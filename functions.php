@@ -51,8 +51,8 @@ add_action(
 				'show_in_rest' => true,
 				'menu_icon'    => 'dashicons-book-alt',
 				'supports'     => array('title', 'editor', 'excerpt', 'thumbnail', 'custom-fields'),
-				'has_archive'  => true,
-				'rewrite'      => array('slug' => 'library'),
+				'has_archive'  => 'books',
+				'rewrite'      => array('slug' => 'books'),
 			)
 		);
 
@@ -95,6 +95,19 @@ add_action(
 			);
 		}
 	}
+);
+
+add_action(
+	'init',
+	static function (): void {
+		$rewrite_version = '2026-05-16-books-v2';
+
+		if (get_option('bbb_rewrite_version') !== $rewrite_version) {
+			flush_rewrite_rules(false);
+			update_option('bbb_rewrite_version', $rewrite_version);
+		}
+	},
+	20
 );
 
 function bbb_get_member_sync_secret(): string {
@@ -444,7 +457,7 @@ function bbb_render_library_filters(): string {
 			</select>
 		</label>
 		<button type="submit">Search</button>
-		<a class="bbb-library-filter__reset" href="<?php echo esc_url(get_post_type_archive_link('bbb_book') ?: home_url('/library/')); ?>">Reset</a>
+		<a class="bbb-library-filter__reset" href="<?php echo esc_url(home_url('/library/')); ?>">Reset</a>
 	</form>
 	<?php
 	return (string) ob_get_clean();
@@ -581,7 +594,7 @@ function bbb_render_book_profile(int $post_id): string {
 			<div class="bbb-book-profile__links">
 				<?php if ($amazon_url) : ?><a href="<?php echo esc_url($amazon_url); ?>">Amazon</a><?php endif; ?>
 				<?php if ($bookshop_url) : ?><a href="<?php echo esc_url($bookshop_url); ?>">Bookshop</a><?php endif; ?>
-				<a href="<?php echo esc_url(get_post_type_archive_link('bbb_book') ?: home_url('/library/')); ?>">Back to library</a>
+				<a href="<?php echo esc_url(home_url('/library/')); ?>">Back to library</a>
 			</div>
 		</div>
 	</article>
@@ -793,7 +806,7 @@ add_shortcode(
 add_shortcode(
 	'library',
 	static function (): string {
-		$url = get_post_type_archive_link('bbb_book') ?: home_url('/library/');
+		$url = home_url('/library/');
 		return '<a class="bbb-inline-library" href="' . esc_url($url) . '">browse the full library &rarr;</a>';
 	}
 );
