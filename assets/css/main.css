@@ -2027,3 +2027,687 @@ body.tax-bbb_series .bbb-main-nav a[href="/library"] {
     font-size: 1.35rem;
   }
 }
+
+/* Shopify parity pass: ported from bybookishbabe-theme assets/base.css and assets/sss-library.css. */
+body,
+.bbb-home,
+.bbb-library-page,
+.bbb-book-page {
+  font-family: "Libre Baskerville", Georgia, serif;
+}
+
+.bbb-masthead__top {
+  min-height: 278px;
+  max-width: 1370px;
+  padding: 54px 96px 28px;
+}
+
+.bbb-circle-icon,
+.bbb-line-icon,
+.bbb-sss-icon {
+  width: 44px;
+  height: 44px;
+}
+
+.bbb-main-nav {
+  min-height: 88px;
+  gap: 36px;
+  padding: 0 20px 31px;
+}
+
+.bbb-main-nav a {
+  font-size: 1.15rem;
+  letter-spacing: .06em;
+}
+
+.hero-custom {
+  min-height: 0;
+  padding: 80px 16px;
+  background-position: center;
+}
+
+.hero-custom::after {
+  background: rgba(0,0,0,.18);
+}
+
+.hero-frame {
+  max-width: 860px;
+  padding: 32px 22px 30px;
+  border: 1px solid #fff;
+}
+
+.hero-frame::before {
+  inset: 18px;
+  border-color: rgba(255,255,255,.4);
+}
+
+.hero-cursive {
+  font-size: 5.2rem;
+  letter-spacing: .04em;
+}
+
+.hero-mini {
+  margin-bottom: 22px;
+  font-size: 1.6rem;
+}
+
+.hero-subtitle {
+  margin-bottom: 28px;
+  font-size: 1.85rem;
+  line-height: 1.7;
+}
+
+.hero-buttons {
+  gap: 14px;
+}
+
+.hero-buttons a {
+  min-width: 0;
+  padding: 16px 38px;
+  border-width: 1px;
+  font-size: 1.15rem;
+  font-weight: 400;
+}
+
+.hero-buttons .btn-secondary {
+  background: #fff;
+  border-color: #fff;
+  color: #000;
+}
+
+.hero-buttons .btn-secondary:hover {
+  background: transparent;
+  color: #fff;
+  box-shadow: none;
+  transform: none;
+}
+
+.bbb-trending {
+  background: #0b0b0b;
+  padding: 60px 20px;
+}
+
+.bbb-trending__inner,
+.bbb-tropes__inner,
+.sss-lib__wrap,
+.bbb-connect-cards__inner,
+.bbb-library-landing,
+.bbb-shelf,
+.bbb-library-jump,
+.bbb-spice-strip,
+.bbb-reader-chemistry,
+.bbb-library-shelf-intro,
+.bbb-mood,
+.bbb-library-archive {
+  max-width: 1100px;
+}
+
+.bbb-trending__head {
+  max-width: none;
+  margin: 0 0 32px;
+}
+
+.bbb-trending__head::before {
+  content: none;
+}
+
+.bbb-trending__kicker,
+.bbb-tropes__kicker,
+.sss-lib__archiveKicker,
+.bbb-quiz-nudge__kicker,
+.bbb-threads__label,
+.bbb-library-hero__kicker,
+.bbb-book-profile__kicker,
+.bbb-library-join p:first-child,
+.bbb-reader-chemistry p:first-child,
+.bbb-library-shelf-intro > p:first-child,
+.bbb-mood > p:first-child,
+.bbb-shelf__kicker {
+  color: rgba(246,246,246,.6);
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  opacity: 1;
+}
+
+.bbb-trending__title,
+.bbb-tropes__title,
+.sss-lib__archiveTitle,
+.bbb-library-landing__copy h1,
+.bbb-library-shelf-intro h2,
+.bbb-mood h2,
+.bbb-library-archive__title,
+.bbb-shelf__title {
+  margin: 6px 0 0;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1.2;
+  text-transform: lowercase;
+}
+
+.bbb-trending__sub,
+.sss-lib__archiveSub,
+.bbb-library-landing__copy p:not(.bbb-library-hero__kicker),
+.bbb-library-join p,
+.bbb-shelf__sub,
+.bbb-library-shelf-intro p,
+.bbb-mood p,
+.bbb-reader-chemistry p {
+  color: rgba(246,246,246,.65);
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.bbb-trending .bbb-library-grid {
+  display: flex;
+  grid-template-columns: none;
+  gap: 18px;
+  margin: 0;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.bbb-trending .bbb-library-card {
+  flex: 0 0 150px;
+}
+
+.bbb-trending__cta {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.bbb-trending__cta a {
+  border-bottom: 0;
+  color: #ff8ac7;
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.bbb-library-page,
+.bbb-book-page {
+  position: relative;
+  overflow: visible;
+  background: #0b0b0b;
+  color: #f6f6f6;
+}
+
+.bbb-library-page::before,
+.bbb-book-page::before {
+  content: "";
+  position: absolute;
+  inset: -40px;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 520px at 50% 90px, rgba(255,255,255,.08), transparent 70%),
+    repeating-linear-gradient(to bottom, rgba(255,255,255,.03), rgba(255,255,255,.03) 1px, transparent 1px, transparent 26px);
+  opacity: .55;
+}
+
+.bbb-library-page > *,
+.bbb-book-page > * {
+  position: relative;
+  z-index: 1;
+}
+
+.bbb-library-landing {
+  grid-template-columns: minmax(0,1fr) minmax(280px,380px);
+  gap: 70px;
+  padding: 90px 16px 40px;
+}
+
+.bbb-library-landing__copy h1 {
+  margin-top: 4px;
+}
+
+.bbb-library-landing__copy h2,
+.bbb-library-join h2 {
+  margin: 18px 0 0;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.55;
+  text-transform: lowercase;
+}
+
+.bbb-library-landing__copy p:not(.bbb-library-hero__kicker) {
+  max-width: 70ch;
+  margin: 18px 0 0;
+}
+
+.bbb-library-landing__copy a {
+  display: inline-flex;
+  margin-top: 14px;
+  border-bottom: 1px solid rgba(255,138,199,.35);
+  color: #ff8ac7;
+  font-size: 12px;
+  line-height: 1.5;
+  text-decoration: none;
+}
+
+.bbb-library-join {
+  padding: 28px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 22px;
+  background: rgba(255,255,255,.03);
+  box-shadow: 0 22px 54px rgba(0,0,0,.22);
+}
+
+.bbb-library-join a {
+  min-height: 46px;
+  margin-top: 18px;
+  padding: 0 24px;
+  border: 1px solid #ff8ac7;
+  border-radius: 999px;
+  background: #ff8ac7;
+  color: #111;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 11px;
+  letter-spacing: .14em;
+}
+
+.bbb-shelf {
+  padding: 44px 16px 52px;
+}
+
+.bbb-shelf--featured {
+  position: relative;
+  margin-top: 22px;
+  padding: 25px 14px 10px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  background: rgba(255,255,255,.03);
+}
+
+.bbb-shelf--featured .bbb-shelf__title {
+  position: absolute;
+  top: -20px;
+  left: 24px;
+  width: auto;
+  padding: 0;
+  background: transparent;
+  font-family: "Kaushan Script", cursive;
+  font-size: 38px;
+  line-height: 1;
+  text-align: left;
+}
+
+.bbb-shelf--featured .bbb-shelf__sub {
+  margin: 28px 0 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  text-align: left;
+}
+
+.bbb-shelf__sub {
+  max-width: 70ch;
+  margin: 10px 0 0;
+  text-align: left;
+}
+
+.bbb-shelf__row {
+  gap: 16px;
+  margin-top: 22px;
+  overflow-x: auto;
+  overflow-y: visible;
+  scroll-snap-type: x mandatory;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.bbb-shelf__row::-webkit-scrollbar {
+  height: 8px;
+}
+
+.bbb-shelf__row::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.12);
+  border-radius: 999px;
+}
+
+.bbb-shelf__row .bbb-library-card {
+  flex: 0 0 150px;
+  width: 150px;
+  scroll-snap-align: start;
+}
+
+.bbb-shelf--featured .bbb-shelf__row {
+  justify-content: flex-start;
+}
+
+.bbb-shelf--current {
+  margin: 44px auto 52px;
+  padding: 25px 14px 18px;
+  border-radius: 16px;
+}
+
+.bbb-shelf--current .bbb-shelf__title {
+  margin-top: -50px;
+  padding: 0;
+  background: transparent;
+  font-family: "Kaushan Script", cursive;
+  font-size: 38px;
+  line-height: 1;
+}
+
+.bbb-library-jump {
+  margin: 30px auto 20px;
+  padding: 16px 20px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  background: rgba(255,255,255,.03);
+}
+
+.bbb-library-jump p {
+  margin-bottom: 12px;
+  color: rgba(255,255,255,.6);
+  font-size: 11px;
+  letter-spacing: .14em;
+}
+
+.bbb-library-jump div {
+  gap: 10px;
+}
+
+.bbb-library-jump a {
+  padding: 6px 14px;
+  border-color: rgba(255,255,255,.25);
+  color: #f6f6f6;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.bbb-library-jump a:hover {
+  background: #f6f6f6;
+  color: #0b0b0b;
+}
+
+.bbb-spice-strip {
+  margin: 18px auto 8px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255,138,199,.18);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255,138,199,.08), rgba(255,255,255,.02));
+  color: inherit;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.bbb-spice-strip span {
+  margin-bottom: 6px;
+  color: rgba(246,246,246,.62);
+  font-size: 10px;
+  letter-spacing: .16em;
+}
+
+.bbb-reader-chemistry {
+  grid-template-columns: minmax(0,1fr) minmax(260px,420px);
+  gap: 28px;
+  margin: 24px auto 52px;
+  padding: 28px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 22px;
+  background: rgba(255,255,255,.03);
+}
+
+.bbb-reader-chemistry h2 {
+  margin: 10px 0 0;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 28px;
+  line-height: 1.25;
+}
+
+.bbb-reader-chemistry h2 span {
+  color: #ff8ac7;
+  font-family: "Kaushan Script", cursive;
+}
+
+.bbb-reader-chemistry h3 {
+  color: #ffb9da;
+  font-size: 13px;
+  letter-spacing: .14em;
+}
+
+.bbb-reader-chemistry__cards {
+  min-height: 210px;
+  border-radius: 18px;
+  background: rgba(0,0,0,.22);
+}
+
+.bbb-library-shelf-intro,
+.bbb-mood {
+  padding: 70px 16px 16px;
+}
+
+.bbb-library-shelf-intro a {
+  min-height: 44px;
+  padding: 0 18px;
+  border-color: #ff8ac7;
+  border-radius: 8px;
+  color: #ff8ac7;
+  font-size: 11px;
+  letter-spacing: .14em;
+}
+
+.bbb-mood > a {
+  margin-top: 30px;
+  padding: 44px;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.025));
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 34px;
+}
+
+.bbb-mood > a span {
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 14px;
+}
+
+.bbb-library-archive {
+  padding: 70px 16px 90px;
+}
+
+.bbb-library-grid,
+.bbb-library-grid--archive {
+  grid-template-columns: repeat(auto-fill, 150px);
+  justify-content: start;
+  gap: 22px;
+}
+
+.bbb-library-card {
+  color: inherit;
+  cursor: pointer;
+}
+
+.bbb-library-card__media {
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 10px;
+  background: #0e0e0e;
+}
+
+.bbb-library-card__cover {
+  aspect-ratio: 2 / 3;
+  border: 0;
+  border-radius: 0;
+  background: #111;
+  box-shadow: none;
+  object-fit: contain;
+}
+
+.bbb-library-card__title {
+  margin-top: 10px;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.bbb-library-card__author {
+  margin-top: 3px;
+  color: rgba(246,246,246,.6);
+  font-size: 11px;
+}
+
+.bbb-library-card__badge {
+  top: 8px;
+  left: 8px;
+  width: 26px;
+  height: 26px;
+  background: #e85a9b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.bbb-library-card__spice {
+  top: 8px;
+  right: 8px;
+  padding: 4px 8px;
+  background: rgba(0,0,0,.7);
+  font-size: 12px;
+}
+
+.bbb-library-card__save {
+  left: 8px;
+  bottom: 8px;
+  padding: 7px 11px;
+  background: rgba(0,0,0,.72);
+  font-size: 12px;
+  letter-spacing: .02em;
+}
+
+.bbb-library-card__ribbon {
+  right: -28px;
+  bottom: 18px;
+  min-width: 118px;
+  width: 118px;
+  padding: 7px 20px 6px;
+  background: rgba(74,138,92,.92);
+  font-size: 10px;
+  letter-spacing: .18em;
+  box-shadow: 0 10px 24px rgba(0,0,0,.35);
+}
+
+.bbb-library-filter {
+  gap: 14px;
+  margin-top: 24px;
+  padding: 18px;
+  border-color: rgba(255,255,255,.12);
+  border-radius: 18px;
+  background: rgba(255,255,255,.03);
+}
+
+.bbb-library-filter input,
+.bbb-library-filter select {
+  min-height: 48px;
+  border-color: rgba(255,255,255,.16);
+  border-radius: 999px;
+  background: #111;
+  font: inherit;
+}
+
+.bbb-library-filter button,
+.bbb-library-filter__reset {
+  min-height: 46px;
+  border-radius: 999px;
+  background: #ff8ac7;
+  border-color: #ff8ac7;
+  color: #111;
+  font-size: 11px;
+}
+
+.bbb-library-filter__reset {
+  background: transparent;
+  color: #f6f6f6;
+  border-color: rgba(255,255,255,.22);
+}
+
+.bbb-book-profile {
+  max-width: 1100px;
+  font-family: "Libre Baskerville", Georgia, serif;
+}
+
+.bbb-book-profile h1 {
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 42px;
+  line-height: 1.1;
+}
+
+@media (max-width: 768px) {
+  .bbb-masthead__top {
+    min-height: 214px;
+    grid-template-columns: 48px 1fr 48px;
+    padding: 36px 18px 12px;
+  }
+
+  .hero-custom {
+    padding: 56px 12px;
+  }
+
+  .hero-frame {
+    padding: 26px 16px 24px;
+  }
+
+  .hero-frame::before {
+    inset: 14px;
+  }
+
+  .hero-cursive {
+    font-size: 3.2rem;
+  }
+
+  .hero-mini {
+    margin-bottom: 14px;
+    font-size: 1.3rem;
+  }
+
+  .hero-subtitle {
+    margin-bottom: 32px;
+    font-size: 1.45rem;
+  }
+
+  .hero-buttons {
+    width: 100%;
+  }
+
+  .hero-buttons a {
+    width: 100%;
+  }
+
+  .bbb-library-landing,
+  .bbb-reader-chemistry {
+    grid-template-columns: 1fr;
+  }
+
+  .bbb-library-landing {
+    padding: 70px 16px 30px;
+  }
+
+  .bbb-library-grid,
+  .bbb-library-grid--archive {
+    grid-template-columns: repeat(2, 150px);
+    justify-content: center;
+    gap: 18px 16px;
+  }
+
+  .bbb-shelf__row .bbb-library-card {
+    flex: 0 0 140px;
+    width: 140px;
+  }
+
+  .bbb-shelf--featured,
+  .bbb-shelf--current,
+  .bbb-reader-chemistry,
+  .bbb-library-jump,
+  .bbb-spice-strip {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+}
