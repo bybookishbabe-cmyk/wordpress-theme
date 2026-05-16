@@ -11,29 +11,39 @@
       "defaultPalette": false,
       "palette": [
         {
+          "slug": "black",
+          "name": "Black",
+          "color": "#0b0b0b"
+        },
+        {
           "slug": "ink",
           "name": "Ink",
-          "color": "#211b1d"
+          "color": "#111111"
         },
         {
-          "slug": "paper",
-          "name": "Paper",
-          "color": "#fffaf4"
+          "slug": "white",
+          "name": "White",
+          "color": "#ffffff"
         },
         {
-          "slug": "rose",
-          "name": "Rose",
-          "color": "#a94755"
+          "slug": "pink",
+          "name": "Pink",
+          "color": "#e85a9b"
         },
         {
-          "slug": "moss",
-          "name": "Moss",
-          "color": "#56624b"
+          "slug": "pink-light",
+          "name": "Pink Light",
+          "color": "#ff8ac7"
         },
         {
-          "slug": "gold",
-          "name": "Gold",
-          "color": "#c4944d"
+          "slug": "pink-society",
+          "name": "Pink Society",
+          "color": "#EC80B8"
+        },
+        {
+          "slug": "muted",
+          "name": "Muted",
+          "color": "rgba(246,246,246,0.6)"
         }
       ]
     },
@@ -42,17 +52,22 @@
       "fontFamilies": [
         {
           "slug": "serif",
-          "name": "Cormorant Garamond",
-          "fontFamily": "'Cormorant Garamond', Georgia, 'Times New Roman', serif"
+          "name": "Libre Baskerville",
+          "fontFamily": "'Libre Baskerville', Georgia, 'Times New Roman', serif"
+        },
+        {
+          "slug": "display",
+          "name": "Playfair Display",
+          "fontFamily": "'Playfair Display', Georgia, serif"
         },
         {
           "slug": "script",
-          "name": "Allura",
-          "fontFamily": "'Allura', cursive"
+          "name": "Dancing Script",
+          "fontFamily": "'Dancing Script', cursive"
         },
         {
           "slug": "sans",
-          "name": "Sans",
+          "name": "Inter",
           "fontFamily": "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
         }
       ],
@@ -60,7 +75,7 @@
         {
           "slug": "small",
           "name": "Small",
-          "size": "0.875rem"
+          "size": "0.75rem"
         },
         {
           "slug": "medium",
@@ -70,20 +85,20 @@
         {
           "slug": "large",
           "name": "Large",
-          "size": "1.35rem"
+          "size": "1.125rem"
         },
         {
           "slug": "x-large",
           "name": "Extra Large",
-          "size": "2.25rem"
+          "size": "2.625rem"
         }
       ]
     }
   },
   "styles": {
     "color": {
-      "background": "var(--wp--preset--color--paper)",
-      "text": "var(--wp--preset--color--ink)"
+      "background": "var(--wp--preset--color--black)",
+      "text": "var(--wp--preset--color--white)"
     },
     "typography": {
       "fontFamily": "var(--wp--preset--font-family--sans)",
@@ -93,31 +108,36 @@
     "elements": {
       "button": {
         "border": {
-          "radius": "4px"
+          "radius": "999px"
         },
         "color": {
-          "background": "var(--wp--preset--color--ink)",
-          "text": "var(--wp--preset--color--paper)"
+          "background": "var(--wp--preset--color--pink)",
+          "text": "var(--wp--preset--color--white)"
         },
         "spacing": {
           "padding": {
             "top": "0.75rem",
-            "right": "1rem",
+            "right": "1.375rem",
             "bottom": "0.75rem",
-            "left": "1rem"
+            "left": "1.375rem"
           }
+        },
+        "typography": {
+          "fontWeight": "600",
+          "letterSpacing": "0.08em"
         }
       },
       "heading": {
         "typography": {
-          "fontFamily": "var(--wp--preset--font-family--serif)",
-          "fontWeight": "600",
-          "lineHeight": "1.12"
+          "fontFamily": "var(--wp--preset--font-family--display)",
+          "fontWeight": "400",
+          "lineHeight": "1.12",
+          "textTransform": "lowercase"
         }
       },
       "link": {
         "color": {
-          "text": "var(--wp--preset--color--rose)"
+          "text": "var(--wp--preset--color--pink)"
         }
       }
     }
