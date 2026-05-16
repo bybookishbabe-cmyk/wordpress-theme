@@ -874,6 +874,7 @@ hr {
   grid-column: 3;
   display: flex;
   align-items: center;
+  overflow: hidden;
   justify-content: flex-end;
   gap: 0.625rem;
 }
