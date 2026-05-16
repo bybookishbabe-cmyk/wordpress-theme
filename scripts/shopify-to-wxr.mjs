@@ -3,7 +3,9 @@ import { resolve } from 'node:path';
 
 const root = process.cwd();
 const contentDir = resolve(root, 'migration', 'exports', 'content');
-const outputPath = resolve(root, 'migration', 'exports', 'wordpress-content-import.xml');
+const forceDrafts = process.argv.includes('--drafts');
+const outputFileName = forceDrafts ? 'wordpress-content-import-drafts.xml' : 'wordpress-content-import.xml';
+const outputPath = resolve(root, 'migration', 'exports', outputFileName);
 
 const pages = await readJson(resolve(contentDir, 'pages.json'));
 const blogGroups = await readJson(resolve(contentDir, 'blog-articles.json'));
@@ -13,7 +15,7 @@ await mkdir(resolve(root, 'migration', 'exports'), { recursive: true });
 const items = [
   ...pages.map(pageToWxrItem),
   ...blogGroups.flatMap((group) => group.articles.map((article) => articleToWxrItem(article, group.blog))),
-];
+].map((item) => forceDrafts ? { ...item, status: 'draft' } : item);
 
 await writeFile(outputPath, buildWxr(items));
 
