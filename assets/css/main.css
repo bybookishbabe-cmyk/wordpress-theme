@@ -1,0 +1,33 @@
+body {
+  min-height: 100vh;
+}
+
+a {
+  text-underline-offset: 0.18em;
+}
+
+.wp-site-blocks {
+  min-height: 100vh;
+}
+
+.site-header,
+.site-footer {
+  border-color: color-mix(in srgb, currentColor 16%, transparent);
+}
+
+.site-header {
+  border-bottom: 1px solid;
+}
+
+.site-footer {
+  border-top: 1px solid;
+}
+
+.hero-kicker {
+  font-family: var(--wp--preset--font-family--sans);
+  font-size: var(--wp--preset--font-size--small);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
