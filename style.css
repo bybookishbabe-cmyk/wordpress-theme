@@ -1870,3 +1870,105 @@ html { font-size: 15px; }
   .bbb-wordmark__script { font-size: 1.1rem !important; }
   .bbb-wordmark__serif { font-size: 0.55rem !important; }
 }
+
+/* ============================================================
+   FOOTER FIX
+============================================================ */
+.bbb-footer,
+.wp-block-group.bbb-footer {
+  background: #0b0b0b !important;
+  border-top: 1px solid rgba(255,255,255,0.08) !important;
+  padding: 3rem 2rem 1.5rem !important;
+  color: rgba(255,255,255,0.8) !important;
+}
+
+.bbb-footer .wp-block-columns {
+  max-width: 900px;
+  margin: 0 auto 2rem;
+  gap: 3rem;
+}
+
+.bbb-footer__title.wp-block-heading {
+  font-family: 'Playfair Display', Georgia, serif !important;
+  font-size: 1rem !important;
+  font-weight: 400 !important;
+  text-transform: lowercase !important;
+  color: #fff !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.bbb-footer p {
+  font-size: 0.78rem !important;
+  color: rgba(255,255,255,0.55) !important;
+  line-height: 1.65 !important;
+}
+
+.bbb-footer__kicker {
+  font-size: 0.6rem !important;
+  letter-spacing: 0.18em !important;
+  text-transform: uppercase !important;
+  color: rgba(255,255,255,0.4) !important;
+  margin-bottom: 0.4rem !important;
+}
+
+.bbb-footer a {
+  color: #e85a9b !important;
+  text-decoration: none !important;
+  border-bottom: none !important;
+  font-weight: 400 !important;
+}
+
+.bbb-footer a:hover {
+  color: #ff8ac7 !important;
+}
+
+.bbb-footer__fineprint {
+  text-align: center !important;
+  font-size: 0.65rem !important;
+  color: rgba(255,255,255,0.25) !important;
+  letter-spacing: 0.1em !important;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 1.25rem !important;
+  margin-top: 0 !important;
+  max-width: 900px;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+@media (max-width: 700px) {
+  .bbb-footer { padding: 2rem 1.25rem 1rem !important; }
+  .bbb-footer .wp-block-columns { flex-direction: column; gap: 1.5rem; }
+}
+
+/* ============================================================
+   LOGO IMAGES
+============================================================ */
+.bbb-logo-img {
+  height: 56px;
+  width: auto;
+  display: block;
+  object-fit: contain;
+}
+
+.bbb-sss-logo-img {
+  height: 28px;
+  width: 28px;
+  object-fit: contain;
+  border-radius: 50%;
+  display: block;
+}
+
+.bbb-sss-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 0 !important;
+}
+
+@media (max-width: 700px) {
+  .bbb-logo-img { height: 42px; }
+  .bbb-sss-logo-img { height: 24px; width: 24px; }
+}
