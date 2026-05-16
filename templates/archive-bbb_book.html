@@ -1,13 +1,96 @@
 <!-- wp:template-part {"slug":"header","tagName":"header","className":"site-header"} /-->
 
 <main class="bbb-library-page">
-  <section class="bbb-library-hero">
-    <p class="bbb-library-hero__kicker">by bookish babe</p>
-    <h1>the library</h1>
-    <p>romance books by mood, trope, spice, shelf, and emotional damage.</p>
+  <section class="bbb-library-landing">
+    <div class="bbb-library-landing__copy">
+      <p class="bbb-library-hero__kicker">official library</p>
+      <h1>the romance library</h1>
+      <h2>made for romance readers by a romance reader.</h2>
+      <p>the official collection of romance books curated and catalogued by the smut and sentiment society.</p>
+      <a href="/book-genre/kindle-unlimited">on a kindle kick? try kindle unlimited -></a>
+    </div>
+    <aside class="bbb-library-join">
+      <p>the private layer</p>
+      <h2>join the society for the weekly recommendation</h2>
+      <p>one curated romance, delivered every sunday. full breakdown, tension index, emotional damage rating, and private annotations.</p>
+      <a href="https://thesmutandsentimentsociety.substack.com/subscribe">enter the society</a>
+    </aside>
   </section>
 
-  <section class="bbb-library-archive">
+  <!-- wp:shortcode -->
+  [bbb_library_shelf title="trending in the society" subtitle="the books the society is obsessing over right now" limit="5" meta_key="_bbb_top_shelf" meta_value="1" class="bbb-shelf--featured"]
+  <!-- /wp:shortcode -->
+
+  <nav class="bbb-library-jump" aria-label="Library sections">
+    <p>choose where to begin</p>
+    <div>
+      <a href="#your-shelf">your bookshelf</a>
+      <a href="#classics">classics</a>
+      <a href="/book-series">series</a>
+      <a href="#starter-pack">start here</a>
+      <a href="#month">books of the month</a>
+      <a href="/book-trope">trope shelves</a>
+      <a href="#full-library">full library</a>
+    </div>
+  </nav>
+
+  <a class="bbb-spice-strip" href="/romance-books-by-spice-level">
+    <span>need a faster way in?</span>
+    browse the library by spice level and go straight to your preferred spice ->
+  </a>
+
+  <section class="bbb-reader-chemistry">
+    <div>
+      <p>reader chemistry</p>
+      <h2><span>if you liked...</span> daggermouth</h2>
+      <p>read this next</p>
+      <h3>what to read next</h3>
+    </div>
+    <div class="bbb-reader-chemistry__cards">
+      <span>you picked</span>
+      <strong>daggermouth</strong>
+      <span>read this next</span>
+      <strong>until i die</strong>
+    </div>
+  </section>
+
+  <section class="bbb-library-shelf-intro" id="your-shelf">
+    <p>your shelf</p>
+    <h2>build your own bookshelf</h2>
+    <p>save the ones you want to come back to, compare, and keep close.</p>
+    <a href="#full-library">open synced bookshelf</a>
+  </section>
+
+  <!-- wp:shortcode -->
+  [bbb_library_shelf title="new to the society? start here." kicker="starter pack" subtitle="these are the books i recommend starting with if you're new to romance — or new to the smut & sentiment society." limit="5" meta_key="_bbb_starter_pack" meta_value="1" class="bbb-shelf--plain" fallback="true"]
+  <!-- /wp:shortcode -->
+
+  <!-- wp:shortcode -->
+  [bbb_library_shelf title="books of the month" subtitle="what we're obsessed with this month" limit="5" class="bbb-shelf--plain" fallback="true"]
+  <!-- /wp:shortcode -->
+
+  <!-- wp:shortcode -->
+  [bbb_library_shelf title="currently reading" limit="5" class="bbb-shelf--current" fallback="true"]
+  <!-- /wp:shortcode -->
+
+  <section class="bbb-mood" id="classics">
+    <p>the society shelves</p>
+    <h2>what are you in the mood for today?</h2>
+    <p>pick your poison.</p>
+    <div class="bbb-mood__legend">
+      <span><strong>1</strong> the pink # badge means the book is part of a connected series.</span>
+      <span><strong class="is-white">1</strong> the white # badge means the book is part of a series but can be read as a standalone.</span>
+    </div>
+    <a href="/book-genre/dark-romance">dark romance<span>morally questionable men doing unforgivable things for obsession</span></a>
+  </section>
+
+  <!-- wp:shortcode -->
+  [bbb_library_shelf title="society classics" subtitle="(the permanent canon of the smut & sentiment society.)" limit="10" meta_key="_bbb_top_shelf" meta_value="1" class="bbb-shelf--classics" fallback="true"]
+  <!-- /wp:shortcode -->
+
+  <section class="bbb-library-archive" id="full-library">
+    <p class="bbb-library-hero__kicker">full library</p>
+    <h2 class="bbb-library-archive__title">browse every book</h2>
     <!-- wp:shortcode -->
     [bbb_library limit="96" filters="true"]
     <!-- /wp:shortcode -->

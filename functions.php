@@ -296,6 +296,79 @@ add_shortcode(
 	}
 );
 
+add_shortcode(
+	'bbb_library_shelf',
+	static function (array $atts = array()): string {
+		$atts = shortcode_atts(
+			array(
+				'title'      => '',
+				'kicker'     => '',
+				'subtitle'   => '',
+				'limit'      => 5,
+				'meta_key'   => '',
+				'meta_value' => '',
+				'fallback'   => 'true',
+				'class'      => '',
+			),
+			$atts,
+			'bbb_library_shelf'
+		);
+
+		$post_status = current_user_can('edit_posts') ? array('publish', 'draft') : array('publish');
+		$query_args  = array(
+			'post_type'      => 'bbb_book',
+			'post_status'    => $post_status,
+			'posts_per_page' => max(1, (int) $atts['limit']),
+			'orderby'        => 'date',
+			'order'          => 'DESC',
+		);
+
+		if ($atts['meta_key']) {
+			$query_args['meta_query'] = array(
+				array(
+					'key'   => sanitize_key((string) $atts['meta_key']),
+					'value' => sanitize_text_field((string) $atts['meta_value']),
+				),
+			);
+		}
+
+		$query = new WP_Query($query_args);
+		if (!$query->have_posts() && 'true' === strtolower((string) $atts['fallback']) && $atts['meta_key']) {
+			unset($query_args['meta_query']);
+			$query = new WP_Query($query_args);
+		}
+
+		if (!$query->have_posts()) {
+			return '';
+		}
+
+		ob_start();
+		?>
+		<section class="bbb-shelf <?php echo esc_attr((string) $atts['class']); ?>">
+			<?php if ($atts['kicker']) : ?>
+				<p class="bbb-shelf__kicker"><?php echo esc_html((string) $atts['kicker']); ?></p>
+			<?php endif; ?>
+			<?php if ($atts['title']) : ?>
+				<h2 class="bbb-shelf__title"><?php echo esc_html((string) $atts['title']); ?></h2>
+			<?php endif; ?>
+			<?php if ($atts['subtitle']) : ?>
+				<p class="bbb-shelf__sub"><?php echo esc_html((string) $atts['subtitle']); ?></p>
+			<?php endif; ?>
+			<div class="bbb-shelf__row">
+				<?php
+				while ($query->have_posts()) {
+					$query->the_post();
+					echo bbb_render_library_card(get_the_ID(), 'shelf'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				}
+				wp_reset_postdata();
+				?>
+			</div>
+		</section>
+		<?php
+		return (string) ob_get_clean();
+	}
+);
+
 function bbb_apply_library_filters(array $query_args): array {
 	$search = isset($_GET['bbb_search']) ? sanitize_text_field(wp_unslash($_GET['bbb_search'])) : '';
 	if ($search) {
@@ -400,22 +473,34 @@ function bbb_render_taxonomy_select(string $taxonomy, string $label): string {
 	return (string) ob_get_clean();
 }
 
-function bbb_render_library_card(int $post_id): string {
+function bbb_render_library_card(int $post_id, string $variant = ''): string {
 	$cover_url    = (string) get_post_meta($post_id, '_bbb_cover_url', true);
 	$author       = (string) get_post_meta($post_id, '_bbb_author', true);
 	$access_level = (string) get_post_meta($post_id, '_bbb_access_level', true);
 	$is_locked    = 'society' === $access_level && !bbb_current_user_is_society_member();
 	$spice        = (string) get_post_meta($post_id, '_bbb_spice_level', true);
 	$darkness     = (string) get_post_meta($post_id, '_bbb_darkness_level', true);
+	$series_no    = (string) get_post_meta($post_id, '_bbb_series_number', true);
+	$is_ku        = '1' === (string) get_post_meta($post_id, '_bbb_on_kindle_unlimited', true);
 	$tropes       = get_the_terms($post_id, 'bbb_trope');
 	$genres       = get_the_terms($post_id, 'bbb_genre');
 
 	ob_start();
 	?>
-	<a class="bbb-library-card <?php echo $is_locked ? 'is-locked' : ''; ?>" href="<?php echo esc_url(get_permalink($post_id)); ?>">
+	<a class="bbb-library-card <?php echo $is_locked ? 'is-locked' : ''; ?> <?php echo esc_attr($variant ? 'bbb-library-card--' . $variant : ''); ?>" href="<?php echo esc_url(get_permalink($post_id)); ?>">
 		<span class="bbb-library-card__media">
 			<?php if ($cover_url) : ?>
 				<img class="bbb-library-card__cover" src="<?php echo esc_url($cover_url); ?>" alt="<?php echo esc_attr(get_the_title($post_id)); ?> cover" loading="lazy">
+			<?php endif; ?>
+			<?php if ($series_no) : ?>
+				<span class="bbb-library-card__badge"><?php echo esc_html($series_no); ?></span>
+			<?php endif; ?>
+			<?php if ($spice) : ?>
+				<span class="bbb-library-card__spice"><?php echo esc_html(str_repeat('🌶', min(5, max(1, (int) $spice)))); ?></span>
+			<?php endif; ?>
+			<span class="bbb-library-card__save">♡ save</span>
+			<?php if ($is_ku) : ?>
+				<span class="bbb-library-card__ribbon">read</span>
 			<?php endif; ?>
 			<?php if ($is_locked) : ?>
 				<span class="bbb-library-card__lock">Society</span>
