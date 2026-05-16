@@ -1041,6 +1041,111 @@ body {
   margin: 32px 0;
 }
 
+.bbb-library-page,
+.bbb-book-page {
+  background: #000;
+  color: #f7f3ee;
+  min-height: 70vh;
+}
+
+.bbb-library-hero {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: clamp(58px, 8vw, 110px) 22px 28px;
+}
+
+.bbb-library-hero__kicker,
+.bbb-book-profile__kicker {
+  margin: 0 0 14px;
+  color: rgba(247,243,238,.58);
+  font-size: .72rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.bbb-library-hero h1 {
+  margin: 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(4rem, 9vw, 8rem);
+  font-weight: 500;
+  line-height: .9;
+  text-transform: lowercase;
+}
+
+.bbb-library-hero p:not(.bbb-library-hero__kicker) {
+  max-width: 620px;
+  margin: 20px 0 0;
+  color: rgba(247,243,238,.7);
+  font-size: 1.1rem;
+}
+
+.bbb-library-archive {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 22px clamp(64px, 8vw, 110px);
+}
+
+.bbb-library-filter {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.6fr) repeat(3, minmax(150px, .7fr)) auto auto;
+  gap: 12px;
+  align-items: end;
+  padding: 16px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+}
+
+.bbb-library-filter label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.bbb-library-filter span {
+  color: rgba(247,243,238,.55);
+  font-size: .68rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.bbb-library-filter input,
+.bbb-library-filter select {
+  min-height: 42px;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 0;
+  background: #050505;
+  color: #f7f3ee;
+  padding: 0 11px;
+}
+
+.bbb-library-filter button,
+.bbb-library-filter__reset {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #df81b6;
+  background: #df81b6;
+  color: #0b0b0b;
+  padding: 0 18px;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.bbb-library-filter__reset {
+  background: transparent;
+  color: #df81b6;
+}
+
+.bbb-library-grid--archive {
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 32px 22px;
+  margin-top: 34px;
+}
+
 .bbb-trending .bbb-library-grid {
   grid-template-columns: repeat(4, minmax(150px, 1fr));
   overflow-x: auto;
@@ -1050,7 +1155,13 @@ body {
   display: flex;
   flex-direction: column;
   color: #f7f3ee;
+  position: relative;
   text-decoration: none;
+}
+
+.bbb-library-card__media {
+  display: block;
+  position: relative;
 }
 
 .bbb-library-card__cover {
@@ -1060,6 +1171,23 @@ body {
   border: 1px solid rgba(255,255,255,.16);
   background: #111;
   box-shadow: 0 18px 40px rgba(0,0,0,.4);
+}
+
+.bbb-library-card.is-locked .bbb-library-card__cover {
+  filter: grayscale(.55) brightness(.78);
+}
+
+.bbb-library-card__lock {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  padding: 6px 8px;
+  background: rgba(0,0,0,.78);
+  border: 1px solid rgba(223,129,182,.7);
+  color: #df81b6;
+  font-size: .66rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
 }
 
 .bbb-library-card__title {
@@ -1073,6 +1201,26 @@ body {
   margin-top: 4px;
   color: rgba(247,243,238,.62);
   font-size: .9rem;
+}
+
+.bbb-library-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 9px;
+  color: rgba(247,243,238,.55);
+  font-size: .75rem;
+  text-transform: lowercase;
+}
+
+.bbb-library-card__chip {
+  width: fit-content;
+  margin-top: 8px;
+  padding: 4px 8px;
+  border: 1px solid rgba(255,255,255,.14);
+  color: rgba(247,243,238,.7);
+  font-size: .72rem;
+  text-transform: lowercase;
 }
 
 .bbb-library-card__status {
@@ -1108,6 +1256,109 @@ body {
   font-size: .78rem;
   letter-spacing: .12em;
   text-transform: uppercase;
+}
+
+.bbb-book-profile {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(240px, 360px) minmax(0, 1fr);
+  gap: clamp(34px, 7vw, 84px);
+  padding: clamp(56px, 8vw, 110px) 22px;
+}
+
+.bbb-book-profile__cover img {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border: 1px solid rgba(255,255,255,.18);
+  box-shadow: 0 22px 58px rgba(0,0,0,.5);
+}
+
+.bbb-book-profile h1 {
+  margin: 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(3.4rem, 6vw, 6rem);
+  font-weight: 500;
+  line-height: .92;
+  text-transform: lowercase;
+}
+
+.bbb-book-profile__author {
+  margin: 18px 0 0;
+  color: rgba(247,243,238,.7);
+  font-size: 1.2rem;
+}
+
+.bbb-book-profile__terms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.bbb-book-profile__terms span {
+  border: 1px solid rgba(255,255,255,.16);
+  color: rgba(247,243,238,.76);
+  padding: 6px 10px;
+  font-size: .76rem;
+  text-transform: lowercase;
+}
+
+.bbb-book-profile__scores {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+  margin: 30px 0;
+}
+
+.bbb-book-profile__scores div {
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  padding: 14px;
+}
+
+.bbb-book-profile__scores span {
+  display: block;
+  color: rgba(247,243,238,.58);
+  font-size: .68rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.bbb-book-profile__scores strong {
+  display: block;
+  margin-top: 6px;
+  color: #df81b6;
+  font-size: 1.4rem;
+}
+
+.bbb-book-profile__content {
+  color: rgba(247,243,238,.76);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.bbb-book-profile__teaser {
+  margin-top: 30px;
+  padding: 22px;
+  border: 1px solid rgba(223,129,182,.42);
+  background: rgba(223,129,182,.08);
+}
+
+.bbb-book-profile__teaser a,
+.bbb-book-profile__links a {
+  color: #df81b6;
+  font-size: .78rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.bbb-book-profile__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 28px;
 }
 
 @media (max-width: 768px) {
@@ -1211,6 +1462,16 @@ body {
 
   .bbb-trending .bbb-library-card {
     flex: 0 0 150px;
+  }
+
+  .bbb-library-filter,
+  .bbb-book-profile {
+    grid-template-columns: 1fr;
+  }
+
+  .bbb-library-filter button,
+  .bbb-library-filter__reset {
+    width: 100%;
   }
 
   .bbb-tropes__row,
