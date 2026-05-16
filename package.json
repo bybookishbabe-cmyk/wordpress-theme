@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "shopify:content": "node scripts/shopify-content-export.mjs",
     "shopify:export": "node scripts/shopify-export.mjs",
-    "shopify:inspect": "node scripts/shopify-export.mjs --definitions-only"
+    "shopify:inspect": "node scripts/shopify-export.mjs --definitions-only",
+    "shopify:wxr": "node scripts/shopify-to-wxr.mjs"
   }
 }

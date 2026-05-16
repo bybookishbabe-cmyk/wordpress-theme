@@ -36,3 +36,33 @@ migration/exports/metaobjects/<type>.json
 ```
 
 Those JSON files become the source for WordPress custom post types and import scripts.
+
+## Step 4: Export Shopify pages and blog posts
+
+```bash
+npm run shopify:content
+```
+
+This creates:
+
+```text
+migration/exports/content/pages.json
+migration/exports/content/blogs.json
+migration/exports/content/blog-articles.json
+```
+
+Those JSON files become the source for WordPress pages and posts.
+
+## Step 5: Create a WordPress import file
+
+```bash
+npm run shopify:wxr
+```
+
+This creates:
+
+```text
+migration/exports/wordpress-content-import.xml
+```
+
+Import that XML in WordPress under Tools > Import > WordPress.

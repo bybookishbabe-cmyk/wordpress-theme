@@ -1624,3 +1624,19 @@ hr {
 
   .bbb-card-row { grid-template-columns: 1fr; }
 }
+
+/* ============================================================
+   LOGO IMAGE
+============================================================ */
+.bbb-logo-img {
+  height: 60px;
+  width: auto;
+  display: block;
+  object-fit: contain;
+}
+
+@media (max-width: 700px) {
+  .bbb-logo-img {
+    height: 44px;
+  }
+}
