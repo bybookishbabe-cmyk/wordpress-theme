@@ -100,7 +100,12 @@ add_action(
 add_action(
 	'init',
 	static function (): void {
-		$rewrite_version = '2026-05-16-books-v2';
+		foreach (array_keys(bbb_get_shopify_page_templates()) as $slug) {
+			add_rewrite_rule('^' . preg_quote($slug, '/') . '/?$', 'index.php?bbb_shopify_page=' . $slug, 'top');
+			add_rewrite_rule('^pages/' . preg_quote($slug, '/') . '/?$', 'index.php?bbb_shopify_page=' . $slug, 'top');
+		}
+
+		$rewrite_version = '2026-05-16-shopify-pages-v1';
 
 		if (get_option('bbb_rewrite_version') !== $rewrite_version) {
 			flush_rewrite_rules(false);
@@ -108,6 +113,339 @@ add_action(
 		}
 	},
 	20
+);
+
+add_filter(
+	'query_vars',
+	static function (array $vars): array {
+		$vars[] = 'bbb_shopify_page';
+
+		return $vars;
+	}
+);
+
+add_filter(
+	'template_include',
+	static function (string $template): string {
+		$route = (string) get_query_var('bbb_shopify_page');
+		$slug  = $route ?: (is_page() ? (string) get_post_field('post_name', get_queried_object_id()) : '');
+
+		if ($slug && isset(bbb_get_shopify_page_templates()[$slug])) {
+			$route_template = get_theme_file_path('templates/bbb-shopify-page.php');
+			if (file_exists($route_template)) {
+				return $route_template;
+			}
+		}
+
+		return $template;
+	}
+);
+
+function bbb_get_shopify_page_templates(): array {
+	return array(
+		'library'                       => array('label' => 'library'),
+		'what-to-read-next'             => array('label' => 'what to read next'),
+		'reader-quizzes'                => array('label' => 'reader quizzes'),
+		'reader-mood-quiz'              => array('label' => 'reader mood quiz'),
+		'fictional-boyfriend-quiz'      => array('label' => 'fictional boyfriend quiz'),
+		'romance-books-by-spice-level'  => array('label' => 'spice level'),
+		'spice'                         => array('label' => 'spice level', 'alias' => 'romance-books-by-spice-level'),
+		'book-trope'                    => array('label' => 'trope shelves'),
+		'trope'                         => array('label' => 'trope shelves', 'alias' => 'book-trope'),
+		'book-reviews'                  => array('label' => 'book reviews'),
+		'books-like-directory'          => array('label' => 'books like x'),
+		'blog'                          => array('label' => 'blog'),
+		'book-series'                   => array('label' => 'series reading orders'),
+		'series-reading-orders'         => array('label' => 'series reading orders', 'alias' => 'book-series'),
+		'smut-sentiment-society'        => array('label' => 'the society'),
+		'society-library'               => array('label' => 'society library'),
+		'sss-library'                   => array('label' => 'society library', 'alias' => 'society-library'),
+		'sss-library-page'              => array('label' => 'society library', 'alias' => 'society-library'),
+		'sss-made-for-you'              => array('label' => 'made for you', 'alias' => 'what-to-read-next'),
+		'sss-private-shelf'             => array('label' => 'private shelf', 'alias' => 'society-library'),
+		'sss-quote-wall'                => array('label' => 'quote wall'),
+		'sss-freebies'                  => array('label' => 'freebies', 'alias' => 'society-library'),
+		'my-vault'                      => array('label' => 'my vault'),
+		'shop'                          => array('label' => 'shop'),
+		'our-story'                     => array('label' => 'our story'),
+		'contact'                       => array('label' => 'contact'),
+		'weekly-obsession'              => array('label' => 'weekly obsession'),
+		'bookshelf-weekly-preview'      => array('label' => 'bookshelf weekly', 'alias' => 'weekly-obsession'),
+	);
+}
+
+function bbb_normalize_shopify_page_slug(string $slug): string {
+	$config = bbb_get_shopify_page_templates()[$slug] ?? array();
+
+	return isset($config['alias']) ? (string) $config['alias'] : $slug;
+}
+
+function bbb_render_shopify_page_template(string $slug): string {
+	$slug = bbb_normalize_shopify_page_slug(sanitize_title($slug));
+
+	switch ($slug) {
+		case 'library':
+			return bbb_render_library_page_template();
+		case 'what-to-read-next':
+			return bbb_render_recommendation_page_template();
+		case 'reader-quizzes':
+			return bbb_render_reader_quizzes_template();
+		case 'reader-mood-quiz':
+			return bbb_render_simple_hub_template(
+				'reader mood quiz',
+				'find your reading mood',
+				'choose the kind of chaos you want and jump into the matching shelf.',
+				array(
+					'dark romance' => '/book-genre/dark-romance/',
+					'romantasy'    => '/book-genre/romantasy/',
+					'slow burn'    => '/book-trope/slow-burn/',
+					'full library' => '/library/',
+				)
+			);
+		case 'fictional-boyfriend-quiz':
+			return bbb_render_simple_hub_template(
+				'fictional boyfriend quiz',
+				'who is your fictional boyfriend?',
+				'answer with your reading taste, then use the result to find your next obsession.',
+				array(
+					'take me to morally gray men' => '/book-trope/morally-gray-men/',
+					'romantasy men'               => '/book-genre/romantasy/',
+					'society classics'            => '/library/#classics',
+				)
+			);
+		case 'romance-books-by-spice-level':
+			return bbb_render_spice_page_template();
+		case 'book-trope':
+			return bbb_render_taxonomy_page_template('bbb_trope', 'trope shelves', 'browse the library by the exact kind of trouble you are in the mood for.');
+		case 'book-series':
+			return bbb_render_taxonomy_page_template('bbb_series', 'series reading orders', 'every series in one place, with the reading order ready when the obsession starts.');
+		case 'book-reviews':
+			return bbb_render_posts_page_template('book reviews', 'read, rated, recommended', 'all the reviews and reading guides imported from Shopify.', '');
+		case 'books-like-directory':
+			return bbb_render_posts_page_template('books like x', 'reading guides', 'finished something that wrecked you? start here for the closest next-read lists.', 'books like');
+		case 'blog':
+			return bbb_render_posts_page_template('the society journal', 'reviews & guides', 'book reviews, reading guides, and reader-life notes.', '');
+		case 'smut-sentiment-society':
+			return bbb_render_society_page_template();
+		case 'society-library':
+			return bbb_render_society_library_template();
+		case 'sss-quote-wall':
+			return bbb_render_quote_wall_template();
+		case 'my-vault':
+			return bbb_render_vault_template();
+		case 'shop':
+			return bbb_render_shop_template();
+		case 'our-story':
+			return bbb_render_our_story_template();
+		case 'contact':
+			return bbb_render_simple_hub_template(
+				'contact',
+				'come closer',
+				'For collabs, questions, and reader-life things, these are the best places to find bybookishbabe.',
+				array(
+					'email'     => 'mailto:bybookishbabe@gmail.com',
+					'instagram' => 'https://www.instagram.com/bybookishbabe/',
+					'tiktok'    => 'https://www.tiktok.com/@bybookishbabe',
+					'substack'  => 'https://thesmutandsentimentsociety.substack.com/subscribe',
+				)
+			);
+		case 'weekly-obsession':
+			return bbb_render_weekly_obsession_template();
+		default:
+			return bbb_render_simple_hub_template('page', 'bybookishbabe', 'This Shopify page is mapped into WordPress.', array('open library' => '/library/'));
+	}
+}
+
+function bbb_render_page_shell(string $kicker, string $title, string $subtext, string $body, string $class = ''): string {
+	return sprintf(
+		'<main class="bbb-shopify-page %5$s"><section class="bbb-page-hero"><p>%1$s</p><h1>%2$s</h1><div>%3$s</div></section>%4$s</main>',
+		esc_html($kicker),
+		esc_html($title),
+		wp_kses_post(wpautop($subtext)),
+		$body,
+		esc_attr($class)
+	);
+}
+
+function bbb_render_library_page_template(): string {
+	$body = '<section class="bbb-page-panel bbb-page-panel--wide">'
+		. do_shortcode('[bbb_library_shelf title="trending in the society" subtitle="the books the society is obsessing over right now" limit="5" meta_key="_bbb_top_shelf" meta_value="1" class="bbb-shelf--featured" fallback="true"]')
+		. '</section>'
+		. '<nav class="bbb-template-jump" aria-label="Library sections"><a href="#full-library">full library</a><a href="/book-trope/">trope shelves</a><a href="/book-series/">series</a><a href="/romance-books-by-spice-level/">spice level</a><a href="/what-to-read-next/">what to read next</a></nav>'
+		. '<section class="bbb-page-panel" id="full-library"><p class="bbb-page-kicker">full library</p><h2>browse every book</h2>' . do_shortcode('[bbb_library limit="96" filters="true"]') . '</section>';
+
+	return bbb_render_page_shell('official library', 'the romance library', 'the official collection of romance books curated and catalogued by the smut and sentiment society.', $body, 'bbb-shopify-page--library');
+}
+
+function bbb_render_recommendation_page_template(): string {
+	$body = '<section class="bbb-page-panel bbb-recommendation-panel"><div><p class="bbb-page-kicker">start with a book you already loved</p><h2>reader chemistry</h2><p>Pick from the imported library, then use the shelves below to follow the same mood, trope, or spice energy.</p></div><div class="bbb-rec-stack"><a href="/library/?bbb_search=daggermouth">if you liked... daggermouth</a><a href="/book-trope/morally-gray-men/">morally gray men</a><a href="/book-genre/romantasy/">romantasy girls</a></div></section>'
+		. do_shortcode('[bbb_library_shelf title="closest matches" subtitle="start with the books the society keeps coming back to" limit="8" class="bbb-shelf--plain" fallback="true"]');
+
+	return bbb_render_page_shell('reader rec engine', 'what to read next', 'pick a book from the library and follow the shelf chemistry to your next obsession.', $body);
+}
+
+function bbb_render_reader_quizzes_template(): string {
+	return bbb_render_simple_hub_template(
+		'reader quizzes',
+		'pick your poison',
+		'quick reader paths for finding the next shelf, trope, or fictional man to make your problem.',
+		array(
+			'what to read next'        => '/what-to-read-next/',
+			'reader mood quiz'         => '/reader-mood-quiz/',
+			'fictional boyfriend quiz' => '/fictional-boyfriend-quiz/',
+			'spice level'              => '/romance-books-by-spice-level/',
+		)
+	);
+}
+
+function bbb_render_spice_page_template(): string {
+	$cards = '';
+	for ($i = 1; $i <= 5; $i++) {
+		$cards .= '<a class="bbb-template-card" href="/library/?bbb_spice=' . esc_attr((string) $i) . '"><span>' . esc_html(str_repeat('🌶', $i)) . '</span><strong>' . esc_html((string) $i) . '+ spice</strong><em>browse the shelf</em></a>';
+	}
+
+	return bbb_render_page_shell('browse by heat', 'romance books by spice level', 'go straight to the exact spice mood you want.', '<section class="bbb-template-grid">' . $cards . '</section>');
+}
+
+function bbb_render_taxonomy_page_template(string $taxonomy, string $title, string $subtext): string {
+	$terms = get_terms(array('taxonomy' => $taxonomy, 'hide_empty' => false));
+	$cards = '';
+
+	if (!is_wp_error($terms) && $terms) {
+		foreach ($terms as $term) {
+			$cards .= '<a class="bbb-template-card" href="' . esc_url(get_term_link($term)) . '"><strong>' . esc_html($term->name) . '</strong><em>' . esc_html((string) $term->count) . ' books</em></a>';
+		}
+	}
+
+	$body = '<section class="bbb-template-grid">' . ($cards ?: '<p class="bbb-library-empty">No shelves are showing yet.</p>') . '</section>';
+
+	return bbb_render_page_shell('library guide', $title, $subtext, $body);
+}
+
+function bbb_render_posts_page_template(string $title, string $kicker, string $subtext, string $search = ''): string {
+	$query_args = array(
+		'post_type'      => 'post',
+		'post_status'    => current_user_can('edit_posts') ? array('publish', 'draft') : array('publish'),
+		'posts_per_page' => 24,
+	);
+
+	if ($search) {
+		$query_args['s'] = $search;
+	}
+
+	$query = new WP_Query($query_args);
+	$cards = '';
+
+	while ($query->have_posts()) {
+		$query->the_post();
+		$cards .= '<a class="bbb-template-card bbb-template-card--post" href="' . esc_url(get_permalink()) . '"><span>' . esc_html(get_the_date()) . '</span><strong>' . esc_html(get_the_title()) . '</strong><em>read the guide</em></a>';
+	}
+	wp_reset_postdata();
+
+	return bbb_render_page_shell($kicker, $title, $subtext, '<section class="bbb-template-grid">' . ($cards ?: '<p class="bbb-library-empty">No posts are showing yet.</p>') . '</section>');
+}
+
+function bbb_render_society_page_template(): string {
+	$body = '<section class="bbb-page-panel bbb-society-panel"><p class="bbb-page-kicker">the private layer</p><h2>one curated romance every sunday</h2><p>Substack stays the main membership source. WordPress can unlock society-only pages for synced members, while public readers still get the library and guides.</p><div class="bbb-template-actions"><a href="https://thesmutandsentimentsociety.substack.com/subscribe">join on substack</a><a href="/society-library/">open society library</a></div></section>';
+
+	return bbb_render_page_shell('the society', 'the smut & sentiment society', 'for soft hearts with sinful taste, private notes, and weekly reader chaos.', $body);
+}
+
+function bbb_render_society_library_template(): string {
+	$tabs = array(
+		'main page'          => '/society-library/',
+		'library'            => '/library/',
+		'made for you'       => '/what-to-read-next/',
+		'quote library'      => '/sss-quote-wall/',
+		'private shelf'      => '/sss-private-shelf/',
+		'printable inserts'  => '/shop/',
+		'bookish templates'  => '/shop/',
+	);
+	$links = '';
+	foreach ($tabs as $label => $url) {
+		$links .= '<a href="' . esc_url($url) . '">' . esc_html($label) . '</a>';
+	}
+
+	$body = '<nav class="bbb-template-jump">' . $links . '</nav><section class="bbb-page-panel">' . do_shortcode('[bbb_society_only message="Join on Substack and log in with the same email to unlock the private shelf."][bbb_library_shelf title="private shelf" limit="8" meta_key="_bbb_access_level" meta_value="society" fallback="true"][/bbb_society_only]') . '</section>';
+
+	return bbb_render_page_shell('library files', 'society library', 'pick a folder. dive in.', $body);
+}
+
+function bbb_render_quote_wall_template(): string {
+	$query = new WP_Query(array('post_type' => 'bbb_quote', 'post_status' => 'publish', 'posts_per_page' => 30));
+	$quotes = '';
+	while ($query->have_posts()) {
+		$query->the_post();
+		$quotes .= '<blockquote class="bbb-quote-card">' . wp_kses_post(wpautop(get_the_content())) . '<cite>' . esc_html(get_the_title()) . '</cite></blockquote>';
+	}
+	wp_reset_postdata();
+
+	return bbb_render_page_shell('lines that ruined me', 'quote wall', 'the imported society quote library, collected in one place.', '<section class="bbb-quote-grid">' . ($quotes ?: '<p class="bbb-library-empty">No quotes are showing yet.</p>') . '</section>');
+}
+
+function bbb_render_vault_template(): string {
+	return bbb_render_simple_hub_template(
+		'my vault',
+		'everything you own, in one place.',
+		'Your digital bybookishbabe things live here. For now, WordPress routes the old Shopify vault paths into the right hubs.',
+		array(
+			'printable inserts'  => '/shop/',
+			'bookish templates'  => '/shop/',
+			'society library'    => '/society-library/',
+			'join on substack'   => 'https://thesmutandsentimentsociety.substack.com/subscribe',
+		)
+	);
+}
+
+function bbb_render_shop_template(): string {
+	return bbb_render_simple_hub_template(
+		'digital shop',
+		'curate your bybookishbabe vault',
+		'Shopify product pages are being translated into WordPress hubs. This page keeps the shop nav alive while products move over later.',
+		array(
+			'printable kindle inserts' => '/my-vault/',
+			'bookish templates'        => '/my-vault/',
+			'society membership'       => 'https://thesmutandsentimentsociety.substack.com/subscribe',
+		)
+	);
+}
+
+function bbb_render_our_story_template(): string {
+	return bbb_render_simple_hub_template(
+		'why i started this',
+		'i wanted reading to feel as beautiful as it felt.',
+		'bybookishbabe started because books were never just books. they were the hobby, the aesthetic, the mood, and the little world built around them.',
+		array(
+			'open the library' => '/library/',
+			'take the quiz'   => '/reader-quizzes/',
+			'join society'    => 'https://thesmutandsentimentsociety.substack.com/subscribe',
+		)
+	);
+}
+
+function bbb_render_weekly_obsession_template(): string {
+	$body = do_shortcode('[bbb_library_shelf title="weekly obsession" subtitle="the book currently taking over the smut & sentiment society." limit="1" meta_key="_bbb_top_shelf" meta_value="1" class="bbb-shelf--featured" fallback="true"]')
+		. do_shortcode('[bbb_library_shelf title="read this next" limit="3" class="bbb-shelf--plain" fallback="true"]');
+
+	return bbb_render_page_shell('weekly obsession', 'this week’s obsession', 'the current society pick, plus a few nearby reads.', $body);
+}
+
+function bbb_render_simple_hub_template(string $kicker, string $title, string $subtext, array $links): string {
+	$cards = '';
+	foreach ($links as $label => $url) {
+		$cards .= '<a class="bbb-template-card" href="' . esc_url((string) $url) . '"><strong>' . esc_html((string) $label) . '</strong><em>open</em></a>';
+	}
+
+	return bbb_render_page_shell($kicker, $title, $subtext, '<section class="bbb-template-grid">' . $cards . '</section>');
+}
+
+add_shortcode(
+	'bbb_shopify_page',
+	static function (array $atts = array()): string {
+		$atts = shortcode_atts(array('slug' => ''), $atts, 'bbb_shopify_page');
+
+		return bbb_render_shopify_page_template((string) $atts['slug']);
+	}
 );
 
 function bbb_get_member_sync_secret(): string {
@@ -1067,13 +1405,53 @@ add_shortcode(
 /**
  * [signoff]
  * Renders a newsletter signup CTA at the end of posts.
+ * Matches the .bbb-signoff structure from Shopify blog-signoff.css.
+ *
+ * Optional attributes:
+ *   kicker  — overline text   (default: "you made it to the end")
+ *   title   — headline        (default: "stay in the loop")
+ *   text    — body copy       (default: see below)
+ *   url     — subscribe link  (default: Substack subscribe)
+ *   cta     — button label    (default: "join the society →")
  */
 add_shortcode(
 	'signoff',
-	static function (): string {
-		return '<div class="bbb-signoff">
-			<p class="bbb-signoff__line">morally gray men. weekly. in your inbox.</p>
-			<a class="bbb-signoff__cta" href="https://thesmutandsentimentsociety.substack.com/subscribe" target="_blank" rel="noopener noreferrer">join the smut &amp; sentiment society &rarr;</a>
-		</div>';
+	static function ( array $atts ): string {
+		$a = shortcode_atts(
+			array(
+				'kicker' => 'you made it to the end',
+				'title'  => 'stay in the loop',
+				'text'   => 'morally gray men. spicy recs. weekly drama. in your inbox.',
+				'url'    => 'https://thesmutandsentimentsociety.substack.com/subscribe',
+				'cta'    => 'join the society &rarr;',
+			),
+			$atts,
+			'signoff'
+		);
+
+		$kicker = esc_html( $a['kicker'] );
+		$title  = esc_html( $a['title'] );
+		$text   = esc_html( $a['text'] );
+		$url    = esc_url( $a['url'] );
+		$cta    = wp_kses( $a['cta'], array( 'span' => array(), 'em' => array() ) );
+
+		return sprintf(
+			'<div class="bbb-signoff">
+				<div class="bbb-signoff__sparkle" aria-hidden="true"></div>
+				<div class="bbb-signoff__inner">
+					<p class="bbb-signoff__kicker">%s</p>
+					<h2 class="bbb-signoff__title">%s</h2>
+					<p class="bbb-signoff__text">%s</p>
+					<div class="bbb-signoff__actions">
+						<a class="bbb-signoff__btn bbb-signoff__btn--primary" href="%s" target="_blank" rel="noopener noreferrer">%s</a>
+					</div>
+				</div>
+			</div>',
+			$kicker,
+			$title,
+			$text,
+			$url,
+			$cta
+		);
 	}
 );

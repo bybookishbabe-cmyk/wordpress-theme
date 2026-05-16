@@ -2903,6 +2903,200 @@ body,
   font-size: 13px;
 }
 
+.bbb-shopify-page {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 72px 24px 110px;
+  color: var(--bbb-cream);
+}
+
+.bbb-page-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+  gap: 56px;
+  align-items: end;
+  max-width: 1120px;
+  margin: 0 auto 54px;
+}
+
+.bbb-page-hero > p,
+.bbb-page-kicker {
+  margin: 0 0 14px;
+  color: rgba(246, 246, 246, 0.62);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.bbb-page-hero h1 {
+  margin: 0;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: clamp(40px, 5vw, 74px);
+  font-weight: 700;
+  line-height: 1.05;
+  text-transform: lowercase;
+}
+
+.bbb-page-hero div {
+  color: rgba(246, 246, 246, 0.72);
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 17px;
+  line-height: 1.8;
+}
+
+.bbb-page-panel {
+  max-width: 1120px;
+  margin: 34px auto;
+  padding: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 22px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.025));
+}
+
+.bbb-page-panel--wide {
+  max-width: 1240px;
+}
+
+.bbb-page-panel h2 {
+  margin: 0 0 14px;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: clamp(28px, 4vw, 48px);
+  text-transform: lowercase;
+}
+
+.bbb-template-jump {
+  max-width: 1120px;
+  margin: 34px auto;
+  padding: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.bbb-template-jump a,
+.bbb-template-actions a,
+.bbb-template-card {
+  color: var(--bbb-cream);
+  text-decoration: none;
+}
+
+.bbb-template-jump a {
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 13px;
+}
+
+.bbb-template-grid {
+  max-width: 1120px;
+  margin: 36px auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.bbb-template-card {
+  min-height: 150px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
+}
+
+.bbb-template-card span {
+  color: var(--bbb-pink);
+  font-size: 13px;
+}
+
+.bbb-template-card strong {
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 24px;
+  line-height: 1.25;
+  text-transform: lowercase;
+}
+
+.bbb-template-card em {
+  color: rgba(246, 246, 246, 0.58);
+  font-style: normal;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.bbb-template-card--post {
+  min-height: 190px;
+}
+
+.bbb-recommendation-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 380px);
+  gap: 24px;
+}
+
+.bbb-rec-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.bbb-rec-stack a,
+.bbb-template-actions a {
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 138, 199, 0.42);
+  border-radius: 999px;
+  color: var(--bbb-pink);
+  text-decoration: none;
+}
+
+.bbb-society-panel {
+  border-color: rgba(255, 138, 199, 0.32);
+  background:
+    radial-gradient(circle at 80% 20%, rgba(236, 128, 184, 0.18), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.025));
+}
+
+.bbb-template-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.bbb-quote-grid {
+  max-width: 1120px;
+  margin: 36px auto;
+  columns: 3 260px;
+  column-gap: 18px;
+}
+
+.bbb-quote-card {
+  display: inline-block;
+  width: 100%;
+  margin: 0 0 18px;
+  padding: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.bbb-quote-card cite {
+  display: block;
+  margin-top: 14px;
+  color: var(--bbb-pink);
+  font-style: normal;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 @media (max-width: 768px) {
   .bbb-masthead__top {
     min-height: 214px;
@@ -2980,5 +3174,23 @@ body,
 
   .article-book-card__image {
     max-width: 180px;
+  }
+
+  .bbb-shopify-page {
+    padding: 46px 16px 80px;
+  }
+
+  .bbb-page-hero,
+  .bbb-recommendation-panel {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+
+  .bbb-template-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bbb-page-panel {
+    padding: 22px;
   }
 }
