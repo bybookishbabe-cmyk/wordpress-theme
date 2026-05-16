@@ -136,6 +136,16 @@
   ],
   "customTemplates": [
     {
+      "name": "front-page",
+      "title": "Front Page",
+      "postTypes": ["page"]
+    },
+    {
+      "name": "home",
+      "title": "Blog Home",
+      "postTypes": ["page"]
+    },
+    {
       "name": "page-home",
       "title": "Homepage",
       "postTypes": ["page"]
