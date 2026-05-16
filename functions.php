@@ -112,7 +112,7 @@ add_action(
 			add_rewrite_rule('^pages/' . preg_quote($slug, '/') . '/?$', 'index.php?bbb_shopify_page=' . $slug, 'top');
 		}
 
-		$rewrite_version = '2026-05-16-shopify-pages-v2';
+		$rewrite_version = '2026-05-16-shopify-pages-v3';
 
 		if (get_option('bbb_rewrite_version') !== $rewrite_version) {
 			flush_rewrite_rules(false);
@@ -149,7 +149,8 @@ add_filter(
 );
 
 function bbb_get_shopify_page_templates(): array {
-	return array(
+	return array_merge(
+		array(
 		'artprints'                     => array('label' => 'art prints', 'alias' => 'shop'),
 		'library'                       => array('label' => 'library'),
 		'what-to-read-next'             => array('label' => 'what to read next'),
@@ -204,17 +205,80 @@ function bbb_get_shopify_page_templates(): array {
 		'shelf'                         => array('label' => 'shelf', 'alias' => 'library'),
 		'weekly-obsession'              => array('label' => 'weekly obsession'),
 		'bookshelf-weekly-preview'      => array('label' => 'bookshelf weekly', 'alias' => 'weekly-obsession'),
+		),
+		bbb_get_shopify_topic_page_templates()
+	);
+}
+
+function bbb_get_shopify_topic_page_templates(): array {
+	$templates = array();
+	$configs   = bbb_get_library_topic_configs();
+
+	foreach ($configs as $slug => $config) {
+		$label = (string) ($config['title'] ?? '');
+		if ('' === $label && isset($config['alias'], $configs[$config['alias']]['title'])) {
+			$label = (string) $configs[$config['alias']]['title'];
+		}
+
+		$templates[$slug] = array(
+			'label' => $label ?: 'library shelf',
+			'topic' => true,
+		);
+	}
+
+	return $templates;
+}
+
+function bbb_get_library_topic_configs(): array {
+	return array(
+		'sports-romance-books'                 => array(
+			'kicker' => 'trope shelf',
+			'title' => 'sports romance books',
+			'subtext' => 'hockey romance, baseball players, college athletes, and professional athletes with tension on and off the field.',
+			'terms' => array('sports-romance', 'sports', 'hockey-romance', 'baseball-romance', 'football-romance', 'athlete-romance'),
+			'search' => 'sports romance',
+		),
+		'dark-romance-books'                   => array('kicker' => 'trope shelf', 'title' => 'dark romance books', 'subtext' => 'morally questionable men, obsession, danger, and the kind of tension that leaves fingerprints.', 'terms' => array('dark-romance', 'dark', 'morally-gray-men', 'touch-her-and-die'), 'search' => 'dark romance'),
+		'dark-romance'                         => array('alias' => 'dark-romance-books'),
+		'romantasy-books'                      => array('kicker' => 'genre shelf', 'title' => 'romantasy books', 'subtext' => 'magic, kingdoms, curses, trials, and romance with teeth.', 'terms' => array('romantasy', 'fantasy-romance', 'fantasy'), 'search' => 'romantasy'),
+		'fantasy-romance-books'                => array('alias' => 'romantasy-books'),
+		'enemies-to-lovers-books'              => array('kicker' => 'trope shelf', 'title' => 'enemies to lovers books', 'subtext' => 'for readers who want sharp edges before softness.', 'terms' => array('enemies-to-lovers', 'rivals-to-lovers'), 'search' => 'enemies to lovers'),
+		'enemies-to-lovers-romance-books'      => array('alias' => 'enemies-to-lovers-books'),
+		'slow-burn-books'                      => array('kicker' => 'trope shelf', 'title' => 'slow burn romance books', 'subtext' => 'when the almost-touch matters as much as the kiss.', 'terms' => array('slow-burn', 'slow-burn-romance'), 'search' => 'slow burn'),
+		'slow-burn-romance-books'              => array('alias' => 'slow-burn-books'),
+		'morally-gray-men-books'               => array('kicker' => 'trope shelf', 'title' => 'morally gray men books', 'subtext' => 'bad decisions, devotion, and men who should probably come with warnings.', 'terms' => array('morally-gray-men', 'morally-gray', 'antihero'), 'search' => 'morally gray'),
+		'morally-gray-fantasy-books'           => array('alias' => 'morally-gray-men-books'),
+		'touch-her-and-die-books'              => array('kicker' => 'trope shelf', 'title' => 'touch her and die books', 'subtext' => 'protective, possessive, and very serious about consequences.', 'terms' => array('touch-her-and-die', 'protective-hero', 'possessive-hero'), 'search' => 'touch her and die'),
+		'fake-dating-romance-books'            => array('kicker' => 'trope shelf', 'title' => 'fake dating romance books', 'subtext' => 'pretend feelings, real jealousy, inevitable chaos.', 'terms' => array('fake-dating', 'fake-relationship'), 'search' => 'fake dating'),
+		'forced-proximity-romance-books'       => array('kicker' => 'trope shelf', 'title' => 'forced proximity romance books', 'subtext' => 'one room, one trip, one situation neither of them can escape.', 'terms' => array('forced-proximity', 'one-bed'), 'search' => 'forced proximity'),
+		'grumpy-sunshine-romance-books'        => array('kicker' => 'trope shelf', 'title' => 'grumpy sunshine romance books', 'subtext' => 'soft light meets permanent scowl.', 'terms' => array('grumpy-sunshine', 'opposites-attract'), 'search' => 'grumpy sunshine'),
+		'he-falls-first-romance-books'         => array('kicker' => 'trope shelf', 'title' => 'he falls first romance books', 'subtext' => 'men realizing they are in trouble before anyone else does.', 'terms' => array('he-falls-first', 'falls-first'), 'search' => 'he falls first'),
+		'villain-gets-the-girl-romance-books'  => array('kicker' => 'trope shelf', 'title' => 'villain gets the girl books', 'subtext' => 'for when the villain was the love interest all along.', 'terms' => array('villain-gets-the-girl', 'villain-romance'), 'search' => 'villain gets the girl'),
+		'stalker-romance-books'                => array('kicker' => 'trope shelf', 'title' => 'stalker romance books', 'subtext' => 'obsession, surveillance, and absolutely questionable choices.', 'terms' => array('stalker-romance', 'stalker'), 'search' => 'stalker romance'),
+		'captor-captive-romance-books'         => array('kicker' => 'trope shelf', 'title' => 'captor captive romance books', 'subtext' => 'high stakes, blurred lines, and tension that does not behave.', 'terms' => array('captor-captive', 'captive-romance'), 'search' => 'captor captive'),
+		'mafia-romance-books'                  => array('kicker' => 'genre shelf', 'title' => 'mafia romance books', 'subtext' => 'danger, power, loyalty, and love that does not ask permission.', 'terms' => array('mafia-romance', 'mafia'), 'search' => 'mafia romance'),
+		'billionaire-romance-books'            => array('kicker' => 'genre shelf', 'title' => 'billionaire romance books', 'subtext' => 'money, power, rules, and the people who break them.', 'terms' => array('billionaire-romance', 'billionaire'), 'search' => 'billionaire romance'),
+		'cowboy-romance-books'                 => array('kicker' => 'genre shelf', 'title' => 'cowboy romance books', 'subtext' => 'small towns, hard work, and men who know their way around longing.', 'terms' => array('cowboy-romance', 'cowboy', 'western-romance'), 'search' => 'cowboy romance'),
+		'small-town-romance-books'             => array('kicker' => 'genre shelf', 'title' => 'small town romance books', 'subtext' => 'close quarters, local gossip, and a love story everyone can see coming.', 'terms' => array('small-town-romance', 'small-town'), 'search' => 'small town romance'),
+		'college-romance-books'                => array('kicker' => 'genre shelf', 'title' => 'college romance books', 'subtext' => 'campus tension, first freedoms, and beautifully bad decisions.', 'terms' => array('college-romance', 'college'), 'search' => 'college romance'),
 	);
 }
 
 function bbb_normalize_shopify_page_slug(string $slug): string {
 	$config = bbb_get_shopify_page_templates()[$slug] ?? array();
+	if (isset($config['alias'])) {
+		return bbb_normalize_shopify_page_slug((string) $config['alias']);
+	}
 
-	return isset($config['alias']) ? (string) $config['alias'] : $slug;
+	return $slug;
 }
 
 function bbb_render_shopify_page_template(string $slug): string {
 	$slug = bbb_normalize_shopify_page_slug(sanitize_title($slug));
+
+	if (isset(bbb_get_library_topic_configs()[$slug])) {
+		return bbb_render_topic_page_template($slug);
+	}
 
 	switch ($slug) {
 		case 'library':
@@ -367,6 +431,90 @@ function bbb_render_taxonomy_page_template(string $taxonomy, string $title, stri
 	$body = '<section class="bbb-template-grid">' . ($cards ?: '<p class="bbb-library-empty">No shelves are showing yet.</p>') . '</section>';
 
 	return bbb_render_page_shell('library guide', $title, $subtext, $body);
+}
+
+function bbb_render_topic_page_template(string $slug): string {
+	$config = bbb_get_library_topic_configs()[$slug] ?? array();
+	if (isset($config['alias'])) {
+		return bbb_render_topic_page_template((string) $config['alias']);
+	}
+
+	$body = '<section class="bbb-page-panel bbb-page-panel--wide bbb-topic-panel">'
+		. '<p class="bbb-page-kicker">matching shelf</p>'
+		. '<h2>books from the library</h2>'
+		. bbb_render_topic_book_grid($config)
+		. '</section>'
+		. '<nav class="bbb-template-jump" aria-label="Related library links"><a href="/library/">full library</a><a href="/book-trope/">trope shelves</a><a href="/romance-books-by-spice-level/">spice level</a><a href="/what-to-read-next/">what to read next</a></nav>';
+
+	return bbb_render_page_shell(
+		(string) ($config['kicker'] ?? 'library shelf'),
+		(string) ($config['title'] ?? 'romance books'),
+		(string) ($config['subtext'] ?? 'a curated shelf from the bybookishbabe library.'),
+		$body,
+		'bbb-shopify-page--topic'
+	);
+}
+
+function bbb_render_topic_book_grid(array $config): string {
+	$post_status = current_user_can('edit_posts') ? array('publish', 'draft') : array('publish');
+	$query_args  = array(
+		'post_type'      => 'bbb_book',
+		'post_status'    => $post_status,
+		'posts_per_page' => 48,
+		'orderby'        => 'date',
+		'order'          => 'DESC',
+	);
+
+	$tax_query = array('relation' => 'OR');
+	foreach ((array) ($config['terms'] ?? array()) as $term_slug) {
+		foreach (array('bbb_genre', 'bbb_trope', 'bbb_series') as $taxonomy) {
+			if (term_exists((string) $term_slug, $taxonomy)) {
+				$tax_query[] = array(
+					'taxonomy' => $taxonomy,
+					'field'    => 'slug',
+					'terms'    => sanitize_title((string) $term_slug),
+				);
+			}
+		}
+	}
+
+	if (count($tax_query) > 1) {
+		$query_args['tax_query'] = $tax_query;
+	} elseif (!empty($config['search'])) {
+		$query_args['s'] = (string) $config['search'];
+	}
+
+	$query = new WP_Query($query_args);
+
+	if (!$query->have_posts() && !empty($config['search'])) {
+		unset($query_args['tax_query']);
+		$query_args['s'] = (string) $config['search'];
+		$query = new WP_Query($query_args);
+	}
+
+	if (!$query->have_posts()) {
+		unset($query_args['s'], $query_args['tax_query']);
+		$query_args['posts_per_page'] = 12;
+		$query = new WP_Query($query_args);
+	}
+
+	if (!$query->have_posts()) {
+		return '<p class="bbb-library-empty">No books are showing yet.</p>';
+	}
+
+	ob_start();
+	?>
+	<div class="bbb-library-grid bbb-library-grid--archive bbb-library-grid--topic">
+		<?php
+		while ($query->have_posts()) {
+			$query->the_post();
+			echo bbb_render_library_card(get_the_ID()); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		}
+		wp_reset_postdata();
+		?>
+	</div>
+	<?php
+	return (string) ob_get_clean();
 }
 
 function bbb_render_posts_page_template(string $title, string $kicker, string $subtext, string $search = ''): string {
