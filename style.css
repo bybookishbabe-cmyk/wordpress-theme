@@ -1689,3 +1689,122 @@ hr {
 
 /* remove old logo img styles since we're back to text */
 .bbb-logo-img { display: none; }
+
+/* ============================================================
+   SIZE FIXES — tighten everything to normal proportions
+============================================================ */
+
+/* WordPress body/html default size reset */
+html { font-size: 15px; }
+
+/* Header — compact */
+.bbb-masthead__top {
+  padding: 0.75rem 2rem !important;
+}
+
+.bbb-main-nav {
+  padding: 0.5rem 2rem !important;
+  gap: 1.5rem !important;
+}
+
+.bbb-main-nav a {
+  font-size: 0.7rem !important;
+}
+
+/* Wordmark — smaller, tighter */
+.bbb-wordmark__script {
+  font-size: 1.1rem !important;
+  padding-right: 2rem !important;
+}
+
+.bbb-wordmark__script::after {
+  width: 1.5rem !important;
+}
+
+.bbb-wordmark__serif {
+  font-size: 0.7rem !important;
+  letter-spacing: 0.15em !important;
+}
+
+/* Circle icons */
+.bbb-circle-icon {
+  width: 28px !important;
+  height: 28px !important;
+  font-size: 0.6rem !important;
+}
+
+.bbb-sss-icon {
+  font-size: 0.6rem !important;
+}
+
+/* Sections — tighter padding */
+.section,
+.bbb-trending,
+.bbb-tropes,
+.bbb-quiz-nudge,
+.bbb-threads,
+.bbb-connect-cards {
+  padding: 3rem 2rem !important;
+}
+
+/* Section titles */
+.sec-title,
+.bbb-trending__title,
+.bbb-tropes__title,
+.bbb-quiz-nudge__title,
+.bbb-threads__title,
+.bbb-connect-cards__title {
+  font-size: 1.5rem !important;
+}
+
+/* Body text */
+.sec-sub,
+.bbb-trending__sub,
+.bbb-tropes__sub,
+.bbb-threads__sub,
+.bbb-connect-cards__sub {
+  font-size: 0.8rem !important;
+}
+
+/* Cards */
+.obsession-card,
+.trope-card {
+  padding: 0.875rem !important;
+  border-radius: 8px !important;
+}
+
+.obs-label,
+.trope-title { font-size: 0.8rem !important; }
+
+/* Libcards */
+.libcard__paper {
+  padding: 1rem !important;
+  min-height: 160px !important;
+}
+
+.libcard-handle { font-size: 0.8rem !important; }
+.libcard-row { font-size: 0.7rem !important; }
+
+/* Hero */
+.hero-heading { font-size: 1.8rem !important; }
+.hero-mini { font-size: 0.85rem !important; }
+.hero-sub { font-size: 0.72rem !important; }
+.btn-ol, .btn-pk { font-size: 0.65rem !important; padding: 0.5rem 1rem !important; }
+
+/* Footer */
+.bbb-footer { padding: 2.5rem 2rem 1.5rem !important; }
+.bbb-footer__title { font-size: 0.95rem !important; }
+.bbb-footer__body { font-size: 0.72rem !important; }
+
+/* Mobile */
+@media (max-width: 700px) {
+  html { font-size: 14px; }
+  .bbb-masthead__top { padding: 0.625rem 1rem !important; }
+  .bbb-main-nav { padding: 0.4rem 1rem !important; gap: 0.875rem !important; }
+  .section, .bbb-trending, .bbb-tropes, .bbb-quiz-nudge, .bbb-threads, .bbb-connect-cards {
+    padding: 2rem 1.25rem !important;
+  }
+  .sec-title, .bbb-trending__title, .bbb-threads__title { font-size: 1.25rem !important; }
+  .cards-row, .bbb-trending__row { grid-template-columns: 1fr 1fr !important; }
+  .libcards-row { grid-template-columns: 1fr !important; }
+}
