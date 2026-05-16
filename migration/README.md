@@ -66,3 +66,17 @@ migration/exports/wordpress-content-import.xml
 ```
 
 Import that XML in WordPress under Tools > Import > WordPress.
+
+## Step 6: Create a WordPress library import file
+
+```bash
+npm run shopify:library:wxr
+```
+
+This creates:
+
+```text
+migration/exports/wordpress-library-import-drafts.xml
+```
+
+Import that XML after the updated theme is installed. It creates draft Books and Quotes from Shopify metaobjects, preserving cover URLs, affiliate links, scores, genres, tropes, and series data.

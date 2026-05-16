@@ -1034,6 +1034,42 @@ body {
   font-size: .85rem;
 }
 
+.bbb-library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 24px;
+  margin: 32px 0;
+}
+
+.bbb-library-card {
+  display: flex;
+  flex-direction: column;
+  color: #f7f3ee;
+  text-decoration: none;
+}
+
+.bbb-library-card__cover {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border: 1px solid rgba(255,255,255,.16);
+  background: #111;
+  box-shadow: 0 18px 40px rgba(0,0,0,.4);
+}
+
+.bbb-library-card__title {
+  margin-top: 12px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.35rem;
+  line-height: 1.1;
+}
+
+.bbb-library-card__author {
+  margin-top: 4px;
+  color: rgba(247,243,238,.62);
+  font-size: .9rem;
+}
+
 @media (max-width: 768px) {
   .bbb-masthead__top {
     min-height: 214px;
