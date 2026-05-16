@@ -84,6 +84,14 @@ body {
   text-transform: uppercase;
 }
 
+.bbb-logo-img {
+  width: 260px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
 .bbb-wordmark__script {
   position: absolute;
   left: 8px;
@@ -149,6 +157,14 @@ body {
   font-size: 1.9rem;
   font-weight: 700;
   letter-spacing: 0;
+}
+
+.bbb-sss-logo-img {
+  width: 44px;
+  max-width: 44px;
+  height: 44px;
+  display: block;
+  object-fit: contain;
 }
 
 .bbb-book-icon {
@@ -225,7 +241,8 @@ body {
   padding: 0 20px 31px;
 }
 
-.bbb-main-nav a {
+.bbb-main-nav a,
+.bbb-nav-dropdown summary {
   color: rgba(255,255,255,.72);
   font-family: "Assistant", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 1.15rem;
@@ -233,6 +250,51 @@ body {
   letter-spacing: .06em;
   text-decoration: none;
   text-transform: lowercase;
+}
+
+.bbb-nav-dropdown {
+  position: relative;
+}
+
+.bbb-nav-dropdown summary {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  cursor: pointer;
+}
+
+.bbb-nav-dropdown summary::-webkit-details-marker {
+  display: none;
+}
+
+.bbb-nav-dropdown__menu {
+  min-width: 230px;
+  position: absolute;
+  top: calc(100% + 16px);
+  left: 50%;
+  z-index: 30;
+  display: grid;
+  gap: 2px;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 10px;
+  background: rgba(5,5,5,.96);
+  box-shadow: 0 22px 44px rgba(0,0,0,.45);
+  transform: translateX(-50%);
+}
+
+.bbb-nav-dropdown__menu a {
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: rgba(255,255,255,.78);
+  font-size: .92rem;
+  letter-spacing: .03em;
+  white-space: nowrap;
+}
+
+.bbb-nav-dropdown__menu a:hover {
+  background: rgba(255,255,255,.08);
+  color: #fff;
 }
 
 body.home .bbb-main-nav a:first-child,
@@ -254,6 +316,10 @@ body.tax-bbb_series .bbb-main-nav a[href="/library"] {
 .bbb-main-nav span {
   margin-left: 5px;
   font-size: .9em;
+}
+
+.bbb-nav-dropdown[open] summary {
+  color: #fff;
 }
 
 .bbb-home {
