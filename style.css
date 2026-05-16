@@ -1640,3 +1640,52 @@ hr {
     height: 64px;
   }
 }
+
+/* ============================================================
+   WORDMARK — matches actual BBB logo
+============================================================ */
+.bbb-wordmark {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-decoration: none;
+  line-height: 1;
+  gap: 0;
+  position: relative;
+}
+
+.bbb-wordmark__script {
+  font-family: 'Dancing Script', cursive;
+  font-size: 1.75rem;
+  color: #fff;
+  display: block;
+  line-height: 1;
+  position: relative;
+  padding-right: 3rem;
+}
+
+.bbb-wordmark__script::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 2.5rem;
+  height: 1px;
+  background: #fff;
+  opacity: 0.8;
+}
+
+.bbb-wordmark__serif {
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: 1.1rem;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  color: #fff;
+  text-transform: uppercase;
+  display: block;
+  line-height: 1.25;
+  margin-top: 0.1rem;
+}
+
+/* remove old logo img styles since we're back to text */
+.bbb-logo-img { display: none; }
