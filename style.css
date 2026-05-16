@@ -3,7 +3,7 @@ Theme Name: WordPress Theme
 Theme URI: https://bybookishbabe.com
 Author: By Bookish Babe
 Description: Custom WordPress block theme rebuilt from the Shopify site foundation.
-Version: 0.1.1
+Version: 0.1.2
 Requires at least: 6.5
 Tested up to: 6.8
 Requires PHP: 8.1
@@ -2893,6 +2893,153 @@ html { font-size: 15px; }
 }
 
 .bbb-bigspecific__cta:hover { background: var(--bbb-pink-hover); }
+
+/* ============================================================
+   WORDPRESS PARITY OVERRIDES
+   These intentionally win over older compact migration rules above.
+============================================================ */
+
+.bbb-masthead {
+  background: #000 !important;
+  border-bottom: 1px solid rgba(255,255,255,.16) !important;
+}
+
+.bbb-masthead__top {
+  min-height: 278px !important;
+  max-width: 1370px !important;
+  margin: 0 auto !important;
+  display: grid !important;
+  grid-template-columns: 1fr auto 1fr !important;
+  align-items: center !important;
+  padding: 54px 96px 28px !important;
+}
+
+.bbb-wordmark {
+  width: 260px !important;
+  min-height: 110px !important;
+  display: block !important;
+  text-align: center !important;
+}
+
+.bbb-logo-img {
+  display: block !important;
+  width: 260px !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: none !important;
+  object-fit: contain !important;
+}
+
+.bbb-main-nav {
+  padding: 31px 24px 34px !important;
+  gap: 38px !important;
+  border-top: 1px solid rgba(255,255,255,.12) !important;
+  border-bottom: 1px solid rgba(255,255,255,.12) !important;
+}
+
+.bbb-main-nav a,
+.bbb-main-nav summary {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  letter-spacing: .055em !important;
+}
+
+.hero-custom {
+  min-height: 674px !important;
+  padding: 132px 16px 126px !important;
+  background-image: url("https://cdn.shopify.com/s/files/1/0633/4968/6353/files/MainLogo_2cf8c37f-58ee-482e-af99-2e916ea1f3dd.png?v=1764968954") !important;
+  background-size: cover !important;
+  background-position: center 47% !important;
+  background-color: #000 !important;
+}
+
+.hero-custom::before {
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.18), rgba(0,0,0,.48) 41%, rgba(0,0,0,.24)),
+    rgba(0,0,0,.18) !important;
+}
+
+.hero-frame {
+  max-width: 1088px !important;
+  width: 100% !important;
+  padding: 74px 44px 50px !important;
+  border: 2px solid rgba(255,255,255,.78) !important;
+}
+
+.hero-frame::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 24px !important;
+  border: 1px solid rgba(255,255,255,.5) !important;
+  pointer-events: none !important;
+}
+
+.hero-heading {
+  font-size: clamp(60px, 5.7vw, 86px) !important;
+  line-height: 1.08 !important;
+  margin: 0 0 28px !important;
+}
+
+.hero-cursive {
+  font-family: "Playfair Display", Georgia, serif !important;
+  font-style: italic !important;
+  font-weight: 400 !important;
+  letter-spacing: .08em !important;
+}
+
+.hero-mini {
+  margin-bottom: 32px !important;
+  font-size: 20px !important;
+  font-family: "Libre Baskerville", Georgia, serif !important;
+  font-style: italic !important;
+}
+
+.hero-subtitle {
+  margin-bottom: 44px !important;
+  font-size: 22px !important;
+  font-family: "Libre Baskerville", Georgia, serif !important;
+}
+
+@media (max-width: 768px) {
+  .bbb-masthead__top {
+    min-height: 214px !important;
+    grid-template-columns: 48px 1fr 48px !important;
+    padding: 36px 18px 12px !important;
+  }
+
+  .bbb-wordmark {
+    width: min(220px, 58vw) !important;
+    min-height: auto !important;
+    justify-self: center !important;
+  }
+
+  .bbb-logo-img {
+    width: min(220px, 58vw) !important;
+  }
+
+  .bbb-main-nav {
+    padding: 18px 12px 22px !important;
+    gap: 18px !important;
+    overflow-x: auto !important;
+  }
+
+  .hero-custom {
+    min-height: 560px !important;
+    padding: 56px 12px !important;
+  }
+
+  .hero-frame {
+    padding: 26px 16px 24px !important;
+  }
+
+  .hero-frame::before {
+    inset: 14px !important;
+  }
+
+  .hero-heading {
+    font-size: 52px !important;
+  }
+}
 
 /* ---- Inline library link ---- */
 .bbb-inline-library {
