@@ -47,6 +47,7 @@ function bookToItem(entry) {
     meta: {
       _shopify_id: entry.id,
       _shopify_handle: entry.handle,
+      _bbb_access_level: booleanField(fields.private_shelf) === '1' ? 'society' : 'public',
       _bbb_author: author,
       _bbb_cover_url: cover,
       _bbb_genre_handle: fields.shelf?.reference?.handle,
@@ -62,6 +63,9 @@ function bookToItem(entry) {
       _bbb_newsletter_url: textField(fields.newsletter_url),
       _bbb_on_kindle_unlimited: booleanField(fields.on_kindle_unlimited),
       _bbb_hide_from_library: booleanField(fields.hide_from_library),
+      _bbb_private_shelf: booleanField(fields.private_shelf),
+      _bbb_top_shelf: booleanField(fields.top_shelf),
+      _bbb_starter_pack: booleanField(fields.starter_pack),
       _bbb_raw_fields: JSON.stringify(entry.fields),
     },
   };

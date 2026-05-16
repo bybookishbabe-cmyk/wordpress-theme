@@ -1091,6 +1091,25 @@ body {
   color: rgba(247,243,238,.7);
 }
 
+.bbb-society-lock {
+  margin: 24px 0;
+  padding: 22px;
+  border: 1px solid rgba(223,129,182,.42);
+  background: rgba(223,129,182,.08);
+  color: #f7f3ee;
+}
+
+.bbb-society-lock p {
+  margin: 0 0 14px;
+}
+
+.bbb-society-lock a {
+  color: #df81b6;
+  font-size: .78rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
 @media (max-width: 768px) {
   .bbb-masthead__top {
     min-height: 214px;

@@ -29,6 +29,17 @@ add_action(
 add_action(
 	'init',
 	static function (): void {
+		if (!get_role('society_member')) {
+			add_role(
+				'society_member',
+				__('Society Member', 'wordpress-theme'),
+				array(
+					'read'               => true,
+					'bbb_society_access' => true,
+				)
+			);
+		}
+
 		register_post_type(
 			'bbb_book',
 			array(
@@ -83,6 +94,143 @@ add_action(
 				)
 			);
 		}
+	}
+);
+
+function bbb_get_member_sync_secret(): string {
+	if (defined('BBB_MEMBER_SYNC_SECRET') && BBB_MEMBER_SYNC_SECRET) {
+		return (string) BBB_MEMBER_SYNC_SECRET;
+	}
+
+	$env_secret = getenv('BBB_MEMBER_SYNC_SECRET');
+	return $env_secret ? (string) $env_secret : '';
+}
+
+function bbb_current_user_is_society_member(): bool {
+	if (!is_user_logged_in()) {
+		return false;
+	}
+
+	if (current_user_can('manage_options') || current_user_can('bbb_society_access')) {
+		return true;
+	}
+
+	$user = wp_get_current_user();
+	return in_array('society_member', (array) $user->roles, true);
+}
+
+function bbb_get_bearer_token(WP_REST_Request $request): string {
+	$authorization = (string) $request->get_header('authorization');
+	if (preg_match('/^Bearer\s+(.+)$/i', $authorization, $matches)) {
+		return trim($matches[1]);
+	}
+
+	return trim((string) $request->get_header('x-bbb-member-sync-secret'));
+}
+
+add_action(
+	'rest_api_init',
+	static function (): void {
+		register_rest_route(
+			'bbb/v1',
+			'/society-member',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'permission_callback' => static function (WP_REST_Request $request) {
+					$secret = bbb_get_member_sync_secret();
+					if (!$secret) {
+						return new WP_Error(
+							'bbb_member_sync_not_configured',
+							'Member sync secret is not configured.',
+							array('status' => 503)
+						);
+					}
+
+					if (!hash_equals($secret, bbb_get_bearer_token($request))) {
+						return new WP_Error(
+							'bbb_member_sync_forbidden',
+							'Invalid member sync secret.',
+							array('status' => 403)
+						);
+					}
+
+					return true;
+				},
+				'callback'            => static function (WP_REST_Request $request) {
+					$email  = sanitize_email((string) $request->get_param('email'));
+					$active = rest_sanitize_boolean($request->get_param('active'));
+
+					if (!$email || !is_email($email)) {
+						return new WP_Error(
+							'bbb_member_sync_invalid_email',
+							'A valid email is required.',
+							array('status' => 400)
+						);
+					}
+
+					$user = get_user_by('email', $email);
+					if (!$user && $active) {
+						$user_id = wp_create_user($email, wp_generate_password(32, true), $email);
+						if (is_wp_error($user_id)) {
+							return $user_id;
+						}
+						$user = get_user_by('id', $user_id);
+					}
+
+					if (!$user) {
+						return rest_ensure_response(
+							array(
+								'email'  => $email,
+								'active' => false,
+								'synced' => false,
+								'reason' => 'user_not_found',
+							)
+						);
+					}
+
+					$wp_user = new WP_User($user->ID);
+					if ($active) {
+						$wp_user->add_role('society_member');
+					} else {
+						$wp_user->remove_role('society_member');
+						if (!$wp_user->roles) {
+							$wp_user->add_role('subscriber');
+						}
+					}
+
+					update_user_meta($user->ID, '_bbb_society_member_active', $active ? '1' : '0');
+					update_user_meta($user->ID, '_bbb_society_member_synced_at', current_time('mysql', true));
+
+					return rest_ensure_response(
+						array(
+							'user_id' => $user->ID,
+							'email'   => $email,
+							'active'  => $active,
+							'synced'  => true,
+						)
+					);
+				},
+			)
+		);
+	}
+);
+
+add_shortcode(
+	'bbb_society_only',
+	static function (array $atts = array(), ?string $content = null): string {
+		$atts = shortcode_atts(
+			array(
+				'message' => 'Join the Society on Substack to unlock this.',
+			),
+			$atts,
+			'bbb_society_only'
+		);
+
+		if (bbb_current_user_is_society_member()) {
+			return do_shortcode((string) $content);
+		}
+
+		return '<div class="bbb-society-lock"><p>' . esc_html((string) $atts['message']) . '</p><a href="https://thesmutandsentimentsociety.substack.com/subscribe">Join the Society</a></div>';
 	}
 );
 
