@@ -1808,3 +1808,65 @@ html { font-size: 15px; }
   .cards-row, .bbb-trending__row { grid-template-columns: 1fr 1fr !important; }
   .libcards-row { grid-template-columns: 1fr !important; }
 }
+
+/* ============================================================
+   HEADER HEIGHT FIX — collapse the empty space
+============================================================ */
+.bbb-masthead {
+  padding: 0 !important;
+}
+
+.bbb-masthead__top {
+  padding: 0.625rem 2rem !important;
+  min-height: unset !important;
+}
+
+/* Wordmark — row layout matching actual logo */
+.bbb-wordmark {
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  text-align: left !important;
+}
+
+.bbb-wordmark__script {
+  font-size: 1.4rem !important;
+  padding-right: 1.5rem !important;
+  line-height: 1 !important;
+}
+
+.bbb-wordmark__script::after {
+  width: 1rem !important;
+  top: 45% !important;
+}
+
+.bbb-wordmark__serif {
+  font-size: 0.65rem !important;
+  letter-spacing: 0.18em !important;
+  line-height: 1.3 !important;
+  margin-top: 0 !important;
+}
+
+/* Nav — stick right under header with no gap */
+.bbb-main-nav {
+  padding: 0.5rem 2rem !important;
+}
+
+/* Hero — remove the double border */
+.hero-custom {
+  border: none !important;
+  outline: none !important;
+}
+
+/* Keep only the inner frame border */
+.hero-frame {
+  border: 1px solid rgba(255,255,255,0.3) !important;
+}
+
+/* Mobile */
+@media (max-width: 700px) {
+  .bbb-masthead__top { padding: 0.5rem 1rem !important; }
+  .bbb-main-nav { padding: 0.375rem 1rem !important; }
+  .bbb-wordmark__script { font-size: 1.1rem !important; }
+  .bbb-wordmark__serif { font-size: 0.55rem !important; }
+}

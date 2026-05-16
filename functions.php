@@ -88,19 +88,29 @@ add_action(
 
 add_shortcode(
 	'bbb_library',
-	static function (): string {
+	static function (array $atts = array()): string {
+		$atts = shortcode_atts(
+			array(
+				'limit' => 24,
+			),
+			$atts,
+			'bbb_library'
+		);
+
+		$post_status = current_user_can('edit_posts') ? array('publish', 'draft') : array('publish');
+
 		$query = new WP_Query(
 			array(
 				'post_type'      => 'bbb_book',
-				'post_status'    => 'publish',
-				'posts_per_page' => 24,
-				'orderby'        => 'title',
-				'order'          => 'ASC',
+				'post_status'    => $post_status,
+				'posts_per_page' => max(1, (int) $atts['limit']),
+				'orderby'        => 'date',
+				'order'          => 'DESC',
 			)
 		);
 
 		if (!$query->have_posts()) {
-			return '';
+			return current_user_can('edit_posts') ? '<p class="bbb-library-empty">No imported books found yet. Check Books > All Books to confirm the library import finished.</p>' : '';
 		}
 
 		ob_start();
@@ -119,6 +129,9 @@ add_shortcode(
 					<span class="bbb-library-card__title"><?php the_title(); ?></span>
 					<?php if ($author) : ?>
 						<span class="bbb-library-card__author"><?php echo esc_html($author); ?></span>
+					<?php endif; ?>
+					<?php if ('draft' === get_post_status()) : ?>
+						<span class="bbb-library-card__status">draft</span>
 					<?php endif; ?>
 				</a>
 				<?php
