@@ -1,0 +1,10 @@
+{
+  "name": "wordpress-theme",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "shopify:export": "node scripts/shopify-export.mjs",
+    "shopify:inspect": "node scripts/shopify-export.mjs --definitions-only"
+  }
+}
