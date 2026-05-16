@@ -1041,6 +1041,11 @@ body {
   margin: 32px 0;
 }
 
+.bbb-trending .bbb-library-grid {
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  overflow-x: auto;
+}
+
 .bbb-library-card {
   display: flex;
   flex-direction: column;
@@ -1068,6 +1073,22 @@ body {
   margin-top: 4px;
   color: rgba(247,243,238,.62);
   font-size: .9rem;
+}
+
+.bbb-library-card__status {
+  width: fit-content;
+  margin-top: 8px;
+  padding: 3px 7px;
+  border: 1px solid rgba(255,255,255,.18);
+  color: #df81b6;
+  font-size: .68rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.bbb-library-empty {
+  margin: 30px 0;
+  color: rgba(247,243,238,.7);
 }
 
 @media (max-width: 768px) {
@@ -1162,6 +1183,15 @@ body {
   .bbb-tropes__title,
   .sss-lib__archiveTitle {
     font-size: 2.7rem;
+  }
+
+  .bbb-trending .bbb-library-grid {
+    display: flex;
+    gap: 16px;
+  }
+
+  .bbb-trending .bbb-library-card {
+    flex: 0 0 150px;
   }
 
   .bbb-tropes__row,
