@@ -1,33 +1,400 @@
+:root {
+  --bbb-black: #0b0b0b;
+  --bbb-ink: #111111;
+  --bbb-cream: #f7f3ee;
+  --bbb-muted: rgba(246, 246, 246, 0.68);
+  --bbb-pink: #ff8ac7;
+  --bbb-pink-soft: rgba(255, 138, 199, 0.16);
+  --bbb-line: rgba(255, 255, 255, 0.13);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   min-height: 100vh;
+  background: var(--bbb-black);
+  color: var(--bbb-cream);
 }
 
 a {
-  text-underline-offset: 0.18em;
+  text-underline-offset: 0.2em;
 }
 
 .wp-site-blocks {
   min-height: 100vh;
+  background:
+    radial-gradient(760px 420px at 50% -8%, rgba(255, 138, 199, 0.12), transparent 62%),
+    var(--bbb-black);
 }
 
-.site-header,
-.site-footer {
-  border-color: color-mix(in srgb, currentColor 16%, transparent);
+.bbb-announcement {
+  padding: 0.55rem 1rem;
+  background: var(--bbb-ink);
+  border-bottom: 1px solid var(--bbb-line);
+  color: rgba(246, 246, 246, 0.72);
+  text-align: center;
 }
 
-.site-header {
-  border-bottom: 1px solid;
+.bbb-announcement p,
+.bbb-footer p,
+.bbb-trope-card,
+.bbb-spice-callout {
+  margin: 0;
 }
 
-.site-footer {
-  border-top: 1px solid;
-}
-
-.hero-kicker {
-  font-family: var(--wp--preset--font-family--sans);
-  font-size: var(--wp--preset--font-size--small);
+.bbb-announcement p,
+.bbb-kicker,
+.bbb-footer__kicker,
+.bbb-book-card__issue,
+.bbb-trope-card span {
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
+.bbb-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  gap: 1rem;
+  padding: 1rem clamp(1rem, 4vw, 3rem);
+  background: rgba(11, 11, 11, 0.92);
+  border-bottom: 1px solid var(--bbb-line);
+  backdrop-filter: blur(16px);
+}
+
+.bbb-brand {
+  gap: 0.75rem;
+}
+
+.bbb-brand__mark {
+  margin: 0;
+}
+
+.bbb-brand__mark img {
+  display: block;
+  border-radius: 999px;
+}
+
+.bbb-brand__name a {
+  color: var(--bbb-cream);
+  font-family: var(--wp--preset--font-family--serif);
+  font-size: clamp(1.25rem, 3vw, 1.7rem);
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  text-transform: lowercase;
+}
+
+.bbb-nav a {
+  color: rgba(246, 246, 246, 0.76);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.bbb-home {
+  background: var(--bbb-black);
+}
+
+.bbb-hero {
+  min-height: clamp(520px, 82vh, 760px);
+  display: grid;
+  place-content: center;
+  padding: clamp(4rem, 10vw, 7rem) 1.25rem;
+  text-align: center;
+  background:
+    linear-gradient(180deg, rgba(11, 11, 11, 0.16), rgba(11, 11, 11, 0.96)),
+    radial-gradient(760px 360px at 50% 12%, rgba(255, 138, 199, 0.28), transparent 64%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.035) 1px, transparent 1px, transparent 72px),
+    var(--bbb-black);
+}
+
+.bbb-hero__script {
+  margin: 0;
+  color: var(--bbb-pink);
+  font-family: var(--wp--preset--font-family--script);
+  font-size: clamp(4.4rem, 13vw, 10rem);
+  line-height: 0.86;
+  text-shadow: 0 18px 46px rgba(0, 0, 0, 0.5);
+}
+
+.bbb-hero__title {
+  max-width: 760px;
+  margin: 1.2rem auto 0;
+  color: var(--bbb-cream);
+  font-family: var(--wp--preset--font-family--serif);
+  font-size: clamp(2rem, 5vw, 4.2rem);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.bbb-hero__subtitle {
+  margin: 1rem auto 0;
+  color: rgba(246, 246, 246, 0.76);
+  font-size: clamp(1rem, 2.4vw, 1.35rem);
+  text-transform: lowercase;
+}
+
+.bbb-buttons {
+  margin-top: 2rem;
+}
+
+.bbb-buttons .wp-block-button__link,
+.bbb-quiz__button .wp-block-button__link {
+  border: 1px solid var(--bbb-pink);
+  border-radius: 999px;
+  padding: 0.85rem 1.15rem;
+  background: var(--bbb-pink);
+  color: var(--bbb-black);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transition: transform 160ms ease, letter-spacing 160ms ease;
+}
+
+.bbb-buttons .is-style-outline .wp-block-button__link {
+  background: transparent;
+  color: var(--bbb-cream);
+}
+
+.bbb-buttons .wp-block-button__link:hover,
+.bbb-quiz__button .wp-block-button__link:hover {
+  transform: translateY(-2px);
+  letter-spacing: 0.19em;
+}
+
+.bbb-trending,
+.bbb-tropes,
+.bbb-society {
+  padding: clamp(3.4rem, 7vw, 5rem) 1.25rem;
+}
+
+.bbb-kicker {
+  margin: 0 0 0.55rem;
+  color: rgba(246, 246, 246, 0.58);
+}
+
+.bbb-section-title {
+  margin: 0;
+  color: var(--bbb-cream);
+  font-family: var(--wp--preset--font-family--serif);
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 500;
+  line-height: 1.02;
+  text-transform: lowercase;
+}
+
+.bbb-muted {
+  max-width: 680px;
+  margin: 0.75rem 0 0;
+  color: var(--bbb-muted);
+}
+
+.bbb-book-row {
+  margin-top: 2rem;
+}
+
+.bbb-book-card {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1.05rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.015)),
+    #111111;
+  border: 1px solid var(--bbb-line);
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.36);
+}
+
+.bbb-book-card h3 {
+  margin: 0.45rem 0 0;
+  color: var(--bbb-cream);
+  font-size: 1.25rem;
+}
+
+.bbb-book-card p:last-child {
+  margin-bottom: 0;
+  color: var(--bbb-muted);
+}
+
+.bbb-book-card__issue {
+  color: var(--bbb-pink);
+}
+
+.bbb-tropes {
+  background: #080808;
+  border-top: 1px solid var(--bbb-line);
+  border-bottom: 1px solid var(--bbb-line);
+}
+
+.bbb-spice-callout {
+  margin-bottom: 1.5rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(255, 138, 199, 0.24);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 138, 199, 0.1), rgba(255, 255, 255, 0.025));
+}
+
+.bbb-spice-callout a {
+  color: var(--bbb-cream);
+  text-decoration: none;
+}
+
+.bbb-trope-layout {
+  gap: clamp(1.5rem, 5vw, 3rem);
+}
+
+.bbb-trope-grid {
+  gap: 1rem;
+}
+
+.bbb-trope-card a {
+  min-height: 188px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0.95rem;
+  border: 1px solid var(--bbb-line);
+  border-radius: 14px;
+  background: #111111;
+  color: var(--bbb-cream);
+  text-decoration: none;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.bbb-trope-card a:hover {
+  transform: translateY(-6px);
+  border-color: var(--bbb-pink);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.56);
+}
+
+.bbb-trope-card span {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: rgba(246, 246, 246, 0.55);
+}
+
+.bbb-trope-card em {
+  display: block;
+  margin-top: 1rem;
+  color: var(--bbb-pink);
+  font-size: 0.82rem;
+  font-style: normal;
+}
+
+.bbb-society {
+  text-align: center;
+  background:
+    radial-gradient(680px 320px at 50% 22%, rgba(255, 138, 199, 0.18), transparent 68%),
+    var(--bbb-black);
+}
+
+.bbb-society .bbb-kicker,
+.bbb-society .bbb-muted {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.bbb-society__logo img {
+  border-radius: 999px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45);
+}
+
+.bbb-quiz {
+  gap: 1.5rem;
+  margin: clamp(2.4rem, 6vw, 4rem) auto;
+  padding: 1.35rem;
+  border: 1px solid var(--bbb-line);
+  border-radius: 16px;
+  background:
+    radial-gradient(680px 280px at 30% 0%, rgba(255, 255, 255, 0.08), transparent 64%),
+    rgba(255, 255, 255, 0.03);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.34);
+}
+
+.bbb-quiz__copy {
+  flex: 1 1 420px;
+}
+
+.bbb-quiz__title {
+  margin: 0;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  text-transform: lowercase;
+}
+
+.bbb-quiz__title span {
+  font-family: var(--wp--preset--font-family--serif);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.bbb-footer {
+  padding: clamp(2.5rem, 7vw, 4.5rem) 1.25rem 1.25rem;
+  background: #050505;
+  border-top: 1px solid var(--bbb-line);
+  color: rgba(246, 246, 246, 0.72);
+}
+
+.bbb-footer a {
+  color: var(--bbb-cream);
+}
+
+.bbb-footer__title {
+  margin-top: 0;
+  color: var(--bbb-cream);
+  text-transform: lowercase;
+}
+
+.bbb-footer__kicker {
+  color: rgba(246, 246, 246, 0.54);
+}
+
+.bbb-footer__fineprint {
+  margin-top: 2rem;
+  color: rgba(246, 246, 246, 0.46);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 720px) {
+  .bbb-header {
+    position: static;
+  }
+
+  .bbb-nav {
+    width: 100%;
+  }
+
+  .bbb-hero {
+    min-height: 560px;
+  }
+
+  .bbb-hero__script {
+    font-size: clamp(4.1rem, 22vw, 6.6rem);
+  }
+
+  .bbb-book-row {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .bbb-quiz {
+    align-items: flex-start;
+  }
+
+  .bbb-quiz__button,
+  .bbb-quiz__button .wp-block-button__link {
+    width: 100%;
+    text-align: center;
+  }
+}

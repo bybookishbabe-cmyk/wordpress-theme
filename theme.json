@@ -42,8 +42,13 @@
       "fontFamilies": [
         {
           "slug": "serif",
-          "name": "Serif",
-          "fontFamily": "Georgia, 'Times New Roman', serif"
+          "name": "Cormorant Garamond",
+          "fontFamily": "'Cormorant Garamond', Georgia, 'Times New Roman', serif"
+        },
+        {
+          "slug": "script",
+          "name": "Allura",
+          "fontFamily": "'Allura', cursive"
         },
         {
           "slug": "sans",
@@ -137,4 +142,3 @@
     }
   ]
 }
-
