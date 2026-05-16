@@ -22,45 +22,225 @@ body {
   background: var(--bbb-black);
 }
 
-.bbb-announcement {
-  display: none;
-}
-
-.bbb-header {
-  padding: 14px clamp(18px, 4vw, 48px);
+.bbb-masthead {
   background: #000;
-  border-bottom: 1px solid rgba(255,255,255,.12);
   color: #fff;
+  border-bottom: 1px solid rgba(255,255,255,.16);
 }
 
-.bbb-brand {
-  gap: 12px;
+.bbb-masthead__top {
+  position: relative;
+  min-height: 278px;
+  max-width: 1370px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 54px 96px 28px;
 }
 
-.bbb-brand__mark {
-  margin: 0;
+.bbb-search-icon {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  opacity: .92;
+  text-decoration: none;
 }
 
-.bbb-brand__mark img {
+.bbb-search-icon span {
+  width: 20px;
+  height: 20px;
   display: block;
-  border-radius: 999px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  position: relative;
 }
 
-.bbb-brand__name a {
+.bbb-search-icon span::after {
+  content: "";
+  width: 10px;
+  height: 2px;
+  position: absolute;
+  right: -8px;
+  bottom: -4px;
+  background: currentColor;
+  transform: rotate(45deg);
+  transform-origin: center;
+}
+
+.bbb-wordmark {
+  position: relative;
+  width: 260px;
+  min-height: 110px;
+  display: block;
   color: #fff;
   font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: clamp(1.45rem, 2.5vw, 2rem);
-  font-weight: 500;
+  line-height: .82;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.bbb-wordmark__script {
+  position: absolute;
+  left: 8px;
+  top: -14px;
+  font-family: "Allura", "Great Vibes", cursive;
+  font-size: 4.8rem;
+  font-weight: 400;
+  line-height: 1;
+  text-transform: lowercase;
+  transform: rotate(-4deg);
+}
+
+.bbb-wordmark__bookish,
+.bbb-wordmark__babe {
+  display: block;
+  margin-left: 42px;
+  font-size: 3.15rem;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.bbb-wordmark__babe {
+  margin-top: -2px;
+  margin-left: 116px;
+}
+
+.bbb-header-icons {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 14px;
+}
+
+.bbb-circle-icon,
+.bbb-line-icon,
+.bbb-sss-icon {
+  width: 52px;
+  height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #111;
+  background: #fff;
+  border-radius: 999px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  box-shadow: 0 1px 0 rgba(255,255,255,.3);
+}
+
+.bbb-line-icon,
+.bbb-sss-icon {
+  width: auto;
+  background: transparent;
+  color: #fff;
+  box-shadow: none;
+}
+
+.bbb-sss-icon {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.bbb-book-icon {
+  position: relative;
+}
+
+.bbb-book-icon::before,
+.bbb-book-icon::after {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 24px;
+  border: 2px solid #111;
+  border-radius: 2px;
+  background: #fff;
+  transform: rotate(-11deg);
+}
+
+.bbb-book-icon::after {
+  width: 17px;
+  height: 21px;
+  transform: translate(7px, 1px) rotate(12deg);
+}
+
+.bbb-person-icon {
+  width: 22px;
+  height: 24px;
+  display: block;
+  position: relative;
+  border-bottom: 2px solid currentColor;
+}
+
+.bbb-person-icon::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+
+.bbb-bag-icon::before {
+  content: "";
+  width: 19px;
+  height: 20px;
+  border: 2px solid #111;
+  border-radius: 0 0 6px 6px;
+}
+
+.bbb-bag-icon::after {
+  content: "";
+  width: 12px;
+  height: 7px;
+  position: absolute;
+  margin-top: -17px;
+  border: 2px solid #111;
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+}
+
+.bbb-main-nav {
+  min-height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
+  padding: 0 20px 31px;
+}
+
+.bbb-main-nav a {
+  color: rgba(255,255,255,.72);
+  font-family: "Assistant", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: .06em;
   text-decoration: none;
   text-transform: lowercase;
 }
 
-.bbb-nav a {
-  color: rgba(255,255,255,.78);
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: 1.08rem;
-  letter-spacing: .08em;
-  text-transform: lowercase;
+.bbb-main-nav a:first-child {
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: .32em;
+  text-decoration-thickness: 1px;
+}
+
+.bbb-main-nav span {
+  margin-left: 5px;
+  font-size: .9em;
 }
 
 .bbb-home {
@@ -70,32 +250,36 @@ body {
 
 .hero-custom {
   position: relative;
-  padding: 80px 16px;
+  min-height: 674px;
+  padding: 132px 16px 126px;
   color: #fff;
   display: flex;
+  align-items: center;
   justify-content: center;
   text-align: center;
   overflow: hidden;
   background-image: url("https://cdn.shopify.com/s/files/1/0633/4968/6353/files/MainLogo_2cf8c37f-58ee-482e-af99-2e916ea1f3dd.png?v=1764968954");
   background-size: cover;
-  background-position: center;
+  background-position: center 47%;
 }
 
 .hero-custom::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,.18);
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.18), rgba(0,0,0,.48) 41%, rgba(0,0,0,.24)),
+    rgba(0,0,0,.18);
   pointer-events: none;
 }
 
 .hero-frame {
   position: relative;
-  max-width: 860px;
+  max-width: 1088px;
   width: 100%;
   margin: 0 auto;
-  padding: 32px 22px 30px;
-  border: 1px solid #fff;
+  padding: 74px 44px 50px;
+  border: 2px solid rgba(255,255,255,.78);
   box-sizing: border-box;
   z-index: 2;
 }
@@ -103,8 +287,8 @@ body {
 .hero-frame::before {
   content: "";
   position: absolute;
-  inset: 18px;
-  border: 1px solid rgba(255,255,255,.4);
+  inset: 24px;
+  border: 1px solid rgba(255,255,255,.5);
   pointer-events: none;
 }
 
@@ -135,17 +319,17 @@ body {
   margin-bottom: 16px;
   color: #fff;
   font-family: "Playfair Display", "Cormorant Garamond", serif;
-  font-size: 5.2rem;
+  font-size: 4.8rem;
   font-style: italic;
   font-weight: 400;
-  letter-spacing: .04em;
+  letter-spacing: .09em;
   line-height: 1;
 }
 
 .hero-mini {
   margin: 0 0 14px;
   font-family: "Cormorant Garamond", serif;
-  font-size: 1.6rem;
+  font-size: 1.35rem;
   font-style: italic;
   letter-spacing: .06em;
   text-transform: lowercase;
@@ -153,26 +337,27 @@ body {
 
 .hero-subtitle {
   max-width: 820px;
-  margin: 0 auto 22px;
+  margin: 0 auto 44px;
   font-family: "Cormorant Garamond", serif;
-  font-size: 1.85rem;
-  line-height: 1.7;
+  font-size: 1.55rem;
+  line-height: 1.5;
 }
 
 .hero-buttons {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 20px;
 }
 
 .hero-buttons a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 14px 22px;
-  border-radius: 999px;
+  min-width: 230px;
+  padding: 18px 30px;
+  border-radius: 0;
   font-family: "Cormorant Garamond", serif;
-  font-size: 1.15rem;
+  font-size: 1rem;
   font-weight: 600;
   letter-spacing: .14em;
   text-decoration: none;
@@ -183,7 +368,7 @@ body {
 .hero-buttons .btn-primary {
   background: transparent;
   color: #fff;
-  border: 2px solid rgba(255,255,255,.65);
+  border: 2px solid rgba(255,255,255,.78);
 }
 
 .hero-buttons .btn-primary:hover {
@@ -193,10 +378,10 @@ body {
 }
 
 .hero-buttons .btn-secondary {
-  background: var(--bbb-pink);
+  background: #df81b6;
   color: #111;
-  border: 2px solid var(--bbb-pink);
-  box-shadow: 0 10px 28px rgba(236,128,184,.38);
+  border: 2px solid #df81b6;
+  box-shadow: none;
 }
 
 .hero-buttons .btn-secondary:hover {
@@ -216,8 +401,11 @@ body {
 }
 
 .bbb-trending {
-  background: #0b0b0b;
-  padding: 60px 20px;
+  background:
+    radial-gradient(circle at 72% 30%, rgba(255,255,255,.08), transparent 1px),
+    radial-gradient(circle at 40% 54%, rgba(255,255,255,.1), transparent 1px),
+    #050505;
+  padding: 32px 20px 64px;
   color: #f6f6f6;
 }
 
@@ -225,12 +413,23 @@ body {
 .bbb-tropes__inner,
 .sss-lib__wrap,
 .bbb-connect-cards__inner {
-  max-width: 1100px;
+  max-width: 1250px;
   margin: auto;
 }
 
 .bbb-trending__head {
-  margin-bottom: 32px;
+  max-width: 980px;
+  margin: 0 auto 34px;
+  text-align: left;
+}
+
+.bbb-trending__head::before {
+  content: "";
+  width: 96px;
+  height: 1px;
+  display: block;
+  margin-bottom: 26px;
+  background: rgba(255,255,255,.72);
 }
 
 .bbb-trending__kicker,
@@ -249,7 +448,7 @@ body {
 .sss-lib__archiveTitle {
   margin: 6px 0 0;
   font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: clamp(2.4rem, 4vw, 3.6rem);
+  font-size: 3.6rem;
   font-weight: 500;
   line-height: 1.05;
   text-transform: lowercase;
@@ -836,12 +1035,62 @@ body {
 }
 
 @media (max-width: 768px) {
+  .bbb-masthead__top {
+    min-height: 214px;
+    grid-template-columns: 48px 1fr 48px;
+    padding: 36px 18px 12px;
+  }
+
+  .bbb-wordmark {
+    width: 220px;
+    margin: 0 auto;
+    transform: scale(.82);
+  }
+
+  .bbb-search-icon {
+    justify-self: start;
+  }
+
+  .bbb-header-icons {
+    justify-self: end;
+    gap: 8px;
+  }
+
+  .bbb-header-icons a:not(.bbb-bag-icon) {
+    display: none;
+  }
+
+  .bbb-circle-icon,
+  .bbb-bag-icon {
+    width: 46px;
+    height: 46px;
+  }
+
+  .bbb-main-nav {
+    justify-content: flex-start;
+    gap: 22px;
+    min-height: 66px;
+    padding: 0 18px 18px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .bbb-main-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .bbb-main-nav a {
+    flex: 0 0 auto;
+    font-size: 1rem;
+  }
+
   .hero-custom {
-    padding: 56px 12px;
+    min-height: 560px;
+    padding: 72px 12px;
   }
 
   .hero-frame {
-    padding: 26px 16px 24px;
+    padding: 42px 20px 34px;
   }
 
   .hero-frame::before {
@@ -863,6 +1112,20 @@ body {
   .hero-buttons,
   .hero-buttons a {
     width: 100%;
+  }
+
+  .bbb-trending {
+    padding-top: 28px;
+  }
+
+  .bbb-trending__head {
+    max-width: none;
+  }
+
+  .bbb-trending__title,
+  .bbb-tropes__title,
+  .sss-lib__archiveTitle {
+    font-size: 2.7rem;
   }
 
   .bbb-tropes__row,
