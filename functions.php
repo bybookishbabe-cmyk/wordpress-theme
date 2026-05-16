@@ -23,6 +23,13 @@ add_action(
 			array('wordpress-theme-fonts'),
 			wp_get_theme()->get('Version')
 		);
+
+		wp_enqueue_style(
+			'wordpress-theme-shopify-replica',
+			get_stylesheet_uri(),
+			array('wordpress-theme-main'),
+			wp_get_theme()->get('Version')
+		);
 	}
 );
 
