@@ -1,12 +1,22 @@
 <!-- wp:template-part {"slug":"header","tagName":"header","className":"site-header"} /-->
 
-<!-- wp:group {"tagName":"main","layout":{"type":"constrained"}} -->
-<main class="wp-block-group">
-	<!-- wp:post-title {"level":1} /-->
-	<!-- wp:post-date /-->
-	<!-- wp:post-content {"layout":{"type":"constrained"}} /-->
+<!-- wp:group {"tagName":"main","className":"article-template","layout":{"type":"constrained"}} -->
+<main class="wp-block-group article-template">
+
+	<!-- wp:group {"tagName":"header","className":"article-template__header","layout":{"type":"constrained"}} -->
+	<header class="wp-block-group article-template__header">
+		<!-- wp:post-title {"level":1,"className":"article-template__title"} /-->
+		<!-- wp:post-date /-->
+	</header>
+	<!-- /wp:group -->
+
+	<!-- wp:group {"className":"article-template__content","layout":{"type":"constrained"}} -->
+	<div class="wp-block-group article-template__content">
+		<!-- wp:post-content {"layout":{"type":"constrained"}} /-->
+	</div>
+	<!-- /wp:group -->
+
 </main>
 <!-- /wp:group -->
 
 <!-- wp:template-part {"slug":"footer","tagName":"footer","className":"site-footer"} /-->
-
