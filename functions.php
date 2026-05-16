@@ -112,7 +112,7 @@ add_action(
 			add_rewrite_rule('^pages/' . preg_quote($slug, '/') . '/?$', 'index.php?bbb_shopify_page=' . $slug, 'top');
 		}
 
-		$rewrite_version = '2026-05-16-shopify-pages-v1';
+		$rewrite_version = '2026-05-16-shopify-pages-v2';
 
 		if (get_option('bbb_rewrite_version') !== $rewrite_version) {
 			flush_rewrite_rules(false);
@@ -150,9 +150,11 @@ add_filter(
 
 function bbb_get_shopify_page_templates(): array {
 	return array(
+		'artprints'                     => array('label' => 'art prints', 'alias' => 'shop'),
 		'library'                       => array('label' => 'library'),
 		'what-to-read-next'             => array('label' => 'what to read next'),
 		'reader-quizzes'                => array('label' => 'reader quizzes'),
+		'reader-quizes'                 => array('label' => 'reader quizzes', 'alias' => 'reader-quizzes'),
 		'reader-mood-quiz'              => array('label' => 'reader mood quiz'),
 		'fictional-boyfriend-quiz'      => array('label' => 'fictional boyfriend quiz'),
 		'romance-books-by-spice-level'  => array('label' => 'spice level'),
@@ -160,22 +162,46 @@ function bbb_get_shopify_page_templates(): array {
 		'book-trope'                    => array('label' => 'trope shelves'),
 		'trope'                         => array('label' => 'trope shelves', 'alias' => 'book-trope'),
 		'book-reviews'                  => array('label' => 'book reviews'),
+		'books-like'                    => array('label' => 'books like this'),
 		'books-like-directory'          => array('label' => 'books like x'),
 		'blog'                          => array('label' => 'blog'),
 		'book-series'                   => array('label' => 'series reading orders'),
 		'series-reading-orders'         => array('label' => 'series reading orders', 'alias' => 'book-series'),
+		'for-readers'                   => array('label' => 'for readers', 'alias' => 'reader-quizzes'),
 		'smut-sentiment-society'        => array('label' => 'the society'),
 		'society-library'               => array('label' => 'society library'),
+		'societylibrary'                => array('label' => 'society library', 'alias' => 'society-library'),
+		'ssslibrary'                    => array('label' => 'society library', 'alias' => 'society-library'),
 		'sss-library'                   => array('label' => 'society library', 'alias' => 'society-library'),
 		'sss-library-page'              => array('label' => 'society library', 'alias' => 'society-library'),
 		'sss-made-for-you'              => array('label' => 'made for you', 'alias' => 'what-to-read-next'),
 		'sss-private-shelf'             => array('label' => 'private shelf', 'alias' => 'society-library'),
 		'sss-quote-wall'                => array('label' => 'quote wall'),
 		'sss-freebies'                  => array('label' => 'freebies', 'alias' => 'society-library'),
+		'sss-canva-templates'           => array('label' => 'canva templates', 'alias' => 'bookish-templates'),
+		'sss-printable-kindle'          => array('label' => 'printable kindle', 'alias' => 'kindle-inserts'),
+		'sss-monthly-staging'           => array('label' => 'monthly staging', 'alias' => 'society-library'),
+		'sss-series'                    => array('label' => 'society series', 'alias' => 'book-series'),
+		'sss-series-page'               => array('label' => 'society series', 'alias' => 'book-series'),
 		'my-vault'                      => array('label' => 'my vault'),
+		'my-bookshelf'                  => array('label' => 'my bookshelf', 'alias' => 'library'),
 		'shop'                          => array('label' => 'shop'),
+		'bookish-templates'             => array('label' => 'bookish templates'),
+		'digitalproductstemplate'       => array('label' => 'digital products', 'alias' => 'shop'),
+		'kindle-inserts'                => array('label' => 'kindle inserts'),
+		'kindle-insert-vault'           => array('label' => 'kindle insert vault', 'alias' => 'kindle-inserts'),
 		'our-story'                     => array('label' => 'our story'),
 		'contact'                       => array('label' => 'contact'),
+		'customerreviews'               => array('label' => 'customer reviews'),
+		'media-kit'                     => array('label' => 'media kit'),
+		'newslettertemplate'            => array('label' => 'newsletter', 'alias' => 'smut-sentiment-society'),
+		'newsletter-submissions'        => array('label' => 'newsletter submissions'),
+		'society-submissions'           => array('label' => 'society submissions', 'alias' => 'newsletter-submissions'),
+		'privacy-policy'                => array('label' => 'privacy policy'),
+		'preview'                       => array('label' => 'preview', 'alias' => 'society-library'),
+		'quote-audit'                   => array('label' => 'quote audit', 'alias' => 'sss-quote-wall'),
+		'reading-list'                  => array('label' => 'reading list', 'alias' => 'library'),
+		'shelf'                         => array('label' => 'shelf', 'alias' => 'library'),
 		'weekly-obsession'              => array('label' => 'weekly obsession'),
 		'bookshelf-weekly-preview'      => array('label' => 'bookshelf weekly', 'alias' => 'weekly-obsession'),
 	);
@@ -228,6 +254,8 @@ function bbb_render_shopify_page_template(string $slug): string {
 			return bbb_render_taxonomy_page_template('bbb_series', 'series reading orders', 'every series in one place, with the reading order ready when the obsession starts.');
 		case 'book-reviews':
 			return bbb_render_posts_page_template('book reviews', 'read, rated, recommended', 'all the reviews and reading guides imported from Shopify.', '');
+		case 'books-like':
+			return bbb_render_posts_page_template('books like this', 'reading guide', 'books that match the mood, trope, and damage level of the one that ruined you.', 'books like');
 		case 'books-like-directory':
 			return bbb_render_posts_page_template('books like x', 'reading guides', 'finished something that wrecked you? start here for the closest next-read lists.', 'books like');
 		case 'blog':
@@ -242,6 +270,10 @@ function bbb_render_shopify_page_template(string $slug): string {
 			return bbb_render_vault_template();
 		case 'shop':
 			return bbb_render_shop_template();
+		case 'bookish-templates':
+			return bbb_render_shop_family_template('bookish templates', 'Canva templates, reader trackers, and digital things for making your book life prettier.', array('my vault' => '/my-vault/', 'shop' => '/shop/', 'society library' => '/society-library/'));
+		case 'kindle-inserts':
+			return bbb_render_shop_family_template('printable kindle inserts', 'Printable inserts and vault links from the Shopify shop, mapped into WordPress while products move later.', array('my vault' => '/my-vault/', 'shop' => '/shop/', 'society library' => '/society-library/'));
 		case 'our-story':
 			return bbb_render_our_story_template();
 		case 'contact':
@@ -256,6 +288,14 @@ function bbb_render_shopify_page_template(string $slug): string {
 					'substack'  => 'https://thesmutandsentimentsociety.substack.com/subscribe',
 				)
 			);
+		case 'customerreviews':
+			return bbb_render_simple_hub_template('reader proof', 'customer reviews', 'Reader notes, social proof, and happy chaos from the bybookishbabe world.', array('shop' => '/shop/', 'library' => '/library/', 'contact' => '/contact/'));
+		case 'media-kit':
+			return bbb_render_simple_hub_template('media kit', 'work with bybookishbabe', 'Collabs, features, and brand partnership information live here.', array('email' => 'mailto:bybookishbabe@gmail.com', 'instagram' => 'https://www.instagram.com/bybookishbabe/', 'tiktok' => 'https://www.tiktok.com/@bybookishbabe'));
+		case 'newsletter-submissions':
+			return bbb_render_simple_hub_template('submissions', 'send something to the society', 'A WordPress landing page for the old Shopify submission flow.', array('email me' => 'mailto:bybookishbabe@gmail.com', 'join substack' => 'https://thesmutandsentimentsociety.substack.com/subscribe', 'society library' => '/society-library/'));
+		case 'privacy-policy':
+			return bbb_render_simple_hub_template('privacy policy', 'privacy policy', 'Your Shopify privacy-policy page is routed here in WordPress. Replace this content with the final legal policy before launch.', array('contact' => '/contact/', 'home' => '/'));
 		case 'weekly-obsession':
 			return bbb_render_weekly_obsession_template();
 		default:
@@ -415,6 +455,23 @@ function bbb_render_shop_template(): string {
 			'society membership'       => 'https://thesmutandsentimentsociety.substack.com/subscribe',
 		)
 	);
+}
+
+function bbb_render_shop_family_template(string $title, string $subtext, array $links): string {
+	$body = '<section class="bbb-page-panel bbb-page-panel--wide">'
+		. '<p class="bbb-page-kicker">digital shop</p><h2>' . esc_html($title) . '</h2><p>' . esc_html($subtext) . '</p>'
+		. '<div class="bbb-template-actions">';
+
+	foreach ($links as $label => $url) {
+		$body .= '<a href="' . esc_url((string) $url) . '">' . esc_html((string) $label) . '</a>';
+	}
+
+	$body .= '</div></section>'
+		. '<section class="bbb-page-panel"><p class="bbb-page-kicker">library preview</p>'
+		. do_shortcode('[bbb_library_shelf title="reader favorites" limit="4" class="bbb-shelf--plain" fallback="true"]')
+		. '</section>';
+
+	return bbb_render_page_shell('shop files', $title, $subtext, $body);
 }
 
 function bbb_render_our_story_template(): string {
