@@ -3,7 +3,7 @@ Theme Name: WordPress Theme
 Theme URI: https://bybookishbabe.com
 Author: By Bookish Babe
 Description: Custom WordPress block theme rebuilt from the Shopify site foundation.
-Version: 0.1.16
+Version: 0.1.17
 Requires at least: 6.5
 Tested up to: 6.8
 Requires PHP: 8.1
@@ -5531,5 +5531,125 @@ html { font-size: 15px; }
   .bbb-main-nav summary {
     font-size: 13px !important;
     white-space: nowrap !important;
+  }
+}
+
+/* ============================================================
+   HOMEPAGE SHOPIFY VISUAL DIFF FIXES
+   These override the older WordPress homepage experiments so the
+   active [bbb_homepage] shortcode follows the Shopify source sizes.
+============================================================ */
+.bbb-home--shopify .hero-custom {
+  min-height: 0 !important;
+  padding: 80px 16px !important;
+  align-items: stretch !important;
+}
+
+.bbb-home--shopify .hero-frame {
+  max-width: 860px !important;
+  padding: 32px 22px 30px !important;
+  border: 1px solid #fff !important;
+}
+
+.bbb-home--shopify .hero-frame::before {
+  inset: 18px !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+}
+
+.bbb-home--shopify .hero-cursive {
+  font-size: 5.2rem !important;
+  letter-spacing: .045em !important;
+}
+
+.bbb-home--shopify .hero-mini {
+  margin-bottom: 14px !important;
+  font-size: 1.6rem !important;
+}
+
+.bbb-home--shopify .hero-subtitle {
+  margin-bottom: 28px !important;
+  font-size: 1.85rem !important;
+}
+
+.bbb-home--shopify .hero-buttons {
+  gap: 14px !important;
+}
+
+.bbb-home--shopify .hero-custom .btn-primary,
+.bbb-home--shopify .hero-custom .btn-secondary {
+  min-width: 0 !important;
+  padding: 16px 38px !important;
+  border-width: 1px !important;
+  font-size: 1.15rem !important;
+}
+
+.bbb-home--shopify .hero-custom .btn-secondary {
+  background: #df81b6 !important;
+  border-color: #df81b6 !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession {
+  padding: 18px 20px 34px !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__sectionTitle {
+  font-family: "Libre Baskerville", Georgia, serif !important;
+  font-size: clamp(2rem, 3.5vw, 2.9rem) !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__title {
+  font-family: "Libre Baskerville", Georgia, serif !important;
+  font-size: clamp(2.4rem, 5vw, 4.5rem) !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__row {
+  grid-template-columns: minmax(250px, 280px) minmax(320px, 520px) !important;
+  max-width: 860px !important;
+}
+
+.bbb-home--shopify .bbb-trending {
+  padding: 18px 20px 34px !important;
+}
+
+.bbb-home--shopify .bbb-trending__title {
+  font-family: "Libre Baskerville", Georgia, serif !important;
+  font-size: clamp(2rem, 3.5vw, 2.9rem) !important;
+}
+
+@media (max-width: 768px) {
+  .bbb-home--shopify .hero-custom {
+    min-height: 0 !important;
+    padding: 56px 12px !important;
+  }
+
+  .bbb-home--shopify .hero-frame {
+    max-width: 94vw !important;
+    padding: 26px 16px 24px !important;
+  }
+
+  .bbb-home--shopify .hero-cursive {
+    font-size: 3.2rem !important;
+  }
+
+  .bbb-home--shopify .hero-mini {
+    margin-bottom: 14px !important;
+  }
+
+  .bbb-home--shopify .hero-subtitle {
+    margin-bottom: 22px !important;
+  }
+
+  .bbb-home--shopify .hero-buttons {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .bbb-home--shopify .hero-buttons a {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .bbb-home--shopify .bbb-home-obsession__row {
+    grid-template-columns: 1fr !important;
   }
 }

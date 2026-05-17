@@ -12,7 +12,7 @@ add_action(
 	static function (): void {
 		wp_enqueue_style(
 			'wordpress-theme-fonts',
-			'https://fonts.googleapis.com/css2?family=Allura&family=Cormorant:wght@500;600&family=Cormorant+Garamond:wght@400;500;600;700&family=Great+Vibes&family=Kaushan+Script&family=Libre+Baskerville:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&display=swap',
+			'https://fonts.googleapis.com/css2?family=Allura&family=Assistant:wght@400;500;600;700&family=Cormorant:wght@500;600&family=Cormorant+Garamond:wght@400;500;600;700&family=Great+Vibes&family=Kaushan+Script&family=Libre+Baskerville:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&display=swap',
 			array(),
 			null
 		);
@@ -927,16 +927,37 @@ function bbb_render_homepage_weekly_obsession(): string {
 	$issue = bbb_get_current_newsletter_issue();
 	$book  = $issue ? bbb_find_book_for_newsletter_issue($issue) : null;
 
-	if (!$issue || !$book) {
-		return do_shortcode('[bbb_library_shelf title="weekly obsession" subtitle="the book currently taking over the smut & sentiment society." limit="1" meta_key="_bbb_top_shelf" meta_value="1" class="bbb-shelf--featured" fallback="true"]');
+	if (!$book) {
+		$fallback_books = bbb_home_book_ids(
+			array(
+				'posts_per_page' => 1,
+				'meta_query'     => array(
+					array(
+						'key'   => '_bbb_top_shelf',
+						'value' => '1',
+					),
+				),
+			)
+		);
+
+		if (!$fallback_books) {
+			$fallback_books = bbb_home_book_ids(array('posts_per_page' => 1));
+		}
+
+		$book = $fallback_books ? get_post((int) $fallback_books[0]) : null;
+	}
+
+	if (!$book instanceof WP_Post) {
+		return '';
 	}
 
 	$cover_url = (string) get_post_meta($book->ID, '_bbb_cover_url', true);
 	$author    = (string) get_post_meta($book->ID, '_bbb_author', true);
-	$subtitle  = (string) get_post_meta($issue->ID, '_bbb_subtitle', true);
+	$subtitle  = $issue ? (string) get_post_meta($issue->ID, '_bbb_subtitle', true) : (string) get_post_meta($book->ID, '_bbb_mini_note', true);
 	$spice     = (string) get_post_meta($book->ID, '_bbb_spice_level', true);
 	$genre     = get_the_terms($book->ID, 'bbb_genre');
 	$tropes    = get_the_terms($book->ID, 'bbb_trope');
+	$title     = $issue ? get_the_title($issue) : get_the_title($book);
 
 	ob_start();
 	?>
@@ -978,7 +999,7 @@ function bbb_render_homepage_weekly_obsession(): string {
 				</a>
 				<div class="bbb-home-obsession__copy">
 					<p class="bbb-home-obsession__kicker">weekly obsession</p>
-					<h2 class="bbb-home-obsession__title"><?php echo esc_html(get_the_title($issue)); ?></h2>
+					<h2 class="bbb-home-obsession__title"><?php echo esc_html($title); ?></h2>
 					<?php if ($subtitle) : ?><p class="bbb-home-obsession__sub"><?php echo esc_html($subtitle); ?></p><?php endif; ?>
 				</div>
 			</div>
