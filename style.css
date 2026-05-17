@@ -3,7 +3,7 @@ Theme Name: WordPress Theme
 Theme URI: https://bybookishbabe.com
 Author: By Bookish Babe
 Description: Custom WordPress block theme rebuilt from the Shopify site foundation.
-Version: 0.1.8
+Version: 0.1.10
 Requires at least: 6.5
 Tested up to: 6.8
 Requires PHP: 8.1
@@ -3736,6 +3736,65 @@ html { font-size: 15px; }
 @media (max-width: 768px) {
   .bbb-masthead__top {
     grid-template-columns: 1fr !important;
+  }
+}
+
+/* Homepage/header menu tightening. */
+.bbb-masthead__top {
+  min-height: 190px !important;
+  padding-top: 44px !important;
+  padding-bottom: 14px !important;
+}
+
+.bbb-wordmark,
+.bbb-logo-img {
+  width: 196px !important;
+  max-width: 196px !important;
+}
+
+.bbb-main-nav {
+  min-height: 58px !important;
+  padding: 14px 20px 17px !important;
+  gap: clamp(20px, 2.4vw, 34px) !important;
+}
+
+.bbb-main-nav a,
+.bbb-main-nav summary {
+  font-family: "Inter", "Assistant", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-size: clamp(12px, .82vw, 14px) !important;
+  font-weight: 600 !important;
+  letter-spacing: .075em !important;
+  color: rgba(255,255,255,.76) !important;
+  -webkit-font-smoothing: antialiased !important;
+  text-rendering: geometricPrecision !important;
+}
+
+.bbb-main-nav > a:first-child {
+  text-underline-offset: 4px !important;
+}
+
+.bbb-nav-dropdown summary span {
+  font-size: .72em !important;
+  margin-left: 3px !important;
+}
+
+@media (max-width: 768px) {
+  .bbb-masthead__top {
+    min-height: 142px !important;
+    padding-top: 28px !important;
+    padding-bottom: 8px !important;
+  }
+
+  .bbb-wordmark,
+  .bbb-logo-img {
+    width: min(170px, 46vw) !important;
+    max-width: min(170px, 46vw) !important;
+  }
+
+  .bbb-main-nav {
+    min-height: 54px !important;
+    padding: 13px 14px 15px !important;
+    gap: 18px !important;
   }
 }
 
