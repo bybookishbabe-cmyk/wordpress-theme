@@ -3739,6 +3739,68 @@ html { font-size: 15px; }
   }
 }
 
+/* Compact centered homepage banner. */
+.bbb-home--shopify .hero-custom {
+  padding: 54px 16px !important;
+}
+
+.bbb-home--shopify .hero-frame {
+  max-width: 740px !important;
+  padding: 26px 22px 24px !important;
+  text-align: center !important;
+}
+
+.bbb-home--shopify .hero-frame::before {
+  inset: 14px !important;
+}
+
+.bbb-home--shopify .hero-heading,
+.bbb-home--shopify .hero-mini,
+.bbb-home--shopify .hero-subtitle,
+.bbb-home--shopify .hero-buttons {
+  width: 100% !important;
+  text-align: center !important;
+  justify-content: center !important;
+}
+
+.bbb-home--shopify .hero-cursive {
+  font-size: clamp(38px, 4.2vw, 64px) !important;
+  letter-spacing: .055em !important;
+}
+
+.bbb-home--shopify .hero-mini {
+  margin-bottom: 10px !important;
+  font-size: clamp(18px, 1.7vw, 23px) !important;
+}
+
+.bbb-home--shopify .hero-subtitle {
+  max-width: 100% !important;
+  margin: 0 auto 22px !important;
+  font-size: clamp(19px, 1.8vw, 25px) !important;
+  line-height: 1.45 !important;
+}
+
+.bbb-home--shopify .hero-custom .btn-primary,
+.bbb-home--shopify .hero-custom .btn-secondary {
+  padding: 12px 30px !important;
+  font-size: 1rem !important;
+}
+
+@media (max-width: 768px) {
+  .bbb-home--shopify .hero-custom {
+    padding: 38px 12px !important;
+  }
+
+  .bbb-home--shopify .hero-frame {
+    max-width: 92vw !important;
+    padding: 24px 16px 22px !important;
+  }
+
+  .bbb-home--shopify .hero-cursive {
+    font-size: clamp(34px, 10vw, 48px) !important;
+  }
+}
+
 /* Homepage/header menu tightening. */
 .bbb-masthead__top {
   min-height: 190px !important;
@@ -4296,5 +4358,94 @@ html { font-size: 15px; }
     align-items: center !important;
     justify-self: center !important;
     text-align: center !important;
+  }
+}
+
+/* Final homepage compact pass. */
+.bbb-masthead__top {
+  grid-template-columns: 1fr !important;
+  min-height: 190px !important;
+  padding: 44px 18px 14px !important;
+  justify-items: center !important;
+}
+
+.bbb-main-nav {
+  min-height: 58px !important;
+  padding: 14px 20px 17px !important;
+  gap: clamp(20px, 2.4vw, 34px) !important;
+}
+
+.bbb-main-nav a,
+.bbb-main-nav summary {
+  font-family: "Inter", "Assistant", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-size: clamp(12px, .82vw, 14px) !important;
+  font-weight: 600 !important;
+  letter-spacing: .075em !important;
+}
+
+.bbb-home--shopify .hero-custom {
+  padding: 54px 16px !important;
+}
+
+.bbb-home--shopify .hero-frame {
+  max-width: 740px !important;
+  padding: 26px 22px 24px !important;
+  text-align: center !important;
+}
+
+.bbb-home--shopify .hero-frame::before {
+  inset: 14px !important;
+}
+
+.bbb-home--shopify .hero-heading,
+.bbb-home--shopify .hero-mini,
+.bbb-home--shopify .hero-subtitle,
+.bbb-home--shopify .hero-buttons {
+  width: 100% !important;
+  text-align: center !important;
+  justify-content: center !important;
+}
+
+.bbb-home--shopify .hero-cursive {
+  font-size: clamp(38px, 4.2vw, 64px) !important;
+  letter-spacing: .055em !important;
+}
+
+.bbb-home--shopify .hero-mini {
+  margin-bottom: 10px !important;
+  font-size: clamp(18px, 1.7vw, 23px) !important;
+}
+
+.bbb-home--shopify .hero-subtitle {
+  max-width: 100% !important;
+  margin: 0 auto 22px !important;
+  font-size: clamp(19px, 1.8vw, 25px) !important;
+  line-height: 1.45 !important;
+}
+
+.bbb-home--shopify .hero-custom .btn-primary,
+.bbb-home--shopify .hero-custom .btn-secondary {
+  padding: 12px 30px !important;
+  font-size: 1rem !important;
+}
+
+@media (max-width: 768px) {
+  .bbb-masthead__top {
+    grid-template-columns: 1fr !important;
+    min-height: 142px !important;
+    padding: 28px 14px 8px !important;
+  }
+
+  .bbb-home--shopify .hero-custom {
+    padding: 38px 12px !important;
+  }
+
+  .bbb-home--shopify .hero-frame {
+    max-width: 92vw !important;
+    padding: 24px 16px 22px !important;
+  }
+
+  .bbb-home--shopify .hero-cursive {
+    font-size: clamp(34px, 10vw, 48px) !important;
   }
 }
