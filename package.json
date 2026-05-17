@@ -8,6 +8,7 @@
     "shopify:export": "node scripts/shopify-export.mjs",
     "shopify:inspect": "node scripts/shopify-export.mjs --definitions-only",
     "shopify:library:wxr": "node scripts/shopify-library-to-wxr.mjs",
+    "shopify:newsletter:wxr": "node scripts/shopify-library-to-wxr.mjs --only-newsletters",
     "shopify:wxr": "node scripts/shopify-to-wxr.mjs",
     "shopify:wxr:drafts": "node scripts/shopify-to-wxr.mjs --drafts"
   }

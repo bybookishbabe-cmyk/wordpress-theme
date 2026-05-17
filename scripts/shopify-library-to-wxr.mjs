@@ -3,7 +3,13 @@ import { resolve } from 'node:path';
 
 const root = process.cwd();
 const metaobjectsDir = resolve(root, 'migration', 'exports', 'metaobjects');
-const outputPath = resolve(root, 'migration', 'exports', 'wordpress-library-import.xml');
+const onlyNewsletters = process.argv.includes('--only-newsletters');
+const outputPath = resolve(
+  root,
+  'migration',
+  'exports',
+  onlyNewsletters ? 'wordpress-newsletter-issues-import.xml' : 'wordpress-library-import.xml'
+);
 
 const library = await readMetaobjectFile('sss_library.json');
 const quotes = await readMetaobjectFile('sss_quote.json');
@@ -14,12 +20,16 @@ await mkdir(resolve(root, 'migration', 'exports'), { recursive: true });
 const bookItems = library.entries.map(bookToItem);
 const quoteItems = quotes.entries.map(quoteToItem);
 const newsletterIssueItems = newsletterIssues.entries.map(newsletterIssueToItem);
-const items = [...bookItems, ...quoteItems, ...newsletterIssueItems];
+const items = onlyNewsletters ? newsletterIssueItems : [...bookItems, ...quoteItems, ...newsletterIssueItems];
 
 await writeFile(outputPath, buildWxr(items));
 
 console.log(`Created ${relative(outputPath)}`);
-console.log(`Included ${bookItems.length} draft books, ${quoteItems.length} draft quotes, and ${newsletterIssueItems.length} published newsletter issues`);
+if (onlyNewsletters) {
+  console.log(`Included ${newsletterIssueItems.length} published newsletter issues`);
+} else {
+  console.log(`Included ${bookItems.length} draft books, ${quoteItems.length} draft quotes, and ${newsletterIssueItems.length} published newsletter issues`);
+}
 
 async function readMetaobjectFile(name) {
   return JSON.parse(await readFile(resolve(metaobjectsDir, name), 'utf8'));
