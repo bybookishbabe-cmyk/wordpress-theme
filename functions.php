@@ -25,10 +25,91 @@ add_action(
 		);
 
 		wp_enqueue_style(
-			'wordpress-theme-shopify-replica',
-			get_stylesheet_uri(),
+			'bbb-sss-library',
+			get_theme_file_uri('assets/sss-library.css'),
 			array('wordpress-theme-main'),
 			wp_get_theme()->get('Version')
+		);
+
+		wp_enqueue_style(
+			'bbb-blog-system',
+			get_theme_file_uri('assets/blog-system.css'),
+			array('bbb-sss-library'),
+			wp_get_theme()->get('Version')
+		);
+
+		wp_enqueue_style(
+			'bbb-bookshelf-signup',
+			get_theme_file_uri('assets/bookshelf-signup.css'),
+			array('bbb-blog-system'),
+			wp_get_theme()->get('Version')
+		);
+
+		wp_enqueue_style(
+			'wordpress-theme-shopify-replica',
+			get_stylesheet_uri(),
+			array('bbb-bookshelf-signup'),
+			wp_get_theme()->get('Version')
+		);
+
+		wp_enqueue_script(
+			'bbb-supabase',
+			'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
+			array(),
+			null,
+			true
+		);
+
+		wp_enqueue_script(
+			'bbb-sss-library',
+			get_theme_file_uri('assets/sss-library.js'),
+			array('bbb-supabase'),
+			wp_get_theme()->get('Version'),
+			true
+		);
+
+		wp_enqueue_script(
+			'bbb-blog-system',
+			get_theme_file_uri('assets/blog-system.js'),
+			array('bbb-sss-library'),
+			wp_get_theme()->get('Version'),
+			true
+		);
+
+		wp_enqueue_script(
+			'bbb-bookshelf-signup',
+			get_theme_file_uri('assets/bookshelf-signup.js'),
+			array('bbb-blog-system'),
+			wp_get_theme()->get('Version'),
+			true
+		);
+
+		$user       = wp_get_current_user();
+		$is_logged  = is_user_logged_in();
+		$is_society = bbb_current_user_is_society_member();
+		$config     = array(
+			'account' => array(
+				'loggedIn'     => $is_logged,
+				'customerId'   => $is_logged ? $user->ID : null,
+				'email'        => $is_logged ? $user->user_email : '',
+				'firstName'    => $is_logged ? ( $user->first_name ?: $user->display_name ) : '',
+				'isSociety'    => $is_society,
+				'bookshelfUrl' => home_url('/my-bookshelf/'),
+				'accountUrl'   => function_exists('wc_get_account_endpoint_url') ? wc_get_account_endpoint_url('dashboard') : admin_url('profile.php'),
+				'loginUrl'     => wp_login_url(get_permalink() ?: home_url('/')),
+			),
+			'urls'    => array(
+				'library'        => home_url('/library/'),
+				'societyLibrary' => home_url('/society-library/'),
+				'myBookshelf'    => home_url('/my-bookshelf/'),
+				'seriesBase'     => home_url('/book-series/'),
+			),
+		);
+
+		wp_add_inline_script(
+			'bbb-sss-library',
+			'window.BBBReaderAccount = ' . wp_json_encode($config['account']) . '; window.bbbUrls = ' . wp_json_encode($config['urls']) . '; window.bbbAdminPreview = !!document.body && document.body.classList.contains("wp-admin");',
+			'before'
 		);
 	}
 );
@@ -1023,6 +1104,84 @@ function bbb_current_user_is_society_member(): bool {
 	return in_array('society_member', (array) $user->roles, true);
 }
 
+add_action(
+	'wp_footer',
+	static function (): void {
+		?>
+		<div class="sss-lib__modal" hidden aria-hidden="true">
+			<div class="sss-lib__backdrop" data-close></div>
+			<div class="sss-lib__dialog" role="dialog" aria-modal="true" aria-label="<?php echo esc_attr__('Get this book', 'wordpress-theme'); ?>">
+				<button class="sss-lib__mshare" type="button" data-modal-share-btn aria-label="<?php echo esc_attr__('Share this book', 'wordpress-theme'); ?>">
+					<span class="sss-lib__mshareIcon" aria-hidden="true">📲</span>
+					<span class="sss-lib__mshareLabel" data-modal-share-label>share</span>
+				</button>
+				<button class="sss-lib__x" type="button" data-close aria-label="<?php echo esc_attr__('Close', 'wordpress-theme'); ?>">×</button>
+				<div class="sss-lib__mhead">
+					<div class="sss-lib__mkicker">book breakdown</div>
+					<div class="sss-lib__mseries" data-mseries hidden></div>
+					<div class="sss-lib__mseriesOrder" data-mseries-order></div>
+					<div class="sss-lib__mstandalone" data-mstandalone></div>
+					<div class="sss-lib__mtitle" data-mtitle></div>
+					<div class="sss-lib__mauthor" data-mauthor></div>
+				</div>
+				<div class="sss-lib__mbody">
+					<div class="sss-lib__mcoverWrap">
+						<div class="sss-lib__mcoverFrame">
+							<span class="sss-lib__heart sss-lib__heart--modal" data-modal-heart role="button" aria-label="<?php echo esc_attr__('save to your bookshelf', 'wordpress-theme'); ?>">
+								<span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♡</span>
+								<span class="sss-lib__heartLabel" data-heart-label>save</span>
+							</span>
+							<img class="sss-lib__mcover" alt="" loading="lazy" data-mcover>
+						</div>
+					</div>
+					<div class="sss-lib__mcontent">
+						<div class="sss-lib__mmini" data-mmini></div>
+						<div class="sss-lib__mcta">
+							<a class="sss-lib__mbtn sss-lib__mbtn--amazon" href="#" target="_blank" rel="noopener" data-amazon-btn>ku/amazon</a>
+							<a class="sss-lib__mbtn sss-lib__mbtn--bookshop" href="#" target="_blank" rel="noopener" data-bookshop-btn>support indie bookstore</a>
+							<a class="sss-lib__mbtn sss-lib__mbtn--newsletter" href="#" target="_blank" rel="noopener" data-newsletter-btn>read the newsletter</a>
+						</div>
+						<div class="sss-lib__mku" data-mku></div>
+					</div>
+					<div class="sss-lib__mbelow">
+						<div class="sss-lib__mmeta">
+							<div class="sss-lib__mtropes" data-mtropes></div>
+							<div class="sss-lib__mratings">
+								<div class="sss-lib__mtension" data-mtension></div>
+								<div class="sss-lib__mdamage" data-mdamage></div>
+								<div class="sss-lib__myearning" data-myearning></div>
+								<div class="sss-lib__mboyfriend" data-mboyfriend></div>
+								<div class="sss-lib__mdarkness" data-mdarkness></div>
+								<div class="sss-lib__mreread" data-mreread></div>
+							</div>
+							<div class="sss-lib__mwhy" data-mwhy></div>
+						</div>
+						<div class="sss-lib__mdisclaimer">some links may be affiliate links, so thank you for supporting the recs. &lt;3</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div data-bbb-shelf-signup data-success="<?php echo esc_attr(isset($_GET['bbb_shelf_signup']) && 'success' === $_GET['bbb_shelf_signup'] ? 'true' : 'false'); ?>">
+			<div class="bbb-shelf-signup__backdrop" data-bbb-shelf-close></div>
+			<div class="bbb-shelf-signup__dialog" role="dialog" aria-modal="true" aria-label="<?php echo esc_attr__('Save your bookshelf', 'wordpress-theme'); ?>">
+				<button class="bbb-shelf-signup__close" type="button" data-bbb-shelf-close aria-label="<?php echo esc_attr__('Close', 'wordpress-theme'); ?>">×</button>
+				<p class="bbb-shelf-signup__kicker">your shelf</p>
+				<h2 class="bbb-shelf-signup__title">keep your saves close</h2>
+				<p class="bbb-shelf-signup__text">enter your email and i’ll keep your bookish chaos synced for later.</p>
+				<form id="BBBBookshelfSignupForm" action="<?php echo esc_url(home_url('/my-bookshelf/')); ?>" method="get">
+					<label class="screen-reader-text" for="bbbShelfSignupEmail"><?php echo esc_html__('Email', 'wordpress-theme'); ?></label>
+					<input id="bbbShelfSignupEmail" type="email" name="email" placeholder="email address" required>
+					<button type="submit">save my shelf</button>
+				</form>
+			</div>
+		</div>
+		<script>
+			document.body.dataset.template = document.body.dataset.template || <?php echo wp_json_encode(is_front_page() ? 'index' : (is_singular() ? get_post_type() : 'site')); ?>;
+		</script>
+		<?php
+	}
+);
+
 function bbb_get_bearer_token(WP_REST_Request $request): string {
 	$authorization = (string) $request->get_header('authorization');
 	if (preg_match('/^Bearer\s+(.+)$/i', $authorization, $matches)) {
@@ -1175,11 +1334,11 @@ add_shortcode(
 		<?php if ('true' === strtolower((string) $atts['filters'])) : ?>
 			<?php echo bbb_render_library_filters(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 		<?php endif; ?>
-		<div class="bbb-library-grid <?php echo 'true' === strtolower((string) $atts['filters']) ? 'bbb-library-grid--archive' : ''; ?>">
+		<div class="bbb-library-grid <?php echo 'true' === strtolower((string) $atts['filters']) ? 'bbb-library-grid--archive' : ''; ?>" data-sss-lib="public">
 			<?php
 			while ($query->have_posts()) {
 				$query->the_post();
-				echo bbb_render_library_card(get_the_ID()); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				echo bbb_render_book_card(get_the_ID()); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			}
 			wp_reset_postdata();
 			?>
@@ -1258,11 +1417,11 @@ add_shortcode(
 			<?php if ($atts['subtitle']) : ?>
 				<p class="bbb-shelf__sub"><?php echo esc_html((string) $atts['subtitle']); ?></p>
 			<?php endif; ?>
-			<div class="bbb-shelf__row">
+			<div class="bbb-shelf__row" data-sss-lib="public">
 				<?php
 				while ($query->have_posts()) {
 					$query->the_post();
-					echo bbb_render_library_card(get_the_ID(), 'shelf'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+					echo bbb_render_book_card(get_the_ID()); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 				}
 				wp_reset_postdata();
 				?>

@@ -1,0 +1,171 @@
+.bbb-shelf-signup{
+  position:fixed;
+  inset:0;
+  z-index:99999;
+  display:none;
+}
+
+.bbb-shelf-signup.is-open{
+  display:block;
+}
+
+body.bbb-shelf-signup-open{
+  overflow:hidden;
+}
+
+.bbb-shelf-signup__overlay{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.72);
+  backdrop-filter:blur(6px);
+}
+
+.bbb-shelf-signup__dialog{
+  position:relative;
+  z-index:1;
+  width:min(92vw, 54rem);
+  margin:50vh auto 0;
+  transform:translateY(-50%);
+  padding:3rem 2.6rem 2.4rem;
+  border-radius:2.4rem;
+  border:1px solid rgba(255,255,255,.12);
+  background:
+    linear-gradient(180deg, rgba(28,20,28,.98), rgba(14,14,14,.98)),
+    radial-gradient(circle at top left, rgba(232,90,155,.18), transparent 48%);
+  box-shadow:0 30px 80px rgba(0,0,0,.42);
+  color:#f6f6f6;
+  text-align:center;
+}
+
+.bbb-shelf-signup__close{
+  position:absolute;
+  top:1.4rem;
+  right:1.4rem;
+  border:0;
+  background:transparent;
+  color:rgba(246,246,246,.7);
+  font-size:2.4rem;
+  cursor:pointer;
+}
+
+.bbb-shelf-signup__eyebrow{
+  display:none;
+}
+
+.bbb-shelf-signup__title{
+  margin:0;
+  font-family:"Cormorant Garamond", Georgia, serif;
+  font-size:4rem;
+  line-height:1.02;
+  text-transform:lowercase;
+}
+
+.bbb-shelf-signup__copy{
+  margin:1.4rem auto 0;
+  max-width:42rem;
+  font-size:1.7rem;
+  line-height:1.65;
+  color:rgba(246,246,246,.82);
+}
+
+.bbb-shelf-signup__micro{
+  margin:1.4rem 0 0;
+  font-size:1.15rem;
+  letter-spacing:.16em;
+  text-transform:lowercase;
+  color:#ff8ac7;
+}
+
+.bbb-shelf-signup__field{
+  margin-top:2rem;
+  text-align:left;
+}
+
+.bbb-shelf-signup__label{
+  display:block;
+  margin-bottom:.7rem;
+  font-size:1.1rem;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:rgba(246,246,246,.62);
+}
+
+.bbb-shelf-signup__input{
+  width:100%;
+  min-height:5.4rem;
+  padding:0 1.6rem;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.04);
+  color:#fff;
+  font:inherit;
+}
+
+.bbb-shelf-signup__input:focus{
+  outline:none;
+  border-color:#ff8ac7;
+  box-shadow:0 0 0 3px rgba(255,138,199,.14);
+}
+
+.bbb-shelf-signup__actions{
+  margin-top:1.8rem;
+  display:flex;
+  flex-direction:column;
+  gap:1rem;
+}
+
+.bbb-shelf-signup__submit,
+.bbb-shelf-signup__dismiss{
+  min-height:5rem;
+  border-radius:999px;
+  font:inherit;
+  cursor:pointer;
+  transition:transform .18s ease, opacity .18s ease;
+}
+
+.bbb-shelf-signup__submit{
+  border:1px solid #e85a9b;
+  background:#e85a9b;
+  color:#fff;
+}
+
+.bbb-shelf-signup__dismiss{
+  border:1px solid rgba(255,255,255,.14);
+  background:transparent;
+  color:rgba(246,246,246,.8);
+}
+
+.bbb-shelf-signup__submit:hover,
+.bbb-shelf-signup__dismiss:hover{
+  transform:translateY(-1px);
+}
+
+.bbb-shelf-signup__error,
+.bbb-shelf-signup__success{
+  margin:1.2rem 0 0;
+  font-size:1.35rem;
+  line-height:1.5;
+}
+
+.bbb-shelf-signup__error{
+  color:#ffb4c8;
+}
+
+.bbb-shelf-signup__success{
+  color:#ffc0df;
+}
+
+@media (max-width: 749px){
+  .bbb-shelf-signup__dialog{
+    width:min(92vw, 42rem);
+    padding:2.4rem 1.8rem 1.9rem;
+  }
+
+  .bbb-shelf-signup__title{
+    font-size:3.2rem;
+  }
+
+  .bbb-shelf-signup__copy{
+    font-size:1.55rem;
+  }
+}
