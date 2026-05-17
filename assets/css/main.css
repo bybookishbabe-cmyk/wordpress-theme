@@ -3782,3 +3782,65 @@ body,
   align-items: center;
   grid-template-columns: unset;
 }
+
+/* ============================================================
+   HOMEPAGE — scaled-down masthead, nav, and hero (~half size)
+============================================================ */
+
+/* Masthead top bar */
+.bbb-masthead__top {
+  min-height: 140px;
+  padding: 27px 96px 14px;
+}
+
+/* Nav strip */
+.bbb-main-nav {
+  min-height: 44px;
+  gap: 20px;
+  padding: 0 20px 14px;
+}
+
+.bbb-main-nav a,
+.bbb-nav-dropdown summary {
+  font-size: 0.78rem;
+}
+
+/* Hero banner */
+.hero-custom {
+  min-height: 340px;
+  padding: 66px 16px 63px;
+}
+
+.hero-frame {
+  padding: 37px 44px 25px;
+}
+
+.hero-frame::before {
+  inset: 12px;
+}
+
+/* Hero text */
+.hero-cursive {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.hero-mini {
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.hero-subtitle {
+  font-size: 1rem;
+  margin-bottom: 24px;
+}
+
+.hero-buttons {
+  gap: 12px;
+}
+
+.hero-buttons a {
+  min-width: 160px;
+  padding: 12px 22px;
+  font-size: 0.85rem;
+}
