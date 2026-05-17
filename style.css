@@ -3,7 +3,7 @@ Theme Name: WordPress Theme
 Theme URI: https://bybookishbabe.com
 Author: By Bookish Babe
 Description: Custom WordPress block theme rebuilt from the Shopify site foundation.
-Version: 0.1.14
+Version: 0.1.15
 Requires at least: 6.5
 Tested up to: 6.8
 Requires PHP: 8.1
@@ -5047,5 +5047,289 @@ html { font-size: 15px; }
 
   .sss-lib__book {
     width: min(168px, 46vw);
+  }
+}
+
+/* Homepage section parity pass from Shopify index.json. */
+.bbb-home--shopify .bbb-trending__row,
+.bbb-home--shopify .bbb-feature-lists__grid,
+.bbb-home--shopify .sss-lib__shelfRow,
+.bbb-boyfriends__row {
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(18px, 2vw, 28px);
+  overflow-x: auto;
+  padding: 4px 2px 16px;
+  scroll-snap-type: x proximity;
+}
+
+.bbb-home--shopify .bbb-trending__row::-webkit-scrollbar,
+.bbb-home--shopify .sss-lib__shelfRow::-webkit-scrollbar,
+.bbb-boyfriends__row::-webkit-scrollbar {
+  height: 8px;
+}
+
+.bbb-home--shopify .bbb-trending__row::-webkit-scrollbar-thumb,
+.bbb-home--shopify .sss-lib__shelfRow::-webkit-scrollbar-thumb,
+.bbb-boyfriends__row::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(255, 138, 199, .45);
+}
+
+.bbb-home--shopify .bbb-trending__book,
+.bbb-home--shopify .sss-lib__shelfRow > .sss-lib__book,
+.bbb-boyfriends__lead,
+.bbb-boyfriends__similarItem {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+
+.bbb-homeRecDemo,
+.bbb-boyfriends {
+  position: relative;
+  padding: clamp(72px, 8vw, 128px) clamp(22px, 8vw, 11vw);
+  background: #0b0b0b;
+  color: #f6f6f6;
+  border-top: 1px solid rgba(255, 255, 255, .08);
+}
+
+.bbb-homeRecDemo {
+  display: grid;
+  grid-template-columns: minmax(280px, .72fr) minmax(320px, 1fr);
+  gap: clamp(34px, 6vw, 90px);
+  align-items: center;
+}
+
+.bbb-homeRecDemo__kicker,
+.bbb-homeRecDemo__label,
+.sss-lib__archiveKicker,
+.bbb-boyfriends__kicker,
+.bbb-boyfriends__type {
+  color: rgba(255, 255, 255, .58);
+  font-family: "Inter", sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+}
+
+.bbb-homeRecDemo__title,
+.sss-lib__archiveTitle,
+.bbb-boyfriends__title {
+  margin: 8px 0 14px;
+  color: #fff;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(32px, 4.3vw, 62px);
+  font-weight: 600;
+  line-height: .95;
+  letter-spacing: 0;
+  text-transform: lowercase;
+}
+
+.bbb-homeRecDemo__sub,
+.sss-lib__archiveSub,
+.bbb-boyfriends__sub {
+  max-width: 520px;
+  color: rgba(246, 246, 246, .64);
+  font-family: "Inter", sans-serif;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.bbb-homeRecDemo__cta,
+.sss-lib__previewLink {
+  display: inline-flex;
+  margin-top: 22px;
+  color: #ff8ac7;
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 138, 199, .72);
+}
+
+.bbb-homeRecDemo__stage {
+  position: relative;
+  min-height: 360px;
+}
+
+.bbb-homeRecDemo__book {
+  position: absolute;
+  width: min(220px, 42vw);
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 20px;
+  background: rgba(18, 18, 18, .9);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, .4);
+}
+
+.bbb-homeRecDemo__book img {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.bbb-homeRecDemo__book--picked {
+  left: 0;
+  top: 18px;
+  transform: rotate(-3deg);
+  z-index: 2;
+}
+
+.bbb-homeRecDemo__book--result {
+  right: 4%;
+  top: 96px;
+  transform: rotate(3deg);
+  animation: bbbHomeRecSlide 6s ease-in-out infinite;
+}
+
+.bbb-homeRecDemo__bookTitle,
+.bbb-homeRecDemo__meta {
+  display: block;
+}
+
+.bbb-homeRecDemo__bookTitle {
+  margin-top: 12px;
+  color: #fff;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.bbb-homeRecDemo__meta {
+  margin-top: 5px;
+  color: rgba(246, 246, 246, .55);
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+}
+
+.sss-lib--preview {
+  grid-column: 1 / -1;
+  margin-top: clamp(42px, 5vw, 76px);
+}
+
+.sss-lib__archiveHead {
+  margin-bottom: 24px;
+}
+
+.bbb-trope-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.bbb-emoji-rain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.bbb-emoji-rain span {
+  position: absolute;
+  top: -28px;
+  opacity: 0;
+  animation: tropeFall 6s linear infinite;
+}
+
+.bbb-boyfriends__inner {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.bbb-boyfriends__head {
+  max-width: 720px;
+  margin-bottom: 34px;
+}
+
+.bbb-boyfriends__rotator {
+  position: relative;
+  min-height: 360px;
+}
+
+.bbb-boyfriends__slide {
+  display: none;
+  opacity: 0;
+}
+
+.bbb-boyfriends__slide.is-active {
+  display: block;
+  opacity: 1;
+  animation: bbbBoyfriendFade .45s ease both;
+}
+
+.bbb-boyfriends__label {
+  margin-bottom: 8px;
+  color: #fff;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(28px, 4vw, 54px);
+  line-height: 1;
+}
+
+.bbb-boyfriends__label span {
+  color: #ff8ac7;
+  font-family: "Kaushan Script", cursive;
+}
+
+.bbb-boyfriends__arrow {
+  align-self: center;
+  color: #ff8ac7;
+  font-size: 40px;
+  animation: bbbArrowNudge 3.2s ease-in-out infinite;
+}
+
+.bbb-boyfriends__similar {
+  display: flex;
+  gap: clamp(16px, 2vw, 24px);
+  align-items: flex-start;
+}
+
+@keyframes tropeFall {
+  0% { opacity: 0; transform: translateY(-24px) rotate(0deg); }
+  18% { opacity: .75; }
+  100% { opacity: 0; transform: translateY(210px) rotate(85deg); }
+}
+
+@keyframes bbbHomeRecSlide {
+  0%, 18% { opacity: .35; transform: translate(34px, 18px) rotate(-4deg); }
+  34%, 100% { opacity: 1; transform: translate(0, 0) rotate(3deg); }
+}
+
+@keyframes bbbBoyfriendFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bbbArrowNudge {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(5px); }
+}
+
+@media (max-width: 760px) {
+  .bbb-homeRecDemo {
+    grid-template-columns: 1fr;
+  }
+
+  .bbb-homeRecDemo__stage {
+    min-height: 320px;
+  }
+
+  .bbb-homeRecDemo__book {
+    width: min(190px, 54vw);
+  }
+
+  .bbb-homeRecDemo__book--result {
+    right: 0;
+    top: 76px;
+  }
+
+  .bbb-boyfriends__row {
+    gap: 16px;
+  }
+
+  .bbb-boyfriends__arrow {
+    display: none;
   }
 }
