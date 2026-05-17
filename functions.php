@@ -861,7 +861,7 @@ function bbb_render_homepage_weekly_obsession(): string {
 		<div class="section-divider"></div>
 		<div class="bbb-home-obsession__inner">
 			<div class="bbb-home-obsession__sparkles" aria-hidden="true">
-				<span>✦</span><span>✧</span><span>⋆</span><span>✦</span><span>✧</span><span>⋆</span>
+				<span>✦</span><span>✧</span><span>⋆</span><span>✦</span><span>✧</span><span>⋆</span><span>✦</span><span>✧</span><span>⋆</span><span>✦</span><span>✧</span><span>⋆</span>
 			</div>
 			<div class="bbb-home-obsession__head">
 				<p class="bbb-home-obsession__sectionKicker">from the society</p>
@@ -878,22 +878,25 @@ function bbb_render_homepage_weekly_obsession(): string {
 							<div class="bbb-home-obsession__spice"><?php echo esc_html(str_repeat('🌶', min(5, max(1, (int) $spice)))); ?></div>
 						<?php endif; ?>
 					</div>
-					<?php if (!is_wp_error($genre) && $genre) : ?>
-						<div class="bbb-home-obsession__shelf"><span></span><?php echo esc_html($genre[0]->name); ?></div>
+					<?php if ((!is_wp_error($genre) && $genre) || (!is_wp_error($tropes) && $tropes)) : ?>
+						<div class="bbb-home-obsession__meta">
+							<?php if (!is_wp_error($genre) && $genre) : ?>
+								<div class="bbb-home-obsession__shelf"><span class="bbb-home-obsession__line" aria-hidden="true"></span><span><?php echo esc_html($genre[0]->name); ?></span></div>
+							<?php endif; ?>
+							<?php if (!is_wp_error($tropes) && $tropes) : ?>
+								<div class="bbb-home-obsession__tropes">
+									<?php foreach (array_slice($tropes, 0, 3) as $term) : ?>
+										<a class="bbb-home-obsession__trope" href="<?php echo esc_url(get_term_link($term)); ?>"><?php echo esc_html($term->name); ?></a>
+									<?php endforeach; ?>
+								</div>
+							<?php endif; ?>
+						</div>
 					<?php endif; ?>
 				</a>
 				<div class="bbb-home-obsession__copy">
 					<p class="bbb-home-obsession__kicker">weekly obsession</p>
 					<h2 class="bbb-home-obsession__title"><?php echo esc_html(get_the_title($issue)); ?></h2>
 					<?php if ($subtitle) : ?><p class="bbb-home-obsession__sub"><?php echo esc_html($subtitle); ?></p><?php endif; ?>
-					<p class="bbb-home-obsession__book"><?php echo esc_html(get_the_title($book)); ?><?php echo $author ? ' · ' . esc_html($author) : ''; ?></p>
-					<?php if (!is_wp_error($tropes) && $tropes) : ?>
-						<div class="bbb-home-obsession__tropes">
-							<?php foreach (array_slice($tropes, 0, 3) as $term) : ?>
-								<a href="<?php echo esc_url(get_term_link($term)); ?>"><?php echo esc_html($term->name); ?></a>
-							<?php endforeach; ?>
-						</div>
-					<?php endif; ?>
 				</div>
 			</div>
 		</div>

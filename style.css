@@ -3,7 +3,7 @@ Theme Name: WordPress Theme
 Theme URI: https://bybookishbabe.com
 Author: By Bookish Babe
 Description: Custom WordPress block theme rebuilt from the Shopify site foundation.
-Version: 0.1.10
+Version: 0.1.11
 Requires at least: 6.5
 Tested up to: 6.8
 Requires PHP: 8.1
@@ -4447,5 +4447,298 @@ html { font-size: 15px; }
 
   .bbb-home--shopify .hero-cursive {
     font-size: clamp(34px, 10vw, 48px) !important;
+  }
+}
+
+/* Homepage weekly obsession: Shopify source parity. */
+.bbb-home--shopify .bbb-home-obsession {
+  position: relative !important;
+  overflow: hidden !important;
+  background: #0b0b0b !important;
+  padding: 18px 20px 34px !important;
+  color: #f6f6f6 !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession .section-divider {
+  width: 100% !important;
+  height: 1px !important;
+  margin: 0 0 34px !important;
+  background: linear-gradient(90deg, rgba(255,255,255,.08), rgba(255,138,199,.72), rgba(255,255,255,.08)) !important;
+  opacity: 1 !important;
+  box-shadow: 0 1px 0 rgba(255,138,199,.15) !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__inner {
+  position: relative !important;
+  max-width: 1100px !important;
+  margin: 0 auto !important;
+  padding-bottom: 34px !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__inner::after {
+  content: "" !important;
+  display: block !important;
+  width: min(62%, 620px) !important;
+  height: 8px !important;
+  min-height: 8px !important;
+  margin: 34px 0 0 auto !important;
+  border-radius: 999px !important;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,138,199,.78) 28%, rgba(255,138,199,1) 100%) !important;
+  box-shadow: 0 0 26px rgba(255,138,199,.28) !important;
+  transform: rotate(-1.2deg) !important;
+  transform-origin: right center !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__sparkles {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  opacity: .82 !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__sparkles span {
+  position: absolute !important;
+  color: rgba(255,255,255,.6) !important;
+  text-shadow: 0 0 14px rgba(255,255,255,.18) !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__sparkles span:nth-child(1) { top: 8px !important; left: 3% !important; font-size: 13px !important; }
+.bbb-home--shopify .bbb-home-obsession__sparkles span:nth-child(2) { top: 34px !important; left: 13% !important; font-size: 11px !important; }
+.bbb-home--shopify .bbb-home-obsession__sparkles span:nth-child(3) { top: 14px !important; left: 28% !important; font-size: 10px !important; }
+.bbb-home--shopify .bbb-home-obsession__sparkles span:nth-child(4) { top: 54px !important; left: 44% !important; font-size: 12px !important; }
+.bbb-home--shopify .bbb-home-obsession__sparkles span:nth-child(5) { top: 12px !important; right: 20% !important; font-size: 11px !important; }
+.bbb-home--shopify .bbb-home-obsession__sparkles span:nth-child(6) { top: 46px !important; right: 6% !important; font-size: 9px !important; }
+.bbb-home--shopify .bbb-home-obsession__sparkles span:nth-child(7) { top: 36% !important; left: 8% !important; font-size: 11px !important; }
+.bbb-home--shopify .bbb-home-obsession__sparkles span:nth-child(8) { top: 42% !important; left: 31% !important; font-size: 9px !important; }
+.bbb-home--shopify .bbb-home-obsession__sparkles span:nth-child(9) { top: 51% !important; right: 16% !important; font-size: 12px !important; }
+.bbb-home--shopify .bbb-home-obsession__sparkles span:nth-child(10) { top: 66% !important; left: 18% !important; font-size: 10px !important; }
+.bbb-home--shopify .bbb-home-obsession__sparkles span:nth-child(11) { top: 74% !important; left: 56% !important; font-size: 11px !important; }
+.bbb-home--shopify .bbb-home-obsession__sparkles span:nth-child(12) { top: 82% !important; right: 7% !important; font-size: 9px !important; }
+
+.bbb-home--shopify .bbb-home-obsession__head {
+  position: relative !important;
+  z-index: 1 !important;
+  max-width: 440px !important;
+  margin: 0 0 22px !important;
+  text-align: left !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__head::before {
+  content: "" !important;
+  display: block !important;
+  width: 68px !important;
+  height: 1px !important;
+  margin: 0 0 16px !important;
+  background: rgba(255,255,255,.72) !important;
+  box-shadow: 0 0 14px rgba(255,255,255,.12) !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__sectionKicker,
+.bbb-home--shopify .bbb-home-obsession__kicker {
+  margin: 0 !important;
+  color: rgba(246,246,246,.62) !important;
+  font-family: "Inter", sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: .18em !important;
+  line-height: 1.3 !important;
+  text-transform: uppercase !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__sectionTitle {
+  margin: 8px 0 0 !important;
+  font-family: "Libre Baskerville", Georgia, serif !important;
+  font-size: clamp(2rem, 3.5vw, 2.9rem) !important;
+  font-weight: 400 !important;
+  line-height: 1.04 !important;
+  letter-spacing: 0 !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__sectionSub {
+  max-width: 42ch !important;
+  margin: 10px 0 0 !important;
+  color: rgba(246,246,246,.72) !important;
+  font-family: "Inter", sans-serif !important;
+  font-size: 14px !important;
+  line-height: 1.7 !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__row {
+  position: relative !important;
+  z-index: 1 !important;
+  display: grid !important;
+  grid-template-columns: minmax(250px, 280px) minmax(320px, 520px) !important;
+  gap: 14px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  max-width: 860px !important;
+  margin: 0 auto !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__coverLink {
+  display: block !important;
+  justify-self: end !important;
+  margin-top: 18px !important;
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__coverWrap {
+  position: relative !important;
+  overflow: hidden !important;
+  width: 100% !important;
+  border: 1px solid rgba(255,255,255,.1) !important;
+  border-radius: 22px !important;
+  background: rgba(255,255,255,.04) !important;
+  box-shadow: 0 24px 54px rgba(0,0,0,.34) !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__coverWrap::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background: linear-gradient(180deg, rgba(0,0,0,.06), rgba(0,0,0,.22)) !important;
+  pointer-events: none !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__cover {
+  display: block !important;
+  width: 100% !important;
+  aspect-ratio: 3 / 4.2 !important;
+  object-fit: cover !important;
+  filter: none !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__spice {
+  position: absolute !important;
+  top: 16px !important;
+  right: 16px !important;
+  z-index: 2 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 8px 12px !important;
+  border: 1px solid rgba(255,255,255,.12) !important;
+  border-radius: 999px !important;
+  background: rgba(27,27,27,.88) !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,.24) !important;
+  font-size: 15px !important;
+  line-height: 1 !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__meta {
+  margin-top: 14px !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__shelf {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin: 0 !important;
+  color: rgba(246,246,246,.66) !important;
+  font-family: "Inter", sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: .16em !important;
+  text-transform: uppercase !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__line,
+.bbb-home--shopify .bbb-home-obsession__shelf > span:first-child {
+  display: inline-block !important;
+  width: 34px !important;
+  height: 1px !important;
+  background: #ff8ac7 !important;
+  opacity: .8 !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__tropes {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  margin-top: 14px !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__trope,
+.bbb-home--shopify .bbb-home-obsession__tropes a {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 9px 13px !important;
+  border: 1px solid rgba(255,255,255,.12) !important;
+  border-radius: 999px !important;
+  background: #f0bfd1 !important;
+  color: #3a202d !important;
+  font-family: "Inter", sans-serif !important;
+  font-size: 12px !important;
+  letter-spacing: .03em !important;
+  text-decoration: none !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__copy {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  justify-self: start !important;
+  max-width: 520px !important;
+  padding-top: 4px !important;
+  text-align: right !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__title {
+  max-width: 14ch !important;
+  margin: 10px 0 0 !important;
+  color: #f6f6f6 !important;
+  font-family: "Libre Baskerville", Georgia, serif !important;
+  font-size: clamp(2.4rem, 5vw, 4.5rem) !important;
+  font-weight: 400 !important;
+  line-height: .98 !important;
+  letter-spacing: 0 !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__sub {
+  max-width: 33ch !important;
+  margin: 12px 0 0 !important;
+  color: rgba(246,246,246,.72) !important;
+  font-family: "Inter", sans-serif !important;
+  font-size: 16px !important;
+  line-height: 1.65 !important;
+}
+
+@media (max-width: 749px) {
+  .bbb-home--shopify .bbb-home-obsession {
+    padding: 14px 16px 28px !important;
+  }
+
+  .bbb-home--shopify .bbb-home-obsession__row {
+    grid-template-columns: 1fr !important;
+    gap: 28px !important;
+    max-width: 520px !important;
+  }
+
+  .bbb-home--shopify .bbb-home-obsession__head {
+    max-width: none !important;
+    text-align: left !important;
+  }
+
+  .bbb-home--shopify .bbb-home-obsession__coverLink {
+    justify-self: center !important;
+    width: min(78vw, 280px) !important;
+  }
+
+  .bbb-home--shopify .bbb-home-obsession__copy {
+    align-items: center !important;
+    justify-self: center !important;
+    text-align: center !important;
+  }
+
+  .bbb-home--shopify .bbb-home-obsession__title {
+    font-size: clamp(2.2rem, 11vw, 3.8rem) !important;
+  }
+
+  .bbb-home--shopify .bbb-home-obsession__inner::after {
+    width: 78% !important;
+    margin-right: auto !important;
   }
 }
