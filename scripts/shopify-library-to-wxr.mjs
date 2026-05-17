@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 
 const root = process.cwd();
 const metaobjectsDir = resolve(root, 'migration', 'exports', 'metaobjects');
-const outputPath = resolve(root, 'migration', 'exports', 'wordpress-library-import-drafts.xml');
+const outputPath = resolve(root, 'migration', 'exports', 'wordpress-library-import.xml');
 
 const library = await readMetaobjectFile('sss_library.json');
 const quotes = await readMetaobjectFile('sss_quote.json');
@@ -19,7 +19,7 @@ const items = [...bookItems, ...quoteItems, ...newsletterIssueItems];
 await writeFile(outputPath, buildWxr(items));
 
 console.log(`Created ${relative(outputPath)}`);
-console.log(`Included ${bookItems.length} books, ${quoteItems.length} quotes, and ${newsletterIssueItems.length} newsletter issues as drafts`);
+console.log(`Included ${bookItems.length} draft books, ${quoteItems.length} draft quotes, and ${newsletterIssueItems.length} published newsletter issues`);
 
 async function readMetaobjectFile(name) {
   return JSON.parse(await readFile(resolve(metaobjectsDir, name), 'utf8'));
@@ -113,7 +113,7 @@ function newsletterIssueToItem(entry) {
     title,
     slug: entry.handle,
     type: 'bbb_newsletter_issue',
-    status: 'draft',
+    status: 'publish',
     date: publishDate,
     modified: entry.updatedAt,
     content: renderNewsletterIssueContent({ subtitle, issueUrl, book }),
