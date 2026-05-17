@@ -3097,6 +3097,94 @@ html { font-size: 15px; }
   margin-bottom: 36px !important;
 }
 
+.bbb-weekly-obsession {
+  max-width: 1120px !important;
+  margin: 0 auto 72px !important;
+  display: grid !important;
+  grid-template-columns: minmax(220px, 340px) minmax(0, 1fr) !important;
+  gap: clamp(40px, 7vw, 110px) !important;
+  align-items: center !important;
+  padding: 34px 0 48px !important;
+}
+
+.bbb-weekly-obsession__media a {
+  position: relative !important;
+  display: block !important;
+  color: inherit !important;
+}
+
+.bbb-weekly-obsession__media img {
+  width: 100% !important;
+  aspect-ratio: 2 / 3 !important;
+  object-fit: cover !important;
+  border: 1px solid rgba(255,255,255,.22) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 24px 70px rgba(0,0,0,.45) !important;
+}
+
+.bbb-weekly-obsession__spice {
+  position: absolute !important;
+  top: 16px !important;
+  right: 16px !important;
+  display: inline-flex !important;
+  padding: 8px 12px !important;
+  border-radius: 999px !important;
+  background: rgba(16,16,16,.82) !important;
+}
+
+.bbb-weekly-obsession__copy h2 {
+  max-width: 720px !important;
+  margin: 0 0 18px !important;
+  font-size: clamp(48px, 5vw, 74px) !important;
+}
+
+.bbb-weekly-obsession__copy p {
+  max-width: 580px !important;
+  color: rgba(255,255,255,.68) !important;
+  font-family: var(--font-serif) !important;
+  font-size: 20px !important;
+}
+
+.bbb-weekly-obsession__book {
+  margin-top: 28px !important;
+  color: #fff !important;
+}
+
+.bbb-weekly-obsession__shelf {
+  margin-top: 24px !important;
+  font-family: var(--font-sans) !important;
+  font-size: 12px !important;
+  letter-spacing: .18em !important;
+  text-transform: uppercase !important;
+}
+
+.bbb-weekly-obsession__terms {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+  margin: 24px 0 32px !important;
+}
+
+.bbb-weekly-obsession__terms a {
+  padding: 10px 18px !important;
+  border-radius: 999px !important;
+  background: #f3c5dc !important;
+  color: #432637 !important;
+  font-family: var(--font-sans) !important;
+  text-decoration: none !important;
+  text-transform: lowercase !important;
+}
+
+@media (max-width: 760px) {
+  .bbb-weekly-obsession {
+    grid-template-columns: 1fr !important;
+  }
+
+  .bbb-weekly-obsession__media {
+    max-width: 280px !important;
+  }
+}
+
 @media (max-width: 768px) {
   .bbb-masthead__top {
     min-height: 214px !important;
