@@ -1508,6 +1508,186 @@ function bbb_render_post_terms(int $post_id, string $taxonomy): string {
 	);
 }
 
+function bbb_meta_string(int $post_id, string $key): string {
+	return trim((string) get_post_meta($post_id, $key, true));
+}
+
+function bbb_meta_bool(int $post_id, string $key): bool {
+	$value = strtolower(bbb_meta_string($post_id, $key));
+
+	return in_array($value, array('1', 'true', 'yes', 'on'), true);
+}
+
+function bbb_book_is_private(int $post_id): bool {
+	return 'society' === bbb_meta_string($post_id, '_bbb_access_level') || bbb_meta_bool($post_id, '_bbb_private_shelf');
+}
+
+function bbb_book_is_visible(int $post_id, bool $allow_hidden_from_library = false): bool {
+	if (!$allow_hidden_from_library && bbb_meta_bool($post_id, '_bbb_hide_from_library')) {
+		return false;
+	}
+
+	$featured_date = bbb_meta_string($post_id, '_bbb_featured_in_newsletter_date');
+	if ('' === $featured_date) {
+		return true;
+	}
+
+	$featured_ts = strtotime($featured_date);
+	if (!$featured_ts) {
+		return true;
+	}
+
+	return ($featured_ts + 36000) <= time();
+}
+
+function bbb_trope_color(string $handle): array {
+	$handle = sanitize_title($handle);
+	$map    = array(
+		'enemies-to-lovers'       => array('#f2a7ad', '#6e1422'),
+		'friends-to-lovers'       => array('#bfe3cb', '#144a31'),
+		'slow-burn'               => array('#f2c179', '#6a3700'),
+		'billionaire-romance'     => array('#bfdca0', '#365316'),
+		'billionaire'             => array('#bfdca0', '#365316'),
+		'second-chance'           => array('#cfbef5', '#4b2280'),
+		'forced-proximity'        => array('#a9cdf6', '#163f72'),
+		'grumpy-sunshine'         => array('#f2d35f', '#5f4700'),
+		'workplace-romance'       => array('#bfd0ef', '#274469'),
+		'fake-dating'             => array('#efb6d3', '#6e2147'),
+		'marriage-of-convenience' => array('#dbc2a7', '#6c4221'),
+		'sports-romance'          => array('#9fd8e5', '#0f5064'),
+		'small-town'              => array('#c7d89b', '#405719'),
+		'brothers-best-friend'    => array('#ebb99c', '#71351a'),
+		'dark-romance'            => array('#b8a0d8', '#2f1646'),
+		'stalker-romance'         => array('#b8a0d8', '#2f1646'),
+		'stalker'                 => array('#b8a0d8', '#2f1646'),
+		'morally-gray-hero'       => array('#b9c1cb', '#26303b'),
+		'morally-gray-men'        => array('#b9c1cb', '#26303b'),
+		'morally-gray'            => array('#b9c1cb', '#26303b'),
+		'touch-her-and-die'       => array('#e596a8', '#641223'),
+		'one-bed'                 => array('#d8b9ea', '#55276f'),
+		'fated-mates'             => array('#e7acd1', '#74204f'),
+		'age-gap'                 => array('#c4d4ec', '#31486e'),
+		'single-dad'              => array('#b7dbc9', '#1f543b'),
+		'reverse-harem'           => array('#d7a8d7', '#651c58'),
+	);
+
+	$pair = $map[$handle] ?? array('#f3bfd5', '#4b112d');
+
+	return array('bg' => $pair[0], 'text' => $pair[1]);
+}
+
+function bbb_term_names(int $post_id, string $taxonomy): array {
+	$terms = get_the_terms($post_id, $taxonomy);
+	if (is_wp_error($terms) || !$terms) {
+		return array();
+	}
+
+	return array_values(array_map(static fn($term): string => $term->name, $terms));
+}
+
+function bbb_term_urls(int $post_id, string $taxonomy): array {
+	$terms = get_the_terms($post_id, $taxonomy);
+	if (is_wp_error($terms) || !$terms) {
+		return array();
+	}
+
+	$urls = array();
+	foreach ($terms as $term) {
+		$url = get_term_link($term);
+		if (!is_wp_error($url)) {
+			$urls[] = (string) $url;
+		}
+	}
+
+	return $urls;
+}
+
+function bbb_render_book_card(int $post_id, bool $mini = false, bool $allow_hidden_from_library = false): string {
+	if (!bbb_book_is_visible($post_id, $allow_hidden_from_library)) {
+		return '';
+	}
+
+	$cover_url     = bbb_meta_string($post_id, '_bbb_cover_url');
+	$author        = bbb_meta_string($post_id, '_bbb_author');
+	$amazon_url    = bbb_meta_string($post_id, '_bbb_amazon_url');
+	$bookshop_url  = bbb_meta_string($post_id, '_bbb_bookshop_url');
+	$spice         = bbb_meta_string($post_id, '_bbb_spice_level');
+	$series_number = bbb_meta_string($post_id, '_bbb_series_number');
+	$series_terms  = get_the_terms($post_id, 'bbb_series');
+	$series_term   = !is_wp_error($series_terms) && $series_terms ? $series_terms[0] : null;
+	$series_handle = $series_term ? $series_term->slug : bbb_meta_string($post_id, '_bbb_series_handle');
+	$series_name   = $series_term ? $series_term->name : '';
+	$tropes        = get_the_terms($post_id, 'bbb_trope');
+	$tropes        = !is_wp_error($tropes) && $tropes ? $tropes : array();
+	$genres        = bbb_term_names($post_id, 'bbb_genre');
+	$trope_names   = bbb_term_names($post_id, 'bbb_trope');
+	$trope_urls    = bbb_term_urls($post_id, 'bbb_trope');
+
+	ob_start();
+	?>
+	<button
+		type="button"
+		class="sss-lib__book<?php echo $mini ? ' sss-lib__book--mini' : ''; ?>"
+		data-handle="<?php echo esc_attr(get_post_field('post_name', $post_id)); ?>"
+		data-title="<?php echo esc_attr(get_the_title($post_id)); ?>"
+		data-author="<?php echo esc_attr($author); ?>"
+		data-cover="<?php echo esc_url($cover_url); ?>"
+		data-amazon="<?php echo esc_url($amazon_url); ?>"
+		data-bookshop="<?php echo esc_url($bookshop_url); ?>"
+		data-shelf="<?php echo esc_attr($genres[0] ?? ''); ?>"
+		data-private-shelf="<?php echo bbb_book_is_private($post_id) ? 'true' : 'false'; ?>"
+		data-spice="<?php echo esc_attr($spice); ?>"
+		data-tropes="<?php echo esc_attr(implode(', ', $trope_names)); ?>"
+		data-tropes-display="<?php echo esc_attr(implode(', ', $trope_names)); ?>"
+		data-trope-urls="<?php echo esc_attr(implode(', ', $trope_urls)); ?>"
+		data-why="<?php echo esc_attr(bbb_meta_string($post_id, '_bbb_why_i_loved_it')); ?>"
+		data-newsletter="<?php echo esc_url(bbb_meta_string($post_id, '_bbb_newsletter_url')); ?>"
+		data-mini="<?php echo esc_attr(bbb_meta_string($post_id, '_bbb_mini_note')); ?>"
+		data-series="<?php echo esc_attr($series_handle); ?>"
+		data-series-name="<?php echo esc_attr($series_name); ?>"
+		data-series-number="<?php echo esc_attr($series_number); ?>"
+		data-tension="<?php echo esc_attr(bbb_meta_string($post_id, '_bbb_tension_score')); ?>"
+		data-damage="<?php echo esc_attr(bbb_meta_string($post_id, '_bbb_emotional_damage_score')); ?>"
+		data-yearning="<?php echo esc_attr(bbb_meta_string($post_id, '_bbb_yearning_level')); ?>"
+		data-boyfriend="<?php echo esc_attr(bbb_meta_string($post_id, '_bbb_boyfriend_type')); ?>"
+		data-boyfriend-name="<?php echo esc_attr(bbb_meta_string($post_id, '_bbb_boyfriend_name')); ?>"
+		data-reread="<?php echo bbb_meta_bool($post_id, '_bbb_reread_badge') ? 'true' : 'false'; ?>"
+		data-standalone="<?php echo bbb_meta_bool($post_id, '_bbb_read_as_standalone') ? 'true' : 'false'; ?>"
+		data-ku="<?php echo bbb_meta_bool($post_id, '_bbb_on_kindle_unlimited') ? 'true' : 'false'; ?>"
+		data-darkness="<?php echo esc_attr(bbb_meta_string($post_id, '_bbb_darkness_level')); ?>"
+	>
+		<span class="sss-lib__coverWrap">
+			<span class="sss-lib__heart" data-heart role="button" aria-label="save to your bookshelf">
+				<span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♡</span>
+				<span class="sss-lib__heartLabel" data-heart-label>save</span>
+			</span>
+			<?php if ($series_number) : ?>
+				<span class="sss-lib__seriesBadge<?php echo bbb_meta_bool($post_id, '_bbb_read_as_standalone') ? ' sss-lib__seriesBadge--standalone' : ''; ?>" data-series-url="<?php echo esc_url('/book-series/' . $series_handle . '/'); ?>"><?php echo esc_html($series_number); ?></span>
+			<?php endif; ?>
+			<?php if ($spice) : ?>
+				<span class="sss-lib__floatSpice"><?php echo esc_html(str_repeat('🌶', min(5, max(1, (int) $spice)))); ?></span>
+			<?php endif; ?>
+			<?php if ($cover_url) : ?>
+				<img class="sss-lib__cover" src="<?php echo esc_url($cover_url); ?>" alt="<?php echo esc_attr(get_the_title($post_id)); ?> cover" loading="lazy">
+			<?php endif; ?>
+		</span>
+		<span class="sss-lib__under">
+			<span class="sss-lib__name"><?php echo esc_html(get_the_title($post_id)); ?></span>
+			<?php if ($author) : ?><span class="sss-lib__author"><?php echo esc_html($author); ?></span><?php endif; ?>
+		</span>
+		<?php if ($tropes) : ?>
+			<span class="sss-lib__pills">
+				<?php foreach (array_slice($tropes, 0, 3) as $trope) : ?>
+					<?php $colors = bbb_trope_color($trope->slug); ?>
+					<span class="sss-lib__pill" style="--trope-bg: <?php echo esc_attr($colors['bg']); ?>; --trope-text: <?php echo esc_attr($colors['text']); ?>;"><?php echo esc_html($trope->name); ?></span>
+				<?php endforeach; ?>
+			</span>
+		<?php endif; ?>
+	</button>
+	<?php
+	return (string) ob_get_clean();
+}
+
 // ============================================================
 // BLOG SHORTCODES
 // ============================================================
@@ -1590,6 +1770,8 @@ function bbb_get_article_book_title(int $post_id, int $index): string {
 }
 
 function bbb_render_article_book_card(int $post_id): string {
+	return bbb_render_book_card($post_id);
+
 	$cover_url    = (string) get_post_meta($post_id, '_bbb_cover_url', true);
 	$author       = (string) get_post_meta($post_id, '_bbb_author', true);
 	$spice        = (string) get_post_meta($post_id, '_bbb_spice_level', true);
