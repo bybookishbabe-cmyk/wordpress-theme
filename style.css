@@ -3,7 +3,7 @@ Theme Name: WordPress Theme
 Theme URI: https://bybookishbabe.com
 Author: By Bookish Babe
 Description: Custom WordPress block theme rebuilt from the Shopify site foundation.
-Version: 0.1.5
+Version: 0.1.6
 Requires at least: 6.5
 Tested up to: 6.8
 Requires PHP: 8.1
@@ -3243,4 +3243,477 @@ html { font-size: 15px; }
   .bbb-bigspecific { padding: 1.5rem 1.25rem; }
   .bbb-series-item { padding: 0.75rem; }
   .bbb-series-item__cover { width: 36px; height: 52px; }
+}
+
+/* ============================================================
+   HOMEPAGE SHOPIFY PORT
+============================================================ */
+.bbb-home--shopify {
+  background: #0b0b0b;
+  color: #f6f6f6;
+}
+
+.bbb-home--shopify .hero-custom {
+  min-height: 560px !important;
+  padding: 70px 16px !important;
+  background-image: url("https://cdn.shopify.com/s/files/1/0633/4968/6353/files/MainLogo_2cf8c37f-58ee-482e-af99-2e916ea1f3dd.png?v=1764968954") !important;
+  background-size: cover !important;
+  background-position: center 47% !important;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+
+.bbb-home--shopify .hero-custom::before {
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.12), rgba(0,0,0,.48) 42%, rgba(0,0,0,.18)),
+    rgba(0,0,0,.20) !important;
+}
+
+.bbb-home--shopify .hero-frame {
+  width: min(100%, 1030px) !important;
+  min-height: 315px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 56px 40px 44px !important;
+  border: 2px solid rgba(255,255,255,.72) !important;
+  text-align: center !important;
+}
+
+.bbb-home--shopify .hero-frame::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 24px !important;
+  border: 1px solid rgba(255,255,255,.48) !important;
+  pointer-events: none !important;
+}
+
+.bbb-home--shopify .hero-heading,
+.bbb-home--shopify .hero-mini,
+.bbb-home--shopify .hero-subtitle,
+.bbb-home--shopify .hero-buttons {
+  width: 100% !important;
+  text-align: center !important;
+}
+
+.bbb-home--shopify .hero-heading { margin: 0 0 20px !important; }
+
+.bbb-home--shopify .hero-cursive {
+  font-family: "Playfair Display", Georgia, serif !important;
+  font-style: italic !important;
+  font-size: clamp(46px, 5.1vw, 78px) !important;
+  font-weight: 400 !important;
+  letter-spacing: .08em !important;
+  line-height: 1.08 !important;
+}
+
+.bbb-home--shopify .hero-mini {
+  margin: 0 0 22px !important;
+  font-family: "Libre Baskerville", Georgia, serif !important;
+  font-size: clamp(15px, 1.4vw, 20px) !important;
+  font-style: italic !important;
+}
+
+.bbb-home--shopify .hero-subtitle {
+  margin: 0 0 34px !important;
+  font-family: "Libre Baskerville", Georgia, serif !important;
+  font-size: clamp(16px, 1.55vw, 22px) !important;
+  color: rgba(255,255,255,.78) !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession {
+  padding: 46px 20px 58px;
+  background: #0b0b0b;
+  overflow: hidden;
+}
+
+.bbb-home-obsession .section-divider {
+  width: min(100%, 1100px);
+  height: 1px;
+  margin: 0 auto 44px;
+  background: linear-gradient(90deg, rgba(255,255,255,.06), rgba(255,138,199,.72), rgba(255,255,255,.06));
+}
+
+.bbb-home-obsession__inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.bbb-home-obsession__sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .45;
+}
+
+.bbb-home-obsession__sparkles span {
+  position: absolute;
+  color: rgba(255,255,255,.58);
+}
+
+.bbb-home-obsession__sparkles span:nth-child(1) { top: 8%; left: 10%; }
+.bbb-home-obsession__sparkles span:nth-child(2) { top: 32%; left: 25%; }
+.bbb-home-obsession__sparkles span:nth-child(3) { top: 18%; right: 22%; }
+.bbb-home-obsession__sparkles span:nth-child(4) { bottom: 10%; left: 36%; }
+.bbb-home-obsession__sparkles span:nth-child(5) { bottom: 24%; right: 12%; }
+.bbb-home-obsession__sparkles span:nth-child(6) { top: 58%; right: 36%; }
+
+.bbb-home-obsession__head {
+  max-width: 430px;
+  margin-bottom: 36px;
+}
+
+.bbb-home-obsession__head::before {
+  content: "";
+  display: block;
+  width: 70px;
+  height: 1px;
+  margin-bottom: 18px;
+  background: rgba(255,255,255,.74);
+}
+
+.bbb-home-obsession__sectionKicker,
+.bbb-home-obsession__kicker,
+.bbb-feature-lists__kicker,
+.bbb-society-hero__kicker,
+.bbb-threads__label {
+  margin: 0 0 10px;
+  color: rgba(246,246,246,.62);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.bbb-home-obsession__sectionTitle,
+.bbb-home-obsession__title,
+.bbb-feature-lists h2,
+.bbb-society-hero h2,
+.bbb-threads__title {
+  margin: 0;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: clamp(32px, 4vw, 56px);
+  font-weight: 400;
+  line-height: 1.08;
+  text-transform: lowercase;
+}
+
+.bbb-home-obsession__sectionSub {
+  max-width: 42ch;
+  margin: 12px 0 0;
+  color: rgba(246,246,246,.70);
+  font-size: 15px;
+}
+
+.bbb-home-obsession__row {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(280px, 520px);
+  gap: clamp(32px, 7vw, 96px);
+  align-items: center;
+  justify-content: center;
+}
+
+.bbb-home-obsession__coverLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.bbb-home-obsession__coverWrap {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.16);
+  box-shadow: 0 28px 90px rgba(0,0,0,.48);
+}
+
+.bbb-home-obsession__cover {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+}
+
+.bbb-home-obsession__spice {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.70);
+  font-size: 15px;
+}
+
+.bbb-home-obsession__shelf {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 26px;
+  color: rgba(246,246,246,.68);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.bbb-home-obsession__shelf span {
+  width: 44px;
+  height: 1px;
+  background: #ec80b8;
+}
+
+.bbb-home-obsession__sub {
+  max-width: 34ch;
+  margin: 18px 0 0;
+  color: rgba(246,246,246,.76);
+  font-size: clamp(17px, 1.8vw, 22px);
+  line-height: 1.5;
+}
+
+.bbb-home-obsession__book {
+  margin: 18px 0 0;
+  color: rgba(246,246,246,.62);
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 14px;
+}
+
+.bbb-home-obsession__tropes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.bbb-home-obsession__tropes a {
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: #f2c6dc;
+  color: #301521;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.bbb-home--shopify .bbb-trending,
+.bbb-home--shopify .bbb-tropes,
+.bbb-feature-lists,
+.bbb-society-hero,
+.bbb-quiz-nudge,
+.bbb-threads,
+.bbb-connect-cards {
+  padding: 58px 20px;
+  background: #0b0b0b;
+  border-top: 1px solid rgba(255,255,255,.07);
+}
+
+.bbb-home--shopify .bbb-trending__inner,
+.bbb-home--shopify .bbb-tropes__inner,
+.bbb-feature-lists__inner,
+.bbb-society-hero__inner,
+.bbb-quiz-nudge__wrap,
+.bbb-threads__inner,
+.bbb-connect-cards__inner {
+  width: min(100%, 1120px);
+  margin: 0 auto;
+}
+
+.bbb-home--shopify .bbb-trending__row {
+  display: flex !important;
+  gap: 18px;
+  overflow-x: auto;
+  padding: 12px 0 14px;
+  margin: 26px 0 24px;
+}
+
+.bbb-home--shopify .bbb-trending__book {
+  flex: 0 0 170px;
+}
+
+.bbb-library-card--home {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.bbb-library-card--home .bbb-library-card__media {
+  border-radius: 12px;
+}
+
+.bbb-library-card--home .bbb-library-card__title {
+  margin-top: 11px;
+  font-size: 14px;
+}
+
+.bbb-library-card--home .bbb-library-card__author,
+.bbb-library-card--home .bbb-library-card__meta,
+.bbb-library-card--home .bbb-library-card__chip {
+  font-size: 12px;
+}
+
+.bbb-home--shopify .bbb-trending__cta {
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.bbb-home--shopify .bbb-trending__cta a,
+.bbb-feature-list-card em {
+  color: #ec80b8;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+
+.bbb-home--shopify .bbb-tropes__row {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 36px;
+  align-items: center;
+}
+
+.bbb-feature-lists__grid,
+.bbb-connect-cards__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.bbb-feature-list-card,
+.bbb-society-hero__card,
+.bbb-thread-card,
+.bbb-connect-cards__grid a {
+  display: block;
+  min-height: 160px;
+  padding: 22px;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.018));
+  color: #f6f6f6;
+  text-decoration: none;
+}
+
+.bbb-feature-list-card span,
+.bbb-society-hero__card span {
+  display: block;
+  margin-bottom: 14px;
+  color: rgba(246,246,246,.55);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .17em;
+  text-transform: uppercase;
+}
+
+.bbb-feature-list-card strong,
+.bbb-society-hero__card strong {
+  display: block;
+  margin-bottom: 18px;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 19px;
+  line-height: 1.45;
+  text-transform: lowercase;
+}
+
+.bbb-society-hero__inner,
+.bbb-quiz-nudge__wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+  gap: 44px;
+  align-items: center;
+}
+
+.bbb-society-hero p,
+.bbb-feature-lists p,
+.bbb-quiz-nudge__sub,
+.bbb-threads__sub,
+.bbb-connect-cards__sub {
+  color: rgba(246,246,246,.66);
+}
+
+.bbb-quiz-nudge__wrap {
+  padding: 34px;
+  border: 1px solid rgba(236,128,184,.26);
+  border-radius: 24px;
+  background: radial-gradient(circle at 78% 22%, rgba(236,128,184,.18), transparent 36%), rgba(255,255,255,.025);
+}
+
+.bbb-quiz-nudge__script,
+.bbb-connect-cards__title span {
+  display: block;
+  color: #ff8ac7;
+  font-family: "Great Vibes", cursive;
+  font-size: clamp(42px, 5vw, 74px);
+  font-weight: 400;
+}
+
+.bbb-quiz-nudge__btn {
+  display: inline-flex;
+  padding: 14px 22px;
+  border: 1px solid rgba(255,138,199,.65);
+  border-radius: 999px;
+  color: #ffd0e8;
+  text-decoration: none;
+}
+
+.bbb-threads__carousel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.bbb-thread-card span {
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 18px;
+  line-height: 1.55;
+}
+
+.bbb-connect-cards__header {
+  text-align: center;
+}
+
+.bbb-connect-cards__grid a {
+  min-height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffd0e8;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 20px;
+}
+
+@media (max-width: 900px) {
+  .bbb-home-obsession__row,
+  .bbb-home--shopify .bbb-tropes__row,
+  .bbb-society-hero__inner,
+  .bbb-quiz-nudge__wrap,
+  .bbb-feature-lists__grid,
+  .bbb-connect-cards__grid,
+  .bbb-threads__carousel {
+    grid-template-columns: 1fr;
+  }
+
+  .bbb-home-obsession__coverLink {
+    width: min(78vw, 320px);
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .bbb-home--shopify .hero-custom {
+    min-height: 500px !important;
+    padding: 50px 14px !important;
+  }
+
+  .bbb-home--shopify .hero-cursive {
+    font-size: clamp(36px, 12vw, 52px) !important;
+  }
+
+  .bbb-home--shopify .hero-buttons a {
+    width: min(100%, 250px);
+  }
+
+  .bbb-home--shopify .bbb-trending__book {
+    flex-basis: 145px;
+  }
 }

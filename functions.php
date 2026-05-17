@@ -800,6 +800,204 @@ add_shortcode(
 	}
 );
 
+add_shortcode(
+	'bbb_homepage',
+	static function (): string {
+		return bbb_render_homepage_template();
+	}
+);
+
+function bbb_render_homepage_template(): string {
+	return '<main class="bbb-home bbb-home--shopify">'
+		. bbb_render_homepage_hero()
+		. bbb_render_homepage_weekly_obsession()
+		. bbb_render_homepage_trending()
+		. bbb_render_homepage_tropes()
+		. bbb_render_homepage_featured_lists()
+		. bbb_render_homepage_society()
+		. bbb_render_homepage_quiz()
+		. bbb_render_homepage_threads()
+		. bbb_render_homepage_connect()
+		. '</main>';
+}
+
+function bbb_render_homepage_hero(): string {
+	ob_start();
+	?>
+	<section class="hero-custom bbb-home-hero">
+		<div class="hero-overlay" aria-hidden="true"></div>
+		<div class="hero-frame">
+			<h1 class="hero-heading"><span class="hero-cursive">smut meets sentiment</span></h1>
+			<p class="hero-mini">for soft hearts with sinful taste.</p>
+			<p class="hero-subtitle">morally gray men delivered every sunday</p>
+			<div class="hero-buttons">
+				<a href="/library/" class="btn-primary">explore library</a>
+				<a href="https://thesmutandsentimentsociety.substack.com/subscribe" class="btn-secondary">join the society</a>
+			</div>
+		</div>
+	</section>
+	<?php
+	return (string) ob_get_clean();
+}
+
+function bbb_render_homepage_weekly_obsession(): string {
+	$issue = bbb_get_current_newsletter_issue();
+	$book  = $issue ? bbb_find_book_for_newsletter_issue($issue) : null;
+
+	if (!$issue || !$book) {
+		return do_shortcode('[bbb_library_shelf title="weekly obsession" subtitle="the book currently taking over the smut & sentiment society." limit="1" meta_key="_bbb_top_shelf" meta_value="1" class="bbb-shelf--featured" fallback="true"]');
+	}
+
+	$cover_url = (string) get_post_meta($book->ID, '_bbb_cover_url', true);
+	$author    = (string) get_post_meta($book->ID, '_bbb_author', true);
+	$subtitle  = (string) get_post_meta($issue->ID, '_bbb_subtitle', true);
+	$spice     = (string) get_post_meta($book->ID, '_bbb_spice_level', true);
+	$genre     = get_the_terms($book->ID, 'bbb_genre');
+	$tropes    = get_the_terms($book->ID, 'bbb_trope');
+
+	ob_start();
+	?>
+	<section class="bbb-home-obsession">
+		<div class="section-divider"></div>
+		<div class="bbb-home-obsession__inner">
+			<div class="bbb-home-obsession__sparkles" aria-hidden="true">
+				<span>✦</span><span>✧</span><span>⋆</span><span>✦</span><span>✧</span><span>⋆</span>
+			</div>
+			<div class="bbb-home-obsession__head">
+				<p class="bbb-home-obsession__sectionKicker">from the society</p>
+				<h2 class="bbb-home-obsession__sectionTitle">weekly obsession</h2>
+				<p class="bbb-home-obsession__sectionSub">the book currently taking over the smut &amp; sentiment society.</p>
+			</div>
+			<div class="bbb-home-obsession__row">
+				<a class="bbb-home-obsession__coverLink" href="<?php echo esc_url('/weekly-obsession/'); ?>">
+					<div class="bbb-home-obsession__coverWrap">
+						<?php if ($cover_url) : ?>
+							<img src="<?php echo esc_url($cover_url); ?>" alt="<?php echo esc_attr(get_the_title($book)); ?> cover" class="bbb-home-obsession__cover" loading="lazy">
+						<?php endif; ?>
+						<?php if ($spice) : ?>
+							<div class="bbb-home-obsession__spice"><?php echo esc_html(str_repeat('🌶', min(5, max(1, (int) $spice)))); ?></div>
+						<?php endif; ?>
+					</div>
+					<?php if (!is_wp_error($genre) && $genre) : ?>
+						<div class="bbb-home-obsession__shelf"><span></span><?php echo esc_html($genre[0]->name); ?></div>
+					<?php endif; ?>
+				</a>
+				<div class="bbb-home-obsession__copy">
+					<p class="bbb-home-obsession__kicker">weekly obsession</p>
+					<h2 class="bbb-home-obsession__title"><?php echo esc_html(get_the_title($issue)); ?></h2>
+					<?php if ($subtitle) : ?><p class="bbb-home-obsession__sub"><?php echo esc_html($subtitle); ?></p><?php endif; ?>
+					<p class="bbb-home-obsession__book"><?php echo esc_html(get_the_title($book)); ?><?php echo $author ? ' · ' . esc_html($author) : ''; ?></p>
+					<?php if (!is_wp_error($tropes) && $tropes) : ?>
+						<div class="bbb-home-obsession__tropes">
+							<?php foreach (array_slice($tropes, 0, 3) as $term) : ?>
+								<a href="<?php echo esc_url(get_term_link($term)); ?>"><?php echo esc_html($term->name); ?></a>
+							<?php endforeach; ?>
+						</div>
+					<?php endif; ?>
+				</div>
+			</div>
+		</div>
+	</section>
+	<?php
+	return (string) ob_get_clean();
+}
+
+function bbb_home_book_ids(array $args = array()): array {
+	$defaults = array(
+		'post_type'      => 'bbb_book',
+		'post_status'    => current_user_can('edit_posts') ? array('publish', 'draft') : array('publish'),
+		'posts_per_page' => 5,
+		'fields'         => 'ids',
+		'orderby'        => 'date',
+		'order'          => 'DESC',
+	);
+
+	return get_posts(array_merge($defaults, $args));
+}
+
+function bbb_render_home_book_card(int $post_id): string {
+	return bbb_render_library_card($post_id, 'home');
+}
+
+function bbb_render_homepage_trending(): string {
+	$books = bbb_home_book_ids(
+		array(
+			'posts_per_page' => 6,
+			'meta_query'     => array(
+				array(
+					'key'   => '_bbb_top_shelf',
+					'value' => '1',
+				),
+			),
+		)
+	);
+
+	if (!$books) {
+		$books = bbb_home_book_ids(array('posts_per_page' => 6));
+	}
+
+	$cards = '';
+	foreach ($books as $book_id) {
+		$cards .= '<div class="bbb-trending__book">' . bbb_render_home_book_card((int) $book_id) . '</div>';
+	}
+
+	return '<section class="bbb-trending"><div class="bbb-trending__inner"><div class="bbb-trending__head"><p class="bbb-trending__kicker">what the society is reading right now</p><h2 class="bbb-trending__title">trending romance reads</h2><p class="bbb-trending__sub">the books currently circulating through the smut &amp; sentiment society.</p></div><div class="bbb-trending__row">' . $cards . '</div><div class="bbb-trending__cta"><a href="https://thesmutandsentimentsociety.substack.com/subscribe">don’t miss a sunday →</a><a href="/library/">explore the full library →</a></div></div></section>';
+}
+
+function bbb_render_homepage_tropes(): string {
+	$cards = array(
+		array('touch her and die', '/book-trope/touch-her-and-die/'),
+		array('morally gray men', '/book-trope/morally-gray/'),
+		array('fated mates', '/book-trope/fated-mates/'),
+		array('enemies to lovers', '/book-trope/enemies-to-lovers/'),
+	);
+	$html = '';
+
+	foreach ($cards as $card) {
+		$html .= '<a href="' . esc_url($card[1]) . '" class="bbb-trope-card"><span class="bbb-trope-card__label">trope</span><span class="bbb-trope-card__title">' . esc_html($card[0]) . '</span><span class="bbb-trope-card__arrow">see books →</span></a>';
+	}
+
+	return '<section class="bbb-tropes"><div class="bbb-tropes__inner"><a class="bbb-spiceCallout" href="/romance-books-by-spice-level/"><span class="bbb-spiceCallout__kicker">new way to browse</span><span class="bbb-spiceCallout__text">want the exact spice level? browse romance by spice level →</span></a><div class="bbb-tropes__row"><div class="bbb-tropes__titleWrap"><p class="bbb-tropes__kicker">romance navigation</p><h2 class="bbb-tropes__title">browse by trope</h2></div><div class="bbb-tropes__grid">' . $html . '</div></div></div></section>';
+}
+
+function bbb_render_homepage_featured_lists(): string {
+	$posts = get_posts(
+		array(
+			'post_type'      => 'post',
+			'post_status'    => 'publish',
+			's'              => 'books like',
+			'posts_per_page' => 4,
+		)
+	);
+	$cards = '';
+
+	foreach ($posts as $post) {
+		$cards .= '<a class="bbb-feature-list-card" href="' . esc_url(get_permalink($post)) . '"><span>reading list</span><strong>' . esc_html(get_the_title($post)) . '</strong><em>open guide →</em></a>';
+	}
+
+	if (!$cards) {
+		$cards = '<a class="bbb-feature-list-card" href="/blog/"><span>reading list</span><strong>featured romance lists</strong><em>open guides →</em></a>';
+	}
+
+	return '<section class="bbb-feature-lists"><div class="bbb-feature-lists__inner"><p class="bbb-feature-lists__kicker">reader favorites</p><h2>featured romance lists</h2><p>quick romance reading lists for when you’re not sure what to read next.</p><div class="bbb-feature-lists__grid">' . $cards . '</div></div></section>';
+}
+
+function bbb_render_homepage_society(): string {
+	return '<section class="bbb-society-hero"><div class="bbb-society-hero__inner"><div><p class="bbb-society-hero__kicker">for the bookaholics who love romance</p><h2>the smut &amp; sentiment society</h2><p>weekly letters, obsessive recs, and reader-core you pretend you’re not addicted to.</p></div><a href="/smut-sentiment-society/" class="bbb-society-hero__card"><span>inside the society</span><strong>the archive. reading lists. the fictional men problem. a tasteful amount of chaos.</strong></a></div></section>';
+}
+
+function bbb_render_homepage_quiz(): string {
+	return '<section class="bbb-quiz-nudge"><div class="bbb-quiz-nudge__wrap"><div><p class="bbb-quiz-nudge__kicker">reader quiz</p><h2 class="bbb-quiz-nudge__title"><span class="bbb-quiz-nudge__script">who’s your</span><span class="bbb-quiz-nudge__main">fictional boyfriend?</span></h2><p class="bbb-quiz-nudge__sub">answer five questions. meet your fictional boyfriend. get a book you’ll ruin your sleep over.</p></div><div class="bbb-quiz-nudge__right"><a href="/fictional-boyfriend-quiz/" class="bbb-quiz-nudge__btn">take the quiz →</a><p class="bbb-quiz-nudge__tiny">quick. dramatic. painfully accurate.</p></div></div></section>';
+}
+
+function bbb_render_homepage_threads(): string {
+	return '<section class="bbb-threads"><div class="bbb-threads__inner"><p class="bbb-threads__label">from the feed</p><h2 class="bbb-threads__title">threads from the society</h2><p class="bbb-threads__sub">reader brainrot, smutty confessions, and unhinged kindle devotion in real time.</p><div class="bbb-threads__carousel"><a href="https://www.threads.net/@bybookishbabe" class="bbb-thread-card"><span>sundays are for letting fiction ruin me a little &amp; pretending it’s self care.</span></a><a href="https://www.threads.net/@bybookishbabe" class="bbb-thread-card"><span>“just one more chapter” is how i time travel from 9pm to 2am in a single blink.</span></a></div></div></section>';
+}
+
+function bbb_render_homepage_connect(): string {
+	return '<section class="bbb-connect-cards"><div class="bbb-connect-cards__inner"><div class="bbb-connect-cards__header"><h2 class="bbb-connect-cards__title"><span>come</span> closer</h2><p class="bbb-connect-cards__sub">book recs, newsletter notes, and all the reader-life chaos in the places i actually post.</p></div><div class="bbb-connect-cards__grid"><a href="https://www.tiktok.com/@bybookishbabe">TikTok</a><a href="https://thesmutandsentimentsociety.substack.com/subscribe">Substack</a><a href="https://www.instagram.com/bybookishbabe/">Instagram</a></div></div></section>';
+}
+
 function bbb_get_member_sync_secret(): string {
 	if (defined('BBB_MEMBER_SYNC_SECRET') && BBB_MEMBER_SYNC_SECRET) {
 		return (string) BBB_MEMBER_SYNC_SECRET;
