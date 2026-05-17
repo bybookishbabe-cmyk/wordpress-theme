@@ -79,6 +79,22 @@ add_action(
 			)
 		);
 
+		register_post_type(
+			'bbb_newsletter_issue',
+			array(
+				'labels'       => array(
+					'name'          => __('Newsletter Issues', 'wordpress-theme'),
+					'singular_name' => __('Newsletter Issue', 'wordpress-theme'),
+				),
+				'public'       => true,
+				'show_in_rest' => true,
+				'menu_icon'    => 'dashicons-email-alt2',
+				'supports'     => array('title', 'editor', 'excerpt', 'custom-fields'),
+				'has_archive'  => 'newsletter-issues',
+				'rewrite'      => array('slug' => 'newsletter-issues'),
+			)
+		);
+
 		foreach (
 			array(
 				'bbb_genre'  => array('Genres', 'Genre', 'book-genre'),
@@ -636,10 +652,134 @@ function bbb_render_our_story_template(): string {
 }
 
 function bbb_render_weekly_obsession_template(): string {
-	$body = do_shortcode('[bbb_library_shelf title="weekly obsession" subtitle="the book currently taking over the smut & sentiment society." limit="1" meta_key="_bbb_top_shelf" meta_value="1" class="bbb-shelf--featured" fallback="true"]')
+	$body = bbb_render_newsletter_weekly_obsession()
 		. do_shortcode('[bbb_library_shelf title="read this next" limit="3" class="bbb-shelf--plain" fallback="true"]');
 
 	return bbb_render_page_shell('weekly obsession', 'this week’s obsession', 'the current society pick, plus a few nearby reads.', $body);
+}
+
+function bbb_get_current_newsletter_issue(): ?WP_Post {
+	$today = current_time('Y-m-d');
+	$query = new WP_Query(
+		array(
+			'post_type'      => 'bbb_newsletter_issue',
+			'post_status'    => current_user_can('edit_posts') ? array('publish', 'draft') : array('publish'),
+			'posts_per_page' => 1,
+			'meta_key'       => '_bbb_publish_date',
+			'orderby'        => 'meta_value',
+			'order'          => 'DESC',
+			'meta_query'     => array(
+				array(
+					'key'     => '_bbb_publish_date',
+					'value'   => $today,
+					'compare' => '<=',
+					'type'    => 'DATE',
+				),
+			),
+		)
+	);
+
+	$issue = $query->have_posts() ? $query->posts[0] : null;
+	wp_reset_postdata();
+
+	return $issue instanceof WP_Post ? $issue : null;
+}
+
+function bbb_find_book_for_newsletter_issue(WP_Post $issue): ?WP_Post {
+	$shopify_id = (string) get_post_meta($issue->ID, '_bbb_book_shopify_id', true);
+	$handle     = (string) get_post_meta($issue->ID, '_bbb_book_handle', true);
+	$title      = (string) get_post_meta($issue->ID, '_bbb_book_title', true);
+
+	foreach (array('_shopify_id' => $shopify_id, '_shopify_handle' => $handle) as $meta_key => $value) {
+		if (!$value) {
+			continue;
+		}
+
+		$query = new WP_Query(
+			array(
+				'post_type'      => 'bbb_book',
+				'post_status'    => current_user_can('edit_posts') ? array('publish', 'draft') : array('publish'),
+				'posts_per_page' => 1,
+				'meta_key'       => $meta_key,
+				'meta_value'     => $value,
+			)
+		);
+
+		$book = $query->have_posts() ? $query->posts[0] : null;
+		wp_reset_postdata();
+
+		if ($book instanceof WP_Post) {
+			return $book;
+		}
+	}
+
+	if ($title) {
+		$page = get_page_by_title($title, OBJECT, 'bbb_book');
+		if ($page instanceof WP_Post) {
+			return $page;
+		}
+	}
+
+	return null;
+}
+
+function bbb_render_newsletter_weekly_obsession(): string {
+	$issue = bbb_get_current_newsletter_issue();
+	$book  = $issue ? bbb_find_book_for_newsletter_issue($issue) : null;
+
+	if (!$issue || !$book) {
+		return do_shortcode('[bbb_library_shelf title="weekly obsession" subtitle="the book currently taking over the smut & sentiment society." limit="1" meta_key="_bbb_top_shelf" meta_value="1" class="bbb-shelf--featured" fallback="true"]');
+	}
+
+	$cover_url  = (string) get_post_meta($book->ID, '_bbb_cover_url', true);
+	$author     = (string) get_post_meta($book->ID, '_bbb_author', true);
+	$subtitle   = (string) get_post_meta($issue->ID, '_bbb_subtitle', true);
+	$issue_url  = (string) get_post_meta($issue->ID, '_bbb_issue_url', true);
+	$spice      = (string) get_post_meta($book->ID, '_bbb_spice_level', true);
+	$genre      = get_the_terms($book->ID, 'bbb_genre');
+	$tropes     = get_the_terms($book->ID, 'bbb_trope');
+	$terms      = !is_wp_error($tropes) && $tropes ? array_slice($tropes, 0, 3) : array();
+
+	ob_start();
+	?>
+	<section class="bbb-weekly-obsession">
+		<div class="bbb-weekly-obsession__media">
+			<a href="<?php echo esc_url(get_permalink($book)); ?>">
+				<?php if ($cover_url) : ?>
+					<img src="<?php echo esc_url($cover_url); ?>" alt="<?php echo esc_attr(get_the_title($book)); ?> cover" loading="lazy">
+				<?php endif; ?>
+				<?php if ($spice) : ?>
+					<span class="bbb-weekly-obsession__spice"><?php echo esc_html(str_repeat('🌶', min(5, max(1, (int) $spice)))); ?></span>
+				<?php endif; ?>
+			</a>
+		</div>
+		<div class="bbb-weekly-obsession__copy">
+			<p class="bbb-page-kicker">weekly obsession</p>
+			<h2><?php echo esc_html(get_the_title($issue)); ?></h2>
+			<?php if ($subtitle) : ?>
+				<p><?php echo esc_html($subtitle); ?></p>
+			<?php endif; ?>
+			<p class="bbb-weekly-obsession__book"><?php echo esc_html(get_the_title($book)); ?><?php echo $author ? ' by ' . esc_html($author) : ''; ?></p>
+			<?php if (!is_wp_error($genre) && $genre) : ?>
+				<p class="bbb-weekly-obsession__shelf"><?php echo esc_html($genre[0]->name); ?></p>
+			<?php endif; ?>
+			<?php if ($terms) : ?>
+				<div class="bbb-weekly-obsession__terms">
+					<?php foreach ($terms as $term) : ?>
+						<a href="<?php echo esc_url(get_term_link($term)); ?>"><?php echo esc_html($term->name); ?></a>
+					<?php endforeach; ?>
+				</div>
+			<?php endif; ?>
+			<div class="bbb-template-actions">
+				<a href="<?php echo esc_url(get_permalink($book)); ?>">open book</a>
+				<?php if ($issue_url) : ?>
+					<a href="<?php echo esc_url($issue_url); ?>">read newsletter</a>
+				<?php endif; ?>
+			</div>
+		</div>
+	</section>
+	<?php
+	return (string) ob_get_clean();
 }
 
 function bbb_render_simple_hub_template(string $kicker, string $title, string $subtext, array $links): string {

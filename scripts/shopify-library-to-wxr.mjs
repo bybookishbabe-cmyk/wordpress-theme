@@ -7,17 +7,19 @@ const outputPath = resolve(root, 'migration', 'exports', 'wordpress-library-impo
 
 const library = await readMetaobjectFile('sss_library.json');
 const quotes = await readMetaobjectFile('sss_quote.json');
+const newsletterIssues = await readMetaobjectFile('newsletter_issue.json');
 
 await mkdir(resolve(root, 'migration', 'exports'), { recursive: true });
 
 const bookItems = library.entries.map(bookToItem);
 const quoteItems = quotes.entries.map(quoteToItem);
-const items = [...bookItems, ...quoteItems];
+const newsletterIssueItems = newsletterIssues.entries.map(newsletterIssueToItem);
+const items = [...bookItems, ...quoteItems, ...newsletterIssueItems];
 
 await writeFile(outputPath, buildWxr(items));
 
 console.log(`Created ${relative(outputPath)}`);
-console.log(`Included ${bookItems.length} books and ${quoteItems.length} quotes as drafts`);
+console.log(`Included ${bookItems.length} books, ${quoteItems.length} quotes, and ${newsletterIssueItems.length} newsletter issues as drafts`);
 
 async function readMetaobjectFile(name) {
   return JSON.parse(await readFile(resolve(metaobjectsDir, name), 'utf8'));
@@ -96,6 +98,48 @@ function quoteToItem(entry) {
       _bbb_raw_fields: JSON.stringify(entry.fields),
     },
   };
+}
+
+function newsletterIssueToItem(entry) {
+  const fields = fieldMap(entry);
+  const title = textField(fields.title) || entry.displayName || entry.handle;
+  const subtitle = textField(fields.subtitle);
+  const book = fields.book?.reference || fields.library_book?.reference;
+  const publishDate = textField(fields.publish_date) || entry.updatedAt;
+  const issueUrl = linkUrl(fields.url);
+  const preview = fields.preview?.reference;
+
+  return {
+    title,
+    slug: entry.handle,
+    type: 'bbb_newsletter_issue',
+    status: 'draft',
+    date: publishDate,
+    modified: entry.updatedAt,
+    content: renderNewsletterIssueContent({ subtitle, issueUrl, book }),
+    excerpt: subtitle || '',
+    terms: [],
+    meta: {
+      _shopify_id: entry.id,
+      _shopify_handle: entry.handle,
+      _bbb_subtitle: subtitle,
+      _bbb_publish_date: publishDate,
+      _bbb_issue_url: issueUrl,
+      _bbb_preview_shopify_id: preview?.id || textField(fields.preview),
+      _bbb_book_shopify_id: book?.id,
+      _bbb_book_handle: book?.handle,
+      _bbb_book_title: book?.displayName,
+      _bbb_raw_fields: JSON.stringify(entry.fields),
+    },
+  };
+}
+
+function renderNewsletterIssueContent({ subtitle, issueUrl, book }) {
+  const bits = [];
+  if (subtitle) bits.push(`<p>${escapeHtml(subtitle)}</p>`);
+  if (book?.displayName) bits.push(`<p><strong>Featured book:</strong> ${escapeHtml(book.displayName)}</p>`);
+  if (issueUrl) bits.push(`<p><a href="${escapeHtml(issueUrl)}">Read the newsletter</a></p>`);
+  return bits.join('\n');
 }
 
 function renderBookContent(fields, note) {

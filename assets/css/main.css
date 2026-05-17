@@ -3772,3 +3772,13 @@ body,
   .bbb-series-item { padding: 0.75rem; }
   .bbb-series-item__cover { width: 36px; height: 52px; }
 }
+
+/* ============================================================
+   HEADER — logo-only layout (homepage)
+============================================================ */
+.bbb-masthead__top--logo-only {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  grid-template-columns: unset;
+}
