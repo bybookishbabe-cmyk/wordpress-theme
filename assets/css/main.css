@@ -337,7 +337,7 @@ body.tax-bbb_series .bbb-main-nav a[href="/library"] {
   justify-content: center;
   text-align: center;
   overflow: hidden;
-  background-image: url("https://cdn.shopify.com/s/files/1/0633/4968/6353/files/MainLogo_2cf8c37f-58ee-482e-af99-2e916ea1f3dd.png?v=1764968954");
+  background-image: url("../../assets/hero-bg.png");
   background-size: cover;
   background-position: center 47%;
 }

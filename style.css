@@ -3,7 +3,7 @@ Theme Name: WordPress Theme
 Theme URI: https://bybookishbabe.com
 Author: By Bookish Babe
 Description: Custom WordPress block theme rebuilt from the Shopify site foundation.
-Version: 0.1.19
+Version: 0.1.20
 Requires at least: 6.5
 Tested up to: 6.8
 Requires PHP: 8.1
@@ -39,6 +39,544 @@ Text Domain: wordpress-theme
 
   --content-width: 720px;
   --wide-width:    1180px;
+}
+
+/* ============================================================
+   Homepage active-section parity pass
+============================================================ */
+.bbb-home--shopify .bbb-romance-lists,
+.bbb-home--shopify .bbb-newsletter-cta,
+.bbb-home--shopify .bbb-connect-cards {
+  background: #0b0b0b;
+  color: #f6f6f6;
+  border-top: 1px solid rgba(255,255,255,.07);
+}
+
+.bbb-home--shopify .bbb-romance-lists {
+  padding: 58px 20px;
+}
+
+.bbb-romance-lists__inner {
+  width: min(100%, 1100px);
+  margin: 0 auto;
+}
+
+.bbb-romance-lists__head {
+  max-width: 560px;
+  margin-bottom: 28px;
+  animation: listsHeadDrop .75s ease both;
+}
+
+.bbb-romance-lists__kicker,
+.bbb-newsletter-cta__kicker,
+.bbb-nc__kicker {
+  margin: 0 0 10px;
+  color: rgba(246,246,246,.62);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.bbb-romance-lists__title,
+.bbb-newsletter-cta__title {
+  margin: 0;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 400;
+  line-height: 1.08;
+  text-transform: lowercase;
+}
+
+.bbb-romance-lists__sub,
+.bbb-newsletter-cta__sub {
+  max-width: 54ch;
+  color: rgba(246,246,246,.68);
+}
+
+.bbb-romance-lists__shelf {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 760px;
+}
+
+.bbb-romance-lists__spine {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-height: 58px;
+  margin-top: -6px;
+  padding: 16px 22px;
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+  color: #f6f6f6;
+  font-family: "Libre Baskerville", Georgia, serif;
+  text-decoration: none;
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  animation: spineDrop .65s ease both;
+}
+
+.bbb-romance-lists__spine:nth-child(2) { animation-delay: .1s; }
+.bbb-romance-lists__spine:nth-child(3) { animation-delay: .2s; }
+.bbb-romance-lists__spine:nth-child(4) { animation-delay: .3s; }
+.bbb-romance-lists__spine:nth-child(5) { animation-delay: .4s; }
+
+.bbb-romance-lists__spine:hover {
+  transform: translateX(4px);
+  border-color: #ff8ac7;
+  box-shadow: 0 0 18px rgba(255,138,199,.25);
+}
+
+.bbb-romance-lists__number {
+  color: #ff8ac7;
+  font-size: 13px;
+  letter-spacing: .12em;
+}
+
+.bbb-romance-lists__name {
+  font-size: 18px;
+  line-height: 1.35;
+  text-transform: lowercase;
+}
+
+.bbb-romance-lists__cta {
+  margin-top: 24px;
+}
+
+.bbb-romance-lists__cta a {
+  color: #ec80b8;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+
+@keyframes listsHeadDrop {
+  from { opacity: 0; transform: translateY(-2.4rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spineDrop {
+  from { opacity: 0; transform: translateY(-28px) scale(.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.bbb-home--shopify .bbb-newsletter-cta {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(44px, 6vw, 92px) 20px;
+}
+
+.bbb-newsletter-cta__wrap {
+  width: min(100%, 1100px);
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.bbb-newsletter-cta__head {
+  max-width: 680px;
+  margin: 0 auto 30px;
+  text-align: center;
+}
+
+.bbb-newsletter-cta__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr);
+  gap: 0;
+}
+
+.bbb-nc {
+  border: 1px solid rgba(255,255,255,.15);
+  background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.018));
+  overflow: hidden;
+}
+
+.bbb-nc--latest { border-radius: 22px 0 0 22px; }
+.bbb-nc--society { border-radius: 0 22px 22px 0; border-left: 0; }
+
+.bbb-nc__latestLink,
+.bbb-nc__societyLink {
+  display: block;
+  height: 100%;
+  padding: clamp(24px, 4vw, 42px);
+  color: inherit;
+  text-decoration: none;
+}
+
+.bbb-nc__top,
+.bbb-nc__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.bbb-nc__meta {
+  justify-content: flex-start;
+  margin-top: 8px;
+  color: rgba(246,246,246,.55);
+  font-size: 12px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.bbb-nc__badge {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #ff8ac7;
+  color: #111;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.bbb-nc__rule {
+  width: 64px;
+  height: 1px;
+  margin: 22px 0;
+  background: rgba(255,255,255,.55);
+}
+
+.bbb-nc__img {
+  display: block;
+  width: min(100%, 220px);
+  aspect-ratio: 4 / 5;
+  margin: 0 0 24px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.14);
+}
+
+.bbb-nc__title {
+  margin: 0;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: clamp(24px, 3vw, 38px);
+  line-height: 1.15;
+  text-transform: lowercase;
+}
+
+.bbb-nc__desc {
+  max-width: 52ch;
+  color: rgba(246,246,246,.68);
+  line-height: 1.65;
+}
+
+.bbb-nc__link {
+  display: inline-flex;
+  margin-top: 10px;
+  color: #ff8ac7;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255,138,199,.7);
+}
+
+.bbb-nc__fineprint {
+  margin: 18px 0 0;
+  color: rgba(246,246,246,.44);
+  font-size: 12px;
+}
+
+.bbb-newsletter-cta__rain,
+.bbb-rain-emoji {
+  pointer-events: none;
+}
+
+.bbb-newsletter-cta__rain {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: .35;
+}
+
+.bbb-rain-emoji {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  font-size: var(--size, 20px);
+  animation: bbb-fall var(--dur, 28s) linear infinite;
+}
+
+@keyframes bbb-fall {
+  from { transform: translate3d(0, -20vh, 0) rotate(0deg); }
+  to { transform: translate3d(var(--drift, 30px), 120vh, 0) rotate(var(--rot, 45deg)); }
+}
+
+.bbb-home--shopify .bbb-connect-cards {
+  padding: clamp(36px, 6vw, 76px) 20px;
+}
+
+.bbb-connect-cards__inner {
+  width: min(100%, 1150px);
+  margin: 0 auto;
+}
+
+.bbb-connect-cards__header {
+  max-width: 760px;
+  margin: 0 auto 28px;
+  text-align: center;
+}
+
+.bbb-connect-cards__title {
+  margin: 0;
+  line-height: .9;
+  text-transform: lowercase;
+}
+
+.bbb-lets {
+  display: block;
+  color: #ff8ac7;
+  font-family: "Great Vibes", cursive;
+  font-size: clamp(48px, 7vw, 92px);
+  font-weight: 400;
+}
+
+.bbb-word {
+  display: block;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: clamp(30px, 4vw, 48px);
+}
+
+.bbb-card-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(18px, 2.5vw, 26px);
+}
+
+.libcard {
+  color: #111;
+  text-decoration: none;
+  animation: bbbConnectCardIn .65s ease both;
+  animation-delay: var(--bbb-card-delay, 0s);
+}
+
+.libcard__paper {
+  position: relative;
+  min-height: 320px;
+  padding: 28px;
+  border: 2px solid #111;
+  border-radius: 12px;
+  background: #fff;
+  background-image: repeating-linear-gradient(to bottom, rgba(0,0,0,.08) 0, rgba(0,0,0,.08) 1px, transparent 1px, transparent 28px);
+  transition: transform .2s ease, background .2s ease, border-color .2s ease;
+}
+
+.libcard:hover .libcard__paper {
+  transform: translateY(-4px);
+  background: #ff8ac7 !important;
+  border-color: #ff8ac7 !important;
+  background-image: none !important;
+}
+
+.libcard__hole {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #111;
+  border-radius: 50%;
+}
+
+.libcard__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 34px;
+}
+
+.libcard__platform {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 2.2rem;
+  font-weight: 600;
+  text-transform: lowercase;
+}
+
+.libcard__ico {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: #111;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.libcard__handle {
+  max-width: 150px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.libcard__body {
+  display: grid;
+  gap: 16px;
+}
+
+.libcard__row {
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  gap: 16px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.7rem;
+  line-height: 1.3;
+}
+
+.libcard__row span:first-child {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.bbb-swipe-hint {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 18px;
+  color: rgba(246,246,246,.55);
+  font-size: 11px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.bbb-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff8ac7;
+}
+
+@keyframes bbbConnectCardIn {
+  from { opacity: 0; transform: translateY(26px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.bbb-home--shopify .bbb-home-obsession__row {
+  gap: 14px !important;
+  max-width: 860px !important;
+  justify-content: center !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__copy {
+  align-items: flex-end !important;
+  text-align: right !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__cover {
+  aspect-ratio: 3 / 4.2 !important;
+}
+
+.bbb-home--shopify .bbb-home-obsession__tropes a {
+  background: var(--trope-bg, rgba(255,255,255,.04)) !important;
+  color: var(--trope-text, #f6f6f6) !important;
+}
+
+.bbb-home--shopify .bbb-trending__title {
+  font-size: 32px !important;
+}
+
+.bbb-home--shopify .bbb-trending__cta {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 10px !important;
+}
+
+.bbb-home--shopify .bbb-tropes__title {
+  position: relative;
+  display: inline-block;
+  font-size: 32px !important;
+}
+
+.bbb-home--shopify .bbb-tropes__title::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -8px;
+  width: 60%;
+  height: 1px;
+  background: rgba(255,138,199,.72);
+  transform-origin: left center;
+  animation: tropeHighlight .9s ease both;
+}
+
+@keyframes tropeHighlight {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.bbb-home--shopify .bbb-quiz-nudge {
+  font-family: "Libre Baskerville", Georgia, serif !important;
+}
+
+.bbb-home--shopify .bbb-quiz-nudge__script {
+  display: inline !important;
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-size: 26px !important;
+  font-style: italic !important;
+  color: #ff8ac7 !important;
+}
+
+.bbb-home--shopify .bbb-quiz-nudge__btn {
+  background: #ff8ac7 !important;
+  color: #0b0b0b !important;
+  border: 1px solid #ff8ac7 !important;
+}
+
+.bbb-home--shopify .bbb-boyfriends {
+  padding: 0 20px 56px !important;
+}
+
+@media (max-width: 860px) {
+  .bbb-newsletter-cta__grid,
+  .bbb-card-row {
+    grid-template-columns: 1fr;
+  }
+
+  .bbb-nc--latest,
+  .bbb-nc--society {
+    border-radius: 18px;
+    border-left: 1px solid rgba(255,255,255,.15);
+  }
+
+  .bbb-card-row {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 12px;
+  }
+
+  .libcard {
+    flex: 0 0 72%;
+    scroll-snap-align: center;
+  }
+
+  .libcard__paper {
+    min-height: 220px;
+  }
+
+  .bbb-swipe-hint {
+    display: flex;
+  }
+
+  .bbb-home--shopify .bbb-home-obsession__coverLink {
+    order: 2 !important;
+  }
+
+  .bbb-home--shopify .bbb-home-obsession__copy {
+    order: 1 !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
 }
 
 /* ============================================================
@@ -2947,7 +3485,7 @@ html { font-size: 15px; }
 .hero-custom {
   min-height: 674px !important;
   padding: 132px 16px 126px !important;
-  background-image: url("https://cdn.shopify.com/s/files/1/0633/4968/6353/files/MainLogo_2cf8c37f-58ee-482e-af99-2e916ea1f3dd.png?v=1764968954") !important;
+  background-image: url("assets/hero-bg.png") !important;
   background-size: cover !important;
   background-position: center 47% !important;
   background-color: #000 !important;
@@ -3256,7 +3794,7 @@ html { font-size: 15px; }
 .bbb-home--shopify .hero-custom {
   min-height: 560px !important;
   padding: 70px 16px !important;
-  background-image: url("https://cdn.shopify.com/s/files/1/0633/4968/6353/files/MainLogo_2cf8c37f-58ee-482e-af99-2e916ea1f3dd.png?v=1764968954") !important;
+  background-image: url("assets/hero-bg.png") !important;
   background-size: cover !important;
   background-position: center 47% !important;
   border-top: 1px solid rgba(255,255,255,.08);
@@ -4000,7 +4538,7 @@ html { font-size: 15px; }
   align-items: center !important;
   justify-content: center !important;
   text-align: center !important;
-  background-image: url("https://cdn.shopify.com/s/files/1/0633/4968/6353/files/MainLogo_2cf8c37f-58ee-482e-af99-2e916ea1f3dd.png?v=1764968954") !important;
+  background-image: url("assets/hero-bg.png") !important;
   background-size: cover !important;
   background-position: center !important;
 }
@@ -5650,6 +6188,106 @@ html { font-size: 15px; }
   }
 
   .bbb-home--shopify .bbb-home-obsession__row {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Final homepage audit overrides: keep these after legacy replica rules. */
+.bbb-home--shopify .sss-lib--preview {
+  padding: 0 20px 56px !important;
+  background: #0b0b0b;
+  color: #f6f6f6;
+}
+
+.bbb-home--shopify .sss-lib--preview .sss-lib__wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.bbb-home--shopify .bbb-homeRecDemo {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px) !important;
+  gap: clamp(24px, 5vw, 70px) !important;
+  align-items: center;
+  margin-bottom: clamp(42px, 5vw, 76px);
+  padding: 26px 28px !important;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(255,255,255,.045), rgba(255,255,255,.012)) !important;
+  color: inherit;
+  text-decoration: none;
+}
+
+.bbb-home--shopify .bbb-homeRecDemo__book--picked {
+  top: 0 !important;
+  left: 0 !important;
+  z-index: 1 !important;
+  transform: none !important;
+}
+
+.bbb-home--shopify .bbb-homeRecDemo__book--result {
+  right: 0 !important;
+  bottom: 0 !important;
+  top: auto !important;
+  transform: translate(8px, 8px) rotate(-2deg) !important;
+}
+
+.bbb-home--shopify .bbb-boyfriends__type {
+  color: rgba(255,255,255,.58) !important;
+  font-size: 13px !important;
+  letter-spacing: .08em !important;
+}
+
+.bbb-home--shopify .bbb-boyfriends__meta {
+  margin-top: 20px;
+  color: rgba(246,246,246,.54);
+  font-size: 13px;
+  letter-spacing: .04em;
+}
+
+.bbb-home--shopify .bbb-boyfriends__similarItem--wiggle {
+  animation: bbbBoyfriendWiggle 5.5s ease-in-out 1.2s infinite;
+}
+
+.bbb-home--shopify .bbb-threads__carousel {
+  position: relative !important;
+  display: block !important;
+  min-height: 170px;
+  margin: 12px auto 22px;
+}
+
+.bbb-home--shopify .bbb-thread-card {
+  position: absolute;
+  inset: 0;
+  width: min(620px, 92%);
+  margin: 0 auto;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity .35s ease, transform .35s ease;
+}
+
+.bbb-home--shopify .bbb-thread-card.is-active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.bbb-home--shopify .bbb-thread-card__body {
+  color: inherit;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.7rem;
+  line-height: 1.55;
+}
+
+@keyframes bbbBoyfriendWiggle {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  45% { transform: rotate(-1.5deg) translateY(-3px); }
+  65% { transform: rotate(1deg) translateY(1px); }
+}
+
+@media (max-width: 760px) {
+  .bbb-home--shopify .bbb-homeRecDemo {
     grid-template-columns: 1fr !important;
   }
 }
