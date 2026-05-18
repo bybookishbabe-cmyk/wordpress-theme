@@ -2059,8 +2059,32 @@ function bbb_render_book_card(int $post_id, bool $mini = false, bool $allow_hidd
 add_filter(
 	'the_content',
 	static function (string $content): string {
-		$content = preg_replace('/\[specific:([A-Za-z0-9_-]+)\]/', '[bbb_specific context="$1"]', $content) ?? $content;
-		$content = preg_replace('/\[book:([0-9]+)\]/', '[bbb_article_book index="$1"]', $content) ?? $content;
+		$replacements = array(
+			'/\[book:([0-9]+)\]/i' => '[bbb_article_book index="$1"]',
+			'/\[(?:pillarbookcard|pillar\s+bookcard)\]/i' => '[bbb_bookcard pillar="true"]',
+			'/\[bookcard\]/i' => '[bbb_bookcard]',
+			'/\[library\]/i' => '[bbb_library limit="5"]',
+			'/\[signoff\]/i' => '[bbb_signoff]',
+			'/\[ku\]/i' => '[bbb_ku]',
+			'/\[specific:([A-Za-z0-9_-]+)\]/i' => '[bbb_specific cluster="$1"]',
+			'/\[(?:specific|specific\s+links|looking\s+for\s+something\s+specific)\]/i' => '[bbb_specific]',
+			'/\[bigspecific\]/i' => '[bbb_bigspecific]',
+			'/\[(?:readnext|read\s+next)\]/i' => '[bbb_readnext]',
+			'/\[series\]/i' => '[bbb_series]',
+			'/\[quickstats(?::([0-9]+))?\]/i' => '[bbb_quickstats index="$1"]',
+			'/\[(?:weeklyobsession|weekly\s+obsession)\]/i' => '[bbb_weeklyobsession]',
+			'/\[(?:whattoreadnext|what\s+to\s+read\s+next)\]/i' => '[bbb_whattoreadnext]',
+			'/\[faq\]/i' => '[faq]',
+			'/\[\/faq\]/i' => '[/faq]',
+			'/\[q\]/i' => '[q]',
+			'/\[\/q\]/i' => '[/q]',
+			'/\[a\]/i' => '[a]',
+			'/\[\/a\]/i' => '[/a]',
+		);
+
+		foreach ($replacements as $pattern => $replacement) {
+			$content = preg_replace($pattern, $replacement, $content) ?? $content;
+		}
 
 		return $content;
 	},
@@ -2108,14 +2132,14 @@ function bbb_find_book_by_title(string $title): ?WP_Post {
 
 function bbb_get_article_book_title(int $post_id, int $index): string {
 	$content = (string) get_post_field('post_content', $post_id);
-	$token   = '[book:' . $index . ']';
-	$offset  = strpos($content, $token);
+	$pattern = '/\[book:' . preg_quote((string) $index, '/') . '\]/i';
 
-	if (false === $offset) {
+	if (!preg_match($pattern, $content, $match, PREG_OFFSET_CAPTURE)) {
 		return '';
 	}
 
-	$after = substr($content, $offset + strlen($token));
+	$offset = (int) $match[0][1];
+	$after  = substr($content, $offset + strlen($match[0][0]));
 	$after = preg_replace('/<!--\s*\/?wp:[^>]*-->/i', "\n", $after) ?? $after;
 	$after = preg_replace('/<\/p>|<br\s*\/?>|<\/h[1-6]>|<\/div>/i', "\n", $after) ?? $after;
 	$after = wp_strip_all_tags($after);
@@ -2245,9 +2269,10 @@ function bbb_render_specific_links(string $context): string {
 add_shortcode(
 	'bbb_specific',
 	static function (array $atts = array()): string {
-		$atts = shortcode_atts(array('context' => ''), $atts, 'bbb_specific');
+		$atts = shortcode_atts(array('context' => '', 'cluster' => ''), $atts, 'bbb_specific');
+		$context = (string) ($atts['cluster'] ?: $atts['context']);
 
-		return bbb_render_specific_links((string) $atts['context']);
+		return bbb_render_specific_links($context);
 	}
 );
 
@@ -2282,6 +2307,16 @@ add_shortcode(
 );
 
 add_shortcode(
+	'bbb_book',
+	static function (array $atts = array()): string {
+		$atts  = shortcode_atts(array('index' => '1'), $atts, 'bbb_book');
+		$index = max(1, absint($atts['index']));
+
+		return do_shortcode('[bbb_article_book index="' . esc_attr((string) $index) . '"]');
+	}
+);
+
+add_shortcode(
 	'bookcard',
 	static function (): string {
 		global $post;
@@ -2290,7 +2325,7 @@ add_shortcode(
 			return '';
 		}
 
-		preg_match_all('/\[book:([0-9]+)\]/', (string) get_post_field('post_content', $post->ID), $matches);
+		preg_match_all('/\[book:([0-9]+)\]/i', (string) get_post_field('post_content', $post->ID), $matches);
 		$indexes = array_values(array_unique(array_map('absint', $matches[1] ?? array())));
 
 		if (!$indexes) {
@@ -2308,6 +2343,24 @@ add_shortcode(
 		}
 
 		return $cards ? '<div class="article-book-list">' . $cards . '</div>' : '';
+	}
+);
+
+add_shortcode(
+	'bbb_bookcard',
+	static function (array $atts = array()): string {
+		$atts = shortcode_atts(array('pillar' => 'false'), $atts, 'bbb_bookcard');
+		$html = do_shortcode('[bookcard]');
+
+		if (!$html) {
+			$html = do_shortcode('[bbb_library limit="5"]');
+		}
+
+		if ('true' === strtolower((string) $atts['pillar'])) {
+			return '<div class="article-book-list article-book-list--pillar">' . $html . '</div>';
+		}
+
+		return $html;
 	}
 );
 
@@ -2380,6 +2433,16 @@ add_shortcode(
 			$icon ? '<span class="bbb-ku__icon" aria-hidden="true">' . esc_html($icon) . '</span>' : '',
 			esc_html($label)
 		);
+	}
+);
+
+add_shortcode(
+	'bbb_ku',
+	static function (): string {
+		return '<div class="blog-ku-cta">
+			<p class="blog-ku-cta__intro">most of the recs in the library are on kindle unlimited, which makes the spiral slightly easier to justify.</p>
+			<p class="blog-ku-cta__outro"><span class="blog-ku-cta__outroText">(i use it constantly, and it is very much part of the reader math.)</span> <a class="blog-ku-cta__accent" href="https://amzn.to/4uZ8Y3a" target="_blank" rel="noopener sponsored">try it here &rarr;</a></p>
+		</div>';
 	}
 );
 
@@ -2472,6 +2535,16 @@ add_shortcode(
 	}
 );
 
+add_shortcode(
+	'bbb_series',
+	static function (array $atts = array()): string {
+		$atts = shortcode_atts(array('name' => ''), $atts, 'bbb_series');
+		$name = sanitize_title((string) $atts['name']);
+
+		return do_shortcode($name ? '[series name="' . esc_attr($name) . '"]' : '[series]');
+	}
+);
+
 /**
  * [bigspecific]
  * Renders a "dangerously specific recommendation" CTA block
@@ -2486,6 +2559,13 @@ add_shortcode(
 			<p class="bbb-bigspecific__sub">pick a book you loved and get a romance rec that\'s almost too specific to be legal.</p>
 			<a class="bbb-bigspecific__cta" href="/what-to-read-next">find your match &rarr;</a>
 		</div>';
+	}
+);
+
+add_shortcode(
+	'bbb_bigspecific',
+	static function (): string {
+		return do_shortcode('[bigspecific]');
 	}
 );
 
@@ -2552,5 +2632,79 @@ add_shortcode(
 			$url,
 			$cta
 		);
+	}
+);
+
+add_shortcode(
+	'bbb_signoff',
+	static function (array $atts = array()): string {
+		return do_shortcode('[signoff]');
+	}
+);
+
+add_shortcode(
+	'bbb_quickstats',
+	static function (array $atts = array()): string {
+		global $post;
+
+		if (!$post instanceof WP_Post) {
+			return '';
+		}
+
+		$atts  = shortcode_atts(array('index' => '1'), $atts, 'bbb_quickstats');
+		$index = max(1, absint($atts['index'] ?: 1));
+		$title = bbb_get_article_book_title($post->ID, $index);
+		$book  = bbb_find_book_by_title($title);
+
+		if (!$book instanceof WP_Post) {
+			return '';
+		}
+
+		$spice    = (string) get_post_meta($book->ID, '_bbb_spice_level', true);
+		$darkness = (string) get_post_meta($book->ID, '_bbb_darkness_level', true);
+		$is_ku    = bbb_meta_bool($book->ID, '_bbb_on_kindle_unlimited');
+		$tropes   = get_the_terms($book->ID, 'bbb_trope');
+		$series   = get_the_terms($book->ID, 'bbb_series');
+
+		ob_start();
+		?>
+		<aside class="blog-quickstats" aria-label="quick stats for <?php echo esc_attr(get_the_title($book)); ?>">
+			<div class="blog-quickstats__head"><h3 class="blog-quickstats__kicker"><?php echo esc_html(get_the_title($book)); ?> book stats</h3></div>
+			<dl class="blog-quickstats__list">
+				<?php if ($spice) : ?><div class="blog-quickstats__row"><dt>spice</dt><dd><?php echo esc_html(str_repeat('🌶', min(5, max(1, (int) $spice))) . ' / 5'); ?></dd></div><?php endif; ?>
+				<?php if ($darkness) : ?><div class="blog-quickstats__row"><dt>darkness</dt><dd><?php echo esc_html(str_repeat('💀', min(5, max(1, (int) $darkness))) . ' / 5'); ?></dd></div><?php endif; ?>
+				<?php if (!is_wp_error($tropes) && $tropes) : ?><div class="blog-quickstats__row"><dt>tropes</dt><dd><?php echo esc_html(implode(' · ', wp_list_pluck($tropes, 'name'))); ?></dd></div><?php endif; ?>
+				<?php if (!is_wp_error($series) && $series) : ?><div class="blog-quickstats__row"><dt>series</dt><dd><?php echo esc_html($series[0]->name); ?></dd></div><?php endif; ?>
+				<div class="blog-quickstats__row"><dt>on kindle unlimited</dt><dd><?php echo $is_ku ? '✓ yes' : 'check listing'; ?></dd></div>
+			</dl>
+		</aside>
+		<?php
+		return (string) ob_get_clean();
+	}
+);
+
+add_shortcode(
+	'bbb_readnext',
+	static function (): string {
+		return '<section class="blog-readnext" aria-label="read these next">
+			<div class="blog-readnext__eyebrow">read these next</div>
+			<h2 class="blog-readnext__title">if this hit the right nerve, start here next</h2>
+			<p class="blog-readnext__intro">more romance routes for the exact mood you came for.</p>
+			<div class="blog-readnext__list"><a class="blog-readnext__item" href="' . esc_url(home_url('/what-to-read-next/')) . '"><span class="blog-readnext__label">open the reader matchmaker</span><span class="blog-readnext__meta">pick a mood, trope, or book and get pointed toward the next spiral.</span></a></div>
+		</section>';
+	}
+);
+
+add_shortcode(
+	'bbb_weeklyobsession',
+	static function (): string {
+		return '<div class="bbb-weeklyobsession-token">' . bbb_render_homepage_weekly_obsession() . '</div>';
+	}
+);
+
+add_shortcode(
+	'bbb_whattoreadnext',
+	static function (): string {
+		return '<div class="bbb-whatnext-token"><p class="bbb-whatnext-token__kicker">what to read next</p><p class="bbb-whatnext-token__title">need a more specific recommendation?</p><a href="' . esc_url(home_url('/what-to-read-next/')) . '">open the reader matchmaker &rarr;</a></div>';
 	}
 );
