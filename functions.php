@@ -1982,12 +1982,18 @@ function bbb_render_book_card(int $post_id, bool $mini = false, bool $allow_hidd
 	$series_terms  = get_the_terms($post_id, 'bbb_series');
 	$series_term   = !is_wp_error($series_terms) && $series_terms ? $series_terms[0] : null;
 	$series_handle = $series_term ? $series_term->slug : bbb_meta_string($post_id, '_bbb_series_handle');
-	$series_name   = $series_term ? $series_term->name : '';
+	$series_name   = $series_term ? $series_term->name : bbb_meta_string($post_id, '_bbb_series_name');
 	$tropes        = get_the_terms($post_id, 'bbb_trope');
 	$tropes        = !is_wp_error($tropes) && $tropes ? $tropes : array();
 	$genres        = bbb_term_names($post_id, 'bbb_genre');
 	$trope_names   = bbb_term_names($post_id, 'bbb_trope');
 	$trope_urls    = bbb_term_urls($post_id, 'bbb_trope');
+	$trope_display = array();
+
+	foreach ($tropes as $trope) {
+		$emoji           = (string) get_term_meta($trope->term_id, '_bbb_emoji', true);
+		$trope_display[] = trim($emoji . ' ' . $trope->name);
+	}
 
 	ob_start();
 	?>
@@ -2004,7 +2010,7 @@ function bbb_render_book_card(int $post_id, bool $mini = false, bool $allow_hidd
 		data-private-shelf="<?php echo bbb_book_is_private($post_id) ? 'true' : 'false'; ?>"
 		data-spice="<?php echo esc_attr($spice); ?>"
 		data-tropes="<?php echo esc_attr(implode(', ', $trope_names)); ?>"
-		data-tropes-display="<?php echo esc_attr(implode(', ', $trope_names)); ?>"
+		data-tropes-display="<?php echo esc_attr(implode(', ', $trope_display ?: $trope_names)); ?>"
 		data-trope-urls="<?php echo esc_attr(implode(', ', $trope_urls)); ?>"
 		data-why="<?php echo esc_attr(bbb_meta_string($post_id, '_bbb_why_i_loved_it')); ?>"
 		data-newsletter="<?php echo esc_url(bbb_meta_string($post_id, '_bbb_newsletter_url')); ?>"
@@ -2022,33 +2028,25 @@ function bbb_render_book_card(int $post_id, bool $mini = false, bool $allow_hidd
 		data-ku="<?php echo bbb_meta_bool($post_id, '_bbb_on_kindle_unlimited') ? 'true' : 'false'; ?>"
 		data-darkness="<?php echo esc_attr(bbb_meta_string($post_id, '_bbb_darkness_level')); ?>"
 	>
-		<span class="sss-lib__coverWrap">
+		<div class="sss-lib__coverWrap">
 			<span class="sss-lib__heart" data-heart role="button" aria-label="save to your bookshelf">
 				<span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♡</span>
 				<span class="sss-lib__heartLabel" data-heart-label>save</span>
 			</span>
 			<?php if ($series_number) : ?>
-				<span class="sss-lib__seriesBadge<?php echo bbb_meta_bool($post_id, '_bbb_read_as_standalone') ? ' sss-lib__seriesBadge--standalone' : ''; ?>" data-series-url="<?php echo esc_url('/book-series/' . $series_handle . '/'); ?>"><?php echo esc_html($series_number); ?></span>
+				<span class="sss-lib__seriesBadge<?php echo bbb_meta_bool($post_id, '_bbb_read_as_standalone') ? ' sss-lib__seriesBadge--standalone' : ''; ?>" data-series-url="<?php echo esc_url('/book-series/' . $series_handle . '/'); ?>" aria-label="<?php echo esc_attr(sprintf('open series page for %s', $series_name ?: get_the_title($post_id))); ?>"><?php echo esc_html($series_number); ?></span>
 			<?php endif; ?>
 			<?php if ($spice) : ?>
-				<span class="sss-lib__floatSpice"><?php echo esc_html(str_repeat('🌶', min(5, max(1, (int) $spice)))); ?></span>
+				<div class="sss-lib__floatSpice"><?php echo esc_html(str_repeat('🌶', min(5, max(1, (int) $spice)))); ?></div>
 			<?php endif; ?>
 			<?php if ($cover_url) : ?>
-				<img class="sss-lib__cover" src="<?php echo esc_url($cover_url); ?>" alt="<?php echo esc_attr(get_the_title($post_id)); ?> cover" loading="lazy">
+				<img class="sss-lib__cover" src="<?php echo esc_url($cover_url); ?>" alt="<?php echo esc_attr(get_the_title($post_id)); ?>" loading="lazy">
 			<?php endif; ?>
-		</span>
-		<span class="sss-lib__under">
-			<span class="sss-lib__name"><?php echo esc_html(get_the_title($post_id)); ?></span>
-			<?php if ($author) : ?><span class="sss-lib__author"><?php echo esc_html($author); ?></span><?php endif; ?>
-		</span>
-		<?php if ($tropes) : ?>
-			<span class="sss-lib__pills">
-				<?php foreach (array_slice($tropes, 0, 3) as $trope) : ?>
-					<?php $colors = bbb_trope_color($trope->slug); ?>
-					<span class="sss-lib__pill" style="--trope-bg: <?php echo esc_attr($colors['bg']); ?>; --trope-text: <?php echo esc_attr($colors['text']); ?>;"><?php echo esc_html($trope->name); ?></span>
-				<?php endforeach; ?>
-			</span>
-		<?php endif; ?>
+		</div>
+		<div class="sss-lib__under">
+			<div class="sss-lib__name"><?php echo esc_html(get_the_title($post_id)); ?></div>
+			<?php if ($author) : ?><div class="sss-lib__author"><?php echo esc_html($author); ?></div><?php endif; ?>
+		</div>
 	</button>
 	<?php
 	return (string) ob_get_clean();
