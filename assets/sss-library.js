@@ -5808,7 +5808,7 @@ function initReadFinder(){
 }
 
 function groupSeriesShelves(){
-  var grids = document.querySelectorAll('.sss-lib__grid, .sss-lib__shelfRow');
+  var grids = document.querySelectorAll('.sss-lib__grid[data-series-grouping="true"], .sss-lib__shelfRow[data-series-grouping="true"]');
   if (!grids.length) return;
 
   grids.forEach(function(grid){
