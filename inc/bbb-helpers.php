@@ -77,6 +77,52 @@ function bbb_book_is_private(int $post_id): bool {
 	return (bool) bbb_get_field('is_private', $post_id, false);
 }
 
+function bbb_truthy($value): bool {
+	if (is_bool($value)) {
+		return $value;
+	}
+
+	if (is_numeric($value)) {
+		return 1 === (int) $value;
+	}
+
+	$normalized = strtolower(trim((string) $value));
+
+	return in_array($normalized, array('1', 'true', 'yes', 'on'), true);
+}
+
+function bbb_book_newsletter_is_unlocked(int $post_id): bool {
+	$featured_date = (string) bbb_get_field('featured_in_newsletter_date', $post_id, '');
+	if ('' === trim($featured_date)) {
+		return true;
+	}
+
+	$date = substr(trim($featured_date), 0, 10);
+	if (preg_match('/^\d{8}$/', $date)) {
+		$date = substr($date, 0, 4) . '-' . substr($date, 4, 2) . '-' . substr($date, 6, 2);
+	}
+
+	if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+		return true;
+	}
+
+	try {
+		$timezone = new DateTimeZone('America/Los_Angeles');
+		$unlock   = new DateTimeImmutable($date . ' 10:00:00', $timezone);
+		$now      = new DateTimeImmutable('now', $timezone);
+
+		return $unlock <= $now;
+	} catch (Exception $exception) {
+		return true;
+	}
+}
+
+function bbb_book_is_publicly_visible(int $post_id): bool {
+	return !bbb_truthy(bbb_get_field('hide_from_library', $post_id, false))
+		&& !bbb_truthy(bbb_get_field('is_private', $post_id, false))
+		&& bbb_book_newsletter_is_unlocked($post_id);
+}
+
 function bbb_get_all_books_json(bool $include_private = true): array {
 	$books = get_posts(
 		array(

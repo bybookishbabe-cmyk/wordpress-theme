@@ -9,6 +9,7 @@
     {"key": "field_bbb_book_amazon", "label": "Amazon Link", "name": "amazon_link", "type": "url"},
     {"key": "field_bbb_book_bookshop", "label": "Bookshop Link", "name": "bookshop_link", "type": "url"},
     {"key": "field_bbb_book_starter", "label": "Starter Pack", "name": "starter_pack", "type": "true_false"},
+    {"key": "field_bbb_book_top_shelf", "label": "Top Shelf", "name": "top_shelf", "type": "true_false"},
     {"key": "field_bbb_book_hidden", "label": "Hide From Library", "name": "hide_from_library", "type": "true_false"},
     {"key": "field_bbb_book_private", "label": "Private", "name": "is_private", "type": "true_false"},
     {"key": "field_bbb_book_month", "label": "Month Featured", "name": "month_featured", "type": "date_picker", "display_format": "Y-m", "return_format": "Y-m"},

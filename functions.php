@@ -167,6 +167,7 @@ add_action(
 		bbb_enqueue_js('bbb-holiday-overlay', 'assets/bbb-holiday-overlay.js', array('bbb-rose-petals'));
 		if (is_front_page()) {
 			bbb_enqueue_js('bbb-browse-by-trope', 'assets/js/browse-by-trope.js', array('bbb-global'));
+			bbb_enqueue_js('bbb-homepage-library-preview', 'assets/js/homepage-library-preview.js', array('bbb-supabase', 'bbb-sss-library'));
 			bbb_enqueue_js('bbb-home-static', 'assets/home-static.js', array('bbb-global'));
 		}
 

@@ -80,7 +80,7 @@ add_action(
 			);
 		}
 
-		foreach (array('starter_pack', 'hide_from_library', 'is_private', 'standalone', 'on_kindle_unlimited', 'reread_badge') as $meta_key) {
+		foreach (array('starter_pack', 'hide_from_library', 'is_private', 'read_as_standalone', 'standalone', 'on_kindle_unlimited', 'reread_badge', 'top_shelf') as $meta_key) {
 			register_post_meta(
 				'sss_book',
 				$meta_key,

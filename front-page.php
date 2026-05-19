@@ -16,6 +16,7 @@ get_header();
 	bbb_render_section('trending-romance-reads');
 	get_template_part('template-parts/sections/browse-by-trope');
 	get_template_part('template-parts/home/featured-romance-lists');
+	get_template_part('template-parts/home/library-preview');
 	get_template_part('template-parts/home/quiz-nudge');
 	get_template_part('template-parts/home/threads');
 	get_template_part('template-parts/home/connect-cards');

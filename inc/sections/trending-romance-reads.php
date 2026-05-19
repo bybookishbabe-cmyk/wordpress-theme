@@ -186,8 +186,4 @@ if ($query->have_posts()) {
 	</div>
 </section>
 <?php
-$GLOBALS['bbb_trending_modal_rendered'] = $GLOBALS['bbb_trending_modal_rendered'] ?? false;
-if (!$GLOBALS['bbb_trending_modal_rendered']) {
-	$GLOBALS['bbb_trending_modal_rendered'] = true;
-	get_template_part('template-parts/sss/library-modal');
-}
+bbb_render_component('sss-library-modal');
