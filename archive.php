@@ -8,18 +8,42 @@
 declare(strict_types=1);
 
 $paged = (get_query_var('paged')) ? (int) get_query_var('paged') : 1;
-$query = new WP_Query(
-	array(
-		'post_type'      => 'post',
-		'posts_per_page' => 10,
-		'paged'          => $paged,
-		'post_status'    => 'publish',
-	)
+$forced_category = isset($GLOBALS['bbb_forced_blog_category']) ? sanitize_title((string) $GLOBALS['bbb_forced_blog_category']) : '';
+$archive_object  = get_queried_object();
+$category_slug   = $forced_category;
+if (!$category_slug && $archive_object instanceof WP_Term && 'category' === $archive_object->taxonomy) {
+	$category_slug = $archive_object->slug;
+}
+
+$query_args = array(
+	'post_type'      => 'post',
+	'posts_per_page' => 10,
+	'paged'          => $paged,
+	'post_status'    => 'publish',
 );
+if ($category_slug) {
+	$query_args['category_name'] = $category_slug;
+}
+
+$query = new WP_Query($query_args);
+if ($forced_category && 0 === (int) $query->post_count) {
+	$query_args_without_category = $query_args;
+	unset($query_args_without_category['category_name']);
+	$query_args_without_category['meta_query'] = array(
+		array(
+			'key'   => '_shopify_blog_handle',
+			'value' => $forced_category,
+		),
+	);
+	$query = new WP_Query($query_args_without_category);
+}
 $is_page_one = ($paged <= 1);
 
-$archive_object = get_queried_object();
-$archive_title  = isset($archive_object->name) ? (string) $archive_object->name : get_the_archive_title();
+$archive_title = isset($archive_object->name) ? (string) $archive_object->name : get_the_archive_title();
+if ($forced_category) {
+	$forced_term   = get_category_by_slug($forced_category);
+	$archive_title = $forced_term instanceof WP_Term ? $forced_term->name : ucwords(str_replace('-', ' ', $forced_category));
+}
 
 $archive_get_field = static function (string $key, $post_id = null, $default = null) {
 	if (function_exists('bbb_get_field')) {
@@ -96,37 +120,24 @@ $trope_one     = null;
 $trope_two     = null;
 
 if ($is_page_one) {
-	$issues = get_posts(
-		array(
-			'post_type'   => 'newsletter_issue',
-			'numberposts' => 50,
-			'post_status' => 'publish',
-		)
-	);
-	$now    = time();
-
-	foreach ($issues as $issue) {
-		$publish_date = (string) $archive_get_field('publish_date', $issue->ID, '');
-		$pub_ts       = $publish_date ? strtotime($publish_date) : false;
-
-		if (!$pub_ts) {
-			continue;
-		}
-
-		$live_ts = $pub_ts + 36000;
-		if ($live_ts <= $now) {
-			$current_pub_ts = $current_issue ? strtotime((string) $archive_get_field('publish_date', $current_issue->ID, '')) : false;
-			if (!$current_issue || ($current_pub_ts && $pub_ts > $current_pub_ts)) {
-				$current_issue = $issue;
-			}
-		}
+	if (function_exists('sss_get_current_newsletter_issue')) {
+		$current_issue = sss_get_current_newsletter_issue();
 	}
 
 	if ($current_issue) {
-		$book    = $archive_first_item($archive_get_field('book', $current_issue->ID, array()));
+		$book = function_exists('sss_get_obsession_book') ? sss_get_obsession_book($current_issue) : null;
+		if (!$book) {
+			$book = $archive_first_item($archive_get_field('book', $current_issue->ID, array()));
+		}
 		$book_id = $archive_post_id($book);
 		$tropes  = $book_id > 0 ? (array) $archive_get_field('tropes', $book_id, array()) : array();
 		$tropes  = array_values(array_filter(array_map($archive_trope_data, $tropes), static fn(array $trope): bool => '' !== $trope['name']));
+		if (!$tropes && $book_id > 0 && function_exists('sss_article_tropes')) {
+			$tropes = array_values(array_filter(array_map(
+				static fn(array $trope): array => array('name' => $trope['name'] ?? '', 'emoji' => $trope['emoji'] ?? ''),
+				sss_article_tropes($book_id)
+			), static fn(array $trope): bool => '' !== $trope['name']));
+		}
 
 		$trope_one = $tropes[0] ?? null;
 		$trope_two = $tropes[1] ?? null;
@@ -163,8 +174,8 @@ $shelf_pages = $is_page_one ? get_posts(
 
 $rec_pick_title       = (string) $archive_get_field('rec_pick_title', 'option', '');
 $rec_result_title     = (string) $archive_get_field('rec_result_title', 'option', '');
-$tease_pick_book      = $rec_pick_title ? get_page_by_path(sanitize_title($rec_pick_title), OBJECT, 'library_book') : null;
-$tease_result_book    = $rec_result_title ? get_page_by_path(sanitize_title($rec_result_title), OBJECT, 'library_book') : null;
+$tease_pick_book      = $rec_pick_title ? get_page_by_path(sanitize_title($rec_pick_title), OBJECT, array('bbb_book', 'sss_book', 'library_book')) : null;
+$tease_result_book    = $rec_result_title ? get_page_by_path(sanitize_title($rec_result_title), OBJECT, array('bbb_book', 'sss_book', 'library_book')) : null;
 $tease_pick_cover_url = $tease_pick_book ? $archive_image_url($archive_get_field('cover', $tease_pick_book->ID, '')) : '';
 $tease_result_cover_url = $tease_result_book ? $archive_image_url($archive_get_field('cover', $tease_result_book->ID, '')) : '';
 

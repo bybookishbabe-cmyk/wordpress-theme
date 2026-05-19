@@ -15,11 +15,52 @@ function sss_article_field(string $key, int $post_id, $default = '') {
 		}
 	}
 
-	return function_exists('bbb_get_field') ? bbb_get_field($key, $post_id, $default) : get_post_meta($post_id, $key, true);
+	$value = function_exists('bbb_get_field') ? bbb_get_field($key, $post_id, null) : get_post_meta($post_id, $key, true);
+	if (null !== $value && '' !== $value && false !== $value) {
+		return $value;
+	}
+
+	if ('bbb_book' === get_post_type($post_id)) {
+		$meta_map = array(
+			'author'                  => '_bbb_author',
+			'cover'                   => '_bbb_cover_url',
+			'amazon_link'             => '_bbb_amazon_url',
+			'bookshop_link'           => '_bbb_bookshop_url',
+			'newsletter_url'          => '_bbb_newsletter_url',
+			'spice_level'             => '_bbb_spice',
+			'tension_score'           => '_bbb_tension',
+			'emotional_damage_score'  => '_bbb_damage',
+			'yearning_level'          => '_bbb_yearning',
+			'boyfriend_type'          => '_bbb_boyfriend_type',
+			'boyfriend_name'          => '_bbb_boyfriend_name',
+			'reread_badge'            => '_bbb_reread',
+			'darkness_level'          => '_bbb_darkness',
+			'on_kindle_unlimited'     => '_bbb_ku',
+			'read_as_standalone'      => '_bbb_standalone',
+			'hide_from_library'       => '_bbb_hide_from_library',
+			'mini_note'               => '_bbb_mini_note',
+			'why_i_loved_it'          => '_bbb_why',
+			'series_number'           => '_bbb_series_number',
+			'series_handle'           => '_bbb_series_handle',
+			'shelf'                   => '_bbb_shelf_name',
+		);
+		if (isset($meta_map[$key])) {
+			$mapped = get_post_meta($post_id, $meta_map[$key], true);
+			if ($mapped !== '' && $mapped !== null) {
+				return $mapped;
+			}
+		}
+	}
+
+	return $default;
 }
 
 function sss_article_bool($value): bool {
-	return function_exists('bbb_truthy') ? bbb_truthy($value) : in_array(strtolower(trim((string) $value)), array('1', 'true', 'yes', 'on'), true);
+	if (function_exists('bbb_truthy')) {
+		return bbb_truthy($value);
+	}
+
+	return in_array(strtolower(trim((string) $value)), array('1', 'true', 'yes', 'on'), true);
 }
 
 function sss_article_post($value): ?WP_Post {
@@ -113,6 +154,23 @@ function sss_article_tropes(int $book_id): array {
 		}
 	}
 
+	if (!$tropes) {
+		$terms = get_the_terms($book_id, 'bbb_trope');
+		if ($terms && !is_wp_error($terms)) {
+			foreach ($terms as $term) {
+				$colors = function_exists('bbb_get_trope_colors') ? bbb_get_trope_colors($term->slug) : array('#f3bfd5', '#4b112d');
+				$tropes[] = array(
+					'id'    => 0,
+					'name'  => $term->name,
+					'slug'  => $term->slug,
+					'emoji' => (string) get_term_meta($term->term_id, 'trope_emoji', true),
+					'bg'    => $colors[0],
+					'text'  => $colors[1],
+				);
+			}
+		}
+	}
+
 	return $tropes;
 }
 
@@ -134,13 +192,32 @@ function sss_article_shelf(int $book_id): array {
 		return array('name' => $terms[0]->name, 'slug' => $terms[0]->slug);
 	}
 
-	$raw = is_string($shelf_raw) ? $shelf_raw : '';
+	$terms = get_the_terms($book_id, 'bbb_shelf');
+	if ($terms && !is_wp_error($terms)) {
+		return array('name' => $terms[0]->name, 'slug' => $terms[0]->slug);
+	}
+
+	$raw = is_string($shelf_raw) ? $shelf_raw : (string) get_post_meta($book_id, '_bbb_shelf_name', true);
 	return array('name' => $raw, 'slug' => sanitize_title($raw));
 }
 
 function sss_article_book_data(int $book_id): array {
 	$series = sss_article_post(sss_article_field('series', $book_id, null));
 	$tropes = sss_article_tropes($book_id);
+	$series_handle = '';
+	$series_name   = '';
+	if ($series) {
+		$series_handle = $series->post_name;
+		$series_name   = get_the_title($series);
+	} elseif ('bbb_book' === get_post_type($book_id)) {
+		$series_handle = (string) get_post_meta($book_id, '_bbb_series_handle', true);
+		if ($series_handle) {
+			$series_term = get_term_by('slug', $series_handle, 'bbb_series');
+			if ($series_term instanceof WP_Term) {
+				$series_name = $series_term->name;
+			}
+		}
+	}
 
 	return array(
 		'id'            => $book_id,
@@ -160,8 +237,8 @@ function sss_article_book_data(int $book_id): array {
 		'tropes'        => $tropes,
 		'shelf'         => sss_article_shelf($book_id),
 		'series'        => $series,
-		'series_handle' => $series ? $series->post_name : '',
-		'series_name'   => $series ? get_the_title($series) : '',
+		'series_handle' => $series_handle,
+		'series_name'   => $series_name,
 		'series_number' => (string) sss_article_field('series_number', $book_id, ''),
 	);
 }
@@ -200,6 +277,10 @@ function sss_article_data_attrs(array $book): string {
 }
 
 function sss_render_article_book_card(int $book_id, bool $show_why = false): string {
+	if ('bbb_book' === get_post_type($book_id) && function_exists('bbb_render_article_book_card')) {
+		return bbb_render_article_book_card($book_id, $show_why);
+	}
+
 	$book = sss_article_book_data($book_id);
 	ob_start();
 	?>
@@ -293,10 +374,39 @@ function sss_render_article_book_card(int $book_id, bool $show_why = false): str
 }
 
 function sss_article_post_books(int $post_id): array {
-	return sss_article_posts(sss_article_field('book', $post_id, array()));
+	$books = sss_article_posts(sss_article_field('book', $post_id, array()));
+	if ($books) {
+		return $books;
+	}
+
+	$book_ids = get_post_meta($post_id, '_bbb_article_books', true);
+	if (is_array($book_ids)) {
+		$books = sss_article_posts($book_ids);
+		if ($books) {
+			return $books;
+		}
+	}
+
+	$books = array();
+	for ($index = 1; $index <= 24; $index++) {
+		$book_id = (int) get_post_meta($post_id, '_bbb_article_book_' . $index, true);
+		if ($book_id <= 0) {
+			continue;
+		}
+		$book = get_post($book_id);
+		if ($book instanceof WP_Post) {
+			$books[] = $book;
+		}
+	}
+
+	return $books;
 }
 
 function sss_article_book_visible(WP_Post $book): bool {
+	if ('bbb_book' === $book->post_type && function_exists('bbb_is_book_visible')) {
+		return bbb_is_book_visible($book->ID);
+	}
+
 	$is_visible = function_exists('get_field') ? get_field('is_visible', $book->ID) : null;
 	if (null === $is_visible || '' === $is_visible) {
 		$is_visible = get_post_meta($book->ID, 'is_visible', true);
@@ -314,7 +424,7 @@ function sss_article_book_visible(WP_Post $book): bool {
 }
 
 function sss_article_all_visible_books(): array {
-	$books = get_posts(array('post_type' => 'sss_book', 'post_status' => 'publish', 'posts_per_page' => -1, 'orderby' => 'title', 'order' => 'ASC'));
+	$books = get_posts(array('post_type' => array('sss_book', 'bbb_book'), 'post_status' => 'publish', 'posts_per_page' => -1, 'orderby' => 'title', 'order' => 'ASC'));
 	return array_values(array_filter($books, 'sss_article_book_visible'));
 }
 
@@ -372,7 +482,35 @@ function sss_article_books_for_post(int $post_id): array {
 		return sss_article_books_for_trope($trope);
 	}
 
+	$trope_terms = get_the_terms($post_id, 'bbb_trope');
+	if ($trope_terms && !is_wp_error($trope_terms)) {
+		$book_ids = get_posts(
+			array(
+				'post_type'      => array('bbb_book', 'sss_book'),
+				'post_status'    => 'publish',
+				'posts_per_page' => 24,
+				'fields'         => 'ids',
+				'tax_query'      => array(
+					array(
+						'taxonomy' => 'bbb_trope',
+						'field'    => 'term_id',
+						'terms'    => wp_list_pluck($trope_terms, 'term_id'),
+					),
+				),
+			)
+		);
+		$books = sss_article_posts($book_ids);
+		if ($books) {
+			return $books;
+		}
+	}
+
 	$category = sss_article_post(sss_article_field('guide_category', $post_id, null));
+	if (!$category) {
+		$category_slug = sanitize_title((string) get_post_meta($post_id, '_bbb_guide_category', true));
+		$category = $category_slug ? get_page_by_path($category_slug, OBJECT, 'page') : null;
+	}
+
 	return $category ? sss_article_books_for_guide_category($category) : array();
 }
 
@@ -423,6 +561,9 @@ function sss_render_weekly_obsession_banner(): string {
 function sss_book_shortcode($atts): string {
 	$atts = shortcode_atts(array('index' => 1, 'post_id' => get_the_ID()), $atts, 'sss_book');
 	$books = sss_article_post_books((int) $atts['post_id']);
+	if (!$books) {
+		$books = sss_article_books_for_post((int) $atts['post_id']);
+	}
 	$book = $books[max(0, (int) $atts['index'] - 1)] ?? null;
 
 	return $book instanceof WP_Post ? sss_render_article_book_card($book->ID) : '';
@@ -433,7 +574,28 @@ function sss_book_trope_shortcode($atts): string {
 	$atts = shortcode_atts(array('index' => 1, 'post_id' => get_the_ID()), $atts, 'sss_book_trope');
 	$trope = sss_article_post(sss_article_field('trope', (int) $atts['post_id'], null));
 	if (!$trope) {
-		return '';
+		$terms = get_the_terms((int) $atts['post_id'], 'bbb_trope');
+		if (!$terms || is_wp_error($terms)) {
+			return '';
+		}
+		$book_ids = get_posts(
+			array(
+				'post_type'      => array('bbb_book', 'sss_book'),
+				'post_status'    => 'publish',
+				'posts_per_page' => max(1, (int) $atts['index']),
+				'fields'         => 'ids',
+				'tax_query'      => array(
+					array(
+						'taxonomy' => 'bbb_trope',
+						'field'    => 'term_id',
+						'terms'    => wp_list_pluck($terms, 'term_id'),
+					),
+				),
+			)
+		);
+		$book = sss_article_posts($book_ids)[max(0, (int) $atts['index'] - 1)] ?? null;
+
+		return $book instanceof WP_Post ? sss_render_article_book_card($book->ID) : '';
 	}
 	$books = sss_article_books_for_trope($trope);
 	$book = $books[max(0, (int) $atts['index'] - 1)] ?? null;

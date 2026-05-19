@@ -39,6 +39,8 @@ function sss_token_engine(string $content, int $post_id): string {
 		'/\[pillar\s*bookcard\]/i'     => '[sss_pillar_bookcard post_id="' . $post_id . '"]',
 		'/\[library\]/i'               => '[sss_library post_id="' . $post_id . '"]',
 		'/\[signoff\]/i'               => '[sss_signoff]',
+		'/\[(?:specific|specific\s+links|looking\s+for\s+something\s+specific)\]/i' => '[sss_specific_links post_id="' . $post_id . '"]',
+		'/\[bigspecific\]/i'           => '[sss_bigspecific]',
 		'/\[read\s*next\]/i'           => '[sss_readnext post_id="' . $post_id . '"]',
 		'/\[series\]/i'                => '[sss_series post_id="' . $post_id . '"]',
 		'/\[(?:pillar|pillar\s*nav)\]/i' => '[sss_pillar_nav post_id="' . $post_id . '"]',
@@ -52,6 +54,12 @@ function sss_token_engine(string $content, int $post_id): string {
 	$content = preg_replace_callback(
 		'/\[newsletter:([a-z0-9_-]+)\]/i',
 		static fn(array $matches): string => '[sss_newsletter handle="' . esc_attr($matches[1]) . '"]',
+		$content
+	) ?? $content;
+
+	$content = preg_replace_callback(
+		'/\[specific:([a-z0-9_-]+)\]/i',
+		static fn(array $matches): string => '[sss_specific_links cluster="' . esc_attr($matches[1]) . '" post_id="' . $post_id . '"]',
 		$content
 	) ?? $content;
 

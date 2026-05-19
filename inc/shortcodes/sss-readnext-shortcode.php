@@ -79,10 +79,14 @@ function sss_resolve_shopify_path(string $path): array {
 }
 
 function sss_specific_links_shortcode($atts): string {
-	$atts = shortcode_atts(array('post_id' => get_the_ID()), $atts, 'sss_specific_links');
+	$atts = shortcode_atts(array('post_id' => get_the_ID(), 'cluster' => '', 'context' => ''), $atts, 'sss_specific_links');
 	$post_id = (int) $atts['post_id'];
 	$prompt = (string) sss_article_field('specific_prompt', $post_id, 'looking for something specific?');
-	$cluster = sss_detect_cluster(sss_readnext_context($post_id));
+	$cluster = sanitize_title((string) $atts['cluster']);
+	if (!$cluster) {
+		$context = (string) $atts['context'];
+		$cluster = sss_detect_cluster($context ?: sss_readnext_context($post_id));
+	}
 	$paths = sss_specific_link_clusters()[$cluster] ?? array();
 	if (!$paths) {
 		return '';
@@ -103,6 +107,49 @@ function sss_specific_links_shortcode($atts): string {
 	return ob_get_clean();
 }
 add_shortcode('sss_specific_links', 'sss_specific_links_shortcode');
+
+function sss_bigspecific_shortcode(): string {
+	$url = function_exists('bbb_resolve_page_url') ? bbb_resolve_page_url('what-to-read-next') : home_url('/what-to-read-next/');
+
+	return '<div class="bbb-bigspecific"><p class="bbb-bigspecific__kicker">reader matchmaker</p><p class="bbb-bigspecific__title">want a dangerously specific recommendation?</p><p class="bbb-bigspecific__sub">pick a book you loved and get a romance rec that is almost too specific to be legal.</p><a class="bbb-bigspecific__cta" href="' . esc_url($url) . '">find your match &rarr;</a></div>';
+}
+add_shortcode('sss_bigspecific', 'sss_bigspecific_shortcode');
+add_shortcode('bigspecific', 'sss_bigspecific_shortcode');
+
+function sss_faq_shortcode($atts, ?string $content = null): string {
+	if (null === $content || trim($content) === '') {
+		return '';
+	}
+
+	$items = '';
+	if (preg_match_all('/\[q\](.*?)\[\/q\]\s*\[a\](.*?)\[\/a\]/is', $content, $matches, PREG_SET_ORDER)) {
+		foreach ($matches as $match) {
+			$question = trim(wp_strip_all_tags(do_shortcode($match[1])));
+			$answer   = trim($match[2]);
+			if (!$question || !$answer) {
+				continue;
+			}
+			$items .= '<details class="blog-faq__item"><summary class="blog-faq__question"><span>' . esc_html($question) . '</span><span class="blog-faq__arrow" aria-hidden="true">⌄</span></summary><div class="blog-faq__answer">' . wp_kses_post(do_shortcode($answer)) . '</div></details>';
+		}
+	}
+
+	if (!$items) {
+		return '<section class="blog-faq">' . wp_kses_post(do_shortcode($content)) . '</section>';
+	}
+
+	return '<section class="blog-faq" aria-label="frequently asked questions"><div class="blog-faq__kicker">questions readers ask</div><h2 class="blog-faq__title">frequently asked questions</h2><div class="blog-faq__list">' . $items . '</div></section>';
+}
+add_shortcode('faq', 'sss_faq_shortcode');
+
+function sss_faq_question_shortcode($atts, ?string $content = null): string {
+	return '<div class="blog-faq__q">' . wp_kses_post(do_shortcode((string) $content)) . '</div>';
+}
+add_shortcode('q', 'sss_faq_question_shortcode');
+
+function sss_faq_answer_shortcode($atts, ?string $content = null): string {
+	return '<div class="blog-faq__a">' . wp_kses_post(do_shortcode((string) $content)) . '</div>';
+}
+add_shortcode('a', 'sss_faq_answer_shortcode');
 
 function sss_readnext_copy(string $cluster, ?WP_Post $secondary_page, ?WP_Post $guide_article, ?WP_Post $browse_page, ?WP_Post $rec_book): array {
 	$default = array(
@@ -171,7 +218,21 @@ function sss_find_readnext_book(WP_Post $anchor, string $cluster): ?WP_Post {
 }
 
 function sss_posts_in_guides(int $exclude): array {
-	return get_posts(array('post_type' => 'post', 'post_status' => 'publish', 'posts_per_page' => -1, 'post__not_in' => array($exclude), 'category_name' => 'curated-romance-guides'));
+	$posts = get_posts(array('post_type' => 'post', 'post_status' => 'publish', 'posts_per_page' => -1, 'post__not_in' => array($exclude), 'category_name' => 'curated-romance-guides'));
+	if ($posts) {
+		return $posts;
+	}
+
+	return get_posts(
+		array(
+			'post_type'      => 'post',
+			'post_status'    => 'publish',
+			'posts_per_page' => -1,
+			'post__not_in'   => array($exclude),
+			'meta_key'       => '_shopify_blog_handle',
+			'meta_value'     => 'curated-romance-guides',
+		)
+	);
 }
 
 function sss_find_article_for_book(WP_Post $book, int $exclude): ?WP_Post {

@@ -18,7 +18,7 @@ function bbb_page_route_registry(): array {
 		'account'                        => '',
 		'cart'                           => '',
 		'contact'                        => 'page-contact.php',
-		'curated-romance-guides'         => '',
+		'curated-romance-guides'         => 'page-curated-romance-guides.php',
 		'enemies-to-lovers'              => '',
 		'fictional-boyfriend-quiz'       => '',
 		'find-your-read'                 => '',
@@ -142,6 +142,32 @@ add_action(
 		}
 
 		$request_path   = trim((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
+		if (preg_match('#^(?:blogs/)?curated-romance-guides/page/([0-9]+)/?$#', $request_path, $matches)) {
+			set_query_var('paged', max(1, (int) $matches[1]));
+			$template = bbb_route_template_for_slug('curated-romance-guides');
+			if ($template !== '') {
+				status_header(200);
+				nocache_headers();
+				require $template;
+				exit;
+			}
+		}
+
+		if (preg_match('#^(?:blogs/)?curated-romance-guides/([^/]+)/?$#', $request_path, $matches)) {
+			$post = get_posts(
+				array(
+					'name'           => sanitize_title($matches[1]),
+					'post_type'      => 'post',
+					'post_status'    => 'publish',
+					'posts_per_page' => 1,
+				)
+			);
+			if ($post) {
+				wp_safe_redirect(get_permalink($post[0]), 301);
+				exit;
+			}
+		}
+
 		if (
 			($request_path === 'cart' && function_exists('wc_get_cart_url'))
 			|| (($request_path === 'account' || str_starts_with($request_path, 'account/')) && function_exists('wc_get_account_endpoint_url'))
