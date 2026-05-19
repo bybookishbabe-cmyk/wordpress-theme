@@ -108,9 +108,30 @@ summary.list-menu__item {
   text-decoration: none;
 }
 
+.header__vault-link,
+.bbb-bookshelf-header {
+  background: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 999px;
+  color: #111;
+  height: 4.4rem;
+  min-height: 4.4rem;
+  min-width: 4.4rem;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  width: 4.4rem;
+}
+
+.header__vault-link:hover,
+.bbb-bookshelf-header:hover {
+  background: #111;
+  border-color: rgba(255, 255, 255, 0.75);
+  color: #fff;
+  transform: translateY(-0.1rem);
+}
+
 .header__vault-badge {
   align-items: center;
-  border: 0.1rem solid rgba(var(--color-foreground), 0.35);
+  border: 0.1rem solid currentColor;
   border-radius: 999px;
   display: inline-flex;
   font-family: var(--font-heading-family);
@@ -122,16 +143,18 @@ summary.list-menu__item {
   width: 3rem;
 }
 
+.bbb-bookshelf-header__emoji {
+  filter: grayscale(1) contrast(1.35);
+  font-size: 2rem;
+  line-height: 1;
+}
+
 .header__sss-image {
   border-radius: 999px;
   display: block;
   height: 4.4rem;
   object-fit: cover;
   width: 4.4rem;
-}
-
-.header__icon--cart {
-  margin-right: -1.2rem;
 }
 
 .header__heading-logo-wrapper {

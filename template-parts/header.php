@@ -5,7 +5,6 @@
  * @package ByBookishBabeShopifyPort
  */
 
-$cart_count = bbb_cart_count();
 $logo       = sprintf(
 	'<a href="%1$s" class="header__heading-link link link--text focus-inset"><div class="header__heading-logo-wrapper"><img src="%2$s" class="header__heading-logo motion-reduce" width="200" height="%3$d" alt="%4$s" sizes="(max-width: 400px) 50vw, 200px" loading="eager"></div></a>',
 	esc_url(home_url('/')),
@@ -39,21 +38,6 @@ $logo       = sprintf(
 				<?php get_template_part('template-parts/header/reader-bookshelf-access'); ?>
 
 				<a
-					href="<?php echo esc_url(is_user_logged_in() ? bbb_wc_account_url() : wp_login_url()); ?>"
-					class="header__icon header__icon--account link focus-inset small-hide"
-					rel="nofollow"
-				>
-					<account-icon>
-						<?php if (is_user_logged_in() && bbb_user_has_avatar()) : ?>
-							<?php echo get_avatar(get_current_user_id(), 44); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-						<?php else : ?>
-							<span class="svg-wrapper"><?php echo bbb_get_inline_svg('icon-account'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
-						<?php endif; ?>
-					</account-icon>
-					<span class="visually-hidden"><?php echo esc_html(is_user_logged_in() ? __('Account', 'bybookishbabe-shopify-port') : __('Log in', 'bybookishbabe-shopify-port')); ?></span>
-				</a>
-
-				<a
 					href="https://thesmutandsentimentsociety.substack.com/subscribe"
 					class="header__sss-link link focus-inset"
 					target="_blank"
@@ -68,23 +52,6 @@ $logo       = sprintf(
 						width="104"
 						height="104"
 					>
-				</a>
-
-				<a href="<?php echo esc_url(bbb_wc_cart_url()); ?>" class="header__icon header__icon--cart link focus-inset" id="cart-icon-bubble">
-					<?php if (bbb_cart_is_empty()) : ?>
-						<span class="svg-wrapper"><?php echo bbb_get_inline_svg('icon-cart-empty'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
-					<?php else : ?>
-						<span class="svg-wrapper"><?php echo bbb_get_inline_svg('icon-cart'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
-					<?php endif; ?>
-					<span class="visually-hidden"><?php esc_html_e('Cart', 'bybookishbabe-shopify-port'); ?></span>
-					<?php if (!bbb_cart_is_empty()) : ?>
-						<div class="cart-count-bubble">
-							<?php if ($cart_count < 100) : ?>
-								<span aria-hidden="true"><?php echo esc_html((string) $cart_count); ?></span>
-							<?php endif; ?>
-							<span class="visually-hidden"><?php echo esc_html(sprintf(_n('%d item in cart', '%d items in cart', $cart_count, 'bybookishbabe-shopify-port'), $cart_count)); ?></span>
-						</div>
-					<?php endif; ?>
 				</a>
 			</div>
 		</header>
