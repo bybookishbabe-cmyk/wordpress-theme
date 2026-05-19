@@ -6,7 +6,7 @@
  */
 
 $join_url    = get_option('bbb_society_gate_member_url', 'https://thesmutandsentimentsociety.substack.com/subscribe');
-$account_url = is_user_logged_in() ? (function_exists('wc_get_page_permalink') ? wc_get_page_permalink('myaccount') : home_url('/my-account/')) : wp_login_url(get_permalink());
+$account_url = is_user_logged_in() ? (function_exists('bbb_wc_account_url') ? bbb_wc_account_url() : home_url('/account/')) : wp_login_url(get_permalink());
 $back_page   = get_page_by_path('smut-sentiment-society');
 $back_url    = $back_page instanceof WP_Post ? get_permalink($back_page) : home_url('/smut-sentiment-society/');
 ?>

@@ -79,6 +79,22 @@ function bbb_current_route_slug(): string {
 		$path = 'shop';
 	}
 
+	if (str_starts_with($path, 'collections/')) {
+		$path = substr($path, strlen('collections/'));
+	}
+
+	if (str_starts_with($path, 'products/')) {
+		$path = substr($path, strlen('products/'));
+	}
+
+	if (str_starts_with($path, 'product/')) {
+		$path = substr($path, strlen('product/'));
+	}
+
+	if (str_starts_with($path, 'product-category/')) {
+		$path = substr($path, strlen('product-category/'));
+	}
+
 	return sanitize_title(trim($path, '/'));
 }
 
@@ -126,9 +142,21 @@ add_action(
 		}
 
 		$request_path   = trim((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
+		if (
+			($request_path === 'cart' && function_exists('wc_get_cart_url'))
+			|| (($request_path === 'account' || str_starts_with($request_path, 'account/')) && function_exists('wc_get_account_endpoint_url'))
+			|| $request_path === 'account/login'
+		) {
+			return;
+		}
+
 		$is_legacy_path = str_starts_with($request_path, 'pages/')
 			|| str_starts_with($request_path, 'blogs/')
-			|| $request_path === 'collections/all';
+			|| str_starts_with($request_path, 'collections/')
+			|| str_starts_with($request_path, 'products/')
+			|| str_starts_with($request_path, 'product/')
+			|| str_starts_with($request_path, 'product-category/')
+			|| str_starts_with($request_path, 'curated-romance-guides/');
 		$routes = bbb_page_route_registry();
 		if (!array_key_exists($slug, $routes) && !$is_legacy_path) {
 			return;
