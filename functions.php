@@ -114,7 +114,7 @@ add_action(
 		bbb_enqueue_css('bbb-header-inline', 'assets/header-inline.css', array('bbb-section-footer'));
 		bbb_enqueue_css('bbb-custom-overrides', 'assets/site-custom-overrides.css', array('bbb-header-inline'));
 		bbb_enqueue_css('bbb-bookshelf-signup', 'assets/bookshelf-signup.css', array('bbb-custom-overrides'));
-		bbb_enqueue_css('bbb-sss-library', 'assets/sss-library.css', array('bbb-bookshelf-signup'));
+		bbb_enqueue_css('bbb-sss-library', 'assets/css/sss-library.css', array('bbb-bookshelf-signup'));
 		bbb_enqueue_css('bbb-sss-folder-tabs', 'assets/css/sss-folder-tabs.css', array('bbb-sss-library'));
 		bbb_enqueue_css('bbb-sss-memberdash', 'assets/css/sss-memberdash.css', array('bbb-sss-folder-tabs'));
 		bbb_enqueue_css('bbb-page-spice', 'assets/css/page-spice.css', array('bbb-sss-library'));
@@ -155,7 +155,7 @@ add_action(
 		bbb_enqueue_js('bbb-sticky-header', 'assets/sticky-header.js', array('bbb-global'));
 		bbb_enqueue_js('bbb-cart-notification', 'assets/cart-notification.js', array('bbb-pubsub'));
 		bbb_enqueue_js('bbb-bookshelf-signup', 'assets/bookshelf-signup.js', array('bbb-supabase'));
-		bbb_enqueue_js('bbb-sss-library', 'assets/sss-library.js', array('bbb-supabase'), false);
+		bbb_enqueue_js('bbb-sss-library', 'assets/js/sss-library.js', array('bbb-supabase'), false);
 		bbb_enqueue_js('bbb-sss-memberdash', 'assets/js/sss-memberdash.js', array('bbb-global'));
 		bbb_enqueue_js('bbb-sss-library-member', 'assets/js/sss-library-member.js', array('bbb-sss-library'));
 		bbb_enqueue_js('bbb-page-spice', 'assets/js/page-spice.js', array('bbb-sss-library'));

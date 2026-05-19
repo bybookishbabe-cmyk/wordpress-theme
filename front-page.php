@@ -13,6 +13,7 @@ get_header();
 	<?php
 	get_template_part('template-parts/hero-smut-sentiment');
 	get_template_part('template-parts/homepage/weekly-obsession');
+	bbb_render_section('trending-romance-reads');
 	get_template_part('template-parts/home/browse-by-trope');
 	get_template_part('template-parts/home/featured-romance-lists');
 	get_template_part('template-parts/home/quiz-nudge');
