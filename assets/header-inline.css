@@ -34,6 +34,11 @@ summary.list-menu__item {
   line-height: calc(1 + 0.3 / var(--font-body-scale));
 }
 
+.header__inline-menu .header__menu-item,
+.menu-drawer__menu-item {
+  text-transform: lowercase;
+}
+
 .list-menu__item--link {
   text-decoration: none;
   padding-bottom: 1rem;
@@ -55,6 +60,28 @@ summary.list-menu__item {
 .section-header {
   position: sticky;
   margin-bottom: 0;
+  overflow: visible;
+  z-index: 50;
+}
+
+.header-wrapper,
+.header {
+  overflow: visible;
+}
+
+.header__inline-menu,
+.header__inline-menu header-menu,
+.header__inline-menu details {
+  position: relative;
+}
+
+.header__inline-menu details[open] {
+  z-index: 60;
+}
+
+.header__inline-menu details[open] > .header__submenu,
+.header__inline-menu .header__submenu.global-settings-popup {
+  z-index: 60;
 }
 
 @media screen and (min-width: 990px) {

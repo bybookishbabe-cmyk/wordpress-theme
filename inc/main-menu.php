@@ -61,118 +61,94 @@ declare(strict_types=1);
  */
 function bbb_get_fallback_main_menu(): array {
 	return array(
+		array(
+			'title'    => 'home',
+			'url'      => home_url( '/' ),
+			'children' => array(),
+		),
 
 		// ── Library [CONFIRMED — primary hero CTA: shopify://pages/library] ─────
 		array(
-			'title'    => 'Library',
+			'title'    => 'library',
 			'url'      => bbb_page_url( 'library' ),
+			'children' => array(),
+		),
+
+		array(
+			'title'    => 'find your read',
+			'url'      => bbb_page_url( 'find-your-read' ),
 			'children' => array(
-				// [INFERRED] Sub-navigation by trope/browse mode.
-				// Adjust titles/slugs to match your actual Shopify menu.
 				array(
-					'title'    => 'Browse All',
-					'url'      => bbb_page_url( 'library' ),
+					'title'    => 'what should i read next',
+					'url'      => bbb_page_url( 'what-to-read-next' ),
 					'children' => array(),
 				),
 				array(
-					// [CONFIRMED] index.json trope block: shopify://pages/sports-romance-books
-					'title'    => 'Sports Romance',
-					'url'      => bbb_page_url( 'sports-romance-books' ),
+					'title'    => 'books by spice level',
+					'url'      => bbb_page_url( 'romance-books-by-spice-level' ),
 					'children' => array(),
 				),
 				array(
-					// [CONFIRMED] index.json trope block: shopify://pages/enemies-to-lovers
-					'title'    => 'Enemies to Lovers',
-					'url'      => bbb_page_url( 'enemies-to-lovers' ),
-					'children' => array(),
-				),
-				array(
-					// [CONFIRMED] index.json trope block: shopify://pages/slow-burn-books
-					'title'    => 'Slow Burn',
-					'url'      => bbb_page_url( 'slow-burn-books' ),
-					'children' => array(),
-				),
-				array(
-					// [INFERRED] Dark romance — referenced as a blog post in index.json trope block.
-					// Shopify URL: shopify://blogs/curated-romance-guides/the-best-dark-romance-books-with-morally-gray-men-that-will-ruin-you
-					// May be a menu item pointing to this article or to a page. Verify in Shopify admin.
-					'title'    => 'Dark Romance',
-					'url'      => home_url( '/curated-romance-guides/the-best-dark-romance-books-with-morally-gray-men-that-will-ruin-you/' ),
+					'title'    => 'reader quizzes',
+					'url'      => bbb_page_url( 'reader-quizes' ),
 					'children' => array(),
 				),
 			),
 		),
 
-		// ── Reading Guides / Blog [CONFIRMED — blog handle: curated-romance-guides] ─
 		array(
-			// [INFERRED] Title unknown — verify in Shopify admin. Could be "Reading Guides",
-			// "Blog", "Romance Guides", or similar.
-			'title'    => 'Reading Guides',
+			'title'    => 'reviews & guides',
 			'url'      => home_url( '/curated-romance-guides/' ),
-			'children' => array(),
+			'children' => array(
+				array(
+					'title'    => 'book reviews',
+					'url'      => bbb_page_url( 'book-reviews' ),
+					'children' => array(),
+				),
+				array(
+					'title'    => 'romance guides',
+					'url'      => home_url( '/curated-romance-guides/' ),
+					'children' => array(),
+				),
+				array(
+					'title'    => 'series reading orders',
+					'url'      => bbb_page_url( 'series-reading-orders' ),
+					'children' => array(),
+				),
+				array(
+					'title'    => 'books like x',
+					'url'      => bbb_page_url( 'books-like' ),
+					'children' => array(),
+				),
+			),
 		),
 
-		// ── The Society [CONFIRMED — society_url in index.json society_hero section] ─
 		array(
-			// [INFERRED] Exact title unknown. Could be "The Society", "SSS", "Join", etc.
-			'title'    => 'The Society',
+			'title'    => 'the society',
 			'url'      => bbb_page_url( 'smut-sentiment-society' ),
 			'children' => array(
-				// [INFERRED] Possible sub-items based on page templates. Verify in Shopify admin.
 				array(
-					'title'    => 'What\'s Inside',
+					'title'    => 'about the society',
 					'url'      => bbb_page_url( 'smut-sentiment-society' ),
 					'children' => array(),
 				),
 				array(
-					// [INFERRED] SSS freebies page found in templates/page.sss-freebies.json
-					'title'    => 'Freebies',
-					'url'      => bbb_page_url( 'sss-freebies' ),
+					'title'    => 'society\'s library',
+					'url'      => bbb_page_url( 'society-library' ),
+					'children' => array(),
+				),
+				array(
+					'title'    => 'society submissions',
+					'url'      => bbb_page_url( 'society-submissions' ),
 					'children' => array(),
 				),
 			),
 		),
 
-		// ── Shop [CONFIRMED — hero image-banner button: shopify://collections/all] ─
 		array(
-			// [INFERRED] Title unknown. Could be "Shop", "Kindle Inserts", "Bookish Goods", etc.
-			'title'    => 'Shop',
-			'url'      => home_url( '/shop/' ),
-			'children' => array(
-				array(
-					// [CONFIRMED] templates/page.kindle-inserts.json exists.
-					'title'    => 'Kindle Inserts',
-					'url'      => bbb_page_url( 'kindle-inserts' ),
-					'children' => array(),
-				),
-				array(
-					// [CONFIRMED] templates/page.artprints.json exists.
-					'title'    => 'Art Prints',
-					'url'      => bbb_page_url( 'art-prints' ),
-					'children' => array(),
-				),
-			),
-		),
-
-		// ── For Readers [CONFIRMED — templates/page.for-readers.json, page.what-to-read-next.json] ─
-		array(
-			// [INFERRED] Title unknown. Could be "For Readers", "Start Here", "Reader Tools", etc.
-			'title'    => 'For Readers',
-			'url'      => bbb_page_url( 'for-readers' ),
-			'children' => array(
-				array(
-					// [CONFIRMED] page.for-readers.json links to /pages/reader-quizes
-					'title'    => 'Reader Quiz',
-					'url'      => bbb_page_url( 'reader-quizes' ),
-					'children' => array(),
-				),
-				array(
-					// [CONFIRMED] page.what-to-read-next.json exists.
-					'title'    => 'What to Read Next',
-					'url'      => bbb_page_url( 'what-to-read-next' ),
-					'children' => array(),
-				),
-			),
+			'title'    => 'shop',
+			'url'      => bbb_page_url( 'shop' ),
+			'children' => array(),
 		),
 
 	);
