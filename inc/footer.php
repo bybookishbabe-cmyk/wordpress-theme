@@ -113,7 +113,7 @@ function bbb_footer_menu_items(): array {
 	}
 
 	if (!$menu) {
-		return array();
+		return function_exists('bbb_get_fallback_main_menu') ? bbb_footer_fallback_menu_items() : array();
 	}
 
 	$items = wp_get_nav_menu_items(
@@ -124,7 +124,11 @@ function bbb_footer_menu_items(): array {
 	);
 
 	if (!is_array($items)) {
-		return array();
+		return function_exists('bbb_get_fallback_main_menu') ? bbb_footer_fallback_menu_items() : array();
+	}
+
+	if (!$items && function_exists('bbb_get_fallback_main_menu')) {
+		return bbb_footer_fallback_menu_items();
 	}
 
 	foreach ($items as $item) {
@@ -138,7 +142,29 @@ function bbb_footer_menu_items(): array {
 	return $items;
 }
 
-function bbb_footer_menu_item_is_active(WP_Post $item): bool {
+function bbb_footer_fallback_menu_items(): array {
+	if (!function_exists('bbb_get_fallback_main_menu')) {
+		return array();
+	}
+
+	$items = array();
+	foreach (bbb_get_fallback_main_menu() as $index => $item) {
+		$post              = new stdClass();
+		$post->ID          = $index + 1;
+		$post->title       = (string) ($item['title'] ?? '');
+		$post->url         = (string) ($item['url'] ?? home_url('/'));
+		$post->classes     = array();
+		$post->menu_order  = $index + 1;
+		$post->post_title  = $post->title;
+		$post->post_name   = sanitize_title($post->title);
+		$post->post_type   = 'nav_menu_item';
+		$items[]           = $post;
+	}
+
+	return $items;
+}
+
+function bbb_footer_menu_item_is_active(object $item): bool {
 	$classes = array_filter((array) $item->classes);
 	if (array_intersect($classes, array('current-menu-item', 'current_page_item', 'current-menu-ancestor', 'current_page_ancestor'))) {
 		return true;
@@ -149,6 +175,39 @@ function bbb_footer_menu_item_is_active(WP_Post $item): bool {
 	$item_url    = untrailingslashit((string) $item->url);
 
 	return '' !== $current_url && '' !== $item_url && $current_url === $item_url;
+}
+
+function bbb_footer_affiliate_disclaimer(): string {
+	$default = 'some links may be affiliate links, so thank you for supporting the recs. <3';
+	$value   = get_option('bbb_footer_affiliate_disclaimer', $default);
+
+	return is_string($value) && '' !== trim($value) ? $value : $default;
+}
+
+add_action('admin_post_nopriv_bbb_footer_contact', 'bbb_handle_footer_contact');
+add_action('admin_post_bbb_footer_contact', 'bbb_handle_footer_contact');
+
+function bbb_handle_footer_contact(): void {
+	check_admin_referer('bbb_footer_contact');
+
+	$name    = isset($_POST['contact_name']) ? sanitize_text_field((string) wp_unslash($_POST['contact_name'])) : '';
+	$email   = isset($_POST['contact_email']) ? sanitize_email((string) wp_unslash($_POST['contact_email'])) : '';
+	$subject = isset($_POST['contact_subject']) ? sanitize_text_field((string) wp_unslash($_POST['contact_subject'])) : '';
+	$message = isset($_POST['contact_message']) ? sanitize_textarea_field((string) wp_unslash($_POST['contact_message'])) : '';
+
+	$status = 'error';
+	if ('' !== $name && is_email($email) && '' !== $message) {
+		$to      = (string) get_option('admin_email', 'bybookishbabe@gmail.com');
+		$subject = '' !== $subject ? $subject : 'Footer note from bybookishbabe';
+		$body    = "Name: {$name}\nEmail: {$email}\n\n{$message}";
+		$headers = array('Reply-To: ' . $name . ' <' . $email . '>');
+
+		$status = wp_mail($to, $subject, $body, $headers) ? 'sent' : 'error';
+	}
+
+	$referer = wp_get_referer() ?: home_url('/');
+	wp_safe_redirect(add_query_arg('bbb_note', $status, remove_query_arg('bbb_note', $referer)) . '#bbb-contact-footer');
+	exit;
 }
 
 function bbb_footer_newsletter_enabled(): bool {

@@ -1,4 +1,5 @@
 </main>
+<?php get_template_part('template-parts/contact-footer'); ?>
 <?php get_template_part('template-parts/footer'); ?>
 <?php get_template_part('template-parts/bookshelf-signup-modal'); ?>
 <?php get_template_part('template-parts/sss-library-modal'); ?>

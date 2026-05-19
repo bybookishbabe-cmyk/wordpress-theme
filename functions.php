@@ -131,7 +131,8 @@ add_action(
 		bbb_enqueue_css('bbb-component-newsletter', 'assets/css/component-newsletter.css', array('bbb-component-list-social'));
 		bbb_enqueue_css('bbb-component-list-payment', 'assets/css/component-list-payment.css', array('bbb-component-newsletter'));
 		bbb_enqueue_css('bbb-section-footer', 'assets/css/section-footer.css', array('bbb-component-list-payment'));
-		bbb_enqueue_css('bbb-header-inline', 'assets/header-inline.css', array('bbb-section-footer'));
+		bbb_enqueue_css('bbb-contact-footer', 'assets/css/contact-footer.css', array('bbb-section-footer'));
+		bbb_enqueue_css('bbb-header-inline', 'assets/header-inline.css', array('bbb-contact-footer'));
 		bbb_enqueue_css('bbb-custom-overrides', 'assets/site-custom-overrides.css', array('bbb-header-inline'));
 		bbb_enqueue_css('bbb-bookshelf-signup', 'assets/bookshelf-signup.css', array('bbb-custom-overrides'));
 		if (is_singular('post')) {

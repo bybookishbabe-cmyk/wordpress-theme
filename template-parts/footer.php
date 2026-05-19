@@ -48,6 +48,10 @@ $has_social_icons = bbb_footer_has_social_links();
 	</div>
 
 	<div class="footer__content-bottom scroll-trigger animate--slide-in" data-cascade>
+		<div class="footer__affiliate-note page-width">
+			<p><?php echo esc_html(bbb_footer_affiliate_disclaimer()); ?></p>
+		</div>
+
 		<div class="footer__content-bottom-wrapper page-width">
 			<div class="footer__column footer__localization isolate"></div>
 			<div class="footer__column footer__column--info">
