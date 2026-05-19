@@ -32,6 +32,7 @@ function bbb_render_shopify_import_page(): void {
 	if (is_array($result)) {
 		delete_transient('bbb_shopify_import_result_' . get_current_user_id());
 	}
+	$status = bbb_get_shopify_import_status();
 	?>
 	<div class="wrap">
 		<h1><?php esc_html_e('BBB Shopify Import', 'bybookishbabe-shopify-port'); ?></h1>
@@ -56,6 +57,30 @@ function bbb_render_shopify_import_page(): void {
 
 		<div style="display:grid;gap:24px;max-width:760px;">
 			<div class="card" style="max-width:none;">
+				<h2><?php esc_html_e('Current Import Status', 'bybookishbabe-shopify-port'); ?></h2>
+				<p>
+					<?php
+					echo esc_html(
+						sprintf(
+							__('Books: %1$d total. Books with shelves: %2$d. Shelf terms: %3$d.', 'bybookishbabe-shopify-port'),
+							$status['book_count'],
+							$status['books_with_shelves'],
+							$status['shelf_count']
+						)
+					);
+					?>
+				</p>
+				<?php if ($status['book_count'] > 0 && 0 === $status['books_with_shelves']) : ?>
+					<p style="color:#b32d2e;"><strong><?php esc_html_e('No imported books currently have shelves attached. Re-import the Books JSON after updating the theme.', 'bybookishbabe-shopify-port'); ?></strong></p>
+				<?php elseif ($status['book_count'] > $status['books_with_shelves']) : ?>
+					<p style="color:#996800;"><strong><?php echo esc_html(sprintf(__('%d books are missing shelves. Re-importing the Books JSON will repair any shelf data present in Shopify.', 'bybookishbabe-shopify-port'), $status['book_count'] - $status['books_with_shelves'])); ?></strong></p>
+				<?php endif; ?>
+				<?php if (!empty($status['shelf_names'])) : ?>
+					<p><?php echo esc_html__('Shelves found: ', 'bybookishbabe-shopify-port') . esc_html(implode(', ', $status['shelf_names'])); ?></p>
+				<?php endif; ?>
+			</div>
+
+			<div class="card" style="max-width:none;">
 				<h2><?php esc_html_e('Books', 'bybookishbabe-shopify-port'); ?></h2>
 				<p><?php esc_html_e('Use the sss_library books export. Import books before newsletter issues so issue references can resolve to book posts.', 'bybookishbabe-shopify-port'); ?></p>
 				<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" enctype="multipart/form-data">
@@ -79,6 +104,47 @@ function bbb_render_shopify_import_page(): void {
 		</div>
 	</div>
 	<?php
+}
+
+function bbb_get_shopify_import_status(): array {
+	$book_ids = get_posts(
+		array(
+			'post_type'      => 'bbb_book',
+			'post_status'    => 'any',
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+		)
+	);
+
+	$books_with_shelves = 0;
+	foreach ($book_ids as $book_id) {
+		$terms = get_the_terms((int) $book_id, 'bbb_shelf');
+		if ($terms && !is_wp_error($terms)) {
+			++$books_with_shelves;
+			continue;
+		}
+
+		if ((string) get_post_meta((int) $book_id, '_bbb_shelf_name', true) !== '') {
+			++$books_with_shelves;
+		}
+	}
+
+	$shelves     = get_terms(array('taxonomy' => 'bbb_shelf', 'hide_empty' => false));
+	$shelf_names = array();
+	if ($shelves && !is_wp_error($shelves)) {
+		foreach ($shelves as $shelf) {
+			if ($shelf instanceof WP_Term) {
+				$shelf_names[] = $shelf->name;
+			}
+		}
+	}
+
+	return array(
+		'book_count'         => count($book_ids),
+		'books_with_shelves' => $books_with_shelves,
+		'shelf_count'        => count($shelf_names),
+		'shelf_names'        => array_slice($shelf_names, 0, 12),
+	);
 }
 
 function bbb_handle_books_json_import(): void {

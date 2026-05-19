@@ -193,6 +193,9 @@ function sss_book_data(WP_Post $post): array {
 
 		$shelf_terms = get_the_terms($post->ID, 'bbb_shelf');
 		$shelf       = ($shelf_terms && !is_wp_error($shelf_terms)) ? $shelf_terms[0]->name : '';
+		if ('' === $shelf) {
+			$shelf = (string) get_post_meta($post->ID, '_bbb_shelf_name', true);
+		}
 		$trope_terms = get_the_terms($post->ID, 'bbb_trope');
 		$tropes      = array();
 
