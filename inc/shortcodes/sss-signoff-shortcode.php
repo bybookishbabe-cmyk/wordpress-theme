@@ -1,0 +1,36 @@
+<?php
+/**
+ * Blog signoff shortcode.
+ *
+ * @package ByBookishBabeShopifyPort
+ */
+
+declare(strict_types=1);
+
+function sss_signoff_shortcode($atts = array()): string {
+	return '<div class="bbb-signoff">
+  <div class="bbb-signoff__sparkle"></div>
+  <div class="bbb-signoff__inner">
+    <div class="bbb-signoff__kicker">before you go</div>
+    <h3 class="bbb-signoff__title">join the smut &amp; sentiment society</h3>
+    <p class="bbb-signoff__text">
+      every sunday we send a carefully curated romance recommendation —
+      morally gray men delievered straight to you
+    </p>
+    <div class="bbb-signoff__actions">
+      <div class="bbb-signoff__embed">
+        <iframe
+          src="https://thesmutandsentimentsociety.substack.com/embed"
+          title="subscribe to the smut &amp; sentiment society"
+          loading="lazy"
+          scrolling="no"
+        ></iframe>
+      </div>
+    </div>
+    <div class="bbb-signoff__socialproof">
+      loved by readers who secretly root for the villain
+    </div>
+  </div>
+</div>';
+}
+add_shortcode('sss_signoff', 'sss_signoff_shortcode');
