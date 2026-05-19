@@ -12,7 +12,8 @@ require_once get_theme_file_path('inc/bbb-helpers.php');
 require_once get_theme_file_path('inc/footer.php');
 require_once get_theme_file_path('inc/customizer/hero-smut-sentiment.php');
 require_once get_theme_file_path('inc/weekly-obsession-query.php');
-require_once get_theme_file_path('inc/cpt-newsletter-issue.php');
+require_once get_theme_file_path('inc/newsletter-issue-cpt.php');
+require_once get_theme_file_path('inc/acf-society-hero-options.php');
 require_once get_theme_file_path('inc/cpt-sss-book.php');
 require_once get_theme_file_path('inc/cpt/sss-series.php');
 require_once get_theme_file_path('inc/cpt/sss-quote.php');
@@ -128,6 +129,7 @@ add_action(
 			bbb_enqueue_css('bbb-hero', 'assets/css/hero-smut-sentiment.css', array('bbb-society-gate'));
 			bbb_enqueue_css('bbb-browse-by-trope', 'assets/css/sections/browse-by-trope.css', array('bbb-hero'));
 			bbb_enqueue_css('bbb-home-static', 'assets/home-static.css', array('bbb-browse-by-trope'));
+			bbb_enqueue_css('bbb-section-society-hero', 'assets/css/section-society-hero.css', array('bbb-home-static'));
 		}
 
 		if ('drawer' === get_option('bbb_cart_type', 'notification')) {
@@ -169,6 +171,7 @@ add_action(
 			bbb_enqueue_js('bbb-browse-by-trope', 'assets/js/browse-by-trope.js', array('bbb-global'));
 			bbb_enqueue_js('bbb-homepage-library-preview', 'assets/js/homepage-library-preview.js', array('bbb-supabase', 'bbb-sss-library'));
 			bbb_enqueue_js('bbb-home-static', 'assets/home-static.js', array('bbb-global'));
+			bbb_enqueue_js('bbb-section-society-hero', 'assets/js/section-society-hero.js', array('bbb-global'));
 		}
 
 		if ((bool) get_option('bbb_localization_enabled', false)) {

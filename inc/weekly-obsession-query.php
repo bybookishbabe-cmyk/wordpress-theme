@@ -20,6 +20,11 @@ function sss_get_current_newsletter_issue(): ?WP_Post {
 			'post_status'    => 'publish',
 			'posts_per_page' => -1,
 			'meta_query'     => array(
+				'relation' => 'OR',
+				array(
+					'key'     => 'publish_date',
+					'compare' => 'EXISTS',
+				),
 				array(
 					'key'     => '_issue_publish_date',
 					'compare' => 'EXISTS',
@@ -32,12 +37,20 @@ function sss_get_current_newsletter_issue(): ?WP_Post {
 	$current_ts = 0;
 
 	foreach ($issues as $issue) {
-		$raw = get_post_meta($issue->ID, '_issue_publish_date', true);
+		$raw = function_exists('get_field') ? get_field('publish_date', $issue->ID) : get_post_meta($issue->ID, 'publish_date', true);
+		if (empty($raw)) {
+			$raw = get_post_meta($issue->ID, '_issue_publish_date', true);
+		}
 		if (empty($raw)) {
 			continue;
 		}
 
-		$issue_ts = strtotime((string) $raw);
+		$date = trim((string) $raw);
+		if (preg_match('/^\d{8}$/', $date)) {
+			$date = substr($date, 0, 4) . '-' . substr($date, 4, 2) . '-' . substr($date, 6, 2);
+		}
+
+		$issue_ts = strtotime($date);
 		if (false === $issue_ts) {
 			continue;
 		}
