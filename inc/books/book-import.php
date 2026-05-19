@@ -1,0 +1,220 @@
+<?php
+/**
+ * WP-CLI importer for Shopify sss_library metaobject exports.
+ *
+ * Usage: wp bbb import-books --file=books.json
+ *
+ * @package ByBookishBabeShopifyPort
+ */
+
+declare(strict_types=1);
+
+function bbb_import_bool_to_meta($value): string {
+	if (is_bool($value)) {
+		return $value ? '1' : '0';
+	}
+
+	return in_array(strtolower(trim((string) $value)), array('1', 'true', 'yes', 'on'), true) ? '1' : '0';
+}
+
+function bbb_import_field_title(array $fields, string $fallback): string {
+	return (string) ($fields['title']['value'] ?? $fields['name']['value'] ?? $fallback);
+}
+
+function bbb_import_metaobject_field_value(array $fields, string $key): string {
+	return isset($fields[$key]['value']) ? (string) $fields[$key]['value'] : '';
+}
+
+if (defined('WP_CLI') && WP_CLI) {
+	WP_CLI::add_command(
+		'bbb import-books',
+		static function ($args, $assoc_args): void {
+			$file = $assoc_args['file'] ?? '';
+			if (!file_exists($file)) {
+				WP_CLI::error("File not found: $file");
+			}
+
+			$data  = json_decode((string) file_get_contents($file), true);
+			$books = $data['data']['metaobjects']['edges'] ?? array();
+			$count = 0;
+
+			foreach ($books as $edge) {
+				$node   = $edge['node'] ?? array();
+				$handle = (string) ($node['handle'] ?? '');
+				if ($handle === '') {
+					WP_CLI::warning('Skipped a book without a handle.');
+					continue;
+				}
+
+				$fields = array();
+				foreach (($node['fields'] ?? array()) as $field) {
+					if (isset($field['key'])) {
+						$fields[$field['key']] = $field;
+					}
+				}
+
+				$title    = bbb_import_field_title($fields, $handle);
+				$existing = get_page_by_path($handle, OBJECT, 'bbb_book');
+				$post_id  = $existing instanceof WP_Post
+					? wp_update_post(
+						array(
+							'ID'         => $existing->ID,
+							'post_title' => $title,
+							'post_name'  => $handle,
+						),
+						true
+					)
+					: wp_insert_post(
+						array(
+							'post_type'   => 'bbb_book',
+							'post_status' => 'publish',
+							'post_title'  => $title,
+							'post_name'   => $handle,
+						),
+						true
+					);
+
+				if (is_wp_error($post_id)) {
+					WP_CLI::warning('Failed: ' . $handle . ' - ' . $post_id->get_error_message());
+					continue;
+				}
+
+				$meta_map = array(
+					'author'                 => '_bbb_author',
+					'spice_level'            => '_bbb_spice',
+					'tension_score'          => '_bbb_tension',
+					'emotional_damage_score' => '_bbb_damage',
+					'yearning_level'         => '_bbb_yearning',
+					'boyfriend_type'         => '_bbb_boyfriend_type',
+					'boyfriend_name'         => '_bbb_boyfriend_name',
+					'reread_badge'           => '_bbb_reread',
+					'darkness_level'         => '_bbb_darkness',
+					'mini_note'              => '_bbb_mini_note',
+					'why_i_loved_it'         => '_bbb_why',
+					'series_number'          => '_bbb_series_number',
+				);
+
+				foreach ($meta_map as $shopify_key => $wp_meta) {
+					if (isset($fields[$shopify_key]['value'])) {
+						update_post_meta((int) $post_id, $wp_meta, $fields[$shopify_key]['value']);
+					}
+				}
+
+				foreach (
+					array(
+						'on_kindle_unlimited' => '_bbb_ku',
+						'read_as_standalone'  => '_bbb_standalone',
+						'hide_from_library'   => '_bbb_hide_from_library',
+						'private_shelf'       => '_bbb_private_shelf',
+					) as $shopify_key => $wp_meta
+				) {
+					if (isset($fields[$shopify_key]['value'])) {
+						update_post_meta((int) $post_id, $wp_meta, bbb_import_bool_to_meta($fields[$shopify_key]['value']));
+					}
+				}
+
+				$cover_url = $fields['cover']['reference']['image']['url'] ?? '';
+				if ($cover_url) {
+					update_post_meta((int) $post_id, '_bbb_cover_url', $cover_url);
+				}
+
+				$url_map = array(
+					'amazon_link'                 => '_bbb_amazon_url',
+					'bookshop_link'               => '_bbb_bookshop_url',
+					'newsletter_url'              => '_bbb_newsletter_url',
+					'featured_in_newsletter_date' => '_bbb_newsletter_date',
+				);
+
+				foreach ($url_map as $shopify_key => $wp_meta) {
+					$value = bbb_import_metaobject_field_value($fields, $shopify_key);
+					if ($value !== '') {
+						update_post_meta((int) $post_id, $wp_meta, $value);
+					}
+				}
+
+				$series_ref = $fields['series']['reference'] ?? null;
+				if (is_array($series_ref)) {
+					$series_handle = (string) ($series_ref['handle'] ?? '');
+					$series_title  = '';
+					foreach (($series_ref['fields'] ?? array()) as $series_field) {
+						if (($series_field['key'] ?? '') === 'title') {
+							$series_title = (string) ($series_field['value'] ?? '');
+						}
+					}
+
+					if ($series_handle !== '') {
+						update_post_meta((int) $post_id, '_bbb_series_handle', $series_handle);
+						$series_term = get_term_by('slug', $series_handle, 'bbb_series');
+						if (!$series_term) {
+							$inserted = wp_insert_term($series_title ?: $series_handle, 'bbb_series', array('slug' => $series_handle));
+							if (!is_wp_error($inserted)) {
+								$series_term = get_term((int) $inserted['term_id'], 'bbb_series');
+							}
+						}
+						if ($series_term instanceof WP_Term) {
+							wp_set_object_terms((int) $post_id, (int) $series_term->term_id, 'bbb_series');
+						}
+					}
+				}
+
+				$shelf_ref = $fields['shelf']['reference'] ?? null;
+				if (is_array($shelf_ref)) {
+					$shelf_name = '';
+					foreach (($shelf_ref['fields'] ?? array()) as $shelf_field) {
+						if (($shelf_field['key'] ?? '') === 'name') {
+							$shelf_name = (string) ($shelf_field['value'] ?? '');
+						}
+					}
+
+					if ($shelf_name !== '') {
+						wp_set_object_terms((int) $post_id, $shelf_name, 'bbb_shelf');
+					}
+				}
+
+				$trope_refs  = $fields['tropes']['references']['edges'] ?? array();
+				$trope_slugs = array();
+				foreach ($trope_refs as $trope_edge) {
+					$trope_node   = $trope_edge['node'] ?? array();
+					$trope_handle = (string) ($trope_node['handle'] ?? '');
+					$trope_name   = '';
+					$trope_emoji  = '';
+
+					foreach (($trope_node['fields'] ?? array()) as $trope_field) {
+						if (($trope_field['key'] ?? '') === 'name') {
+							$trope_name = (string) ($trope_field['value'] ?? '');
+						}
+						if (($trope_field['key'] ?? '') === 'emoji') {
+							$trope_emoji = (string) ($trope_field['value'] ?? '');
+						}
+					}
+
+					if ($trope_handle !== '') {
+						$term = get_term_by('slug', $trope_handle, 'bbb_trope');
+						if (!$term) {
+							$inserted = wp_insert_term($trope_name ?: $trope_handle, 'bbb_trope', array('slug' => $trope_handle));
+							if (!is_wp_error($inserted)) {
+								$term = get_term((int) $inserted['term_id'], 'bbb_trope');
+							}
+						}
+
+						if ($term instanceof WP_Term) {
+							if ($trope_emoji !== '') {
+								update_term_meta((int) $term->term_id, 'trope_emoji', $trope_emoji);
+							}
+							$trope_slugs[] = (int) $term->term_id;
+						}
+					}
+				}
+
+				if ($trope_slugs) {
+					wp_set_object_terms((int) $post_id, $trope_slugs, 'bbb_trope');
+				}
+
+				$count++;
+				WP_CLI::log('Imported: ' . $handle);
+			}
+
+			WP_CLI::success("Done. $count books imported.");
+		}
+	);
+}
