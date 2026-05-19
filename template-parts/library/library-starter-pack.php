@@ -4,7 +4,9 @@ declare(strict_types=1);
 $starter_books = array_values(
 	array_filter(
 		$args['books'] ?? array(),
-		static fn($book): bool => $book instanceof WP_Post && sss_bool(sss_meta($book->ID, 'sss_starter_pack', false))
+		static fn($book): bool => $book instanceof WP_Post
+			&& function_exists('sss_book_is_starter_pack')
+			&& sss_book_is_starter_pack($book->ID)
 	)
 );
 

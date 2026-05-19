@@ -110,6 +110,16 @@ $top_shelf_query   = new WP_Query(
 					'value'   => 'true',
 					'compare' => '=',
 				),
+				array(
+					'key'     => '_bbb_top_shelf',
+					'value'   => '1',
+					'compare' => '=',
+				),
+				array(
+					'key'     => '_bbb_top_shelf',
+					'value'   => 'true',
+					'compare' => '=',
+				),
 			),
 			array(
 				'relation' => 'OR',
@@ -145,6 +155,10 @@ if ($top_shelf_query->have_posts()) {
 		$book_id = get_the_ID();
 
 		if (function_exists('bbb_book_is_publicly_visible') && !bbb_book_is_publicly_visible($book_id)) {
+			continue;
+		}
+
+		if (function_exists('sss_book_is_top_shelf') && !sss_book_is_top_shelf($book_id)) {
 			continue;
 		}
 

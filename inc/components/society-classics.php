@@ -3,13 +3,31 @@ declare(strict_types=1);
 
 $query = $args['query'] ?? new WP_Query(
 	array(
-		'post_type'      => 'sss_book',
+		'post_type'      => array_values(
+			array_filter(
+				array('sss_book', 'bbb_book'),
+				static fn(string $post_type): bool => post_type_exists($post_type)
+			)
+		) ?: 'sss_book',
 		'posts_per_page' => 8,
-		'tax_query'      => array(
+		'meta_query'     => array(
 			array(
-				'taxonomy' => 'sss_shelf',
-				'field'    => 'slug',
-				'terms'    => 'society-classics',
+				'relation' => 'OR',
+				array(
+					'key'     => 'top_shelf',
+					'value'   => '1',
+					'compare' => '=',
+				),
+				array(
+					'key'     => 'top_shelf',
+					'value'   => 'true',
+					'compare' => '=',
+				),
+				array(
+					'key'     => '_bbb_top_shelf',
+					'value'   => '1',
+					'compare' => '=',
+				),
 			),
 		),
 	)

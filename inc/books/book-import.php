@@ -46,6 +46,10 @@ function bbb_import_books_edges_from_export(array $data): array {
 	return $edges;
 }
 
+function bbb_import_metaobject_edges_from_export(array $data): array {
+	return bbb_import_books_edges_from_export($data);
+}
+
 if (defined('WP_CLI') && WP_CLI) {
 	WP_CLI::add_command(
 		'bbb import-books',
@@ -127,6 +131,8 @@ if (defined('WP_CLI') && WP_CLI) {
 						'read_as_standalone'  => '_bbb_standalone',
 						'hide_from_library'   => '_bbb_hide_from_library',
 						'private_shelf'       => '_bbb_private_shelf',
+						'top_shelf'           => '_bbb_top_shelf',
+						'starter_pack'        => '_bbb_starter_pack',
 					) as $shopify_key => $wp_meta
 				) {
 					if (isset($fields[$shopify_key]['value'])) {
@@ -236,6 +242,103 @@ if (defined('WP_CLI') && WP_CLI) {
 			}
 
 			WP_CLI::success("Done. $count books imported.");
+		}
+	);
+
+	WP_CLI::add_command(
+		'bbb import-newsletter-issues',
+		static function ($args, $assoc_args): void {
+			$file = $assoc_args['file'] ?? '';
+			if (!file_exists($file)) {
+				WP_CLI::error("File not found: $file");
+			}
+
+			$data   = json_decode((string) file_get_contents($file), true);
+			$issues = is_array($data) ? bbb_import_metaobject_edges_from_export($data) : array();
+			$count  = 0;
+
+			foreach ($issues as $edge) {
+				$node   = $edge['node'] ?? array();
+				$handle = (string) ($node['handle'] ?? '');
+				if ('' === $handle) {
+					WP_CLI::warning('Skipped a newsletter issue without a handle.');
+					continue;
+				}
+
+				$fields = array();
+				foreach (($node['fields'] ?? array()) as $field) {
+					if (isset($field['key'])) {
+						$fields[$field['key']] = $field;
+					}
+				}
+
+				$title = (string) (
+					$fields['title']['value']
+					?? $fields['subject']['value']
+					?? $fields['name']['value']
+					?? $handle
+				);
+
+				$publish_date = (string) (
+					$fields['publish_date']['value']
+					?? $fields['date']['value']
+					?? ''
+				);
+
+				$post_date = $publish_date;
+				if (preg_match('/^\d{8}$/', $post_date)) {
+					$post_date = substr($post_date, 0, 4) . '-' . substr($post_date, 4, 2) . '-' . substr($post_date, 6, 2);
+				}
+
+				$existing = get_page_by_path($handle, OBJECT, 'newsletter_issue');
+				$postarr  = array(
+					'post_type'   => 'newsletter_issue',
+					'post_status' => 'publish',
+					'post_title'  => $title,
+					'post_name'   => $handle,
+				);
+
+				if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $post_date)) {
+					$postarr['post_date'] = $post_date . ' 10:00:00';
+				}
+
+				if ($existing instanceof WP_Post) {
+					$postarr['ID'] = $existing->ID;
+					$post_id       = wp_update_post($postarr, true);
+				} else {
+					$post_id = wp_insert_post($postarr, true);
+				}
+
+				if (is_wp_error($post_id)) {
+					WP_CLI::warning('Failed newsletter issue: ' . $handle . ' - ' . $post_id->get_error_message());
+					continue;
+				}
+
+				if ('' !== $publish_date) {
+					update_post_meta((int) $post_id, 'publish_date', $publish_date);
+					update_post_meta((int) $post_id, '_issue_publish_date', $publish_date);
+				}
+
+				foreach (
+					array(
+						'url'        => '_bbb_newsletter_url',
+						'issue_url'  => '_bbb_newsletter_url',
+						'subtitle'   => '_issue_subtitle',
+						'issue_no'   => '_issue_no',
+						'issue_label'=> '_issue_label',
+					) as $shopify_key => $wp_meta
+				) {
+					$value = bbb_import_metaobject_field_value($fields, $shopify_key);
+					if ('' !== $value) {
+						update_post_meta((int) $post_id, $wp_meta, $value);
+					}
+				}
+
+				$count++;
+				WP_CLI::log('Imported newsletter issue: ' . $handle);
+			}
+
+			WP_CLI::success("Done. $count newsletter issues imported.");
 		}
 	);
 }

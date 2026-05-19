@@ -59,6 +59,22 @@ function sss_book_is_private(int $post_id): bool {
 	return $flag || 'private shelf' === $shelf;
 }
 
+function sss_book_is_top_shelf(int $post_id): bool {
+	if ('bbb_book' === get_post_type($post_id)) {
+		return sss_bool(get_post_meta($post_id, '_bbb_top_shelf', true));
+	}
+
+	return sss_bool(sss_meta($post_id, 'top_shelf', sss_meta($post_id, 'sss_top_shelf', false)));
+}
+
+function sss_book_is_starter_pack(int $post_id): bool {
+	if ('bbb_book' === get_post_type($post_id)) {
+		return sss_bool(get_post_meta($post_id, '_bbb_starter_pack', true));
+	}
+
+	return sss_bool(sss_meta($post_id, 'sss_starter_pack', sss_meta($post_id, 'starter_pack', false)));
+}
+
 function sss_get_all_books(): array {
 	$post_types = array_values(
 		array_filter(
@@ -217,7 +233,8 @@ function sss_book_data(WP_Post $post): array {
 			'boyfriend_name' => (string) get_post_meta($post->ID, '_bbb_boyfriend_name', true),
 			'reread'         => (string) get_post_meta($post->ID, '_bbb_reread', true),
 			'ku'             => '1' === $ku_raw,
-			'starter_pack'   => false,
+			'starter_pack'   => sss_book_is_starter_pack($post->ID),
+			'top_shelf'      => sss_book_is_top_shelf($post->ID),
 			'is_private'     => sss_book_is_private($post->ID),
 			'featured_month' => substr((string) get_post_meta($post->ID, '_bbb_newsletter_date', true), 0, 7),
 		);
@@ -250,7 +267,8 @@ function sss_book_data(WP_Post $post): array {
 		'boyfriend_name' => (string) sss_meta($post->ID, 'sss_boyfriend_name', ''),
 		'reread'         => sss_bool(sss_meta($post->ID, 'sss_reread', false)),
 		'ku'             => sss_bool(sss_meta($post->ID, 'sss_ku', false)),
-		'starter_pack'   => sss_bool(sss_meta($post->ID, 'sss_starter_pack', false)),
+		'starter_pack'   => sss_book_is_starter_pack($post->ID),
+		'top_shelf'      => sss_book_is_top_shelf($post->ID),
 		'is_private'     => sss_book_is_private($post->ID),
 		'featured_month' => (string) sss_meta($post->ID, 'sss_featured_month', ''),
 	);

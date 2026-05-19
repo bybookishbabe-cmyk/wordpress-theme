@@ -8,6 +8,36 @@
 declare(strict_types=1);
 
 function bbb_get_field(string $key, $post_id = null, $default = null) {
+	$post_id = null === $post_id ? get_the_ID() : (int) $post_id;
+
+	if ('bbb_book' === get_post_type($post_id)) {
+		$bbb_map = array(
+			'author'                      => '_bbb_author',
+			'cover'                       => '_bbb_cover_url',
+			'amazon_link'                 => '_bbb_amazon_url',
+			'bookshop_link'               => '_bbb_bookshop_url',
+			'spice_level'                 => '_bbb_spice',
+			'book_spice_level'            => '_bbb_spice',
+			'starter_pack'                => '_bbb_starter_pack',
+			'top_shelf'                   => '_bbb_top_shelf',
+			'hide_from_library'           => '_bbb_hide_from_library',
+			'is_private'                  => '_bbb_private_shelf',
+			'read_as_standalone'          => '_bbb_standalone',
+			'standalone'                  => '_bbb_standalone',
+			'on_kindle_unlimited'         => '_bbb_ku',
+			'why_i_loved_it'              => '_bbb_why',
+			'mini_note'                   => '_bbb_mini_note',
+			'featured_in_newsletter_date' => '_bbb_newsletter_date',
+		);
+
+		if (isset($bbb_map[$key])) {
+			$value = get_post_meta($post_id, $bbb_map[$key], true);
+			if ('' !== $value && null !== $value) {
+				return $value;
+			}
+		}
+	}
+
 	if (function_exists('get_field')) {
 		$value = get_field($key, $post_id);
 		if (null !== $value && '' !== $value && false !== $value) {
@@ -15,12 +45,12 @@ function bbb_get_field(string $key, $post_id = null, $default = null) {
 		}
 	}
 
-	$raw = get_post_meta(null === $post_id ? get_the_ID() : (int) $post_id, $key, true);
+	$raw = get_post_meta($post_id, $key, true);
 	if ('' !== $raw) {
 		return $raw;
 	}
 
-	$legacy = get_post_meta(null === $post_id ? get_the_ID() : (int) $post_id, '_' . $key, true);
+	$legacy = get_post_meta($post_id, '_' . $key, true);
 	return '' !== $legacy ? $legacy : $default;
 }
 
@@ -177,8 +207,9 @@ function bbb_get_all_books_json(bool $include_private = true): array {
 			continue;
 		}
 
-		$shelf_terms = get_the_terms($book->ID, 'sss_shelf');
-		$trope_terms = get_the_terms($book->ID, 'sss_trope');
+		$is_bbb      = 'bbb_book' === $book->post_type;
+		$shelf_terms = get_the_terms($book->ID, $is_bbb ? 'bbb_shelf' : 'sss_shelf');
+		$trope_terms = get_the_terms($book->ID, $is_bbb ? 'bbb_trope' : 'sss_trope');
 
 		$out[] = array(
 			'id'           => $book->ID,
@@ -191,8 +222,9 @@ function bbb_get_all_books_json(bool $include_private = true): array {
 			'tropes'       => $trope_terms && !is_wp_error($trope_terms) ? wp_list_pluck($trope_terms, 'name') : array(),
 			'spice_level'  => (int) bbb_get_field('spice_level', $book->ID, bbb_get_field('book_spice_level', $book->ID, 0)),
 			'is_private'   => $is_private,
-			'starter_pack' => (bool) bbb_get_field('starter_pack', $book->ID, false),
-			'on_ku'        => (bool) bbb_get_field('on_kindle_unlimited', $book->ID, false),
+			'starter_pack' => function_exists('sss_book_is_starter_pack') ? sss_book_is_starter_pack($book->ID) : (bool) bbb_get_field('starter_pack', $book->ID, false),
+			'top_shelf'    => function_exists('sss_book_is_top_shelf') ? sss_book_is_top_shelf($book->ID) : (bool) bbb_get_field('top_shelf', $book->ID, false),
+			'on_ku'        => bbb_truthy(bbb_get_field('on_kindle_unlimited', $book->ID, false)),
 			'why'          => (string) bbb_get_field('why_i_loved_it', $book->ID, ''),
 			'mini'         => (string) bbb_get_field('mini_note', $book->ID, ''),
 		);
