@@ -14,12 +14,7 @@ wp_enqueue_script('bbb-sss-library', get_template_directory_uri() . '/assets/js/
 get_header();
 
 $all_books        = sss_get_all_books();
-$all_public_books = array_values(
-	array_filter(
-		$all_books,
-		static fn(WP_Post $book): bool => !sss_book_is_private($book->ID)
-	)
-);
+$all_public_books = $all_books;
 ?>
 
 <section class="sss-lib sss-lib--public" id="sss-lib-public" data-sss-lib="public">

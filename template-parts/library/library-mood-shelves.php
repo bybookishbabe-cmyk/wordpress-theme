@@ -35,7 +35,7 @@ foreach ($shelf_names as $shelf) {
 		)
 	);
 
-	if (count($shelf_books) <= 5) {
+	if (!$shelf_books) {
 		continue;
 	}
 

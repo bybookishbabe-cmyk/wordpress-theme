@@ -19,7 +19,7 @@ foreach ($books as $book) {
 
 $has_mood_shelves = false;
 foreach ($shelf_counts as $count) {
-	if ($count >= 6) {
+	if ($count > 0) {
 		$has_mood_shelves = true;
 		break;
 	}

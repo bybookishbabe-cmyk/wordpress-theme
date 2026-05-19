@@ -8,10 +8,13 @@ $books = array_filter(
 			return false;
 		}
 
-		return $book instanceof WP_Post
-			&& sss_book_is_visible($book->ID)
-			&& function_exists('sss_book_is_top_shelf')
-			&& sss_book_is_top_shelf($book->ID);
+		$data = sss_book_data($book);
+
+		return sss_book_is_visible($book->ID)
+			&& (
+				(function_exists('sss_book_is_top_shelf') && sss_book_is_top_shelf($book->ID))
+				|| 'society classics' === strtolower(trim((string) $data['shelf']))
+			);
 	}
 );
 
