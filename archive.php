@@ -462,12 +462,15 @@ get_header();
 	<?php if ($query->max_num_pages > 1) : ?>
 		<nav class="pagination" aria-label="Blog navigation">
 			<?php
+			$pagination_base = $forced_category
+				? home_url('/' . trim($forced_category, '/') . '/page/%#%/')
+				: str_replace(999999999, '%#%', get_pagenum_link(999999999, false));
 			echo wp_kses_post(
 				paginate_links(
 					array(
-						'base'      => str_replace(999999999, '%#%', esc_url(get_pagenum_link(999999999))),
-						'format'    => '?paged=%#%',
-						'current'   => max(1, get_query_var('paged')),
+						'base'      => $pagination_base,
+						'format'    => '',
+						'current'   => max(1, $paged),
 						'total'     => $query->max_num_pages,
 						'prev_text' => '&larr; previous',
 						'next_text' => 'next &rarr;',
