@@ -9,7 +9,8 @@ $terms = get_terms(array('taxonomy' => 'sss_shelf', 'hide_empty' => true, 'numbe
 	<div class="sss-lib__jumpLinks">
 		<?php if ($terms && !is_wp_error($terms)) : ?>
 			<?php foreach ($terms as $term) : ?>
-				<a href="<?php echo esc_url(get_term_link($term)); ?>"><?php echo esc_html($term->name); ?></a>
+				<?php $term_url = function_exists('bbb_book_taxonomy_term_url') ? bbb_book_taxonomy_term_url($term) : get_term_link($term); ?>
+				<a href="<?php echo esc_url($term_url); ?>"><?php echo esc_html($term->name); ?></a>
 			<?php endforeach; ?>
 		<?php endif; ?>
 	</div>

@@ -19,7 +19,7 @@ function bbb_page_route_registry(): array {
 		'cart'                           => '',
 		'contact'                        => 'page-contact.php',
 		'curated-romance-guides'         => 'page-curated-romance-guides.php',
-		'enemies-to-lovers'              => '',
+		'enemies-to-lovers'              => 'page-trope.php',
 		'fictional-boyfriend-quiz'       => '',
 		'find-your-read'                 => '',
 		'for-readers'                    => '',
@@ -39,11 +39,11 @@ function bbb_page_route_registry(): array {
 		'series-reading-orders'          => 'page-series-reading-orders.php',
 		'shelf'                          => 'page-shelf.php',
 		'shop'                           => '',
-		'slow-burn-books'                => '',
+		'slow-burn-books'                => 'page-trope.php',
 		'smut-sentiment-society'         => '',
 		'society-library'                => 'page-societylibrary.php',
 		'societylibrary'                 => 'page-societylibrary.php',
-		'sports-romance-books'           => '',
+		'sports-romance-books'           => 'page-shelf.php',
 		'sss-canva-templates'            => '',
 		'sss-freebies'                   => '',
 		'sss-library'                    => 'page-sss-library.php',
@@ -176,6 +176,30 @@ add_action(
 			return;
 		}
 
+		$routes             = bbb_page_route_registry();
+		$registered_template = (string) ($routes[$slug] ?? '');
+		$forced_tax_kind     = '';
+		if ('page-shelf.php' === $registered_template) {
+			$forced_tax_kind = 'shelf';
+		} elseif ('page-trope.php' === $registered_template) {
+			$forced_tax_kind = 'trope';
+		}
+
+		if (function_exists('bbb_find_book_taxonomy_term')) {
+			$route_term = bbb_find_book_taxonomy_term($slug, $forced_tax_kind);
+			if ($route_term instanceof WP_Term) {
+				$route_kind = bbb_book_taxonomy_kind_for_taxonomy($route_term->taxonomy);
+				$template   = get_theme_file_path('page-' . $route_kind . '.php');
+				if (file_exists($template)) {
+					$GLOBALS['bbb_book_taxonomy_route_term'] = $route_term;
+					status_header(200);
+					nocache_headers();
+					require $template;
+					exit;
+				}
+			}
+		}
+
 		$is_legacy_path = str_starts_with($request_path, 'pages/')
 			|| str_starts_with($request_path, 'blogs/')
 			|| str_starts_with($request_path, 'collections/')
@@ -183,7 +207,6 @@ add_action(
 			|| str_starts_with($request_path, 'product/')
 			|| str_starts_with($request_path, 'product-category/')
 			|| str_starts_with($request_path, 'curated-romance-guides/');
-		$routes = bbb_page_route_registry();
 		$is_registered_route = array_key_exists($slug, $routes);
 
 		if (!$is_registered_route && !$is_legacy_path) {

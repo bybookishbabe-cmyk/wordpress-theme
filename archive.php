@@ -158,6 +158,26 @@ $trope_pages = $is_page_one ? get_posts(
 	)
 ) : array();
 
+$trope_items = array();
+foreach ($trope_pages as $trope_page) {
+	$trope_items[$trope_page->post_name] = array(
+		'url'   => get_permalink($trope_page->ID),
+		'name'  => (string) $archive_get_field('trope_name', $trope_page->ID, get_the_title($trope_page->ID)),
+		'emoji' => (string) $archive_get_field('trope_emoji', $trope_page->ID, ''),
+		'bg'    => (string) $archive_get_field('trope_bg_color', $trope_page->ID, '#ff8ac7'),
+		'text'  => (string) $archive_get_field('trope_text_color', $trope_page->ID, '#ffb0d8'),
+	);
+}
+if ($is_page_one && function_exists('bbb_get_book_taxonomy_discovery_items')) {
+	foreach (bbb_get_book_taxonomy_discovery_items('trope') as $item) {
+		$key = sanitize_title((string) ($item['name'] ?? ''));
+		if ($key && !isset($trope_items[$key])) {
+			$trope_items[$key] = $item;
+		}
+	}
+}
+$trope_items = array_values($trope_items);
+
 $shelf_pages = $is_page_one ? get_posts(
 	array(
 		'post_type'      => 'page',
@@ -171,6 +191,25 @@ $shelf_pages = $is_page_one ? get_posts(
 		),
 	)
 ) : array();
+
+$shelf_items = array();
+foreach ($shelf_pages as $shelf_page) {
+	$shelf_items[$shelf_page->post_name] = array(
+		'url'         => get_permalink($shelf_page->ID),
+		'name'        => (string) $archive_get_field('shelf_name', $shelf_page->ID, get_the_title($shelf_page->ID)),
+		'emoji'       => (string) $archive_get_field('shelf_emoji', $shelf_page->ID, ''),
+		'description' => (string) $archive_get_field('shelf_description', $shelf_page->ID, ''),
+	);
+}
+if ($is_page_one && function_exists('bbb_get_book_taxonomy_discovery_items')) {
+	foreach (bbb_get_book_taxonomy_discovery_items('shelf') as $item) {
+		$key = sanitize_title((string) ($item['name'] ?? ''));
+		if ($key && !isset($shelf_items[$key])) {
+			$shelf_items[$key] = $item;
+		}
+	}
+}
+$shelf_items = array_values($shelf_items);
 
 $rec_pick_title       = (string) $archive_get_field('rec_pick_title', 'option', '');
 $rec_result_title     = (string) $archive_get_field('rec_result_title', 'option', '');
@@ -255,19 +294,19 @@ get_header();
 			</div>
 
 			<div class="blog-discovery__tropeStage" data-trope-rotator>
-				<?php foreach (array_chunk($trope_pages, 6) as $set_index => $set) : ?>
+				<?php foreach (array_chunk($trope_items, 6) as $set_index => $set) : ?>
 					<div class="blog-discovery__grid blog-discovery__grid--tropes blog-discovery__tropeSet <?php echo 0 === $set_index ? 'is-active' : ''; ?>"
 						data-trope-set
 						<?php echo 0 !== $set_index ? 'hidden' : ''; ?>>
 
 						<?php
-						foreach ($set as $trope_page) :
-							$trope_bg   = (string) $archive_get_field('trope_bg_color', $trope_page->ID, '#ff8ac7');
-							$trope_text = (string) $archive_get_field('trope_text_color', $trope_page->ID, '#ffb0d8');
-							$emoji      = (string) $archive_get_field('trope_emoji', $trope_page->ID, '');
-							$name       = (string) $archive_get_field('trope_name', $trope_page->ID, get_the_title($trope_page->ID));
+						foreach ($set as $trope_item) :
+							$trope_bg   = (string) ($trope_item['bg'] ?? '#ff8ac7');
+							$trope_text = (string) ($trope_item['text'] ?? '#ffb0d8');
+							$emoji      = (string) ($trope_item['emoji'] ?? '');
+							$name       = (string) ($trope_item['name'] ?? '');
 							?>
-							<a href="<?php echo esc_url(get_permalink($trope_page->ID)); ?>"
+							<a href="<?php echo esc_url((string) ($trope_item['url'] ?? '#')); ?>"
 								class="blog-discovery__card blog-discovery__card--trope"
 								style="--trope-bg: <?php echo esc_attr($trope_bg); ?>; --trope-text: <?php echo esc_attr($trope_text); ?>;">
 								<?php if ($emoji) : ?>
@@ -290,15 +329,15 @@ get_header();
 
 			<div class="blog-discovery__grid blog-discovery__grid--shelves">
 				<?php
-				foreach ($shelf_pages as $shelf_page) :
-					$name        = (string) $archive_get_field('shelf_name', $shelf_page->ID, '');
-					$emoji       = (string) $archive_get_field('shelf_emoji', $shelf_page->ID, '');
-					$description = (string) $archive_get_field('shelf_description', $shelf_page->ID, '');
+				foreach ($shelf_items as $shelf_item) :
+					$name        = (string) ($shelf_item['name'] ?? '');
+					$emoji       = (string) ($shelf_item['emoji'] ?? '');
+					$description = (string) ($shelf_item['description'] ?? '');
 					if (!$name) {
 						continue;
 					}
 					?>
-					<a href="<?php echo esc_url(get_permalink($shelf_page->ID)); ?>"
+					<a href="<?php echo esc_url((string) ($shelf_item['url'] ?? '#')); ?>"
 						class="blog-discovery__card blog-discovery__card--shelf">
 						<div class="blog-discovery__content">
 							<div class="blog-discovery__line">

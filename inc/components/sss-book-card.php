@@ -166,7 +166,7 @@ $trope_urls    = array_map(
 	static function (array $trope): string {
 		$slug = sanitize_title($trope['slug'] ?: $trope['name']);
 
-		return '/pages/' . ('-books' === substr($slug, -6) ? $slug : $slug . '-books');
+		return home_url('/' . ('-books' === substr($slug, -6) ? $slug : $slug . '-books') . '/');
 	},
 	$tropes
 );

@@ -52,7 +52,7 @@ function bbb_get_book_data_attrs(int $post_id): string {
 	if ($trope_terms && !is_wp_error($trope_terms)) {
 		foreach ($trope_terms as $trope) {
 			$emoji           = get_term_meta($trope->term_id, 'trope_emoji', true);
-			$trope_link      = get_term_link($trope);
+			$trope_link      = function_exists('bbb_book_taxonomy_term_url') ? bbb_book_taxonomy_term_url($trope) : get_term_link($trope);
 			$trope_names[]   = $trope->name;
 			$trope_display[] = trim(($emoji ? $emoji . ' ' : '') . $trope->name);
 			$trope_urls[]    = is_wp_error($trope_link) ? '' : $trope_link;

@@ -21,6 +21,7 @@ require_once get_theme_file_path('inc/books/book-cpt.php');
 require_once get_theme_file_path('inc/books/book-visibility.php');
 require_once get_theme_file_path('inc/books/trope-colors.php');
 require_once get_theme_file_path('inc/books/book-renderers.php');
+require_once get_theme_file_path('inc/books/book-taxonomy-pages.php');
 require_once get_theme_file_path('inc/books/book-import.php');
 require_once get_theme_file_path('inc/books/book-admin-importer.php');
 require_once get_theme_file_path('inc/cpt-sss-book.php');
