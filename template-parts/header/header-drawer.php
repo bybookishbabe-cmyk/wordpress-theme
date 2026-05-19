@@ -45,15 +45,6 @@ function bbb_render_drawer_item(WP_Post $item, int $index, string $parent_handle
 						<?php echo esc_html($item->title); ?>
 					</button>
 					<ul class="menu-drawer__menu list-menu" role="list" tabindex="-1">
-						<?php if (bbb_menu_item_has_link($item)) : ?>
-							<li>
-								<a
-									id="HeaderDrawer-<?php echo esc_attr($id_prefix . '-overview'); ?>"
-									href="<?php echo esc_url($item->url); ?>"
-									class="menu-drawer__menu-item list-menu__item link link--text focus-inset"
-								><?php esc_html_e('overview', 'bybookishbabe-shopify-port'); ?></a>
-							</li>
-						<?php endif; ?>
 						<?php foreach ($item->children as $child_index => $child) : ?>
 							<?php bbb_render_drawer_item($child, $child_index + 1, $id_prefix); ?>
 						<?php endforeach; ?>

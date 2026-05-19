@@ -29,15 +29,6 @@ function bbb_render_header_dropdown_item(WP_Post $item, int $index, string $pare
 						<?php echo bbb_get_inline_svg('icon-caret'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 					</summary>
 					<ul id="HeaderMenu-MenuList-<?php echo esc_attr((string) $index); ?>" class="header__submenu list-menu list-menu--disclosure color-scheme-1 gradient caption-large motion-reduce global-settings-popup" role="list" tabindex="-1">
-						<?php if (bbb_menu_item_has_link($item)) : ?>
-							<li>
-								<a
-									id="HeaderMenu-<?php echo esc_attr($handle . '-overview'); ?>"
-									href="<?php echo esc_url($item->url); ?>"
-									class="header__menu-item list-menu__item link link--text focus-inset caption-large"
-								><?php esc_html_e('overview', 'bybookishbabe-shopify-port'); ?></a>
-							</li>
-						<?php endif; ?>
 						<?php foreach ($item->children as $child) : ?>
 							<?php bbb_render_header_dropdown_child($child, $handle); ?>
 						<?php endforeach; ?>
@@ -91,15 +82,6 @@ function bbb_render_header_dropdown_child(WP_Post $item, string $parent_handle):
 				<?php echo bbb_get_inline_svg('icon-caret'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 			</summary>
 			<ul id="HeaderMenu-SubMenuList-<?php echo esc_attr($id_prefix); ?>" class="header__submenu list-menu motion-reduce">
-				<?php if (bbb_menu_item_has_link($item)) : ?>
-					<li>
-						<a
-							id="HeaderMenu-<?php echo esc_attr($id_prefix . '-overview'); ?>"
-							href="<?php echo esc_url($item->url); ?>"
-							class="header__menu-item list-menu__item link link--text focus-inset caption-large"
-						><?php esc_html_e('overview', 'bybookishbabe-shopify-port'); ?></a>
-					</li>
-				<?php endif; ?>
 				<?php foreach ($item->children as $grandchild) : ?>
 					<?php
 					$grandchild_handle = bbb_menu_item_handle($grandchild);
