@@ -383,6 +383,14 @@ function bbb_import_newsletter_issues_from_data(array $data, ?callable $logger =
 			if ($book instanceof WP_Post) {
 				update_post_meta((int) $post_id, '_issue_book_id', (int) $book->ID);
 				update_post_meta((int) $post_id, '_issue_library_book_id', (int) $book->ID);
+
+				if ('' !== $publish_date) {
+					if ('bbb_book' === $book->post_type) {
+						update_post_meta((int) $book->ID, '_bbb_newsletter_date', $publish_date);
+					} else {
+						update_post_meta((int) $book->ID, 'featured_in_newsletter_date', $publish_date);
+					}
+				}
 			}
 		}
 
@@ -698,6 +706,14 @@ if (defined('WP_CLI') && WP_CLI) {
 					if ($book instanceof WP_Post) {
 						update_post_meta((int) $post_id, '_issue_book_id', (int) $book->ID);
 						update_post_meta((int) $post_id, '_issue_library_book_id', (int) $book->ID);
+
+						if ('' !== $publish_date) {
+							if ('bbb_book' === $book->post_type) {
+								update_post_meta((int) $book->ID, '_bbb_newsletter_date', $publish_date);
+							} else {
+								update_post_meta((int) $book->ID, 'featured_in_newsletter_date', $publish_date);
+							}
+						}
 					}
 				}
 

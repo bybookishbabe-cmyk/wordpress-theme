@@ -8,22 +8,47 @@ $rec_link     = (string) get_option('sss_lib_rec_link', '/what-to-read-next/');
 $rec_href     = preg_match('/^https?:\/\//', $rec_link) ? $rec_link : home_url($rec_link);
 
 $find_book = static function (string $title): ?WP_Post {
+	$post_types = array_values(
+		array_filter(
+			array('bbb_book', 'sss_book'),
+			static fn(string $post_type): bool => post_type_exists($post_type)
+		)
+	);
+
 	$posts = get_posts(
 		array(
-			'post_type'        => 'sss_book',
+			'post_type'        => $post_types ?: 'sss_book',
 			'title'            => $title,
 			'posts_per_page'   => 1,
 			'suppress_filters' => false,
 		)
 	);
 
-	return isset($posts[0]) && $posts[0] instanceof WP_Post ? $posts[0] : null;
+	if (isset($posts[0]) && $posts[0] instanceof WP_Post) {
+		return $posts[0];
+	}
+
+	$book = get_page_by_path(sanitize_title($title), OBJECT, $post_types ?: 'sss_book');
+
+	return $book instanceof WP_Post ? $book : null;
+};
+
+$cover_for_book = static function (?WP_Post $book): string {
+	if (!$book instanceof WP_Post) {
+		return '';
+	}
+
+	if ('bbb_book' === $book->post_type) {
+		return (string) get_post_meta($book->ID, '_bbb_cover_url', true);
+	}
+
+	return function_exists('sss_get_book_cover_url') ? sss_get_book_cover_url($book->ID) : '';
 };
 
 $pick_book    = $find_book($pick_title);
 $result_book  = $find_book($result_title);
-$pick_cover   = $pick_book instanceof WP_Post ? sss_get_book_cover_url($pick_book->ID) : '';
-$result_cover = $result_book instanceof WP_Post ? sss_get_book_cover_url($result_book->ID) : '';
+$pick_cover   = $cover_for_book($pick_book);
+$result_cover = $cover_for_book($result_book);
 ?>
 <a href="<?php echo esc_url($rec_href); ?>" class="bbb-homeRecDemo bbb-homeRecDemo--library">
 	<div class="bbb-homeRecDemo__copy">

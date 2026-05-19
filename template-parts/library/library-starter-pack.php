@@ -14,7 +14,7 @@ if (!$starter_books) {
 	return;
 }
 ?>
-<div id="starter-pack" class="sss-lib__starter">
+<div id="starter-pack" class="sss-lib__starter sss-lib__shelf--starter">
 	<div class="sss-lib__starterHead">
 		<div class="sss-lib__starterKicker">starter pack</div>
 		<h2 class="sss-lib__starterTitle">new to the society? start here.</h2>

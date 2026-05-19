@@ -19,15 +19,14 @@ if (!$books) {
 	return;
 }
 ?>
-<div id="society-classics" class="sss-lib__classics">
-	<div class="sss-lib__classicsHead">
-		<div class="sss-lib__archiveKicker">society classics</div>
-		<h2 class="sss-lib__archiveTitle">the society classics shelf</h2>
-		<div class="sss-lib__archiveSub">the books that keep coming up because they earned their place.</div>
+<div id="society-classics" class="sss-lib__shelf sss-lib__shelf--classics">
+	<div class="sss-lib__shelfHead">
+		<div class="sss-lib__shelfTitle">💌 society classics</div>
+		<div class="sss-lib__shelfDesc">(the permanent canon of the smut &amp; sentiment society.)</div>
 	</div>
-	<div class="sss-lib__grid">
+	<div class="sss-lib__shelfRow">
 		<?php foreach ($books as $book) : ?>
-			<?php get_template_part('template-parts/library/book-card', null, array('post' => $book)); ?>
+			<?php get_template_part('template-parts/library/book-card', null, array('post' => $book, 'mini' => true)); ?>
 		<?php endforeach; ?>
 	</div>
 </div>
