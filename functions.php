@@ -9,6 +9,12 @@ declare(strict_types=1);
 
 require_once get_theme_file_path('inc/header-functions.php');
 require_once get_theme_file_path('inc/customizer/hero-smut-sentiment.php');
+require_once get_theme_file_path('inc/weekly-obsession-query.php');
+require_once get_theme_file_path('inc/cpt-newsletter-issue.php');
+require_once get_theme_file_path('inc/cpt-sss-book.php');
+require_once get_theme_file_path('inc/taxonomy-sss-trope.php');
+require_once get_theme_file_path('inc/taxonomy-sss-shelf.php');
+require_once get_theme_file_path('inc/enqueue-weekly-obsession.php');
 
 function bbb_reader_is_society(): bool {
 	return bbb_user_is_society(get_current_user_id());
@@ -21,6 +27,12 @@ add_action(
 		add_theme_support('post-thumbnails');
 		add_theme_support('custom-logo');
 		add_theme_support('site-icon');
+
+		add_image_size('obsession-360', 360, 0, false);
+		add_image_size('obsession-540', 540, 0, false);
+		add_image_size('obsession-720', 720, 0, false);
+		add_image_size('obsession-900', 900, 0, false);
+		add_image_size('obsession-1200', 1200, 0, false);
 
 		register_nav_menus(
 			array(
