@@ -158,14 +158,9 @@ add_action(
 			|| str_starts_with($request_path, 'product-category/')
 			|| str_starts_with($request_path, 'curated-romance-guides/');
 		$routes = bbb_page_route_registry();
-		if (!array_key_exists($slug, $routes) && !$is_legacy_path) {
-			return;
-		}
+		$is_registered_route = array_key_exists($slug, $routes);
 
-		if (
-			!is_404()
-			&& !$is_legacy_path
-		) {
+		if (!$is_registered_route && !$is_legacy_path) {
 			return;
 		}
 
