@@ -12,27 +12,6 @@ $starter_books = array_values(
 );
 
 if (!$starter_books) {
-	$starter_books = array_values(
-		array_filter(
-			$args['books'] ?? array(),
-			static fn($book): bool => $book instanceof WP_Post
-				&& sss_book_is_visible($book->ID)
-				&& function_exists('sss_book_is_top_shelf')
-				&& sss_book_is_top_shelf($book->ID)
-		)
-	);
-}
-
-if (!$starter_books) {
-	$starter_books = array_values(
-		array_filter(
-			$args['books'] ?? array(),
-			static fn($book): bool => $book instanceof WP_Post && sss_book_is_visible($book->ID)
-		)
-	);
-}
-
-if (!$starter_books) {
 	return;
 }
 ?>

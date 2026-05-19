@@ -70,6 +70,18 @@ function bbb_render_shopify_import_page(): void {
 					);
 					?>
 				</p>
+				<p>
+					<?php
+					echo esc_html(
+						sprintf(
+							__('Books with spice: %1$d. Starter Pack books: %2$d. Society Classics books: %3$d.', 'bybookishbabe-shopify-port'),
+							$status['books_with_spice'],
+							$status['starter_count'],
+							$status['top_shelf_count']
+						)
+					);
+					?>
+				</p>
 				<?php if ($status['book_count'] > 0 && 0 === $status['books_with_shelves']) : ?>
 					<p style="color:#b32d2e;"><strong><?php esc_html_e('No imported books currently have shelves attached. Re-import the Books JSON after updating the theme.', 'bybookishbabe-shopify-port'); ?></strong></p>
 				<?php elseif ($status['book_count'] > $status['books_with_shelves']) : ?>
@@ -117,7 +129,22 @@ function bbb_get_shopify_import_status(): array {
 	);
 
 	$books_with_shelves = 0;
+	$books_with_spice   = 0;
+	$starter_count      = 0;
+	$top_shelf_count    = 0;
 	foreach ($book_ids as $book_id) {
+		if ((int) get_post_meta((int) $book_id, '_bbb_spice', true) > 0) {
+			++$books_with_spice;
+		}
+
+		if (function_exists('sss_book_is_starter_pack') && sss_book_is_starter_pack((int) $book_id)) {
+			++$starter_count;
+		}
+
+		if (function_exists('sss_book_is_top_shelf') && sss_book_is_top_shelf((int) $book_id)) {
+			++$top_shelf_count;
+		}
+
 		$terms = get_the_terms((int) $book_id, 'bbb_shelf');
 		if ($terms && !is_wp_error($terms)) {
 			++$books_with_shelves;
@@ -142,6 +169,9 @@ function bbb_get_shopify_import_status(): array {
 	return array(
 		'book_count'         => count($book_ids),
 		'books_with_shelves' => $books_with_shelves,
+		'books_with_spice'   => $books_with_spice,
+		'starter_count'      => $starter_count,
+		'top_shelf_count'    => $top_shelf_count,
 		'shelf_count'        => count($shelf_names),
 		'shelf_names'        => array_slice($shelf_names, 0, 12),
 	);

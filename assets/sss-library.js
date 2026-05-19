@@ -1416,6 +1416,18 @@ function init(){
     var modalShareIcon = modal ? modal.querySelector('.sss-lib__mshareIcon') : null;
     var seriesOrderEl = modal ? modal.querySelector('[data-mseries-order]') : null;
 
+    function ensureModalSpiceBadge(){
+      if (spiceEl || !modal) return spiceEl;
+      var coverFrame = modal.querySelector('.sss-lib__mcoverFrame');
+      if (!coverFrame) return null;
+      spiceEl = document.createElement('div');
+      spiceEl.className = 'sss-lib__floatSpice sss-lib__mspice';
+      spiceEl.setAttribute('data-mspice', '');
+      spiceEl.hidden = true;
+      coverFrame.appendChild(spiceEl);
+      return spiceEl;
+    }
+
     function getModalBookData(btn){
       return {
         handle: btn.dataset.handle || '',
@@ -1565,10 +1577,11 @@ if(modalHeart){
         coverEl.alt = data.title || '';
       }
 
-      if (spiceEl){
+      var modalSpiceEl = ensureModalSpiceBadge();
+      if (modalSpiceEl){
         var spiceCount = parseInt(data.spice, 10) || 0;
-        spiceEl.textContent = spiceCount > 0 ? Array(spiceCount + 1).join('🌶') : '';
-        spiceEl.hidden = spiceCount <= 0;
+        modalSpiceEl.textContent = spiceCount > 0 ? Array(spiceCount + 1).join('🌶') : '';
+        modalSpiceEl.hidden = spiceCount <= 0;
       }
 
       if (kuEl){

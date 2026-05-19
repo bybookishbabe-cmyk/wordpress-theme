@@ -366,8 +366,20 @@ const damageEl = preview.querySelector("[data-mdamage]");
 const yearningEl = preview.querySelector("[data-myearning]");
 const boyfriendEl = preview.querySelector("[data-mboyfriend]");
 const rereadEl = preview.querySelector("[data-mreread]");
-const spiceEl = preview.querySelector("[data-mspice]");
+let spiceEl = preview.querySelector("[data-mspice]");
 const modalHeart = preview.querySelector("[data-modal-heart]");
+
+function ensurePreviewSpiceBadge(){
+  if (spiceEl || !preview) return spiceEl;
+  const coverFrame = preview.querySelector(".sss-lib__mcoverFrame");
+  if (!coverFrame) return null;
+  spiceEl = document.createElement("div");
+  spiceEl.className = "sss-lib__floatSpice sss-lib__mspice";
+  spiceEl.setAttribute("data-mspice", "");
+  spiceEl.hidden = true;
+  coverFrame.appendChild(spiceEl);
+  return spiceEl;
+}
 
 if (titleEl) titleEl.textContent = title || "";
 if (authorEl) authorEl.textContent = author ? "by " + author : "";
@@ -386,10 +398,11 @@ if (damageEl) damageEl.textContent = "";
 if (yearningEl) yearningEl.textContent = "";
 if (boyfriendEl) boyfriendEl.textContent = "";
 if (rereadEl) rereadEl.textContent = spice ? "🌶 " + spice + "/5 spice" : "";
-if (spiceEl) {
+const modalSpiceEl = ensurePreviewSpiceBadge();
+if (modalSpiceEl) {
   const spiceCount = parseInt(spice, 10) || 0;
-  spiceEl.textContent = spiceCount > 0 ? Array(spiceCount + 1).join("🌶") : "";
-  spiceEl.hidden = spiceCount <= 0;
+  modalSpiceEl.textContent = spiceCount > 0 ? Array(spiceCount + 1).join("🌶") : "";
+  modalSpiceEl.hidden = spiceCount <= 0;
 }
 
 if (seriesEl) {
