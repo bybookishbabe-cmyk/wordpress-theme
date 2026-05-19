@@ -146,16 +146,17 @@ if (!function_exists('bbb_series_book_terms')) {
 if (!function_exists('bbb_series_book_data')) {
 	function bbb_series_book_data(WP_Post $book): array {
 		$post_id      = $book->ID;
-		$series_terms = bbb_series_book_terms($post_id, 'sss_series');
+		$is_bbb       = 'bbb_book' === $book->post_type;
+		$series_terms = bbb_series_book_terms($post_id, $is_bbb ? 'bbb_series' : 'sss_series');
 		$series_term  = $series_terms[0] ?? null;
-		$shelf_terms  = bbb_series_book_terms($post_id, 'sss_shelf');
-		$trope_terms  = bbb_series_book_terms($post_id, 'sss_trope');
+		$shelf_terms  = bbb_series_book_terms($post_id, $is_bbb ? 'bbb_shelf' : 'sss_shelf');
+		$trope_terms  = bbb_series_book_terms($post_id, $is_bbb ? 'bbb_trope' : 'sss_trope');
 		$tropes       = array();
 
 		foreach ($trope_terms as $term) {
 			$tropes[] = array(
 				'name'   => $term->name,
-				'emoji'  => (string) get_term_meta($term->term_id, 'emoji', true),
+				'emoji'  => (string) get_term_meta($term->term_id, $is_bbb ? 'trope_emoji' : 'emoji', true),
 				'handle' => $term->slug,
 			);
 		}
@@ -183,11 +184,20 @@ if (!function_exists('bbb_series_book_data')) {
 		}
 
 		$series_handle = $series_term instanceof WP_Term ? $series_term->slug : (string) bbb_series_field($post_id, 'series_handle', '');
+		if ('' === $series_handle && $is_bbb) {
+			$series_handle = (string) get_post_meta($post_id, '_bbb_series_handle', true);
+		}
 		if ('' === $series_handle) {
 			$series_handle = sanitize_title((string) bbb_series_field($post_id, 'series', ''));
 		}
 
 		$series_name = $series_term instanceof WP_Term ? $series_term->name : (string) bbb_series_field($post_id, 'series_name', '');
+		if ('' === $series_name && '' !== $series_handle && taxonomy_exists('bbb_series')) {
+			$series_lookup = get_term_by('slug', $series_handle, 'bbb_series');
+			if ($series_lookup instanceof WP_Term) {
+				$series_name = $series_lookup->name;
+			}
+		}
 		$cover       = bbb_series_image_url(bbb_series_field($post_id, 'cover', ''), $post_id);
 
 		return array(
@@ -198,7 +208,7 @@ if (!function_exists('bbb_series_book_data')) {
 			'amazon'         => bbb_series_url_value(bbb_series_field($post_id, 'amazon_link', '')),
 			'bookshop'       => bbb_series_url_value(bbb_series_field($post_id, 'bookshop_link', '')),
 			'shelf'          => $shelf_terms ? $shelf_terms[0]->name : (string) bbb_series_field($post_id, 'shelf', ''),
-			'is_private'     => function_exists('sss_book_is_private') ? sss_book_is_private($post_id) : bbb_series_bool(bbb_series_field($post_id, 'is_private', false)),
+			'is_private'     => $is_bbb && function_exists('bbb_is_book_private') ? bbb_is_book_private($post_id) : (function_exists('sss_book_is_private') ? sss_book_is_private($post_id) : bbb_series_bool(bbb_series_field($post_id, 'is_private', false))),
 			'spice'          => (int) bbb_series_field($post_id, 'spice_level', 0),
 			'tropes'         => $tropes,
 			'why'            => (string) bbb_series_field($post_id, 'why_i_loved_it', ''),

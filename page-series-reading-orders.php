@@ -11,9 +11,16 @@ require_once get_theme_file_path('template-parts/sss-book-card.php');
 
 if (!function_exists('bbb_series_visible_books')) {
 	function bbb_series_visible_books(): array {
+		$post_types = array_values(
+			array_filter(
+				array('sss_book', 'bbb_book'),
+				static fn(string $post_type): bool => post_type_exists($post_type)
+			)
+		);
+
 		$books = get_posts(
 			array(
-				'post_type'      => 'sss_book',
+				'post_type'      => $post_types ?: 'sss_book',
 				'post_status'    => 'publish',
 				'posts_per_page' => -1,
 				'orderby'        => 'title',
@@ -24,7 +31,13 @@ if (!function_exists('bbb_series_visible_books')) {
 		return array_values(
 			array_filter(
 				$books,
-				static fn(WP_Post $book): bool => function_exists('sss_book_is_visible') ? sss_book_is_visible($book->ID) : true
+				static function (WP_Post $book): bool {
+					if ('bbb_book' === $book->post_type && function_exists('bbb_book_is_publicly_visible')) {
+						return bbb_book_is_publicly_visible($book->ID);
+					}
+
+					return function_exists('sss_book_is_visible') ? sss_book_is_visible($book->ID) : true;
+				}
 			)
 		);
 	}
@@ -32,30 +45,43 @@ if (!function_exists('bbb_series_visible_books')) {
 
 if (!function_exists('bbb_series_terms')) {
 	function bbb_series_terms(): array {
-		if (taxonomy_exists('sss_series')) {
+		$series = array();
+
+		foreach (array('bbb_series', 'sss_series') as $taxonomy) {
+			if (!taxonomy_exists($taxonomy)) {
+				continue;
+			}
+
 			$terms = get_terms(
 				array(
-					'taxonomy'   => 'sss_series',
+					'taxonomy'   => $taxonomy,
 					'hide_empty' => false,
+					'orderby'    => 'name',
+					'order'      => 'ASC',
 				)
 			);
 
-			return ($terms && !is_wp_error($terms)) ? array_values($terms) : array();
+			if ($terms && !is_wp_error($terms)) {
+				$series = array_merge($series, array_values($terms));
+			}
 		}
 
-		if (!post_type_exists('sss_series')) {
-			return array();
+		if (post_type_exists('sss_series')) {
+			$series = array_merge(
+				$series,
+				get_posts(
+					array(
+						'post_type'      => 'sss_series',
+						'post_status'    => 'publish',
+						'posts_per_page' => -1,
+						'orderby'        => 'title',
+						'order'          => 'ASC',
+					)
+				)
+			);
 		}
 
-		return get_posts(
-			array(
-				'post_type'      => 'sss_series',
-				'post_status'    => 'publish',
-				'posts_per_page' => -1,
-				'orderby'        => 'title',
-				'order'          => 'ASC',
-			)
-		);
+		return $series;
 	}
 }
 
@@ -106,7 +132,7 @@ if (!function_exists('bbb_series_book_matches')) {
 		$slug = bbb_series_entity_slug($series);
 		$name = bbb_series_entity_title($series);
 
-		if ($series instanceof WP_Term && has_term($series->term_id, 'sss_series', $book)) {
+		if ($series instanceof WP_Term && has_term($series->term_id, $series->taxonomy, $book)) {
 			return true;
 		}
 
