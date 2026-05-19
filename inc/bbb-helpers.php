@@ -139,6 +139,10 @@ function bbb_book_newsletter_is_unlocked(int $post_id): bool {
 }
 
 function bbb_book_is_publicly_visible(int $post_id): bool {
+	if (apply_filters('bbb_show_all_imported_books', true, $post_id)) {
+		return 'publish' === get_post_status($post_id);
+	}
+
 	return !bbb_truthy(bbb_get_field('hide_from_library', $post_id, false))
 		&& !bbb_truthy(bbb_get_field('is_private', $post_id, false))
 		&& bbb_book_newsletter_is_unlocked($post_id);
@@ -210,57 +214,6 @@ function bbb_get_public_books_query(array $args = array()): WP_Query {
 		'posts_per_page' => -1,
 		'orderby'        => 'title',
 		'order'          => 'ASC',
-		'meta_query'     => array(
-			'relation' => 'AND',
-			array(
-				'relation' => 'OR',
-				array(
-					'key'     => 'hide_from_library',
-					'compare' => 'NOT EXISTS',
-				),
-				array(
-					'key'     => 'hide_from_library',
-					'value'   => '1',
-					'compare' => '!=',
-				),
-			),
-			array(
-				'relation' => 'OR',
-				array(
-					'key'     => '_bbb_hide_from_library',
-					'compare' => 'NOT EXISTS',
-				),
-				array(
-					'key'     => '_bbb_hide_from_library',
-					'value'   => '1',
-					'compare' => '!=',
-				),
-			),
-			array(
-				'relation' => 'OR',
-				array(
-					'key'     => 'is_private',
-					'compare' => 'NOT EXISTS',
-				),
-				array(
-					'key'     => 'is_private',
-					'value'   => '1',
-					'compare' => '!=',
-				),
-			),
-			array(
-				'relation' => 'OR',
-				array(
-					'key'     => '_bbb_private_shelf',
-					'compare' => 'NOT EXISTS',
-				),
-				array(
-					'key'     => '_bbb_private_shelf',
-					'value'   => '1',
-					'compare' => '!=',
-				),
-			),
-		),
 	);
 
 	return new WP_Query(array_replace_recursive($defaults, $args));

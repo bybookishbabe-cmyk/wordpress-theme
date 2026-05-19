@@ -159,7 +159,7 @@ if ($top_shelf_query->have_posts()) {
 
 if (count($top_shelf_books) < 5 && function_exists('sss_get_all_books')) {
 	foreach (sss_get_all_books() as $book) {
-		if (!$book instanceof WP_Post || sss_book_is_private($book->ID)) {
+		if (!$book instanceof WP_Post) {
 			continue;
 		}
 

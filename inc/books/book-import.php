@@ -25,6 +25,27 @@ function bbb_import_metaobject_field_value(array $fields, string $key): string {
 	return isset($fields[$key]['value']) ? (string) $fields[$key]['value'] : '';
 }
 
+function bbb_import_books_edges_from_export(array $data): array {
+	if (isset($data['data']['metaobjects']['edges']) && is_array($data['data']['metaobjects']['edges'])) {
+		return $data['data']['metaobjects']['edges'];
+	}
+
+	if (isset($data['edges']) && is_array($data['edges'])) {
+		return $data['edges'];
+	}
+
+	$edges = array();
+	foreach ($data as $page) {
+		if (!is_array($page)) {
+			continue;
+		}
+
+		$edges = array_merge($edges, bbb_import_books_edges_from_export($page));
+	}
+
+	return $edges;
+}
+
 if (defined('WP_CLI') && WP_CLI) {
 	WP_CLI::add_command(
 		'bbb import-books',
@@ -35,7 +56,7 @@ if (defined('WP_CLI') && WP_CLI) {
 			}
 
 			$data  = json_decode((string) file_get_contents($file), true);
-			$books = $data['data']['metaobjects']['edges'] ?? array();
+			$books = is_array($data) ? bbb_import_books_edges_from_export($data) : array();
 			$count = 0;
 
 			foreach ($books as $edge) {

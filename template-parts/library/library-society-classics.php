@@ -12,7 +12,6 @@ $books = array_filter(
 
 		return $book instanceof WP_Post
 			&& sss_book_is_visible($book->ID)
-			&& !sss_book_is_private($book->ID)
 			&& 'society classics' === strtolower(trim((string) $data['shelf']));
 	}
 );

@@ -37,6 +37,10 @@ function sss_bool($value): bool {
 }
 
 function sss_book_is_visible(int $post_id): bool {
+	if (apply_filters('bbb_show_all_imported_books', true, $post_id)) {
+		return 'publish' === get_post_status($post_id);
+	}
+
 	if ('bbb_book' === get_post_type($post_id) && function_exists('bbb_is_book_visible')) {
 		return bbb_is_book_visible($post_id);
 	}
