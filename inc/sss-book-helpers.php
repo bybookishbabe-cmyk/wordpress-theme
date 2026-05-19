@@ -37,10 +37,18 @@ function sss_bool($value): bool {
 }
 
 function sss_book_is_visible(int $post_id): bool {
+	if ('bbb_book' === get_post_type($post_id) && function_exists('bbb_is_book_visible')) {
+		return bbb_is_book_visible($post_id);
+	}
+
 	return !sss_bool(sss_meta($post_id, 'sss_hide_from_library', false));
 }
 
 function sss_book_is_private(int $post_id): bool {
+	if ('bbb_book' === get_post_type($post_id) && function_exists('bbb_is_book_private')) {
+		return bbb_is_book_private($post_id);
+	}
+
 	$shelf = strtolower(trim((string) sss_meta($post_id, 'sss_shelf', '')));
 	$flag  = sss_bool(sss_meta($post_id, 'sss_is_private', false));
 
@@ -48,30 +56,32 @@ function sss_book_is_private(int $post_id): bool {
 }
 
 function sss_get_all_books(): array {
-	$query = new WP_Query(
-		array(
-			'post_type'      => 'sss_book',
-			'posts_per_page' => -1,
-			'orderby'        => 'title',
-			'order'          => 'ASC',
-			'meta_query'     => array(
-				array(
-					'relation' => 'OR',
-					array(
-						'key'     => 'sss_hide_from_library',
-						'compare' => 'NOT EXISTS',
-					),
-					array(
-						'key'     => 'sss_hide_from_library',
-						'value'   => '1',
-						'compare' => '!=',
-					),
-				),
-			),
+	$post_types = array_values(
+		array_filter(
+			array('sss_book', 'bbb_book'),
+			static fn(string $post_type): bool => post_type_exists($post_type)
 		)
 	);
 
-	return $query->posts;
+	if (!$post_types) {
+		return array();
+	}
+
+	$query = new WP_Query(
+		array(
+			'post_type'      => $post_types,
+			'posts_per_page' => -1,
+			'orderby'        => 'title',
+			'order'          => 'ASC',
+		)
+	);
+
+	return array_values(
+		array_filter(
+			$query->posts,
+			static fn(WP_Post $post): bool => sss_book_is_visible($post->ID)
+		)
+	);
 }
 
 function sss_get_book_cover_url(int $post_id): string {
@@ -151,6 +161,64 @@ function sss_get_series_name(string $series_handle): string {
 }
 
 function sss_book_data(WP_Post $post): array {
+	if ('bbb_book' === $post->post_type) {
+		$series_handle = (string) get_post_meta($post->ID, '_bbb_series_handle', true);
+		$series_name   = '';
+		if ($series_handle) {
+			$series_term = get_term_by('slug', $series_handle, 'bbb_series');
+			if ($series_term instanceof WP_Term) {
+				$series_name = $series_term->name;
+			}
+		}
+
+		$shelf_terms = get_the_terms($post->ID, 'bbb_shelf');
+		$shelf       = ($shelf_terms && !is_wp_error($shelf_terms)) ? $shelf_terms[0]->name : '';
+		$trope_terms = get_the_terms($post->ID, 'bbb_trope');
+		$tropes      = array();
+
+		if ($trope_terms && !is_wp_error($trope_terms)) {
+			foreach ($trope_terms as $term) {
+				$tropes[] = array(
+					'name'   => $term->name,
+					'emoji'  => (string) get_term_meta($term->term_id, 'trope_emoji', true),
+					'handle' => $term->slug,
+				);
+			}
+		}
+
+		$ku_raw = get_post_meta($post->ID, '_bbb_ku', true);
+
+		return array(
+			'handle'         => $post->post_name,
+			'title'          => $post->post_title,
+			'author'         => (string) get_post_meta($post->ID, '_bbb_author', true),
+			'cover'          => (string) get_post_meta($post->ID, '_bbb_cover_url', true),
+			'amazon'         => (string) get_post_meta($post->ID, '_bbb_amazon_url', true),
+			'bookshop'       => (string) get_post_meta($post->ID, '_bbb_bookshop_url', true),
+			'shelf'          => $shelf,
+			'spice'          => (int) get_post_meta($post->ID, '_bbb_spice', true),
+			'darkness'       => get_post_meta($post->ID, '_bbb_darkness', true),
+			'tropes'         => $tropes,
+			'why'            => (string) get_post_meta($post->ID, '_bbb_why', true),
+			'mini'           => (string) get_post_meta($post->ID, '_bbb_mini_note', true),
+			'newsletter'     => (string) get_post_meta($post->ID, '_bbb_newsletter_url', true),
+			'series_handle'  => $series_handle,
+			'series_name'    => $series_name,
+			'series_number'  => get_post_meta($post->ID, '_bbb_series_number', true),
+			'standalone'     => '1' === get_post_meta($post->ID, '_bbb_standalone', true),
+			'tension'        => get_post_meta($post->ID, '_bbb_tension', true),
+			'damage'         => get_post_meta($post->ID, '_bbb_damage', true),
+			'yearning'       => (string) get_post_meta($post->ID, '_bbb_yearning', true),
+			'boyfriend'      => (string) get_post_meta($post->ID, '_bbb_boyfriend_type', true),
+			'boyfriend_name' => (string) get_post_meta($post->ID, '_bbb_boyfriend_name', true),
+			'reread'         => (string) get_post_meta($post->ID, '_bbb_reread', true),
+			'ku'             => '1' === $ku_raw,
+			'starter_pack'   => false,
+			'is_private'     => sss_book_is_private($post->ID),
+			'featured_month' => substr((string) get_post_meta($post->ID, '_bbb_newsletter_date', true), 0, 7),
+		);
+	}
+
 	$series_handle = (string) sss_meta($post->ID, 'sss_series_handle', '');
 
 	return array(

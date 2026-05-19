@@ -14,6 +14,11 @@ if (!$post instanceof WP_Post) {
 	return;
 }
 
+if ('bbb_book' === $post->post_type && function_exists('bbb_render_library_book_card')) {
+	echo bbb_render_library_book_card($post->ID, $mini);
+	return;
+}
+
 $data          = sss_book_data($post);
 $trope_names   = array_column($data['tropes'], 'name');
 $trope_display = array_map(
