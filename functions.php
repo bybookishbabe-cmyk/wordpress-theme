@@ -15,6 +15,7 @@ require_once get_theme_file_path('inc/weekly-obsession-query.php');
 require_once get_theme_file_path('inc/newsletter-issue-cpt.php');
 require_once get_theme_file_path('inc/acf-society-hero-options.php');
 require_once get_theme_file_path('inc/cpt-sss-book.php');
+require_once get_theme_file_path('inc/sss-book-helpers.php');
 require_once get_theme_file_path('inc/cpt/sss-series.php');
 require_once get_theme_file_path('inc/cpt/sss-quote.php');
 require_once get_theme_file_path('inc/taxonomy-sss-trope.php');

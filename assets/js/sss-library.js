@@ -25,8 +25,6 @@ function isAnalyticsExcluded(){
       localStorage.removeItem("sssAnalyticsExcluded");
     }
 
-    if (window.Shopify && window.Shopify.designMode) return true;
-
     return localStorage.getItem("sssAnalyticsExcluded") === "true";
   } catch(err) {
     return false;

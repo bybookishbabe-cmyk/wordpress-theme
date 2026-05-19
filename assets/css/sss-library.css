@@ -8,6 +8,170 @@
   background:rgba(255,255,255,.03);
 }
 
+.bbb-homeRecDemo.bbb-homeRecDemo--library{
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) minmax(300px, 390px);
+  gap:24px;
+  align-items:center;
+  max-width:920px;
+  margin:18px 0 24px;
+  padding:22px 24px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:24px;
+  background:linear-gradient(180deg, rgba(255,138,199,.07), rgba(255,255,255,.03));
+  box-shadow:0 18px 50px rgba(0,0,0,.22);
+  text-decoration:none;
+  text-align:left;
+  color:inherit;
+}
+
+.bbb-homeRecDemo--library .bbb-homeRecDemo__kicker{
+  font-size:10px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:#ffb8e0;
+  margin-bottom:10px;
+}
+
+.bbb-homeRecDemo--library .bbb-homeRecDemo__title{
+  font-family:'Cormorant', serif;
+  font-size:clamp(2rem, 3vw, 2.6rem);
+  line-height:1.12;
+  color:#f7f3ee;
+}
+
+.bbb-homeRecDemo--library .bbb-homeRecDemo__title span{
+  color:#ff8ac7;
+  font-family:'Kaushan Script', cursive;
+  font-size:1.08em;
+  font-weight:400;
+  padding:0 .04em;
+}
+
+.bbb-homeRecDemo--library .bbb-homeRecDemo__sub{
+  margin-top:10px;
+  font-size:.78rem;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:rgba(247,243,238,.5);
+}
+
+.bbb-homeRecDemo--library .bbb-homeRecDemo__cta{
+  margin-top:14px;
+  color:#ffb8e0;
+  font-size:12px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  font-weight:700;
+}
+
+.bbb-homeRecDemo--library .bbb-homeRecDemo__stage{
+  position:relative;
+  min-height:235px;
+}
+
+.bbb-homeRecDemo--library .bbb-homeRecDemo__book{
+  position:absolute;
+  display:grid;
+  grid-template-columns:82px minmax(0, 1fr);
+  gap:12px;
+  width:100%;
+  padding:12px;
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(15,15,18,.86);
+  box-shadow:0 18px 38px rgba(0,0,0,.24);
+}
+
+.bbb-homeRecDemo--library .bbb-homeRecDemo__book--picked{
+  top:0;
+  left:0;
+  z-index:1;
+}
+
+.bbb-homeRecDemo--library .bbb-homeRecDemo__book--result{
+  right:0;
+  bottom:0;
+  z-index:2;
+  transform:translate(8px, 8px) rotate(-2deg);
+  animation:bbbLibraryRecSlide 3.6s ease-in-out infinite;
+}
+
+.bbb-homeRecDemo--library .bbb-homeRecDemo__book img{
+  width:82px;
+  aspect-ratio:3 / 4.2;
+  object-fit:cover;
+  border-radius:12px;
+  display:block;
+}
+
+.bbb-homeRecDemo--library .bbb-homeRecDemo__label{
+  grid-column:1 / -1;
+  font-size:9px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:#ffb8e0;
+}
+
+.bbb-homeRecDemo--library .bbb-homeRecDemo__meta{
+  align-self:center;
+  min-width:0;
+}
+
+.bbb-homeRecDemo--library .bbb-homeRecDemo__bookTitle{
+  font-family:'Cormorant', serif;
+  font-size:1.4rem;
+  line-height:1.04;
+  color:#f7f3ee;
+}
+
+@keyframes bbbLibraryRecSlide{
+  0%, 18% { transform:translate(32px, 18px) rotate(-4deg); opacity:.2; }
+  34%, 100% { transform:translate(8px, 8px) rotate(-2deg); opacity:1; }
+}
+
+@media (max-width: 749px){
+  .bbb-homeRecDemo.bbb-homeRecDemo--library{
+    grid-template-columns:1fr;
+    gap:16px;
+    margin:14px 0 20px;
+    padding:16px 14px;
+    border-radius:18px;
+  }
+
+  .bbb-homeRecDemo--library .bbb-homeRecDemo__title{
+    font-size:clamp(1.6rem, 8vw, 2.1rem);
+  }
+
+  .bbb-homeRecDemo--library .bbb-homeRecDemo__sub{
+    font-size:.68rem;
+  }
+
+  .bbb-homeRecDemo--library .bbb-homeRecDemo__cta{
+    margin-top:12px;
+    font-size:11px;
+  }
+
+  .bbb-homeRecDemo--library .bbb-homeRecDemo__stage{
+    min-height:210px;
+  }
+
+  .bbb-homeRecDemo--library .bbb-homeRecDemo__book{
+    grid-template-columns:70px minmax(0, 1fr);
+    gap:10px;
+    padding:10px;
+  }
+
+  .bbb-homeRecDemo--library .bbb-homeRecDemo__book img{
+    width:70px;
+    border-radius:10px;
+  }
+
+  .bbb-homeRecDemo--library .bbb-homeRecDemo__bookTitle{
+    font-size:1.2rem;
+  }
+}
+
 /* ===============================
 SOCIAL FAVORITES PREVIEW
 uses normal library styling
@@ -588,13 +752,6 @@ overflow:visible;
   position:relative;
   z-index:1;
 }
-#sss-lib-{{ section.id }} .sss-lib__wrap{
-  max-width:1100px;
-  margin:0 auto;
-  position:relative;
-  z-index:1;
-}
-
 .sss-lib__kicker{
   margin:0;
   font-size:12px;
