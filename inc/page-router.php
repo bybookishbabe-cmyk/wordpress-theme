@@ -114,9 +114,19 @@ function bbb_route_template_for_slug(string $slug): string {
 	return file_exists($path) ? $path : '';
 }
 
-function bbb_render_waiting_on_template(string $slug): void {
+function bbb_mark_virtual_route_found(): void {
+	global $wp_query;
+
+	if ($wp_query instanceof WP_Query) {
+		$wp_query->is_404 = false;
+	}
+
 	status_header(200);
 	nocache_headers();
+}
+
+function bbb_render_waiting_on_template(string $slug): void {
+	bbb_mark_virtual_route_found();
 
 	$title = ucwords(str_replace('-', ' ', $slug));
 
@@ -146,8 +156,7 @@ add_action(
 			set_query_var('paged', max(1, (int) $matches[1]));
 			$template = bbb_route_template_for_slug('curated-romance-guides');
 			if ($template !== '') {
-				status_header(200);
-				nocache_headers();
+				bbb_mark_virtual_route_found();
 				require $template;
 				exit;
 			}
@@ -192,8 +201,7 @@ add_action(
 				$template   = get_theme_file_path('page-' . $route_kind . '.php');
 				if (file_exists($template)) {
 					$GLOBALS['bbb_book_taxonomy_route_term'] = $route_term;
-					status_header(200);
-					nocache_headers();
+					bbb_mark_virtual_route_found();
 					require $template;
 					exit;
 				}
@@ -215,8 +223,7 @@ add_action(
 
 		$template = bbb_route_template_for_slug($slug);
 		if ($template !== '') {
-			status_header(200);
-			nocache_headers();
+			bbb_mark_virtual_route_found();
 			require $template;
 			exit;
 		}
