@@ -1194,7 +1194,6 @@ body {
   .main-page-title,
   .article-template__title,
   .bbb-home-obsession__sectionTitle,
-  .bbb-tropes__title,
   .main-blog .title--primary {
     line-height: 1.02;
   }
@@ -1223,26 +1222,6 @@ body {
   .bbb-home-obsession__coverLink {
     justify-self: center;
     margin-top: 0;
-  }
-
-  .bbb-tropes__row {
-    flex-direction: column-reverse;
-    align-items: flex-start;
-    gap: 2.4rem;
-  }
-
-  .bbb-tropes__titleWrap {
-    text-align: left;
-  }
-
-  .bbb-tropes__grid {
-    width: 100%;
-    padding-right: 2rem;
-  }
-
-  .bbb-trope-card {
-    flex-basis: 180px;
-    height: 210px;
   }
 
   .main-blog__hero {

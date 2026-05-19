@@ -126,7 +126,8 @@ add_action(
 		bbb_enqueue_css('bbb-society-gate', 'assets/bbb-society-gate.css', array('bbb-holiday-overlay'));
 		if (is_front_page()) {
 			bbb_enqueue_css('bbb-hero', 'assets/css/hero-smut-sentiment.css', array('bbb-society-gate'));
-			bbb_enqueue_css('bbb-home-static', 'assets/home-static.css', array('bbb-hero'));
+			bbb_enqueue_css('bbb-browse-by-trope', 'assets/css/sections/browse-by-trope.css', array('bbb-hero'));
+			bbb_enqueue_css('bbb-home-static', 'assets/home-static.css', array('bbb-browse-by-trope'));
 		}
 
 		if ('drawer' === get_option('bbb_cart_type', 'notification')) {
@@ -165,6 +166,7 @@ add_action(
 		bbb_enqueue_js('bbb-rose-petals', 'assets/bbb-rose-petals.js', array('bbb-global'));
 		bbb_enqueue_js('bbb-holiday-overlay', 'assets/bbb-holiday-overlay.js', array('bbb-rose-petals'));
 		if (is_front_page()) {
+			bbb_enqueue_js('bbb-browse-by-trope', 'assets/js/browse-by-trope.js', array('bbb-global'));
 			bbb_enqueue_js('bbb-home-static', 'assets/home-static.js', array('bbb-global'));
 		}
 
