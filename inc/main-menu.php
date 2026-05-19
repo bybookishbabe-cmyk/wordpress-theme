@@ -76,7 +76,7 @@ function bbb_get_fallback_main_menu(): array {
 
 		array(
 			'title'    => 'find your read',
-			'url'      => bbb_page_url( 'find-your-read' ),
+			'url'      => bbb_page_url( 'what-to-read-next' ),
 			'children' => array(
 				array(
 					'title'    => 'what should i read next',

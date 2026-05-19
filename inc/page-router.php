@@ -21,7 +21,7 @@ function bbb_page_route_registry(): array {
 		'curated-romance-guides'         => 'page-curated-romance-guides.php',
 		'enemies-to-lovers'              => 'page-trope.php',
 		'fictional-boyfriend-quiz'       => '',
-		'find-your-read'                 => '',
+		'find-your-read'                 => 'page-what-to-read-next.php',
 		'for-readers'                    => '',
 		'kindle-insert-vault'            => '',
 		'kindle-inserts'                 => '',
@@ -57,7 +57,7 @@ function bbb_page_route_registry(): array {
 		'sss-series'                     => '',
 		'sss-series-page'                => '',
 		'weekly-obsession'               => '',
-		'what-to-read-next'              => '',
+		'what-to-read-next'              => 'page-what-to-read-next.php',
 	);
 }
 
