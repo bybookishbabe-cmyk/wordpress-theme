@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 require_once get_theme_file_path('inc/header-functions.php');
 require_once get_theme_file_path('inc/bbb-helpers.php');
+require_once get_theme_file_path('inc/footer.php');
 require_once get_theme_file_path('inc/customizer/hero-smut-sentiment.php');
 require_once get_theme_file_path('inc/weekly-obsession-query.php');
 require_once get_theme_file_path('inc/cpt-newsletter-issue.php');
@@ -57,7 +58,8 @@ add_action(
 
 		register_nav_menus(
 			array(
-				'main-menu' => __('Main Navigation', 'bybookishbabe-shopify-port'),
+				'main-menu'       => __('Main Navigation', 'bybookishbabe-shopify-port'),
+				'footer-policies' => __('Footer Policies', 'bybookishbabe-shopify-port'),
 			)
 		);
 	}
@@ -99,14 +101,17 @@ add_action(
 			wp_add_inline_style('bbb-base', (string) file_get_contents(get_theme_file_path('assets/bbb-design-tokens.css')));
 		}
 
-		bbb_enqueue_css('bbb-component-list-menu', 'assets/component-list-menu.css', array('bbb-base'));
+		bbb_enqueue_css('bbb-component-list-menu', 'assets/css/component-list-menu.css', array('bbb-base'));
 		bbb_enqueue_css('bbb-component-search', 'assets/component-search.css', array('bbb-component-list-menu'));
 		bbb_enqueue_css('bbb-component-menu-drawer', 'assets/component-menu-drawer.css', array('bbb-component-search'));
 		bbb_enqueue_css('bbb-component-cart-notification', 'assets/component-cart-notification.css', array('bbb-component-menu-drawer'));
 		bbb_enqueue_css('bbb-component-price-header', 'assets/component-price.css', array('bbb-component-cart-notification'));
 		bbb_enqueue_css('bbb-component-predictive-search', 'assets/component-predictive-search.css', array('bbb-component-price-header'));
-		bbb_enqueue_css('bbb-component-list-social', 'assets/component-list-social.css', array('bbb-component-predictive-search'));
-		bbb_enqueue_css('bbb-header-inline', 'assets/header-inline.css', array('bbb-component-list-social'));
+		bbb_enqueue_css('bbb-component-list-social', 'assets/css/component-list-social.css', array('bbb-component-predictive-search'));
+		bbb_enqueue_css('bbb-component-newsletter', 'assets/css/component-newsletter.css', array('bbb-component-list-social'));
+		bbb_enqueue_css('bbb-component-list-payment', 'assets/css/component-list-payment.css', array('bbb-component-newsletter'));
+		bbb_enqueue_css('bbb-section-footer', 'assets/css/section-footer.css', array('bbb-component-list-payment'));
+		bbb_enqueue_css('bbb-header-inline', 'assets/header-inline.css', array('bbb-section-footer'));
 		bbb_enqueue_css('bbb-custom-overrides', 'assets/site-custom-overrides.css', array('bbb-header-inline'));
 		bbb_enqueue_css('bbb-bookshelf-signup', 'assets/bookshelf-signup.css', array('bbb-custom-overrides'));
 		bbb_enqueue_css('bbb-sss-library', 'assets/sss-library.css', array('bbb-bookshelf-signup'));
