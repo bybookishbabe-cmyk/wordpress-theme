@@ -22,11 +22,19 @@ $defaults = array(
 	),
 );
 
-$kicker       = bbb_get_field('bbb_tropes_kicker', 'option', $defaults['kicker']);
-$title        = bbb_get_field('bbb_tropes_title', 'option', $defaults['title']);
-$spice_url    = bbb_get_field('bbb_tropes_spice_url', 'option', $defaults['spice_url']);
-$spice_kicker = bbb_get_field('bbb_tropes_spice_kicker', 'option', $defaults['spice_kicker']);
-$spice_text   = bbb_get_field('bbb_tropes_spice_text', 'option', $defaults['spice_text']);
+if (!function_exists('bbb_tropes_option_text')) {
+	function bbb_tropes_option_text(string $field_name, string $default): string {
+		$value = bbb_get_field($field_name, 'option', $default);
+
+		return is_string($value) && '' !== trim($value) ? $value : $default;
+	}
+}
+
+$kicker       = bbb_tropes_option_text('bbb_tropes_kicker', $defaults['kicker']);
+$title        = bbb_tropes_option_text('bbb_tropes_title', $defaults['title']);
+$spice_url    = bbb_tropes_option_text('bbb_tropes_spice_url', $defaults['spice_url']);
+$spice_kicker = bbb_tropes_option_text('bbb_tropes_spice_kicker', $defaults['spice_kicker']);
+$spice_text   = bbb_tropes_option_text('bbb_tropes_spice_text', $defaults['spice_text']);
 $trope_cards  = function_exists('get_field') ? get_field('bbb_trope_cards', 'option') : array();
 
 if (empty($trope_cards) || !is_array($trope_cards)) {

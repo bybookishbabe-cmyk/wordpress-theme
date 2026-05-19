@@ -123,6 +123,7 @@ text-align:right;
 font-size:11px;
 letter-spacing:.18em;
 text-transform:uppercase;
+color:#f6f6f6;
 opacity:.55;
 margin-bottom:6px;
 }
@@ -130,6 +131,7 @@ margin-bottom:6px;
 .bbb-tropes__title{
 font-size:32px;
 margin:0;
+color:#f6f6f6;
 }
 
 .bbb-trope-card{
@@ -293,6 +295,7 @@ width:60%;
 .bbb-tropes__title{
 font-size:32px;
 margin:0;
+color:#f6f6f6;
 display:inline-block;
 padding-bottom:10px;
 border-bottom:1px solid rgba(255,138,199,.6);
