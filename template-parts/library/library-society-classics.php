@@ -4,10 +4,16 @@ declare(strict_types=1);
 $books = array_filter(
 	$args['books'] ?? array(),
 	static function ($book): bool {
+		if (!$book instanceof WP_Post) {
+			return false;
+		}
+
+		$data = sss_book_data($book);
+
 		return $book instanceof WP_Post
 			&& sss_book_is_visible($book->ID)
 			&& !sss_book_is_private($book->ID)
-			&& 'society classics' === strtolower(trim((string) sss_meta($book->ID, 'sss_shelf', '')));
+			&& 'society classics' === strtolower(trim((string) $data['shelf']));
 	}
 );
 

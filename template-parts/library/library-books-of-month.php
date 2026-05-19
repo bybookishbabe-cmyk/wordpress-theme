@@ -5,7 +5,15 @@ $current_month = date('Y-m');
 $books         = array_values(
 	array_filter(
 		$args['books'] ?? array(),
-		static fn($book): bool => $book instanceof WP_Post && $current_month === (string) sss_meta($book->ID, 'sss_featured_month', '')
+		static function ($book) use ($current_month): bool {
+			if (!$book instanceof WP_Post) {
+				return false;
+			}
+
+			$data = sss_book_data($book);
+
+			return $current_month === (string) $data['featured_month'];
+		}
 	)
 );
 

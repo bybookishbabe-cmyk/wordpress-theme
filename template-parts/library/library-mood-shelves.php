@@ -5,7 +5,8 @@ $books       = array_values(array_filter($args['books'] ?? array(), static fn($b
 $shelf_names = array();
 
 foreach ($books as $post) {
-	$shelf = strtolower(trim((string) sss_meta($post->ID, 'sss_shelf', '')));
+	$data  = sss_book_data($post);
+	$shelf = strtolower(trim((string) $data['shelf']));
 	if ($shelf && 'society classics' !== $shelf && !in_array($shelf, $shelf_names, true)) {
 		$shelf_names[] = $shelf;
 	}
@@ -27,7 +28,10 @@ foreach ($shelf_names as $shelf) {
 	$shelf_books = array_values(
 		array_filter(
 			$books,
-			static fn(WP_Post $post): bool => strtolower(trim((string) sss_meta($post->ID, 'sss_shelf', ''))) === $shelf
+			static function (WP_Post $post) use ($shelf): bool {
+				$data = sss_book_data($post);
+				return strtolower(trim((string) $data['shelf'])) === $shelf;
+			}
 		)
 	);
 
@@ -37,9 +41,10 @@ foreach ($shelf_names as $shelf) {
 
 	$preview = array();
 	foreach ($shelf_books as $post) {
-		$series_num = sss_meta($post->ID, 'sss_series_number', '');
-		$standalone = sss_bool(sss_meta($post->ID, 'sss_standalone', false));
-		$has_series = !empty(sss_meta($post->ID, 'sss_series_handle', ''));
+		$data       = sss_book_data($post);
+		$series_num = $data['series_number'];
+		$standalone = (bool) $data['standalone'];
+		$has_series = !empty($data['series_handle']);
 
 		if ($has_series && !$standalone && $series_num && '1' !== (string) $series_num) {
 			continue;
