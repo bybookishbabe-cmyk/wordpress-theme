@@ -1,6 +1,10 @@
 document.addEventListener('DOMContentLoaded', function() {
   const params = new URLSearchParams(window.location.search);
-  const initial = parseInt(params.get('spice')) || 3;
+  const available = Array.from(document.querySelectorAll('#sssSpiceGrid .sss-lib__book'))
+    .map(card => parseInt(card.dataset.spice, 10))
+    .filter(level => level >= 1 && level <= 5);
+  const requested = parseInt(params.get('spice'), 10);
+  const initial = requested >= 1 && requested <= 5 ? requested : (available[0] || 3);
   applySpice(initial);
 
   document.querySelectorAll('[data-spice-filter]').forEach(btn => {
@@ -10,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   function applySpice(level) {
-    const cards = document.querySelectorAll('#sssSpiceGrid .sss-lib__card');
+    const cards = document.querySelectorAll('#sssSpiceGrid .sss-lib__book');
     let count = 0;
     cards.forEach(card => {
       const show = parseInt(card.dataset.spice) === level;

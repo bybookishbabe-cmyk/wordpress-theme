@@ -8,5 +8,10 @@
   cursor: pointer;
   transition: background 0.2s;
 }
+.sss-spiceNav__pill span {
+  color: rgba(246,246,246,0.68);
+  font-size: 0.76em;
+  margin-left: 6px;
+}
 .sss-spiceNav__pill.is-active,
 .sss-spiceNav__pill:hover { background: rgba(246,246,246,0.1); }
