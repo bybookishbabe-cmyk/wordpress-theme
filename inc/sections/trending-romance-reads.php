@@ -40,6 +40,10 @@ if (!function_exists('bbb_trending_field')) {
 
 if (!function_exists('bbb_trending_book_is_visible')) {
 	function bbb_trending_book_is_visible(int $post_id): bool {
+		if (function_exists('sss_book_is_visible')) {
+			return sss_book_is_visible($post_id);
+		}
+
 		$is_visible = bbb_trending_field('is_visible', $post_id, null);
 		$is_hidden  = bbb_trending_bool(bbb_trending_field('hide_from_library', $post_id, false));
 
@@ -138,7 +142,6 @@ if ($query->have_posts()) {
 		if (
 			'' === $featured_date
 			|| !bbb_trending_book_is_visible($book_id)
-			|| bbb_trending_bool(bbb_trending_field('is_private', $book_id, false))
 		) {
 			continue;
 		}
@@ -169,6 +172,37 @@ if ($query->have_posts()) {
 	}
 
 	wp_reset_postdata();
+}
+
+if (count($matched_books) < count($issue_types) && function_exists('sss_get_all_books')) {
+	$used_book_ids = array();
+	foreach ($matched_books as $book) {
+		if ($book instanceof WP_Post) {
+			$used_book_ids[(int) $book->ID] = true;
+		}
+	}
+
+	$fallback_books = array_values(
+		array_filter(
+			sss_get_all_books(),
+			static function (WP_Post $book) use ($used_book_ids): bool {
+				return empty($used_book_ids[(int) $book->ID]);
+			}
+		)
+	);
+
+	foreach ($issue_types as $issue) {
+		if (!empty($matched_books[$issue])) {
+			continue;
+		}
+
+		$book = array_shift($fallback_books);
+		if (!$book instanceof WP_Post) {
+			break;
+		}
+
+		$matched_books[$issue] = $book;
+	}
 }
 ?>
 <section class="bbb-trending">

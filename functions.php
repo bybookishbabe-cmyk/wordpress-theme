@@ -293,7 +293,7 @@ add_action(
 				array(
 					'books'       => bbb_get_all_books_json(),
 					'supabaseUrl' => defined('SUPABASE_URL') ? SUPABASE_URL : 'https://efmrfxsmgbeikfgtrxjv.supabase.co',
-					'supabaseKey' => defined('SUPABASE_ANON_KEY') ? SUPABASE_ANON_KEY : '',
+					'supabaseKey' => defined('SUPABASE_ANON_KEY') ? SUPABASE_ANON_KEY : 'sb_publishable_iwjASe3QwixdDvHovaXZBQ_gbXU0Utk',
 					'currentUser' => is_user_logged_in() ? wp_get_current_user()->user_email : null,
 					'isMember'    => bbb_is_sss_member(),
 					'ajaxUrl'     => admin_url('admin-ajax.php'),

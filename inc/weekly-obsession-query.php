@@ -13,10 +13,20 @@ declare(strict_types=1);
  */
 function sss_get_current_newsletter_issue(): ?WP_Post {
 	$now = time();
+	$post_types = array_values(
+		array_filter(
+			array('newsletter_issue', 'bbb_newsletter_issue'),
+			static fn(string $post_type): bool => post_type_exists($post_type)
+		)
+	);
+
+	if (!$post_types) {
+		return null;
+	}
 
 	$issues = get_posts(
 		array(
-			'post_type'      => 'newsletter_issue',
+			'post_type'      => $post_types,
 			'post_status'    => 'publish',
 			'posts_per_page' => -1,
 			'meta_query'     => array(
@@ -75,13 +85,96 @@ function sss_get_obsession_book(WP_Post $issue): ?WP_Post {
 		$book_id = (int) get_post_meta($issue->ID, $key, true);
 		if ($book_id > 0) {
 			$book = get_post($book_id);
-			if ($book && 'sss_book' === $book->post_type) {
+			if ($book && in_array($book->post_type, array('sss_book', 'bbb_book'), true)) {
 				return $book;
 			}
 		}
 	}
 
 	return null;
+}
+
+function sss_get_latest_featured_book(): ?WP_Post {
+	$post_types = array_values(
+		array_filter(
+			array('sss_book', 'bbb_book'),
+			static fn(string $post_type): bool => post_type_exists($post_type)
+		)
+	);
+
+	if (!$post_types) {
+		return null;
+	}
+
+	$today = wp_date('Y-m-d');
+	$query = new WP_Query(
+		array(
+			'post_type'      => $post_types,
+			'post_status'    => 'publish',
+			'posts_per_page' => 50,
+			'meta_query'     => array(
+				'relation' => 'OR',
+				array(
+					'key'     => 'featured_in_newsletter_date',
+					'compare' => 'EXISTS',
+				),
+				array(
+					'key'     => '_bbb_newsletter_date',
+					'compare' => 'EXISTS',
+				),
+			),
+		)
+	);
+
+	$latest    = null;
+	$latest_ts = 0;
+
+	foreach ($query->posts as $book) {
+		if (function_exists('sss_book_is_visible') && !sss_book_is_visible($book->ID)) {
+			continue;
+		}
+
+		$date = 'bbb_book' === $book->post_type
+			? (string) get_post_meta($book->ID, '_bbb_newsletter_date', true)
+			: (string) get_post_meta($book->ID, 'featured_in_newsletter_date', true);
+
+		if ('' === $date && function_exists('get_field')) {
+			$date = (string) get_field('featured_in_newsletter_date', $book->ID);
+		}
+
+		$date = substr(trim($date), 0, 10);
+		if (preg_match('/^\d{8}$/', $date)) {
+			$date = substr($date, 0, 4) . '-' . substr($date, 4, 2) . '-' . substr($date, 6, 2);
+		}
+
+		if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) || $date > $today) {
+			continue;
+		}
+
+		$ts = strtotime($date);
+		if (false !== $ts && $ts >= $latest_ts) {
+			$latest    = $book;
+			$latest_ts = $ts;
+		}
+	}
+
+	wp_reset_postdata();
+
+	if ($latest instanceof WP_Post) {
+		return $latest;
+	}
+
+	$fallback = get_posts(
+		array(
+			'post_type'      => $post_types,
+			'post_status'    => 'publish',
+			'posts_per_page' => 1,
+			'orderby'        => 'date',
+			'order'          => 'DESC',
+		)
+	);
+
+	return $fallback[0] ?? null;
 }
 
 function sss_get_trope_colors(string $slug): array {
