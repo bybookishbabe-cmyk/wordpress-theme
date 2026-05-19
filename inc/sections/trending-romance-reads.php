@@ -87,6 +87,31 @@ if (!function_exists('bbb_trending_sunday_index_for_date')) {
 	}
 }
 
+if (!function_exists('bbb_trending_issue_date')) {
+	function bbb_trending_issue_date(WP_Post $issue, DateTimeZone $timezone): ?DateTimeImmutable {
+		$raw = function_exists('get_field') ? get_field('publish_date', $issue->ID) : get_post_meta($issue->ID, 'publish_date', true);
+		if (empty($raw)) {
+			$raw = get_post_meta($issue->ID, '_issue_publish_date', true);
+		}
+
+		$date = trim((string) $raw);
+		if ('' === $date) {
+			return null;
+		}
+
+		if (preg_match('/^\d{8}$/', $date)) {
+			$date = substr($date, 0, 4) . '-' . substr($date, 4, 2) . '-' . substr($date, 6, 2);
+		}
+
+		$date = substr($date, 0, 10);
+		if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+			return null;
+		}
+
+		return new DateTimeImmutable($date, $timezone);
+	}
+}
+
 $settings = wp_parse_args(
 	$args ?? array(),
 	array(
@@ -106,102 +131,57 @@ $issue_types   = count($sundays) >= 5
 	? array('smutty', 'sentimental', 'trope report', 'extra extra', "chapter's end")
 	: array('smutty', 'sentimental', 'trope report', "chapter's end");
 $matched_books = array();
-$post_types    = array_values(
+$issue_post_types = array_values(
 	array_filter(
-		array('sss_library', 'sss_book', 'bbb_book'),
+		array('newsletter_issue', 'bbb_newsletter_issue'),
 		static fn(string $post_type): bool => post_type_exists($post_type)
 	)
 );
 
-$query = new WP_Query(
-	array(
-		'post_type'      => $post_types ?: 'sss_book',
-		'post_status'    => 'publish',
-		'posts_per_page' => 250,
-		'meta_query'     => array(
-			'relation' => 'OR',
-			array(
-				'key'     => 'featured_in_newsletter_date',
-				'compare' => 'EXISTS',
+if ($issue_post_types) {
+	$issues = get_posts(
+		array(
+			'post_type'      => $issue_post_types,
+			'post_status'    => 'publish',
+			'posts_per_page' => -1,
+			'meta_query'     => array(
+				'relation' => 'OR',
+				array(
+					'key'     => 'publish_date',
+					'compare' => 'EXISTS',
+				),
+				array(
+					'key'     => '_issue_publish_date',
+					'compare' => 'EXISTS',
+				),
 			),
-			array(
-				'key'     => '_bbb_newsletter_date',
-				'compare' => 'EXISTS',
-			),
-		),
-	)
-);
+		)
+	);
 
-if ($query->have_posts()) {
-	while ($query->have_posts()) {
-		$query->the_post();
-
-		$book_id       = get_the_ID();
-		$featured_date = (string) bbb_trending_field('featured_in_newsletter_date', $book_id, '');
-
-		if (
-			'' === $featured_date
-			|| !bbb_trending_book_is_visible($book_id)
-		) {
+	foreach ($issues as $newsletter_issue) {
+		if (!$newsletter_issue instanceof WP_Post) {
 			continue;
 		}
 
-		$featured_day = substr($featured_date, 0, 10);
-		if (preg_match('/^\d{8}$/', $featured_day)) {
-			$featured_day = substr($featured_day, 0, 4) . '-' . substr($featured_day, 4, 2) . '-' . substr($featured_day, 6, 2);
-		}
-
-		if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $featured_day)) {
+		$issue_date = bbb_trending_issue_date($newsletter_issue, $timezone);
+		if (!$issue_date || $issue_date->format('Y-m') !== $current_month || $issue_date->format('Y-m-d') > $today) {
 			continue;
 		}
 
-		$featured = new DateTimeImmutable($featured_day, $timezone);
-		if ($featured->format('Y-m-d') > $today || $featured->format('Y-m') !== $current_month) {
-			continue;
-		}
-
-		$sunday_index = bbb_trending_sunday_index_for_date($featured, $sundays);
+		$sunday_index = bbb_trending_sunday_index_for_date($issue_date, $sundays);
 		if ($sunday_index < 1 || $sunday_index > count($issue_types)) {
+			continue;
+		}
+
+		$book = function_exists('sss_get_obsession_book') ? sss_get_obsession_book($newsletter_issue) : null;
+		if (!$book instanceof WP_Post || !bbb_trending_book_is_visible((int) $book->ID)) {
 			continue;
 		}
 
 		$issue = $issue_types[$sunday_index - 1];
 		if (empty($matched_books[$issue])) {
-			$matched_books[$issue] = get_post();
+			$matched_books[$issue] = $book;
 		}
-	}
-
-	wp_reset_postdata();
-}
-
-if (count($matched_books) < count($issue_types) && function_exists('sss_get_all_books')) {
-	$used_book_ids = array();
-	foreach ($matched_books as $book) {
-		if ($book instanceof WP_Post) {
-			$used_book_ids[(int) $book->ID] = true;
-		}
-	}
-
-	$fallback_books = array_values(
-		array_filter(
-			sss_get_all_books(),
-			static function (WP_Post $book) use ($used_book_ids): bool {
-				return empty($used_book_ids[(int) $book->ID]);
-			}
-		)
-	);
-
-	foreach ($issue_types as $issue) {
-		if (!empty($matched_books[$issue])) {
-			continue;
-		}
-
-		$book = array_shift($fallback_books);
-		if (!$book instanceof WP_Post) {
-			break;
-		}
-
-		$matched_books[$issue] = $book;
 	}
 }
 ?>
