@@ -74,7 +74,7 @@ function bbb_user_has_avatar(int $user_id = 0): bool {
 function bbb_wc_account_url(): string {
 	return function_exists('wc_get_account_endpoint_url')
 		? wc_get_account_endpoint_url('dashboard')
-		: home_url('/my-account/');
+		: home_url('/account/');
 }
 
 function bbb_wc_cart_url(): string {
@@ -91,6 +91,34 @@ function bbb_cart_count(): int {
 
 function bbb_cart_is_empty(): bool {
 	return 0 === bbb_cart_count();
+}
+
+function bbb_normalize_menu_item_url(string $url): string {
+	$url = trim($url);
+	if ('' === $url || '#' === $url) {
+		return '#';
+	}
+
+	return function_exists('bbb_resolve_shopify_url') ? bbb_resolve_shopify_url($url) : $url;
+}
+
+function bbb_menu_item_has_link(WP_Post $item): bool {
+	$url = isset($item->url) ? trim((string) $item->url) : '';
+	return '' !== $url && '#' !== $url;
+}
+
+function bbb_normalize_menu_item_tree(array $items): array {
+	foreach ($items as $item) {
+		if (isset($item->url)) {
+			$item->url = bbb_normalize_menu_item_url((string) $item->url);
+		}
+
+		if (!empty($item->children) && is_array($item->children)) {
+			$item->children = bbb_normalize_menu_item_tree($item->children);
+		}
+	}
+
+	return $items;
 }
 
 function bbb_get_header_menu_items(): array {
@@ -116,12 +144,12 @@ function bbb_get_header_menu_items(): array {
 			$tree[] = $item;
 		}
 
-		return $tree;
+		return bbb_normalize_menu_item_tree($tree);
 	}
 
 	// No WP menu assigned yet — use the hardcoded Shopify-faithful fallback.
 	// Configure a real menu at Appearance → Menus → Main Navigation to override.
-	return function_exists( 'bbb_get_fallback_menu_tree' ) ? bbb_get_fallback_menu_tree() : array();
+	return function_exists( 'bbb_get_fallback_menu_tree' ) ? bbb_normalize_menu_item_tree(bbb_get_fallback_menu_tree()) : array();
 }
 
 function bbb_menu_item_handle(WP_Post $item): string {

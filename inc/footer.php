@@ -123,7 +123,19 @@ function bbb_footer_menu_items(): array {
 		)
 	);
 
-	return is_array($items) ? $items : array();
+	if (!is_array($items)) {
+		return array();
+	}
+
+	foreach ($items as $item) {
+		if (isset($item->url)) {
+			$item->url = function_exists('bbb_normalize_menu_item_url')
+				? bbb_normalize_menu_item_url((string) $item->url)
+				: (string) $item->url;
+		}
+	}
+
+	return $items;
 }
 
 function bbb_footer_menu_item_is_active(WP_Post $item): bool {
