@@ -50,6 +50,16 @@ function bbb_import_metaobject_edges_from_export(array $data): array {
 	return bbb_import_books_edges_from_export($data);
 }
 
+function bbb_import_field_reference_handle(array $fields, string $key): string {
+	$reference = $fields[$key]['reference'] ?? null;
+	if (is_array($reference) && !empty($reference['handle'])) {
+		return (string) $reference['handle'];
+	}
+
+	$value = $fields[$key]['value'] ?? '';
+	return is_string($value) ? sanitize_title($value) : '';
+}
+
 if (defined('WP_CLI') && WP_CLI) {
 	WP_CLI::add_command(
 		'bbb import-books',
@@ -323,14 +333,31 @@ if (defined('WP_CLI') && WP_CLI) {
 					array(
 						'url'        => '_bbb_newsletter_url',
 						'issue_url'  => '_bbb_newsletter_url',
+						'excerpt'    => '_issue_excerpt',
 						'subtitle'   => '_issue_subtitle',
 						'issue_no'   => '_issue_no',
 						'issue_label'=> '_issue_label',
+						'label'      => '_issue_label',
+						'tropes'     => '_issue_tropes',
 					) as $shopify_key => $wp_meta
 				) {
 					$value = bbb_import_metaobject_field_value($fields, $shopify_key);
 					if ('' !== $value) {
 						update_post_meta((int) $post_id, $wp_meta, $value);
+					}
+				}
+
+				$book_handle = bbb_import_field_reference_handle($fields, 'book');
+				if ('' === $book_handle) {
+					$book_handle = bbb_import_field_reference_handle($fields, 'library_book');
+				}
+
+				if ('' !== $book_handle) {
+					update_post_meta((int) $post_id, '_issue_book_handle', $book_handle);
+					$book = get_page_by_path($book_handle, OBJECT, array('bbb_book', 'sss_book'));
+					if ($book instanceof WP_Post) {
+						update_post_meta((int) $post_id, '_issue_book_id', (int) $book->ID);
+						update_post_meta((int) $post_id, '_issue_library_book_id', (int) $book->ID);
 					}
 				}
 

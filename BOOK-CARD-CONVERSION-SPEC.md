@@ -446,7 +446,21 @@ For subsequent pages, add `after: "{endCursor}"` to the `metaobjects` args.
     edges {
       node {
         handle
-        fields { key value }
+        fields {
+          key
+          value
+          type
+          reference {
+            ... on Metaobject {
+              handle
+              type
+              fields { key value }
+            }
+            ... on MediaImage {
+              image { url }
+            }
+          }
+        }
       }
     }
   }

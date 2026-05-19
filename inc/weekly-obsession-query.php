@@ -91,6 +91,85 @@ function sss_get_obsession_book(WP_Post $issue): ?WP_Post {
 		}
 	}
 
+	$book_handle = (string) get_post_meta($issue->ID, '_issue_book_handle', true);
+	if ('' !== $book_handle) {
+		$book = get_page_by_path($book_handle, OBJECT, array('sss_book', 'bbb_book'));
+		if ($book instanceof WP_Post) {
+			return $book;
+		}
+	}
+
+	$issue_url = (string) get_post_meta($issue->ID, '_bbb_newsletter_url', true);
+	if ('' !== $issue_url) {
+		$books = get_posts(
+			array(
+				'post_type'      => array_values(
+					array_filter(
+						array('bbb_book', 'sss_book'),
+						static fn(string $post_type): bool => post_type_exists($post_type)
+					)
+				) ?: 'bbb_book',
+				'post_status'    => 'publish',
+				'posts_per_page' => 1,
+				'meta_query'     => array(
+					'relation' => 'OR',
+					array(
+						'key'   => '_bbb_newsletter_url',
+						'value' => $issue_url,
+					),
+					array(
+						'key'   => 'newsletter_url',
+						'value' => $issue_url,
+					),
+				),
+			)
+		);
+
+		if (!empty($books[0]) && $books[0] instanceof WP_Post) {
+			return $books[0];
+		}
+	}
+
+	$publish_date = (string) get_post_meta($issue->ID, '_issue_publish_date', true);
+	if ('' === $publish_date) {
+		$publish_date = (string) get_post_meta($issue->ID, 'publish_date', true);
+	}
+
+	$publish_date = substr(trim($publish_date), 0, 10);
+	if (preg_match('/^\d{8}$/', $publish_date)) {
+		$publish_date = substr($publish_date, 0, 4) . '-' . substr($publish_date, 4, 2) . '-' . substr($publish_date, 6, 2);
+	}
+
+	if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $publish_date)) {
+		$books = get_posts(
+			array(
+				'post_type'      => array_values(
+					array_filter(
+						array('bbb_book', 'sss_book'),
+						static fn(string $post_type): bool => post_type_exists($post_type)
+					)
+				) ?: 'bbb_book',
+				'post_status'    => 'publish',
+				'posts_per_page' => 1,
+				'meta_query'     => array(
+					'relation' => 'OR',
+					array(
+						'key'   => '_bbb_newsletter_date',
+						'value' => $publish_date,
+					),
+					array(
+						'key'   => 'featured_in_newsletter_date',
+						'value' => $publish_date,
+					),
+				),
+			)
+		);
+
+		if (!empty($books[0]) && $books[0] instanceof WP_Post) {
+			return $books[0];
+		}
+	}
+
 	return null;
 }
 
