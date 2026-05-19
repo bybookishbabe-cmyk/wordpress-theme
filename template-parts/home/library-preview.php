@@ -26,11 +26,20 @@ $settings = wp_parse_args(
 
 if (!function_exists('bbb_library_preview_find_book')) {
 	function bbb_library_preview_find_book(string $title): ?WP_Post {
-		$post_type = post_type_exists('sss_library') ? 'sss_library' : 'sss_book';
-		$slug      = sanitize_title($title);
+		$post_types = array_values(
+			array_filter(
+				array('sss_library', 'sss_book', 'bbb_book'),
+				static fn(string $post_type): bool => post_type_exists($post_type)
+			)
+		);
+		$slug = sanitize_title($title);
+
+		if (!$post_types) {
+			return null;
+		}
 
 		if ('' !== $slug) {
-			$by_slug = get_page_by_path($slug, OBJECT, $post_type);
+			$by_slug = get_page_by_path($slug, OBJECT, $post_types);
 			if ($by_slug instanceof WP_Post) {
 				return $by_slug;
 			}
@@ -38,7 +47,7 @@ if (!function_exists('bbb_library_preview_find_book')) {
 
 		$matches = get_posts(
 			array(
-				'post_type'        => $post_type,
+				'post_type'        => $post_types,
 				'post_status'      => 'publish',
 				'title'            => $title,
 				'posts_per_page'   => 1,
@@ -61,17 +70,26 @@ if (!function_exists('bbb_library_preview_cover')) {
 			return '';
 		}
 
+		if ('bbb_book' === $book->post_type) {
+			return (string) get_post_meta($book->ID, '_bbb_cover_url', true);
+		}
+
 		return function_exists('bbb_get_book_cover_url') ? bbb_get_book_cover_url($book->ID) : (get_the_post_thumbnail_url($book->ID, 'large') ?: '');
 	}
 }
 
 $demo_pick_cover   = bbb_library_preview_cover((string) $settings['demo_pick_cover'], (string) $settings['demo_pick_title']);
 $demo_result_cover = bbb_library_preview_cover((string) $settings['demo_result_cover'], (string) $settings['demo_result_title']);
-$post_type         = post_type_exists('sss_library') ? 'sss_library' : 'sss_book';
+$post_types        = array_values(
+	array_filter(
+		array('sss_library', 'sss_book', 'bbb_book'),
+		static fn(string $post_type): bool => post_type_exists($post_type)
+	)
+);
 $top_shelf_books   = array();
 $top_shelf_query   = new WP_Query(
 	array(
-		'post_type'      => $post_type,
+		'post_type'      => $post_types ?: 'sss_book',
 		'post_status'    => 'publish',
 		'posts_per_page' => 250,
 		'orderby'        => array(
@@ -137,6 +155,25 @@ if ($top_shelf_query->have_posts()) {
 	}
 
 	wp_reset_postdata();
+}
+
+if (count($top_shelf_books) < 5 && function_exists('sss_get_all_books')) {
+	foreach (sss_get_all_books() as $book) {
+		if (!$book instanceof WP_Post || sss_book_is_private($book->ID)) {
+			continue;
+		}
+
+		foreach ($top_shelf_books as $selected_book) {
+			if ($selected_book instanceof WP_Post && $selected_book->ID === $book->ID) {
+				continue 2;
+			}
+		}
+
+		$top_shelf_books[] = $book;
+		if (count($top_shelf_books) >= 5) {
+			break;
+		}
+	}
 }
 ?>
 <section class="sss-lib sss-lib--preview" data-sss-lib="public">

@@ -18,6 +18,11 @@ if (!$book_id) {
 	return;
 }
 
+if ('bbb_book' === get_post_type($book_id) && function_exists('bbb_render_library_book_card')) {
+	echo bbb_render_library_book_card($book_id, true);
+	return;
+}
+
 if (!function_exists('bbb_sss_card_field')) {
 	function bbb_sss_card_field(string $key, int $post_id, $default = '') {
 		return function_exists('bbb_get_field') ? bbb_get_field($key, $post_id, $default) : get_post_meta($post_id, $key, true);

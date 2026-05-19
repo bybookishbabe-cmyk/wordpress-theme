@@ -53,6 +53,13 @@ function bbb_require_sss_member(): void {
 }
 
 function bbb_get_book_cover_url(int $post_id): string {
+	if ('bbb_book' === get_post_type($post_id)) {
+		$cover = (string) get_post_meta($post_id, '_bbb_cover_url', true);
+		if ('' !== $cover) {
+			return $cover;
+		}
+	}
+
 	$field = bbb_get_field('cover', $post_id, '');
 	if (is_array($field)) {
 		return (string) ($field['url'] ?? '');
@@ -66,14 +73,26 @@ function bbb_get_book_cover_url(int $post_id): string {
 }
 
 function bbb_get_book_author(int $post_id): string {
+	if ('bbb_book' === get_post_type($post_id)) {
+		return (string) get_post_meta($post_id, '_bbb_author', true);
+	}
+
 	return (string) bbb_get_field('author', $post_id, '');
 }
 
 function bbb_book_is_hidden(int $post_id): bool {
+	if ('bbb_book' === get_post_type($post_id)) {
+		return bbb_truthy(get_post_meta($post_id, '_bbb_hide_from_library', true));
+	}
+
 	return (bool) bbb_get_field('hide_from_library', $post_id, false);
 }
 
 function bbb_book_is_private(int $post_id): bool {
+	if ('bbb_book' === get_post_type($post_id)) {
+		return function_exists('bbb_is_book_private') ? bbb_is_book_private($post_id) : bbb_truthy(get_post_meta($post_id, '_bbb_private_shelf', true));
+	}
+
 	return (bool) bbb_get_field('is_private', $post_id, false);
 }
 
@@ -92,7 +111,9 @@ function bbb_truthy($value): bool {
 }
 
 function bbb_book_newsletter_is_unlocked(int $post_id): bool {
-	$featured_date = (string) bbb_get_field('featured_in_newsletter_date', $post_id, '');
+	$featured_date = 'bbb_book' === get_post_type($post_id)
+		? (string) get_post_meta($post_id, '_bbb_newsletter_date', true)
+		: (string) bbb_get_field('featured_in_newsletter_date', $post_id, '');
 	if ('' === trim($featured_date)) {
 		return true;
 	}
@@ -124,9 +145,16 @@ function bbb_book_is_publicly_visible(int $post_id): bool {
 }
 
 function bbb_get_all_books_json(bool $include_private = true): array {
+	$post_types = array_values(
+		array_filter(
+			array('sss_book', 'bbb_book'),
+			static fn(string $post_type): bool => post_type_exists($post_type)
+		)
+	);
+
 	$books = get_posts(
 		array(
-			'post_type'        => 'sss_book',
+			'post_type'        => $post_types ?: 'sss_book',
 			'numberposts'      => -1,
 			'orderby'          => 'title',
 			'order'            => 'ASC',
@@ -170,8 +198,15 @@ function bbb_get_all_books_json(bool $include_private = true): array {
 }
 
 function bbb_get_public_books_query(array $args = array()): WP_Query {
+	$post_types = array_values(
+		array_filter(
+			array('sss_book', 'bbb_book'),
+			static fn(string $post_type): bool => post_type_exists($post_type)
+		)
+	);
+
 	$defaults = array(
-		'post_type'      => 'sss_book',
+		'post_type'      => $post_types ?: 'sss_book',
 		'posts_per_page' => -1,
 		'orderby'        => 'title',
 		'order'          => 'ASC',
@@ -192,11 +227,35 @@ function bbb_get_public_books_query(array $args = array()): WP_Query {
 			array(
 				'relation' => 'OR',
 				array(
+					'key'     => '_bbb_hide_from_library',
+					'compare' => 'NOT EXISTS',
+				),
+				array(
+					'key'     => '_bbb_hide_from_library',
+					'value'   => '1',
+					'compare' => '!=',
+				),
+			),
+			array(
+				'relation' => 'OR',
+				array(
 					'key'     => 'is_private',
 					'compare' => 'NOT EXISTS',
 				),
 				array(
 					'key'     => 'is_private',
+					'value'   => '1',
+					'compare' => '!=',
+				),
+			),
+			array(
+				'relation' => 'OR',
+				array(
+					'key'     => '_bbb_private_shelf',
+					'compare' => 'NOT EXISTS',
+				),
+				array(
+					'key'     => '_bbb_private_shelf',
 					'value'   => '1',
 					'compare' => '!=',
 				),

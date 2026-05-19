@@ -21,6 +21,19 @@ if (!function_exists('bbb_trending_bool')) {
 
 if (!function_exists('bbb_trending_field')) {
 	function bbb_trending_field(string $key, int $post_id, $default = '') {
+		if ('bbb_book' === get_post_type($post_id)) {
+			$bbb_map = array(
+				'featured_in_newsletter_date' => '_bbb_newsletter_date',
+				'hide_from_library'           => '_bbb_hide_from_library',
+				'is_private'                  => '_bbb_private_shelf',
+			);
+
+			if (isset($bbb_map[$key])) {
+				$value = get_post_meta($post_id, $bbb_map[$key], true);
+				return '' !== $value ? $value : $default;
+			}
+		}
+
 		return function_exists('bbb_get_field') ? bbb_get_field($key, $post_id, $default) : get_post_meta($post_id, $key, true);
 	}
 }
@@ -89,16 +102,26 @@ $issue_types   = count($sundays) >= 5
 	? array('smutty', 'sentimental', 'trope report', 'extra extra', "chapter's end")
 	: array('smutty', 'sentimental', 'trope report', "chapter's end");
 $matched_books = array();
-$post_type     = post_type_exists('sss_library') ? 'sss_library' : 'sss_book';
+$post_types    = array_values(
+	array_filter(
+		array('sss_library', 'sss_book', 'bbb_book'),
+		static fn(string $post_type): bool => post_type_exists($post_type)
+	)
+);
 
 $query = new WP_Query(
 	array(
-		'post_type'      => $post_type,
+		'post_type'      => $post_types ?: 'sss_book',
 		'post_status'    => 'publish',
 		'posts_per_page' => 250,
 		'meta_query'     => array(
+			'relation' => 'OR',
 			array(
 				'key'     => 'featured_in_newsletter_date',
+				'compare' => 'EXISTS',
+			),
+			array(
+				'key'     => '_bbb_newsletter_date',
 				'compare' => 'EXISTS',
 			),
 		),
