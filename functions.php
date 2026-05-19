@@ -8,6 +8,7 @@
 declare(strict_types=1);
 
 require_once get_theme_file_path('inc/header-functions.php');
+require_once get_theme_file_path('inc/customizer/hero-smut-sentiment.php');
 
 function bbb_reader_is_society(): bool {
 	return bbb_user_is_society(get_current_user_id());
@@ -82,7 +83,8 @@ add_action(
 		bbb_enqueue_css('bbb-holiday-overlay', 'assets/bbb-holiday-overlay.css', array('bbb-favorite-card-atc'));
 		bbb_enqueue_css('bbb-society-gate', 'assets/bbb-society-gate.css', array('bbb-holiday-overlay'));
 		if (is_front_page()) {
-			bbb_enqueue_css('bbb-home-static', 'assets/home-static.css', array('bbb-society-gate'));
+			bbb_enqueue_css('bbb-hero', 'assets/css/hero-smut-sentiment.css', array('bbb-society-gate'));
+			bbb_enqueue_css('bbb-home-static', 'assets/home-static.css', array('bbb-hero'));
 		}
 
 		if ('drawer' === get_option('bbb_cart_type', 'notification')) {
