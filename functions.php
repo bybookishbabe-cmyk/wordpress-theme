@@ -139,6 +139,12 @@ add_action(
 			bbb_enqueue_css('blog-signoff', 'assets/css/blog-signoff.css', array('blog-system'));
 			bbb_enqueue_css('sss-you-might-like', 'assets/css/sss-you-might-like.css', array('blog-signoff'));
 		}
+		if (is_home() || is_archive()) {
+			bbb_enqueue_css('component-card', 'assets/css/component-card.css', array('bbb-bookshelf-signup'));
+			bbb_enqueue_css('component-article-card', 'assets/css/component-article-card.css', array('component-card'));
+			bbb_enqueue_css('section-main-blog', 'assets/css/section-main-blog.css', array('component-article-card'));
+			bbb_enqueue_js('blog-trope-rotator', 'assets/js/blog-trope-rotator.js', array(), true);
+		}
 		bbb_enqueue_css('bbb-sss-library', 'assets/css/sss-library.css', array('bbb-bookshelf-signup'));
 		bbb_enqueue_css('bbb-sss-folder-tabs', 'assets/css/sss-folder-tabs.css', array('bbb-sss-library'));
 		bbb_enqueue_css('bbb-sss-memberdash', 'assets/css/sss-memberdash.css', array('bbb-sss-folder-tabs'));
