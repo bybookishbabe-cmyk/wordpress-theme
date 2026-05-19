@@ -2,7 +2,4 @@
 .env
 node_modules/
 vendor/
-dist/
-*.log
-*.zip
-migration/exports/
+supabase/.temp/

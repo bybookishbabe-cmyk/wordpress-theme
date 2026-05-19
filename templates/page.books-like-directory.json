@@ -1,0 +1,26 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-page",
+      "disabled": true,
+      "settings": {
+        "padding_top": 28,
+        "padding_bottom": 28
+      }
+    },
+    "directory": {
+      "type": "books-like-directory-page",
+      "name": "Books like directory",
+      "settings": {
+        "kicker": "reading guides",
+        "heading": "books like x",
+        "subtext": "finished something that wrecked you and have no idea what to read next? start here. every list has been read, curated, and personally recommended.",
+        "footer_note": "each card links directly to its blog post · grouped by genre · author and main trope visible at a glance"
+      }
+    }
+  },
+  "order": [
+    "main",
+    "directory"
+  ]
+}

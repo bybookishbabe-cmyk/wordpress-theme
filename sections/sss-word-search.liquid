@@ -1,0 +1,958 @@
+{% comment %}
+  sss-wordsearch.liquid
+  Interactive word search:
+  - drag to select letters
+  - supports diagonal + backwards (all 8 directions)
+  - pink ink trail while dragging
+  - found words highlight pink + cross out in list
+  - hearts burst on each found word
+  - unlock message when all found
+
+  Words (default):
+  kai, aaron, rhysand, morally gray, fictional, valentine, villain, romantically, unwell
+{% endcomment %}
+
+{%- assign active_drop = nil -%}
+{%- assign best_drop = nil -%}
+{%- assign best_drop_key = '' -%}
+{%- capture shared_preview_drop_handle -%}{% render 'sss-preview-drop-handle' %}{%- endcapture -%}
+{%- assign preview_drop_handle = section.settings.preview_drop_handle | default: shared_preview_drop_handle | strip -%}
+{%- assign now_key = 'now' | date: '%Y-%m-%d' -%}
+
+{%- if preview_drop_handle != blank -%}
+  {%- assign active_drop = shop.metaobjects.sss_drop[preview_drop_handle] -%}
+{%- elsif shop.metaobjects.sss_drop != blank -%}
+  {%- for d in shop.metaobjects.sss_drop.values -%}
+    {%- if d.release_date != blank -%}
+      {%- assign d_key = d.release_date | date: '%Y-%m-%d' -%}
+      {%- if d_key <= now_key -%}
+        {%- if best_drop_key == '' or d_key >= best_drop_key -%}
+          {%- assign best_drop = d -%}
+          {%- assign best_drop_key = d_key -%}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- if best_drop != nil -%}
+    {%- assign active_drop = best_drop -%}
+  {%- endif -%}
+{%- endif -%}
+
+{%- assign ws_accent = '#ff69b4' -%}
+{%- assign ws_card_bg = '#151515' -%}
+{%- assign ws_text = '#f6f6f6' -%}
+{%- if active_drop != nil -%}
+  {%- if active_drop.mood_accent != blank -%}{%- assign ws_accent = active_drop.mood_accent -%}{%- endif -%}
+  {%- if active_drop.mood_pill_bg != blank -%}{%- assign ws_card_bg = active_drop.mood_pill_bg -%}{%- endif -%}
+  {%- if active_drop.mood_pill_ink != blank -%}{%- assign ws_text = active_drop.mood_pill_ink -%}{%- endif -%}
+{%- endif -%}
+
+<section class="sss-ws" data-sss-wordsearch>
+  <div class="sss-ws__wrap">
+
+    <div class="sss-ws__top">
+      <p class="sss-ws__kicker">{{ section.settings.kicker }}</p>
+      <h2 class="sss-ws__title">{{ section.settings.title }}</h2>
+      {% if section.settings.subtext != blank %}
+        <p class="sss-ws__sub">{{ section.settings.subtext }}</p>
+      {% endif %}
+    </div>
+
+    <div class="sss-ws__gridWrap">
+      <!-- LEFT: Puzzle -->
+      <div class="sss-ws__board">
+        <div class="sss-ws__hud">
+          <span class="sss-ws__pill" id="wsHint">drag over letters to find a word</span>
+          <button class="sss-ws__reset" type="button" id="wsReset">reset</button>
+        </div>
+
+        <div class="sss-ws__stage">
+          <!-- SVG “ink trail” layer -->
+          <svg class="sss-ws__ink" id="wsInk" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <path id="wsInkPath" d="" fill="none"></path>
+          </svg>
+
+          <!-- Hearts burst layer -->
+          <div class="sss-ws__hearts" id="wsHearts" aria-hidden="true"></div>
+          <div class="sss-ws__foundPopup" id="wsFoundPopup" hidden></div>
+
+          <!-- Grid -->
+          <div class="sss-ws__grid" id="wsGrid" role="application" aria-label="word search grid"></div>
+        </div>
+
+        <div class="sss-ws__unlock" id="wsUnlock" hidden>
+          <div class="sss-ws__unlockCard">
+            <p class="sss-ws__unlockKicker">unlocked</p>
+            <h3 class="sss-ws__unlockTitle">{{ section.settings.unlock_title }}</h3>
+            <p class="sss-ws__unlockSub">{{ section.settings.unlock_subtext }}</p>
+            {% if section.settings.unlock_url != blank %}
+              <a class="sss-ws__unlockBtn" href="{{ section.settings.unlock_url }}">{{ section.settings.unlock_btn }}</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Word list -->
+      <aside class="sss-ws__list">
+        <div class="sss-ws__listHead">
+          <p class="sss-ws__listKicker">find these</p>
+          <p class="sss-ws__listSub">diagonal + backwards count 😌</p>
+        </div>
+        <ul class="sss-ws__words" id="wsWords" aria-label="words to find"></ul>
+      </aside>
+    </div>
+
+  </div>
+</section>
+
+<script type="application/json" id="wsWordsData-{{ section.id }}">
+[
+{%- assign configured_words = section.settings.words | newline_to_br | split: '<br />' -%}
+{%- assign first_word = true -%}
+{%- assign rendered_word_count = 0 -%}
+{%- for word in configured_words -%}
+  {%- assign clean_word = word | strip | downcase -%}
+  {%- if clean_word == blank -%}{%- continue -%}{%- endif -%}
+  {%- if rendered_word_count >= 10 -%}{%- break -%}{%- endif -%}
+  {%- unless first_word -%},{%- endunless -%}
+  {{ clean_word | json }}
+  {%- assign first_word = false -%}
+  {%- assign rendered_word_count = rendered_word_count | plus: 1 -%}
+{%- endfor -%}
+]
+</script>
+
+<style>
+/* ===== bybookishbabe dark editorial ===== */
+.sss-ws{
+  --ws-accent: {{ ws_accent }};
+  --ws-card-bg: {{ ws_card_bg }};
+  --ws-text: {{ ws_text }};
+  --ws-accent-soft: color-mix(in srgb, var(--ws-accent) 16%, transparent);
+  --ws-accent-strong: color-mix(in srgb, var(--ws-accent) 55%, transparent);
+  background:
+    radial-gradient(circle at top center, color-mix(in srgb, var(--ws-accent) 12%, transparent), transparent 54%),
+    linear-gradient(180deg, color-mix(in srgb, var(--ws-card-bg) 24%, #0b0b0b 76%), #0b0b0b 42%);
+  color:var(--ws-text);
+  padding:22px 12px;
+  font-family:"Libre Baskerville", Georgia, serif;
+  position:relative;
+  overflow:hidden;
+}
+.sss-ws::before{
+  content:"";
+  position:absolute; inset:-60px;
+  pointer-events:none;
+  background:
+    radial-gradient(1000px 560px at 50% 120px, rgba(255,255,255,.08), transparent 70%),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,.035),
+      rgba(255,255,255,.035) 1px,
+      transparent 1px,
+      transparent 26px
+    );
+  opacity:.55;
+}
+.sss-ws__wrap{
+  max-width:1200px;
+  margin:0 auto;
+  position:relative;
+  z-index:2;
+  padding:0 8px;
+}
+.sss-ws__top{ max-width:900px; margin:0 auto 14px; }
+.sss-ws__top{
+  text-align:right;
+  margin:0 0 14px auto;
+}
+.sss-ws__kicker{
+  margin:0 0 8px;
+  font-size:12px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.82);
+}
+.sss-ws__title{
+  margin:0;
+  font-size:20px;
+  font-weight:400;
+  text-transform:lowercase;
+  color:#fff;
+}
+.sss-ws__sub{
+  margin:8px 0 0;
+  font-size:13px;
+  line-height:1.6;
+  color:rgba(255,255,255,.78);
+}
+
+.sss-ws__gridWrap{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:14px;
+  align-items:start;
+}
+@media(min-width:990px){
+  .sss-ws__gridWrap{ grid-template-columns: 1.25fr .75fr; }
+}
+
+/* left board */
+.sss-ws__board{
+  background:color-mix(in srgb, var(--ws-card-bg) 90%, rgba(10,10,10,.95));
+  border:1px solid color-mix(in srgb, var(--ws-accent) 18%, rgba(255,255,255,.12));
+  border-radius:18px;
+  box-shadow:0 12px 28px rgba(0,0,0,.45), 0 0 0 1px color-mix(in srgb, var(--ws-accent) 10%, transparent);
+  overflow:hidden;
+}
+.sss-ws__hud{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:12px;
+  border-bottom:1px solid color-mix(in srgb, var(--ws-accent) 14%, rgba(255,255,255,.12));
+  background:color-mix(in srgb, var(--ws-text) 4%, transparent);
+}
+.sss-ws__pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-size:12px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(255,255,255,.06);
+  color:color-mix(in srgb, var(--ws-text) 86%, transparent);
+  text-transform:lowercase;
+}
+.sss-ws__reset{
+  height:38px;
+  padding:0 12px;
+  border-radius:12px;
+  border:1px solid color-mix(in srgb, var(--ws-accent) 22%, rgba(255,255,255,.14));
+  background:color-mix(in srgb, var(--ws-accent) 8%, transparent);
+  color:color-mix(in srgb, var(--ws-text) 84%, transparent);
+  cursor:pointer;
+  text-transform:lowercase;
+  font-size:12px;
+}
+.sss-ws__reset:hover{
+  color:#fff;
+  border-color:color-mix(in srgb, var(--ws-accent) 44%, white 10%);
+  background:color-mix(in srgb, var(--ws-accent) 14%, transparent);
+}
+
+.sss-ws__stage{
+  position:relative;
+  padding:12px;
+}
+
+/* grid */
+.sss-ws__grid{
+  display:grid;
+  grid-template-columns: repeat(12, minmax(0,1fr));
+  gap:6px;
+  width:100%;
+  box-sizing:border-box;
+  user-select:none;
+  -webkit-user-select:none;
+  touch-action:none;
+}
+.sss-ws__stage{
+  position:relative;
+  padding:10px;
+  overflow:hidden;
+  box-sizing:border-box;
+}
+
+.sss-ws__cell{
+  aspect-ratio:1 / 1;
+  border-radius:10px;
+  border:1px solid color-mix(in srgb, var(--ws-accent) 14%, rgba(255,255,255,.1));
+  background:color-mix(in srgb, var(--ws-text) 4%, transparent);
+  color:var(--ws-text);
+  display:grid;
+  place-items:center;
+  font-size:14px;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  cursor:pointer;
+  position:relative;
+  z-index:2;
+  transition:background .12s ease, border-color .12s ease;
+}
+.sss-ws__cell.is-active{
+  border-color:var(--ws-accent-strong);
+  background:var(--ws-accent-soft);
+  color:#fff;
+}
+.sss-ws__cell.is-found{
+  border-color:color-mix(in srgb, var(--ws-accent) 82%, white 18%);
+  background:color-mix(in srgb, var(--ws-accent) 24%, transparent);
+  color:#fff;
+}
+
+/* ink trail */
+.sss-ws__ink{
+  position:absolute;
+  inset:12px;
+  width:calc(100% - 24px);
+  height:calc(100% - 24px);
+  pointer-events:none;
+  z-index:1;
+}
+#wsInkPath{
+  stroke: var(--ws-accent);
+  stroke-width: 10;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 10px 16px rgba(0,0,0,.45));
+  opacity:.86;
+  transition:opacity .12s ease;
+}
+#wsInkPath.is-on{ opacity:.86; }
+
+/* right list */
+.sss-ws__list{
+  background:color-mix(in srgb, var(--ws-card-bg) 88%, rgba(21,21,21,.92));
+  border:1px solid color-mix(in srgb, var(--ws-accent) 18%, rgba(255,255,255,.12));
+  border-radius:18px;
+  box-shadow:0 12px 28px rgba(0,0,0,.45), 0 0 0 1px color-mix(in srgb, var(--ws-accent) 10%, transparent);
+  overflow:hidden;
+}
+.sss-ws__listHead{
+  padding:12px;
+  border-bottom:1px solid color-mix(in srgb, var(--ws-accent) 14%, rgba(255,255,255,.12));
+  background:color-mix(in srgb, var(--ws-text) 4%, transparent);
+}
+.sss-ws__listKicker{
+  margin:0;
+  font-size:12px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:#fff;
+}
+.sss-ws__listSub{
+  margin:6px 0 0;
+  font-size:12px;
+  color:rgba(255,255,255,.74);
+}
+.sss-ws__words{
+  list-style:none;
+  margin:0;
+  padding:10px 12px 12px;
+  display:grid;
+  gap:8px;
+}
+.sss-ws__word{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid color-mix(in srgb, var(--ws-accent) 16%, rgba(255,255,255,.1));
+  background:color-mix(in srgb, var(--ws-accent) 10%, var(--ws-text) 4%);
+  text-transform:lowercase;
+  font-size:13px;
+  color:color-mix(in srgb, var(--ws-text) 82%, white 18%);
+}
+.sss-ws__word .label{
+  color:color-mix(in srgb, var(--ws-text) 82%, white 18%);
+}
+.sss-ws__word .tag{
+  font-size:11px;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid color-mix(in srgb, var(--ws-accent) 18%, rgba(255,255,255,.12));
+  color:color-mix(in srgb, var(--ws-text) 72%, transparent);
+}
+.sss-ws__word.is-found{
+  border-color:var(--ws-accent-strong);
+  background:var(--ws-accent-soft);
+}
+.sss-ws__word.is-found .label{
+  color:#fff;
+  text-decoration:line-through;
+  text-decoration-thickness:2px;
+  text-decoration-color:var(--ws-accent);
+}
+.sss-ws__word.is-found .tag{
+  border-color:var(--ws-accent-strong);
+  color:#fff;
+}
+
+/* ===== MOBILE WORD SEARCH FIX ===== */
+@media(max-width:640px){
+  .sss-ws__gridWrap{
+    gap:12px;
+  }
+
+  .sss-ws__list{
+    order:2;
+  }
+
+  .sss-ws__listHead{
+    padding:10px 12px 8px;
+  }
+
+  .sss-ws__words{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:8px;
+    padding:10px 10px 12px;
+  }
+
+  .sss-ws__word{
+    min-height:52px;
+    padding:9px 10px;
+    align-items:flex-start;
+    flex-direction:column;
+    justify-content:flex-start;
+  }
+
+  .sss-ws__word .label{
+    line-height:1.25;
+  }
+
+  .sss-ws__word .tag{
+    margin-top:2px;
+  }
+
+  .sss-ws__stage{
+    padding:8px;
+  }
+
+  .sss-ws__grid{
+    grid-template-columns: repeat(12, minmax(0,1fr));
+    gap:5px;
+    padding:0 4px; /* gives breathing room */
+  }
+
+  .sss-ws__cell{
+    font-size:17px;
+    border-radius:6px;
+  }
+
+  #wsInkPath{
+    stroke-width:7;
+  }
+
+}
+@media(max-width:640px){
+  .sss-ws__grid{
+    grid-template-columns: repeat(11, 1fr);
+  }
+}
+@media(max-width:640px){
+  .sss-ws__grid{
+    gap:5px;
+  }
+}
+/* ===== FIX BOARD CUT OFF ON MOBILE ===== */
+@media(max-width: 600px){
+
+  .sss-ws__stage{
+    padding:10px; /* slightly tighter */
+  }
+
+  .sss-ws__grid{
+    width:100%;
+    gap:6px;              /* reduce gap slightly */
+  }
+
+  .sss-ws__cell{
+    font-size:16px;
+  }
+
+}
+/* ========================================= */
+/* MOBILE BOARD WIDTH FIX */
+/* ========================================= */
+
+@media(max-width:640px){
+
+  .sss-ws__stage{
+    padding:8px;
+    box-sizing:border-box;
+  }
+
+  .sss-ws__grid{
+    grid-template-columns: repeat(12, minmax(0,1fr)) !important;
+    gap:5px;
+    width:100%;
+  }
+
+  .sss-ws__cell{
+    font-size:16px;
+  }
+
+  #wsInkPath{
+    stroke-width:6;
+  }
+
+}
+
+/* ========================================= */
+/* UNLOCK MESSAGE – NON-FREEZING MODAL */
+/* ========================================= */
+
+.sss-ws__unlock{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.6);
+  backdrop-filter:blur(6px);
+  z-index:9999;
+  pointer-events:auto;
+}
+
+.sss-ws__unlock[hidden]{
+  display:none;
+}
+
+.sss-ws__unlockCard{
+  background:color-mix(in srgb, var(--ws-card-bg) 92%, #111 8%);
+  border:1px solid var(--ws-accent-strong);
+  border-radius:20px;
+  padding:24px;
+  max-width:340px;
+  width:90%;
+  text-align:center;
+  animation:sssPop .25s ease;
+}
+
+@keyframes sssPop{
+  from{ transform:scale(.92); opacity:0; }
+  to{ transform:scale(1); opacity:1; }
+}
+/* ========================================= */
+/* FOUND WORD POPUP */
+/* ========================================= */
+
+.sss-ws__foundPopup{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%, -50%) scale(.9);
+  background:#181818;
+  border:1px solid color-mix(in srgb, var(--ws-accent) 72%, white 28%);
+  padding:16px 22px;
+  border-radius:16px;
+  font-size:14px;
+  letter-spacing:.04em;
+  text-transform:lowercase;
+  color:color-mix(in srgb, var(--ws-accent) 70%, white 30%);
+  box-shadow:0 20px 40px rgba(0,0,0,.6);
+  z-index:50;
+  pointer-events:none;
+  opacity:0;
+  transition:all .2s ease;
+}
+
+.sss-ws__foundPopup.is-visible{
+  opacity:1;
+  transform:translate(-50%, -50%) scale(1);
+}
+
+</style>
+
+<script>
+(function(){
+
+  const root = document.querySelector('[data-sss-wordsearch]');
+  if (!root || root.__wsBound) return;
+  root.__wsBound = true;
+
+  const gridEl      = root.querySelector('#wsGrid');
+  const wordsEl     = root.querySelector('#wsWords');
+  const hintEl      = root.querySelector('#wsHint');
+  const resetEl     = root.querySelector('#wsReset');
+  const inkPath     = root.querySelector('#wsInkPath');
+  const hearts      = root.querySelector('#wsHearts');
+  const unlock      = root.querySelector('#wsUnlock');
+  const foundPopup  = root.querySelector('#wsFoundPopup');
+
+  const configuredWordsEl = document.getElementById('wsWordsData-{{ section.id }}');
+  const configuredWords = configuredWordsEl ? JSON.parse(configuredWordsEl.textContent || '[]') : [];
+  const WORD_POOL = (configuredWords || [])
+    .map(function(word){
+      var label = String(word || '').trim().toLowerCase();
+      return label ? { label: label, key: norm(label) } : null;
+    })
+    .filter(Boolean);
+  const WORDS_PER_BOARD = Math.min(10, WORD_POOL.length || 10);
+  let rotationBag = [];
+  let currentWords = [];
+
+  const SIZE = 12;
+  const FILL = 'abcdefghijklmnopqrstuvwxyz';
+
+  const DIRS = [
+    [1,0], [-1,0], [0,1], [0,-1],
+    [1,1], [-1,-1], [1,-1], [-1,1]
+  ];
+
+  const rand = (n)=> Math.floor(Math.random()*n);
+  const found = new Set();
+
+  function norm(s){
+    return (s || '').toLowerCase().replace(/\s+/g,'');
+  }
+
+  function shuffle(list){
+    const copy = list.slice();
+    for(let i = copy.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      const temp = copy[i];
+      copy[i] = copy[j];
+      copy[j] = temp;
+    }
+    return copy;
+  }
+
+  function refillRotationBag(){
+    rotationBag = shuffle(WORD_POOL);
+  }
+
+  function getNextWordSet(){
+    if(!WORD_POOL.length) return [];
+    const next = [];
+    while(next.length < WORDS_PER_BOARD){
+      if(!rotationBag.length) refillRotationBag();
+      const candidate = rotationBag.shift();
+      if(!candidate) break;
+      if(next.some(function(entry){ return entry.key === candidate.key; })) continue;
+      next.push(candidate);
+    }
+    return next;
+  }
+
+  function renderWords(){
+    wordsEl.innerHTML = '';
+    currentWords.forEach(w=>{
+      const li = document.createElement('li');
+      li.className = 'sss-ws__word';
+      li.dataset.key = w.key;
+      li.innerHTML = `<span class="label">${w.label}</span><span class="tag">not found</span>`;
+      wordsEl.appendChild(li);
+    });
+  }
+
+  function markFound(key){
+    const li = wordsEl.querySelector(`[data-key="${key}"]`);
+    if(li){
+      li.classList.add('is-found');
+      li.querySelector('.tag').textContent = 'found 💗';
+    }
+  }
+
+  function allFound(){
+    return found.size === currentWords.length;
+  }
+
+  function makeEmptyGrid(){
+    return Array.from({length: SIZE}, ()=> Array.from({length: SIZE}, ()=> ''));
+  }
+
+  function canPlace(g, word, x, y, dx, dy){
+    for(let i=0;i<word.length;i++){
+      const xx = x + dx*i;
+      const yy = y + dy*i;
+      if(xx<0 || yy<0 || xx>=SIZE || yy>=SIZE) return false;
+      const cur = g[yy][xx];
+      if(cur && cur !== word[i]) return false;
+    }
+    return true;
+  }
+
+  function placeWord(g, word){
+    const w = word.toUpperCase();
+    for(let tries=0; tries<350; tries++){
+      const [dx,dy] = DIRS[rand(DIRS.length)];
+      const x = rand(SIZE);
+      const y = rand(SIZE);
+      if(!canPlace(g, w, x, y, dx, dy)) continue;
+      for(let i=0;i<w.length;i++){
+        g[y + dy*i][x + dx*i] = w[i];
+      }
+      return true;
+    }
+    return false;
+  }
+
+  function fillGrid(g){
+    for(let y=0;y<SIZE;y++){
+      for(let x=0;x<SIZE;x++){
+        if(!g[y][x]) g[y][x] = FILL[rand(FILL.length)].toUpperCase();
+      }
+    }
+  }
+
+  function buildPuzzle(){
+    const g = makeEmptyGrid();
+    const ordered = currentWords.slice().sort((a,b)=> b.key.length - a.key.length);
+
+    ordered.forEach(w=>{
+      const letters = w.key.split('');
+      const maybe = (Math.random()<0.45) ? letters.reverse().join('') : w.key;
+      placeWord(g, maybe);
+    });
+
+    fillGrid(g);
+    return g;
+  }
+
+  function renderGrid(g){
+    gridEl.innerHTML = '';
+    gridEl.style.gridTemplateColumns = `repeat(${SIZE}, 1fr)`;
+
+    for(let y=0;y<SIZE;y++){
+      for(let x=0;x<SIZE;x++){
+        const cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = 'sss-ws__cell';
+        cell.textContent = g[y][x];
+        cell.dataset.x = x;
+        cell.dataset.y = y;
+        cell.dataset.letter = g[y][x];
+        gridEl.appendChild(cell);
+      }
+    }
+  }
+
+  let isDown=false, startCell=null, dir=null, active=[];
+
+  function clearActive(){
+    active.forEach(c=> c.classList.remove('is-active'));
+    active=[];
+    startCell=null;
+    dir=null;
+    inkPath.setAttribute('d','');
+    inkPath.classList.remove('is-on');
+  }
+
+  function centerOf(cell){
+    const r = cell.getBoundingClientRect();
+    const parent = gridEl.getBoundingClientRect();
+    return [
+      ((r.left+r.width/2)-parent.left)/parent.width*100,
+      ((r.top+r.height/2)-parent.top)/parent.height*100
+    ];
+  }
+
+  function updateInk(){
+    if(active.length<2){
+      inkPath.setAttribute('d','');
+      inkPath.classList.remove('is-on');
+      return;
+    }
+
+    const pts = active.map(c=> centerOf(c));
+    let d = `M ${pts[0][0]} ${pts[0][1]}`;
+    for(let i=1;i<pts.length;i++){
+      d += ` L ${pts[i][0]} ${pts[i][1]}`;
+    }
+    inkPath.setAttribute('d', d);
+    inkPath.classList.add('is-on');
+  }
+
+  function activate(cell){
+    if(!cell || active.includes(cell)) return;
+
+    if(active.length===1){
+      const x0=+startCell.dataset.x, y0=+startCell.dataset.y;
+      const x1=+cell.dataset.x, y1=+cell.dataset.y;
+      const dx=x1-x0, dy=y1-y0;
+      const adx=Math.abs(dx), ady=Math.abs(dy);
+
+      if(!(dx===0||dy===0||adx===ady)) return;
+      dir=[dx===0?0:dx/adx, dy===0?0:dy/ady];
+    }
+
+    if(dir && active.length>=1){
+      const prev=active[active.length-1];
+      const px=+prev.dataset.x, py=+prev.dataset.y;
+      const nx=px+dir[0], ny=py+dir[1];
+      if(+cell.dataset.x!==nx||+cell.dataset.y!==ny) return;
+    }
+
+    cell.classList.add('is-active');
+    active.push(cell);
+    updateInk();
+  }
+
+  function selectedString(){
+    return active.map(c=> c.dataset.letter.toLowerCase()).join('');
+  }
+
+  function burstHeartsAt(cell){
+    if(!cell) return;
+
+    const rect=cell.getBoundingClientRect();
+    const gridRect=gridEl.getBoundingClientRect();
+    const x=(rect.left-gridRect.left)+rect.width/2;
+    const y=(rect.top-gridRect.top)+rect.height/2;
+
+    for(let i=0;i<12;i++){
+      const h=document.createElement('div');
+      h.className='sss-ws__heart';
+      h.textContent='💗';
+      h.style.left=x+'px';
+      h.style.top=y+'px';
+      hearts.appendChild(h);
+      setTimeout(()=>h.remove(),1000);
+    }
+  }
+
+  function showFoundPopup(text){
+    if(!foundPopup) return;
+
+    foundPopup.textContent = text;
+    foundPopup.hidden = false;
+
+    requestAnimationFrame(()=>{
+      foundPopup.classList.add('is-visible');
+    });
+
+    setTimeout(()=>{
+      foundPopup.classList.remove('is-visible');
+      setTimeout(()=> foundPopup.hidden = true, 200);
+    },900);
+  }
+
+  function commitIfMatch(){
+  const raw = selectedString();
+  if(!raw || raw.length < 2){
+    clearActive();
+    return;
+  }
+
+  const n = norm(raw);
+  const rev = norm(raw.split('').reverse().join(''));
+  const match = currentWords.find(w => w.key === n || w.key === rev);
+
+  if(!match || found.has(match.key)){
+    clearActive();
+    hintEl.textContent = 'try again…';
+    return;
+  }
+
+  found.add(match.key);
+  markFound(match.key);
+
+  active.forEach(c=>{
+    c.classList.remove('is-active');
+    c.classList.add('is-found');
+  });
+
+  hintEl.textContent = `found: ${match.label} 💗`;
+
+  // ✨ SIMPLE POPUP
+  showFoundPopup();
+
+  setTimeout(clearActive, 200);
+
+if(allFound()){
+  showAllFoundPopup();
+  setTimeout(function(){
+    startNewBoard(true);
+  }, 1450);
+}
+}
+function showFoundPopup(){
+  if(!foundPopup) return;
+
+  foundPopup.textContent = 'found 💗';
+  foundPopup.hidden = false;
+  foundPopup.classList.add('is-visible');
+
+  setTimeout(()=>{
+    foundPopup.classList.remove('is-visible');
+    setTimeout(()=> foundPopup.hidden = true, 200);
+  }, 700);
+}
+function showAllFoundPopup(){
+  if(!foundPopup) return;
+
+  foundPopup.textContent = 'you found them all 💗';
+  foundPopup.hidden = false;
+  foundPopup.classList.add('is-visible');
+
+  setTimeout(()=>{
+    foundPopup.classList.remove('is-visible');
+    setTimeout(()=> foundPopup.hidden = true, 200);
+  }, 1400);
+}
+
+  function cellFromPoint(x,y){
+    const el=document.elementFromPoint(x,y);
+    return el&&el.closest('.sss-ws__cell');
+  }
+
+  gridEl.addEventListener('pointerdown',e=>{
+    const cell=e.target.closest('.sss-ws__cell');
+    if(!cell) return;
+    isDown=true;
+    clearActive();
+    startCell=cell;
+    activate(cell);
+  });
+
+  gridEl.addEventListener('pointermove',e=>{
+    if(!isDown) return;
+    activate(cellFromPoint(e.clientX,e.clientY));
+  });
+
+  document.addEventListener('pointerup',()=>{
+    if(!isDown) return;
+    isDown=false;
+    commitIfMatch();
+  });
+
+  function startNewBoard(fromCompletion){
+    currentWords = getNextWordSet();
+    found.clear();
+    unlock.hidden=true;
+    hintEl.textContent = fromCompletion ? 'new board loaded 💗' : 'drag over letters to find a word';
+    renderWords();
+    renderGrid(buildPuzzle());
+    clearActive();
+  }
+
+  function fullReset(){
+    startNewBoard(false);
+  }
+
+  resetEl.addEventListener('click', fullReset);
+
+  unlock.addEventListener('click', e=>{
+    if(e.target===unlock) unlock.hidden=true;
+  });
+
+  startNewBoard(false);
+})();
+</script>
+
+{% schema %}
+{
+  "name": "sss word search",
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "kicker", "default": "little game inside the society" },
+    { "type": "text", "id": "title", "label": "title", "default": "find the words. prove you’re romantically unwell." },
+    { "type": "textarea", "id": "subtext", "label": "subtext", "default": "drag across letters (diagonal + backwards count). when you find them all, you unlock a little surprise." },
+    { "type": "textarea", "id": "words", "label": "words (one per line)", "default": "library\nnovel\nprose\nchapter\nbookmark\npaperback\nhardcover\nfiction\nnarrative\nanthology\nmanuscript\nink\nmargin\nverse\npoetry\nauthor\nreader\nbookshelf\nliterature\npages\ncandlelight\nvelvet\nlace\ncathedral\nabbey\ncorridor\nchamber\ntower\ncrypt\nruins\nivy\nfog\nmist\ntwilight\nmidnight\ndusk\nstorm\nthunder\nshadows\ngloom\nobsession\ndesire\nlonging\nache\nhunger\ntemptation\nsin\nforbidden\ndevotion\nsurrender\ntorment\npossession\ndangerous\nuntamed\nreckless\nsecret\nbetrayal\nvengeance\ncruel\nwicked\nphantom\nspecter\nwraith\nrevenant\nhaunting\ncurse\nomen\nritual\nspell\nenchantment\ndemon\nvampire\nshadow\nnightmare\necho\nveil\nabyss\nvoid\neclipse\nwhisper\nblack\ncrimson\nsilver\nash\nsmoke\nvelvetine\nsilk\nthorn\nrose\nblood\nbone\nskull\ndagger\npoison\nglass\nmirror\nchill\nsilence\nstillness\ndecay" },
+    { "type": "text", "id": "preview_drop_handle", "label": "preview drop handle (optional)" },
+
+    { "type": "text", "id": "unlock_title", "label": "unlock title", "default": "you did it, pretty." },
+    { "type": "textarea", "id": "unlock_subtext", "label": "unlock subtext", "default": "all words found. your reward is being objectively correct about fictional men." },
+    { "type": "url", "id": "unlock_url", "label": "unlock button link (optional)" },
+    { "type": "text", "id": "unlock_btn", "label": "unlock button text", "default": "claim your surprise ↗" }
+  ],
+  "presets": [
+    { "name": "sss word search" }
+  ]
+}
+{% endschema %}

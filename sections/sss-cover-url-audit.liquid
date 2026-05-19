@@ -1,0 +1,188 @@
+{% assign books = shop.metaobjects.sss_library.values %}
+{% assign match_rows = '' %}
+{% assign match_count = 0 %}
+
+{% for book in books %}
+  {% capture is_visible %}{% render 'sss-book-visible', book: book, allow_hidden_from_library: true %}{% endcapture %}
+  {% assign is_visible_value = is_visible | strip %}
+  {% unless is_visible_value == 'true' %}
+    {% continue %}
+  {% endunless %}
+
+  {% assign cover_value = book.cover.value | default: book.cover %}
+  {% assign cover_url = '' %}
+  {% if cover_value != blank %}
+    {% if cover_value.url != blank %}
+      {% assign cover_url = cover_value.url %}
+    {% elsif cover_value contains 'http://' or cover_value contains 'https://' or cover_value contains '//' %}
+      {% assign cover_url = cover_value %}
+    {% else %}
+      {% assign cover_url = cover_value | image_url: width: 900 %}
+    {% endif %}
+  {% endif %}
+
+  {% assign cover_url_downcase = cover_url | downcase %}
+  {% if cover_url_downcase contains 'bookshop' %}
+    {% assign match_count = match_count | plus: 1 %}
+    {% capture row %}
+      <article class="sss-coverAudit__card">
+        {% if cover_url != blank %}
+          <div class="sss-coverAudit__imageWrap">
+            <img
+              class="sss-coverAudit__image"
+              src="{{ cover_url }}"
+              alt="{{ book.title.value | escape }} cover"
+              loading="lazy">
+          </div>
+        {% endif %}
+        <div class="sss-coverAudit__meta">
+          <h3 class="sss-coverAudit__title">{{ book.title.value }}</h3>
+          {% if book.author.value != blank %}
+            <p class="sss-coverAudit__author">{{ book.author.value }}</p>
+          {% endif %}
+          <code class="sss-coverAudit__url">{{ cover_url }}</code>
+        </div>
+      </article>
+    {% endcapture %}
+    {% assign match_rows = match_rows | append: row %}
+  {% endif %}
+{% endfor %}
+
+<section class="sss-coverAudit">
+  <div class="sss-coverAudit__wrap page-width">
+    <p class="sss-coverAudit__kicker">{{ section.settings.kicker }}</p>
+    <h1 class="sss-coverAudit__heading">{{ section.settings.heading }}</h1>
+    <p class="sss-coverAudit__sub">{{ match_count }} books with <code>bookshop</code> in the cover URL.</p>
+
+    {% if match_rows != blank %}
+      <div class="sss-coverAudit__grid">
+        {{ match_rows }}
+      </div>
+    {% else %}
+      <div class="sss-coverAudit__empty">No visible library books are currently using a cover URL that contains <code>bookshop</code>.</div>
+    {% endif %}
+  </div>
+</section>
+
+<style>
+  .sss-coverAudit{
+    background:#070709;
+    color:#f4efe9;
+    padding:48px 20px 72px;
+  }
+
+  .sss-coverAudit__wrap{
+    max-width:1160px;
+  }
+
+  .sss-coverAudit__kicker{
+    margin:0 0 10px;
+    font-size:12px;
+    letter-spacing:.28em;
+    text-transform:uppercase;
+    color:rgba(244,239,233,.62);
+  }
+
+  .sss-coverAudit__heading{
+    margin:0;
+    font-size:clamp(2.8rem,5vw,5.2rem);
+    line-height:.98;
+    font-weight:500;
+  }
+
+  .sss-coverAudit__sub{
+    margin:12px 0 0;
+    font-size:15px;
+    line-height:1.7;
+    color:rgba(244,239,233,.72);
+  }
+
+  .sss-coverAudit__grid{
+    margin-top:28px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+    gap:20px;
+  }
+
+  .sss-coverAudit__card{
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:22px;
+    overflow:hidden;
+    box-shadow:0 16px 30px rgba(0,0,0,.25);
+  }
+
+  .sss-coverAudit__imageWrap{
+    aspect-ratio:2 / 3;
+    background:#111;
+    padding:14px;
+  }
+
+  .sss-coverAudit__image{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    border-radius:16px;
+    display:block;
+  }
+
+  .sss-coverAudit__meta{
+    padding:16px 16px 18px;
+  }
+
+  .sss-coverAudit__title{
+    margin:0;
+    font-size:18px;
+    line-height:1.2;
+  }
+
+  .sss-coverAudit__author{
+    margin:6px 0 0;
+    font-size:13px;
+    color:rgba(244,239,233,.64);
+  }
+
+  .sss-coverAudit__url{
+    margin-top:12px;
+    display:block;
+    font-size:11px;
+    line-height:1.6;
+    word-break:break-word;
+    white-space:normal;
+    color:#b7cdfb;
+  }
+
+  .sss-coverAudit__empty{
+    margin-top:24px;
+    padding:18px 20px;
+    border-radius:18px;
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.08);
+    color:rgba(244,239,233,.72);
+  }
+</style>
+
+{% schema %}
+{
+  "name": "sss cover url audit",
+  "settings": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "kicker",
+      "default": "library cleanup"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "heading",
+      "default": "bookshop cover url audit"
+    }
+  ],
+  "presets": [
+    {
+      "name": "sss cover url audit"
+    }
+  ]
+}
+{% endschema %}

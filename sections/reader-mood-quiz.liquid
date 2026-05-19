@@ -1,0 +1,1403 @@
+<section class="bbb-moodquiz" id="reader-mood-quiz" data-reader-mood-quiz>
+  <div class="bbb-moodquiz__wrap">
+    <div class="bbb-moodquiz__topbar" aria-label="quiz navigation">
+      <a class="bbb-moodquiz__back" href="/pages/reader-quizes">back to all quizzes</a>
+      <button class="bbb-moodquiz__again" type="button" data-mood-retake>retake quiz</button>
+    </div>
+
+    <header class="bbb-moodquiz__head">
+      <p class="bbb-moodquiz__kicker">{{ section.settings.kicker }}</p>
+      <h2 class="bbb-moodquiz__title">{{ section.settings.title }}</h2>
+      {% if section.settings.subtext != blank %}
+        <p class="bbb-moodquiz__sub">{{ section.settings.subtext }}</p>
+      {% endif %}
+      <button class="bbb-moodquiz__start" type="button" data-mood-start>{{ section.settings.cta_label }}</button>
+      {% if section.settings.tagline != blank %}
+        <p class="bbb-moodquiz__tagline">{{ section.settings.tagline }}</p>
+      {% endif %}
+    </header>
+
+    <div class="bbb-moodquiz__track" data-mood-track>
+      <div class="bbb-moodquiz__slide">
+        <h3>what did today do to you?</h3>
+        <div class="bbb-moodquiz__answers">
+          <button type="button" data-mood-answer data-mood="sad">it made me want to stare out a window dramatically.</button>
+          <button type="button" data-mood-answer data-mood="chaos">it was messy and now i need fictional consequences.</button>
+          <button type="button" data-mood-answer data-mood="comfort">it was too much. i need someone competent and kind.</button>
+          <button type="button" data-mood-answer data-mood="obsessed">it made me want to be somebody's entire problem.</button>
+        </div>
+      </div>
+
+      <div class="bbb-moodquiz__slide">
+        <h3>how much emotional damage are you available for?</h3>
+        <div class="bbb-moodquiz__answers">
+          <button type="button" data-mood-answer data-mood="comfort">none. tuck me in and speak softly.</button>
+          <button type="button" data-mood-answer data-mood="soft">a little yearning, as a treat.</button>
+          <button type="button" data-mood-answer data-mood="sad">i can handle a beautiful ache.</button>
+          <button type="button" data-mood-answer data-mood="dark">ruin me respectfully. or not respectfully.</button>
+        </div>
+      </div>
+
+      <div class="bbb-moodquiz__slide">
+        <h3>pick your current villain era status.</h3>
+        <div class="bbb-moodquiz__answers">
+          <button type="button" data-mood-answer data-mood="soft">retired. i am mostly just yearning.</button>
+          <button type="button" data-mood-answer data-mood="chaos">active, moisturized, and making choices.</button>
+          <button type="button" data-mood-answer data-mood="dark">morally gray, technically correct.</button>
+          <button type="button" data-mood-answer data-mood="obsessed">i want devotion that alarms bystanders.</button>
+        </div>
+      </div>
+
+      <div class="bbb-moodquiz__slide">
+        <h3>what kind of man fixes the plot right now?</h3>
+        <div class="bbb-moodquiz__answers">
+          <button type="button" data-mood-answer data-mood="comfort">the one who brings snacks and handles everything.</button>
+          <button type="button" data-mood-answer data-mood="obsessed">the one who says touch her and find out.</button>
+          <button type="button" data-mood-answer data-mood="soft">the one who argues because feelings are terrifying.</button>
+          <button type="button" data-mood-answer data-mood="dark">the one everyone warned me about.</button>
+        </div>
+      </div>
+
+      <div class="bbb-moodquiz__slide">
+        <h3>what are you pretending not to need?</h3>
+        <div class="bbb-moodquiz__answers">
+          <button type="button" data-mood-answer data-mood="sad">a cathartic cry with kissing afterward.</button>
+          <button type="button" data-mood-answer data-mood="spicy">tension that makes the plot sweat.</button>
+          <button type="button" data-mood-answer data-mood="comfort">a safe place to land.</button>
+          <button type="button" data-mood-answer data-mood="chaos">drama i did not personally create.</button>
+        </div>
+      </div>
+
+      <div class="bbb-moodquiz__slide bbb-moodquiz__result">
+        <div data-mood-result></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script type="application/json" id="mood-books-{{ section.id }}">
+  [
+    {% assign mood_books = shop.metaobjects.sss_library.values %}
+    {% assign first_mood_book = true %}
+    {% for book in mood_books %}
+      {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+      {% assign is_visible_value = is_visible | strip %}
+      {% unless is_visible_value == 'true' %}
+        {% continue %}
+      {% endunless %}
+      {% capture is_private %}{% render 'sss-book-private', book: book %}{% endcapture %}
+      {% assign is_private_value = is_private | strip %}
+      {% if is_private_value == 'true' %}
+        {% continue %}
+      {% endif %}
+      {% unless first_mood_book %},{% endunless %}
+      {
+        "handle": {{ book.system.handle | json }},
+        "title": {{ book.title.value | json }},
+        "author": {{ book.author.value | json }},
+        "cover": {{ book.cover.value.url | default: book.cover.value | json }},
+        "amazon": {{ book.amazon_link.value.url | default: book.amazon_link.value | json }},
+        "bookshop": {{ book.bookshop_link.value.url | default: book.bookshop_link.value | json }},
+        "shelf": {{ book.shelf.value.name | json }},
+        "spice": {{ book.spice_level.value | default: 0 | json }},
+        "tropes": {{ book.tropes.value | map: 'name' | join: ', ' | json }},
+        "tropesDisplay": {{ book.tropes.value | map: 'name' | join: ', ' | json }},
+        "mini": {{ book.mini_note.value | json }},
+        "tension": {{ book.tension_score.value | default: 0 | json }},
+        "damage": {{ book.emotional_damage_score.value | default: 0 | json }},
+        "darkness": {{ book.darkness_level.value | default: 0 | json }}
+      }
+      {% assign first_mood_book = false %}
+    {% endfor %}
+  ]
+</script>
+
+{% render 'sss-library-modal' %}
+
+<style>
+  #reader-mood-quiz.bbb-moodquiz{
+    padding:72px 18px 92px;
+    background:#0b0b0b;
+    color:#f6f6f6;
+    font-family:"Libre Baskerville", Georgia, serif;
+  }
+
+  .bbb-moodquiz__wrap{
+    position:relative;
+    max-width:800px;
+    margin:0 auto;
+    overflow:hidden;
+  }
+
+  .bbb-moodquiz__head{
+    text-align:center;
+    transition:opacity .28s ease, transform .28s ease, max-height .28s ease, margin .28s ease;
+  }
+
+  .bbb-moodquiz.is-started .bbb-moodquiz__head,
+  .bbb-moodquiz.is-result .bbb-moodquiz__head{
+    max-height:0;
+    margin:0;
+    opacity:0;
+    transform:translateY(-12px);
+    pointer-events:none;
+    overflow:hidden;
+  }
+
+  .bbb-moodquiz__kicker,
+  .bbb-moodquiz__resultKicker,
+  .bbb-moodquiz__booksKicker{
+    margin:0;
+    color:#ff8ac7;
+    font-size:.72rem;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+  }
+
+  .bbb-moodquiz__title{
+    margin:10px auto 0;
+    font-size:clamp(2.6rem, 7vw, 5.3rem);
+    line-height:.94;
+    font-weight:400;
+    text-transform:lowercase;
+  }
+
+  .bbb-moodquiz__sub{
+    max-width:42rem;
+    margin:18px auto 0;
+    color:rgba(246,246,246,.74);
+    line-height:1.7;
+  }
+
+  .bbb-moodquiz__start,
+  .bbb-moodquiz__back,
+  .bbb-moodquiz__again,
+  .bbb-moodquiz__share,
+  .bbb-moodquiz__join,
+  .bbb-moodquiz__upsell{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:48px;
+    padding:0 20px;
+    border-radius:999px;
+    border:1px solid rgba(255,138,199,.48);
+    background:rgba(255,138,199,.12);
+    color:#ff8ac7;
+    font:inherit;
+    font-size:.82rem;
+    font-weight:800;
+    letter-spacing:.12em;
+    text-decoration:none;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:transform .18s ease, background .18s ease, color .18s ease;
+  }
+
+  .bbb-moodquiz__start{
+    width:min(100%, 430px);
+    margin-top:32px;
+  }
+
+  .bbb-moodquiz__again{
+    z-index:3;
+    min-height:38px;
+    opacity:1;
+    pointer-events:auto;
+    transform:none;
+  }
+
+  .bbb-moodquiz__topbar{
+    position:relative;
+    z-index:4;
+    display:none;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin:0 0 28px;
+  }
+
+  .bbb-moodquiz__back,
+  .bbb-moodquiz__again{
+    padding:0 15px;
+    min-height:38px;
+    font-size:.78rem;
+    letter-spacing:.11em;
+  }
+
+  .bbb-moodquiz.is-result .bbb-moodquiz__topbar{
+    display:flex;
+  }
+
+  .bbb-moodquiz__start:hover,
+  .bbb-moodquiz__back:hover,
+  .bbb-moodquiz__again:hover,
+  .bbb-moodquiz__share:hover,
+  .bbb-moodquiz__join:hover,
+  .bbb-moodquiz__upsell:hover{
+    transform:translateY(-2px);
+    background:#ff8ac7;
+    color:#0b0b0b;
+  }
+
+  .bbb-moodquiz__tagline{
+    margin:14px 0 0;
+    color:rgba(246,246,246,.46);
+    font-size:.82rem;
+    letter-spacing:.06em;
+  }
+
+  .bbb-moodquiz__track{
+    display:none;
+    transition:transform .55s cubic-bezier(.2,.85,.2,1);
+    will-change:transform;
+  }
+
+  .bbb-moodquiz.is-started .bbb-moodquiz__track,
+  .bbb-moodquiz.is-result .bbb-moodquiz__track{
+    display:flex;
+  }
+
+  .bbb-moodquiz__slide{
+    min-width:100%;
+    padding:8px 4px 0;
+  }
+
+  .bbb-moodquiz__slide h3{
+    max-width:13ch;
+    margin:0 0 34px;
+    font-size:clamp(2.1rem, 5vw, 3.5rem);
+    line-height:1.02;
+    font-weight:400;
+    text-transform:lowercase;
+  }
+
+  .bbb-moodquiz__answers{
+    display:grid;
+    gap:14px;
+  }
+
+  .bbb-moodquiz__answers button{
+    width:100%;
+    padding:18px 22px;
+    border-radius:8px;
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(255,255,255,.055);
+    color:#f6f6f6;
+    font:inherit;
+    font-size:1.12rem;
+    line-height:1.45;
+    text-align:left;
+    cursor:pointer;
+    transition:transform .16s ease, border-color .16s ease, background .16s ease;
+  }
+
+  .bbb-moodquiz__answers button:hover{
+    transform:translateY(-1px);
+    border-color:rgba(255,138,199,.38);
+    background:rgba(255,255,255,.075);
+  }
+
+  .bbb-moodquiz__answers button.is-selected{
+    background:#ff8ac7;
+    border-color:#ff8ac7;
+    color:#0b0b0b;
+  }
+
+  .bbb-moodquiz__result{
+    text-align:center;
+  }
+
+  .bbb-moodquiz__resultHero{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    width:100%;
+    text-align:center;
+  }
+
+  .bbb-moodquiz__result .bbb-moodquiz__resultKicker{
+    display:block;
+    width:100%;
+    margin:0 auto;
+    text-align:center;
+  }
+
+  .bbb-moodquiz__resultTitle{
+    width:100%;
+    max-width:none;
+    margin:10px auto 0;
+    font-size:clamp(2.7rem, 8vw, 5rem);
+    line-height:.96;
+    font-weight:400;
+    text-transform:lowercase;
+    text-align:center;
+  }
+
+  .bbb-moodquiz__matchCover{
+    position:relative;
+    width:118px;
+    margin:20px auto 0;
+    border-radius:8px;
+    border:1px solid rgba(255,255,255,.14);
+    box-shadow:0 18px 38px rgba(0,0,0,.34);
+    overflow:hidden;
+    background:rgba(255,255,255,.05);
+  }
+
+  .bbb-moodquiz__matchCover img{
+    position:relative;
+    z-index:1;
+    width:100%;
+    aspect-ratio:2/3;
+    object-fit:cover;
+    display:block;
+  }
+
+  .bbb-moodquiz__coverRain{
+    position:absolute;
+    inset:0;
+    z-index:2;
+    pointer-events:none;
+    overflow:hidden;
+  }
+
+  .bbb-moodquiz__coverEmoji{
+    position:absolute;
+    top:-24%;
+    left:var(--x, 50%);
+    font-size:var(--size, 14px);
+    filter:drop-shadow(0 5px 8px rgba(0,0,0,.55));
+    opacity:.9;
+    animation:bbbMoodCoverDrop var(--dur, 4200ms) linear infinite;
+    animation-delay:var(--delay, 0ms);
+  }
+
+  @keyframes bbbMoodCoverDrop{
+    0%{ transform:translate3d(0,-12%,0) rotate(0deg); opacity:0; }
+    12%{ opacity:.9; }
+    86%{ opacity:.9; }
+    to{ transform:translate3d(var(--drift, 0px),156px,0) rotate(var(--rot, 180deg)); opacity:0; }
+  }
+
+  .bbb-moodquiz__resultDesc{
+    max-width:52ch;
+    margin:0 auto;
+    color:rgba(246,246,246,.82);
+    font-size:16px;
+    line-height:1.75;
+    text-align:center;
+  }
+
+  .bbb-moodquiz__traits{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:10px;
+    max-width:520px;
+    margin:24px auto;
+    padding:0;
+    list-style:none;
+  }
+
+  .bbb-moodquiz__trait{
+    padding:10px 12px;
+    border-radius:8px;
+    border:1px solid rgba(255,138,199,.36);
+    background:rgba(255,138,199,.08);
+    color:#ff8ac7;
+    font-size:13px;
+    line-height:1.35;
+  }
+
+  .bbb-moodquiz__books{
+    margin-top:0;
+    padding-top:0;
+    text-align:left;
+  }
+
+  .bbb-moodquiz__divider{
+    border:none;
+    border-top:1px solid rgba(255,255,255,.1);
+    margin:36px 0;
+  }
+
+  .bbb-moodquiz__booksKicker{
+    margin:0 0 22px;
+    font-size:11px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    opacity:.5;
+  }
+
+  .bbb-moodquiz__bookList{
+    display:grid;
+    gap:0;
+    margin-top:0;
+  }
+
+  .bbb-moodquiz__bookItem{
+    padding:20px 0;
+    cursor:pointer;
+  }
+
+  .bbb-moodquiz__bookItem--match{
+    padding:20px 16px;
+    border-radius:8px;
+    border:1px solid rgba(255,138,199,.35);
+    background:rgba(255,138,199,.04);
+    margin-bottom:4px;
+  }
+
+  .bbb-moodquiz__bookInner{
+    display:flex;
+    gap:20px;
+    align-items:flex-start;
+  }
+
+  .bbb-moodquiz__coverWrap{
+    position:relative;
+    flex:0 0 80px;
+    width:80px;
+  }
+
+  .bbb-moodquiz__cover{
+    width:80px;
+    aspect-ratio:2/3;
+    object-fit:cover;
+    border-radius:8px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.06);
+    display:block;
+  }
+
+  .bbb-moodquiz__coverWrap .sss-lib__floatSpice{
+    position:absolute;
+    top:6px;
+    right:6px;
+    z-index:3;
+    background:rgba(0,0,0,.75);
+    backdrop-filter:blur(6px);
+    padding:3px 7px;
+    border-radius:999px;
+    font-size:10px;
+    letter-spacing:.04em;
+    box-shadow:0 6px 16px rgba(0,0,0,.35);
+    pointer-events:none;
+  }
+
+  .bbb-moodquiz__coverWrap .sss-lib__heart.bbb-moodquiz__heart{
+    position:absolute;
+    bottom:6px;
+    left:6px;
+    min-width:30px;
+    height:30px;
+    padding:0 9px;
+    gap:5px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.25);
+    background:rgba(0,0,0,.75);
+    backdrop-filter:blur(6px);
+    color:#fff;
+    font-size:12px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 6px 16px rgba(0,0,0,.4);
+    z-index:6;
+    cursor:pointer;
+    line-height:1;
+    transition:all .18s ease;
+  }
+
+  .bbb-moodquiz__coverWrap .sss-lib__heart.bbb-moodquiz__heart:hover{
+    transform:translateY(-2px) scale(1.05);
+  }
+
+  .bbb-moodquiz__coverWrap .sss-lib__heart.bbb-moodquiz__heart.is-saved{
+    background:#e85a9b;
+    border-color:#e85a9b;
+    color:#fff;
+  }
+
+  .bbb-moodquiz__coverWrap .sss-lib__heartLabel{
+    font-size:10px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+
+  .bbb-moodquiz__bookContent{
+    flex:1;
+    min-width:0;
+  }
+
+  .bbb-moodquiz__bookTitle{
+    margin:0 0 4px;
+    font-size:18px;
+    line-height:1.3;
+    font-weight:400;
+  }
+
+  .bbb-moodquiz__bookAuthor,
+  .bbb-moodquiz__bookMeta{
+    margin:0 0 10px;
+    color:rgba(246,246,246,.58);
+    font-size:13px;
+    line-height:1.35;
+  }
+
+  .bbb-moodquiz__bookDesc{
+    margin:0 0 14px;
+    color:rgba(246,246,246,.72);
+    font-size:14px;
+    line-height:1.65;
+  }
+
+  .bbb-moodquiz__bookLinks{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:0;
+    padding-top:0;
+  }
+
+  .bbb-moodquiz__bookLinks a,
+  .bbb-moodquiz__bookLinks button{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:10px 18px;
+    border-radius:12px;
+    border:1px solid rgba(246,246,246,.26);
+    background:transparent;
+    color:#f6f6f6;
+    font:inherit;
+    font-size:13px;
+    text-decoration:none;
+    cursor:pointer;
+    transition:background .18s ease, border-color .18s ease, color .18s ease;
+    white-space:nowrap;
+  }
+
+  .bbb-moodquiz__bookLinks a:hover{
+    background:#ff8ac7;
+    border-color:#ff8ac7;
+    color:#0b0b0b;
+  }
+
+  .bbb-moodquiz__bookLinks button:hover{
+    background:rgba(246,246,246,.92);
+    border-color:rgba(246,246,246,.92);
+    color:#0b0b0b;
+  }
+
+  .bbb-moodquiz__bookLinks button.is-saved,
+  .bbb-moodquiz__bookLinks button.is-saved:hover{
+    background:#e85a9b;
+    border-color:#e85a9b;
+    color:#fff;
+  }
+
+  .bbb-moodquiz__newsletter{
+    margin-top:16px;
+    padding:28px;
+    border-radius:16px;
+    border:1px solid rgba(255,255,255,.1);
+    background:rgba(255,255,255,.05);
+    text-align:center;
+  }
+
+  .bbb-moodquiz__newsletter h4{
+    margin:0 0 8px;
+    font-size:18px;
+    font-weight:400;
+    text-transform:lowercase;
+  }
+
+  .bbb-moodquiz__newsletter p{
+    margin:0 0 20px;
+    color:rgba(246,246,246,.62);
+    font-size:13px;
+    line-height:1.65;
+  }
+
+  .bbb-moodquiz__newsletter form{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:0;
+  }
+
+  .bbb-moodquiz__newsletter input{
+    flex:1;
+    min-width:200px;
+    min-height:0;
+    padding:13px 18px;
+    border-radius:12px;
+    border:1px solid rgba(246,246,246,.2);
+    background:rgba(255,255,255,.06);
+    color:#f6f6f6;
+    font:inherit;
+    font-size:15px;
+    outline:none;
+  }
+
+  .bbb-moodquiz__actions{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:12px;
+    margin-top:40px;
+    margin-bottom:20px;
+  }
+
+  .bbb-moodquiz__share,
+  .bbb-moodquiz__join,
+  .bbb-moodquiz__upsell{
+    min-height:0;
+    padding:14px 28px;
+    border-radius:14px;
+    border-color:rgba(246,246,246,.26);
+    background:transparent;
+    color:#f6f6f6;
+    font-size:15px;
+    font-weight:400;
+    letter-spacing:0;
+    text-transform:none;
+    transition:background .18s ease, border-color .18s ease, color .18s ease;
+  }
+
+  .bbb-moodquiz__share:hover,
+  .bbb-moodquiz__join:hover,
+  .bbb-moodquiz__upsell:hover{
+    transform:none;
+    background:#ff8ac7;
+    border-color:#ff8ac7;
+    color:#0b0b0b;
+  }
+
+  .bbb-moodquiz__confettiLayer{
+    position:fixed;
+    inset:0;
+    z-index:9999;
+    pointer-events:none;
+    overflow:hidden;
+  }
+
+  .bbb-moodquiz__confetti{
+    position:absolute;
+    top:-12vh;
+    font-size:var(--size, 22px);
+    filter:drop-shadow(0 10px 18px rgba(0,0,0,.34));
+    opacity:.95;
+    transform:translate3d(0,-12vh,0) rotate(0deg);
+    animation:bbbMoodDrop var(--dur, 9200ms) linear forwards;
+  }
+
+  @keyframes bbbMoodDrop{
+    0%{ opacity:0; transform:translate3d(0,-12vh,0) rotate(0deg); }
+    9%{ opacity:.95; }
+    82%{ opacity:.95; }
+    to{ transform:translate3d(var(--drift, 0px),118vh,0) rotate(var(--rot, 360deg)); opacity:0; }
+  }
+
+  @media(max-width:720px){
+    #reader-mood-quiz.bbb-moodquiz{
+      padding-top:52px;
+    }
+
+    .bbb-moodquiz__wrap{
+      overflow:visible;
+    }
+
+    .bbb-moodquiz__again{
+      min-height:34px;
+      padding:0 10px;
+      font-size:.62rem;
+      letter-spacing:.08em;
+    }
+
+    .bbb-moodquiz__topbar{
+      margin-bottom:24px;
+    }
+
+    .bbb-moodquiz__slide{
+      text-align:center;
+    }
+
+    .bbb-moodquiz__slide h3{
+      margin-inline:auto;
+    }
+
+    .bbb-moodquiz__answers button{
+      text-align:center;
+    }
+
+    .bbb-moodquiz__newsletter,
+    .bbb-moodquiz__books{
+      text-align:center;
+    }
+
+    .bbb-moodquiz__join,
+    .bbb-moodquiz__newsletter input,
+    .bbb-moodquiz__share,
+    .bbb-moodquiz__upsell{
+      width:100%;
+    }
+
+    .bbb-moodquiz__traits{
+      grid-template-columns:1fr;
+    }
+
+    .bbb-moodquiz__bookInner{
+      flex-direction:column;
+      align-items:center;
+      text-align:center;
+    }
+
+    .bbb-moodquiz__coverWrap{
+      flex:unset;
+      width:100%;
+      max-width:120px;
+      margin:0 auto;
+    }
+
+    .bbb-moodquiz__cover{
+      width:100%;
+    }
+
+    .bbb-moodquiz__bookLinks{
+      justify-content:center;
+    }
+  }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  var root = document.getElementById("reader-mood-quiz");
+  if(!root) return;
+
+  var track = root.querySelector("[data-mood-track]");
+  var slides = Array.prototype.slice.call(root.querySelectorAll(".bbb-moodquiz__slide"));
+  var answers = Array.prototype.slice.call(root.querySelectorAll("[data-mood-answer]"));
+  var startBtn = root.querySelector("[data-mood-start]");
+  var retakeBtns = root.querySelectorAll("[data-mood-retake]");
+  var resultEl = root.querySelector("[data-mood-result]");
+  var moodBooksEl = document.getElementById("mood-books-{{ section.id }}");
+  var currentSlide = 0;
+  var scores = {};
+  var moodBooks = [];
+
+  try {
+    moodBooks = moodBooksEl ? JSON.parse(moodBooksEl.textContent) : [];
+  } catch(err){
+    moodBooks = [];
+  }
+
+  var moods = {
+    sad: {
+      label: "sad girl, but make it romantic",
+      desc: "you want longing, ache, and the kind of romance that presses directly on the bruise before kissing it better.",
+      chips: ["yearning", "angst", "emotional damage"],
+      emojis: ["💔", "🥀", "🌧️"],
+      shelves: ["society classics", "morally gray lovers"],
+      tropes: ["angst", "slow burn", "second chance", "forbidden", "yearning", "grief"],
+      minDamage: 3,
+      minSpice: 1
+    },
+    chaos: {
+      label: "chaos with lip gloss",
+      desc: "you do not want peace. you want drama, bad decisions, and characters whose group chat should be used as evidence.",
+      chips: ["messy", "forbidden", "bad choices"],
+      emojis: ["🔥", "💋", "🖤"],
+      shelves: ["morally gray lovers", "extra dark", "five chili nights"],
+      tropes: ["mafia", "forbidden", "toxic", "revenge", "enemies", "dark romance"],
+      minSpice: 3,
+      minDarkness: 2
+    },
+    obsessed: {
+      label: "i need him obsessed",
+      desc: "you are looking for devotion with a warning label. protective, possessive, locked-in, absolutely not casual.",
+      chips: ["touch her and die", "possessive", "protective"],
+      emojis: ["🖤", "🔪", "💌"],
+      shelves: ["morally gray lovers", "extra dark"],
+      tropes: ["possessive", "obsessive", "touch her and die", "stalker", "protector", "forced proximity"],
+      minTension: 3,
+      minSpice: 2
+    },
+    comfort: {
+      label: "comfort read emergency",
+      desc: "you need a soft place to land, a man who knows how to act, and a plot that remembers you have been through enough.",
+      chips: ["soft", "caretaking", "low chaos"],
+      emojis: ["🤍", "☕", "🕯️"],
+      shelves: ["society classics"],
+      tropes: ["friends to lovers", "found family", "caretaking", "small town", "he falls first", "romcom"],
+      maxSpice: 3,
+      maxDarkness: 2
+    },
+    soft: {
+      label: "soft heart, sharp mouth",
+      desc: "you want banter, tension, and two people pretending they are not already emotionally compromised.",
+      chips: ["banter", "slow burn", "feelings under protest"],
+      emojis: ["💌", "✨", "🌙"],
+      shelves: ["society classics", "romantasy girls"],
+      tropes: ["enemies to lovers", "rivals", "banter", "slow burn", "grumpy sunshine", "forced proximity"],
+      minTension: 2,
+      maxDarkness: 3
+    },
+    dark: {
+      label: "burn it down and kiss me after",
+      desc: "you are not here for reasonable choices. you want danger, obsession, betrayal, and a man with questionable ethics.",
+      chips: ["danger", "morally gray", "high stakes"],
+      emojis: ["🗡️", "🖤", "🥀"],
+      shelves: ["extra dark", "morally gray lovers", "romantasy girls"],
+      tropes: ["dark romance", "villain", "revenge", "betrayal", "mafia", "enemies"],
+      minDarkness: 3,
+      minSpice: 3
+    },
+    spicy: {
+      label: "spicy spiral",
+      desc: "you want the tension loud, the stakes hot, and the plot very aware that everyone has chemistry.",
+      chips: ["high heat", "tension", "no early bedtime"],
+      emojis: ["🌶️", "🔥", "💋"],
+      shelves: ["five chili nights", "extra dark"],
+      tropes: ["forbidden", "why choose", "rivals", "dark romance", "forced proximity", "one bed"],
+      minSpice: 4,
+      minTension: 3
+    }
+  };
+
+  function normalize(value){
+    return String(value || "").toLowerCase().trim();
+  }
+
+  function escapeHtml(value){
+    return String(value || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;");
+  }
+
+  function goTo(index){
+    currentSlide = index;
+    track.style.transform = "translateX(-" + (index * 100) + "%)";
+  }
+
+  function resetQuiz(){
+    scores = {};
+    currentSlide = 0;
+    answers.forEach(function(btn){
+      btn.classList.remove("is-selected");
+      btn.disabled = false;
+    });
+    root.classList.remove("is-started");
+    root.classList.remove("is-result");
+    if(resultEl) resultEl.innerHTML = "";
+    goTo(0);
+  }
+
+  function getWinner(){
+    var keys = Object.keys(scores);
+    if(!keys.length) return "comfort";
+
+    return keys.reduce(function(best, key){
+      return scores[key] > scores[best] ? key : best;
+    }, keys[0]);
+  }
+
+  function cardScore(card, config){
+    var shelf = normalize(card && (card.shelf || card.dataset && card.dataset.shelf));
+    var tropes = normalize(card && (card.tropes || card.dataset && card.dataset.tropes));
+    var spice = parseInt(card && (card.spice || card.dataset && card.dataset.spice), 10) || 0;
+    var darkness = parseInt(card && (card.darkness || card.dataset && card.dataset.darkness), 10) || 0;
+    var damage = parseInt(card && (card.damage || card.dataset && card.dataset.damage), 10) || 0;
+    var tension = parseInt(card && (card.tension || card.dataset && card.dataset.tension), 10) || 0;
+    var score = 0;
+
+    (config.shelves || []).forEach(function(item){
+      if(shelf && shelf.indexOf(normalize(item)) !== -1) score += 5;
+    });
+
+    (config.tropes || []).forEach(function(item){
+      if(tropes && tropes.indexOf(normalize(item)) !== -1) score += 3;
+    });
+
+    if(config.minSpice && spice >= config.minSpice) score += 2;
+    if(config.maxSpice && spice > 0 && spice <= config.maxSpice) score += 2;
+    if(config.minDarkness && darkness >= config.minDarkness) score += 2;
+    if(config.maxDarkness && darkness > 0 && darkness <= config.maxDarkness) score += 2;
+    if(config.minDamage && damage >= config.minDamage) score += 2;
+    if(config.minTension && tension >= config.minTension) score += 2;
+
+    return score;
+  }
+
+  function pickBooks(config){
+    var ranked = moodBooks.map(function(card, index){
+      return {
+        card: card,
+        score: cardScore(card, config),
+        index: index
+      };
+    }).filter(function(item){
+      return item.score > 0;
+    }).sort(function(a, b){
+      if(b.score !== a.score) return b.score - a.score;
+      return a.index - b.index;
+    });
+
+    if(ranked.length < 3){
+      moodBooks.forEach(function(card, index){
+        if(ranked.some(function(item){ return item.card === card; })) return;
+        ranked.push({ card: card, score: 0, index: index });
+      });
+    }
+
+    return ranked.slice(0, 3).map(function(item){ return item.card; });
+  }
+
+  function spiceText(value){
+    var spice = parseInt(value, 10) || 0;
+    if(!spice) return "";
+    return "🌶".repeat(Math.min(spice, 5));
+  }
+
+  function coverEmojiRainHtml(emojis){
+    var fall = emojis && emojis.length ? emojis : ["✨"];
+    var html = "";
+    for(var i = 0; i < 14; i++){
+      html += '<span class="bbb-moodquiz__coverEmoji" style="--x:' + (8 + Math.random() * 84) + '%; --size:' + (11 + Math.random() * 9) + 'px; --dur:' + (3200 + Math.random() * 2400) + 'ms; --delay:-' + (Math.random() * 4200) + 'ms; --drift:' + ((Math.random() * 30) - 15) + 'px; --rot:' + ((Math.random() * 260) - 130) + 'deg;">' + escapeHtml(fall[i % fall.length]) + '</span>';
+    }
+    return html;
+  }
+
+  function getMoodShelf(){
+    try {
+      return JSON.parse(localStorage.getItem("sssMyShelf")) || [];
+    } catch(err){
+      return [];
+    }
+  }
+
+  function setMoodShelf(nextShelf){
+    localStorage.setItem("sssMyShelf", JSON.stringify(nextShelf));
+    document.dispatchEvent(new CustomEvent("sss:bookshelf-updated", {
+      detail: { count: Array.isArray(nextShelf) ? nextShelf.length : 0 }
+    }));
+  }
+
+  function moodBookData(card){
+    if(!card) return null;
+    return {
+      handle: card.handle || card.dataset && (card.dataset.handle || card.dataset.bkHandle) || "",
+      title: card.title || card.dataset && (card.dataset.title || card.dataset.bkTitle) || "",
+      author: card.author || card.dataset && (card.dataset.author || card.dataset.bkAuthor) || "",
+      cover: card.cover || card.dataset && (card.dataset.cover || card.dataset.bkCover) || "",
+      amazon: card.amazon || card.dataset && (card.dataset.amazon || card.dataset.bkAmazon) || "",
+      bookshop: card.bookshop || card.dataset && (card.dataset.bookshop || card.dataset.bkBookshop) || ""
+    };
+  }
+
+  function moodBookIsSaved(bookData){
+    if(!bookData || !bookData.title) return false;
+    return getMoodShelf().some(function(book){
+      return book.title === bookData.title || (bookData.handle && book.handle === bookData.handle);
+    });
+  }
+
+  function updateMoodHeart(heart, isSaved){
+    if(!heart) return;
+    heart.classList.toggle("is-saved", !!isSaved);
+
+    var icon = heart.querySelector("[data-heart-icon]");
+    var label = heart.querySelector("[data-heart-label]");
+
+    if(icon) icon.textContent = isSaved ? "♥" : "♡";
+    if(label) label.textContent = isSaved ? "saved" : "save";
+    heart.setAttribute("aria-label", isSaved ? "remove from your bookshelf" : "save to your bookshelf");
+  }
+
+  function syncMoodSourceHeart(handle, isSaved){
+    if(!handle) return;
+    updateMoodSaveButtons(handle, isSaved);
+  }
+
+  function toggleMoodShelfBook(bookData){
+    if(!bookData || !bookData.title) return false;
+    var shelf = getMoodShelf();
+    var exists = shelf.some(function(book){
+      return book.title === bookData.title || (bookData.handle && book.handle === bookData.handle);
+    });
+
+    if(exists){
+      shelf = shelf.filter(function(book){
+        return book.title !== bookData.title && (!bookData.handle || book.handle !== bookData.handle);
+      });
+    } else {
+      shelf.push(bookData);
+    }
+
+    setMoodShelf(shelf);
+    document.dispatchEvent(new CustomEvent(exists ? "bbb:shelf-unsaved" : "bbb:shelf-saved", {
+      detail: {
+        count: shelf.length,
+        bookTitle: bookData.title,
+        bookHandle: bookData.handle,
+        book: bookData,
+        source: "reader_mood_quiz"
+      }
+    }));
+
+    return !exists;
+  }
+
+  function bookHtml(card, index){
+    var cover = card.cover || "";
+    var title = card.title || "";
+    var author = card.author || "";
+    var handle = card.handle || "";
+    var amazon = card.amazon || "";
+    var bookshop = card.bookshop || "";
+    var tropes = card.tropesDisplay || card.tropes || "";
+    var mini = card.mini || "";
+    var spice = spiceText(card.spice);
+    var label = index === 0 ? "start here" : (index === 1 ? "go deeper" : "keep the mood going");
+
+    return `
+      <article class="bbb-moodquiz__bookItem${index === 0 ? " bbb-moodquiz__bookItem--match" : ""}"
+        data-bk-title="${escapeHtml(title)}"
+        data-bk-author="${escapeHtml(author)}"
+        data-bk-cover="${escapeHtml(cover)}"
+        data-bk-amazon="${escapeHtml(amazon)}"
+        data-bk-bookshop="${escapeHtml(bookshop)}"
+        data-bk-mini="${escapeHtml(mini)}"
+        data-bk-tropes="${escapeHtml(card.tropes || "")}"
+        data-bk-tropes-display="${escapeHtml(tropes)}"
+        data-bk-handle="${escapeHtml(handle)}">
+        <div class="bbb-moodquiz__bookInner">
+          <div class="bbb-moodquiz__coverWrap">
+            ${cover ? `<img class="bbb-moodquiz__cover" src="${escapeHtml(cover)}" alt="${escapeHtml(title)}" loading="lazy">` : `<div class="bbb-moodquiz__cover"></div>`}
+            ${spice ? `<div class="sss-lib__floatSpice">${spice}</div>` : ""}
+            <button class="sss-lib__heart bbb-moodquiz__heart" type="button" data-mood-book-save data-book-handle="${escapeHtml(handle)}" aria-label="save to shelf">
+              <span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♡</span>
+              <span class="sss-lib__heartLabel" data-heart-label>save</span>
+            </button>
+          </div>
+          <div class="bbb-moodquiz__bookContent">
+            <p class="bbb-moodquiz__bookMeta">${escapeHtml(label)}</p>
+            <h4 class="bbb-moodquiz__bookTitle">${escapeHtml(title)}</h4>
+            <p class="bbb-moodquiz__bookAuthor">${escapeHtml(author)}</p>
+            ${mini ? `<p class="bbb-moodquiz__bookDesc">${escapeHtml(mini)}</p>` : ""}
+            ${tropes ? `<p class="bbb-moodquiz__bookMeta">tropes: ${escapeHtml(tropes)}</p>` : ""}
+            <div class="bbb-moodquiz__bookLinks">
+              ${amazon ? `<a href="${escapeHtml(amazon)}" target="_blank" rel="noopener sponsored">amazon</a>` : ""}
+              ${bookshop ? `<a href="${escapeHtml(bookshop)}" target="_blank" rel="noopener sponsored">bookshop</a>` : ""}
+              <button type="button" data-mood-book-save data-book-handle="${escapeHtml(handle)}">save to shelf</button>
+            </div>
+          </div>
+        </div>
+      </article>
+    `;
+  }
+
+  function showResult(){
+    var winner = getWinner();
+    var config = moods[winner] || moods.comfort;
+    var books = pickBooks(config);
+    var traits = (config.chips || []).map(function(chip){
+      return `<li class="bbb-moodquiz__trait">${escapeHtml(chip)}</li>`;
+    }).join("");
+    var bookCards = books.map(bookHtml).join("");
+    var mainBook = books[0] || null;
+    var mainCover = mainBook ? (mainBook.cover || "") : "";
+    var coverRain = coverEmojiRainHtml(config.emojis || []);
+    var shareText = "my romance reading mood is " + config.label + ". take the quiz: " + window.location.href.split("#")[0] + "#reader-mood-quiz";
+    var upsellUrl = {{ section.settings.upsell_url | json }};
+
+    root.classList.add("is-result");
+
+    resultEl.innerHTML = `
+      <div class="bbb-moodquiz__resultHero">
+        <p class="bbb-moodquiz__resultKicker">your current reading mood is</p>
+        <h3 class="bbb-moodquiz__resultTitle">${escapeHtml(config.label)}</h3>
+        ${mainCover ? `<div class="bbb-moodquiz__matchCover"><img src="${escapeHtml(mainCover)}" alt="${escapeHtml(config.label)}" loading="lazy"><div class="bbb-moodquiz__coverRain" aria-hidden="true">${coverRain}</div></div>` : ""}
+      </div>
+      <ul class="bbb-moodquiz__traits">${traits}</ul>
+      <p class="bbb-moodquiz__resultDesc">${escapeHtml(config.desc)}</p>
+
+      <hr class="bbb-moodquiz__divider">
+
+      <div class="bbb-moodquiz__books">
+        <p class="bbb-moodquiz__booksKicker">your mood-matched romance stack</p>
+        <div class="bbb-moodquiz__bookList">${bookCards}</div>
+      </div>
+
+      <div class="bbb-moodquiz__newsletter">
+        <h4>save this mood before it changes</h4>
+        <p>get the sunday romance rec and more bookish little diagnoses from the smut &amp; sentiment society.</p>
+        <form action="/contact#contact_form" method="post" accept-charset="UTF-8">
+          <input type="hidden" name="form_type" value="customer">
+          <input type="hidden" name="utf8" value="✓">
+          <input type="hidden" name="contact[tags]" value="newsletter, mood quiz">
+          <input type="email" name="contact[email]" placeholder="your email" required>
+          <button class="bbb-moodquiz__join" type="submit">send me recs</button>
+        </form>
+      </div>
+
+      <div class="bbb-moodquiz__actions">
+        <button class="bbb-moodquiz__share" type="button" data-mood-share data-share-text="${escapeHtml(shareText)}">share result</button>
+        ${upsellUrl ? `<a class="bbb-moodquiz__upsell" href="${escapeHtml(upsellUrl)}">build my full mood list</a>` : ""}
+      </div>
+    `;
+
+    books.forEach(function(book){
+      var data = moodBookData(book);
+      if(data && data.handle) updateMoodSaveButtons(data.handle, moodBookIsSaved(data));
+    });
+
+    goTo(slides.length - 1);
+    startMoodRain(winner);
+  }
+
+  if(startBtn){
+    startBtn.addEventListener("click", function(){
+      root.classList.add("is-started");
+    });
+  }
+
+  retakeBtns.forEach(function(btn){
+    btn.addEventListener("click", resetQuiz);
+  });
+
+  answers.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      if(btn.classList.contains("is-selected")) return;
+      var mood = btn.dataset.mood;
+      scores[mood] = (scores[mood] || 0) + 1;
+      btn.classList.add("is-selected");
+      slides[currentSlide].querySelectorAll("[data-mood-answer]").forEach(function(answer){
+        answer.disabled = true;
+      });
+
+      window.setTimeout(function(){
+        var next = currentSlide + 1;
+        if(next >= slides.length - 1){
+          showResult();
+          return;
+        }
+        goTo(next);
+      }, 280);
+    });
+  });
+
+  root.addEventListener("click", function(e){
+    var saveBtn = e.target.closest("[data-mood-book-save]");
+    if(saveBtn){
+      e.stopPropagation();
+      var handle = saveBtn.dataset.bookHandle;
+      var resultCard = saveBtn.closest(".bbb-moodquiz__bookItem");
+      var sourceBook = handle ? moodBooks.find(function(book){ return book.handle === handle; }) : null;
+      var isSaved = toggleMoodShelfBook(moodBookData(sourceBook || resultCard));
+      updateMoodSaveButtons(handle, isSaved);
+      syncMoodSourceHeart(handle, isSaved);
+      return;
+    }
+
+    var bookInner = e.target.closest(".bbb-moodquiz__bookInner");
+    if(bookInner && !e.target.closest("a") && !e.target.closest("[data-mood-book-save]")){
+      var item = bookInner.closest(".bbb-moodquiz__bookItem");
+      var modal = document.querySelector(".sss-lib__modal:not([data-quiz-modal])");
+      if(item && modal){
+        var titleEl = modal.querySelector("[data-mtitle]");
+        var authorEl = modal.querySelector("[data-mauthor]");
+        var coverEl = modal.querySelector("[data-mcover]");
+        var amazonEl = modal.querySelector("[data-amazon-btn]");
+        var shopEl = modal.querySelector("[data-bookshop-btn]");
+        var miniEl = modal.querySelector("[data-mmini]");
+        var tropesEl = modal.querySelector("[data-mtropes]");
+        var seriesEl = modal.querySelector("[data-mseries]");
+        var seriesOrderEl = modal.querySelector("[data-mseries-order]");
+        var kuEl = modal.querySelector("[data-mku]");
+        var bfEl = modal.querySelector("[data-mboyfriend]");
+        var tensionEl = modal.querySelector("[data-mtension]");
+        var damageEl = modal.querySelector("[data-mdamage]");
+        var yearningEl = modal.querySelector("[data-myearning]");
+        var rereadEl = modal.querySelector("[data-mreread]");
+        var whyEl = modal.querySelector("[data-mwhy]");
+        var breakdownEl = modal.querySelector("[data-newsletter-btn]");
+        var modalHeart = modal.querySelector("[data-modal-heart]");
+
+        if(titleEl) titleEl.textContent = item.dataset.bkTitle || "";
+        if(authorEl) authorEl.textContent = "by " + (item.dataset.bkAuthor || "");
+        if(coverEl) coverEl.src = item.dataset.bkCover || "";
+        if(amazonEl) amazonEl.href = item.dataset.bkAmazon || "#";
+        if(shopEl) shopEl.href = item.dataset.bkBookshop || "#";
+        if(miniEl) miniEl.textContent = item.dataset.bkMini || "";
+        if(tropesEl){
+          var modalTropes = item.dataset.bkTropesDisplay || item.dataset.bkTropes || "";
+          tropesEl.textContent = modalTropes ? "tropes: " + modalTropes : "";
+        }
+        [seriesEl, seriesOrderEl, kuEl, bfEl, tensionEl, damageEl, yearningEl, rereadEl, whyEl].forEach(function(el){
+          if(el) el.textContent = "";
+        });
+        if(breakdownEl){
+          var handle = item.dataset.bkHandle || "";
+          breakdownEl.href = handle ? "/pages/library?book=" + encodeURIComponent(handle) : "#";
+        }
+        modal.dataset.quizBookHandle = item.dataset.bkHandle || "";
+        modal.dataset.quizBookTitle = item.dataset.bkTitle || "";
+        modal.dataset.quizBookAuthor = item.dataset.bkAuthor || "";
+        modal.dataset.quizBookCover = item.dataset.bkCover || "";
+        modal.dataset.quizBookAmazon = item.dataset.bkAmazon || "";
+        modal.dataset.quizBookBookshop = item.dataset.bkBookshop || "";
+        updateMoodHeart(modalHeart, moodBookIsSaved(moodBookData(item)));
+        modal.hidden = false;
+      }
+      return;
+    }
+
+    var shareBtn = e.target.closest("[data-mood-share]");
+    if(!shareBtn) return;
+    var text = shareBtn.dataset.shareText || window.location.href;
+    var url = window.location.href.split("#")[0] + "#reader-mood-quiz";
+
+    if(navigator.share){
+      navigator.share({
+        title: "what should you read based on your mood?",
+        text: text,
+        url: url
+      }).catch(function(){});
+      return;
+    }
+
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){
+        var old = shareBtn.textContent;
+        shareBtn.textContent = "copied";
+        window.setTimeout(function(){ shareBtn.textContent = old; }, 1600);
+      });
+    }
+  });
+
+  document.querySelectorAll("[data-close]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var modal = document.querySelector(".sss-lib__modal");
+      if(modal) modal.hidden = true;
+    });
+  });
+
+  document.addEventListener("click", function(e){
+    var modalHeart = e.target.closest("[data-modal-heart]");
+    if(!modalHeart) return;
+    var modal = modalHeart.closest(".sss-lib__modal");
+    if(!modal || !modal.dataset.quizBookTitle) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    var bookData = {
+      handle: modal.dataset.quizBookHandle || "",
+      title: modal.dataset.quizBookTitle || "",
+      author: modal.dataset.quizBookAuthor || "",
+      cover: modal.dataset.quizBookCover || "",
+      amazon: modal.dataset.quizBookAmazon || "",
+      bookshop: modal.dataset.quizBookBookshop || ""
+    };
+    var isSaved = toggleMoodShelfBook(bookData);
+    updateMoodHeart(modalHeart, isSaved);
+    updateMoodSaveButtons(bookData.handle, isSaved);
+    syncMoodSourceHeart(bookData.handle, isSaved);
+  });
+
+  function updateMoodSaveButtons(handle, isSaved){
+    root.querySelectorAll("[data-mood-book-save]").forEach(function(btn){
+      if(btn.dataset.bookHandle !== handle) return;
+      btn.classList.toggle("is-saved", !!isSaved);
+
+      var icon = btn.querySelector("[data-heart-icon]");
+      var label = btn.querySelector("[data-heart-label]");
+
+      if(icon) icon.textContent = isSaved ? "♥" : "♡";
+      if(label) label.textContent = isSaved ? "saved" : "save";
+      if(!icon && !label) btn.textContent = isSaved ? "saved" : "save to shelf";
+    });
+  }
+
+  function startMoodRain(mood){
+    var existingLayer = document.querySelector(".bbb-moodquiz__confettiLayer");
+    if(existingLayer) existingLayer.remove();
+
+    var layer = document.createElement("div");
+    layer.className = "bbb-moodquiz__confettiLayer";
+    layer.setAttribute("aria-hidden", "true");
+    document.body.appendChild(layer);
+
+    var config = moods[mood] || moods.comfort;
+    var emojis = config.emojis || ["✨", "💌", "🖤"];
+
+    for(var i = 0; i < 48; i++){
+      var el = document.createElement("span");
+      el.className = "bbb-moodquiz__confetti";
+      el.textContent = emojis[i % emojis.length];
+      el.style.left = Math.random() * 100 + "vw";
+      el.style.setProperty("--size", (14 + Math.random() * 18) + "px");
+      el.style.setProperty("--dur", (7200 + Math.random() * 5000) + "ms");
+      el.style.setProperty("--drift", ((Math.random() * 180) - 90) + "px");
+      el.style.setProperty("--rot", ((Math.random() * 720) - 360) + "deg");
+      el.style.animationDelay = (Math.random() * 2200) + "ms";
+      layer.appendChild(el);
+    }
+
+    window.setTimeout(function(){
+      if(layer && layer.parentNode) layer.remove();
+    }, 13200);
+  }
+});
+</script>
+
+{% schema %}
+{
+  "name": "Reader mood quiz",
+  "settings": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Kicker",
+      "default": "mood quiz"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "what should you read based on your mood?"
+    },
+    {
+      "type": "textarea",
+      "id": "subtext",
+      "label": "Subtext",
+      "default": "answer like a mood check-in, not a book quiz. i’ll match your current emotional state to romance books from the library."
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "CTA label",
+      "default": "diagnose my mood"
+    },
+    {
+      "type": "text",
+      "id": "tagline",
+      "label": "Tagline",
+      "default": "zero romance knowledge required. feelings, unfortunately, required."
+    },
+    {
+      "type": "url",
+      "id": "upsell_url",
+      "label": "Full mood reading list product URL"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Reader mood quiz"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,124 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "main-page",
+      "disabled": true,
+      "settings": {
+        "padding_top": 28,
+        "padding_bottom": 28
+      }
+    },
+    "sss_folder_tabs_pWadHt": {
+      "type": "sss-folder-tabs",
+      "blocks": {
+        "tab_WmVD36": {
+          "type": "tab",
+          "name": "main page",
+          "settings": {
+            "label": "main page",
+            "sub": "start here",
+            "icon": "📁",
+            "url": "shopify://pages/society-library"
+          }
+        },
+        "tab_UkGVGp": {
+          "type": "tab",
+          "name": "library",
+          "settings": {
+            "label": "library",
+            "sub": "books to read",
+            "icon": "📚",
+            "url": "shopify://pages/sss-library-page"
+          }
+        },
+        "tab_madeForYou": {
+          "type": "tab",
+          "name": "made for you",
+          "settings": {
+            "label": "made for you",
+            "sub": "your reader profile + recs",
+            "icon": "✨",
+            "url": "shopify://pages/sss-made-for-you"
+          }
+        },
+        "tab_pCjB84": {
+          "type": "tab",
+          "name": "printable inserts",
+          "settings": {
+            "label": "printable inserts",
+            "sub": "all printable drops + sizes",
+            "icon": "🗂️",
+            "url": "shopify://pages/sss-printable-kindle-inserts"
+          }
+        },
+        "tab_wgLGR7": {
+          "type": "tab",
+          "name": "bookish templates",
+          "settings": {
+            "label": "bookish templates",
+            "sub": "canva templates + tutorials",
+            "icon": "⌨️",
+            "url": "shopify://pages/sss-canva-templates"
+          }
+        },
+        "tab_fAPjtH": {
+          "type": "tab",
+          "settings": {
+            "label": "free downloads",
+            "sub": "little gifts. no gatekeeping.",
+            "icon": "🎁",
+            "url": ""
+          }
+        },
+        "tab_nXBccW": {
+          "type": "tab",
+          "name": "quote library",
+          "settings": {
+            "label": "quote library",
+            "sub": "lines that ruined me (in a good way)",
+            "icon": "\"",
+            "url": "shopify://pages/sss-quote-wall"
+          }
+        }
+      },
+      "block_order": [
+        "tab_WmVD36",
+        "tab_UkGVGp",
+        "tab_madeForYou",
+        "tab_pCjB84",
+        "tab_wgLGR7",
+        "tab_fAPjtH",
+        "tab_nXBccW"
+      ],
+      "name": "sss folder tabs",
+      "settings": {
+        "kicker": "library files",
+        "hint": "pick a folder. dive in."
+      }
+    },
+    "sss_printable_library_WjGawe": {
+      "type": "sss-printable-library",
+      "name": "sss printable library",
+      "settings": {
+        "kicker": "printable inserts",
+        "title": "open a drop. pick a design. download your size.",
+        "subtext": "click a file to preview. then choose your kindle size.",
+        "open_first_drop": false
+      }
+    }
+  },
+  "order": [
+    "main",
+    "sss_folder_tabs_pWadHt",
+    "sss_printable_library_WjGawe"
+  ]
+}

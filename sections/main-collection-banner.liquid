@@ -1,0 +1,420 @@
+{% comment %}theme-check-disable ImgLazyLoading{% endcomment %}
+{{ 'component-collection-hero.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  {%- assign collection_handle_downcase = collection.handle | downcase -%}
+  {%- assign collection_title_downcase = collection.title | downcase -%}
+  {%- assign is_printable_insert_collection = false -%}
+  {%- assign is_physical_insert_collection = false -%}
+  {%- if collection_handle_downcase contains 'physical'
+    or collection_handle_downcase contains 'printed'
+    or collection_handle_downcase contains 'shipped'
+    or collection_title_downcase contains 'physical'
+    or collection_title_downcase contains 'printed'
+    or collection_title_downcase contains 'shipped' -%}
+    {%- assign is_physical_insert_collection = true -%}
+  {%- endif -%}
+  {%- if collection_handle_downcase contains 'printable-kindle'
+    or collection_handle_downcase contains 'kindle-insert'
+    or collection_handle_downcase contains 'spring'
+    or collection_handle_downcase contains 'summer'
+    or collection_handle_downcase contains 'fall'
+    or collection_handle_downcase contains 'autumn'
+    or collection_handle_downcase contains 'winter'
+    or collection_title_downcase contains 'printable kindle inserts'
+    or collection_title_downcase contains 'kindle insert'
+    or collection_title_downcase contains 'spring collection'
+    or collection_title_downcase contains 'summer collection'
+    or collection_title_downcase contains 'fall collection'
+    or collection_title_downcase contains 'autumn collection'
+    or collection_title_downcase contains 'winter collection' -%}
+    {%- assign is_printable_insert_collection = true -%}
+  {%- endif -%}
+  {%- if collection.all_tags contains 'Printable' -%}
+    {%- assign is_printable_insert_collection = true -%}
+  {%- endif -%}
+  {%- if is_physical_insert_collection -%}
+    {%- assign is_printable_insert_collection = false -%}
+  {%- endif -%}
+
+  @media screen and (max-width: 749px) {
+    .collection-hero--with-image .collection-hero__inner {
+      padding-bottom: calc({{ settings.media_shadow_vertical_offset | at_least: 0 }}px + 2rem);
+    }
+  }
+
+  #shopify-section-{{ section.id }} .collection-hero {
+    position: relative;
+    padding: 1.8rem 0 0.8rem;
+    overflow: hidden;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0)),
+      transparent;
+  }
+
+  #shopify-section-{{ section.id }} .collection-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.03), transparent 58%),
+      radial-gradient(circle at 14% 22%, rgba(255, 194, 224, 0.08), transparent 24%),
+      radial-gradient(circle at 84% 18%, rgba(212, 244, 255, 0.05), transparent 20%);
+    opacity: 0.9;
+  }
+
+  #shopify-section-{{ section.id }} .collection-hero__inner {
+    position: relative;
+    z-index: 1;
+    align-items: start;
+    gap: 2.8rem;
+    max-width: 112rem;
+    margin-inline: auto;
+    padding: 0;
+  }
+
+  #shopify-section-{{ section.id }} .collection-hero__text-wrapper {
+    width: 100%;
+    max-width: 54rem;
+    padding: 2.25rem 0 1.1rem clamp(0.85rem, 1.8vw, 1.6rem);
+  }
+
+  #shopify-section-{{ section.id }} .collection-hero__title {
+    margin: 0;
+    font-size: clamp(3.2rem, 6vw, 6.4rem);
+    line-height: 0.94;
+    letter-spacing: -0.03em;
+    text-transform: lowercase;
+  }
+
+  #shopify-section-{{ section.id }} .collection-hero__title + .collection-hero__description,
+  #shopify-section-{{ section.id }} .collection-hero__description {
+    margin-top: 1rem;
+    margin-bottom: 0;
+    max-width: 42rem;
+    color: rgba(255,255,255,0.76);
+    font-size: clamp(1.5rem, 1.9vw, 1.9rem);
+    line-height: 1.58;
+  }
+
+  #shopify-section-{{ section.id }} .collection-hero__description p {
+    margin: 0;
+  }
+
+  #shopify-section-{{ section.id }} .collection-hero__vaultCta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    margin-top: 1.2rem;
+    padding: 0.95rem 1.35rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 183, 220, 0.28);
+    background: rgba(239, 137, 191, 0.12);
+    box-shadow: 0 0 0 1px rgba(255, 161, 210, 0.04);
+    color: #ef89bf;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+  }
+
+  #shopify-section-{{ section.id }} .collection-hero__vaultCta:hover {
+    background: rgba(239, 137, 191, 0.18);
+    border-color: rgba(255, 196, 226, 0.4);
+    transform: translateY(-1px);
+  }
+
+  {%- if is_printable_insert_collection -%}
+    #shopify-section-{{ section.id }} .collection-hero__inner {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(280px, 320px);
+      gap: clamp(1.4rem, 3vw, 2.4rem);
+      align-items: start;
+    }
+
+    #shopify-section-{{ section.id }} .collection-hero__promo {
+      justify-self: end;
+      width: 100%;
+      max-width: 320px;
+      padding: 1.45rem 1.2rem 1.2rem;
+      border-radius: 28px;
+      border: 1px solid rgba(255, 183, 220, 0.26);
+      background:
+        radial-gradient(circle at 18% 18%, rgba(255, 197, 225, 0.14), transparent 36%),
+        radial-gradient(circle at 82% 20%, rgba(255, 223, 188, 0.06), transparent 28%),
+        linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02));
+      box-shadow:
+        0 0 0 1px rgba(255, 161, 210, 0.06),
+        0 0 38px rgba(255, 133, 199, 0.09);
+    }
+
+    #shopify-section-{{ section.id }} .collection-hero__promoTitle {
+      margin: 0;
+      font-size: 1.95rem;
+      line-height: 0.98;
+      text-transform: lowercase;
+      color: #ef89bf;
+    }
+
+    #shopify-section-{{ section.id }} .collection-hero__promoSub {
+      margin: 0.7rem 0 0;
+      color: rgba(255,255,255,0.72);
+      font-size: 1.08rem;
+      line-height: 1.52;
+    }
+
+    #shopify-section-{{ section.id }} .collection-hero__promoChooser {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.7rem;
+      margin-top: 1rem;
+    }
+
+    #shopify-section-{{ section.id }} .collection-hero__promoSelect {
+      width: 100%;
+      min-height: 56px;
+      padding: 0 3rem 0 1.15rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 183, 220, 0.22);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018)),
+        rgba(11, 11, 11, 0.82);
+      color: rgb(var(--color-foreground));
+      font-size: 1.08rem;
+      font-weight: 700;
+      letter-spacing: 0.015em;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, #ef89bf 50%),
+        linear-gradient(135deg, #ef89bf 50%, transparent 50%);
+      background-position:
+        calc(100% - 22px) calc(50% - 3px),
+        calc(100% - 16px) calc(50% - 3px);
+      background-size: 6px 6px, 6px 6px;
+      background-repeat: no-repeat;
+      transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+    }
+
+    #shopify-section-{{ section.id }} .collection-hero__promoSelect:hover,
+    #shopify-section-{{ section.id }} .collection-hero__promoSelect:focus {
+      border-color: rgba(255, 198, 228, 0.42);
+      box-shadow: 0 0 0 3px rgba(239, 137, 191, 0.08);
+      outline: none;
+    }
+
+    #shopify-section-{{ section.id }} .collection-hero__promoButton {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 56px;
+      padding: 1rem 1.25rem;
+      border-radius: 999px;
+      background: #ef89bf;
+      color: #1a1116;
+      font-size: 0.98rem;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: transform 180ms ease, filter 180ms ease;
+    }
+
+    #shopify-section-{{ section.id }} .collection-hero__promoButton:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.04);
+    }
+
+  {%- endif -%}
+
+  @media screen and (max-width: 989px) {
+    #shopify-section-{{ section.id }} .collection-hero {
+      padding-top: 1.1rem;
+    }
+
+    #shopify-section-{{ section.id }} .collection-hero__inner {
+      gap: 1.35rem;
+    }
+
+    #shopify-section-{{ section.id }} .collection-hero__text-wrapper {
+      padding: 1.5rem 0 0.4rem;
+    }
+
+    #shopify-section-{{ section.id }} .collection-hero__title {
+      font-size: clamp(2.5rem, 10vw, 4rem);
+    }
+
+    #shopify-section-{{ section.id }} .collection-hero__title + .collection-hero__description,
+    #shopify-section-{{ section.id }} .collection-hero__description {
+      font-size: 1.15rem;
+      line-height: 1.6;
+      max-width: none;
+    }
+
+    {%- if is_printable_insert_collection -%}
+      #shopify-section-{{ section.id }} .collection-hero__vaultCta {
+        width: 100%;
+      }
+
+      #shopify-section-{{ section.id }} .collection-hero__inner {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+      }
+
+      #shopify-section-{{ section.id }} .collection-hero__promo {
+        justify-self: stretch;
+        max-width: none;
+        padding: 1.35rem 1rem 1rem;
+      }
+
+      #shopify-section-{{ section.id }} .collection-hero__promoTitle {
+        font-size: 1.85rem;
+      }
+
+      #shopify-section-{{ section.id }} .collection-hero__promoSub {
+        font-size: 1.08rem;
+      }
+
+      #shopify-section-{{ section.id }} .collection-hero__promoSelect,
+      #shopify-section-{{ section.id }} .collection-hero__promoButton {
+        min-height: 54px;
+        font-size: 1rem;
+      }
+    {%- endif -%}
+  }
+{%- endstyle -%}
+
+<div class="collection-hero{% if section.settings.show_collection_image and collection.image %} collection-hero--with-image{% endif %} color-{{ section.settings.color_scheme }} gradient">
+  <div class="collection-hero__inner page-width">
+    <div class="collection-hero__text-wrapper">
+      <h1 class="collection-hero__title">
+        <span class="visually-hidden">{{ 'sections.collection_template.title' | t }}: </span>
+        {{- collection.title | escape -}}
+      </h1>
+
+      {%- if section.settings.show_collection_description -%}
+        <div class="collection-hero__description rte">{{ collection.description }}</div>
+      {%- endif -%}
+
+      {%- if is_printable_insert_collection -%}
+        <a class="collection-hero__vaultCta" href="/pages/shop">unlock the printable insert vault</a>
+      {%- endif -%}
+    </div>
+
+    {%- if is_printable_insert_collection -%}
+      <aside class="collection-hero__promo" aria-label="printable insert sample downloads">
+        <h2 class="collection-hero__promoTitle">try before you buy</h2>
+        <p class="collection-hero__promoSub">pick your kindle size to see what you get and if it fits.</p>
+        <div class="collection-hero__promoChooser">
+          <select class="collection-hero__promoSelect" id="PrintablePromoSize-{{ section.id }}">
+            <option value="{{ '6Inch_Printable_Test.pdf' | asset_url }}">6 inch kindle</option>
+            <option value="{{ '10thGen_Printable_Test.pdf' | asset_url }}">10th gen kindle</option>
+            <option value="{{ '11thGen_Printable_Test.pdf' | asset_url }}">11th gen kindle</option>
+            <option value="{{ '12thGen_Printable_Test.pdf' | asset_url }}">12th gen kindle</option>
+          </select>
+          <a
+            class="collection-hero__promoButton"
+            id="PrintablePromoLink-{{ section.id }}"
+            href="{{ '6Inch_Printable_Test.pdf' | asset_url }}"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-printable-download
+            data-printable-source="collection_page_sample_pdf"
+            data-printable-product="{{ collection.title | escape }}"
+            data-printable-label="6 inch kindle"
+            data-printable-url="{{ '6Inch_Printable_Test.pdf' | asset_url }}"
+          >
+            open sample pdf →
+          </a>
+        </div>
+      </aside>
+    {%- endif -%}
+
+    {%- if section.settings.show_collection_image and collection.image -%}
+      <div class="collection-hero__image-container media gradient">
+        <img
+          srcset="
+            {%- if collection.image.width >= 165 -%}{{ collection.image | image_url: width: 165 }} 165w,{%- endif -%}
+            {%- if collection.image.width >= 360 -%}{{ collection.image | image_url: width: 360 }} 360w,{%- endif -%}
+            {%- if collection.image.width >= 535 -%}{{ collection.image | image_url: width: 535 }} 535w,{%- endif -%}
+            {%- if collection.image.width >= 750 -%}{{ collection.image | image_url: width: 750 }} 750w,{%- endif -%}
+            {%- if collection.image.width >= 1070 -%}{{ collection.image | image_url: width: 1070 }} 1070w,{%- endif -%}
+            {%- if collection.image.width >= 1500 -%}{{ collection.image | image_url: width: 1500 }} 1500w,{%- endif -%}
+            {{ collection.image | image_url }} {{ collection.image.width }}w
+          "
+          src="{{ collection.image | image_url: width: 750 }}"
+          sizes="(min-width: {{ settings.page_width }}px) {{ settings.page_width | minus: 100 | divided_by: 2 }}px, (min-width: 750px) calc(50vw - 130px), calc(50vw - 55px)"
+          alt="{{ collection.image.alt | escape }}"
+          width="{{ collection.image.width }}"
+          height="{{ collection.image.height }}"
+        >
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+{%- if is_printable_insert_collection -%}
+  <script>
+    (() => {
+      const select = document.getElementById('PrintablePromoSize-{{ section.id }}');
+      const link = document.getElementById('PrintablePromoLink-{{ section.id }}');
+      if (!select || !link) return;
+      const syncLink = () => {
+        link.href = select.value;
+        link.dataset.printableUrl = select.value;
+        link.dataset.printableLabel = select.options[select.selectedIndex]?.textContent || 'sample pdf';
+      };
+      select.addEventListener('change', syncLink);
+      link.addEventListener('click', () => {
+        if (typeof trackSiteEvent !== 'function') return;
+        trackSiteEvent('printable_download_clicked', {
+          uiLocation: 'collection_sample_pdf',
+          metadata: {
+            printable: 'trial_kindle_insert_sample',
+            product: {{ collection.title | json }},
+            label: link.dataset.printableLabel || link.textContent.trim(),
+            url: link.dataset.printableUrl || link.href,
+            source: 'collection_page_sample_pdf',
+            link_text: link.textContent.trim()
+          }
+        });
+      });
+      syncLink();
+    })();
+  </script>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:sections.main-collection-banner.name",
+  "class": "section",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "t:sections.main-collection-banner.settings.paragraph.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_collection_description",
+      "default": true,
+      "label": "t:sections.main-collection-banner.settings.show_collection_description.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_collection_image",
+      "default": false,
+      "label": "t:sections.main-collection-banner.settings.show_collection_image.label"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "default": "scheme-1"
+    }
+  ]
+}
+{% endschema %}

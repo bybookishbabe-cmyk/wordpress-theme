@@ -1,0 +1,33 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-page",
+      "disabled": true,
+      "settings": {
+        "padding_top": 28,
+        "padding_bottom": 28
+      }
+    },
+    "newsletter_submissions": {
+      "type": "newsletter-submissions-page",
+      "name": "Newsletter submissions page",
+      "settings": {
+        "kicker": "the sunday letter",
+        "heading": "get featured in the sunday letter",
+        "subtext": "every sunday i feature one reader. got a hot take, a quote that lives rent free in your head, or a book you'd recommend to everyone you like? submit it below.",
+        "submission_types": "bookish hot take\nquote i can't stop thinking about\nbook recommendation\nunpopular opinion\nmain character take",
+        "submit_label": "submit to the sunday letter →",
+        "preview_label": "newsletter preview — how the featured section looks on sunday",
+        "preview_heading": "this week's featured reader",
+        "preview_cta": "want to be featured next week? submit yours →",
+        "table_name": "newsletter_submissions",
+        "supabase_url": "https://efmrfxsmgbeikfgtrxjv.supabase.co",
+        "supabase_key": "sb_publishable_iwjASe3QwixdDvHovaXZBQ_gbXU0Utk"
+      }
+    }
+  },
+  "order": [
+    "main",
+    "newsletter_submissions"
+  ]
+}

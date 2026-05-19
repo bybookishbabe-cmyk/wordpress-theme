@@ -1,0 +1,365 @@
+{% comment %}
+  sss-library-sneak-peek.liquid
+  Small trending library teaser for editorial pages.
+  Uses site_events/book_saves via Supabase on the client, with a simple fallback.
+{% endcomment %}
+
+{% assign books = shop.metaobjects.sss_library.values %}
+
+<section class="sss-libpeek" data-sss-lib="society" data-libpeek>
+  <div class="sss-libpeek__wrap">
+    {% assign library_href = section.settings.library_url %}
+    {% if library_href == blank %}
+      {% assign library_href = '/pages/library' %}
+    {% endif %}
+
+    <div class="sss-libpeek__head">
+      <p class="sss-libpeek__kicker">{{ section.settings.kicker }}</p>
+      <h2 class="sss-libpeek__title">{{ section.settings.title }}</h2>
+      {% if section.settings.subtext != blank %}
+        <p class="sss-libpeek__sub">{{ section.settings.subtext }}</p>
+      {% endif %}
+    </div>
+
+    <div class="sss-libpeek__row" data-libpeek-row>
+      {% assign preview_count = 0 %}
+      {% assign preview_rendered_keys = '' %}
+      {% for book in books %}
+        {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+        {% assign is_visible_value = is_visible | strip %}
+        {% unless is_visible_value == 'true' %}
+          {% continue %}
+        {% endunless %}
+        {% assign book_title_key = book.title.value | default: book.title | append: '-' | append: book.author.value | handleize %}
+        {% assign book_key_token = '|' | append: book_title_key | append: '|' %}
+        {% if preview_rendered_keys contains book_key_token %}
+          {% continue %}
+        {% endif %}
+        {% if preview_count >= 3 %}
+          {% break %}
+        {% endif %}
+        {% assign preview_rendered_keys = preview_rendered_keys | append: book_key_token %}
+        {% assign preview_count = preview_count | plus: 1 %}
+        <div class="sss-libpeek__item">
+          {% render 'sss-book-card', book: book, mini: true %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="sss-libpeek__cta">
+      <a href="{{ library_href }}">check out the library</a>
+    </div>
+
+    <div class="sss-libpeek__source" hidden aria-hidden="true">
+      {% assign source_rendered_keys = '' %}
+      {% for book in books %}
+        {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+        {% assign is_visible_value = is_visible | strip %}
+        {% unless is_visible_value == 'true' %}
+          {% continue %}
+        {% endunless %}
+        {% assign book_title_key = book.title.value | default: book.title | append: '-' | append: book.author.value | handleize %}
+        {% assign book_key_token = '|' | append: book_title_key | append: '|' %}
+        {% if source_rendered_keys contains book_key_token %}
+          {% continue %}
+        {% endif %}
+        {% assign source_rendered_keys = source_rendered_keys | append: book_key_token %}
+        {% render 'sss-book-card', book: book, mini: true %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<style>
+  .sss-libpeek{
+    background:#0b0b0b;
+    color:#f6f6f6;
+    padding:18px 12px 28px;
+    font-family:"Libre Baskerville", Georgia, serif;
+    position:relative;
+    overflow:hidden;
+  }
+  .sss-libpeek:before{
+    content:"";
+    position:absolute;
+    inset:-40px;
+    pointer-events:none;
+    background:
+      radial-gradient(900px 520px at 50% 90px, rgba(255,255,255,.08), transparent 70%),
+      repeating-linear-gradient(to bottom, rgba(255,255,255,.03), rgba(255,255,255,.03) 1px, transparent 1px, transparent 26px);
+    opacity:.55;
+  }
+  .sss-libpeek__wrap{
+    max-width:980px;
+    margin:0 auto;
+    padding:0 8px;
+    position:relative;
+    z-index:1;
+  }
+  .sss-libpeek__head{
+    max-width:720px;
+  }
+  .sss-libpeek__kicker{
+    margin:0;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:#d9d1d7;
+  }
+  .sss-libpeek__title{
+    margin:6px 0 0;
+    font-size:24px;
+    line-height:1.2;
+    font-weight:400;
+    text-transform:lowercase;
+  }
+  .sss-libpeek__sub{
+    margin:10px 0 0;
+    font-size:14px;
+    line-height:1.7;
+    color:rgba(246,246,246,.76);
+  }
+  .sss-libpeek__row{
+    margin-top:18px;
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:16px;
+  }
+  .sss-libpeek__item{
+    opacity:0;
+    transform:translateY(24px) scale(.98);
+    transition:
+      opacity .95s ease,
+      transform 1.05s cubic-bezier(.2,.85,.28,1);
+  }
+  .sss-libpeek__item.is-in{
+    opacity:1;
+    transform:translateY(0) scale(1);
+  }
+  .sss-libpeek__item.is-dazzle{
+    animation:sssLibPeekDazzle 3.8s ease-in-out 1.25s infinite;
+    transform-origin:50% 92%;
+  }
+  @keyframes sssLibPeekDazzle{
+    0%, 84%, 100%{ transform:translateY(0) scale(1) rotate(0deg); }
+    88%{ transform:translateY(-3px) scale(1.018) rotate(-1deg); }
+    91%{ transform:translateY(0) scale(1.012) rotate(.9deg); }
+    95%{ transform:translateY(-1px) scale(1.008) rotate(-.45deg); }
+  }
+  .sss-libpeek__cta{
+    margin-top:18px;
+  }
+  .sss-libpeek__cta a{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    text-decoration:none;
+    color:#ff8ac7;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+  }
+  .sss-libpeek__cta a:after{
+    content:"→";
+  }
+  .sss-libpeek__source{
+    display:none;
+  }
+  @media (max-width: 860px){
+    .sss-libpeek{
+      overflow:hidden;
+    }
+
+    .sss-libpeek__row{
+      display:flex;
+      gap:14px;
+      overflow-x:auto;
+      overflow-y:hidden;
+      margin-left:-8px;
+      margin-right:-8px;
+      padding:2px 8px 16px;
+      scroll-snap-type:x mandatory;
+      -webkit-overflow-scrolling:touch;
+    }
+
+    .sss-libpeek__row::-webkit-scrollbar{
+      display:none;
+    }
+
+    .sss-libpeek__item{
+      flex:0 0 min(72vw, 260px);
+      scroll-snap-align:start;
+    }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .sss-libpeek__item{
+      opacity:1 !important;
+      transform:none !important;
+      transition:none !important;
+    }
+    .sss-libpeek__item.is-dazzle{
+      animation:none !important;
+    }
+  }
+</style>
+
+<script>
+(function(){
+  async function loadLibrarySneakPeeks(){
+    var roots = document.querySelectorAll('[data-libpeek]');
+    if (!roots.length) return;
+
+    roots.forEach(async function(root){
+      if (root.__peekBound) return;
+      root.__peekBound = true;
+
+      var row = root.querySelector('[data-libpeek-row]');
+      var source = root.querySelector('.sss-libpeek__source');
+      if (!row || !source) return;
+
+      var sourceCards = Array.from(source.querySelectorAll('.sss-lib__book'));
+      if (!sourceCards.length) return;
+
+      var bookMap = {};
+      var uniqueCards = [];
+      var seenCards = {};
+      function normalizeKey(value){
+        return (value || '').trim().toLowerCase();
+      }
+      function cardIdentity(card){
+        return normalizeKey(card.dataset.title) + '|' + normalizeKey(card.dataset.author);
+      }
+
+      sourceCards.forEach(function(card){
+        var identity = cardIdentity(card);
+        if (identity && seenCards[identity]) return;
+        if (identity) seenCards[identity] = true;
+        uniqueCards.push(card);
+
+        var handle = normalizeKey(card.dataset.handle);
+        var title = normalizeKey(card.dataset.title);
+        if (handle && !bookMap[handle]) bookMap[handle] = card;
+        if (title && !bookMap[title]) bookMap[title] = card;
+      });
+
+      var selectedCards = [];
+      var selectedIds = {};
+
+      function addSelectedCard(card){
+        if (!card) return;
+        var identity = cardIdentity(card);
+        if (!identity || selectedIds[identity]) return;
+        selectedIds[identity] = true;
+        selectedCards.push(card);
+      }
+
+      try{
+        if (typeof supabaseClient !== 'undefined'){
+          var savesResp = await supabaseClient
+            .from('book_saves_recent_rollup')
+            .select('book_key,book_title,saves_last_30_days,last_saved_at')
+            .gt('saves_last_30_days', 0)
+            .order('saves_last_30_days', { ascending: false })
+            .order('last_saved_at', { ascending: false })
+            .limit(12);
+
+          if (!savesResp.error && Array.isArray(savesResp.data)){
+            rankedKeys = savesResp.data
+            .map(function(item){
+              return (
+                (item.book_key || '').trim().toLowerCase() ||
+                (item.book_title || '').trim().toLowerCase()
+              );
+            })
+            .filter(function(key){ return !!bookMap[key]; })
+            .forEach(function(key){
+              addSelectedCard(bookMap[key]);
+            });
+          }
+        }
+      } catch(err){
+        console.log('Library sneak peek load failed', err);
+      }
+
+      if (selectedCards.length < 3){
+        uniqueCards.forEach(function(card){
+          if (selectedCards.length < 3) addSelectedCard(card);
+        });
+      }
+
+      selectedCards = selectedCards.slice(0, 3);
+
+      row.innerHTML = '';
+
+      selectedCards.forEach(function(sourceCard, index){
+        if (!sourceCard) return;
+
+        var clone = sourceCard.cloneNode(true);
+        var item = document.createElement('div');
+        item.className = 'sss-libpeek__item';
+        item.style.transitionDelay = (index * 90) + 'ms';
+        if (index === 0) item.classList.add('is-dazzle');
+        item.appendChild(clone);
+        row.appendChild(item);
+
+        clone.addEventListener('click', function(e){
+          if (e.target.closest('[data-heart]')) return;
+          sourceCard.click();
+        });
+
+        var sourceHeart = sourceCard.querySelector('[data-heart]');
+        var cloneHeart = clone.querySelector('[data-heart]');
+        if (sourceHeart && cloneHeart){
+          cloneHeart.classList.toggle('is-saved', sourceHeart.classList.contains('is-saved'));
+          cloneHeart.textContent = sourceHeart.classList.contains('is-saved') ? '♥' : '♡';
+          cloneHeart.addEventListener('click', function(e){
+            e.stopPropagation();
+            sourceHeart.click();
+            window.setTimeout(function(){
+              cloneHeart.classList.toggle('is-saved', sourceHeart.classList.contains('is-saved'));
+              cloneHeart.textContent = sourceHeart.classList.contains('is-saved') ? '♥' : '♡';
+            }, 40);
+          });
+        }
+      });
+
+      var items = row.querySelectorAll('.sss-libpeek__item');
+      if (!items.length) return;
+
+      if (!('IntersectionObserver' in window)){
+        items.forEach(function(item){ item.classList.add('is-in'); });
+        return;
+      }
+
+      var io = new IntersectionObserver(function(entries){
+        entries.forEach(function(entry){
+          if (entry.isIntersecting){
+            entry.target.classList.add('is-in');
+            io.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -10% 0px' });
+
+      items.forEach(function(item){ io.observe(item); });
+    });
+  }
+
+  loadLibrarySneakPeeks();
+  document.addEventListener('shopify:section:load', loadLibrarySneakPeeks);
+})();
+</script>
+
+{% schema %}
+{
+  "name": "sss library sneak peek",
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "kicker", "default": "check out the library" },
+    { "type": "text", "id": "title", "label": "title", "default": "a 3-book sneak peek." },
+    { "type": "textarea", "id": "subtext", "label": "subtext", "default": "the books readers are actually clicking, saving, and spiraling over right now." },
+    { "type": "url", "id": "library_url", "label": "library url" }
+  ],
+  "presets": [
+    { "name": "sss library sneak peek" }
+  ]
+}
+{% endschema %}

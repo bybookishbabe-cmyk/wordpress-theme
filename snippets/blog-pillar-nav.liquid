@@ -1,0 +1,124 @@
+{%- assign books = books | default: article.metafields.custom.book.value -%}
+{%- assign book_count = 0 -%}
+{%- assign spice_count_1 = 0 -%}
+{%- assign spice_count_2 = 0 -%}
+{%- assign spice_count_3 = 0 -%}
+{%- assign spice_count_4 = 0 -%}
+{%- assign spice_count_5 = 0 -%}
+{%- assign pillar_name = pillar_label | default: '' | strip -%}
+{%- if pillar_name == blank -%}
+  {%- assign pillar_name = 'romance' -%}
+{%- endif -%}
+{%- assign pillar_handle = pillar_name | handleize -%}
+{%- assign pillar_name_downcase = pillar_name | downcase -%}
+
+{%- if books != blank -%}
+  {%- for book in books -%}
+    {%- assign book_spice = book.spice_level.value | default: 0 | plus: 0 -%}
+    {%- case book_spice -%}
+      {%- when 1 -%}
+        {%- assign spice_count_1 = spice_count_1 | plus: 1 -%}
+        {%- assign book_count = book_count | plus: 1 -%}
+      {%- when 2 -%}
+        {%- assign spice_count_2 = spice_count_2 | plus: 1 -%}
+        {%- assign book_count = book_count | plus: 1 -%}
+      {%- when 3 -%}
+        {%- assign spice_count_3 = spice_count_3 | plus: 1 -%}
+        {%- assign book_count = book_count | plus: 1 -%}
+      {%- when 4 -%}
+        {%- assign spice_count_4 = spice_count_4 | plus: 1 -%}
+        {%- assign book_count = book_count | plus: 1 -%}
+      {%- when 5 -%}
+        {%- assign spice_count_5 = spice_count_5 | plus: 1 -%}
+        {%- assign book_count = book_count | plus: 1 -%}
+    {%- endcase -%}
+  {%- endfor -%}
+{%- elsif pillar_handle != blank -%}
+  {%- paginate shop.metaobjects.sss_library.values by 250 -%}
+  {%- for book in shop.metaobjects.sss_library.values -%}
+    {%- capture is_visible -%}{%- render 'sss-book-visible', book: book -%}{%- endcapture -%}
+    {%- assign is_visible_value = is_visible | strip -%}
+    {%- unless is_visible_value == 'true' -%}
+      {%- continue -%}
+    {%- endunless -%}
+
+    {%- assign category_match = false -%}
+    {%- assign book_shelf_handle = book.shelf.value.system.handle | default: book.shelf.value.name | handleize -%}
+    {%- assign book_shelf_name = book.shelf.value.name | default: '' | strip | downcase -%}
+
+    {%- if book_shelf_handle == pillar_handle or book_shelf_name == pillar_name_downcase -%}
+      {%- assign category_match = true -%}
+    {%- endif -%}
+
+    {%- unless category_match -%}
+      {%- for linked_trope in book.tropes.value -%}
+        {%- assign linked_trope_handle = linked_trope.system.handle | default: linked_trope.name | handleize -%}
+        {%- assign linked_trope_name = linked_trope.name | default: '' | strip | downcase -%}
+        {%- if linked_trope_handle == pillar_handle or linked_trope_name == pillar_name_downcase -%}
+          {%- assign category_match = true -%}
+          {%- break -%}
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endunless -%}
+
+    {%- if category_match -%}
+      {%- assign series_number_text = book.series_number.value | append: '' | strip -%}
+      {%- if book.series.value != blank and book.read_as_standalone.value != true and series_number_text != blank and series_number_text != '1' -%}
+        {%- continue -%}
+      {%- endif -%}
+
+      {%- assign book_spice = book.spice_level.value | default: 0 | plus: 0 -%}
+      {%- case book_spice -%}
+        {%- when 1 -%}
+          {%- assign spice_count_1 = spice_count_1 | plus: 1 -%}
+          {%- assign book_count = book_count | plus: 1 -%}
+        {%- when 2 -%}
+          {%- assign spice_count_2 = spice_count_2 | plus: 1 -%}
+          {%- assign book_count = book_count | plus: 1 -%}
+        {%- when 3 -%}
+          {%- assign spice_count_3 = spice_count_3 | plus: 1 -%}
+          {%- assign book_count = book_count | plus: 1 -%}
+        {%- when 4 -%}
+          {%- assign spice_count_4 = spice_count_4 | plus: 1 -%}
+          {%- assign book_count = book_count | plus: 1 -%}
+        {%- when 5 -%}
+          {%- assign spice_count_5 = spice_count_5 | plus: 1 -%}
+          {%- assign book_count = book_count | plus: 1 -%}
+      {%- endcase -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- endpaginate -%}
+{%- endif -%}
+
+<nav class="blog-pillar-nav" aria-label="pillar guide spice navigation">
+  <div class="blog-pillar-nav__eyebrow">{{ pillar_name }} pillar guide</div>
+  <div class="blog-pillar-nav__header">
+    <h2 class="blog-pillar-nav__title">choose your {{ pillar_name }} spice level</h2>
+    {%- if book_count > 0 -%}
+      <p class="blog-pillar-nav__count">{{ book_count }} books, sorted by heat instead of chaos.</p>
+    {%- endif -%}
+  </div>
+
+  <div class="blog-pillar-nav__links">
+    <a class="blog-pillar-nav__link{% if spice_count_1 == 0 %} is-disabled{% endif %}"{% if spice_count_1 > 0 %} href="#spice-1"{% else %} aria-disabled="true" tabindex="-1"{% endif %}>
+      <span>🌶 1</span>
+      soft open door
+    </a>
+    <a class="blog-pillar-nav__link{% if spice_count_2 == 0 %} is-disabled{% endif %}"{% if spice_count_2 > 0 %} href="#spice-2"{% else %} aria-disabled="true" tabindex="-1"{% endif %}>
+      <span>🌶🌶 2</span>
+      some heat
+    </a>
+    <a class="blog-pillar-nav__link{% if spice_count_3 == 0 %} is-disabled{% endif %}"{% if spice_count_3 > 0 %} href="#spice-3"{% else %} aria-disabled="true" tabindex="-1"{% endif %}>
+      <span>🌶🌶🌶 3</span>
+      balanced
+    </a>
+    <a class="blog-pillar-nav__link{% if spice_count_4 == 0 %} is-disabled{% endif %}"{% if spice_count_4 > 0 %} href="#spice-4"{% else %} aria-disabled="true" tabindex="-1"{% endif %}>
+      <span>🌶🌶🌶🌶 4</span>
+      high spice
+    </a>
+    <a class="blog-pillar-nav__link{% if spice_count_5 == 0 %} is-disabled{% endif %}"{% if spice_count_5 > 0 %} href="#spice-5"{% else %} aria-disabled="true" tabindex="-1"{% endif %}>
+      <span>🌶🌶🌶🌶🌶 5</span>
+      wreck me
+    </a>
+  </div>
+</nav>

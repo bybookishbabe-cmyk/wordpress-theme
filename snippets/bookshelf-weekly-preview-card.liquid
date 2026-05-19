@@ -1,0 +1,104 @@
+{%- liquid
+  assign sample = sample | default: blank
+  assign title = title | default: 'preview'
+  assign kicker = kicker | default: ''
+  assign show_tease = show_tease | default: false
+
+  assign subject_line = sample.subject_line | default: ''
+  assign preview_text = sample.preview_text | default: ''
+  assign intro_copy = sample.intro_copy | default: ''
+  assign latest_books = sample.latest_books | default: blank
+  assign recommended_book = sample.recommended_book | default: blank
+  assign support_link = sample.support_link | default: blank
+  assign newsletter_sneak_peek = sample.newsletter_sneak_peek | default: blank
+-%}
+
+<article class="bbb-weekly-preview-card">
+  {%- if kicker != blank -%}
+    <p class="bbb-weekly-preview-card__kicker">{{ kicker }}</p>
+  {%- endif -%}
+  <h2 class="bbb-weekly-preview-card__title">{{ title }}</h2>
+
+  <div class="bbb-weekly-preview-card__subject">
+    <span class="bbb-weekly-preview-card__label">subject line</span>
+    <div class="bbb-weekly-preview-card__text">
+      {% if subject_line != blank %}{{ subject_line }}{% else %}not set yet{% endif %}
+    </div>
+  </div>
+
+  <div class="bbb-weekly-preview-card__preview">
+    <span class="bbb-weekly-preview-card__label">preview text</span>
+    <div class="bbb-weekly-preview-card__text">
+      {% if preview_text != blank %}{{ preview_text }}{% else %}not set yet{% endif %}
+    </div>
+  </div>
+
+  <div class="bbb-weekly-preview-card__intro">
+    <span class="bbb-weekly-preview-card__label">intro</span>
+    <div class="bbb-weekly-preview-card__text">
+      {% if intro_copy != blank %}{{ intro_copy }}{% else %}not set yet{% endif %}
+    </div>
+  </div>
+
+  <div class="bbb-weekly-preview-card__block">
+    <span class="bbb-weekly-preview-card__label">latest 3 saved books</span>
+    {% if latest_books != blank and latest_books.size > 0 %}
+      <ul class="bbb-weekly-preview-card__list">
+        {% for book in latest_books %}
+          <li>{{ book.book_title | default: book.title }}{% if book.author != blank %} by {{ book.author }}{% endif %}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="bbb-weekly-preview-card__text">this version is using the empty-shelf fallback.</div>
+    {% endif %}
+  </div>
+
+  <div class="bbb-weekly-preview-card__block">
+    <span class="bbb-weekly-preview-card__label">recommended book</span>
+    <div class="bbb-weekly-preview-card__text">
+      {% assign rec_title = recommended_book.title | default: recommended_book.book_title %}
+      {% if rec_title != blank %}
+        {{ rec_title }}{% if recommended_book.reason != blank %} — {{ recommended_book.reason }}{% endif %}
+      {% else %}
+        not set yet
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="bbb-weekly-preview-card__block">
+    <span class="bbb-weekly-preview-card__label">supporting click</span>
+    {% assign starter_links = support_link.links | default: blank %}
+    {% if starter_links != blank and starter_links.size > 0 %}
+      <ul class="bbb-weekly-preview-card__linkList">
+        {% for link in starter_links %}
+          <li>
+            {% if link.emoji != blank %}<span>{{ link.emoji }}</span>{% endif %}
+            <strong>{{ link.title }}</strong>{% if link.description != blank %} — {{ link.description }}{% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="bbb-weekly-preview-card__text">
+        {% if support_link.title != blank %}
+          {{ support_link.title }}{% if support_link.description != blank %} — {{ support_link.description }}{% endif %}
+        {% else %}
+          not set yet
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  {% if show_tease %}
+    <div class="bbb-weekly-preview-card__block">
+      <span class="bbb-weekly-preview-card__label">paid sneak peek</span>
+      <div class="bbb-weekly-preview-card__callout">
+        {% if newsletter_sneak_peek.title != blank %}
+          <strong>{{ newsletter_sneak_peek.title }}</strong>
+          {% if newsletter_sneak_peek.body != blank %}<div style="margin-top:6px;">{{ newsletter_sneak_peek.body }}</div>{% endif %}
+        {% else %}
+          waiting for your friday-morning note
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+</article>

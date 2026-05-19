@@ -1,0 +1,830 @@
+{% comment %}
+  sss-folder-tabs.liquid
+  - Folder tabs themed by ACTIVE SSS Drop (metaobject) using release_date <= today
+  - The entire folder tab body becomes a gradient in the month’s theme (not gray)
+  - Uses drop fields (recommended):
+    - mood_accent
+    - mood_pill_bg
+    - mood_pill_ink
+{% endcomment %}
+
+{%- assign now_ts = 'now' | date: '%s' | plus: 0 -%}
+{%- assign active_drop = nil -%}
+{%- assign best_ts = 0 -%}
+{%- capture shared_preview_drop_handle -%}{% render 'sss-preview-drop-handle' %}{%- endcapture -%}
+{%- assign effective_preview_drop_handle = section.settings.preview_drop_handle | default: shared_preview_drop_handle | strip -%}
+
+{%- if effective_preview_drop_handle != blank -%}
+
+  {%- assign active_drop = shop.metaobjects.sss_drop[effective_preview_drop_handle] -%}
+
+{%- else -%}
+
+  {%- if shop.metaobjects.sss_drop != blank -%}
+    {%- for d in shop.metaobjects.sss_drop.values -%}
+      {%- if d.release_date != blank -%}
+        {%- assign d_ts = d.release_date | date: '%s' | plus: 0 -%}
+        {%- if d_ts <= now_ts and d_ts >= best_ts -%}
+          {%- assign best_ts = d_ts -%}
+          {%- assign active_drop = d -%}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endif -%}
+
+{%- endif -%}
+
+
+{%- comment -%} fallbacks {%- endcomment -%}
+{%- assign accent = '#ff4d8d' -%}
+{%- assign tab_bg = '#ffd1e3' -%}
+{%- assign tab_ink = '#0b0b0b' -%}
+
+{%- if active_drop != nil -%}
+  {%- if active_drop.mood_accent != blank -%}{%- assign accent = active_drop.mood_accent -%}{%- endif -%}
+  {%- if active_drop.mood_pill_bg != blank -%}{%- assign tab_bg = active_drop.mood_pill_bg -%}{%- endif -%}
+  {%- if active_drop.mood_pill_ink != blank -%}{%- assign tab_ink = active_drop.mood_pill_ink -%}{%- endif -%}
+{%- endif -%}
+
+{%- assign made_for_you_url = '' -%}
+{%- if all_pages['sss-made-for-you'] != blank -%}
+  {%- assign made_for_you_url = all_pages['sss-made-for-you'].url -%}
+{%- elsif all_pages['made-for-you'] != blank -%}
+  {%- assign made_for_you_url = all_pages['made-for-you'].url -%}
+{%- else -%}
+  {%- assign made_for_you_url = '/pages/made-for-you' -%}
+{%- endif -%}
+
+<style>
+  .sss-tabs{
+    --sss-accent: {{ accent }};
+    --sss-accentBg: {{ tab_bg }};
+    --sss-accentInk: {{ tab_ink }};
+    --sss-floating-jump-top: 132px;
+
+    background:#0b0b0b;
+    color:#f6f6f6;
+    padding:18px 12px 14px;
+    font-family:"Libre Baskerville", Georgia, serif;
+    position:relative;
+    overflow:visible;
+    margin:0 0 10px;
+  }
+
+  .sss-tabs:before{
+    content:"";
+    position:absolute; inset:-40px;
+    pointer-events:none;
+    background:
+      radial-gradient(900px 520px at 50% 80px, rgba(255,255,255,.08), transparent 70%),
+      repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,.03),
+        rgba(255,255,255,.03) 1px,
+        transparent 1px,
+        transparent 26px
+      );
+    opacity:.55;
+  }
+
+  .sss-tabs__wrap{
+    max-width:1300px;
+    margin:0 auto;
+    padding:0 8px;
+    position:relative;
+    z-index:1;
+  }
+
+  .sss-tabs__head{
+    display:flex;
+    align-items:baseline;
+    justify-content:flex-start;
+    gap:12px;
+    margin:0 0 14px;
+  }
+  .sss-tabs__kicker{
+    margin:0;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:#c8c8c8;
+  }
+  .sss-tabs__hint{
+    margin:0;
+    font-size:12px;
+    color:rgba(246,246,246,.72);
+  }
+
+  .folderbar{
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+    gap:10px;
+    align-items:stretch;
+    overflow:visible;
+    padding-bottom:16px;
+  }
+
+  .sss-readerShortcutPopup{
+    position:fixed;
+    top:var(--sss-floating-jump-top);
+    right:28px;
+    width:280px;
+    background:#0b0b0b;
+    border:1px solid rgba(255,255,255,.15);
+    border-radius:14px;
+    padding:16px;
+    z-index:2147483647;
+    box-shadow:0 20px 50px rgba(0,0,0,.6);
+    font-size:13px;
+    animation:tropePopupIn .35s ease;
+    isolation:isolate;
+    transition:opacity .22s ease, transform .22s ease, visibility .22s ease;
+  }
+
+  .sss-readerShortcutPopup.is-hidden{
+    opacity:0;
+    transform:translateY(-8px);
+    visibility:hidden;
+    pointer-events:none;
+  }
+
+  .sss-readerShortcutPopup__title{
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    opacity:.6;
+    margin-bottom:12px;
+  }
+
+  .sss-readerShortcutPopup__link{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    text-decoration:none;
+    color:#ff8ac7;
+    font-size:13px;
+  }
+
+  .sss-readerShortcutPopup__link:hover{
+    text-decoration:underline;
+  }
+
+  .sss-readerShortcutPopup__close{
+    position:absolute;
+    top:6px;
+    right:8px;
+    background:none;
+    border:none;
+    color:#fff;
+    cursor:pointer;
+    font-size:16px;
+    opacity:.5;
+  }
+
+  .sss-readerShortcutPopup__close:hover{
+    opacity:1;
+  }
+
+  @keyframes sssTabsJumpIn{
+    from{
+      opacity:0;
+      transform:translateY(-10px);
+    }
+    to{
+      opacity:1;
+      transform:translateY(0);
+    }
+  }
+
+  /* ========= THEMED FOLDER TAB ========= */
+  .foldertab{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    text-decoration:none;
+    min-width:0;
+    width:100%;
+
+    /* month theme */
+    color: var(--sss-accentInk);
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--sss-accentBg) 86%, #ffffff),
+        var(--sss-accentBg)
+      );
+
+    border: 1px solid color-mix(in srgb, var(--sss-accent) 45%, rgba(0,0,0,.25));
+    border-bottom-color: color-mix(in srgb, var(--sss-accent) 65%, rgba(0,0,0,.45));
+
+    border-radius:14px 14px 12px 12px;
+    padding:10px 12px;
+    box-shadow:
+      0 14px 28px rgba(0,0,0,.35),
+      inset 0 1px 0 rgba(255,255,255,.35);
+
+    position:relative;
+    overflow:visible;
+    transform:translateY(0);
+    transition:transform .14s ease, filter .14s ease, box-shadow .14s ease;
+  }
+
+  /* folder “lip” */
+  .foldertab:before{
+    content:"";
+    position:absolute;
+    left:12px;
+    top:-8px;
+    width:58px;
+    height:12px;
+    border-radius:10px 10px 0 0;
+
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--sss-accentBg) 70%, #ffffff),
+      color-mix(in srgb, var(--sss-accent) 65%, #000000)
+    );
+
+    border:1px solid color-mix(in srgb, var(--sss-accent) 55%, rgba(0,0,0,.35));
+    border-bottom:none;
+
+    box-shadow:0 8px 18px rgba(0,0,0,.35);
+  }
+
+  /* subtle inner “paper” sheen */
+  .foldertab:after{
+    content:"";
+    position:absolute;
+    inset:1px;
+    border-radius:13px 13px 11px 11px;
+    pointer-events:none;
+    background: radial-gradient(120px 40px at 22% 0%, rgba(255,255,255,.25), transparent 60%);
+    opacity:.65;
+  }
+
+  .foldertab:hover{
+  transform:translateY(-3px);
+  box-shadow:
+    0 22px 42px rgba(0,0,0,.55),
+    0 0 0 3px color-mix(in srgb, var(--sss-accent) 35%, transparent),
+    0 0 28px color-mix(in srgb, var(--sss-accent) 25%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.45);
+}
+
+  .foldertab--featured{
+    animation:sssFolderPulse 2.8s ease-in-out infinite;
+  }
+
+  .foldertab--featured::after{
+    opacity:.9;
+  }
+
+  .foldertab--featured:not([aria-current="page"]){
+    box-shadow:
+      0 16px 30px rgba(0,0,0,.4),
+      0 0 0 2px color-mix(in srgb, var(--sss-accent) 18%, transparent),
+      0 0 22px color-mix(in srgb, var(--sss-accent) 20%, transparent),
+      inset 0 1px 0 rgba(255,255,255,.35);
+  }
+
+  @keyframes sssFolderPulse{
+    0%, 100%{
+      transform:translateY(0) scale(1);
+      box-shadow:
+        0 14px 28px rgba(0,0,0,.35),
+        0 0 0 0 color-mix(in srgb, var(--sss-accent) 0%, transparent),
+        inset 0 1px 0 rgba(255,255,255,.35);
+    }
+    50%{
+      transform:translateY(-2px) scale(1.015);
+      box-shadow:
+        0 22px 40px rgba(0,0,0,.45),
+        0 0 0 6px color-mix(in srgb, var(--sss-accent) 16%, transparent),
+        0 0 26px color-mix(in srgb, var(--sss-accent) 26%, transparent),
+        inset 0 1px 0 rgba(255,255,255,.42);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .foldertab--featured{
+      animation:none;
+    }
+  }
+
+  .foldertab__icon{
+    width:26px;
+    height:26px;
+    border-radius:10px;
+    display:grid;
+    place-items:center;
+
+    background: color-mix(in srgb, var(--sss-accent) 85%, #000000);
+    color:#fff;
+
+    border:1px solid rgba(0,0,0,.35);
+    font-size:14px;
+    line-height:1;
+    flex:0 0 auto;
+    position:relative;
+    z-index:2;
+  }
+
+  .foldertab__txt{
+    display:grid;
+    gap:2px;
+    min-width:0;
+    width:100%;
+    position:relative;
+    z-index:2;
+  }
+
+  .foldertab__label{
+    font-size:13px;
+    text-transform:lowercase;
+    letter-spacing:.01em;
+    white-space:normal;
+    color: var(--sss-accentInk);
+  }
+
+  .foldertab__sub{
+    font-size:11px;
+    line-height:1.2;
+    white-space:normal;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    max-width:none;
+    color: color-mix(in srgb, var(--sss-accentInk) 70%, rgba(0,0,0,.55));
+  }
+
+  /* current page = same theme, just “pulled forward” */
+  .foldertab[aria-current="page"]{
+    transform:translateY(-2px);
+    box-shadow:
+      0 18px 36px rgba(0,0,0,.45),
+      0 0 0 2px rgba(255,255,255,.10),
+      0 0 0 6px color-mix(in srgb, var(--sss-accent) 32%, transparent),
+      inset 0 1px 0 rgba(255,255,255,.45);
+    z-index:2;
+  }
+
+  .foldertab[aria-current="page"] .foldertab__icon{
+    background: var(--sss-accent);
+    border-color: rgba(0,0,0,.35);
+  }
+
+  .foldertab__paper{
+    position:absolute;
+    left:14px;
+    top:100%;
+    transform:translateY(-10px);
+    width:140px;
+    height:46px;
+    background:#f7f6f2;
+    border:1px solid rgba(0,0,0,.22);
+    border-radius:8px;
+    box-shadow:
+      0 14px 24px rgba(0,0,0,.30),
+      inset 0 1px 0 rgba(255,255,255,.65);
+    z-index:0;
+    pointer-events:none;
+  }
+  .foldertab__paper:before{
+    content:"";
+    position:absolute;
+    left:16px;
+    top:-10px;
+    width:44px;
+    height:12px;
+    background:#f7f6f2;
+    border:1px solid rgba(0,0,0,.22);
+    border-bottom:none;
+    border-radius:8px 8px 0 0;
+  }
+  .foldertab__paper:after{
+    content:"";
+    position:absolute;
+    left:10px;
+    right:10px;
+    top:10px;
+    bottom:10px;
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        rgba(0,0,0,.07),
+        rgba(0,0,0,.07) 1px,
+        transparent 1px,
+        transparent 9px
+      );
+    opacity:.22;
+    border-radius:6px;
+  }
+  .foldertab__paperLabel{
+    position:absolute;
+    left:0;
+    right:0;
+    top:12px;
+    text-align:center;
+    font-size:10px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:#141414;
+    z-index:1;
+  }
+
+  @media(max-width:920px){
+    .folderbar{
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media(max-width:520px){
+    .sss-tabs__head{
+      align-items:flex-start;
+      flex-direction:column;
+    }
+
+    .folderbar{
+      grid-template-columns:1fr;
+      gap:10px;
+      align-items:stretch;
+      padding-bottom:16px;
+    }
+    .foldertab{
+      width:100%;
+      justify-content:flex-start;
+      padding:10px 10px;
+      border-radius:14px;
+    }
+    .foldertab__txt{
+      min-width:0;
+      width:100%;
+    }
+    .foldertab__sub{ display:none; }
+    .foldertab:before{ left:10px; width:48px; }
+    .foldertab__paper{
+      width:120px;
+      height:42px;
+      left:auto;
+      right:10px;
+      transform:translateY(-9px);
+    }
+    .foldertab__paper:before{
+      left:auto;
+      right:16px;
+    }
+    .foldertab__paperLabel{ font-size:9px; top:11px; }
+
+    .sss-readerShortcutPopup{
+      top:var(--sss-floating-jump-top);
+      right:16px;
+      bottom:auto;
+      left:auto;
+      width:min(220px, calc(100vw - 32px));
+      padding:12px 14px;
+      border-radius:12px;
+      font-size:12px;
+      transform:none;
+    }
+  }
+
+  @media(max-width:360px){
+    .folderbar{ grid-template-columns:1fr; }
+    .foldertab__sub{ display:block; }
+  }
+</style>
+
+<section class="sss-tabs">
+  <div class="sss-tabs__wrap">
+    <div class="sss-tabs__head">
+      <div class="sss-tabs__headCopy">
+        <p class="sss-tabs__kicker">{{ section.settings.kicker }}</p>
+        {% if section.settings.hint != blank %}
+          <p class="sss-tabs__hint">{{ section.settings.hint }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    {%- assign current_path = request.path | split: "?" | first | split: "#" | first -%}
+    {%- if current_path == blank -%}{%- assign current_path = "/" -%}{%- endif -%}
+    {%- assign current_last = current_path | slice: -1, 1 -%}
+    {%- if current_path != "/" and current_last == "/" -%}
+      {%- assign current_path = current_path | slice: 0, current_path.size | minus: 1 -%}
+    {%- endif -%}
+    {%- assign made_for_you_path = made_for_you_url | split: "?" | first | split: "#" | first -%}
+    {%- if made_for_you_path == blank -%}{%- assign made_for_you_path = "/pages/made-for-you" -%}{%- endif -%}
+    {%- assign made_for_you_last = made_for_you_path | slice: -1, 1 -%}
+    {%- if made_for_you_path != "/" and made_for_you_last == "/" -%}
+      {%- assign made_for_you_path = made_for_you_path | slice: 0, made_for_you_path.size | minus: 1 -%}
+    {%- endif -%}
+    {%- assign has_private_shelf_tab = false -%}
+    {%- for block in section.blocks -%}
+      {%- assign block_label_downcase = block.settings.label | downcase | strip -%}
+      {%- if block_label_downcase == 'private shelf' -%}
+        {%- assign has_private_shelf_tab = true -%}
+      {%- endif -%}
+    {%- endfor -%}
+    {%- if all_pages['sss-private-shelf'] != blank -%}
+      {%- assign private_shelf_url = all_pages['sss-private-shelf'].url -%}
+    {%- elsif all_pages['private-shelf'] != blank -%}
+      {%- assign private_shelf_url = all_pages['private-shelf'].url -%}
+    {%- else -%}
+      {%- assign private_shelf_url = '/pages/sss-private-shelf' -%}
+    {%- endif -%}
+
+    {%- assign rendered_private_shelf_tab = false -%}
+
+    <nav class="folderbar" aria-label="library folders">
+      {% for block in section.blocks %}
+        {% assign tab_label_downcase = block.settings.label | downcase | strip %}
+        {% assign url = block.settings.url %}
+
+        {% if tab_label_downcase == 'private shelf' %}
+          {% continue %}
+        {% endif %}
+
+        {% if tab_label_downcase == 'main page' %}
+          {% if all_pages['society-library'] != blank %}
+            {% assign url = all_pages['society-library'].url %}
+          {% elsif all_pages['smut-sentiment-society'] != blank %}
+            {% assign url = all_pages['smut-sentiment-society'].url %}
+          {% else %}
+            {% assign url = '/pages/society-library' %}
+          {% endif %}
+        {% elsif tab_label_downcase == 'library' %}
+          {% if all_pages['sss-library-page'] != blank %}
+            {% assign url = all_pages['sss-library-page'].url %}
+          {% elsif all_pages['sss-library'] != blank %}
+            {% assign url = all_pages['sss-library'].url %}
+          {% elsif all_pages['ssslibrary'] != blank %}
+            {% assign url = all_pages['ssslibrary'].url %}
+          {% elsif all_pages['library'] != blank %}
+            {% assign url = all_pages['library'].url %}
+          {% else %}
+            {% assign url = '/pages/sss-library-page' %}
+          {% endif %}
+        {% elsif tab_label_downcase == 'made for you' %}
+          {% if all_pages['sss-made-for-you'] != blank %}
+            {% assign url = all_pages['sss-made-for-you'].url %}
+          {% elsif all_pages['made-for-you'] != blank %}
+            {% assign url = all_pages['made-for-you'].url %}
+          {% else %}
+            {% assign url = '/pages/made-for-you' %}
+          {% endif %}
+        {% elsif tab_label_downcase == 'private shelf' %}
+          {% assign url = private_shelf_url %}
+        {% elsif tab_label_downcase == 'printable inserts' %}
+          {% if all_pages['sss-printable-kindle-inserts'] != blank %}
+            {% assign url = all_pages['sss-printable-kindle-inserts'].url %}
+          {% elsif all_pages['sss-printable-kindle'] != blank %}
+            {% assign url = all_pages['sss-printable-kindle'].url %}
+          {% elsif all_pages['printable-kindle-inserts'] != blank %}
+            {% assign url = all_pages['printable-kindle-inserts'].url %}
+          {% else %}
+            {% assign url = '/pages/sss-printable-kindle-inserts' %}
+          {% endif %}
+        {% elsif tab_label_downcase == 'bookish templates' %}
+          {% if all_pages['sss-canva-templates'] != blank %}
+            {% assign url = all_pages['sss-canva-templates'].url %}
+          {% elsif all_pages['canva-templates'] != blank %}
+            {% assign url = all_pages['canva-templates'].url %}
+          {% else %}
+            {% assign url = '/pages/sss-canva-templates' %}
+          {% endif %}
+        {% elsif tab_label_downcase == 'free downloads' or tab_label_downcase == 'free extras' %}
+          {% if all_pages['sss-freebies'] != blank %}
+            {% assign url = all_pages['sss-freebies'].url %}
+          {% elsif all_pages['free-downloads'] != blank %}
+            {% assign url = all_pages['free-downloads'].url %}
+          {% elsif all_pages['free-extras'] != blank %}
+            {% assign url = all_pages['free-extras'].url %}
+          {% else %}
+            {% assign url = '' %}
+          {% endif %}
+        {% elsif tab_label_downcase == 'quote library' %}
+          {% if all_pages['sss-quote-wall'] != blank %}
+            {% assign url = all_pages['sss-quote-wall'].url %}
+          {% elsif all_pages['quote-wall'] != blank %}
+            {% assign url = all_pages['quote-wall'].url %}
+          {% else %}
+            {% assign url = '/pages/sss-quote-wall' %}
+          {% endif %}
+        {% endif %}
+
+        {% if url != blank %}
+
+          {%- assign tab_path = url | split: "?" | first | split: "#" | first -%}
+          {%- assign tab_path = tab_path | replace: shop.url, "" -%}
+          {%- if tab_path == blank -%}{%- assign tab_path = "/" -%}{%- endif -%}
+          {%- assign tab_last = tab_path | slice: -1, 1 -%}
+          {%- if tab_path != "/" and tab_last == "/" -%}
+            {%- assign tab_path = tab_path | slice: 0, tab_path.size | minus: 1 -%}
+          {%- endif -%}
+
+          {% assign is_current = false %}
+          {% if current_path == tab_path %}
+            {% assign is_current = true %}
+          {% endif %}
+
+          {% assign is_featured = false %}
+          {% if tab_label_downcase == 'made for you' %}
+            {% assign is_featured = true %}
+          {% endif %}
+
+          <a class="foldertab{% if is_featured %} foldertab--featured{% endif %}" href="{{ url }}" {% if is_current %}aria-current="page"{% endif %} {{ block.shopify_attributes }}>
+            <span class="foldertab__icon" aria-hidden="true">{{ block.settings.icon }}</span>
+
+            <span class="foldertab__txt">
+              <span class="foldertab__label">{{ block.settings.label }}</span>
+              {% if block.settings.sub != blank %}
+                <span class="foldertab__sub">{{ block.settings.sub }}</span>
+              {% endif %}
+            </span>
+
+            {% if is_current %}
+              <span class="foldertab__paper" aria-hidden="true">
+                <span class="foldertab__paperLabel">you are here</span>
+              </span>
+            {% endif %}
+          </a>
+
+          {% if tab_label_downcase == 'library' %}
+            {% assign rendered_private_shelf_tab = true %}
+            {% assign url = private_shelf_url %}
+            {% if url != blank %}
+              {%- assign tab_path = url | split: "?" | first | split: "#" | first -%}
+              {%- assign tab_path = tab_path | replace: shop.url, "" -%}
+              {%- if tab_path == blank -%}{%- assign tab_path = "/" -%}{%- endif -%}
+              {%- assign tab_last = tab_path | slice: -1, 1 -%}
+              {%- if tab_path != "/" and tab_last == "/" -%}
+                {%- assign tab_path = tab_path | slice: 0, tab_path.size | minus: 1 -%}
+              {%- endif -%}
+
+              {% assign is_current = false %}
+              {% if current_path == tab_path %}
+                {% assign is_current = true %}
+              {% endif %}
+
+              <a class="foldertab foldertab--private" href="{{ url }}" {% if is_current %}aria-current="page"{% endif %}>
+                <span class="foldertab__icon" aria-hidden="true">🔒</span>
+
+                <span class="foldertab__txt">
+                  <span class="foldertab__label">private shelf</span>
+                  <span class="foldertab__sub">members-only recs</span>
+                </span>
+
+                {% if is_current %}
+                  <span class="foldertab__paper" aria-hidden="true">
+                    <span class="foldertab__paperLabel">you are here</span>
+                  </span>
+                {% endif %}
+              </a>
+            {% endif %}
+          {% endif %}
+
+        {% endif %}
+      {% endfor %}
+
+      {% unless rendered_private_shelf_tab %}
+        {% assign url = private_shelf_url %}
+        {% if url != blank %}
+          {%- assign tab_path = url | split: "?" | first | split: "#" | first -%}
+          {%- assign tab_path = tab_path | replace: shop.url, "" -%}
+          {%- if tab_path == blank -%}{%- assign tab_path = "/" -%}{%- endif -%}
+          {%- assign tab_last = tab_path | slice: -1, 1 -%}
+          {%- if tab_path != "/" and tab_last == "/" -%}
+            {%- assign tab_path = tab_path | slice: 0, tab_path.size | minus: 1 -%}
+          {%- endif -%}
+
+          {% assign is_current = false %}
+          {% if current_path == tab_path %}
+            {% assign is_current = true %}
+          {% endif %}
+
+          <a class="foldertab foldertab--private" href="{{ url }}" {% if is_current %}aria-current="page"{% endif %}>
+            <span class="foldertab__icon" aria-hidden="true">🔒</span>
+
+            <span class="foldertab__txt">
+              <span class="foldertab__label">private shelf</span>
+              <span class="foldertab__sub">members-only recs</span>
+            </span>
+
+            {% if is_current %}
+              <span class="foldertab__paper" aria-hidden="true">
+                <span class="foldertab__paperLabel">you are here</span>
+              </span>
+            {% endif %}
+          </a>
+        {% endif %}
+      {% endunless %}
+    </nav>
+
+  </div>
+</section>
+
+<script>
+  (function(){
+    var section = document.currentScript && document.currentScript.previousElementSibling;
+    var madeForYouUrl = {{ made_for_you_url | json }};
+    var currentPath = {{ current_path | json }};
+    var madeForYouPath = {{ made_for_you_path | json }};
+    var isLockedSocietyPage = currentPath === '/pages/society-library';
+    if (!section || !madeForYouUrl || currentPath === madeForYouPath || isLockedSocietyPage) return;
+
+    var existingPopup = document.getElementById('sssReaderShortcutPopup');
+    if (existingPopup){
+      existingPopup.remove();
+    }
+
+    var popup = document.createElement('div');
+    popup.id = 'sssReaderShortcutPopup';
+    popup.className = 'sss-readerShortcutPopup';
+    popup.setAttribute('aria-label', 'made for you shortcut');
+    popup.innerHTML = '' +
+      '<button type="button" class="sss-readerShortcutPopup__close" aria-label="close reader shortcut" data-sss-floating-jump-close>×</button>' +
+      '<p class="sss-readerShortcutPopup__title">reader shortcut</p>' +
+      '<a class="sss-readerShortcutPopup__link" href="' + madeForYouUrl + '">' +
+        '<span aria-hidden="true">✦</span>' +
+        '<span>take me to made for you</span>' +
+      '</a>';
+    document.body.appendChild(popup);
+
+    var closeButton = popup.querySelector('[data-sss-floating-jump-close]');
+    var frameRoot = document.documentElement;
+    var autoHideTimer = window.setTimeout(function(){
+      popup.classList.add('is-hidden');
+    }, 5000);
+
+    function getMinTop(){
+      return window.innerWidth <= 520 ? 88 : 118;
+    }
+
+    function isMobileViewport(){
+      return window.innerWidth <= 520;
+    }
+
+    function syncPopupPosition(){
+      if (!section || !frameRoot) return;
+      if (isMobileViewport()){
+        frameRoot.style.setProperty('--sss-floating-jump-top', getMinTop() + 'px');
+        return;
+      }
+      var rect = section.getBoundingClientRect();
+      var nextTop = Math.max(getMinTop(), Math.round(rect.bottom + 12));
+      frameRoot.style.setProperty('--sss-floating-jump-top', nextTop + 'px');
+    }
+
+    syncPopupPosition();
+    window.addEventListener('scroll', syncPopupPosition, { passive: true });
+    window.addEventListener('resize', syncPopupPosition);
+
+    if (!closeButton) return;
+
+    closeButton.addEventListener('click', function(){
+      window.clearTimeout(autoHideTimer);
+      popup.classList.add('is-hidden');
+    });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "sss folder tabs",
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "kicker", "default": "library files" },
+    { "type": "text", "id": "hint", "label": "hint", "default": "pick a folder. dive in." },
+    {
+    "type": "text",
+    "id": "preview_drop_handle",
+    "label": "Preview Drop (Handle for Testing)",
+    "info": "Enter drop handle to preview instead of automatic date logic."
+  }
+  ],
+  "blocks": [
+    {
+      "type": "tab",
+      "name": "folder",
+      "settings": [
+        { "type": "text", "id": "label", "label": "folder name", "default": "library" },
+        { "type": "text", "id": "sub", "label": "folder subtext", "default": "books to read" },
+        { "type": "text", "id": "icon", "label": "icon (emoji)", "default": "📚" },
+        { "type": "url", "id": "url", "label": "page link" }
+      ]
+    }
+  ],
+  "max_blocks": 8,
+  "presets": [
+    {
+      "name": "sss folder tabs",
+      "blocks": [
+        { "type": "tab", "settings": { "label": "main page", "sub": "start here", "icon": "📁" } },
+        { "type": "tab", "settings": { "label": "library", "sub": "books to read", "icon": "📚" } },
+        { "type": "tab", "settings": { "label": "private shelf", "sub": "members-only recs", "icon": "🔒" } },
+        { "type": "tab", "settings": { "label": "printable inserts", "sub": "all printable drops + sizes", "icon": "🖨️" } },
+        { "type": "tab", "settings": { "label": "bookish templates", "sub": "canva templates + tutorials", "icon": "⌨️" } },
+        { "type": "tab", "settings": { "label": "free extras", "sub": "little gifts. no gatekeeping.", "icon": "🎁" } },
+        { "type": "tab", "settings": { "label": "quote library", "sub": "lines that ruined me (in a good way)", "icon": "✒️" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

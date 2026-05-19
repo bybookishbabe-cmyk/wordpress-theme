@@ -1,0 +1,927 @@
+{% comment %}
+  sss-library-page.liquid
+  Society Library — grid + hover overlay + click-to-choose retailer modal
+  Metaobject: sss_library
+  Fields expected (based on your setup):
+    - title (text)
+    - author (text)
+    - cover (link OR text URL)
+    - why_i_loved_it (text)
+    - tropes (text)
+    - spice_level (integer)
+    - amazon_link (link OR text URL)
+    - bookshop_link (link OR text URL)
+{% endcomment %}
+
+<section class="sss-lib sss-lib--public" id="sss-lib-{{ section.id }}" data-sss-lib="public">
+  {% assign society = false %}
+  <div class="sss-lib__wrap">
+
+    <div class="sss-lib__headWrap">
+
+  <header class="sss-lib__head">
+    <p class="sss-lib__kicker">{{ section.settings.kicker }}</p>
+<h1 class="sss-lib__title">{{ section.settings.title }}</h1>
+
+<p class="sss-lib__seoLine">
+  made for romance readers by a romance reader.
+</p>
+
+{% if section.settings.subtext != blank %}
+  <p class="sss-lib__sub">{{ section.settings.subtext }}</p>
+{% endif %}
+  <a class="sss-lib__kuLink" href="https://amzn.to/4uZ8Y3a" target="_blank" rel="noopener sponsored">
+    on a kindle kick? try kindle unlimited →
+  </a>
+  </header>
+
+  <div class="sss-lib__societyInviteCard">
+    <div class="sss-lib__societyInviteKicker">
+      the private layer
+    </div>
+
+    <div class="sss-lib__societyInviteTitle">
+      join the society for the weekly recommendation
+    </div>
+
+    <div class="sss-lib__societyInviteSub">
+      one curated romance. delivered every sunday.  
+      full breakdown, tension index, emotional damage rating, and private annotations.
+    </div>
+
+	    <a href="https://thesmutandsentimentsociety.substack.com/subscribe" class="sss-lib__societyInviteBtn">
+	      enter the society
+	    </a>
+	  </div>
+
+	</div>
+{% paginate shop.metaobjects.sss_library.values by 250 %}
+{% assign jump_books = shop.metaobjects.sss_library.values | sort: "title" %}
+{% endpaginate %}
+
+{% assign jump_starter_count = 0 %}
+{% assign jump_mood_shelf_list = '' %}
+{% assign jump_has_mood_shelves = false %}
+
+{% for book in jump_books %}
+  {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+  {% assign is_visible_value = is_visible | strip %}
+  {% unless is_visible_value == 'true' %}
+    {% continue %}
+  {% endunless %}
+  {% capture is_private %}{% render 'sss-book-private', book: book %}{% endcapture %}
+  {% assign is_private_value = is_private | strip %}
+  {% if is_private_value == 'true' %}
+    {% continue %}
+  {% endif %}
+
+  {% if book.starter_pack.value %}
+    {% assign jump_starter_count = jump_starter_count | plus: 1 %}
+  {% endif %}
+
+  {% assign jump_shelf_name = book.shelf.value.name | strip %}
+  {% if jump_shelf_name != blank and jump_shelf_name != 'society classics' %}
+    {% assign jump_shelf_token = '|' | append: jump_shelf_name | append: '|' %}
+    {% unless jump_mood_shelf_list contains jump_shelf_token %}
+      {% assign jump_mood_shelf_list = jump_mood_shelf_list | append: jump_shelf_name | append: '|' %}
+    {% endunless %}
+  {% endif %}
+{% endfor %}
+
+{% assign jump_mood_shelves = jump_mood_shelf_list | split: '|' %}
+{% for shelf in jump_mood_shelves %}
+  {% if shelf == blank or jump_has_mood_shelves %}
+    {% continue %}
+  {% endif %}
+
+  {% assign jump_shelf_count = 0 %}
+  {% for book in jump_books %}
+    {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+    {% assign is_visible_value = is_visible | strip %}
+    {% unless is_visible_value == 'true' %}
+      {% continue %}
+    {% endunless %}
+    {% capture is_private %}{% render 'sss-book-private', book: book %}{% endcapture %}
+    {% assign is_private_value = is_private | strip %}
+    {% if is_private_value == 'true' %}
+      {% continue %}
+    {% endif %}
+    {% assign book_shelf = book.shelf.value.name | strip %}
+    {% if book_shelf == shelf %}
+      {% assign jump_shelf_count = jump_shelf_count | plus: 1 %}
+    {% endif %}
+  {% endfor %}
+
+  {% if jump_shelf_count > 5 %}
+    {% assign jump_has_mood_shelves = true %}
+  {% endif %}
+{% endfor %}
+{% render 'sss-trending-shelf', books: jump_books, include_private_books: false %}
+
+<nav class="sss-lib__jumpNav">
+<div class="sss-lib__jumpTitle">
+choose where to begin
+</div>
+<div class="sss-lib__jumpLinks">
+<a href="#sssMyShelfSection">📚 your bookshelf</a>
+<a href="#society-classics">👑 classics</a>
+<a href="/pages/series-reading-orders">🔗 series</a>
+{% if jump_starter_count > 0 %}<a href="#starter-pack">✨ start here</a>{% endif %}
+<a href="#monthly">📅 books of the month</a>
+{% if jump_has_mood_shelves %}<a href="#moods">🖤 trope shelves</a>{% endif %}
+<a href="#archive">🗂️ full library</a>
+</div>
+</nav>
+
+<a class="sss-lib__spiceTease" href="/pages/romance-books-by-spice-level">
+  <span class="sss-lib__spiceTeaseRain" aria-hidden="true">
+    <span>🌶</span><span>🌶</span><span>🌶</span><span>🌶</span><span>🌶</span>
+  </span>
+  <span class="sss-lib__spiceTeaseKicker">need a faster way in?</span>
+  <span class="sss-lib__spiceTeaseText">browse the library by spice level and go straight to your preferred spice →</span>
+</a>
+
+{% assign tease_pick_title_key = section.settings.rec_pick_title | downcase | strip %}
+{% assign tease_result_title_key = section.settings.rec_result_title | downcase | strip %}
+{% assign tease_pick_handle_key = section.settings.rec_pick_title | handleize %}
+{% assign tease_result_handle_key = section.settings.rec_result_title | handleize %}
+{% assign tease_pick_cover_url = '' %}
+{% assign tease_result_cover_url = '' %}
+{% assign tease_pick_book = shop.metaobjects.sss_library[tease_pick_handle_key] %}
+{% assign tease_result_book = shop.metaobjects.sss_library[tease_result_handle_key] %}
+
+{% if tease_pick_book != blank %}
+  {% assign tease_pick_cover_value = tease_pick_book.cover.value | default: tease_pick_book.cover %}
+  {% assign tease_pick_cover_url = tease_pick_cover_value.url | default: tease_pick_cover_value %}
+{% endif %}
+
+{% if tease_result_book != blank %}
+  {% assign tease_result_cover_value = tease_result_book.cover.value | default: tease_result_book.cover %}
+  {% assign tease_result_cover_url = tease_result_cover_value.url | default: tease_result_cover_value %}
+{% endif %}
+{% assign tease_books = shop.metaobjects.sss_library.values %}
+{% for book in tease_books %}
+  {% assign book_title_value = book.title.value | default: book.title %}
+  {% assign book_title_key = book_title_value | downcase | strip %}
+  {% assign book_handle_key = book.system.handle | default: book.handle | handleize %}
+  {% assign book_cover_value = book.cover.value | default: book.cover %}
+  {% assign book_cover_url = book_cover_value.url | default: book_cover_value %}
+  {% if tease_pick_cover_url == blank and book_title_key == tease_pick_title_key or tease_pick_cover_url == blank and book_handle_key == tease_pick_handle_key %}
+    {% assign tease_pick_cover_url = book_cover_url %}
+  {% endif %}
+  {% if tease_result_cover_url == blank and book_title_key == tease_result_title_key or tease_result_cover_url == blank and book_handle_key == tease_result_handle_key %}
+    {% assign tease_result_cover_url = book_cover_url %}
+  {% endif %}
+{% endfor %}
+
+<a href="{{ section.settings.rec_link | default: 'https://bybookishbabe.com/pages/what-to-read-next' }}" class="bbb-homeRecDemo bbb-homeRecDemo--library">
+  <div class="bbb-homeRecDemo__copy">
+    <div class="bbb-homeRecDemo__kicker">{{ section.settings.rec_kicker }}</div>
+    <div class="bbb-homeRecDemo__title"><span>if you liked...</span> {{ section.settings.rec_pick_title }}</div>
+    <div class="bbb-homeRecDemo__sub">read this next</div>
+    <div class="bbb-homeRecDemo__cta">{{ section.settings.rec_title }}</div>
+  </div>
+
+  <div class="bbb-homeRecDemo__stage" aria-hidden="true">
+    <div class="bbb-homeRecDemo__book bbb-homeRecDemo__book--picked">
+      <div class="bbb-homeRecDemo__label">you picked</div>
+      {% if tease_pick_cover_url != blank %}
+        <img src="{{ tease_pick_cover_url }}" alt="{{ section.settings.rec_pick_title | escape }}" loading="lazy">
+      {% endif %}
+      <div class="bbb-homeRecDemo__meta">
+        <div class="bbb-homeRecDemo__bookTitle">{{ section.settings.rec_pick_title }}</div>
+      </div>
+    </div>
+
+    <div class="bbb-homeRecDemo__book bbb-homeRecDemo__book--result">
+      <div class="bbb-homeRecDemo__label">read this next</div>
+      {% if tease_result_cover_url != blank %}
+        <img src="{{ tease_result_cover_url }}" alt="{{ section.settings.rec_result_title | escape }}" loading="lazy">
+      {% endif %}
+      <div class="bbb-homeRecDemo__meta">
+        <div class="bbb-homeRecDemo__bookTitle">{{ section.settings.rec_result_title }}</div>
+      </div>
+    </div>
+  </div>
+</a>
+
+<div class="sss-lib__myshelf" id="sssMyShelfSection">
+
+  <div class="sss-lib__archiveHead">
+
+    <div class="sss-lib__archiveKicker">
+      your shelf
+    </div>
+
+    <h2 class="sss-lib__archiveTitle">
+      build your own bookshelf
+    </h2>
+
+    <div class="sss-lib__archiveSub">
+      save the ones you want to come back to, compare, and keep close.
+    </div>
+    <a class="sss-lib__myshelfPageLink" href="/pages/my-bookshelf" aria-label="open your synced bookshelf">
+      <span aria-hidden="true">📚</span>
+      <span>open synced bookshelf</span>
+    </a>
+
+  </div>
+
+  <div class="sss-lib__myshelfActions">
+
+    <div class="sss-lib__myshelfPrompt">
+      want your shelf, plus what to read next each week?
+      <button
+        type="button"
+        class="sss-lib__myshelfPromptLink"
+        data-bbb-shelf-open
+        onclick="if(window.BBBShelfSignup&&window.BBBShelfSignup.open){window.BBBShelfSignup.open();} return false;"
+      >
+        enter email.
+      </button>
+    </div>
+
+    <button type="button" id="sssExportNotes" class="sss-lib__exportBtn">
+      copy list
+    </button>
+
+    <button type="button" id="sssEmailShelf" class="sss-lib__exportBtn sss-lib__exportBtn--secondary">
+      email to self
+    </button>
+
+  </div>
+
+  <div class="sss-lib__grid" id="sssMyShelfGrid"></div>
+
+</div>
+
+
+{% paginate shop.metaobjects.sss_library.values by 250 %}
+
+{% assign all_books = shop.metaobjects.sss_library.values | sort: "title" %}
+
+{% endpaginate %}
+
+
+<script>
+
+console.log("---- SSS LIBRARY DEBUG ----");
+
+{% for book in all_books %}
+
+console.log({
+  title: "{{ book.title }}",
+  handle: "{{ book.system.handle }}",
+  shelf: "{{ book.shelf.value.name }}",
+  shelf_handle: "{{ book.shelf.value.system.handle }}",
+  tropes: [{% for t in book.tropes.value %}"{{ t.name }}"{% unless forloop.last %},{% endunless %}{% endfor %}],
+  trope_handles: [{% for t in book.tropes.value %}"{{ t.system.handle }}"{% unless forloop.last %},{% endunless %}{% endfor %}],
+  hide_from_library: "{{ book.hide_from_library }}"
+});
+
+{% endfor %}
+
+</script>
+
+
+{% render 'sss-society-classics', books: all_books, include_private_books: false %}
+
+
+{%- comment -%}
+===========================================================
+✨ STARTER PACK — WHERE NEW READERS BEGIN
+===========================================================
+{%- endcomment -%}
+
+{% assign starter_count = 0 %}
+
+{% for book in all_books %}
+  {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+  {% assign is_visible_value = is_visible | strip %}
+{% unless is_visible_value == 'true' %}
+    {% continue %}
+  {% endunless %}
+{% unless society %}
+  {% capture is_private %}{% render 'sss-book-private', book: book %}{% endcapture %}
+  {% assign is_private_value = is_private | strip %}
+  {% if is_private_value == 'true' %}
+    {% continue %}
+  {% endif %}
+
+{% endunless %}
+  {% if book.starter_pack.value %}
+    {% assign starter_count = starter_count | plus: 1 %}
+  {% endif %}
+{% endfor %}
+
+{% if starter_count > 0 %}
+
+<div id="starter-pack" class="sss-lib__starter">
+
+  <div class="sss-lib__starterHead">
+
+    <div class="sss-lib__starterKicker">
+      starter pack
+    </div>
+
+    <h2 class="sss-lib__starterTitle">
+      new to the society? start here.
+    </h2>
+
+    <div class="sss-lib__starterSub">
+      these are the books i recommend starting with if you're new to romance — or new to the smut & sentiment society.
+    </div>
+
+  </div>
+
+  <div class="sss-lib__grid">
+
+    {% assign starter_rendered = 0 %}
+
+    {% for book in all_books %}
+  {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+    {% assign is_visible_value = is_visible | strip %}
+  {% unless is_visible_value == 'true' %}
+    {% continue %}
+  {% endunless %}
+      {% capture is_private %}{% render 'sss-book-private', book: book %}{% endcapture %}
+      {% assign is_private_value = is_private | strip %}
+      {% if is_private_value == 'true' %}
+        {% continue %}
+      {% endif %}
+      {% if book.starter_pack.value and starter_rendered < 12 %}
+
+        {% assign starter_rendered = starter_rendered | plus: 1 %}
+
+        {% render 'sss-book-card', book: book %}
+
+      {% endif %}
+    {% endfor %}
+
+  </div>
+
+</div>
+
+{% endif %}
+
+{%- comment -%}
+===========================================================
+📅 2. TOP SHELF — CURRENT MONTH
+===========================================================
+{%- endcomment -%}
+
+{%- assign current_month = 'now' | date: "%Y-%m" -%}
+{%- assign featured_count = 0 -%}
+
+
+{% render 'sss-books-of-month', books: all_books, include_private_books: false %}
+
+<div id="moods" class="sss-lib__moods">
+
+
+<div class="sss-lib__moodHead">
+  <div class="sss-lib__moodKicker">the society shelves</div>
+  <h2 class="sss-lib__moodTitle">what are you in the mood for today?</h2>
+  <div class="sss-lib__moodSub">pick your poison.</div>
+    <div class="sss-lib__seriesDisclaimer">
+    <span class="sss-lib__seriesBadge sss-lib__seriesBadge--demo">1</span>
+    <span class="sss-lib__seriesText">
+      the pink # badge means the book is part of a connected series.
+    </span>
+    <span class="sss-lib__seriesBadge sss-lib__seriesBadge--demo sss-lib__seriesBadge--standalone">1</span>
+    <span class="sss-lib__seriesText">
+      the white # badge means the book is part of a series but can be read as a standalone.
+    </span>
+  </div>
+  
+{% render 'sss-mood-shelves', books: all_books, include_private_books: false %}
+
+ 
+</div>
+
+</div>
+
+{% render 'sss-full-archive', books: all_books %}
+
+
+  </div>
+
+  <!-- Modal -->
+  {% render 'sss-library-modal' %}
+
+<div id="sssNotepad" hidden>
+
+  <div class="sss-notepad__card">
+
+    <div class="sss-notepad__header">
+      <span>🖤 my society shelf</span>
+      <button id="sssNotepadClose" type="button">×</button>
+    </div>
+
+    <div class="sss-notepad__body" id="sssNotepadBody"></div>
+
+  </div>
+
+</div>
+<div id="sssFloatingShare">
+
+<button id="sssShareLibrary" class="sss-lib__floatingShareBtn">
+📲
+</button>
+
+</div>
+<div id="sssBackToTop">
+  <button class="sss-lib__backTopBtn">↑</button>
+</div>
+<div id="sssTropePopup" class="sss-tropePopup" hidden>
+
+<div class="sss-tropePopup__title">
+i want books by trope
+</div>
+
+<div class="sss-tropePopup__list" id="sssTropePopupList"></div>
+
+<button class="sss-tropePopup__close" id="sssTropePopupClose">
+×
+</button>
+
+</div>
+</section>
+
+<style>
+  #sss-lib-{{ section.id }} .bbb-homeRecDemo--library{
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) minmax(300px, 390px);
+    gap:24px;
+    align-items:center;
+    max-width:920px;
+    margin:18px 0 24px;
+    padding:22px 24px;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:24px;
+    background:linear-gradient(180deg, rgba(255,138,199,.07), rgba(255,255,255,.03));
+    box-shadow:0 18px 50px rgba(0,0,0,.22);
+    text-decoration:none;
+    text-align:left;
+    color:inherit;
+  }
+
+  #sss-lib-{{ section.id }} .bbb-homeRecDemo__kicker{
+    font-size:10px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:#ffb8e0;
+    margin-bottom:10px;
+  }
+
+  #sss-lib-{{ section.id }} .bbb-homeRecDemo__title{
+    font-family:'Cormorant', serif;
+    font-size:clamp(2rem, 3vw, 2.6rem);
+    line-height:1.12;
+    color:#f7f3ee;
+  }
+
+  #sss-lib-{{ section.id }} .bbb-homeRecDemo__title span{
+    color:#ff8ac7;
+    font-family:'Kaushan Script', cursive;
+    font-size:1.08em;
+    font-weight:400;
+    padding:0 .04em;
+  }
+
+  #sss-lib-{{ section.id }} .bbb-homeRecDemo__sub{
+    margin-top:10px;
+    font-size:.78rem;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:rgba(247,243,238,.5);
+  }
+
+  #sss-lib-{{ section.id }} .bbb-homeRecDemo__cta{
+    margin-top:14px;
+    color:#ffb8e0;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    font-weight:700;
+  }
+
+  #sss-lib-{{ section.id }} .bbb-homeRecDemo__stage{
+    position:relative;
+    min-height:235px;
+  }
+
+  #sss-lib-{{ section.id }} .bbb-homeRecDemo__book{
+    position:absolute;
+    display:grid;
+    grid-template-columns:82px minmax(0, 1fr);
+    gap:12px;
+    width:100%;
+    padding:12px;
+    border-radius:20px;
+    border:1px solid rgba(255,255,255,.1);
+    background:rgba(15,15,18,.86);
+    box-shadow:0 18px 38px rgba(0,0,0,.24);
+  }
+
+  #sss-lib-{{ section.id }} .bbb-homeRecDemo__book--picked{
+    top:0;
+    left:0;
+    z-index:1;
+  }
+
+  #sss-lib-{{ section.id }} .bbb-homeRecDemo__book--result{
+    right:0;
+    bottom:0;
+    z-index:2;
+    transform:translate(8px, 8px) rotate(-2deg);
+    animation:bbbLibraryRecSlide 3.6s ease-in-out infinite;
+  }
+
+  #sss-lib-{{ section.id }} .bbb-homeRecDemo__book img{
+    width:82px;
+    aspect-ratio:3 / 4.2;
+    object-fit:cover;
+    border-radius:12px;
+    display:block;
+  }
+
+  #sss-lib-{{ section.id }} .bbb-homeRecDemo__label{
+    grid-column:1 / -1;
+    font-size:9px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:#ffb8e0;
+  }
+
+  #sss-lib-{{ section.id }} .bbb-homeRecDemo__meta{
+    align-self:center;
+    min-width:0;
+  }
+
+  #sss-lib-{{ section.id }} .bbb-homeRecDemo__bookTitle{
+    font-family:'Cormorant', serif;
+    font-size:1.4rem;
+    line-height:1.04;
+    color:#f7f3ee;
+  }
+
+  @keyframes bbbLibraryRecSlide{
+    0%, 18% { transform:translate(32px, 18px) rotate(-4deg); opacity:.2; }
+    34%, 100% { transform:translate(8px, 8px) rotate(-2deg); opacity:1; }
+  }
+
+  #sss-lib-{{ section.id }} .sss-lib__recTease{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:18px;
+    margin:18px 0 24px;
+    padding:18px 18px;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:22px;
+    background:rgba(255,255,255,.03);
+    text-decoration:none;
+    color:inherit;
+  }
+
+  #sss-lib-{{ section.id }} .sss-lib__recTeaseHead{
+    max-width:30ch;
+  }
+
+  #sss-lib-{{ section.id }} .sss-lib__recTeaseKicker{
+    font-size:10px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:rgba(255,184,224,.82);
+    margin-bottom:8px;
+  }
+
+  #sss-lib-{{ section.id }} .sss-lib__recTeaseTitle{
+    font-family:'Cormorant', serif;
+    font-size:clamp(1.7rem, 3vw, 2.2rem);
+    line-height:1.15;
+    color:#f7f3ee;
+  }
+
+  #sss-lib-{{ section.id }} .sss-lib__recTeaseTitle span{
+    color:#ff8ac7;
+    font-family:'Kaushan Script', cursive;
+    font-size:1.08em;
+    font-weight:400;
+    padding:0 .04em;
+  }
+
+  #sss-lib-{{ section.id }} .sss-lib__recTeaseSub{
+    margin-top:8px;
+    font-size:.74rem;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    line-height:1.5;
+    color:rgba(247,243,238,.5);
+  }
+
+  #sss-lib-{{ section.id }} .sss-lib__recTeaseStage{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-shrink:0;
+  }
+
+  #sss-lib-{{ section.id }} .sss-lib__recTeaseBook{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:0;
+    min-height:96px;
+    padding:12px;
+    border-radius:18px;
+    border:1px solid rgba(255,255,255,.1);
+    background:rgba(10,10,12,.52);
+    transition:transform .28s ease, border-color .28s ease, box-shadow .28s ease;
+  }
+
+  #sss-lib-{{ section.id }} .sss-lib__recTeaseBook:first-child{
+    padding:8px;
+    min-height:84px;
+    background:transparent;
+    border-color:rgba(255,255,255,.05);
+  }
+
+  #sss-lib-{{ section.id }} .sss-lib__recTeaseBook img{
+    width:64px;
+    aspect-ratio:3 / 4.2;
+    object-fit:cover;
+    border-radius:10px;
+    display:block;
+  }
+
+  #sss-lib-{{ section.id }} .sss-lib__recTeaseBook:first-child img{
+    width:56px;
+    opacity:.96;
+  }
+
+  #sss-lib-{{ section.id }} .sss-lib__recTeaseLabel{
+    font-size:9px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:#ffb8e0;
+  }
+
+  #sss-lib-{{ section.id }} .sss-lib__recTeaseBookTitle{
+    margin-top:5px;
+    font-size:.98rem;
+    color:#f7f3ee;
+    line-height:1.2;
+  }
+
+  #sss-lib-{{ section.id }} .sss-lib__recTeaseBook:first-child .sss-lib__recTeaseMeta{
+    display:none;
+  }
+
+  #sss-lib-{{ section.id }} .sss-lib__recTeaseArrow{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:34px;
+    height:34px;
+    border-radius:999px;
+    border:1px solid rgba(255,138,199,.28);
+    color:#ff8ac7;
+    font-size:16px;
+    flex-shrink:0;
+    animation:sssRecTeaseArrow 2.8s ease-in-out infinite;
+  }
+
+  #sss-lib-{{ section.id }} .sss-lib__recTeaseBook--result{
+    transform:translateX(-8px);
+    box-shadow:0 14px 30px rgba(0,0,0,.22);
+    animation:sssRecTeaseCard 2.8s ease-in-out infinite;
+  }
+
+  #sss-lib-{{ section.id }} .sss-lib__recTease:hover .sss-lib__recTeaseBook{
+    border-color:rgba(255,255,255,.16);
+  }
+
+  @keyframes sssRecTeaseCard{
+    0%, 100% { transform:translateX(-12px) translateY(0); }
+    50% { transform:translateX(-4px) translateY(-2px); }
+  }
+
+  @keyframes sssRecTeaseArrow{
+    0%, 100% { transform:translateX(0); opacity:.72; }
+    50% { transform:translateX(3px); opacity:1; }
+  }
+
+  @media (max-width: 749px){
+    #sss-lib-{{ section.id }} .bbb-homeRecDemo--library{
+      grid-template-columns:1fr;
+      gap:16px;
+      margin:14px 0 20px;
+      padding:16px 14px;
+      border-radius:18px;
+    }
+
+    #sss-lib-{{ section.id }} .bbb-homeRecDemo__title{
+      font-size:clamp(1.6rem, 8vw, 2.1rem);
+    }
+
+    #sss-lib-{{ section.id }} .bbb-homeRecDemo__sub{
+      font-size:.68rem;
+    }
+
+    #sss-lib-{{ section.id }} .bbb-homeRecDemo__cta{
+      margin-top:12px;
+      font-size:11px;
+    }
+
+    #sss-lib-{{ section.id }} .bbb-homeRecDemo__stage{
+      min-height:210px;
+    }
+
+    #sss-lib-{{ section.id }} .bbb-homeRecDemo__book{
+      grid-template-columns:70px minmax(0, 1fr);
+      gap:10px;
+      padding:10px;
+    }
+
+    #sss-lib-{{ section.id }} .bbb-homeRecDemo__book img{
+      width:70px;
+      border-radius:10px;
+    }
+
+    #sss-lib-{{ section.id }} .bbb-homeRecDemo__bookTitle{
+      font-size:1.2rem;
+    }
+
+    #sss-lib-{{ section.id }} .sss-lib__recTease{
+      flex-direction:column;
+      align-items:flex-start;
+      gap:12px;
+      margin:14px 0 20px;
+      padding:14px 12px;
+      border-radius:18px;
+    }
+
+    #sss-lib-{{ section.id }} .sss-lib__recTeaseTitle{
+      font-size:1.5rem;
+    }
+
+    #sss-lib-{{ section.id }} .sss-lib__recTeaseSub{
+      font-size:.68rem;
+    }
+
+    #sss-lib-{{ section.id }} .sss-lib__recTeaseStage{
+      width:100%;
+      gap:6px;
+    }
+
+    #sss-lib-{{ section.id }} .sss-lib__recTeaseBook{
+      flex:1 1 0;
+      gap:10px;
+      min-height:84px;
+      padding:9px;
+    }
+
+    #sss-lib-{{ section.id }} .sss-lib__recTeaseBook:first-child{
+      min-height:72px;
+      padding:7px;
+    }
+
+    #sss-lib-{{ section.id }} .sss-lib__recTeaseBook img{
+      width:52px;
+      border-radius:8px;
+    }
+
+    #sss-lib-{{ section.id }} .sss-lib__recTeaseBook:first-child img{
+      width:46px;
+    }
+
+    #sss-lib-{{ section.id }} .sss-lib__recTeaseBookTitle{
+      font-size:.88rem;
+    }
+
+    #sss-lib-{{ section.id }} .sss-lib__recTeaseArrow{
+      width:28px;
+      height:28px;
+      font-size:13px;
+    }
+  }
+</style>
+
+{% assign script_font = settings.kaushan_script_n4 %}
+{{ 'sss-library.css' | asset_url | stylesheet_tag }}
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+{{ 'sss-library.js' | asset_url | script_tag }}
+
+{% schema %}
+{
+  "name": "public library page",
+  "settings": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "kicker",
+      "default": "official librar"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "title",
+      "default": "the romance library"
+    },
+    {
+      "type": "textarea",
+      "id": "subtext",
+      "label": "subtext",
+      "default": "The official collection of romance books curated and catalogued by The Smut & Sentiment Society."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_ranker",
+      "label": "Show filtering system",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_monthly",
+      "label": "Show books of the month section",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_classics",
+      "label": "Show society classics shelf",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "rec_kicker",
+      "label": "Rec tease kicker",
+      "default": "reader chemistry"
+    },
+    {
+      "type": "text",
+      "id": "rec_title",
+      "label": "Rec tease title",
+      "default": "what to read next"
+    },
+    {
+      "type": "text",
+      "id": "rec_subtext",
+      "label": "Rec tease subtext",
+      "default": "pick a favorite. get a closer match."
+    },
+    {
+      "type": "text",
+      "id": "rec_pick_title",
+      "label": "Picked book title",
+      "default": "daggermouth"
+    },
+    {
+      "type": "text",
+      "id": "rec_result_title",
+      "label": "Result book title",
+      "default": "until i die"
+    },
+    {
+      "type": "url",
+      "id": "rec_link",
+      "label": "Rec tease link"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "shelf",
+      "name": "Shelf",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Shelf Title",
+          "default": "for the morally gray lovers"
+        },
+        {
+          "type": "text",
+          "id": "description",
+          "label": "Shelf Description",
+          "default": "(dark romance, obsessive, dangerous)"
+        },
+        {
+          "type": "text",
+          "id": "category_key",
+          "label": "Metaobject Category Key",
+          "default": "morally gray lovers"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "public library page"
+    }
+  ]
+}
+{% endschema %}

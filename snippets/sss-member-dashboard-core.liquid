@@ -1,0 +1,220 @@
+{% comment %}
+  shared dashboard core for section + staging custom-liquid usage
+{% endcomment %}
+
+{%- assign active_drop = nil -%}
+{%- assign best_drop = nil -%}
+{%- assign best_drop_key = '' -%}
+{%- assign fallback_drop = nil -%}
+{%- assign fallback_drop_key = '' -%}
+{%- capture shared_preview_drop_handle -%}{% render 'sss-preview-drop-handle' %}{%- endcapture -%}
+{%- assign preview_drop_handle = preview_drop_handle_override | default: shared_preview_drop_handle | strip -%}
+{%- assign now_key = 'now' | date: '%Y-%m-%d' -%}
+
+{%- if preview_drop_handle != blank -%}
+  {%- assign active_drop = shop.metaobjects.sss_drop[preview_drop_handle] -%}
+{%- elsif shop.metaobjects.sss_drop != blank -%}
+  {%- for d in shop.metaobjects.sss_drop.values -%}
+    {%- if d.release_date != blank -%}
+      {%- assign d_key = d.release_date | date: '%Y-%m-%d' -%}
+      {%- if d_key <= now_key -%}
+        {%- if best_drop_key == '' or d_key >= best_drop_key -%}
+          {%- assign best_drop = d -%}
+          {%- assign best_drop_key = d_key -%}
+        {%- endif -%}
+      {%- endif -%}
+      {%- if fallback_drop_key == '' or d_key >= fallback_drop_key -%}
+        {%- assign fallback_drop = d -%}
+        {%- assign fallback_drop_key = d_key -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+
+  {%- if best_drop != nil -%}
+    {%- assign active_drop = best_drop -%}
+  {%- elsif fallback_drop != nil -%}
+    {%- assign active_drop = fallback_drop -%}
+  {%- endif -%}
+{%- endif -%}
+
+{%- assign dash_accent = '#ff8ac7' -%}
+{%- assign dash_card_bg = '#151515' -%}
+{%- assign dash_ink = '#f6f6f6' -%}
+{%- assign dash_month_name = active_drop.name | default: '' -%}
+
+{%- if active_drop != blank -%}
+  {%- if active_drop.mood_accent != blank -%}{%- assign dash_accent = active_drop.mood_accent -%}{%- endif -%}
+  {%- if active_drop.mood_pill_bg != blank -%}{%- assign dash_card_bg = active_drop.mood_pill_bg -%}{%- endif -%}
+  {%- if active_drop.mood_pill_ink != blank -%}{%- assign dash_ink = active_drop.mood_pill_ink -%}{%- endif -%}
+{%- endif -%}
+
+{%- assign intro_copy = 'this is your private reading room for the month: the current obsession, the rituals set aside for you, the archive worth reopening, and the little corners that feel especially curated to your taste.' -%}
+{%- if dash_month_name != blank -%}
+  {%- capture intro_copy -%}this is your private reading room for {{ dash_month_name | downcase }}: the current obsession, the rituals set aside for you, the archive worth reopening, and the little corners that feel especially curated to your taste.{%- endcapture -%}
+{%- endif -%}
+
+<section
+  class="sss-memberdash"
+  style="--dash-accent: {{ dash_accent }}; --dash-card-bg: {{ dash_card_bg }}; --dash-ink: {{ dash_ink }};"
+>
+  <div class="sss-memberdash__wrap">
+    <div class="sss-memberdash__intro">
+      <div class="sss-memberdash__sparkles" aria-hidden="true">
+        <span>✦</span><span>✦</span><span>✦</span><span>✦</span><span>✦</span><span>✦</span>
+        <span>✦</span><span>✦</span><span>✦</span><span>✦</span><span>✦</span><span>✦</span>
+      </div>
+      <p class="sss-memberdash__kicker">classified for members</p>
+      <h1 class="sss-memberdash__title">welcome back to the society.</h1>
+      <p class="sss-memberdash__sub">{{ intro_copy }}</p>
+    </div>
+
+    <div class="sss-memberdash__grid">
+      <article class="sss-memberdash__card">
+        <p class="sss-memberdash__cardKicker">start here</p>
+        <h2 class="sss-memberdash__cardTitle">step 1. favorite books first</h2>
+        <div class="sss-memberdash__stepLine">
+          <p class="sss-memberdash__cardText">favorite the books you love in the library.</p>
+          <a href="/pages/sss-library-page" class="sss-memberdash__btn sss-memberdash__btn--ghost">favorite books in the library</a>
+        </div>
+        <div class="sss-memberdash__stepLine">
+          <p class="sss-memberdash__cardText">step 2. open made for you, take the quiz, and get personalized results.</p>
+          <a href="/pages/made-for-you" class="sss-memberdash__btn">open made for you</a>
+        </div>
+      </article>
+
+      <article class="sss-memberdash__card">
+        <p class="sss-memberdash__cardKicker">this month inside the society</p>
+        <h2 class="sss-memberdash__cardTitle">the current obsession, all in one place</h2>
+        <p class="sss-memberdash__cardText">reset first, the current drop next, and then a little member-only fun waiting at the end.</p>
+        <div class="sss-memberdash__stackLinks">
+          <button type="button" class="sss-memberdash__navLink" data-memberdash-target="reset">monthly reset</button>
+          <button type="button" class="sss-memberdash__navLink" data-memberdash-target="collection">current drop</button>
+          <button type="button" class="sss-memberdash__navLink" data-memberdash-target="fun">member fun</button>
+        </div>
+      </article>
+
+      <article class="sss-memberdash__card">
+        <p class="sss-memberdash__cardKicker">member archive</p>
+        <h2 class="sss-memberdash__cardTitle">for kindle, pinterest, and bookish printable lovers</h2>
+        <p class="sss-memberdash__cardText">the prettiest corners of the society live here: inserts, templates, and the quote library you will keep reopening when you want a little more atmosphere.</p>
+        <div class="sss-memberdash__stackLinks">
+          <a href="/pages/sss-printable-kindle-inserts" class="sss-memberdash__textLink">open inserts</a>
+          <a href="/pages/sss-canva-templates" class="sss-memberdash__textLink">open templates</a>
+          <a href="/pages/sss-quote-wall" class="sss-memberdash__textLink">fall for a quote</a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<script>
+  (function() {
+    var root = document.currentScript && document.currentScript.previousElementSibling;
+    if (!root) return;
+    var selectors = {
+      reset: '[id*="__sss_society_journal_"]',
+      collection: '[id*="__sss_auto_exclusive_"]',
+      fun: '[id*="__sss_word_search_"], [id*="__sss_society_cipher_"]'
+    };
+    root.querySelectorAll('[data-memberdash-target]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var target = document.querySelector(selectors[btn.getAttribute('data-memberdash-target')]);
+        if (!target) return;
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  })();
+</script>
+
+<style>
+  .sss-memberdash{
+    background:#0b0b0b;
+    color:#f6f6f6;
+    padding:10px 12px 22px;
+    position:relative;
+    overflow:hidden;
+  }
+  .sss-memberdash:before{
+    content:"";
+    position:absolute;
+    inset:-40px;
+    pointer-events:none;
+    background:
+      radial-gradient(900px 520px at 50% 120px, color-mix(in srgb, var(--dash-accent) 18%, transparent), transparent 70%),
+      repeating-linear-gradient(to bottom, rgba(255,255,255,.03), rgba(255,255,255,.03) 1px, transparent 1px, transparent 26px);
+    opacity:.72;
+  }
+  .sss-memberdash__wrap{ max-width:1200px; margin:0 auto; position:relative; z-index:1; }
+  .sss-memberdash__intro{ max-width:760px; margin:0 0 20px; position:relative; padding:12px 0 6px; }
+  .sss-memberdash__sparkles{ position:absolute; inset:-24px -40px -12px -24px; pointer-events:none; overflow:hidden; }
+  .sss-memberdash__sparkles span{
+    position:absolute;
+    color: color-mix(in srgb, var(--dash-accent) 40%, #fff);
+    text-shadow:0 0 10px color-mix(in srgb, var(--dash-accent) 45%, #fff), 0 0 22px color-mix(in srgb, var(--dash-accent) 28%, transparent);
+    animation:sssMemberTwinkle 2.9s ease-in-out infinite;
+    opacity:.34;
+  }
+  .sss-memberdash__sparkles span:nth-child(1){top:8px;left:14px;font-size:10px;animation-delay:0s}
+  .sss-memberdash__sparkles span:nth-child(2){top:36px;left:88px;font-size:16px;animation-delay:.3s}
+  .sss-memberdash__sparkles span:nth-child(3){top:10px;left:180px;font-size:12px;animation-delay:.8s}
+  .sss-memberdash__sparkles span:nth-child(4){top:54px;left:258px;font-size:9px;animation-delay:1.2s}
+  .sss-memberdash__sparkles span:nth-child(5){top:2px;right:246px;font-size:11px;animation-delay:1.7s}
+  .sss-memberdash__sparkles span:nth-child(6){top:42px;right:174px;font-size:15px;animation-delay:.45s}
+  .sss-memberdash__sparkles span:nth-child(7){top:16px;right:104px;font-size:10px;animation-delay:2.1s}
+  .sss-memberdash__sparkles span:nth-child(8){top:62px;right:22px;font-size:13px;animation-delay:1.4s}
+  .sss-memberdash__sparkles span:nth-child(9){bottom:8px;left:132px;font-size:10px;animation-delay:2.4s}
+  .sss-memberdash__sparkles span:nth-child(10){bottom:4px;left:318px;font-size:14px;animation-delay:1s}
+  .sss-memberdash__sparkles span:nth-child(11){bottom:10px;right:210px;font-size:9px;animation-delay:2.7s}
+  .sss-memberdash__sparkles span:nth-child(12){bottom:0;right:70px;font-size:11px;animation-delay:.65s}
+  .sss-memberdash__kicker,.sss-memberdash__cardKicker{ margin:0 0 8px; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:rgba(246,246,246,.66); }
+  .sss-memberdash__title{ margin:0; font-size:clamp(30px,5vw,56px); line-height:.98; text-transform:lowercase; position:relative; z-index:1; }
+  .sss-memberdash__sub{ margin:12px 0 0; max-width:700px; color:rgba(246,246,246,.76); line-height:1.7; text-transform:lowercase; position:relative; z-index:1; }
+  .sss-memberdash__grid{ display:grid; grid-template-columns:1.2fr 1fr 1fr; gap:16px; }
+  .sss-memberdash__card{
+    border:1px solid color-mix(in srgb, var(--dash-accent) 16%, rgba(255,255,255,.1));
+    border-radius:26px;
+    padding:22px;
+    background:linear-gradient(180deg, color-mix(in srgb, var(--dash-card-bg) 92%, rgba(255,255,255,.06)), color-mix(in srgb, var(--dash-card-bg) 96%, rgba(255,255,255,.015)));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  .sss-memberdash__cardTitle{ margin:0; font-size:clamp(21px,2.4vw,31px); line-height:1.08; text-transform:lowercase; }
+  .sss-memberdash__cardText{ margin:0; color:rgba(246,246,246,.72); line-height:1.7; text-transform:lowercase; }
+  .sss-memberdash__stepLine{ display:grid; gap:10px; margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,.08); }
+  .sss-memberdash__stepLine:first-of-type{ margin-top:12px; }
+  .sss-memberdash__btn{
+    display:inline-flex; align-items:center; justify-content:center; min-height:42px; padding:0 16px; border-radius:999px; text-decoration:none;
+    border:1px solid color-mix(in srgb, var(--dash-accent) 38%, transparent);
+    background:color-mix(in srgb, var(--dash-accent) 14%, transparent);
+    color:#fff; font-size:13px; text-transform:lowercase; transition:background .18s ease,color .18s ease,border-color .18s ease;
+  }
+  .sss-memberdash__btn--ghost{ background:transparent; border-color:rgba(255,255,255,.18); }
+  .sss-memberdash__stackLinks{ display:grid; gap:10px; margin-top:16px; }
+  .sss-memberdash__navLink,.sss-memberdash__textLink{
+    appearance:none; border:0; padding:10px 12px; border-radius:14px;
+    background:color-mix(in srgb, var(--dash-card-bg) 90%, rgba(255,255,255,.03));
+    color:var(--dash-accent); text-decoration:none; font:inherit; font-size:13px; text-transform:lowercase; text-align:left; cursor:pointer;
+    transition:background .18s ease,color .18s ease,border-color .18s ease,box-shadow .18s ease;
+    box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--dash-accent) 14%, rgba(255,255,255,.06));
+  }
+  .sss-memberdash__navLink:hover,.sss-memberdash__textLink:hover{
+    background:color-mix(in srgb, var(--dash-accent) 12%, transparent);
+    color:#fff;
+    box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--dash-accent) 28%, transparent);
+  }
+  .sss-memberdash__btn:hover{ background:color-mix(in srgb, var(--dash-accent) 22%, transparent); border-color:color-mix(in srgb, var(--dash-accent) 48%, transparent); color:#fff; }
+  .sss-memberdash__btn--ghost:hover{ background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.24); }
+  @keyframes sssMemberTwinkle{ 0%,100%{opacity:.15;transform:scale(.88)} 50%{opacity:1;transform:scale(1.22)} }
+  @media screen and (max-width: 989px){
+    .sss-memberdash__grid{ grid-template-columns:1fr; gap:14px; }
+  }
+  @media screen and (max-width: 749px){
+    .sss-memberdash{ padding:4px 12px 18px; }
+    .sss-memberdash__intro{ margin-bottom:14px; padding-top:16px; }
+    .sss-memberdash__title{ font-size:32px; }
+    .sss-memberdash__sparkles{ inset:-18px -14px -10px -10px; }
+    .sss-memberdash__grid{ display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory; padding-bottom:4px; -webkit-overflow-scrolling:touch; }
+    .sss-memberdash__grid::-webkit-scrollbar{ display:none; }
+    .sss-memberdash__card{ padding:18px; border-radius:22px; min-width:86%; scroll-snap-align:start; }
+    .sss-memberdash__btn{ width:100%; }
+  }
+</style>

@@ -1,0 +1,566 @@
+{% comment %}
+  SSS CALENDAR + JOURNAL — DROP DRIVEN
+{% endcomment %}
+
+{%- assign drop = nil -%}
+{%- assign best_drop = nil -%}
+{%- assign best_drop_key = '' -%}
+{%- assign month_drop = nil -%}
+{%- assign month_drop_key = '' -%}
+{%- capture shared_preview_drop_handle -%}{% render 'sss-preview-drop-handle' %}{%- endcapture -%}
+{%- assign preview_drop_handle = section.settings.preview_drop_handle | default: shared_preview_drop_handle | strip -%}
+{%- assign selected_drop = section.settings.drop -%}
+{%- assign now_key = 'now' | date: '%Y-%m-%d' -%}
+{%- assign now_month_key = 'now' | date: '%Y-%m' -%}
+
+{%- if preview_drop_handle != blank -%}
+  {%- assign drop = shop.metaobjects.sss_drop[preview_drop_handle] -%}
+{%- elsif selected_drop != blank -%}
+  {%- assign drop = selected_drop -%}
+{%- elsif shop.metaobjects.sss_drop != blank -%}
+  {%- for d in shop.metaobjects.sss_drop.values -%}
+    {%- assign candidate_month_key = '' -%}
+    {%- if d.journal_start_date != blank -%}
+      {%- assign candidate_month_key = d.journal_start_date | date: '%Y-%m' -%}
+    {%- elsif d.release_date != blank -%}
+      {%- assign candidate_month_key = d.release_date | date: '%Y-%m' -%}
+    {%- endif -%}
+
+    {%- if candidate_month_key == now_month_key and d.release_date != blank -%}
+      {%- assign d_month_sort_key = d.release_date | date: '%Y-%m-%d' -%}
+      {%- if month_drop_key == '' or d_month_sort_key >= month_drop_key -%}
+        {%- assign month_drop = d -%}
+        {%- assign month_drop_key = d_month_sort_key -%}
+      {%- endif -%}
+    {%- endif -%}
+
+    {%- if d.release_date != blank -%}
+      {%- assign d_key = d.release_date | date: '%Y-%m-%d' -%}
+      {%- if d_key <= now_key -%}
+        {%- if best_drop_key == '' or d_key >= best_drop_key -%}
+          {%- assign best_drop = d -%}
+          {%- assign best_drop_key = d_key -%}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+
+  {%- if month_drop != nil -%}
+    {%- assign drop = month_drop -%}
+  {%- elsif best_drop != nil -%}
+    {%- assign drop = best_drop -%}
+  {%- endif -%}
+{%- endif -%}
+
+{% if drop != blank %}
+
+{%- assign calendar_image = drop.calendar_image.value | default: drop.calendar_image -%}
+{%- assign calendar_pdf_link = drop.calendar_pdf.value.url
+  | default: drop.calendar_pdf.url
+  | default: drop.calendar_pdf.value
+  | default: drop.calendar_pdf
+  | default: drop.pdf_link.value.url
+  | default: drop.pdf_link.url
+  | default: drop.pdf_link.value
+  | default: drop.pdf_link
+-%}
+{%- assign canva_link = drop.canva_link.value.url | default: drop.canva_link.url | default: drop.canva_link.value | default: drop.canva_link -%}
+
+<div class="sss-calendar-wrapper">
+
+  <!-- ================= JOURNAL ================= -->
+  <section 
+    class="sss-journal-dark"
+style="
+  --card: {{ drop.mood_pill_bg }};
+  --accent: {{ drop.mood_accent }};
+  --text: {{ drop.mood_pill_lnk }};
+"
+  >
+    <div class="sss-journal-dark__wrap">
+      <div class="sss-journal-dark__card">
+
+        <div class="sss-journal-dark__top-actions">
+          <button id="open-notes" class="sss-icon-btn">📝</button>
+          <button id="journal-complete" class="sss-checkmark">✓</button>
+        </div>
+
+<p class="sss-journal-dark__label">daily prompt</p>
+
+<div class="sss-journal-dark__prompt" id="journal-prompt"></div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CALENDAR ================= -->
+  <div class="sss-calendar">
+
+    {% if calendar_image != blank %}
+      <img 
+        src="{{ calendar_image | image_url: width: 2000 }}"
+        class="sss-calendar__img"
+        alt="calendar"
+      >
+    {% endif %}
+
+    <div class="sss-calendar__grid" id="calendar-grid"></div>
+
+  </div>
+
+  <div class="sss-calendar__actions">
+
+    {% if calendar_pdf_link != blank %}
+      <a href="{{ calendar_pdf_link }}"
+         class="sss-calendar__btn"
+         target="_blank"
+         rel="noopener">
+        download pdf
+      </a>
+    {% endif %}
+
+    {% if canva_link != blank %}
+      <a href="{{ canva_link }}"
+         target="_blank"
+         rel="noopener"
+         class="sss-calendar__btn sss-calendar__btn--ghost">
+        edit in canva
+      </a>
+    {% endif %}
+
+  </div>
+
+</div>
+
+{% endif %}
+
+<style>
+
+/* ================= WRAPPER ================= */
+
+.sss-calendar-wrapper{
+  position:relative;
+  max-width:980px;
+ margin:40px auto 60px;   /* dramatically reduced */
+  padding:0 12px;  
+}
+
+/* ================= CALENDAR ================= */
+
+.sss-calendar{
+  position:relative;
+  width:100%;
+  border-radius:18px;
+  box-shadow:0 40px 100px rgba(0,0,0,.55);
+}
+
+.sss-calendar__img{
+  width:100%;
+  height:auto;
+  display:block;
+  border-radius:18px;
+}
+
+.sss-calendar__grid{
+  position:absolute;
+  inset:0;
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  grid-template-rows:repeat(6,1fr);
+  pointer-events:none;
+}
+
+.calendar-day{
+  position:relative;
+}
+
+.calendar-day--button{
+  appearance:none;
+  width:100%;
+  height:100%;
+  border:0;
+  background:transparent;
+  cursor:pointer;
+  position:relative;
+  pointer-events:auto;
+}
+
+.calendar-day__num{
+  position:absolute;
+  top:10px;
+  left:12px;
+  font-size:13px;
+  color:rgba(0,0,0,.72);
+}
+
+.calendar-day.is-past::after{
+  content:"";
+  position:absolute;
+  width:130%;
+  height:1.5px;
+  background:rgba(0,0,0,.6);
+  top:50%;
+  left:-15%;
+  transform:rotate(-35deg);
+}
+
+.calendar-day.is-today::before{
+  content:"";
+  position:absolute;
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  border:2px solid #c89aa2;
+  top:10px;
+  right:10px;
+}
+
+.calendar-day.is-newsletter::before{
+  content:"💌";
+  position:absolute;
+  bottom:10px;
+  right:10px;
+  font-size:14px;
+}
+
+.calendar-day--button:hover{
+  background:rgba(255,255,255,.08);
+}
+
+.calendar-day--button:focus-visible{
+  outline:2px solid #c89aa2;
+  outline-offset:-2px;
+}
+
+/* Buttons */
+
+.sss-calendar__actions{
+  display:flex;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:16px;
+}
+
+.sss-calendar__btn{
+  padding:8px 16px;
+  border-radius:999px;
+  background:#000;
+  color:#fff;
+  font-size:11px;
+  letter-spacing:.08em;
+  text-decoration:none;
+  border:1px solid rgba(255,255,255,.18);
+  transition:background .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;
+}
+
+.sss-calendar__btn--ghost{
+  background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.4);
+  color:#fff;
+}
+
+.sss-calendar__btn:hover,
+.sss-calendar__btn:focus-visible{
+  background:#e85a9b;
+  border-color:#e85a9b;
+  color:#fff;
+  transform:translateY(-1px);
+}
+
+.sss-calendar__btn--ghost:hover,
+.sss-calendar__btn--ghost:focus-visible{
+  background:rgba(232,90,155,.18);
+  border-color:#e85a9b;
+  color:#fff;
+}
+
+/* ================= JOURNAL ================= */
+
+.sss-journal-dark{
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  width:100%;
+  display:flex;
+  justify-content:center;
+  transform:translateY(-60px);
+  z-index:30;
+}
+
+.sss-journal-dark__wrap{
+  width:420px;
+  max-width:420px;
+  margin:0 auto;
+  pointer-events:auto;
+}
+
+.sss-journal-dark__card{
+  background: {{ drop.mood_pill_bg }};
+  border-radius:20px;
+  padding:28px 26px;
+  box-shadow:0 30px 80px rgba(0,0,0,.45);
+  color:var(--journal-ink, {{ drop.mood_pill_lnk | default: '#f6f6f6' }}) !important;
+  position:relative;
+}
+
+.sss-journal-dark__label{
+  font-size:12px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  margin:0 0 12px;
+  color:var(--journal-muted, rgba(255,255,255,.6));
+}
+
+.sss-journal-dark__prompt{
+  font-size:18px;
+  line-height:1.6;
+  font-weight:400;
+}
+
+.sss-journal-dark__top-actions{
+  position:absolute;
+  top:14px;
+  right:14px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.sss-icon-btn,
+.sss-checkmark{
+  flex:0 0 auto;
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:13px;
+  border:1px solid var(--journal-border, rgba(255,255,255,.3));
+  background:transparent;
+  color:var(--journal-muted, rgba(255,255,255,.7));
+  cursor:pointer;
+}
+
+.sss-checkmark.active{
+  background:#34c759;
+  border-color:#34c759;
+  color:#fff;
+}
+
+.sss-journal-dark__month{
+  font-size:12px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin:0 0 6px;
+}
+
+.sss-journal-dark__date{
+  font-size:14px;
+  opacity:.6;
+  margin:0 0 16px;
+}
+
+.sss-journal-dark__prompt{
+  font-size:17px;
+  line-height:1.5;
+}
+
+/* ================= MOBILE ================= */
+
+@media (max-width:768px){
+
+  .sss-calendar-wrapper{
+    display:flex;
+    flex-direction:column;
+  }
+
+  .sss-journal-dark{
+    position:relative;
+    transform:none;
+    margin-bottom:24px;
+    left:auto;
+    right:auto;
+    display:block;
+  }
+
+  .calendar-day__num{
+    top:6px;
+    left:8px;
+    font-size:11px;
+  }
+
+  .sss-calendarPromptModal__card{
+    width:min(92vw, 420px);
+    margin:18vh auto 0;
+    padding:22px 18px 18px;
+  }
+
+  .sss-journal-dark__wrap{
+    width:100%;
+    max-width:100%;
+  }
+
+  .sss-calendar__actions{
+    margin-top:14px;
+    justify-content:flex-start;
+  }
+
+}
+.sss-calendar-overlay{
+  position:relative;
+  max-width:980px;
+  margin:120px auto;
+  padding:0 20px;
+}
+
+.sss-calendar-overlay__container{
+  position:relative;
+}
+
+.sss-calendar-overlay__image{
+  width:100%;
+  display:block;
+  border-radius:18px;
+}
+
+/* GRID ON TOP OF IMAGE */
+.sss-calendar-overlay__grid{
+  position:absolute;
+  inset:0;
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  grid-template-rows:repeat(6,1fr);
+
+  /* ADJUST THIS TO ALIGN WITH YOUR DESIGN */
+  padding:120px 60px 80px 60px;
+}
+
+.sss-calendar-overlay__cell{
+  position:relative;
+}
+
+/* Newsletter dot */
+.newsletter-dot{
+  position:absolute;
+  bottom:8px;
+  right:8px;
+  font-size:14px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+  {% if drop != blank %}
+
+  /* ===== JOURNAL LOGIC ===== */
+
+  const prompts = `{{ drop.prompts | escape }}`.split("||");
+
+  const releaseDate = new Date("{{ drop.journal_start_date }}");
+  const today = new Date();
+
+  let day = Math.floor((today - releaseDate)/(1000*60*60*24)) + 1;
+
+  if(day < 1) day = 1;
+  if(day > prompts.length) day = prompts.length;
+
+const promptEl = document.getElementById("journal-prompt");
+
+if(promptEl && prompts.length){
+  promptEl.textContent = prompts[day-1];
+}
+
+  /* ===== JOURNAL CONTRAST ===== */
+
+  const journalCard = document.querySelector(".sss-journal-dark__card");
+  const journalShell = document.querySelector(".sss-journal-dark");
+
+  function pickJournalContrast(){
+    if(!journalCard || !journalShell) return;
+    const bg = window.getComputedStyle(journalCard).backgroundColor;
+    const match = bg && bg.match(/\d+(\.\d+)?/g);
+    if(!match || match.length < 3) return;
+    const r = Number(match[0]);
+    const g = Number(match[1]);
+    const b = Number(match[2]);
+    const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+
+    if(luminance > 0.68){
+      journalShell.style.setProperty("--journal-ink", "rgba(20,20,20,.92)");
+      journalShell.style.setProperty("--journal-muted", "rgba(20,20,20,.62)");
+      journalShell.style.setProperty("--journal-border", "rgba(20,20,20,.18)");
+    } else {
+      journalShell.style.setProperty("--journal-ink", "rgba(246,246,246,.96)");
+      journalShell.style.setProperty("--journal-muted", "rgba(246,246,246,.68)");
+      journalShell.style.setProperty("--journal-border", "rgba(255,255,255,.3)");
+    }
+  }
+
+  pickJournalContrast();
+
+  /* ===== NOTES BUTTON ===== */
+
+  const notesBtn = document.getElementById("open-notes");
+
+  if(notesBtn){
+    notesBtn.addEventListener("click", function(){
+
+      const fullText =
+        "{{ drop.name }} — day " + day + "\n\n" +
+        (prompts[day-1] || "");
+
+      if(navigator.share){
+        navigator.share({
+          title: "society journal",
+          text: fullText
+        });
+      } else {
+        navigator.clipboard.writeText(fullText);
+        alert("copied ✦");
+      }
+
+    });
+  }
+
+  /* ===== CHECK BUTTON ===== */
+
+  const checkBtn = document.getElementById("journal-complete");
+
+  if(checkBtn){
+    checkBtn.addEventListener("click", function(){
+      checkBtn.classList.toggle("active");
+    });
+  }
+
+  {% endif %}
+
+});
+</script>
+
+{% schema %}
+{
+  "name": "sss calendar + journal",
+  "settings": [
+    {
+      "type": "metaobject",
+      "id": "drop",
+      "label": "Select Drop",
+      "metaobject_type": "sss_drop"
+    },
+    {
+      "type": "text",
+      "id": "preview_drop_handle",
+      "label": "Preview Drop Handle",
+      "info": "Optional. Use this to stage the next drop without changing the live page."
+    }
+  ],
+  "presets":[
+    { "name":"sss calendar + journal" }
+  ]
+}
+{% endschema %}

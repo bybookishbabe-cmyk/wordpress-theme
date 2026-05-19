@@ -1,0 +1,813 @@
+{%- liquid
+  assign vault_login_url = routes.account_login_url | default: '/account/login'
+  assign vault_login_url = vault_login_url | append: '?return_url=%2Fpages%2Fmy-vault'
+
+  assign customer_size = ''
+  assign has_insert_vault = false
+  assign has_canva_vault = false
+
+  if customer
+    assign customer_size = customer.metafields.custom.kindle_insert_size.value | default: customer.metafields.custom.kindle_insert_size | append: ''
+
+    assign has_insert_vault_value = customer.metafields.custom.has_kindle_insert_vault.value | default: customer.metafields.custom.has_kindle_insert_vault | append: '' | downcase
+    if has_insert_vault_value == 'true'
+      assign has_insert_vault = true
+    endif
+
+    assign has_canva_vault_value = customer.metafields.custom.has_canva_template_vault.value | default: customer.metafields.custom.has_canva_template_vault | append: '' | downcase
+    if has_canva_vault_value == 'true'
+      assign has_canva_vault = true
+    endif
+
+    if has_insert_vault == false
+      assign customer_vault_value = customer.metafields.custom.digital_vault_active.value | default: customer.metafields.custom.digital_vault_active | append: '' | downcase
+      assign customer_vault_tier = customer.metafields.custom.digital_vault_tier.value | default: customer.metafields.custom.digital_vault_tier | append: ''
+      if customer_vault_value == 'true'
+        if customer_vault_tier == 'kindle-inserts'
+          assign has_insert_vault = true
+        endif
+      endif
+    endif
+  endif
+
+  assign has_any_vault = false
+  if has_insert_vault or has_canva_vault
+    assign has_any_vault = true
+  endif
+
+  assign show_insert_preview = false
+  if request.design_mode and has_insert_vault == false
+    assign show_insert_preview = true
+  endif
+
+  assign insert_vault_url = section.settings.insert_vault_url | default: '/pages/my-kindle-inserts'
+  assign insert_buy_url = section.settings.insert_buy_url | default: '/products/printable-kindle-insert-vault'
+  assign canva_buy_url = section.settings.canva_buy_url | default: '/pages/bookish-templates'
+
+  if insert_vault_url contains 'shopify://pages/'
+    assign insert_vault_url = insert_vault_url | replace: 'shopify://pages/', '/pages/'
+  elsif insert_vault_url contains 'shopify://products/'
+    assign insert_vault_url = insert_vault_url | replace: 'shopify://products/', '/products/'
+  endif
+
+  if insert_vault_url == '/pages/my-vault'
+    assign insert_vault_url = '/pages/my-kindle-inserts'
+  endif
+-%}
+
+{%- paginate collections.all.products by 1000 -%}
+  {%- assign insert_matches = 0 -%}
+  {%- assign preview_card_limit = 16 -%}
+  {%- assign preview_cards_shown = 0 -%}
+
+  {%- capture insert_cards -%}
+    {%- for product in collections.all.products -%}
+      {%- assign in_vault_value = product.metafields.custom.in_vault.value | default: product.metafields.custom.in_vault | append: '' | downcase -%}
+      {%- unless in_vault_value == 'true' -%}
+        {%- continue -%}
+      {%- endunless -%}
+
+      {%- assign product_vault_type = product.metafields.custom.vault_type.value | default: product.metafields.custom.vault_type | append: '' -%}
+      {%- if product_vault_type != blank and product_vault_type != 'kindle-inserts' -%}
+        {%- continue -%}
+      {%- endif -%}
+
+      {%- assign matched_variant = blank -%}
+      {%- if show_insert_preview -%}
+        {%- for variant in product.variants -%}
+          {%- assign variant_download_url = '' -%}
+          {%- if variant.metafields.custom.download_file.value != blank -%}
+            {%- if variant.metafields.custom.download_file.value.url != blank -%}
+              {%- assign variant_download_url = variant.metafields.custom.download_file.value.url -%}
+            {%- else -%}
+              {%- assign variant_download_url = variant.metafields.custom.download_file.value | file_url -%}
+            {%- endif -%}
+          {%- endif -%}
+          {%- if variant_download_url != blank -%}
+            {%- assign matched_variant = variant -%}
+            {%- break -%}
+          {%- endif -%}
+        {%- endfor -%}
+      {%- elsif customer_size != blank -%}
+        {%- for variant in product.variants -%}
+          {%- if variant.title == customer_size -%}
+            {%- assign matched_variant = variant -%}
+            {%- break -%}
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endif -%}
+
+      {%- if matched_variant == blank -%}
+        {%- continue -%}
+      {%- endif -%}
+
+      {%- assign download_url = '' -%}
+      {%- if matched_variant.metafields.custom.download_file.value != blank -%}
+        {%- if matched_variant.metafields.custom.download_file.value.url != blank -%}
+          {%- assign download_url = matched_variant.metafields.custom.download_file.value.url -%}
+        {%- else -%}
+          {%- assign download_url = matched_variant.metafields.custom.download_file.value | file_url -%}
+        {%- endif -%}
+      {%- endif -%}
+
+      {%- if download_url == blank and product.metafields.custom.download_file.value != blank -%}
+        {%- if product.metafields.custom.download_file.value.url != blank -%}
+          {%- assign download_url = product.metafields.custom.download_file.value.url -%}
+        {%- else -%}
+          {%- assign download_url = product.metafields.custom.download_file.value | file_url -%}
+        {%- endif -%}
+      {%- endif -%}
+
+      {%- if download_url contains 'dropbox.com' -%}
+        {%- assign download_url = download_url | replace: 'www.dropbox.com', 'dl.dropboxusercontent.com' | replace: 'dropbox.com', 'dl.dropboxusercontent.com' | replace: '?dl=0', '?raw=1' | replace: '&dl=0', '&raw=1' -%}
+      {%- endif -%}
+
+      {%- if download_url == blank -%}
+        {%- continue -%}
+      {%- endif -%}
+
+      {%- assign insert_matches = insert_matches | plus: 1 -%}
+      {%- if show_insert_preview and preview_cards_shown >= preview_card_limit -%}
+        {%- continue -%}
+      {%- endif -%}
+      {%- if show_insert_preview -%}
+        {%- assign preview_cards_shown = preview_cards_shown | plus: 1 -%}
+      {%- endif -%}
+      {%- assign preview_image = product.featured_image | default: product.featured_media.preview_image | default: matched_variant.featured_image | default: matched_variant.image -%}
+      {%- assign preview_image_zoom = '' -%}
+      {%- if preview_image != blank -%}
+        {%- assign preview_image_zoom = preview_image | image_url: width: 1600 -%}
+      {%- endif -%}
+
+      <article class="bbb-myv__assetCard">
+        <div class="bbb-myv__assetMedia">
+          {% if preview_image != blank %}
+            <button
+              class="bbb-myv__assetZoom"
+              type="button"
+              data-vault-preview-open
+              data-vault-preview-src="{{ preview_image_zoom | escape }}"
+              data-vault-preview-thumb="{{ preview_image | image_url: width: 720 | escape }}"
+              data-vault-preview-alt="{{ product.title | escape }}"
+              aria-label="open larger preview of {{ product.title | escape }}"
+            >
+              {{
+                preview_image
+                | image_url: width: 720
+                | image_tag:
+                  class: 'bbb-myv__assetImage',
+                  loading: 'lazy',
+                  alt: product.title
+              }}
+            </button>
+          {% else %}
+            <div class="bbb-myv__assetImage bbb-myv__assetImage--placeholder" aria-hidden="true">✦</div>
+          {% endif %}
+        </div>
+        <div class="bbb-myv__assetBody">
+          <p class="bbb-myv__assetEyebrow">{% if show_insert_preview %}preview inside{% else %}printable insert{% endif %}</p>
+          <h3 class="bbb-myv__assetTitle">{{ product.title }}</h3>
+          {% if show_insert_preview %}
+            <a class="bbb-myv__button" href="{{ insert_buy_url }}">unlock to download</a>
+          {% else %}
+            <a class="bbb-myv__button" href="{{ download_url }}" target="_blank" rel="noopener">download</a>
+          {% endif %}
+        </div>
+      </article>
+    {%- endfor -%}
+  {%- endcapture -%}
+
+<section class="bbb-myv" id="bbb-myv-{{ section.id }}">
+  <div class="bbb-myv__wrap">
+    <div class="bbb-myv__hero">
+      <p class="bbb-myv__kicker">{{ section.settings.kicker }}</p>
+      <h1 class="bbb-myv__title">{{ section.settings.title }}</h1>
+      <p class="bbb-myv__sub">{{ section.settings.subtext }}</p>
+    </div>
+
+    {% if show_insert_preview %}
+      <div class="bbb-myv__vaultBlock" id="kindle-insert-vault-preview">
+        <div class="bbb-myv__vaultHead">
+          <div>
+            <p class="bbb-myv__gateKicker">preview the vault</p>
+            <h2 class="bbb-myv__vaultTitle">kindle insert vault</h2>
+          </div>
+          <div class="bbb-myv__meta">
+            <span class="bbb-myv__metaText">{{ insert_matches }} available</span>
+          </div>
+        </div>
+
+        {% if insert_matches > 0 %}
+          <div class="bbb-myv__previewFrame">
+            <div class="bbb-myv__assetGrid bbb-myv__assetGrid--preview">
+              {{ insert_cards }}
+            </div>
+            <div class="bbb-myv__previewLock" aria-hidden="true">
+              <div class="bbb-myv__previewLockInner">
+                <p class="bbb-myv__previewLockKicker">try before you unlock</p>
+                <p class="bbb-myv__previewLockText">unlock the full vault and download everything that fits your kindle size.</p>
+                <a class="bbb-myv__button" href="{{ insert_buy_url }}">buy the vault</a>
+              </div>
+            </div>
+          </div>
+        {% else %}
+          <div class="bbb-myv__gate">
+            <p class="bbb-myv__gateKicker">nothing to preview yet</p>
+            <h2>the insert vault preview is empty right now.</h2>
+            <p>as soon as vault products have at least one downloadable size attached, they’ll show up here automatically.</p>
+          </div>
+        {% endif %}
+      </div>
+    {% elsif customer == blank %}
+      <div class="bbb-myv__gate">
+        <p class="bbb-myv__gateKicker">log in first</p>
+        <h2>your vault lives inside your bybookishbabe account.</h2>
+        <p>log in first and we’ll show you the vaults you already own, plus anything ready to download right now.</p>
+        <div class="bbb-myv__actions">
+          <a class="bbb-myv__button" href="{{ vault_login_url }}">log in to open your vault</a>
+        </div>
+      </div>
+    {% else %}
+      {% if has_any_vault == false %}
+        <div class="bbb-myv__gate">
+          <p class="bbb-myv__gateKicker">nothing unlocked yet</p>
+          <h2>your vault is ready whenever you are.</h2>
+          <p>right now your account doesn’t show any active vault access. once you unlock one, it’ll live here and keep growing with every new drop.</p>
+          <div class="bbb-myv__actions">
+            <a class="bbb-myv__button" href="{{ insert_buy_url }}">shop the insert vault</a>
+            <a class="bbb-myv__button bbb-myv__button--ghost" href="{{ canva_buy_url }}">browse templates</a>
+          </div>
+        </div>
+      {% endif %}
+
+      {% if has_insert_vault %}
+        <div class="bbb-myv__vaultBlock" id="kindle-insert-vault">
+          <div class="bbb-myv__vaultHead">
+            <div>
+              <p class="bbb-myv__gateKicker">your vault is open</p>
+              <h2 class="bbb-myv__vaultTitle">kindle insert vault</h2>
+            </div>
+            <div class="bbb-myv__meta">
+              {% if customer_size != blank %}
+                <span class="bbb-myv__chip">{{ customer_size }}</span>
+              {% endif %}
+              <span class="bbb-myv__metaText">{{ insert_matches }} ready now</span>
+            </div>
+          </div>
+
+          {% if insert_matches > 0 %}
+            <div class="bbb-myv__assetGrid">
+              {{ insert_cards }}
+            </div>
+          {% else %}
+            <div class="bbb-myv__gate">
+              <p class="bbb-myv__gateKicker">nothing matched yet</p>
+              <h2>we don’t see any insert files for your current size.</h2>
+              <p>your account is reading as <strong>{{ customer_size }}</strong>, but none of the active vault inserts matched that exact variant label with a live file attached yet.</p>
+              <div class="bbb-myv__actions">
+                <a class="bbb-myv__button bbb-myv__button--ghost" href="{{ insert_vault_url }}">open standalone page</a>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      {% if has_canva_vault %}
+        <div class="bbb-myv__vaultBlock" id="canva-template-vault">
+          <div class="bbb-myv__vaultHead">
+            <div>
+              <p class="bbb-myv__gateKicker">your vault is open</p>
+              <h2 class="bbb-myv__vaultTitle">canva template vault</h2>
+            </div>
+          </div>
+          <div class="bbb-myv__gate">
+            <p>this one’s next. the structure is ready so when we turn it on, it’ll slot right into `My Vault` instead of becoming its own little island.</p>
+          </div>
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+  <div class="bbb-myv__lightbox" data-vault-preview hidden>
+    <button class="bbb-myv__lightboxBackdrop" type="button" data-vault-preview-close aria-label="close image preview"></button>
+    <div class="bbb-myv__lightboxDialog" role="dialog" aria-modal="true" aria-label="vault image preview">
+      <button class="bbb-myv__lightboxClose" type="button" data-vault-preview-close aria-label="close image preview">close</button>
+      <img class="bbb-myv__lightboxImage" data-vault-preview-image src="" alt="">
+    </div>
+  </div>
+</section>
+{%- endpaginate -%}
+
+{% schema %}
+{
+  "name": "bbb my vault",
+  "settings": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "kicker",
+      "default": "my vault"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "title",
+      "default": "everything you own, in one place."
+    },
+    {
+      "type": "textarea",
+      "id": "subtext",
+      "label": "subtext",
+      "default": "your digital bybookishbabe things live here. vaults first, chaos reduced, and room to keep growing."
+    },
+    {
+      "type": "url",
+      "id": "insert_buy_url",
+      "label": "insert vault buy url"
+    },
+    {
+      "type": "url",
+      "id": "insert_vault_url",
+      "label": "standalone insert vault url"
+    },
+    {
+      "type": "url",
+      "id": "canva_buy_url",
+      "label": "canva preview url"
+    }
+  ],
+  "presets": [
+    {
+      "name": "bbb my vault"
+    }
+  ]
+}
+{% endschema %}
+
+<style>
+  .bbb-myv{
+    background:#050505;
+    color:#f7f3ee;
+    padding:64px 18px 86px;
+  }
+
+  .bbb-myv__wrap{
+    max-width:1180px;
+    margin:0 auto;
+  }
+
+  .bbb-myv__hero{
+    max-width:760px;
+    margin-bottom:32px;
+  }
+
+  .bbb-myv__kicker,
+  .bbb-myv__gateKicker,
+  .bbb-myv__moduleKicker,
+  .bbb-myv__assetEyebrow{
+    margin:0 0 10px;
+    color:#ff8ac7;
+    font-size:12px;
+    line-height:1.2;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    font-weight:800;
+  }
+
+  .bbb-myv__title,
+  .bbb-myv__gate h2{
+    margin:0;
+    color:#fff;
+    font-family:'Cormorant Garamond', serif;
+    font-weight:500;
+    font-size:clamp(3rem, 7vw, 5.7rem);
+    line-height:.95;
+    text-transform:lowercase;
+  }
+
+  .bbb-myv__sub,
+  .bbb-myv__gate p,
+  .bbb-myv__moduleText{
+    margin:16px 0 0;
+    color:rgba(247,243,238,.74);
+    font-size:1.45rem;
+    line-height:1.65;
+  }
+
+  .bbb-myv__moduleGrid{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:18px;
+    margin-bottom:24px;
+  }
+
+  .bbb-myv__moduleCard,
+  .bbb-myv__gate,
+  .bbb-myv__vaultBlock,
+  .bbb-myv__assetCard{
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:8px;
+    background:linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.02));
+    box-shadow:0 18px 44px rgba(0,0,0,.26);
+  }
+
+  .bbb-myv__moduleCard{
+    padding:20px;
+  }
+
+  .bbb-myv__moduleCard--active{
+    border-color:rgba(255,138,199,.36);
+  }
+
+  .bbb-myv__moduleTop,
+  .bbb-myv__vaultHead{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:16px;
+  }
+
+  .bbb-myv__moduleState,
+  .bbb-myv__chip{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:9px 14px;
+    border-radius:999px;
+    border:1px solid rgba(255,138,199,.48);
+    background:rgba(255,138,199,.14);
+    color:#fff;
+    font-size:12px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    font-weight:700;
+    white-space:nowrap;
+  }
+
+  .bbb-myv__moduleTitle,
+  .bbb-myv__vaultTitle{
+    margin:0;
+    color:#fff;
+    font-family:'Cormorant Garamond', serif;
+    font-weight:500;
+    font-size:clamp(2.2rem, 4vw, 3.8rem);
+    line-height:.98;
+    text-transform:lowercase;
+  }
+
+  .bbb-myv__actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-top:18px;
+  }
+
+  .bbb-myv__button{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:42px;
+    padding:11px 16px;
+    border-radius:8px;
+    background:#ff8ac7;
+    color:#160912;
+    text-decoration:none;
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    font-weight:800;
+    transition:transform .22s ease, background .22s ease, border-color .22s ease;
+  }
+
+  .bbb-myv__button:hover{
+    transform:translateY(-2px);
+    background:#ff9fd1;
+  }
+
+  .bbb-myv__button--ghost{
+    background:transparent;
+    color:#ffb8dc;
+    border:1px solid rgba(255,138,199,.42);
+  }
+
+  .bbb-myv__gate,
+  .bbb-myv__vaultBlock{
+    padding:28px;
+    margin-top:18px;
+  }
+
+  .bbb-myv__previewNote{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    margin-top:20px;
+    padding:18px 20px;
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:20px;
+    background:rgba(255,255,255,.03);
+  }
+
+  .bbb-myv__previewNote p{
+    margin:0;
+    max-width:720px;
+    color:rgba(247,243,238,.78);
+    font-size:1.28rem;
+    line-height:1.55;
+  }
+
+  .bbb-myv__previewFrame{
+    position:relative;
+    margin-top:24px;
+  }
+
+  .bbb-myv__assetGrid--preview{
+    margin-top:0;
+    max-height:1180px;
+    overflow:hidden;
+    mask-image:linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 68%, rgba(0,0,0,.82) 80%, rgba(0,0,0,.16) 94%, rgba(0,0,0,0) 100%);
+    -webkit-mask-image:linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 68%, rgba(0,0,0,.82) 80%, rgba(0,0,0,.16) 94%, rgba(0,0,0,0) 100%);
+  }
+
+  .bbb-myv__previewLock{
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:0;
+    padding:120px 18px 18px;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    background:linear-gradient(to bottom, rgba(5,5,5,0) 0%, rgba(5,5,5,.72) 35%, rgba(5,5,5,.96) 100%);
+    pointer-events:none;
+  }
+
+  .bbb-myv__previewLockInner{
+    width:min(100%, 520px);
+    padding:18px 20px;
+    border-radius:20px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(18,18,20,.82);
+    box-shadow:0 18px 40px rgba(0,0,0,.28);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    text-align:center;
+    pointer-events:auto;
+  }
+
+  .bbb-myv__previewLockKicker{
+    margin:0 0 8px;
+    color:#ff8ac7;
+    font-size:11px;
+    line-height:1.2;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    font-weight:800;
+  }
+
+  .bbb-myv__previewLockText{
+    margin:0 0 16px;
+    color:rgba(247,243,238,.82);
+    font-size:1.28rem;
+    line-height:1.55;
+  }
+
+  .bbb-myv__meta{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+
+  .bbb-myv__metaText{
+    color:rgba(247,243,238,.64);
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+
+  .bbb-myv__assetGrid{
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+    gap:18px;
+    margin-top:24px;
+  }
+
+  .bbb-myv__assetCard{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:12px;
+    padding:16px;
+  }
+
+  .bbb-myv__assetZoom{
+    display:block;
+    width:100%;
+    padding:0;
+    border:0;
+    background:transparent;
+    cursor:zoom-in;
+  }
+
+  .bbb-myv__assetImage{
+    display:block;
+    width:100%;
+    max-width:100%;
+    height:auto;
+    object-fit:contain;
+    border-radius:8px;
+    background:#121212;
+  }
+
+  .bbb-myv__assetImage--placeholder{
+    display:grid;
+    place-items:center;
+    min-height:220px;
+    color:#ff8ac7;
+    font-size:32px;
+    border:1px dashed rgba(255,255,255,.16);
+  }
+
+  .bbb-myv__assetTitle{
+    margin:0;
+    color:#fff;
+    font-size:1.9rem;
+    line-height:1.12;
+    text-transform:lowercase;
+  }
+
+  .bbb-myv__lightbox{
+    position:fixed;
+    inset:0;
+    z-index:40;
+    display:grid;
+    place-items:center;
+    padding:20px;
+  }
+
+  .bbb-myv__lightbox[hidden]{
+    display:none;
+  }
+
+  .bbb-myv__lightboxBackdrop{
+    position:absolute;
+    inset:0;
+    border:0;
+    background:rgba(5,5,5,.88);
+  }
+
+  .bbb-myv__lightboxDialog{
+    position:relative;
+    z-index:1;
+    width:min(100%, 520px);
+    display:grid;
+    gap:12px;
+    justify-items:center;
+  }
+
+  .bbb-myv__lightboxClose{
+    justify-self:end;
+    min-height:36px;
+    padding:8px 12px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.16);
+    background:rgba(255,255,255,.08);
+    color:#fff;
+    font-size:10px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    font-weight:800;
+    cursor:pointer;
+  }
+
+  .bbb-myv__lightboxImage{
+    display:block;
+    width:100%;
+    max-width:100%;
+    max-height:78vh;
+    object-fit:contain;
+    border-radius:8px;
+    background:#121212;
+    box-shadow:0 22px 60px rgba(0,0,0,.42);
+  }
+
+  @media screen and (max-width: 1200px){
+    .bbb-myv__assetGrid{
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media screen and (max-width: 989px){
+    .bbb-myv__assetGrid{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media screen and (max-width: 749px){
+    .bbb-myv{
+      padding:46px 14px 64px;
+    }
+
+    .bbb-myv__title,
+    .bbb-myv__gate h2{
+      font-size:3.7rem;
+    }
+
+    .bbb-myv__sub,
+    .bbb-myv__gate p,
+    .bbb-myv__moduleText{
+      font-size:1.22rem;
+    }
+
+    .bbb-myv__vaultHead{
+      align-items:flex-start;
+      flex-direction:column;
+    }
+
+    .bbb-myv__assetGrid{
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:10px;
+    }
+
+    .bbb-myv__assetCard{
+      gap:10px;
+      padding:10px;
+    }
+
+    .bbb-myv__assetTitle{
+      font-size:1.25rem;
+      line-height:1.08;
+    }
+
+    .bbb-myv__assetEyebrow{
+      margin-bottom:6px;
+      font-size:10px;
+    }
+
+    .bbb-myv__button{
+      min-height:36px;
+      padding:9px 10px;
+      font-size:10px;
+      letter-spacing:.08em;
+    }
+
+    .bbb-myv__lightbox{
+      padding:14px;
+    }
+
+    .bbb-myv__lightboxDialog{
+      width:min(100%, 420px);
+    }
+  }
+</style>
+
+<script>
+  (function(){
+    var section = document.getElementById('bbb-myv-{{ section.id }}');
+    if (!section) return;
+
+    var lightbox = section.querySelector('[data-vault-preview]');
+    var image = section.querySelector('[data-vault-preview-image]');
+    if (!lightbox || !image) return;
+
+    function closePreview(){
+      lightbox.hidden = true;
+      image.setAttribute('src', '');
+      image.setAttribute('alt', '');
+      document.body.style.removeProperty('overflow');
+    }
+
+    section.querySelectorAll('[data-vault-preview-open]').forEach(function(trigger){
+      trigger.addEventListener('click', function(){
+        var src = trigger.getAttribute('data-vault-preview-src') || '';
+        var thumb = trigger.getAttribute('data-vault-preview-thumb') || src;
+        var alt = trigger.getAttribute('data-vault-preview-alt') || '';
+        if (!thumb && !src) return;
+        image.setAttribute('src', thumb || src);
+        image.setAttribute('alt', alt);
+        lightbox.hidden = false;
+        document.body.style.overflow = 'hidden';
+
+        if (src && src !== thumb) {
+          var fullImage = new Image();
+          fullImage.onload = function(){
+            if (lightbox.hidden === false) {
+              image.setAttribute('src', src);
+            }
+          };
+          fullImage.src = src;
+        }
+      });
+    });
+
+    lightbox.querySelectorAll('[data-vault-preview-close]').forEach(function(control){
+      control.addEventListener('click', closePreview);
+    });
+
+    document.addEventListener('keydown', function(event){
+      if (event.key === 'Escape' && lightbox.hidden === false) {
+        closePreview();
+      }
+    });
+  })();
+</script>

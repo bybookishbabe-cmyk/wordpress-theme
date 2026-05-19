@@ -1,0 +1,262 @@
+{% comment %}
+  sss-join-nudge.liquid
+  Reusable Society join nudge with AUTO quote selection by page context.
+
+  Auto rules:
+  - Homepage -> hero vibe
+  - Product pages -> product vibe
+  - Society page handle (smut-sentiment-society) -> editions vibe
+  - All other pages -> default vibe
+
+  You can still override with "Manual quote override".
+{% endcomment %}
+
+{%- comment -%}
+  ✅ Hide on ALL Society pages (including Society Library pages)
+  We treat paid/member pages as:
+  - the main society page
+  - page handles containing "society"
+  - page handles starting with "sss-"
+  - page templates/suffixes containing "sss"
+  - page handles/templates for library/member destinations
+{%- endcomment -%}
+
+{%- assign _page_type = request.page_type | default: "" -%}
+{%- assign hide_on_society_pages = false -%}
+{%- assign _template_suffix = template.suffix | default: '' -%}
+
+{%- if _page_type == 'page' and page.handle != blank -%}
+  {%- if page.handle == 'smut-sentiment-society'
+     or page.handle contains 'society'
+     or page.handle contains 'library'
+     or page.handle contains 'member'
+     or page.handle contains 'paid'
+     or page.handle contains 'subscriber'
+     or page.handle contains 'exclusive'
+     or page.handle contains 'archive'
+     or page.handle contains 'quote-wall'
+     or page.handle contains 'quote-library'
+     or page.handle contains 'journal'
+     or page.handle contains 'printable'
+     or page.handle contains 'template'
+     or page.handle contains 'wallpaper'
+     or page.handle contains 'cipher'
+     or page.handle contains 'crossword'
+     or page.handle contains 'word-search'
+     or page.handle contains 'moodboard'
+     or page.handle contains 'playlist'
+     or page.handle contains 'calendar'
+     or page.handle contains 'folder-tabs'
+     or page.handle contains 'society-library'
+     or page.handle contains 'sss-library'
+     or page.handle contains 'sss'
+     or _template_suffix contains 'sss' -%}
+    {%- assign hide_on_society_pages = true -%}
+  {%- endif -%}
+{%- endif -%}
+
+{%- if hide_on_society_pages == false -%}
+
+<style>
+  .sss-jn{
+    background: rgba(246,246,246,.04);
+    border: 1px solid rgba(246,246,246,.12);
+    border-radius: 16px;
+    padding: 16px 14px;
+    box-shadow: 0 14px 28px rgba(0,0,0,.35);
+    color:#f6f6f6;
+    position: relative;
+    overflow:hidden;
+    font-family:"Libre Baskerville", Georgia, serif;
+  }
+
+  .sss-jn--paper{
+    background:#F6F1E9;
+    color:#171414;
+    border:1px solid rgba(0,0,0,.18);
+    box-shadow: 0 14px 26px rgba(0,0,0,.30);
+  }
+
+  .sss-jn__row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+  }
+
+  .sss-jn__left{ min-width:0; }
+  .sss-jn__kicker{
+    margin:0;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    opacity:.72;
+  }
+  .sss-jn__quote{
+    margin:6px 0 0;
+    font-size:13px;
+    line-height:1.55;
+  }
+
+.sss-jn__btn{
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-decoration:none;
+  border-radius:999px;
+  padding:11px 14px;
+  font-size:11px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+
+  background: rgba(255, 138, 199, .92);
+  color:#0b0b0b;
+  border:1px solid rgba(255, 138, 199, .92);
+
+  cursor:pointer;
+
+  box-shadow:
+    0 6px 14px rgba(0,0,0,.35),
+    inset 0 0 0 0 rgba(255,255,255,0);
+
+  transition:
+    transform .16s ease,
+    box-shadow .16s ease,
+    background-color .16s ease,
+    color .16s ease,
+    letter-spacing .16s ease,
+    filter .16s ease;
+}
+
+/* hover */
+.sss-jn__btn:hover{
+  background: rgba(255, 138, 199, 1);
+  color:#0b0b0b;
+  letter-spacing:.19em;
+  transform:translateY(-2px);
+  filter:brightness(1.03);
+
+  box-shadow:
+    0 12px 26px rgba(0,0,0,.45),
+    inset 0 0 0 1px rgba(0,0,0,.10);
+}
+
+/* active */
+.sss-jn__btn:active{
+  transform:translateY(0);
+  box-shadow:
+    0 6px 14px rgba(0,0,0,.35),
+    inset 0 2px 6px rgba(0,0,0,.25);
+}
+
+/* focus */
+.sss-jn__btn:focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 3px rgba(255, 138, 199, .28),
+    0 12px 26px rgba(0,0,0,.45);
+}
+
+
+  @media(max-width:640px){
+    .sss-jn__row{ flex-direction:column; align-items:stretch; }
+    .sss-jn__btn{ width:100%; }
+  }
+  
+</style>
+
+{%- assign link = section.settings.signup_link | strip -%}
+{%- if link == blank -%}
+  {%- assign link = "https://thesmutandsentimentsociety.substack.com/subscribe" -%}
+{%- endif -%}
+
+{%- comment -%} Detect context {%- endcomment -%}
+{%- assign page_type = request.page_type | default: "" -%}
+
+{%- assign is_society_page = false -%}
+{%- if page_type == 'page' and page.handle == 'smut-sentiment-society' -%}
+  {%- assign is_society_page = true -%}
+{%- endif -%}
+
+{%- assign quote_text = "" -%}
+
+{%- if section.settings.mode == 'manual' and section.settings.manual_quote != blank -%}
+  {%- assign quote_text = section.settings.manual_quote -%}
+{%- else -%}
+  {%- comment -%} AUTO QUOTES {%- endcomment -%}
+  {%- if page_type == 'index' -%}
+    {%- assign quote_text = "weekly letters. sinful recs. soft feelings. come read with us." -%}
+  {%- elsif page_type == 'product' -%}
+    {%- assign quote_text = "members get bonus drops + extra little surprises (the good kind)." -%}
+  {%- elsif is_society_page -%}
+    {%- assign quote_text = "if you read one edition and thought “oh… this is my thing” — that’s your sign." -%}
+  {%- else -%}
+    {%- assign quote_text = "little gifts, big feelings. the society is open." -%}
+  {%- endif -%}
+{%- endif -%}
+
+<div class="sss-jn {% if section.settings.card_style == 'paper' %}sss-jn--paper{% endif %} {% if section.settings.button_style == 'light' %}sss-jn--darkbtn{% endif %}">
+  <div class="sss-jn__row">
+    <div class="sss-jn__left">
+      {% if section.settings.kicker != blank %}
+        <p class="sss-jn__kicker">{{ section.settings.kicker }}</p>
+      {% endif %}
+      <p class="sss-jn__quote">{{ quote_text }}</p>
+    </div>
+
+    <a class="sss-jn__btn" href="{{ link }}" target="_blank" rel="noopener">
+      {{ section.settings.button_label }}
+    </a>
+  </div>
+</div>
+
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "sss join nudge",
+  "settings": [
+    { "type": "url", "id": "signup_link", "label": "Substack signup link" },
+
+    { "type": "text", "id": "kicker", "label": "kicker (small top line)", "default": "the society" },
+    { "type": "text", "id": "button_label", "label": "button label", "default": "unlock the society" },
+
+    {
+      "type": "select",
+      "id": "mode",
+      "label": "quote mode",
+      "default": "auto",
+      "options": [
+        { "value": "auto", "label": "Auto (changes by page type)" },
+        { "value": "manual", "label": "Manual (use the override below)" }
+      ]
+    },
+    { "type": "textarea", "id": "manual_quote", "label": "manual quote override (optional)" },
+
+    {
+      "type": "select",
+      "id": "card_style",
+      "label": "card style",
+      "default": "dark",
+      "options": [
+        { "value": "dark", "label": "Dark (site vibe)" },
+        { "value": "paper", "label": "Paper (parchment card)" }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "button_style",
+      "label": "button style",
+      "default": "dark",
+      "options": [
+        { "value": "dark", "label": "Dark button" },
+        { "value": "light", "label": "Light button" }
+      ]
+    }
+  ],
+  "presets": [
+    { "name": "sss join nudge" }
+  ]
+}
+{% endschema %}

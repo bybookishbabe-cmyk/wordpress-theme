@@ -1,0 +1,112 @@
+{% comment %}
+Reusable Society Library Book Card
+Parameters:
+- book
+- mini (optional)
+{% endcomment %}
+
+{% capture is_visible %}{% render 'sss-book-visible', book: book, allow_hidden_from_library: allow_hidden_from_library %}{% endcapture %}
+{% assign is_visible_value = is_visible | strip %}
+{% if is_visible_value == 'true' %}
+
+{%- assign cover_url = '' -%}
+{% if book.cover.value != blank %}
+  {% if book.cover.value.url != blank %}
+    {% assign cover_url = book.cover.value.url %}
+  {% else %}
+    {% assign cover_url = book.cover.value %}
+  {% endif %}
+{% endif %}
+
+{% assign series_handle = '' %}
+{% assign series_title = '' %}
+{% assign series_number = '' %}
+
+{% if book.series.value %}
+{% assign series_handle = book.series.value.system.handle %}
+  {% assign series_title = book.series.value.title %}
+{% endif %}
+
+{% if book.series_number.value %}
+  {% assign series_number = book.series_number.value %}
+{% endif %}
+
+<button
+  type="button"
+  class="sss-lib__book{% if mini %} sss-lib__book--mini{% endif %}"
+    data-handle="{{ book.system.handle }}"
+  data-title="{{ book.title.value | escape }}"
+  data-author="{{ book.author.value | escape }}"
+  data-cover="{{ cover_url | escape }}"
+  data-amazon="{{ book.amazon_link.value.url | default: book.amazon_link.value | escape }}"
+  data-bookshop="{{ book.bookshop_link.value.url | default: book.bookshop_link.value | escape }}"
+  data-shelf="{{ book.shelf.value.name | escape }}"
+  data-private-shelf="{% capture is_private %}{% render 'sss-book-private', book: book %}{% endcapture %}{{ is_private | strip }}"
+  data-spice="{{ book.spice_level.value }}"
+data-tropes="{% for trope in book.tropes.value %}{{ trope.name }}{% unless forloop.last %}, {% endunless %}{% endfor %}"
+data-tropes-display="{% for trope in book.tropes.value %}{% if trope.emoji != blank %}{{ trope.emoji }} {% endif %}{{ trope.name }}{% unless forloop.last %}, {% endunless %}{% endfor %}"
+
+data-trope-urls="{% for trope in book.tropes.value %}{% assign trope_handle = trope.system.handle | default: trope.name | handleize %}{% assign trope_handle_books = trope_handle | append: '-books' %}{% if all_pages[trope_handle_books] != blank %}{{ all_pages[trope_handle_books].url }}{% elsif all_pages[trope_handle] != blank %}{{ all_pages[trope_handle].url }}{% else %}/pages/{{ trope_handle_books }}{% endif %}{% unless forloop.last %}, {% endunless %}{% endfor %}"
+  data-why="{{ book.why_i_loved_it.value | escape }}"
+  data-newsletter="{{ book.newsletter_url.value | escape }}"
+  data-mini="{{ book.mini_note.value | escape }}"
+  data-series="{{ series_handle }}"
+  data-series-name="{{ series_title | escape }}"
+  data-series-number="{{ series_number }}"
+  data-tension="{{ book.tension_score.value }}"
+  data-damage="{{ book.emotional_damage_score.value }}"
+  data-yearning="{{ book.yearning_level.value | escape }}"
+  data-boyfriend="{{ book.boyfriend_type.value | escape }}"
+  data-boyfriend-name="{{ book.boyfriend_name.value | escape }}"
+  data-reread="{{ book.reread_badge.value }}"
+  data-standalone="{% if book.read_as_standalone.value == true %}true{% else %}false{% endif %}"
+  data-ku="{{ book.on_kindle_unlimited.value }}"
+  data-darkness="{{ book.darkness_level.value }}"
+>
+<div class="sss-lib__coverWrap">
+
+  <span
+    class="sss-lib__heart"
+    data-heart
+    role="button"
+    aria-label="save to your bookshelf"
+  >
+    <span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♡</span>
+    <span class="sss-lib__heartLabel" data-heart-label>save</span>
+  </span>
+
+  {% if book.series_number.value != blank %}
+  <span
+    class="sss-lib__seriesBadge{% if book.read_as_standalone.value == true %} sss-lib__seriesBadge--standalone{% endif %}"
+    data-series-url="/pages/series?series={{ series_handle }}"
+    aria-label="open series page for {{ series_title | escape }}"
+  >
+    {{ book.series_number.value }}
+  </span>
+  {% endif %}
+
+  {% if book.spice_level.value != blank %}
+  <div class="sss-lib__floatSpice">
+    {% for i in (1..book.spice_level.value) %}🌶{% endfor %}
+  </div>
+  {% endif %}
+
+  {% if cover_url != blank %}
+  <img
+    class="sss-lib__cover"
+    src="{{ cover_url }}"
+    alt="{{ book.title.value | escape }}"
+    loading="lazy"
+  >
+  {% endif %}
+
+</div>
+
+<div class="sss-lib__under">
+  <div class="sss-lib__name">{{ book.title.value }}</div>
+  <div class="sss-lib__author">{{ book.author.value }}</div>
+</div>
+
+</button>
+
+{% endif %}

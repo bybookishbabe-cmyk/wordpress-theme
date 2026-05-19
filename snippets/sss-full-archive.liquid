@@ -1,0 +1,189 @@
+{% assign society = society | default: false %}
+{% assign society_enabled = false %}
+{% assign society_text = society | append: '' | downcase | strip %}
+{% if society == true or society_text == 'true' %}
+  {% assign society_enabled = true %}
+{% endif %}
+{% assign books = books | default: shop.metaobjects.sss_library.values %}
+{% assign current_month = 'now' | date: "%Y-%m" %}
+
+<section class="sss-lib__archiveSection" data-archive-section>
+
+<div id="archive" class="sss-lib__archiveHead">
+
+  <div class="sss-lib__archiveKicker">the archive</div>
+
+  <h2 class="sss-lib__archiveTitle">
+    full library
+  </h2>
+
+  <div class="sss-lib__archiveSub">
+    every book i’ve ever recommended — shelved, annotated, unforgettable.
+  </div>
+
+</div>
+
+
+<div class="sss-lib__ranker">
+
+  <div class="sss-lib__rankerTitle">
+    build your obsession
+  </div>
+
+  <div class="sss-lib__rankerControls">
+
+    <div class="sss-lib__rankGroup">
+      <label>spice</label>
+      <input type="range" min="0" max="5" value="0" data-rank="spice">
+      <div class="sss-lib__rankValue" data-rank-value="spice">any</div>
+    </div>
+
+    <div class="sss-lib__rankGroup">
+      <label>darkness</label>
+      <input type="range" min="0" max="5" value="0" data-rank="darkness">
+      <div class="sss-lib__rankValue" data-rank-value="darkness">any</div>
+    </div>
+
+    <div class="sss-lib__rankGroup">
+      <label>tension</label>
+      <input type="range" min="0" max="5" value="0" data-rank="tension">
+      <div class="sss-lib__rankValue" data-rank-value="tension">any</div>
+    </div>
+
+    <div class="sss-lib__rankGroup">
+      <label>emotional damage</label>
+      <input type="range" min="0" max="5" value="0" data-rank="damage">
+      <div class="sss-lib__rankValue" data-rank-value="damage">any</div>
+    </div>
+
+{% if society_enabled %}
+
+    <div class="sss-lib__rankGroup">
+      <label>kindle unlimited</label>
+      <div class="sss-lib__kuToggle">
+        <button type="button" data-ku-filter="any" class="active">any</button>
+        <button type="button" data-ku-filter="true">on ku</button>
+      </div>
+    </div>
+
+{% endif %}
+
+  </div>
+
+
+{% if society_enabled %}
+
+  <div class="sss-lib__rankerControls sss-lib__rankerControls--secondary">
+
+    <div class="sss-lib__rankGroup">
+
+      <label>yearning</label>
+
+      <div class="sss-lib__yearningToggle">
+
+        <button type="button" data-yearning="0" class="active">any</button>
+        <button type="button" data-yearning="1">soft</button>
+        <button type="button" data-yearning="2">intrigued</button>
+        <button type="button" data-yearning="3">feral</button>
+
+      </div>
+
+    </div>
+
+  {% assign archive_tropes = '|' %}
+  {% assign archive_first_trope = true %}
+
+  {% for book in books %}
+    {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+    {% assign is_visible_value = is_visible | strip %}
+    {% unless is_visible_value == 'true' %}
+      {% continue %}
+    {% endunless %}
+
+    {% assign archive_book_month = '' %}
+    {% if book.featured_in_newsletter_date.value != blank %}
+      {% assign archive_book_month = book.featured_in_newsletter_date.value | date: "%Y-%m" %}
+    {% endif %}
+    {% if society_enabled != true and archive_book_month == current_month %}
+      {% continue %}
+    {% endif %}
+
+    {% for trope in book.tropes.value %}
+      {% assign archive_trope_name = trope.name | strip %}
+      {% assign archive_trope_token = '|' | append: archive_trope_name | append: '|' %}
+      {% if archive_trope_name != blank %}
+        {% unless archive_tropes contains archive_trope_token %}
+          {% assign archive_tropes = archive_tropes | append: archive_trope_name | append: '|' %}
+        {% endunless %}
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+
+  {% assign archive_trope_options = archive_tropes | split: '|' | sort_natural %}
+
+  <div class="sss-lib__rankGroup sss-lib__rankGroup--dropdown">
+    <label for="sssArchiveTropeFilter">trope</label>
+    <select id="sssArchiveTropeFilter" class="sss-lib__searchInput sss-lib__searchInput--select">
+      <option value="">all tropes</option>
+      {% for trope_name in archive_trope_options %}
+        {% if trope_name != blank %}
+          <option value="{{ trope_name | escape }}">{{ trope_name }}</option>
+        {% endif %}
+      {% endfor %}
+    </select>
+  </div>
+
+  </div>
+
+{% endif %}
+
+
+  <div class="sss-lib__searchWrap sss-lib__searchWrap--obsession">
+
+    <input
+      type="text"
+      id="sssSearchInput"
+      class="sss-lib__searchInput"
+      placeholder="search by trope, keyword, boyfriend type…"
+      autocomplete="off"
+    >
+
+  </div>
+
+</div>
+
+
+
+<div class="sss-lib__grid">
+
+{% for book in books %}
+{% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+{% assign is_visible_value = is_visible | strip %}
+{% unless is_visible_value == 'true' %}
+{% continue %}
+{% endunless %}
+{% unless society_enabled %}
+  {% capture is_private %}{% render 'sss-book-private', book: book %}{% endcapture %}
+  {% assign is_private_value = is_private | strip %}
+  {% if is_private_value == 'true' %}
+    {% continue %}
+  {% endif %}
+{% endunless %}
+
+{% assign grid_book_month = '' %}
+
+{% if book.featured_in_newsletter_date.value != blank %}
+{% assign grid_book_month = book.featured_in_newsletter_date.value | date: "%Y-%m" %}
+{% endif %}
+
+{% if society_enabled != true and grid_book_month == current_month %}
+{% continue %}
+{% endif %}
+
+{% render 'sss-book-card', book: book %}
+
+{% endfor %}
+
+</div>
+
+</section>

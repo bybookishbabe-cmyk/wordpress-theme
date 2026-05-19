@@ -1,0 +1,1013 @@
+<section
+  class="bbb-weekly-preview"
+  data-bbb-weekly-preview
+  data-supabase-url="https://efmrfxsmgbeikfgtrxjv.supabase.co"
+  data-supabase-key="sb_publishable_iwjASe3QwixdDvHovaXZBQ_gbXU0Utk"
+>
+  <div class="bbb-weekly-preview__wrap">
+    <div class="bbb-weekly-preview__hero">
+      <p class="bbb-weekly-preview__kicker">bookshelf weekly email</p>
+      <div class="bbb-weekly-preview__statusRow">
+        <h1 class="bbb-weekly-preview__title">friday preview</h1>
+        <span class="bbb-weekly-preview__status" data-bbb-weekly-status>loading</span>
+      </div>
+      <p class="bbb-weekly-preview__sub">
+        review the free shelf email, the paid member add-on, and the empty-shelf fallback before the friday send goes out.
+      </p>
+
+      <div class="bbb-weekly-preview__meta">
+        <div class="bbb-weekly-preview__metaItem">
+          <span>week of</span>
+          <strong data-bbb-weekly-week>loading</strong>
+        </div>
+        <div class="bbb-weekly-preview__metaItem">
+          <span>scheduled send</span>
+          <strong data-bbb-weekly-send>friday at 4:00 pm pacific</strong>
+        </div>
+        <div class="bbb-weekly-preview__metaItem">
+          <span>approved by</span>
+          <strong data-bbb-weekly-approved>waiting for approval</strong>
+        </div>
+      </div>
+
+      <div class="bbb-weekly-preview__notes" data-bbb-weekly-notes hidden></div>
+    </div>
+
+    <div class="bbb-weekly-preview__empty" data-bbb-weekly-empty>
+      <h2>loading weekly preview...</h2>
+      <p>once the friday preview function runs, the free, paid, and empty-shelf versions will show up here.</p>
+    </div>
+
+    <div class="bbb-weekly-preview__grid" data-bbb-weekly-grid hidden></div>
+  </div>
+</section>
+
+<script>
+  (function(){
+    var root = document.querySelector('[data-bbb-weekly-preview]');
+    if (!root) return;
+
+    var supabaseUrl = root.dataset.supabaseUrl || '';
+    var supabaseKey = root.dataset.supabaseKey || '';
+    var statusEl = root.querySelector('[data-bbb-weekly-status]');
+    var weekEl = root.querySelector('[data-bbb-weekly-week]');
+    var sendEl = root.querySelector('[data-bbb-weekly-send]');
+    var approvedEl = root.querySelector('[data-bbb-weekly-approved]');
+    var notesEl = root.querySelector('[data-bbb-weekly-notes]');
+    var emptyEl = root.querySelector('[data-bbb-weekly-empty]');
+    var gridEl = root.querySelector('[data-bbb-weekly-grid]');
+
+    function escapeHtml(value){
+      return String(value || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function formatWhen(value){
+      if (!value) return 'friday at 4:00 pm pacific';
+      var date = new Date(value);
+      if (isNaN(date.getTime())) return value;
+      return new Intl.DateTimeFormat('en-US', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+        timeZone: 'America/Los_Angeles'
+      }).format(date);
+    }
+
+    function renderAnchor(url, label){
+      if (!url) return '';
+      return '<a class="bbb-weekly-preview-card__link" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(label || url) + '</a>';
+    }
+
+    function renderSupportLink(link){
+      var starterLinks = Array.isArray(link && link.links) ? link.links : [];
+      if (starterLinks.length){
+        return [
+          '<ul class="bbb-weekly-preview-card__linkList">',
+          starterLinks.map(function(item){
+            return '<li>' +
+              (item.emoji ? '<span>' + escapeHtml(item.emoji) + '</span>' : '') +
+              '<strong>' + escapeHtml(item.title || '') + '</strong>' +
+              (item.description ? ' — ' + escapeHtml(item.description) : '') +
+              (item.url ? '<div class="bbb-weekly-preview-card__url">' + renderAnchor(item.url, item.url.replace(/^https?:\/\//, '')) + '</div>' : '') +
+            '</li>';
+          }).join(''),
+          '</ul>'
+        ].join('');
+      }
+      if (link && link.title){
+        return '<div class="bbb-weekly-preview-card__text">' +
+          escapeHtml(link.title) +
+          (link.description ? ' — ' + escapeHtml(link.description) : '') +
+          (link.url ? '<div class="bbb-weekly-preview-card__url">' + renderAnchor(link.url, link.url.replace(/^https?:\/\//, '')) + '</div>' : '') +
+        '</div>';
+      }
+      return '<div class="bbb-weekly-preview-card__text">not set yet</div>';
+    }
+
+    function renderLatestBooks(books){
+      if (!Array.isArray(books) || !books.length){
+        return '<div class="bbb-weekly-preview-card__text">this version is using the empty-shelf fallback.</div>';
+      }
+      return [
+        '<ul class="bbb-weekly-preview-card__list">',
+        books.map(function(book){
+          var title = book.book_title || book.title || '';
+          var author = book.author ? ' by ' + book.author : '';
+          return '<li>' + escapeHtml(title + author) + '</li>';
+        }).join(''),
+        '</ul>'
+      ].join('');
+    }
+
+    function renderEmailLatestBooks(books){
+      if (!Array.isArray(books) || !books.length){
+        return '';
+      }
+      return [
+        '<div class="bbb-weekly-email__savedGrid">',
+        books.slice(0, 3).map(function(book){
+          var title = book.book_title || book.title || '';
+          var author = book.author || '';
+          var cover = book.cover || '';
+          return [
+            '<div class="bbb-weekly-email__savedBook">',
+              cover ? '<div class="bbb-weekly-email__savedCover"><img src="' + escapeHtml(cover) + '" alt="' + escapeHtml(title) + '"></div>' : '<div class="bbb-weekly-email__savedCover bbb-weekly-email__savedCover--empty">♡</div>',
+              '<div class="bbb-weekly-email__savedMeta">',
+                '<strong>' + escapeHtml(title || 'saved book') + '</strong>',
+                author ? '<span>' + escapeHtml(author) + '</span>' : '',
+              '</div>',
+            '</div>'
+          ].join('');
+        }).join(''),
+        '</div>'
+      ].join('');
+    }
+
+    function renderEmailSupport(link){
+      var starterLinks = Array.isArray(link && link.links) ? link.links : [];
+      if (starterLinks.length){
+        return [
+          '<div class="bbb-weekly-email__starterList">',
+          starterLinks.slice(0, 6).map(function(item){
+            return '<div class="bbb-weekly-email__starterItem">' +
+              (item.emoji ? '<span class="bbb-weekly-email__starterEmoji">' + escapeHtml(item.emoji) + '</span>' : '') +
+              '<div><strong>' + escapeHtml(item.title || '') + '</strong>' +
+              (item.description ? '<p>' + escapeHtml(item.description) + '</p>' : '') +
+              (item.url ? '<a href="' + escapeHtml(item.url) + '" target="_blank" rel="noopener noreferrer">open link</a>' : '') +
+              '</div></div>';
+          }).join(''),
+          '</div>'
+        ].join('');
+      }
+      if (link && link.title){
+        return [
+          '<div class="bbb-weekly-email__ctaRow">',
+            '<div class="bbb-weekly-email__ctaCopy">',
+              '<strong>' + escapeHtml(link.title) + '</strong>',
+              link.description ? '<p>' + escapeHtml(link.description) + '</p>' : '',
+            '</div>',
+            link.url ? '<a class="bbb-weekly-email__button" href="' + escapeHtml(link.url) + '" target="_blank" rel="noopener noreferrer">open it</a>' : '',
+          '</div>'
+        ].join('');
+      }
+      return '<div class="bbb-weekly-email__muted">supporting click not set yet.</div>';
+    }
+
+    function renderEmailPreview(config){
+      var sample = config.sample || {};
+      var recommended = sample.recommended_book || {};
+      var tease = sample.newsletter_sneak_peek || {};
+      var recTitle = recommended.title || recommended.book_title || '';
+      var recAuthor = recommended.author || '';
+      return [
+        '<div class="bbb-weekly-email">',
+          '<div class="bbb-weekly-email__topline">',
+            '<span class="bbb-weekly-email__brand">bybookishbabe</span>',
+            '<span class="bbb-weekly-email__pill">' + escapeHtml(config.emailLabel || 'email preview') + '</span>',
+          '</div>',
+          '<div class="bbb-weekly-email__subjectLine">' + escapeHtml(sample.subject_line || 'subject line goes here') + '</div>',
+          '<div class="bbb-weekly-email__previewLine">' + escapeHtml(sample.preview_text || '') + '</div>',
+          '<div class="bbb-weekly-email__body">',
+            '<p class="bbb-weekly-email__intro">' + escapeHtml(sample.intro_copy || '') + '</p>',
+            renderEmailLatestBooks(sample.latest_books || []),
+            recTitle ? [
+              '<div class="bbb-weekly-email__feature">',
+                '<span class="bbb-weekly-email__eyebrow">your next read</span>',
+                '<h3>' + escapeHtml(recTitle) + '</h3>',
+                recAuthor ? '<div class="bbb-weekly-email__author">' + escapeHtml(recAuthor) + '</div>' : '',
+                recommended.reason ? '<p>' + escapeHtml(recommended.reason) + '</p>' : '',
+                recommended.url ? '<a class="bbb-weekly-email__button" href="' + escapeHtml(recommended.url) + '" target="_blank" rel="noopener noreferrer">open in the library</a>' : '',
+              '</div>'
+            ].join('') : '',
+            '<div class="bbb-weekly-email__support">',
+              '<span class="bbb-weekly-email__eyebrow">' + escapeHtml(config.supportLabel || 'go deeper') + '</span>',
+              renderEmailSupport(sample.support_link || {}),
+            '</div>',
+            config.showTease ? (
+              '<div class="bbb-weekly-email__tease">' +
+                '<span class="bbb-weekly-email__eyebrow">inside the society</span>' +
+                '<h4>' + escapeHtml(tease.title || 'waiting for your friday-morning note') + '</h4>' +
+                (tease.body ? '<p>' + escapeHtml(tease.body) + '</p>' : '') +
+              '</div>'
+            ) : '',
+          '</div>',
+        '</div>'
+      ].join('');
+    }
+
+    function buildEmailHtml(config){
+      var sample = config.sample || {};
+      var recommended = sample.recommended_book || {};
+      var support = sample.support_link || {};
+      var latestBooks = Array.isArray(sample.latest_books) ? sample.latest_books.slice(0, 3) : [];
+      var tease = sample.newsletter_sneak_peek || {};
+      var starterLinks = Array.isArray(support.links) ? support.links.slice(0, 6) : [];
+
+      function htmlBookList(){
+        if (!latestBooks.length) return '';
+        return latestBooks.map(function(book){
+          var title = book.book_title || book.title || '';
+          var author = book.author || '';
+          var cover = book.cover || '';
+          return [
+            '<tr>',
+              '<td style="padding:0 0 12px;">',
+                '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#171515;border:1px solid rgba(255,255,255,0.08);border-radius:8px;">',
+                  '<tr>',
+                    '<td style="width:68px;padding:10px;vertical-align:top;">',
+                      cover
+                        ? '<img src="' + escapeHtml(cover) + '" alt="' + escapeHtml(title) + '" width="48" style="display:block;width:48px;height:68px;object-fit:cover;border-radius:6px;">'
+                        : '<div style="width:48px;height:68px;line-height:68px;text-align:center;border-radius:6px;background:#201a1d;color:#ff8ac7;font-size:18px;">♡</div>',
+                    '</td>',
+                    '<td style="padding:12px 12px 12px 0;vertical-align:middle;">',
+                      '<div style="color:#ffffff;font-size:16px;line-height:1.35;font-weight:700;">' + escapeHtml(title || 'saved book') + '</div>',
+                      (author ? '<div style="margin-top:4px;color:#b7b1ae;font-size:13px;line-height:1.45;">' + escapeHtml(author) + '</div>' : ''),
+                    '</td>',
+                  '</tr>',
+                '</table>',
+              '</td>',
+            '</tr>'
+          ].join('');
+        }).join('');
+      }
+
+      function htmlSupport(){
+        if (starterLinks.length){
+          return starterLinks.map(function(item){
+            return [
+              '<tr>',
+                '<td style="padding:0 0 10px;">',
+                  '<div style="color:#ffffff;font-size:15px;line-height:1.4;font-weight:700;">' + (item.emoji ? escapeHtml(item.emoji) + ' ' : '') + escapeHtml(item.title || '') + '</div>',
+                  (item.description ? '<div style="margin-top:4px;color:#cfc8c5;font-size:14px;line-height:1.6;">' + escapeHtml(item.description) + '</div>' : ''),
+                  (item.url ? '<div style="margin-top:6px;"><a href="' + escapeHtml(item.url) + '" style="color:#ff8ac7;text-decoration:underline;">open link</a></div>' : ''),
+                '</td>',
+              '</tr>'
+            ].join('');
+          }).join('');
+        }
+        if (support.title){
+          return [
+            '<tr><td>',
+              '<div style="color:#ffffff;font-size:16px;line-height:1.4;font-weight:700;">' + escapeHtml(support.title) + '</div>',
+              (support.description ? '<div style="margin-top:4px;color:#cfc8c5;font-size:14px;line-height:1.6;">' + escapeHtml(support.description) + '</div>' : ''),
+              (support.url ? '<div style="margin-top:12px;"><a href="' + escapeHtml(support.url) + '" style="display:inline-block;min-height:38px;line-height:38px;padding:0 16px;border-radius:999px;background:#ff8ac7;color:#140d11;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;font-weight:800;text-decoration:none;">open it</a></div>' : ''),
+            '</td></tr>'
+          ].join('');
+        }
+        return '<tr><td style="color:#b7b1ae;font-size:14px;line-height:1.6;">supporting click not set yet.</td></tr>';
+      }
+
+      return [
+        '<!doctype html>',
+        '<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>',
+        '<body style="margin:0;padding:0;background:#060606;color:#f7f3ee;font-family:Georgia, serif;">',
+          '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#060606;">',
+            '<tr><td align="center" style="padding:32px 16px;">',
+              '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;max-width:640px;background:#0f0d0d;border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;">',
+                '<tr><td style="padding:18px 24px;border-bottom:1px solid rgba(255,255,255,0.08);background:linear-gradient(180deg, rgba(255,138,199,0.08), rgba(255,138,199,0));">',
+                  '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>',
+                    '<td style="color:#ffffff;font-size:18px;line-height:1.2;font-weight:700;">bybookishbabe</td>',
+                    '<td align="right" style="color:#ffb8dc;font-size:11px;line-height:1;letter-spacing:0.14em;text-transform:uppercase;font-weight:700;">' + escapeHtml(config.emailLabel || 'email preview') + '</td>',
+                  '</tr></table>',
+                '</td></tr>',
+                '<tr><td style="padding:24px;">',
+                  '<div style="color:#ffffff;font-size:28px;line-height:1.2;font-weight:700;">' + escapeHtml(sample.subject_line || '') + '</div>',
+                  (sample.preview_text ? '<div style="margin-top:8px;color:#b7b1ae;font-size:14px;line-height:1.6;">' + escapeHtml(sample.preview_text) + '</div>' : ''),
+                  (sample.intro_copy ? '<div style="margin-top:20px;color:#e7e1de;font-size:16px;line-height:1.7;">' + escapeHtml(sample.intro_copy) + '</div>' : ''),
+                  latestBooks.length ? '<div style="margin-top:24px;color:#ff8ac7;font-size:11px;line-height:1;letter-spacing:0.16em;text-transform:uppercase;font-weight:700;">your latest shelf picks</div>' : '',
+                  latestBooks.length ? '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:14px;border-collapse:collapse;">' + htmlBookList() + '</table>' : '',
+                  (recommended.title || recommended.book_title) ? [
+                    '<div style="margin-top:24px;padding:18px;border:1px solid rgba(255,255,255,0.08);border-radius:10px;background:#151313;">',
+                      '<div style="color:#ff8ac7;font-size:11px;line-height:1;letter-spacing:0.16em;text-transform:uppercase;font-weight:700;">your next read</div>',
+                      '<div style="margin-top:10px;color:#ffffff;font-size:24px;line-height:1.2;font-weight:700;">' + escapeHtml(recommended.title || recommended.book_title || '') + '</div>',
+                      (recommended.author ? '<div style="margin-top:6px;color:#b7b1ae;font-size:14px;line-height:1.5;">' + escapeHtml(recommended.author) + '</div>' : ''),
+                      (recommended.reason ? '<div style="margin-top:10px;color:#e7e1de;font-size:15px;line-height:1.7;">' + escapeHtml(recommended.reason) + '</div>' : ''),
+                      (recommended.url ? '<div style="margin-top:14px;"><a href="' + escapeHtml(recommended.url) + '" style="display:inline-block;min-height:40px;line-height:40px;padding:0 18px;border-radius:999px;background:#ff8ac7;color:#140d11;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;font-weight:800;text-decoration:none;">open in the library</a></div>' : ''),
+                    '</div>'
+                  ].join('') : '',
+                  '<div style="margin-top:24px;padding:18px;border:1px solid rgba(255,255,255,0.08);border-radius:10px;background:#151313;">',
+                    '<div style="color:#ff8ac7;font-size:11px;line-height:1;letter-spacing:0.16em;text-transform:uppercase;font-weight:700;">' + escapeHtml(config.supportLabel || 'go deeper') + '</div>',
+                    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;border-collapse:collapse;">' + htmlSupport() + '</table>',
+                  '</div>',
+                  (config.showTease ? [
+                    '<div style="margin-top:24px;padding:18px;border:1px solid rgba(255,138,199,0.24);border-radius:10px;background:rgba(255,138,199,0.08);">',
+                      '<div style="color:#ff8ac7;font-size:11px;line-height:1;letter-spacing:0.16em;text-transform:uppercase;font-weight:700;">inside the society</div>',
+                      '<div style="margin-top:10px;color:#ffffff;font-size:20px;line-height:1.3;font-weight:700;">' + escapeHtml(tease.title || 'waiting for your friday-morning note') + '</div>',
+                      (tease.body ? '<div style="margin-top:8px;color:#f2e9ee;font-size:15px;line-height:1.7;">' + escapeHtml(tease.body) + '</div>' : ''),
+                    '</div>'
+                  ].join('') : ''),
+                '</td></tr>',
+              '</table>',
+            '</td></tr>',
+          '</table>',
+        '</body></html>'
+      ].join('');
+    }
+
+    function renderCard(config){
+      var sample = config.sample || {};
+      var recommended = sample.recommended_book || {};
+      var recTitle = recommended.title || recommended.book_title || '';
+      var tease = sample.newsletter_sneak_peek || {};
+      var recUrl = recommended.url || '';
+      var htmlSource = buildEmailHtml(config);
+      var htmlEncoded = encodeURIComponent(htmlSource);
+      var subjectEncoded = encodeURIComponent(sample.subject_line || '');
+
+      return [
+        '<article class="bbb-weekly-preview-card">',
+          config.kicker ? '<p class="bbb-weekly-preview-card__kicker">' + escapeHtml(config.kicker) + '</p>' : '',
+          '<h2 class="bbb-weekly-preview-card__title">' + escapeHtml(config.title) + '</h2>',
+          '<div class="bbb-weekly-preview-card__subject"><span class="bbb-weekly-preview-card__label">subject line</span><div class="bbb-weekly-preview-card__text">' + escapeHtml(sample.subject_line || 'not set yet') + '</div></div>',
+          '<div class="bbb-weekly-preview-card__preview"><span class="bbb-weekly-preview-card__label">preview text</span><div class="bbb-weekly-preview-card__text">' + escapeHtml(sample.preview_text || 'not set yet') + '</div></div>',
+          '<div class="bbb-weekly-preview-card__intro"><span class="bbb-weekly-preview-card__label">intro</span><div class="bbb-weekly-preview-card__text">' + escapeHtml(sample.intro_copy || 'not set yet') + '</div></div>',
+          '<div class="bbb-weekly-preview-card__block"><span class="bbb-weekly-preview-card__label">latest 3 saved books</span>' + renderLatestBooks(sample.latest_books) + '</div>',
+          '<div class="bbb-weekly-preview-card__block"><span class="bbb-weekly-preview-card__label">recommended book</span><div class="bbb-weekly-preview-card__text">' +
+            (recTitle ? escapeHtml(recTitle + (recommended.reason ? ' — ' + recommended.reason : '')) : 'not set yet') +
+            (recUrl ? '<div class="bbb-weekly-preview-card__url">' + renderAnchor(recUrl, recUrl.replace(/^https?:\/\//, '')) + '</div>' : '') +
+          '</div></div>',
+          '<div class="bbb-weekly-preview-card__block"><span class="bbb-weekly-preview-card__label">supporting click</span>' + renderSupportLink(sample.support_link || {}) + '</div>',
+          config.showTease ? (
+            '<div class="bbb-weekly-preview-card__block"><span class="bbb-weekly-preview-card__label">paid sneak peek</span><div class="bbb-weekly-preview-card__callout">' +
+            (tease.title
+              ? '<strong>' + escapeHtml(tease.title) + '</strong>' + (tease.body ? '<div style="margin-top:6px;">' + escapeHtml(tease.body) + '</div>' : '')
+              : 'waiting for your friday-morning note') +
+            '</div></div>'
+          ) : '',
+          '<div class="bbb-weekly-preview-card__block"><span class="bbb-weekly-preview-card__label">email preview</span>' + renderEmailPreview(config) + '</div>',
+          '<div class="bbb-weekly-preview-card__block"><span class="bbb-weekly-preview-card__label">manual test-send export</span><div class="bbb-weekly-preview-card__exportRow">' +
+            '<button type="button" class="bbb-weekly-preview-card__copyBtn" data-copy-text="' + escapeHtml(sample.subject_line || '') + '">copy subject</button>' +
+            '<button type="button" class="bbb-weekly-preview-card__copyBtn" data-copy-text="' + htmlEncoded + '" data-copy-encoded="true">copy html</button>' +
+            '<button type="button" class="bbb-weekly-preview-card__copyBtn" data-copy-text="' + escapeHtml(sample.preview_text || '') + '">copy preview text</button>' +
+          '</div>' +
+          '<details class="bbb-weekly-preview-card__source"><summary>view raw html</summary><textarea readonly>' + escapeHtml(htmlSource) + '</textarea></details></div>',
+        '</article>'
+      ].join('');
+    }
+
+    function setStatus(status){
+      var normalized = String(status || 'draft').replaceAll('_', '-').toLowerCase();
+      statusEl.className = 'bbb-weekly-preview__status bbb-weekly-preview__status--' + normalized;
+      statusEl.textContent = String(status || 'draft').replaceAll('_', ' ');
+    }
+
+    async function loadPreview(){
+      try {
+        var response = await fetch(supabaseUrl.replace(/\/$/, '') + '/rest/v1/rpc/get_latest_bookshelf_weekly_preview', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabaseKey,
+            'Authorization': 'Bearer ' + supabaseKey
+          },
+          body: '{}'
+        });
+        var data = await response.json();
+        if (!response.ok || !data || Object.keys(data).length === 0){
+          throw new Error((data && data.message) || 'No preview found yet.');
+        }
+
+        setStatus(data.status || 'draft');
+        weekEl.textContent = data.week_of || data.run_week || 'not generated yet';
+        sendEl.textContent = formatWhen(data.scheduled_send_at || data.send_at || '');
+        approvedEl.textContent = data.approved_by || 'waiting for approval';
+
+        if (data.notes){
+          notesEl.hidden = false;
+          notesEl.textContent = data.notes;
+        }
+
+        gridEl.innerHTML = [
+          renderCard({
+            title: 'free shelf preview',
+            kicker: 'for readers with saved books',
+            sample: data.free_sample || {},
+            showTease: false
+          }),
+          renderCard({
+            title: 'paid society preview',
+            kicker: 'adds the sunday sneak peek',
+            sample: data.paid_sample || {},
+            showTease: true
+          }),
+          renderCard({
+            title: 'empty shelf fallback',
+            kicker: 'for subscribers with no saves yet',
+            sample: data.empty_shelf_sample || data.empty_sample || {},
+            showTease: false
+          })
+        ].join('');
+
+        emptyEl.hidden = true;
+        gridEl.hidden = false;
+      } catch (error) {
+        setStatus('draft');
+        weekEl.textContent = 'not generated yet';
+        sendEl.textContent = 'friday at 4:00 pm pacific';
+        approvedEl.textContent = 'waiting for approval';
+        emptyEl.innerHTML = '<h2>no weekly preview yet.</h2><p>' + escapeHtml(error && error.message ? error.message : 'Run the friday preview function first, then refresh this page.') + '</p>';
+      }
+    }
+
+    loadPreview();
+
+    root.addEventListener('click', async function(event){
+      var btn = event.target.closest('[data-copy-text]');
+      if (!btn) return;
+      var value = btn.getAttribute('data-copy-text') || '';
+      if (btn.hasAttribute('data-copy-encoded')) {
+        value = decodeURIComponent(value);
+      }
+      try {
+        await navigator.clipboard.writeText(value);
+        var original = btn.textContent;
+        btn.textContent = 'copied';
+        setTimeout(function(){ btn.textContent = original; }, 1200);
+      } catch (_error) {
+        btn.textContent = 'copy failed';
+        setTimeout(function(){ btn.textContent = 'copy'; }, 1200);
+      }
+    });
+  })();
+</script>
+
+<style>
+  .bbb-weekly-preview{
+    background:#060606;
+    color:#f7f3ee;
+    padding:64px 20px 88px;
+  }
+
+  .bbb-weekly-preview__wrap{
+    max-width:1180px;
+    margin:0 auto;
+  }
+
+  .bbb-weekly-preview__hero{
+    margin-bottom:28px;
+    padding-bottom:28px;
+    border-bottom:1px solid rgba(255,255,255,.12);
+  }
+
+  .bbb-weekly-preview__kicker{
+    margin:0 0 10px;
+    color:#ff8ac7;
+    font-size:12px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    font-weight:700;
+  }
+
+  .bbb-weekly-preview__statusRow{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    align-items:center;
+  }
+
+  .bbb-weekly-preview__title{
+    margin:0;
+    font-family:'Cormorant Garamond', serif;
+    font-size:clamp(3rem, 7vw, 5.5rem);
+    line-height:.96;
+    color:#fff;
+    text-transform:lowercase;
+  }
+
+  .bbb-weekly-preview__status{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:34px;
+    padding:8px 12px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.04);
+    color:#f7f3ee;
+    font-size:11px;
+    line-height:1;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    font-weight:800;
+  }
+
+  .bbb-weekly-preview__status--approved{
+    border-color:rgba(104,197,136,.46);
+    color:#9be1b0;
+  }
+
+  .bbb-weekly-preview__status--draft,
+  .bbb-weekly-preview__status--test-sent{
+    border-color:rgba(255,138,199,.38);
+    color:#ffb8dc;
+  }
+
+  .bbb-weekly-preview__status--sent{
+    border-color:rgba(120,170,255,.42);
+    color:#b7ccff;
+  }
+
+  .bbb-weekly-preview__sub{
+    max-width:760px;
+    margin:16px 0 0;
+    color:rgba(247,243,238,.72);
+    font-size:1.5rem;
+    line-height:1.62;
+  }
+
+  .bbb-weekly-preview__meta{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:12px;
+    margin-top:22px;
+  }
+
+  .bbb-weekly-preview__metaItem,
+  .bbb-weekly-preview__notes,
+  .bbb-weekly-preview__empty,
+  .bbb-weekly-preview-card{
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:8px;
+    background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));
+    box-shadow:0 18px 46px rgba(0,0,0,.2);
+  }
+
+  .bbb-weekly-preview__metaItem{
+    padding:14px 16px;
+  }
+
+  .bbb-weekly-preview__metaItem span{
+    display:block;
+    margin-bottom:6px;
+    color:#ff8ac7;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    font-weight:700;
+  }
+
+  .bbb-weekly-preview__metaItem strong{
+    color:#fff;
+    font-size:1.4rem;
+    line-height:1.35;
+    font-weight:600;
+  }
+
+  .bbb-weekly-preview__notes{
+    margin-top:14px;
+    padding:14px 16px;
+    color:rgba(247,243,238,.8);
+    font-size:1.4rem;
+    line-height:1.6;
+  }
+
+  .bbb-weekly-preview__empty{
+    padding:28px 24px;
+  }
+
+  .bbb-weekly-preview__empty h2{
+    margin:0 0 10px;
+    color:#fff;
+    font-family:'Cormorant Garamond', serif;
+    font-size:3rem;
+    line-height:1;
+    text-transform:lowercase;
+  }
+
+  .bbb-weekly-preview__empty p{
+    margin:0;
+    color:rgba(247,243,238,.72);
+    font-size:1.45rem;
+    line-height:1.6;
+  }
+
+  .bbb-weekly-preview__grid{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:18px;
+  }
+
+  .bbb-weekly-preview-card{
+    padding:18px;
+  }
+
+  .bbb-weekly-preview-card__kicker{
+    margin:0 0 8px;
+    color:#ff8ac7;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    font-weight:700;
+  }
+
+  .bbb-weekly-preview-card__title{
+    margin:0;
+    color:#fff;
+    font-family:'Cormorant Garamond', serif;
+    font-size:2.3rem;
+    line-height:1;
+    text-transform:lowercase;
+  }
+
+  .bbb-weekly-preview-card__subject,
+  .bbb-weekly-preview-card__preview,
+  .bbb-weekly-preview-card__intro,
+  .bbb-weekly-preview-card__block{
+    margin-top:14px;
+  }
+
+  .bbb-weekly-preview-card__label{
+    display:block;
+    margin-bottom:6px;
+    color:#ff8ac7;
+    font-size:10px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    font-weight:700;
+  }
+
+  .bbb-weekly-preview-card__text,
+  .bbb-weekly-preview-card__list,
+  .bbb-weekly-preview-card__callout,
+  .bbb-weekly-preview-card__linkList{
+    color:rgba(247,243,238,.78);
+    font-size:1.35rem;
+    line-height:1.58;
+  }
+
+  .bbb-weekly-preview-card__list,
+  .bbb-weekly-preview-card__linkList{
+    margin:0;
+    padding-left:18px;
+  }
+
+  .bbb-weekly-preview-card__list li + li,
+  .bbb-weekly-preview-card__linkList li + li{
+    margin-top:8px;
+  }
+
+  .bbb-weekly-preview-card__url{
+    margin-top:8px;
+    font-size:.82em;
+    line-height:1.55;
+    word-break:break-word;
+  }
+
+  .bbb-weekly-preview-card__link{
+    color:#ff8ac7;
+    text-decoration:underline;
+    text-underline-offset:3px;
+  }
+
+  .bbb-weekly-preview-card__link:hover{
+    color:#ffc0df;
+  }
+
+  .bbb-weekly-preview-card__linkList span{
+    margin-right:6px;
+  }
+
+  .bbb-weekly-preview-card__callout{
+    margin-top:6px;
+    padding:12px 14px;
+    border-radius:8px;
+    border:1px solid rgba(255,138,199,.28);
+    background:rgba(255,138,199,.08);
+  }
+
+  .bbb-weekly-preview-card__exportRow{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:6px;
+  }
+
+  .bbb-weekly-preview-card__copyBtn{
+    appearance:none;
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:999px;
+    background:rgba(255,255,255,.04);
+    color:#f7f3ee;
+    min-height:36px;
+    padding:0 14px;
+    font-size:.76rem;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    font-weight:800;
+    cursor:pointer;
+  }
+
+  .bbb-weekly-preview-card__copyBtn:hover{
+    border-color:rgba(255,138,199,.32);
+    color:#ffb8dc;
+  }
+
+  .bbb-weekly-preview-card__source{
+    margin-top:12px;
+    border-top:1px solid rgba(255,255,255,.08);
+    padding-top:12px;
+  }
+
+  .bbb-weekly-preview-card__source summary{
+    cursor:pointer;
+    color:#ff8ac7;
+    font-size:.82rem;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    font-weight:700;
+  }
+
+  .bbb-weekly-preview-card__source textarea{
+    width:100%;
+    min-height:220px;
+    margin-top:12px;
+    border-radius:8px;
+    border:1px solid rgba(255,255,255,.1);
+    background:#0c0b0b;
+    color:#e9e1de;
+    padding:12px;
+    font:12px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    resize:vertical;
+  }
+
+  .bbb-weekly-email{
+    margin-top:6px;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:8px;
+    background:#121111;
+    overflow:hidden;
+  }
+
+  .bbb-weekly-email__topline{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:14px 16px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+    background:linear-gradient(180deg, rgba(255,138,199,.08), rgba(255,138,199,0));
+  }
+
+  .bbb-weekly-email__brand{
+    color:#fff;
+    font-size:.95rem;
+    letter-spacing:.08em;
+    text-transform:lowercase;
+    font-weight:700;
+  }
+
+  .bbb-weekly-email__pill{
+    color:#ffb8dc;
+    border:1px solid rgba(255,138,199,.28);
+    border-radius:999px;
+    padding:6px 10px;
+    font-size:.7rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    font-weight:700;
+  }
+
+  .bbb-weekly-email__subjectLine{
+    padding:16px 16px 6px;
+    color:#fff;
+    font-size:1.2rem;
+    line-height:1.45;
+    font-weight:700;
+  }
+
+  .bbb-weekly-email__previewLine{
+    padding:0 16px 16px;
+    color:rgba(247,243,238,.62);
+    font-size:.92rem;
+    line-height:1.5;
+  }
+
+  .bbb-weekly-email__body{
+    padding:0 16px 16px;
+  }
+
+  .bbb-weekly-email__intro,
+  .bbb-weekly-email__feature p,
+  .bbb-weekly-email__ctaCopy p,
+  .bbb-weekly-email__tease p,
+  .bbb-weekly-email__starterItem p{
+    margin:0;
+    color:rgba(247,243,238,.8);
+    font-size:.95rem;
+    line-height:1.65;
+  }
+
+  .bbb-weekly-email__savedGrid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+    margin:16px 0;
+  }
+
+  .bbb-weekly-email__savedBook{
+    display:grid;
+    grid-template-columns:52px minmax(0, 1fr);
+    gap:10px;
+    align-items:center;
+    padding:10px;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:8px;
+    background:rgba(255,255,255,.03);
+  }
+
+  .bbb-weekly-email__savedCover{
+    width:52px;
+    height:72px;
+    border-radius:6px;
+    overflow:hidden;
+    background:#1a1717;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#ff8ac7;
+    font-size:1.1rem;
+  }
+
+  .bbb-weekly-email__savedCover img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+
+  .bbb-weekly-email__savedMeta strong,
+  .bbb-weekly-email__feature h3,
+  .bbb-weekly-email__tease h4,
+  .bbb-weekly-email__ctaCopy strong,
+  .bbb-weekly-email__starterItem strong{
+    display:block;
+    color:#fff;
+    font-size:1rem;
+    line-height:1.35;
+    font-weight:700;
+  }
+
+  .bbb-weekly-email__savedMeta span,
+  .bbb-weekly-email__author{
+    display:block;
+    margin-top:4px;
+    color:rgba(247,243,238,.58);
+    font-size:.88rem;
+    line-height:1.45;
+  }
+
+  .bbb-weekly-email__eyebrow{
+    display:block;
+    margin-bottom:8px;
+    color:#ff8ac7;
+    font-size:.68rem;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    font-weight:800;
+  }
+
+  .bbb-weekly-email__feature,
+  .bbb-weekly-email__support,
+  .bbb-weekly-email__tease{
+    margin-top:16px;
+    padding:14px;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:8px;
+    background:rgba(255,255,255,.025);
+  }
+
+  .bbb-weekly-email__button{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:38px;
+    margin-top:12px;
+    padding:0 16px;
+    border-radius:999px;
+    background:#ff8ac7;
+    color:#140d11;
+    font-size:.78rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    font-weight:800;
+    text-decoration:none;
+  }
+
+  .bbb-weekly-email__button:hover{
+    background:#ffb8dc;
+  }
+
+  .bbb-weekly-email__ctaRow{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+  }
+
+  .bbb-weekly-email__ctaCopy{
+    flex:1 1 auto;
+  }
+
+  .bbb-weekly-email__starterList{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+
+  .bbb-weekly-email__starterItem{
+    display:grid;
+    grid-template-columns:auto minmax(0, 1fr);
+    gap:10px;
+    align-items:flex-start;
+  }
+
+  .bbb-weekly-email__starterEmoji{
+    font-size:1rem;
+    line-height:1.4;
+  }
+
+  .bbb-weekly-email__starterItem a{
+    display:inline-block;
+    margin-top:6px;
+    color:#ff8ac7;
+    font-size:.82rem;
+    line-height:1.45;
+    text-decoration:underline;
+    text-underline-offset:3px;
+  }
+
+  .bbb-weekly-email__muted{
+    color:rgba(247,243,238,.58);
+    font-size:.92rem;
+    line-height:1.55;
+  }
+
+  @media (max-width: 980px){
+    .bbb-weekly-preview__grid{
+      grid-template-columns:1fr;
+    }
+
+    .bbb-weekly-preview__meta{
+      grid-template-columns:1fr;
+    }
+  }
+
+  @media (max-width: 640px){
+    .bbb-weekly-preview{
+      padding:44px 16px 64px;
+    }
+
+    .bbb-weekly-preview__hero{
+      margin-bottom:20px;
+      padding-bottom:20px;
+    }
+
+    .bbb-weekly-preview__sub{
+      font-size:1.3rem;
+    }
+
+    .bbb-weekly-preview-card{
+      padding:16px;
+    }
+
+    .bbb-weekly-email__ctaRow{
+      flex-direction:column;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "bookshelf weekly preview",
+  "settings": [],
+  "presets": [
+    {
+      "name": "bookshelf weekly preview"
+    }
+  ]
+}
+{% endschema %}

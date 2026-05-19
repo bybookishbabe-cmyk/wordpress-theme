@@ -1,0 +1,257 @@
+{% comment %}
+Featured Romance Lists — Book Spine Style
+Pulls blog posts and displays them like stacked book spines
+{% endcomment %}
+
+<section class="bbb-romance-lists">
+  <div class="bbb-romance-lists__inner">
+
+    <div class="bbb-romance-lists__head">
+
+      <p class="bbb-romance-lists__kicker">
+        {{ section.settings.kicker }}
+      </p>
+
+      <h2 class="bbb-romance-lists__title">
+        {{ section.settings.title }}
+      </h2>
+
+      <p class="bbb-romance-lists__sub">
+        {{ section.settings.subtext }}
+      </p>
+
+    </div>
+
+    {% assign blog_handle = section.settings.blog %}
+    {% assign posts = blogs[blog_handle].articles %}
+
+    <div class="bbb-romance-lists__shelf">
+
+      {% for article in posts limit: 5 %}
+
+      <a href="{{ article.url }}" class="bbb-romance-lists__spine">
+
+        <span class="bbb-romance-lists__number">
+          {{ forloop.index }}
+        </span>
+
+        <span class="bbb-romance-lists__name">
+          {{ article.title }}
+        </span>
+
+      </a>
+
+      {% endfor %}
+
+    </div>
+
+    <div class="bbb-romance-lists__cta">
+      <a href="/blogs/{{ blog_handle }}">
+        explore all romance lists →
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<style>
+
+.bbb-romance-lists{
+background:#0b0b0b;
+padding:35px 20px 70px;
+color:#f6f6f6;
+}
+
+.bbb-romance-lists__inner{
+max-width:1100px;
+margin:auto;
+}
+
+.bbb-romance-lists__head{
+margin-bottom:40px;
+opacity:0;
+transform:translateY(-2.4rem);
+animation:listsHeadDrop .75s ease forwards;
+}
+
+.bbb-romance-lists__kicker{
+font-size:11px;
+letter-spacing:.16em;
+text-transform:uppercase;
+opacity:.6;
+}
+
+.bbb-romance-lists__title{
+font-size:32px;
+margin-top:6px;
+}
+
+.bbb-romance-lists__sub{
+font-size:14px;
+opacity:.65;
+margin-top:8px;
+}
+
+/* bookshelf */
+
+.bbb-romance-lists__shelf{
+display:flex;
+flex-direction:column;
+gap:-6px;
+position:relative;
+}
+.bbb-romance-lists__spine{
+margin-top:-6px;
+}
+
+/* book spine */
+
+.bbb-romance-lists__spine{
+
+display:flex;
+align-items:center;
+
+padding:16px 22px;
+
+border-radius:8px;
+
+border:1px solid rgba(255,255,255,.12);
+
+background:linear-gradient(
+90deg,
+rgba(255,255,255,.04),
+rgba(255,255,255,.01)
+);
+
+text-decoration:none;
+color:#f6f6f6;
+
+font-family:"Libre Baskerville", serif;
+
+transition:all .2s ease;
+}
+
+/* hover glow */
+
+.bbb-romance-lists__spine:hover{
+
+transform:translateX(4px);
+
+border-color:#ff8ac7;
+
+box-shadow:0 0 18px rgba(255,138,199,.25);
+
+}
+
+/* number */
+
+.bbb-romance-lists__number{
+
+font-size:16px;
+opacity:.5;
+
+width:26px;
+
+}
+
+/* title */
+
+.bbb-romance-lists__name{
+
+font-size:18px;
+line-height:1.4;
+
+}
+
+/* CTA */
+
+.bbb-romance-lists__cta{
+margin-top:30px;
+}
+
+.bbb-romance-lists__cta a{
+color:#ff8ac7;
+text-decoration:none;
+font-size:14px;
+}
+/* ===============================
+STACKING BOOK SPINE ANIMATION
+================================ */
+
+.bbb-romance-lists__spine{
+
+opacity:0;
+transform:translateY(-28px) scale(.96);
+
+animation:spineDrop .6s ease forwards;
+
+}
+
+/* stagger timing */
+
+.bbb-romance-lists__spine:nth-child(1){ animation-delay:.1s; }
+.bbb-romance-lists__spine:nth-child(2){ animation-delay:.2s; }
+.bbb-romance-lists__spine:nth-child(3){ animation-delay:.3s; }
+.bbb-romance-lists__spine:nth-child(4){ animation-delay:.4s; }
+.bbb-romance-lists__spine:nth-child(5){ animation-delay:.5s; }
+
+@keyframes spineDrop{
+
+to{
+
+opacity:1;
+transform:translateY(0) scale(1);
+
+}
+
+}
+
+@keyframes listsHeadDrop{
+
+to{
+
+opacity:1;
+transform:translateY(0);
+
+}
+
+}
+</style>
+
+{% schema %}
+{
+  "name": "Featured Romance Lists",
+  "tag": "section",
+  "class": "section-featured-romance-lists",
+  "settings": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Kicker",
+      "default": "reader favorites"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "featured romance lists"
+    },
+    {
+      "type": "textarea",
+      "id": "subtext",
+      "label": "Subtext",
+      "default": "quick romance reading lists for when you're not sure what to read next."
+    },
+    {
+      "type": "blog",
+      "id": "blog",
+      "label": "Blog source"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Featured Romance Lists"
+    }
+  ]
+}
+{% endschema %}

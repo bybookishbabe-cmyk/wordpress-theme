@@ -1,0 +1,529 @@
+{% comment %}
+Browse by Trope
+Manual links to trope blog posts styled like editorial clippings
+{% endcomment %}
+
+<section class="bbb-tropes">
+  <div class="bbb-tropes__inner">
+
+<a class="bbb-spiceCallout" href="/pages/romance-books-by-spice-level">
+  <span class="bbb-spiceCallout__rain" aria-hidden="true">
+    <span>🌶</span><span>🌶</span><span>🌶</span><span>🌶</span><span>🌶</span>
+  </span>
+  <span class="bbb-spiceCallout__kicker">new way to browse</span>
+  <span class="bbb-spiceCallout__text">want the exact spice level? browse romance by spice level →</span>
+</a>
+
+<div class="bbb-tropes__row">
+
+  <div class="bbb-tropes__titleWrap">
+
+    <p class="bbb-tropes__kicker">
+      {{ section.settings.kicker }}
+    </p>
+
+    <h2 class="bbb-tropes__title">
+      {{ section.settings.title }}
+    </h2>
+
+  </div>
+
+  <div class="bbb-tropes__grid">
+
+      {% for block in section.blocks %}
+
+<a href="{{ block.settings.link }}"
+   class="bbb-trope-card"
+   data-emoji="{{ block.settings.emoji }}">
+
+<div class="bbb-emoji-rain"></div>
+
+        <div class="bbb-trope-card__label">
+          trope
+        </div>
+
+        <div class="bbb-trope-card__title">
+          {{ block.settings.title }}
+        </div>
+
+        <div class="bbb-trope-card__arrow">
+          see books →
+        </div>
+
+      </a>
+
+      {% endfor %}
+
+    </div>
+
+  </div>
+  </div>
+</section>
+
+<style>
+
+/* ================================
+TROPES SECTION
+================================ */
+
+.bbb-tropes{
+background:#0b0b0b;
+padding:30px 20px 20px;
+color:#f6f6f6;
+}
+
+.bbb-tropes__inner{
+max-width:1100px;
+margin:auto;
+}
+
+.bbb-spiceCallout{
+display:block;
+margin:0 0 24px;
+padding:14px 18px;
+border-radius:18px;
+border:1px solid rgba(255,138,199,.22);
+background:linear-gradient(180deg, rgba(255,138,199,.08), rgba(255,255,255,.02));
+text-decoration:none;
+color:inherit;
+transition:border-color .18s ease, background .18s ease, transform .18s ease;
+position:relative;
+overflow:hidden;
+}
+
+.bbb-spiceCallout:hover,
+.bbb-spiceCallout:focus-visible{
+border-color:rgba(255,138,199,.48);
+background:linear-gradient(180deg, rgba(255,138,199,.14), rgba(255,255,255,.03));
+transform:translateY(-1px);
+outline:none;
+}
+
+.bbb-spiceCallout__kicker{
+display:block;
+margin-bottom:6px;
+font-size:10px;
+letter-spacing:.16em;
+text-transform:uppercase;
+color:rgba(246,246,246,.62);
+position:relative;
+z-index:1;
+}
+
+.bbb-spiceCallout__text{
+display:block;
+font-size:15px;
+line-height:1.45;
+color:#f6f6f6;
+position:relative;
+z-index:1;
+}
+
+.bbb-spiceCallout__rain{
+position:absolute;
+inset:0;
+pointer-events:none;
+overflow:hidden;
+opacity:.42;
+}
+
+.bbb-spiceCallout__rain span{
+position:absolute;
+top:-22px;
+font-size:15px;
+animation:bbbSpiceFall 7.5s linear infinite;
+filter:drop-shadow(0 0 6px rgba(255,138,199,.4));
+text-shadow:0 0 10px rgba(255,138,199,.45);
+}
+
+.bbb-spiceCallout__rain span:nth-child(1){ left:8%; animation-delay:0s; }
+.bbb-spiceCallout__rain span:nth-child(2){ left:26%; animation-delay:1.4s; }
+.bbb-spiceCallout__rain span:nth-child(3){ left:48%; animation-delay:3.2s; }
+.bbb-spiceCallout__rain span:nth-child(4){ left:69%; animation-delay:2.1s; }
+.bbb-spiceCallout__rain span:nth-child(5){ left:86%; animation-delay:4.4s; }
+
+/* layout */
+
+.bbb-tropes__row{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:40px;
+}
+
+/* trope cards row */
+
+.bbb-tropes__grid{
+display:flex;
+gap:16px;
+overflow-x:auto;
+scrollbar-width:none;
+padding:10px 0;
+flex:1;
+
+scroll-snap-type:x mandatory;
+}
+
+.bbb-trope-card{
+scroll-snap-align:start;
+}
+.bbb-tropes__grid::after{
+content:"";
+position:absolute;
+right:0;
+top:0;
+bottom:0;
+width:40px;
+pointer-events:none;
+
+background:linear-gradient(
+to right,
+rgba(11,11,11,0),
+rgba(11,11,11,1)
+);
+}
+
+.bbb-tropes__grid::-webkit-scrollbar{
+display:none;
+}
+
+/* title block */
+
+.bbb-tropes__titleWrap{
+flex-shrink:0;
+text-align:right;
+}
+
+.bbb-tropes__kicker{
+font-size:11px;
+letter-spacing:.18em;
+text-transform:uppercase;
+opacity:.55;
+margin-bottom:6px;
+}
+
+.bbb-tropes__title{
+font-size:32px;
+margin:0;
+}
+
+/* ================================
+TROPE CARDS
+================================ */
+
+.bbb-trope-card{
+
+flex:0 0 150px;
+height:190px;
+
+display:flex;
+flex-direction:column;
+justify-content:flex-end;
+
+padding:14px;
+
+border-radius:14px;
+
+background:#111;
+
+border:1px solid rgba(255,255,255,.12);
+
+text-decoration:none;
+color:#f6f6f6;
+
+position:relative;
+overflow:hidden;
+
+transition:all .2s ease;
+
+}
+
+/* hover */
+
+.bbb-trope-card:hover{
+transform:translateY(-6px);
+border-color:#ff8ac7;
+box-shadow:0 16px 40px rgba(0,0,0,.6);
+}
+
+/* labels */
+
+.bbb-trope-card__label{
+font-size:9px;
+letter-spacing:.18em;
+text-transform:uppercase;
+opacity:.55;
+}
+
+.bbb-trope-card__title{
+font-size:15px;
+line-height:1.3;
+margin-top:4px;
+}
+
+.bbb-trope-card__arrow{
+font-size:11px;
+opacity:.55;
+margin-top:6px;
+}
+
+/* ================================
+EMOJI RAIN
+================================ */
+
+.bbb-emoji-rain{
+position:absolute;
+inset:0;
+pointer-events:none;
+overflow:hidden;
+}
+
+.bbb-emoji-rain span{
+
+position:absolute;
+
+top:-20px;
+
+font-size:16px;
+
+opacity:.18;
+
+animation:tropeFall linear infinite;
+
+filter:blur(.3px);
+
+}
+
+@keyframes tropeFall{
+
+0%{
+transform:translateY(-20px) rotate(0deg);
+opacity:0;
+}
+
+10%{
+opacity:.7;
+}
+
+90%{
+opacity:.7;
+}
+
+100%{
+transform:translateY(220px) rotate(180deg);
+opacity:0;
+}
+
+}
+
+@keyframes bbbSpiceFall{
+0%{ transform:translateY(-14px) rotate(0deg); opacity:0; }
+12%{ opacity:.9; }
+100%{ transform:translateY(88px) rotate(14deg); opacity:0; }
+}
+
+/* ================================
+MOBILE
+================================ */
+
+@media (max-width:768px){
+
+.bbb-spiceCallout{
+margin:0 0 18px;
+padding:12px 14px;
+border-radius:16px;
+}
+
+.bbb-tropes__row{
+flex-direction:column-reverse;
+align-items:flex-start;
+gap:20px;
+}
+
+.bbb-tropes__titleWrap{
+text-align:left;
+}
+
+.bbb-tropes__title{
+font-size:26px;
+}
+
+}
+.bbb-trope-card:active{
+transform:scale(.96);
+}
+@keyframes tropeNudge{
+
+0%{ transform:translateX(0); }
+
+50%{ transform:translateX(-8px); }
+
+100%{ transform:translateX(0); }
+
+}
+
+.bbb-trope-card:first-child{
+
+animation:tropeNudge 1.6s ease 1s 2;
+
+}
+.bbb-trope-card{
+
+box-shadow:
+0 8px 24px rgba(0,0,0,.45);
+
+}
+.bbb-tropes__title::after{
+content:"";
+position:absolute;
+left:-2px;
+bottom:-6px;
+
+width:65%;
+height:7px;
+
+background:#ff8ac7;
+
+border-radius:6px;
+transform:rotate(-1deg);
+
+opacity:.9;
+}
+.bbb-tropes__title::after{
+
+content:"";
+position:absolute;
+left:0;
+bottom:-6px;
+
+width:0;
+height:6px;
+
+background:#ff8ac7;
+
+border-radius:3px;
+
+animation:tropeHighlight .8s ease forwards;
+}
+
+@keyframes tropeHighlight{
+to{
+width:60%;
+}
+}
+.bbb-tropes__title{
+font-size:32px;
+margin:0;
+display:inline-block;
+padding-bottom:10px;
+
+border-bottom:1px solid rgba(255,138,199,.6);
+
+box-shadow:
+0 6px 18px rgba(255,138,199,.15);
+}
+/* soft shelf glow under trope cards */
+
+.bbb-tropes{
+position:relative;
+}
+
+.bbb-tropes::after{
+content:"";
+position:absolute;
+left:50%;
+transform:translateX(-50%);
+bottom:-30px;
+
+width:70%;
+height:120px;
+
+background:radial-gradient(
+ellipse at center,
+rgba(255,255,255,0.12) 0%,
+rgba(255,255,255,0.06) 40%,
+rgba(255,255,255,0) 70%
+);
+
+pointer-events:none;
+}
+</style>
+<script>
+
+document.querySelectorAll('.bbb-trope-card').forEach(card => {
+
+const emoji = card.dataset.emoji || "✨";
+const container = card.querySelector('.bbb-emoji-rain');
+
+for(let i=0;i<10;i++){
+
+const span = document.createElement('span');
+
+span.innerText = emoji;
+
+span.style.left = Math.random()*100 + "%";
+span.style.animationDuration = (4 + Math.random()*4) + "s";
+span.style.animationDelay = (Math.random()*4) + "s";
+
+container.appendChild(span);
+
+}
+
+});
+
+</script>
+{% schema %}
+{
+  "name": "Browse by Trope",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Kicker",
+      "default": "romance navigation"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "browse by trope"
+    },
+    {
+      "type": "textarea",
+      "id": "subtext",
+      "label": "Subtext",
+      "default": "find your next obsession by trope."
+    }
+  ],
+  "blocks": [
+  {
+    "type": "trope",
+    "name": "Trope",
+    "settings": [
+      {
+        "type": "text",
+        "id": "title",
+        "label": "Trope Name"
+      },
+      {
+        "type": "text",
+        "id": "emoji",
+        "label": "Emoji (used for falling animation)",
+        "default": "🖤"
+      },
+      {
+        "type": "url",
+        "id": "link",
+        "label": "Blog Post Link"
+      }
+    ]
+  }
+],
+  "presets": [
+    {
+      "name": "Browse by Trope"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,200 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "main-page",
+      "disabled": true,
+      "settings": {
+        "padding_top": 28,
+        "padding_bottom": 28
+      }
+    },
+    "rich_text_X6cXWA": {
+      "type": "rich-text",
+      "blocks": {
+        "heading_XLNJcH": {
+          "type": "heading",
+          "settings": {
+            "heading": "🕊 One-Woman Show",
+            "heading_size": "h1"
+          }
+        },
+        "text_ywExiG": {
+          "type": "text",
+          "settings": {
+            "text": "<p>It’s just me — a real human, designing, printing, cutting, and shipping every single order with love (and probably a book playing in the background). Go on, shop away 💌</p>"
+          }
+        },
+        "button_HHWqad": {
+          "type": "button",
+          "settings": {
+            "button_label": "Shop Now",
+            "button_link": "shopify://collections/all",
+            "button_style_secondary": false,
+            "button_label_2": "",
+            "button_link_2": "",
+            "button_style_secondary_2": false
+          }
+        }
+      },
+      "block_order": [
+        "heading_XLNJcH",
+        "text_ywExiG",
+        "button_HHWqad"
+      ],
+      "disabled": true,
+      "settings": {
+        "desktop_content_position": "center",
+        "content_alignment": "center",
+        "color_scheme": "",
+        "full_width": true,
+        "padding_top": 40,
+        "padding_bottom": 52
+      }
+    },
+    "image_with_text_nRLUAF": {
+      "type": "image-with-text",
+      "blocks": {
+        "heading_MEnRbp": {
+          "type": "heading",
+          "settings": {
+            "heading": "Smut CEO",
+            "heading_size": "h1"
+          }
+        },
+        "text_pi7C8w": {
+          "type": "text",
+          "settings": {
+            "text": "<p>just a girl who fell in love with her kindle… and never came back.<br/><br/>now i make spicy, aesthetic things for book lovers who feel the same.<br/><br/>every order is handmade by me (hi, i’m autumn), with lots of love, paper cuts, and fictional man drama.</p>",
+            "text_style": "body"
+          }
+        }
+      },
+      "block_order": [
+        "heading_MEnRbp",
+        "text_pi7C8w"
+      ],
+      "disabled": true,
+      "settings": {
+        "image": "shopify://shop_images/aboutme2.png",
+        "height": "adapt",
+        "desktop_image_width": "medium",
+        "layout": "image_first",
+        "image_behavior": "none",
+        "content_layout": "no-overlap",
+        "desktop_content_position": "top",
+        "desktop_content_alignment": "left",
+        "mobile_content_alignment": "left",
+        "section_color_scheme": "",
+        "color_scheme": "",
+        "padding_top": 36,
+        "padding_bottom": 36
+      }
+    },
+    "collapsible_content_fCbEc3": {
+      "type": "collapsible-content",
+      "blocks": {
+        "collapsible_row_BWFJcy": {
+          "type": "collapsible_row",
+          "settings": {
+            "heading": "Favorite Fictional Man",
+            "icon": "check_mark",
+            "row_content": "<p>Aaron Warner (obviously)</p>",
+            "page": ""
+          }
+        },
+        "collapsible_row_gcqmMz": {
+          "type": "collapsible_row",
+          "settings": {
+            "heading": "Top Book Trope",
+            "icon": "check_mark",
+            "row_content": "<p>Enemies to lovers with slow burn and a touch of fated mates</p>",
+            "page": ""
+          }
+        },
+        "collapsible_row_hwB9ba": {
+          "type": "collapsible_row",
+          "settings": {
+            "heading": "My Go-To Drink",
+            "icon": "check_mark",
+            "row_content": "<p>Diet Coke (iykyk)</p>",
+            "page": ""
+          }
+        },
+        "collapsible_row_zxjm6U": {
+          "type": "collapsible_row",
+          "settings": {
+            "heading": "Favorite Book Quote",
+            "icon": "check_mark",
+            "row_content": "<p>How can you possibly ask that of a book addict? My notes app has approx 10,587 quotes</p>",
+            "page": ""
+          }
+        }
+      },
+      "block_order": [
+        "collapsible_row_BWFJcy",
+        "collapsible_row_gcqmMz",
+        "collapsible_row_hwB9ba",
+        "collapsible_row_zxjm6U"
+      ],
+      "disabled": true,
+      "settings": {
+        "caption": "",
+        "heading": "Can You Guess?",
+        "heading_size": "h1",
+        "heading_alignment": "center",
+        "layout": "none",
+        "container_color_scheme": "",
+        "color_scheme": "",
+        "open_first_collapsible_row": false,
+        "image_ratio": "adapt",
+        "desktop_layout": "image_second",
+        "padding_top": 36,
+        "padding_bottom": 36
+      }
+    },
+    "bbb_our_story_RJMFWg": {
+      "type": "bbb-our-story",
+      "name": "our story (interactive)",
+      "settings": {
+        "hero_kicker": "why i started this",
+        "hero_title": "i wanted reading to feel as beautiful as it felt.",
+        "hero_body": "bybookishbabe started because books were never just books for me. they were the hobby, the aesthetic, the mood, the little world i kept building around myself.\n\nso i made the kind of place i wanted to spend time in: dramatic, romantic, obsessive, and very much for the readers who are not normal about any of it.",
+        "hero_image": "shopify://shop_images/IMG_0674.heic",
+        "shelf_kicker": "my shelf, lately",
+        "shelf_title": "the society's classics shelf",
+        "shelf_subtitle": "click through the shelf if you want the books that built my taste.",
+        "favorite_boyfriend_kicker": "favorite book boyfriend",
+        "favorite_boyfriend_title": "the fictional man i would defend in a group chat",
+        "favorite_boyfriend_body": "this is where you put the image, the book, and the little warning that maybe my taste in men is not the safest.\n\nif you want the full diagnosis, take the quiz.",
+        "favorite_boyfriend_image": "shopify://shop_images/aaron_warner.jpg",
+        "favorite_boyfriend_book_handle": "shatter-me",
+        "quiz_label": "take the quiz →",
+        "quiz_url": "",
+        "closing_kicker": "thank you for being here",
+        "closing_title": "if you made it this far, stay a while.",
+        "closing_body": "keep wandering the site, build your shelf, or come join the smut and sentiment society if you want the deeper layer of all of this.",
+        "stick_around_label": "keep exploring →",
+        "stick_around_url": "",
+        "society_label": "join the smut and sentiment society →",
+        "society_url": "",
+        "accent": "#b91c1c"
+      }
+    }
+  },
+  "order": [
+    "main",
+    "rich_text_X6cXWA",
+    "image_with_text_nRLUAF",
+    "collapsible_content_fCbEc3",
+    "bbb_our_story_RJMFWg"
+  ]
+}

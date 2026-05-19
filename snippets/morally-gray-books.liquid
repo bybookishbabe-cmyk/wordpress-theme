@@ -1,0 +1,188 @@
+{% assign books = shop.metaobjects.sss_library.values %}
+
+<div class="sss-blog-books">
+  <div class="sss-blog-grid">
+
+    {% for book in books %}
+      {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+      {% assign is_visible_value = is_visible | strip %}
+      {% unless is_visible_value == 'true' %}
+        {% continue %}
+      {% endunless %}
+      {% if book.shelf_categories.value == "morally gray lovers" %}
+
+        {%- assign cover_url = '' -%}
+        {% if book.cover.value != blank %}
+          {% if book.cover.value.url != blank %}
+            {% assign cover_url = book.cover.value.url %}
+          {% else %}
+            {% assign cover_url = book.cover.value %}
+          {% endif %}
+        {% endif %}
+
+        {%- assign amazon_href = '' -%}
+        {% if book.amazon_link.value != blank %}
+          {% if book.amazon_link.value.url != blank %}
+            {% assign amazon_href = book.amazon_link.value.url %}
+          {% else %}
+            {% assign amazon_href = book.amazon_link.value %}
+          {% endif %}
+        {% endif %}
+
+        {%- assign bookshop_href = '' -%}
+        {% if book.bookshop_link.value != blank %}
+          {% if book.bookshop_link.value.url != blank %}
+            {% assign bookshop_href = book.bookshop_link.value.url %}
+          {% else %}
+            {% assign bookshop_href = book.bookshop_link.value %}
+          {% endif %}
+        {% endif %}
+
+        <div class="sss-blog-book">
+
+          {% if cover_url != blank %}
+            <img 
+              src="{{ cover_url }}" 
+              alt="{{ book.title.value | escape }}"
+              loading="lazy"
+            >
+          {% endif %}
+
+          <h3>{{ book.title.value }}</h3>
+
+          {% if book.author.value != blank %}
+            <p class="author">{{ book.author.value }}</p>
+          {% endif %}
+
+          {% if book.tropes.value != blank %}
+            <p class="meta">
+              tropes: {{ book.tropes.value }}
+            </p>
+          {% endif %}
+
+          {% if book.spice_level.value != blank %}
+            <p class="meta">
+              spice level: {{ book.spice_level.value }}/5 🌶
+            </p>
+          {% endif %}
+
+          <div class="links">
+            {% if amazon_href != blank %}
+              <a href="{{ amazon_href }}" target="_blank">read on amazon</a>
+            {% endif %}
+
+            {% if bookshop_href != blank %}
+              <a href="{{ bookshop_href }}" target="_blank">shop on bookshop</a>
+            {% endif %}
+
+{% if book.newsletter_url.value != blank %}
+  <a href="{{ book.newsletter_url.value }}"
+     target="_blank"
+     class="book-list__newsletter">
+     read the newsletter →
+  </a>
+{% endif %}
+          </div>
+
+        </div>
+
+      {% endif %}
+    {% endfor %}
+
+  </div>
+</div>
+
+<style>
+.sss-blog-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, 180px);
+  gap:28px;
+  margin-top:30px;
+}
+
+.sss-blog-book img{
+  width:100%;
+  aspect-ratio:2/3;
+  object-fit:cover;
+  border-radius:10px;
+  margin-bottom:12px;
+}
+
+.sss-blog-book h3{
+  font-size:14px;
+  margin:0;
+}
+
+.sss-blog-book .author{
+  font-size:12px;
+  opacity:.7;
+  margin:4px 0 8px;
+}
+.sss-blog-book .meta{
+  font-size:12px;
+  opacity:.75;
+  margin:4px 0;
+}
+
+.sss-blog-book .links{
+  margin-top:10px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.sss-blog-book .links a{
+  font-size:12px;
+  text-decoration:underline;
+  opacity:.85;
+}
+
+.sss-blog-book .links a:hover{
+  opacity:1;
+}
+/* make the container swipeable */
+.sss-blog-grid,
+.metaobject-archive ul,
+.slider {
+  display: flex;
+  gap: 18px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 12px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* hide ugly scrollbar (optional but nice) */
+.sss-blog-grid::-webkit-scrollbar,
+.metaobject-archive ul::-webkit-scrollbar,
+.slider::-webkit-scrollbar {
+  height: 8px;
+}
+
+.sss-blog-grid::-webkit-scrollbar-thumb,
+.metaobject-archive ul::-webkit-scrollbar-thumb,
+.slider::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.15);
+  border-radius: 999px;
+}
+
+/* each book becomes a swipe card */
+.sss-blog-book,
+.metaobject-archive li,
+.slider__slide {
+  flex: 0 0 160px;
+  scroll-snap-align: start;
+}
+.article-template__content .book-list__newsletter {
+  display: block;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #e86aa5;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.article-template__content .book-list__newsletter:hover {
+  opacity: 0.7;
+}
+</style>

@@ -1,0 +1,689 @@
+<div class="section-divider"></div>
+
+<div class="favorites-section bbb-pair-save" id="bbb-pair-save-{{ section.id }}">
+  <div class="favorites-inner">
+
+    <h2 class="favorites-title">{{ section.settings.title }}</h2>
+    <p class="favorites-subtitle">{{ section.settings.subtitle }}</p>
+
+    <div class="favorites-row bbb-pair-save-row">
+
+      {% assign inserts_collection = collections[section.settings.inserts_collection] %}
+      {% assign prints_collection  = collections[section.settings.prints_collection] %}
+
+      {% assign insert_first_product = inserts_collection.products.first %}
+      {% assign print_first_product  = prints_collection.products.first %}
+
+      {% assign insert_first_img = nil %}
+      {% if insert_first_product and insert_first_product.featured_media and insert_first_product.featured_media.preview_image %}
+        {% assign insert_first_img = insert_first_product.featured_media.preview_image %}
+      {% endif %}
+
+      {% assign print_first_img = nil %}
+      {% if print_first_product and print_first_product.featured_media and print_first_product.featured_media.preview_image %}
+        {% assign print_first_img = print_first_product.featured_media.preview_image %}
+      {% endif %}
+
+      <!-- INSERT CARD (INSERT DROPDOWN + SIZE PILL BUTTONS) -->
+      <div class="favorite-card">
+        <div class="favorite-card-inner">
+
+          <a href="{% if insert_first_product %}{{ insert_first_product.url }}{% else %}#{% endif %}"
+             class="favorite-card-image-link"
+             data-insert-link>
+            {% if insert_first_img %}
+              <img
+                src="{{ insert_first_img | img_url: '600x' }}"
+                alt="kindle insert"
+                class="favorite-card-img"
+                data-insert-img
+                loading="lazy"
+                width="{{ insert_first_img.width }}"
+                height="{{ insert_first_img.height }}"
+              >
+            {% endif %}
+          </a>
+
+          <div class="favorite-card-content">
+            <div class="favorite-card-label">insert</div>
+            <div class="favorite-card-title">choose your insert</div>
+            <div class="favorite-card-meta">{{ section.settings.insert_meta }}</div>
+
+            {% if inserts_collection and inserts_collection.products_count > 0 %}
+              <!-- Insert chooser -->
+              <select class="favorite-card-select" data-insert-product>
+                {% for product in inserts_collection.products %}
+                  {% if product.available %}
+                    <option value="{{ product.handle }}">{{ product.title }}</option>
+                  {% endif %}
+                {% endfor %}
+              </select>
+
+              <!-- Size pills (populated by JS) -->
+              <div class="bbb-size-pills" data-size-pills aria-label="choose size"></div>
+
+              <!-- Hidden selected insert variant id -->
+              <input type="hidden" data-insert-variant-id value="">
+            {% else %}
+              <div class="favorite-card-soldout">select an inserts collection</div>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ART PRINT CARD -->
+      <div class="favorite-card">
+        <div class="favorite-card-inner">
+
+          <a href="{% if print_first_product %}{{ print_first_product.url }}{% else %}#{% endif %}"
+             class="favorite-card-image-link"
+             data-print-link>
+            {% if print_first_img %}
+              <img
+                src="{{ print_first_img | img_url: '600x' }}"
+                alt="art print"
+                class="favorite-card-img"
+                data-print-img
+                loading="lazy"
+                width="{{ print_first_img.width }}"
+                height="{{ print_first_img.height }}"
+              >
+            {% endif %}
+          </a>
+
+          <div class="favorite-card-content">
+            <div class="favorite-card-label">art print</div>
+            <div class="favorite-card-title">choose your art print</div>
+            <div class="favorite-card-meta">{{ section.settings.print_meta }}</div>
+
+            {% if prints_collection and prints_collection.products_count > 0 %}
+              <select class="favorite-card-select" data-print-select>
+                {% for product in prints_collection.products %}
+                  {% if product.available and product.selected_or_first_available_variant %}
+                    {% assign v = product.selected_or_first_available_variant %}
+                    {% assign pimg = nil %}
+                    {% if product.featured_media and product.featured_media.preview_image %}
+                      {% assign pimg = product.featured_media.preview_image %}
+                    {% endif %}
+                    <option
+                      value="{{ v.id }}"
+                      data-url="{{ product.url }}"
+                      data-img="{% if pimg %}{{ pimg | img_url: '600x' }}{% endif %}"
+                    >
+                      {{ product.title }}
+                    </option>
+                  {% endif %}
+                {% endfor %}
+              </select>
+            {% else %}
+              <div class="favorite-card-soldout">select an art prints collection</div>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+
+      <!-- DEAL CARD -->
+      <div class="favorite-card">
+        <div class="favorite-card-inner">
+          <div class="favorite-card-content">
+
+            <div class="favorite-card-label">deal</div>
+            <div class="favorite-card-title">any insert + any art print</div>
+
+            <div class="bbb-pair-price">
+            </div>
+
+            <div class="favorite-card-meta">{{ section.settings.deal_meta }}</div>
+
+            <button class="favorite-card-button" type="button" data-add-both>
+              {{ section.settings.button_label }}
+            </button>
+
+            <div class="favorite-card-meta bbb-fine">
+              {{ section.settings.fine_print }}
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="favorites-slider-hint">
+      <span class="favorites-dot"></span>
+      <span class="favorites-dot"></span>
+      <span class="favorites-dot"></span>
+      <span class="favorites-hint-text">swipe me</span>
+    </div>
+
+  </div>
+
+  {%- comment -%}
+    Insert map: handle -> { title, url, img, variants[] }
+    IMPORTANT: no parentheses around filters.
+  {%- endcomment -%}
+  <script type="application/json" data-insert-map>
+  {
+    {% for product in inserts_collection.products %}
+      {% if product.available %}
+        {% assign pimg = nil %}
+        {% if product.featured_media and product.featured_media.preview_image %}
+          {% assign pimg = product.featured_media.preview_image %}
+        {% endif %}
+        "{{ product.handle }}": {
+          "title": {{ product.title | json }},
+          "url": {{ product.url | json }},
+          "img": {% if pimg %}{{ pimg | img_url: '600x' | json }}{% else %}""{% endif %},
+"variants": [
+  {% assign first_written = false %}
+  {% for v in product.variants %}
+    {% if v.available %}
+      {% unless first_written %}{% assign first_written = true %}{% else %},{% endunless %}
+
+      {% assign vimg = nil %}
+      {% if v.featured_image %}
+        {% assign vimg = v.featured_image %}
+      {% elsif v.image %}
+        {% assign vimg = v.image %}
+      {% endif %}
+
+      {
+        "id": {{ v.id }},
+        "title": {{ v.title | json }},
+        "img": {% if vimg %}{{ vimg | img_url: '600x' | json }}{% else %}""{% endif %}
+      }
+    {% endif %}
+  {% endfor %}
+]
+
+        }{% unless forloop.last %},{% endunless %}
+      {% endif %}
+    {% endfor %}
+  }
+  </script>
+</div>
+
+<script>
+(function(){
+  const root = document.getElementById('bbb-pair-save-{{ section.id }}');
+  if(!root) return;
+
+  const insertProductSelect = root.querySelector('[data-insert-product]');
+  const pillsMount          = root.querySelector('[data-size-pills]');        // container in your HTML
+  const insertVariantHidden = root.querySelector('[data-insert-variant-id]'); // hidden input in your HTML
+
+  const insertImg  = root.querySelector('[data-insert-img]');
+  const insertLink = root.querySelector('[data-insert-link]');
+
+  const printSelect = root.querySelector('[data-print-select]');
+  const printImg    = root.querySelector('[data-print-img]');
+  const printLink   = root.querySelector('[data-print-link]');
+
+  const btn = root.querySelector('[data-add-both]');
+
+  const mapEl = root.querySelector('[data-insert-map]');
+  const insertMap = mapEl ? JSON.parse(mapEl.textContent) : {};
+
+  /* ------------------------------
+     Center modal (white)
+  ------------------------------ */
+  function ensureModal(){
+    let modal = root.querySelector('.bbb-added-modal');
+    if (modal) return modal;
+
+    modal = document.createElement('div');
+    modal.className = 'bbb-added-modal';
+    modal.innerHTML = `
+      <div class="bbb-added-backdrop" data-close></div>
+      <div class="bbb-added-panel" role="dialog" aria-modal="true" aria-label="added to cart" tabindex="-1">
+        <div class="bbb-added-title">added to cart ✓</div>
+        <div class="bbb-added-items" data-items></div>
+
+        <div class="bbb-added-actions">
+          <button type="button" class="bbb-added-btn" data-close>keep shopping</button>
+          <button type="button" class="bbb-added-btn bbb-added-btn-primary" data-open-drawer>view cart</button>
+        </div>
+      </div>
+    `;
+    root.appendChild(modal);
+
+    modal.addEventListener('click', (e) => {
+      if (e.target.matches('[data-close]')) modal.classList.remove('is-open');
+    });
+
+    modal.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') modal.classList.remove('is-open');
+    });
+
+    modal.querySelector('[data-open-drawer]').addEventListener('click', () => {
+      openCartDrawerSafely();
+      modal.classList.remove('is-open');
+    });
+
+    return modal;
+  }
+
+  function showModal(lines){
+    const modal = ensureModal();
+    const panel = modal.querySelector('.bbb-added-panel');
+    const items = modal.querySelector('[data-items]');
+    items.innerHTML = (lines || []).map(t => `<div class="bbb-added-line">${t}</div>`).join('');
+    modal.classList.add('is-open');
+    // focus for accessibility + prevents weird scroll jumps
+    setTimeout(() => panel && panel.focus(), 0);
+  }
+
+  /* ------------------------------
+     Cart drawer open (NO redirect)
+     (no clicking /cart links)
+  ------------------------------ */
+  function openCartDrawerSafely() {
+    const cartDrawer =
+      document.querySelector('cart-drawer') ||
+      document.getElementById('CartDrawer') ||
+      document.querySelector('[data-cart-drawer]');
+
+    if (cartDrawer && typeof cartDrawer.open === 'function') {
+      cartDrawer.open();
+      return true;
+    }
+
+    // Some themes toggle via aria-hidden + active class
+    if (cartDrawer) {
+      cartDrawer.classList.add('is-active', 'active', 'open');
+      cartDrawer.setAttribute('aria-hidden', 'false');
+      return true;
+    }
+
+    return false;
+  }
+
+  /* ------------------------------
+     Helpers: parse variant title
+     assumes "Size / Color" format
+  ------------------------------ */
+  function parseVariantTitle(title){
+    const parts = String(title || '').split(' / ');
+    return {
+      size: parts[0] ? parts[0].trim() : 'default',
+      color: parts[1] ? parts[1].trim() : null
+    };
+  }
+
+  function looksLikeCssColor(str){
+    if(!str) return false;
+    const s = str.trim().toLowerCase();
+    // common names + hex. Add more if you use them.
+    const common = ['black','white','cream','beige','tan','brown','gray','grey','pink','red','orange','yellow','green','blue','purple','navy','ivory'];
+    if (common.includes(s)) return true;
+    if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(s)) return true;
+    return false;
+  }
+
+  /* ------------------------------
+     Render size pills + optional color dots
+  ------------------------------ */
+  function renderOptions(handle){
+    const p = insertMap[handle];
+    if(!p || !pillsMount || !insertVariantHidden) return;
+
+    // update image + link for selected insert
+    if(insertImg && p.img) insertImg.src = p.img;
+    if(insertLink && p.url) insertLink.href = p.url;
+
+    pillsMount.innerHTML = '';
+
+    const variants = (p.variants || []).filter(v => v && v.id && v.title);
+    if(!variants.length){
+      pillsMount.innerHTML = '<div class="bbb-pill-note">no options available</div>';
+      insertVariantHidden.value = '';
+      return;
+    }
+
+const parsed = variants.map(v => {
+  const pv = parseVariantTitle(v.title);
+  return { id: v.id, size: pv.size, color: pv.color, img: v.img || "" };
+});
+
+    const sizes  = [...new Set(parsed.map(v => v.size))];
+    const colors = [...new Set(parsed.map(v => v.color).filter(Boolean))];
+
+    // size pills row (IMPORTANT: not bbb-size-pills to avoid nesting)
+    const sizeRow = document.createElement('div');
+    sizeRow.className = 'bbb-size-pill-row';
+
+    sizes.forEach(size => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'bbb-pill';
+      b.textContent = size;
+      b.dataset.size = size;
+      sizeRow.appendChild(b);
+    });
+
+    pillsMount.appendChild(sizeRow);
+
+    // color dots row (only when colors exist)
+    let colorRow = null;
+    if(colors.length){
+      colorRow = document.createElement('div');
+      colorRow.className = 'bbb-color-dots';
+
+      colors.forEach(color => {
+        const d = document.createElement('button');
+        d.type = 'button';
+        d.className = 'bbb-color-dot';
+        d.dataset.color = color;
+        d.title = color;
+        d.setAttribute('aria-label', color);
+
+        const c = color.trim();
+        if (looksLikeCssColor(c)) {
+          d.style.backgroundColor = c.toLowerCase();
+        } else {
+          // if you use poetic names, we keep it neutral but still selectable
+          d.style.backgroundColor = '#fff';
+          d.dataset.fallback = '1';
+        }
+
+        colorRow.appendChild(d);
+      });
+
+      pillsMount.appendChild(colorRow);
+    }
+
+    let selectedSize  = sizes[0];
+    let selectedColor = colors[0] || null;
+
+    function setActiveSize(){
+      sizeRow.querySelectorAll('.bbb-pill').forEach(x =>
+        x.classList.toggle('is-active', x.dataset.size === selectedSize)
+      );
+    }
+    function setActiveColor(){
+      if(!colorRow) return;
+      colorRow.querySelectorAll('.bbb-color-dot').forEach(x =>
+        x.classList.toggle('is-active', x.dataset.color === selectedColor)
+      );
+    }
+
+    function syncVariant(){
+  const match = parsed.find(v => v.size === selectedSize && (selectedColor ? v.color === selectedColor : true))
+             || parsed.find(v => v.size === selectedSize);
+
+  if(match){
+    insertVariantHidden.value = String(match.id);
+    if (insertImg) {
+      insertImg.src = match.img ? match.img : (p.img || insertImg.src);
+    }
+  }
+  setActiveSize();
+  setActiveColor();
+}
+
+    sizeRow.addEventListener('click', (e) => {
+      const pill = e.target.closest('.bbb-pill');
+      if(!pill) return;
+      selectedSize = pill.dataset.size;
+      syncVariant();
+    });
+
+    if(colorRow){
+      colorRow.addEventListener('click', (e) => {
+        const dot = e.target.closest('.bbb-color-dot');
+        if(!dot) return;
+        selectedColor = dot.dataset.color;
+        syncVariant();
+      });
+    }
+
+    // init
+    syncVariant();
+  }
+
+  // init options for first insert
+  if(insertProductSelect){
+    renderOptions(insertProductSelect.value);
+    insertProductSelect.addEventListener('change', () => renderOptions(insertProductSelect.value));
+  }
+
+  /* ------------------------------
+     Print image sync
+  ------------------------------ */
+  function syncPrint(){
+    if(!printSelect) return;
+    const opt = printSelect.options[printSelect.selectedIndex];
+    if(opt && printImg && opt.dataset.img) printImg.src = opt.dataset.img;
+    if(opt && printLink && opt.dataset.url) printLink.href = opt.dataset.url;
+  }
+  syncPrint();
+  printSelect && printSelect.addEventListener('change', syncPrint);
+
+  /* ------------------------------
+     Add BOTH items
+  ------------------------------ */
+  async function addItems(items){
+    const res = await fetch('/cart/add.js', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ items })
+    });
+
+    if(!res.ok){
+      let msg = 'add to cart failed.';
+      try {
+        const data = await res.json();
+        msg = data.description || data.message || msg;
+      } catch(e) {}
+      throw new Error(msg);
+    }
+    return res.json();
+  }
+
+  function getSelectedInsertLine(){
+    const handle = insertProductSelect ? insertProductSelect.value : '';
+    const p = insertMap[handle];
+    const variantId = insertVariantHidden ? String(insertVariantHidden.value) : '';
+    if(!p) return 'insert added';
+
+    const found = (p.variants || []).find(x => String(x.id) === variantId);
+    return found ? `insert: ${p.title} — ${found.title}` : `insert: ${p.title}`;
+  }
+
+  function getSelectedPrintLine(){
+    if(!printSelect) return 'art print added';
+    const opt = printSelect.options[printSelect.selectedIndex];
+    return opt ? `art print: ${opt.textContent}` : 'art print added';
+  }
+
+  // ✅ Click: add both, modal, open drawer. NEVER redirect.
+  btn && btn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const insertVariantId = insertVariantHidden ? parseInt(insertVariantHidden.value, 10) : 0;
+    const printVariantId  = printSelect ? parseInt(printSelect.value, 10) : 0;
+
+    if(!insertVariantId || !printVariantId){
+      alert('choose an insert option + an art print first.');
+      return;
+    }
+
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'adding…';
+
+    try{
+      await addItems([
+        { id: insertVariantId, quantity: 1 },
+        { id: printVariantId, quantity: 1 }
+      ]);
+
+      showModal([getSelectedInsertLine(), getSelectedPrintLine()]);
+      openCartDrawerSafely();
+
+      btn.textContent = 'added ✓';
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.disabled = false;
+      }, 900);
+
+    } catch(err){
+      console.error(err);
+      alert(err.message || 'something went wrong.');
+      btn.textContent = 'try again';
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.disabled = false;
+      }, 1200);
+    }
+  });
+
+})();
+</script>
+
+<style>
+/* smaller pills + color dots */
+#bbb-pair-save-{{ section.id }} [data-size-pills]{
+  margin-top: 10px;
+}
+#bbb-pair-save-{{ section.id }} .bbb-size-pill-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+#bbb-pair-save-{{ section.id }} .bbb-pill{
+  padding: 7px 11px;
+  font-size: 13px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,.25);
+  background: rgba(255,255,255,.80);
+  color:#000;
+  cursor:pointer;
+}
+#bbb-pair-save-{{ section.id }} .bbb-pill.is-active{
+  background:#000;
+  color:#fff;
+  border-color:#000;
+}
+
+#bbb-pair-save-{{ section.id }} .bbb-color-dots{
+  display:flex;
+  gap:10px;
+  margin-top:8px;
+}
+#bbb-pair-save-{{ section.id }} .bbb-color-dot{
+  width:16px;
+  height:16px;
+  border-radius:50%;
+  border:1px solid rgba(0,0,0,.25);
+  cursor:pointer;
+  padding:0;
+  position: relative;
+}
+#bbb-pair-save-{{ section.id }} .bbb-color-dot[data-fallback="1"]{
+  background:#fff;
+}
+#bbb-pair-save-{{ section.id }} .bbb-color-dot.is-active{
+  outline:2px solid #000;
+  outline-offset:2px;
+}
+
+/* centered white popup */
+#bbb-pair-save-{{ section.id }} .bbb-added-modal{
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+}
+#bbb-pair-save-{{ section.id }} .bbb-added-modal.is-open{ display:block; }
+
+#bbb-pair-save-{{ section.id }} .bbb-added-backdrop{
+  position:absolute;
+  inset:0;
+  background: rgba(0,0,0,.45);
+}
+
+#bbb-pair-save-{{ section.id }} .bbb-added-panel{
+  position:absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(520px, calc(100% - 28px));
+  background: #fff;
+  color: #000;
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 18px 60px rgba(0,0,0,.35);
+}
+
+#bbb-pair-save-{{ section.id }} .bbb-added-title{
+  font-size: 14px;
+  letter-spacing: .12em;
+  text-transform: lowercase;
+  margin-bottom: 10px;
+}
+
+#bbb-pair-save-{{ section.id }} .bbb-added-line{
+  font-size: 15px;
+  line-height: 1.35;
+  padding: 8px 0;
+  border-top: 1px solid rgba(0,0,0,.10);
+}
+#bbb-pair-save-{{ section.id }} .bbb-added-line:first-child{
+  border-top: 0;
+  padding-top: 0;
+}
+
+#bbb-pair-save-{{ section.id }} .bbb-added-actions{
+  display:flex;
+  gap:10px;
+  margin-top:14px;
+}
+#bbb-pair-save-{{ section.id }} .bbb-added-btn{
+  flex:1;
+  border:1px solid rgba(0,0,0,.2);
+  background:#fff;
+  color:#000;
+  border-radius:12px;
+  padding:10px 12px;
+  font:inherit;
+  cursor:pointer;
+}
+#bbb-pair-save-{{ section.id }} .bbb-added-btn-primary{
+  background:#000;
+  color:#fff;
+  border-color:#000;
+}
+@media (max-width: 520px){
+  #bbb-pair-save-{{ section.id }} .bbb-added-actions{ flex-direction: column; }
+}
+</style>
+
+{% schema %}
+{
+  "name": "bbb — pair & save",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Heading", "default": "pair & save" },
+    { "type": "text", "id": "subtitle", "label": "Subheading", "default": "any insert + any art print." },
+
+    { "type": "collection", "id": "inserts_collection", "label": "Inserts collection" },
+    { "type": "collection", "id": "prints_collection", "label": "Art prints collection" },
+
+    { "type": "text", "id": "insert_meta", "label": "Insert meta", "default": "choose the insert, then tap your size." },
+    { "type": "text", "id": "print_meta", "label": "Print meta", "default": "pick the print that belongs in your reading corner." },
+
+    { "type": "text", "id": "deal_meta", "label": "Deal meta", "default": "bundle pricing + free shipping apply automatically at checkout." },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "add both to cart" },
+
+    { "type": "text", "id": "insert_price", "label": "Insert price", "default": "9" },
+    { "type": "text", "id": "print_price", "label": "Art print price", "default": "22" },
+    { "type": "text", "id": "bundle_price", "label": "Bundle price", "default": "25" }
+  ],
+  "presets": [
+    { "name": "bbb — pair & save" }
+  ]
+}
+{% endschema %}

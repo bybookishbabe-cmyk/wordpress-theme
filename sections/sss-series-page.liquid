@@ -1,0 +1,1164 @@
+{% assign series_list = shop.metaobjects.sss_series.values %}
+{% paginate shop.metaobjects.sss_library.values by 250 %}
+  {% assign books = shop.metaobjects.sss_library.values %}
+
+<section class="series-container">
+
+<section class="series-archive" data-series-archive>
+  <div class="series-header series-header--archive">
+    <div class="series-subtitle">the series index</div>
+    <h1>every series worth keeping together</h1>
+    <div class="series-archive-intro">
+      browse the full series archive by shelf, then open the individual series file when you’re ready to binge.
+    </div>
+  </div>
+
+  {% assign archive_shelves = '|' %}
+  {% for series in series_list %}
+    {% assign series_handle = series.system.handle | default: '' | strip %}
+    {% assign lead_book = nil %}
+    {% assign lead_fallback = nil %}
+
+    {% for book in books %}
+      {% capture is_visible %}{% render 'sss-book-visible', book: book, allow_hidden_from_library: true %}{% endcapture %}
+      {% assign is_visible_value = is_visible | strip %}
+      {% unless is_visible_value == 'true' %}
+        {% continue %}
+      {% endunless %}
+      {% assign book_series_handle = book.series.value.system.handle | default: '' | strip %}
+      {% if book_series_handle != series_handle %}
+        {% continue %}
+      {% endif %}
+      {% if lead_fallback == nil %}
+        {% assign lead_fallback = book %}
+      {% endif %}
+      {% assign series_number_text = book.series_number.value | append: '' | strip %}
+      {% if series_number_text == '1' %}
+        {% assign lead_book = book %}
+        {% break %}
+      {% endif %}
+    {% endfor %}
+
+    {% if lead_book == nil %}
+      {% assign lead_book = lead_fallback %}
+    {% endif %}
+
+    {% if lead_book == nil %}
+      {% continue %}
+    {% endif %}
+
+    {% assign archive_shelf_name = lead_book.shelf.value.name | strip %}
+    {% assign archive_shelf_token = '|' | append: archive_shelf_name | append: '|' %}
+    {% if archive_shelf_name != blank %}
+      {% unless archive_shelves contains archive_shelf_token %}
+        {% assign archive_shelves = archive_shelves | append: archive_shelf_name | append: '|' %}
+      {% endunless %}
+    {% endif %}
+  {% endfor %}
+
+  {% assign archive_shelf_groups = archive_shelves | split: '|' %}
+  {% for archive_shelf in archive_shelf_groups %}
+    {% if archive_shelf == blank %}
+      {% continue %}
+    {% endif %}
+
+    {% assign archive_series_count = 0 %}
+    {% capture archive_series_cards %}
+      {% for series in series_list %}
+        {% assign series_handle = series.system.handle | default: '' | strip %}
+        {% assign lead_book = nil %}
+        {% assign lead_fallback = nil %}
+
+        {% for book in books %}
+          {% capture is_visible %}{% render 'sss-book-visible', book: book, allow_hidden_from_library: true %}{% endcapture %}
+          {% assign is_visible_value = is_visible | strip %}
+          {% unless is_visible_value == 'true' %}
+            {% continue %}
+          {% endunless %}
+          {% assign book_series_handle = book.series.value.system.handle | default: '' | strip %}
+          {% if book_series_handle != series_handle %}
+            {% continue %}
+          {% endif %}
+          {% if lead_fallback == nil %}
+            {% assign lead_fallback = book %}
+          {% endif %}
+          {% assign series_number_text = book.series_number.value | append: '' | strip %}
+          {% if series_number_text == '1' %}
+            {% assign lead_book = book %}
+            {% break %}
+          {% endif %}
+        {% endfor %}
+
+        {% if lead_book == nil %}
+          {% assign lead_book = lead_fallback %}
+        {% endif %}
+
+        {% if lead_book == nil %}
+          {% continue %}
+        {% endif %}
+
+        {% assign lead_shelf_name = lead_book.shelf.value.name | strip %}
+        {% if lead_shelf_name != archive_shelf %}
+          {% continue %}
+        {% endif %}
+
+        {% assign archive_series_count = archive_series_count | plus: 1 %}
+        {% assign cover_url = lead_book.cover.value.url | default: lead_book.cover.value %}
+
+        <a class="series-archive-card" href="/pages/series?series={{ series_handle }}" data-series-card="{{ series_handle }}">
+          <div class="series-archive-coverWrap">
+            {% if cover_url != blank %}
+              {% if lead_book.spice_level.value != blank %}
+                <div class="series-archive-spice">
+                  {% for i in (1..lead_book.spice_level.value) %}🌶{% endfor %}
+                </div>
+              {% endif %}
+              <img class="series-archive-cover" src="{{ cover_url }}" alt="{{ series.title | escape }}" loading="lazy">
+            {% endif %}
+          </div>
+          <div class="series-archive-meta">
+            <div class="series-archive-title">{{ series.title }}</div>
+            {% if lead_book.tropes.value != blank %}
+              <div class="series-archive-tropes">
+                {% for trope in lead_book.tropes.value limit: 3 %}
+                  <span>{{ trope.name }}</span>
+                {% endfor %}
+              </div>
+            {% elsif series.series_tropes.value != blank %}
+              <div class="series-archive-tropes">
+                {% for trope in series.series_tropes.value limit: 3 %}
+                  <span>{{ trope.name }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <div class="series-archive-cta">open series file →</div>
+          </div>
+        </a>
+      {% endfor %}
+    {% endcapture %}
+
+    {% if archive_series_count > 0 %}
+      <section class="series-archive-shelfGroup">
+        <div class="series-archive-shelfKicker">shelf</div>
+        <h2 class="series-archive-shelfTitle">{{ archive_shelf }}</h2>
+        <div class="series-archive-grid">
+          {{ archive_series_cards }}
+        </div>
+      </section>
+    {% endif %}
+  {% endfor %}
+</section>
+
+<div class="series-shelf-banner" id="seriesShelfBanner" hidden>
+<span>you’ve saved books to your shelf ♥</span>
+<a href="/pages/sss-library-page">view your list</a>
+</div>
+
+{% for series in series_list %}
+{% assign series_handle = series.system.handle | default: '' | strip %}
+{% assign series_title = series.title | default: '' | strip | downcase %}
+{% assign series_display_title = series.title | default: '' | strip %}
+{% assign series_display_title_downcase = series_display_title | downcase %}
+{% unless series_display_title_downcase contains 'series' %}
+  {% assign series_display_title = series_display_title | append: ' series' %}
+{% endunless %}
+
+<section class="series-page" data-series="{{ series.system.handle }}" style="display:none;">
+
+<div class="series-header">
+
+<h1>{{ series_display_title }}</h1>
+
+<div class="series-reading-note" data-series-reading></div>
+
+<div class="series-subtitle">
+the society-approved books in this series
+</div>
+
+{% if series.series_tropes.value != blank %}
+<div class="series-tropes">
+{% for trope in series.series_tropes.value %}
+{{ trope.name }}{% unless forloop.last %}, {% endunless %}
+{% endfor %}
+</div>
+{% endif %}
+
+<a
+  href="/pages/series-reading-orders"
+  class="series-back"
+  data-series-back
+  data-default-href="/pages/series-reading-orders"
+  data-default-label="← back to series reading orders"
+>
+← back to series reading orders
+</a>
+
+</div>
+
+<div class="series-grid">
+{% assign series_library_books = books | sort: "series_number" %}
+{% for book in series_library_books %}
+  {% capture is_visible %}{% render 'sss-book-visible', book: book, allow_hidden_from_library: true %}{% endcapture %}
+  {% assign is_visible_value = is_visible | strip %}
+  {% unless is_visible_value == 'true' %}
+    {% continue %}
+  {% endunless %}
+  {% assign book_series_handle = book.series.value.system.handle | default: '' | strip %}
+  {% assign book_series_title = book.series.value.title | default: '' | strip | downcase %}
+  {% if book_series_handle == series_handle or book_series_title == series_title %}
+    {% render 'sss-book-card',
+      book: book,
+      mini: false
+    %}
+  {% endif %}
+{% endfor %}
+
+</div>
+
+
+<div class="related-series">
+
+<h2>more series to binge</h2>
+
+<div class="related-series-grid">
+
+{% assign related_series_count = 0 %}
+
+{% for other_series in series_list %}
+{% if related_series_count >= 5 %}
+  {% break %}
+{% endif %}
+{% if other_series.system.handle != series.system.handle %}
+{% assign other_series_handle = other_series.system.handle | default: '' | strip %}
+{% assign other_series_title = other_series.title | default: '' | strip | downcase %}
+{% assign other_series_books = other_series.books_in_series.value %}
+{% if other_series_books == blank %}
+  {% assign other_series_books = books %}
+{% endif %}
+
+{% for book in other_series_books %}
+{% capture is_visible %}{% render 'sss-book-visible', book: book, allow_hidden_from_library: true %}{% endcapture %}
+{% assign is_visible_value = is_visible | strip %}
+{% unless is_visible_value == 'true' %}
+  {% continue %}
+{% endunless %}
+{% assign book_series_handle = book.series.value.system.handle | default: '' | strip %}
+{% assign book_series_title = book.series.value.title | default: '' | strip | downcase %}
+{% assign related_series_match = false %}
+{% if other_series.books_in_series.value != blank %}
+  {% assign related_series_match = true %}
+{% elsif book_series_handle == other_series_handle or book_series_title == other_series_title %}
+  {% assign related_series_match = true %}
+{% endif %}
+{% if related_series_match and book.series_number.value == 1 %}
+
+{% assign cover_url = book.cover.value.url | default: book.cover.value %}
+
+<a
+class="related-series-card"
+href="/pages/series?series={{ other_series.system.handle }}"
+>
+
+<div class="related-series-coverWrap">
+
+<img
+class="related-series-cover"
+src="{{ cover_url }}"
+alt="{{ book.title.value }}"
+>
+
+</div>
+
+<div class="related-series-meta">
+
+<div class="related-series-title">
+{{ other_series.title }}
+</div>
+
+{% if book.tropes.value %}
+<div class="related-series-trope">
+{% for trope in book.tropes.value %}
+{{ trope.name }}{% unless forloop.last %}, {% endunless %}
+{% endfor %}
+</div>
+{% endif %}
+
+</div>
+
+</a>
+
+{% assign related_series_count = related_series_count | plus: 1 %}
+
+{% break %}
+
+{% endif %}
+{% endfor %}
+
+{% endif %}
+{% endfor %}
+
+</div>
+
+</div>
+
+</section>
+
+{% endfor %}
+
+</section>
+{% endpaginate %}
+
+{% render 'sss-library-modal' %}
+
+<style>
+
+.series-container{
+max-width:1100px;
+margin:80px auto;
+padding:0 20px;
+color:#f6f6f6;
+font-family:"Libre Baskerville", Georgia, serif;
+}
+
+.series-header{
+margin-bottom:40px;
+}
+
+.series-header--archive{
+margin-bottom:28px;
+}
+
+.series-header h1{
+font-size:32px;
+font-weight:400;
+text-transform:lowercase;
+}
+
+.series-archive-intro{
+max-width:72rem;
+font-size:15px;
+line-height:1.7;
+color:rgba(246,246,246,.72);
+}
+
+.series-archive-shelfGroup{
+margin:0 0 46px;
+padding-bottom:28px;
+border-bottom:1px solid rgba(255,138,199,.28);
+}
+
+.series-archive-shelfGroup:last-child{
+padding-bottom:0;
+border-bottom:none;
+}
+
+.series-archive-shelfKicker{
+margin:0 0 6px;
+font-size:11px;
+letter-spacing:.18em;
+text-transform:uppercase;
+color:rgba(246,246,246,.55);
+}
+
+.series-archive-shelfTitle{
+margin:0 0 18px;
+font-size:26px;
+font-weight:400;
+text-transform:lowercase;
+}
+
+.series-archive-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(150px,150px));
+gap:26px;
+}
+
+.series-archive-card{
+display:flex;
+flex-direction:column;
+gap:10px;
+padding:0;
+border-radius:0;
+border:none;
+background:none;
+text-decoration:none;
+color:inherit;
+transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease;
+}
+
+.series-archive-card:hover{
+transform:translateY(-2px);
+box-shadow:none;
+}
+
+.series-archive-coverWrap{
+position:relative;
+aspect-ratio:0.7;
+overflow:hidden;
+border-radius:18px;
+background:rgba(255,255,255,.03);
+border:1px solid rgba(255,255,255,.08);
+}
+
+.series-archive-spice{
+position:absolute;
+top:10px;
+right:10px;
+z-index:2;
+display:inline-flex;
+align-items:center;
+gap:2px;
+padding:4px 8px;
+border-radius:999px;
+background:rgba(18,18,20,.74);
+backdrop-filter:blur(8px);
+font-size:13px;
+line-height:1;
+box-shadow:0 8px 18px rgba(0,0,0,.26);
+}
+
+.series-archive-cover{
+width:100%;
+height:100%;
+object-fit:cover;
+display:block;
+}
+
+.series-archive-meta{
+display:flex;
+flex-direction:column;
+gap:6px;
+}
+
+.series-archive-title{
+font-size:15px;
+line-height:1.25;
+}
+
+.series-archive-tropes{
+display:flex;
+flex-wrap:wrap;
+gap:6px;
+}
+
+.series-archive-tropes span{
+display:inline-flex;
+align-items:center;
+min-height:28px;
+padding:0 10px;
+border-radius:999px;
+border:1px solid rgba(255,255,255,.12);
+background:rgba(255,255,255,.03);
+font-size:11px;
+letter-spacing:.08em;
+text-transform:lowercase;
+color:rgba(246,246,246,.75);
+}
+
+.series-archive-cta{
+font-size:10px;
+letter-spacing:.14em;
+text-transform:uppercase;
+color:#ff9ccb;
+}
+
+.series-grid{
+display:grid;
+grid-template-columns:repeat(auto-fill,150px);
+gap:26px;
+}
+
+.series-book{
+background:none;
+border:0;
+cursor:pointer;
+text-align:left;
+color:inherit;
+}
+
+.sss-lib__coverWrap{
+position:relative;
+}
+
+.sss-lib__cover{
+width:100%;
+aspect-ratio:2/3;
+border-radius:10px;
+object-fit:cover;
+border:1px solid rgba(255,255,255,.12);
+transition:transform .2s;
+}
+
+.sss-lib__book:hover .sss-lib__cover{
+transform:scale(1.05);
+}
+
+.series-number{
+position:absolute;
+top:8px;
+left:8px;
+background:#e85a9b;
+color:white;
+width:26px;
+height:26px;
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:12px;
+}
+
+.series-meta{
+margin-top:10px;
+}
+
+.series-name{
+font-size:13px;
+}
+
+.series-author{
+font-size:11px;
+color:rgba(255,255,255,.6);
+margin-top:3px;
+}
+
+/* modal */
+
+.series-modal{
+position:fixed;
+inset:0;
+z-index:9999;
+}
+
+.series-backdrop{
+position:absolute;
+inset:0;
+background:rgba(0,0,0,.75);
+}
+
+.series-dialog{
+position:absolute;
+left:50%;
+top:50%;
+transform:translate(-50%,-50%);
+width:min(700px,calc(100% - 30px));
+background:#0b0b0b;
+border-radius:18px;
+padding:24px;
+border:1px solid rgba(255,255,255,.14);
+color:#f6f6f6;
+}
+
+.series-close{
+position:absolute;
+top:10px;
+right:12px;
+background:none;
+border:none;
+font-size:20px;
+color:#fff;
+cursor:pointer;
+}
+
+.series-modal-cover{
+width:160px;
+border-radius:10px;
+margin-bottom:14px;
+}
+
+.series-modal-title{
+margin:10px 0 4px;
+font-size:22px;
+}
+
+.series-modal-author{
+color:rgba(255,255,255,.65);
+margin-bottom:14px;
+}
+
+.series-modal-why{
+margin-bottom:14px;
+line-height:1.6;
+}
+
+.series-modal-spice{
+margin-bottom:6px;
+}
+
+.series-modal-tropes{
+font-style:italic;
+margin-bottom:16px;
+}
+
+.series-modal-links{
+display:flex;
+gap:10px;
+}
+
+.series-btn{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+border-radius:999px;
+padding:10px 16px;
+font-size:12px;
+text-transform:uppercase;
+text-decoration:none;
+background:#f6f6f6;
+color:#0b0b0b;
+}
+
+.series-btn.bookshop{
+background:transparent;
+border:1px solid rgba(255,255,255,.3);
+color:#fff;
+}
+.related-series{
+margin-top:80px;
+border-top:1px solid rgba(255,255,255,.1);
+padding-top:40px;
+}
+
+.related-series h2{
+font-size:18px;
+margin-bottom:20px;
+text-transform:lowercase;
+}
+
+.related-series-grid{
+display:flex;
+flex-wrap:wrap;
+gap:12px;
+}
+
+.related-series-grid{
+display:grid;
+grid-template-columns:repeat(auto-fill,140px);
+gap:26px;
+}
+
+.related-series-card{
+display:block;
+text-decoration:none;
+color:#fff;
+transition:.2s;
+}
+
+.related-series-coverWrap{
+border-radius:10px;
+overflow:hidden;
+border:1px solid rgba(255,255,255,.12);
+}
+
+.related-series-cover{
+width:100%;
+aspect-ratio:2/3;
+object-fit:cover;
+transition:transform .25s ease;
+}
+
+.related-series-card:hover .related-series-cover{
+transform:scale(1.06);
+}
+
+.related-series-meta{
+margin-top:10px;
+}
+
+.related-series-title{
+font-size:13px;
+line-height:1.35;
+}
+
+.related-series-trope{
+font-size:11px;
+color:rgba(255,255,255,.6);
+margin-top:4px;
+font-style:italic;
+}
+
+.related-series-card:hover .related-series-title{
+text-decoration:underline;
+}
+.series-tropes{
+margin-top:8px;
+font-size:13px;
+color:rgba(255,255,255,.65);
+font-style:italic;
+}
+.favorite-toggle{
+position:absolute;
+top:8px;
+right:8px;
+width:28px;
+height:28px;
+border-radius:50%;
+border:none;
+background:rgba(0,0,0,.6);
+color:white;
+font-size:14px;
+display:flex;
+align-items:center;
+justify-content:center;
+cursor:pointer;
+transition:.2s;
+}
+
+.favorite-toggle:hover{
+background:#e85a9b;
+}
+
+.favorite-toggle.active{
+background:#e85a9b;
+}
+.sss-lib__heart{
+position:absolute;
+bottom:8px;
+left:8px;
+width:30px;
+height:30px;
+border-radius:50%;
+background:rgba(0,0,0,.75);
+backdrop-filter:blur(6px);
+border:1px solid rgba(255,255,255,.25);
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:14px;
+color:#fff;
+box-shadow:0 6px 16px rgba(0,0,0,.45);
+z-index:6;
+cursor:pointer;
+transition:.18s ease;
+}
+
+.sss-lib__heart:hover{
+transform:translateY(-2px) scale(1.05);
+}
+
+.sss-lib__heart.is-saved{
+background:#e85a9b;
+border-color:#e85a9b;
+}
+/* series books use library card styling */
+
+.sss-lib__book{
+background:transparent;
+border:0;
+padding:0;
+cursor:pointer;
+text-align:left;
+color:inherit;
+position:relative;
+overflow:visible;
+}
+
+.sss-lib__coverWrap{
+position:relative;
+border-radius:10px;
+overflow:hidden;
+border:1px solid rgba(255,255,255,.12);
+background:#0e0e0e;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.sss-lib__cover{
+width:100%;
+aspect-ratio:2/3;
+object-fit:contain;
+background:#111;
+transition:transform .25s ease;
+}
+
+.sss-lib__book:hover .sss-lib__cover{
+transform:scale(1.04);
+}
+
+/* heart */
+
+.sss-lib__heart{
+position:absolute;
+bottom:8px;
+left:8px;
+width:30px;
+height:30px;
+border-radius:50%;
+background:rgba(0,0,0,.75);
+backdrop-filter:blur(6px);
+border:1px solid rgba(255,255,255,.25);
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:14px;
+color:#fff;
+box-shadow:0 6px 16px rgba(0,0,0,.45);
+z-index:6;
+cursor:pointer;
+transition:.18s ease;
+}
+
+.sss-lib__heart:hover{
+transform:translateY(-2px) scale(1.05);
+}
+
+.sss-lib__heart.is-saved{
+background:#e85a9b;
+border-color:#e85a9b;
+}
+
+/* title area */
+
+.sss-lib__under{
+margin-top:10px;
+}
+
+.sss-lib__name{
+font-size:12px;
+line-height:1.35;
+}
+
+.sss-lib__author{
+font-size:11px;
+color:rgba(255,255,255,.6);
+margin-top:3px;
+}
+.library-toast{
+position:fixed;
+top:20px;
+left:50%;
+transform:translateX(-50%);
+background:#111;
+border:1px solid rgba(255,255,255,.2);
+padding:12px 18px;
+border-radius:999px;
+font-size:13px;
+color:#fff;
+z-index:99999;
+opacity:0;
+pointer-events:none;
+transition:.3s ease;
+display:flex;
+gap:10px;
+align-items:center;
+box-shadow:0 10px 30px rgba(0,0,0,.5);
+}
+
+.library-toast.show{
+opacity:1;
+transform:translate(-50%,0);
+}
+
+.library-toast a{
+color:#e85a9b;
+text-decoration:none;
+font-weight:500;
+}
+.series-shelf-banner{
+position:sticky;
+top:0;
+z-index:50;
+background:#111;
+border-bottom:1px solid rgba(255,255,255,.15);
+padding:12px 20px;
+display:flex;
+justify-content:center;
+gap:10px;
+font-size:13px;
+color:#fff;
+}
+
+.series-shelf-banner a{
+color:#e85a9b;
+text-decoration:none;
+font-weight:500;
+}
+
+.series-shelf-banner a:hover{
+text-decoration:underline;
+}
+.sss-lib__mdisclaimer{
+font-size:11px;
+line-height:1.6;
+color:rgba(255,255,255,.6);
+margin-top:14px;
+}
+.series-number{
+position:absolute;
+top:8px;
+left:8px;
+background:#e85a9b;
+color:white;
+padding:4px 8px;
+border-radius:999px;
+font-size:11px;
+font-weight:600;
+letter-spacing:.03em;
+box-shadow:0 4px 10px rgba(0,0,0,.35);
+}
+.series-subtitle{
+margin-top:6px;
+font-size:13px;
+color:rgba(255,255,255,.6);
+letter-spacing:.04em;
+}
+/* ======================
+RELATED SERIES — MOBILE SWIPE
+====================== */
+
+@media (max-width: 768px){
+
+  .series-archive-grid{
+    display:grid;
+    grid-auto-flow:column;
+    grid-auto-columns:150px;
+    grid-template-columns:none;
+    justify-content:unset;
+    overflow-x:auto;
+    overflow-y:hidden;
+    padding-bottom:8px;
+    gap:16px;
+    scroll-snap-type:x proximity;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  .series-archive-card{
+    gap:8px;
+    flex:0 0 150px;
+    scroll-snap-align:start;
+  }
+
+  .series-archive-title{
+    font-size:14px;
+  }
+
+  .series-archive-grid::-webkit-scrollbar{
+    height:6px;
+  }
+
+  .series-archive-grid::-webkit-scrollbar-thumb{
+    background:rgba(255,138,199,.42);
+    border-radius:999px;
+  }
+
+  .series-grid{
+    grid-template-columns:repeat(2, minmax(0, 150px));
+    justify-content:start;
+    gap:18px 16px;
+  }
+
+  .related-series-grid{
+    display:flex;
+    flex-wrap:nowrap;
+
+    gap:16px;
+
+    overflow-x:auto;
+    overflow-y:hidden;
+
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+
+    padding-bottom:8px;
+  }
+
+  .related-series-card{
+    flex:0 0 140px;
+    scroll-snap-align:start;
+  }
+
+  /* scrollbar styling */
+
+  .related-series-grid::-webkit-scrollbar{
+    height:6px;
+  }
+
+  .related-series-grid::-webkit-scrollbar-thumb{
+    background:rgba(255,255,255,.15);
+    border-radius:999px;
+  }
+
+}
+.series-reading-note{
+
+margin-top:12px;
+margin-bottom:6px;
+
+font-size:12px;
+letter-spacing:.06em;
+text-transform:uppercase;
+
+padding:6px 12px;
+
+border-radius:999px;
+
+display:inline-block;
+
+font-family:inherit;
+
+}
+
+/* standalone (safe) */
+
+.note-standalone{
+
+color:rgba(255,255,255,.8);
+background:rgba(255,255,255,.06);
+border:1px solid rgba(255,255,255,.25);
+
+}
+
+/* series warning */
+
+.note-series{
+
+color:#ff8ac7;
+background:rgba(232,90,155,.15);
+border:1px solid rgba(232,90,155,.45);
+
+}
+.series-back{
+
+display:inline-block;
+margin-top:12px;
+margin-bottom:14px;
+
+font-size:12px;
+letter-spacing:.08em;
+text-transform:uppercase;
+
+color:rgba(255,255,255,.7);
+text-decoration:none;
+
+transition:.2s ease;
+
+}
+
+.series-back:hover{
+
+color:#e85a9b;
+
+}
+</style>
+
+
+<script>
+/* -------------------------
+SERIES ROUTER
+------------------------- */
+
+function routeSeries(){
+
+const params = new URLSearchParams(window.location.search);
+const slug = params.get("series");
+
+const archive = document.querySelector("[data-series-archive]");
+const sections = document.querySelectorAll("[data-series]");
+
+let shown = false;
+
+sections.forEach(section => {
+
+section.style.display = "none";
+
+if(slug && section.dataset.series === slug){
+section.style.display = "block";
+shown = true;
+}
+
+});
+
+if(slug && shown){
+  if (archive) archive.style.display = "none";
+  return;
+}
+
+window.location.replace("/pages/series-reading-orders");
+
+}
+
+function updateSeriesReadingNote(){
+
+const visibleSeries = [...document.querySelectorAll(".series-page")]
+.find(s => s.style.display === "block");
+
+if(!visibleSeries) return;
+
+const note = visibleSeries.querySelector("[data-series-reading]");
+if(!note) return;
+
+const books = visibleSeries.querySelectorAll(".sss-lib__book");
+
+let hasStandalone = false;
+
+books.forEach(book=>{
+if(book.dataset.standalone === "true"){
+hasStandalone = true;
+}
+});
+
+/* reset classes */
+
+note.classList.remove("note-series","note-standalone");
+
+if(hasStandalone){
+
+note.textContent =
+"can be read as standalone";
+
+note.classList.add("note-standalone");
+
+}else{
+
+note.textContent =
+"highly recommend starting from book one";
+
+note.classList.add("note-series");
+
+}
+
+}
+/* =========================
+SERIES BACK BUTTON
+========================= */
+
+function setupBackButton(){
+
+const backButtons = document.querySelectorAll("[data-series-back]");
+if(!backButtons.length) return;
+
+const referrer = document.referrer;
+
+backButtons.forEach(backBtn => {
+  var defaultHref = backBtn.getAttribute('data-default-href') || '/pages/series-reading-orders';
+  var defaultLabel = backBtn.getAttribute('data-default-label') || '← back to series reading orders';
+
+  backBtn.href = defaultHref;
+  backBtn.textContent = defaultLabel;
+
+  if(referrer.includes("/pages/sss-library-page")){
+    backBtn.href = referrer;
+    backBtn.textContent = "← back to the society library";
+  } else if(referrer.includes("/pages/library")){
+    backBtn.href = referrer;
+    backBtn.textContent = "← back to library";
+  }
+});
+
+}
+
+document.addEventListener("DOMContentLoaded", setupBackButton);
+
+/* -------------------------
+INIT
+------------------------- */
+
+document.addEventListener("DOMContentLoaded", ()=>{
+
+routeSeries();
+updateSeriesReadingNote();
+
+});
+
+</script>

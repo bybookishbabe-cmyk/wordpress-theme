@@ -1,0 +1,169 @@
+{% comment %}
+  Blog quick stats card.
+  Usage: {% render 'blog-quick-stats', book: book %}
+{% endcomment %}
+
+{% if book != blank %}
+  {%- liquid
+    assign book_title = book.title.value | default: book.title
+    assign spice_level = book.spice_level.value | default: book.spice_level | plus: 0
+    assign darkness_level = book.darkness_level.value | default: book.darkness_level | plus: 0
+    assign is_standalone = book.read_as_standalone.value | default: book.read_as_standalone
+    assign ku_value = book.on_kindle_unlimited.value | default: book.on_kindle_unlimited
+    assign series_title = book.series.value.title | default: book.series.value.name | default: book.series.title | default: book.series.name
+    assign series_handle = book.series.value.system.handle | default: book.series.system.handle | default: ''
+    assign series_number = book.series_number.value | default: book.series_number
+    assign series_number_text = series_number | append: '' | strip
+    assign show_series_row = false
+    assign series_status = ''
+    if is_standalone == true
+      assign show_series_row = true
+      assign series_status = 'standalone'
+    elsif series_title != blank or series_number != blank
+      assign show_series_row = true
+      if series_title != blank
+        assign series_status = series_title | append: ' series'
+      else
+        assign series_status = 'series'
+      endif
+    endif
+
+    assign series_books_source = book.series.value.sss_books.value
+    if series_books_source == blank
+      assign series_books_source = book.series.value.books_in_series.value
+    endif
+
+    assign series_book_count = 0
+    assign series_first_book_title = ''
+    assign fallback_first_book_title = ''
+
+    if series_books_source != blank
+      for series_book in series_books_source
+        assign series_book_count = series_book_count | plus: 1
+        assign series_book_title = series_book.title.value | default: series_book.title | strip
+        if fallback_first_book_title == blank
+          assign fallback_first_book_title = series_book_title
+        endif
+        assign source_series_number = series_book.series_number.value | default: series_book.series_number | append: '' | strip
+        if series_first_book_title == blank and source_series_number == '1'
+          assign series_first_book_title = series_book_title
+        endif
+      endfor
+    elsif series_title != blank or series_handle != blank
+      for library_book in shop.metaobjects.sss_library.values
+        assign library_book_series_handle = library_book.series.value.system.handle | default: '' | strip
+        assign library_book_series_title = library_book.series.value.title | default: '' | strip
+        if library_book_series_handle == series_handle or library_book_series_title == series_title
+          assign series_book_count = series_book_count | plus: 1
+          assign library_book_title = library_book.title.value | default: library_book.title | strip
+          if fallback_first_book_title == blank
+            assign fallback_first_book_title = library_book_title
+          endif
+          assign library_series_number = library_book.series_number.value | default: library_book.series_number | append: '' | strip
+          if series_first_book_title == blank and library_series_number == '1'
+            assign series_first_book_title = library_book_title
+          endif
+        endif
+      endfor
+    endif
+
+    if series_first_book_title == blank
+      assign series_first_book_title = fallback_first_book_title
+    endif
+
+    assign read_order_status = ''
+    if is_standalone == true
+      assign read_order_status = 'no, can be read as a standalone'
+    elsif series_title != blank or series_number_text != blank
+      if series_first_book_title != blank
+        assign read_order_status = 'yes, start with ' | append: series_first_book_title
+      else
+        assign read_order_status = 'yes, read in series order'
+      endif
+    endif
+  -%}
+
+  <aside class="blog-quickstats" aria-label="quick stats for {{ book_title | escape }}">
+    <div class="blog-quickstats__head">
+      <h3 class="blog-quickstats__kicker">{{ book_title | downcase }} book stats</h3>
+    </div>
+
+    <dl class="blog-quickstats__list">
+      {% if spice_level > 0 %}
+        <div class="blog-quickstats__row blog-quickstats__row--mobile-wide">
+          <dt>spice</dt>
+          <dd>
+            <span aria-label="{{ spice_level }} out of 5 spice">
+              {% for i in (1..spice_level) %}🌶{% endfor %}
+            </span>
+            <span class="blog-quickstats__scale">/ 5</span>
+          </dd>
+        </div>
+      {% endif %}
+
+      {% if darkness_level > 0 %}
+        <div class="blog-quickstats__row blog-quickstats__row--mobile-wide">
+          <dt>darkness</dt>
+          <dd>
+            <span aria-label="{{ darkness_level }} out of 5 darkness">
+              {% for i in (1..darkness_level) %}💀{% endfor %}
+            </span>
+            <span class="blog-quickstats__scale">/ 5</span>
+          </dd>
+        </div>
+      {% endif %}
+
+      {% if book.tropes.value != blank %}
+        <div class="blog-quickstats__row blog-quickstats__row--wide">
+          <dt>tropes</dt>
+          <dd>
+            {% for trope in book.tropes.value %}
+              {{ trope.name }}{% unless forloop.last %}<span class="blog-quickstats__dot">·</span>{% endunless %}
+            {% endfor %}
+          </dd>
+        </div>
+      {% endif %}
+
+      {% if show_series_row %}
+        <div class="blog-quickstats__row">
+          <dt>standalone or series</dt>
+          <dd>{{ series_status }}</dd>
+        </div>
+      {% endif %}
+
+      {% if series_book_count > 0 %}
+        <div class="blog-quickstats__row">
+          <dt>books in series</dt>
+          <dd>{{ series_book_count }} {% if series_book_count == 1 %}book{% else %}books{% endif %}</dd>
+        </div>
+      {% endif %}
+
+      {% if series_first_book_title != blank and is_standalone != true %}
+        <div class="blog-quickstats__row">
+          <dt>start with</dt>
+          <dd>{{ series_first_book_title }}</dd>
+        </div>
+      {% endif %}
+
+      {% if read_order_status != blank %}
+        <div class="blog-quickstats__row">
+          <dt>read in order?</dt>
+          <dd>{{ read_order_status }}</dd>
+        </div>
+      {% endif %}
+
+      <div class="blog-quickstats__row">
+        <dt>on kindle unlimited</dt>
+        <dd>
+          {% if ku_value == true %}
+            <span class="blog-quickstats__availability blog-quickstats__availability--yes" aria-label="yes">✓ yes</span>
+          {% elsif ku_value == false %}
+            <span class="blog-quickstats__availability blog-quickstats__availability--no" aria-label="no">× no</span>
+          {% else %}
+            check listing
+          {% endif %}
+        </dd>
+      </div>
+    </dl>
+  </aside>
+{% endif %}

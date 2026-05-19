@@ -1,0 +1,56 @@
+{% assign books = shop.metaobjects.sss_library.values %}
+
+<section class="morally-gray-archive">
+  <div class="page-width">
+
+    <div class="book-grid">
+      {% for book in books %}
+        {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+        {% assign is_visible_value = is_visible | strip %}
+        {% unless is_visible_value == 'true' %}
+          {% continue %}
+        {% endunless %}
+        {% if book.shelf_categories contains "morally gray lovers" %}
+
+          <div class="book-card">
+
+            <img 
+              src="{{ book.cover }}" 
+              alt="{{ book.title }} cover"
+              class="book-cover"
+            >
+
+            <h3>{{ book.title }}</h3>
+            <p class="author">{{ book.author }}</p>
+
+            {% if book.why_i_loved_it != blank %}
+              <p class="why">{{ book.why_i_loved_it }}</p>
+            {% endif %}
+
+            <p class="meta">
+              <span>tropes: {{ book.tropes }}</span><br>
+              <span>spice level: {{ book.spice_level }}/5 🌶️</span>
+            </p>
+
+            <div class="buttons">
+              {% if book.amazon_link.url != blank %}
+                <a href="{{ book.amazon_link.url }}" target="_blank">
+                  read on amazon
+                </a>
+              {% endif %}
+
+              {% if book.bookshop_link.url != blank %}
+                <a href="{{ book.bookshop_link.url }}" target="_blank">
+                  shop on bookshop
+                </a>
+              {% endif %}
+            </div>
+
+          </div>
+
+        {% endif %}
+      {% endfor %}
+    </div>
+
+  </div>
+</section>

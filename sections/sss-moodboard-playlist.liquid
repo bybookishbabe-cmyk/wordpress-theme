@@ -1,0 +1,498 @@
+{% comment %}
+  sss-moodboard — metaobject driven
+{% endcomment %}
+
+{%- assign drop = nil -%}
+{%- assign best_drop = nil -%}
+{%- assign best_drop_key = '' -%}
+{%- assign fallback_drop = nil -%}
+{%- assign fallback_drop_key = '' -%}
+{%- capture shared_preview_drop_handle -%}{% render 'sss-preview-drop-handle' %}{%- endcapture -%}
+{%- assign preview_drop_handle = section.settings.preview_drop_handle | default: shared_preview_drop_handle | strip -%}
+{%- assign selected_drop = section.settings.drop -%}
+{%- assign now_key = 'now' | date: '%Y-%m-%d' -%}
+
+{%- if preview_drop_handle != blank -%}
+  {%- assign drop = shop.metaobjects.sss_drop[preview_drop_handle] -%}
+{%- elsif selected_drop != blank -%}
+  {%- assign drop = selected_drop -%}
+{%- elsif shop.metaobjects.sss_drop != blank -%}
+  {%- for d in shop.metaobjects.sss_drop.values -%}
+    {%- if d.release_date != blank -%}
+      {%- assign d_key = d.release_date | date: '%Y-%m-%d' -%}
+      {%- if d_key <= now_key -%}
+        {%- if best_drop_key == '' or d_key >= best_drop_key -%}
+          {%- assign best_drop = d -%}
+          {%- assign best_drop_key = d_key -%}
+        {%- endif -%}
+      {%- endif -%}
+      {%- if fallback_drop_key == '' or d_key >= fallback_drop_key -%}
+        {%- assign fallback_drop = d -%}
+        {%- assign fallback_drop_key = d_key -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+
+  {%- if best_drop != nil -%}
+    {%- assign drop = best_drop -%}
+  {%- elsif fallback_drop != nil -%}
+    {%- assign drop = fallback_drop -%}
+  {%- endif -%}
+{%- endif -%}
+
+{%- assign header_title = 'this month inside the society' -%}
+{%- assign header_pretitle = 'monthly moodboard' -%}
+{%- assign header_quote = 'the atmosphere, the notes, and the songs are all gathered here.' -%}
+{%- assign spotify_value = blank -%}
+{%- assign wallpaper_images = blank -%}
+{%- assign wallpaper_canva_url = blank -%}
+{%- if drop != blank -%}
+  {%- assign header_title = drop.name | default: header_title -%}
+  {%- assign header_pretitle = drop.moodboard_title | default: header_pretitle -%}
+  {%- assign header_quote = drop.quote_text | default: header_quote -%}
+  {%- assign spotify_value = drop.spotify_url.value | default: drop.spotify_url -%}
+  {%- assign wallpaper_images = drop.wallpaper_images.value | default: drop.wallpaper_images -%}
+  {%- assign wallpaper_canva_url = drop.wallpaper_canva_url.value | default: drop.wallpaper_canva_url -%}
+{%- endif -%}
+
+<section class="sss-mpg">
+
+  <div class="sss-mpg__wrap">
+
+    <div class="sss-hero">
+      <p class="sss-hero__pretitle">
+        {{ header_pretitle }}
+      </p>
+
+      <h1 class="sss-hero__title">
+        {{ header_title }}
+      </h1>
+
+      <div class="sss-hero__quoteWrap">
+        <span class="sss-hero__quoteBar" aria-hidden="true"></span>
+        <blockquote class="sss-hero__quote">
+          {{ header_quote }}
+        </blockquote>
+      </div>
+
+      <div class="sss-emojiRain" id="emojiRain"></div>
+
+    </div>
+
+    <div class="sss-mpg__grid">
+
+      <!-- LEFT: WALLPAPER ROTATOR -->
+      <aside class="gramcard">
+
+        <div class="gramcard__body">
+
+          <div class="sss-wallpaper">
+            <div class="sss-wallpaper__frame" data-wallpaper-frame>
+              {% if wallpaper_images != blank %}
+                {% for wallpaper in wallpaper_images %}
+                  {%- assign wallpaper_download_url = wallpaper | image_url: width: 3000 -%}
+                  {%- assign wallpaper_preview_url = wallpaper | image_url: width: 1400 -%}
+                  <div class="sss-wallpaper__slide{% if forloop.first %} is-active{% endif %}" data-wallpaper-slide data-wallpaper-url="{{ wallpaper_download_url }}">
+                    <img src="{{ wallpaper_preview_url }}" alt="{{ header_title }} wallpaper {{ forloop.index }}" loading="lazy">
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div class="sss-wallpaper__empty">
+                  add this month’s wallpaper pngs to `wallpaper_images`
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="sss-wallpaper__actions">
+              <button class="sss-wallpaper__btn{% if wallpaper_images == blank %} is-disabled{% endif %}" type="button" data-wallpaper-download {% if wallpaper_images == blank %}aria-disabled="true"{% endif %}>
+                download pngs
+              </button>
+              {% if wallpaper_canva_url != blank %}
+                <a class="sss-wallpaper__btn sss-wallpaper__btn--ghost" href="{{ wallpaper_canva_url }}" target="_blank" rel="noopener">
+                  edit in canva
+                </a>
+              {% endif %}
+            </div>
+            {% if wallpaper_images != blank %}
+              <script type="application/json" data-wallpaper-files>
+                [
+                  {% for wallpaper in wallpaper_images %}
+                    {%- assign wallpaper_file_url = wallpaper | image_url: width: 3000 -%}
+                    {{ wallpaper_file_url | json }}{% unless forloop.last %},{% endunless %}
+                  {% endfor %}
+                ]
+              </script>
+            {% endif %}
+          </div>
+
+        </div>
+
+      </aside>
+
+      <!-- RIGHT: PLAYLIST -->
+      {% if spotify_value != blank %}
+
+        {% assign spotify_id = spotify_value | split: '/' | last | split: '?' | first %}
+
+        <aside class="gramcard">
+
+          <div class="gramcard__head">
+            <p class="gramcard__kicker">playlist</p>
+<h3 class="gramcard__title">
+  {{ drop.name }}
+</h3>
+            <p class="gramcard__sub">
+              press play while you <em>play</em>.
+            </p>
+          </div>
+
+          <div class="gramcard__body">
+            <iframe 
+              src="https://open.spotify.com/embed/playlist/{{ spotify_id }}?theme=0"
+              width="100%" 
+              height="420"
+              frameborder="0"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
+            </iframe>
+          </div>
+
+        </aside>
+
+      {% endif %}
+
+    </div>
+  </div>
+
+</section>
+
+<style>
+  /* ===== MEMBER+GRAM ENVIRONMENT ===== */
+
+/* ============================= */
+/* MEMBER + GRAM ENVIRONMENT */
+/* ============================= */
+
+.sss-mpg{
+  background:#000;
+  color:#f6f6f6;
+padding:20px 12px;
+  font-family:"Libre Baskerville", Georgia, serif;
+  position:relative;
+  overflow:hidden;
+}
+
+.sss-mpg__wrap{
+  max-width:1300px;
+  margin:0 auto;
+  padding:0 8px;
+}
+
+/* ============================= */
+/* HERO */
+/* ============================= */
+
+.sss-hero{
+  position:relative;
+  text-align:center;
+  padding:20px 20px 60px;
+}
+
+.sss-hero__pretitle{
+  margin:0 0 10px;
+  font-size:11px;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  color:rgba(246,246,246,.62);
+}
+
+.sss-hero__title{
+  font-family:"Playfair Display", serif;
+  font-size: clamp(48px, 7vw, 90px);
+  font-weight:400;
+  line-height:1.05;
+  margin:0 0 20px;
+}
+
+.sss-hero__quoteWrap{
+  max-width:900px;
+  margin:0 auto;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  gap:18px;
+}
+
+.sss-hero__quoteBar{
+  width:3px;
+  min-height:44px;
+  background:rgba(246,246,246,.38);
+  border-radius:999px;
+  margin-top:4px;
+  flex-shrink:0;
+}
+
+.sss-hero__quote{
+  font-size: clamp(18px, 2.1vw, 22px);
+  font-style:italic;
+  opacity:.96;
+  max-width:760px;
+  margin:0;
+  line-height:1.7;
+  text-align:left;
+  color:#f6f6f6;
+}
+
+/* ============================= */
+/* GRID */
+/* ============================= */
+
+.sss-mpg__grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:24px;
+}
+
+@media(min-width:768px){
+  .sss-mpg__grid{
+    grid-template-columns:1.1fr .9fr;
+  }
+}
+
+/* ============================= */
+/* WALLPAPER */
+/* ============================= */
+
+.sss-wallpaper{
+  display:grid;
+  gap:18px;
+  justify-items:center;
+}
+
+.sss-wallpaper__frame{
+  position:relative;
+  width:320px;
+  height:640px;
+  background:#0b0b0b;
+  overflow:hidden;
+  border-radius:28px;
+  border:1px solid rgba(255,255,255,.1);
+  box-shadow:0 20px 44px rgba(0,0,0,.45);
+}
+
+.sss-wallpaper__slide{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  transition:opacity .9s ease;
+}
+
+.sss-wallpaper__slide.is-active{
+  opacity:1;
+}
+
+.sss-wallpaper__slide img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.sss-wallpaper__empty{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:24px;
+  color:rgba(246,246,246,.64);
+  font-size:14px;
+  line-height:1.7;
+  text-transform:lowercase;
+}
+
+.sss-wallpaper__actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  justify-content:center;
+}
+
+.sss-wallpaper__btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:40px;
+  padding:0 16px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.08);
+  color:#f6f6f6;
+  text-decoration:none;
+  font-size:12px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  transition:transform .2s ease, background .2s ease, border-color .2s ease;
+}
+
+.sss-wallpaper__btn:hover{
+  transform:translateY(-1px);
+  background:rgba(255,255,255,.14);
+  border-color:rgba(255,255,255,.28);
+}
+
+.sss-wallpaper__btn--ghost{
+  background:transparent;
+}
+
+.sss-wallpaper__btn.is-disabled{
+  opacity:.5;
+  pointer-events:none;
+}
+
+/* ============================= */
+/* MOBILE */
+/* ============================= */
+
+@media(max-width:768px){
+  .sss-wallpaper__frame{
+  width:78vw;
+  max-width:360px;
+  height:calc(78vw * 2);
+  max-height:640px;
+}
+}
+.sss-hero__pretitle{
+  font-family:"Libre Baskerville", serif;
+  font-size:12px;
+  letter-spacing:.25em;
+  text-transform:uppercase;
+  opacity:.6;
+  text-align:left;
+  max-width:1300px;
+  margin:0 auto 18px;
+  padding-left:8px;
+}
+/* =============================
+   EMOJI RAIN
+============================= */
+
+.sss-emojiRain{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  overflow:hidden;
+  z-index:2;
+}
+
+.sss-emoji{
+  position:absolute;
+  top:-40px;
+  opacity:.4;
+  animation:sss-fall linear forwards;
+}
+
+@keyframes sss-fall{
+  to{
+    transform:translateY(120vh);
+    opacity:0;
+  }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+
+const emojiContainer = document.getElementById("emojiRain");
+const emojiData = "{{ drop.emoji_list | default: '✦,☾,⋆' | escape }}";
+
+const emojis = emojiData
+  .split(',')
+  .map(e => e.trim())
+  .filter(Boolean);
+
+function spawnEmoji(){
+  if(!emojiContainer || emojis.length === 0) return;
+
+  const el = document.createElement("span");
+  el.className = "sss-emoji";
+  el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+
+  el.style.left = Math.random()*100 + "%";
+  el.style.animationDuration = (4 + Math.random()*4) + "s";
+  el.style.fontSize = (18 + Math.random()*20) + "px";
+
+  emojiContainer.appendChild(el);
+
+  setTimeout(()=> el.remove(), 8000);
+}
+
+setInterval(spawnEmoji, 700);
+const slides = Array.from(document.querySelectorAll('[data-wallpaper-slide]'));
+const downloadBtn = document.querySelector('[data-wallpaper-download]');
+const wallpaperFilesNode = document.querySelector('[data-wallpaper-files]');
+let activeIndex = 0;
+let wallpaperFiles = [];
+
+try{
+  wallpaperFiles = wallpaperFilesNode ? JSON.parse(wallpaperFilesNode.textContent || '[]') : [];
+}catch(error){
+  wallpaperFiles = [];
+}
+
+function showWallpaper(index){
+  if(!slides.length) return;
+  activeIndex = index % slides.length;
+  slides.forEach(function(slide, slideIndex){
+    slide.classList.toggle('is-active', slideIndex === activeIndex);
+  });
+}
+
+if(slides.length > 1){
+  setInterval(function(){
+    showWallpaper((activeIndex + 1) % slides.length);
+  }, 3200);
+}
+
+showWallpaper(0);
+
+if(downloadBtn && wallpaperFiles.length){
+  downloadBtn.addEventListener('click', function(){
+    wallpaperFiles.forEach(function(url, index){
+      if(!url) return;
+      window.setTimeout(function(){
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', '');
+        link.rel = 'noopener';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      }, index * 180);
+    });
+  });
+}
+});
+</script>
+
+{% schema %}
+{
+  "settings": [
+    {
+      "type": "metaobject",
+      "id": "drop",
+      "label": "Select Drop",
+      "metaobject_type": "sss_drop"
+    },
+    {
+      "type": "text",
+      "id": "preview_drop_handle",
+      "label": "Preview Drop Handle",
+      "info": "Optional. Use this to stage the next drop without changing the live page."
+    }
+  ],
+  "presets": [
+    { "name": "sss moodboard" }
+  ]
+}
+{% endschema %}

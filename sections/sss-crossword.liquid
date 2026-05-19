@@ -1,0 +1,403 @@
+{% comment %}
+  SSS CROSSWORD — Slow Burn Spring
+  10x10 Fixed Layout
+  Across + Down
+  Auto-check
+  No random placement
+{% endcomment %}
+
+<section class="sss-cw" id="sss-cw-{{ section.id }}"
+  style="
+    --bg: {{ section.settings.background }};
+    --board: {{ section.settings.board_bg }};
+    --grid-line: {{ section.settings.grid_line }};
+    --accent: {{ section.settings.accent }};
+    --correct: {{ section.settings.correct }};
+    --text: {{ section.settings.text_color }};
+    --clue: {{ section.settings.clue_color }};
+  "
+>
+
+<div class="sss-cw__wrap">
+
+  <div class="sss-cw__top">
+    <p class="sss-cw__kicker">{{ section.settings.kicker }}</p>
+    <h2 class="sss-cw__title">{{ section.settings.title }}</h2>
+    <p class="sss-cw__sub">{{ section.settings.subtext }}</p>
+  </div>
+
+  <div class="sss-cw__layout">
+
+    <!-- GRID -->
+    <div class="sss-cw__board">
+      <div class="sss-cw__grid" id="cwGrid"></div>
+
+      <div class="sss-cw__unlock" id="cwUnlock" hidden>
+        <div class="sss-cw__unlockCard">
+          <p class="sss-cw__unlockKicker">unlocked</p>
+          <h3>{{ section.settings.unlock_title }}</h3>
+          <p>{{ section.settings.unlock_text }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLUES -->
+    <aside class="sss-cw__clues">
+      <div>
+        <p class="sss-cw__clueTitle">across</p>
+        <ul id="cwAcross"></ul>
+      </div>
+      <div>
+        <p class="sss-cw__clueTitle">down</p>
+        <ul id="cwDown"></ul>
+      </div>
+    </aside>
+
+  </div>
+
+</div>
+</section>
+
+<style>
+.sss-cw{
+  background:var(--bg);
+  color:var(--text);
+  padding:28px 14px;
+  font-family:"Libre Baskerville", Georgia, serif;
+}
+
+.sss-cw__wrap{
+  max-width:1100px;
+  margin:0 auto;
+}
+
+.sss-cw__layout{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:20px;
+}
+
+@media(min-width:990px){
+  .sss-cw__layout{
+    grid-template-columns:1.2fr .8fr;
+  }
+}
+
+.sss-cw__board{
+  background:var(--board);
+  padding:16px;
+  border-radius:18px;
+  position:relative;
+  border:2px solid rgba(255,255,255,.25); /* ← clean outer outline */
+  box-shadow:0 20px 40px rgba(0,0,0,.45);
+}
+
+.sss-cw__grid{
+  display:grid;
+  grid-template-columns:repeat(10,1fr);
+  gap:4px;
+}
+
+.sss-cw__cell{
+  aspect-ratio:1;
+  border:1px solid rgba(255,255,255,.18);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,.05);
+  position:relative;
+}
+
+.sss-cw__cell.black{
+  background:#000;
+  border:none;
+}
+
+.sss-cw__cell input{
+  width:100%;
+  height:100%;
+  text-align:center;
+  background:transparent;
+  border:none;
+  outline:none;
+  color:var(--text);
+  font-size:16px;
+  text-transform:uppercase;
+}
+
+.sss-cw__cell.correct{
+  background:rgba(255,105,180,.25);
+  box-shadow:0 0 14px rgba(255,105,180,.35);
+}
+
+.sss-cw__clues{
+  background:var(--board);
+  padding:16px;
+  border-radius:18px;
+}
+
+.sss-cw__clueTitle{
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  margin-bottom:8px;
+  color:var(--clue);
+}
+
+.sss-cw__clues ul{
+  list-style:none;
+  padding:0;
+  margin:0 0 18px;
+  display:grid;
+  gap:6px;
+  font-size:13px;
+}
+
+.sss-cw__unlock{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  backdrop-filter:blur(6px);
+}
+.sss-cw__unlock[hidden]{
+  display:none !important;
+}
+
+.sss-cw__unlockCard{
+  background:#181818;
+  padding:22px;
+  border-radius:16px;
+  border:1px solid var(--accent);
+  text-align:center;
+}
+.sss-cw__cell.correct{
+  background:rgba(255,105,180,.25);
+  box-shadow:0 0 18px rgba(255,105,180,.45);
+  transition:all .3s ease;
+}
+.cw-number{
+  position:absolute;
+  top:2px;
+  left:4px;
+  font-size:10px;
+  color:rgba(255,255,255,.6);
+  pointer-events:none;
+}
+</style>
+
+<script>
+(function(){
+
+const root = document.getElementById("sss-cw-{{ section.id }}");
+if(!root) return;
+
+const gridEl   = root.querySelector("#cwGrid");
+const acrossEl = root.querySelector("#cwAcross");
+const downEl   = root.querySelector("#cwDown");
+const unlock   = root.querySelector("#cwUnlock");
+
+const SIZE = 10;
+let direction = "across";
+
+/* ===== LAYOUT WITH BLACK SQUARES ===== */
+const layout = [
+[1,1,1,1,1,1,1,1,0,1],
+[1,0,0,0,1,0,0,1,0,1],
+[1,1,1,1,1,1,0,1,1,1],
+[0,0,1,0,0,1,0,0,0,1],
+[1,1,1,1,0,1,1,1,1,1],
+[1,0,0,1,0,0,0,0,0,1],
+[1,1,1,1,1,1,1,0,1,1],
+[0,0,0,0,1,0,1,0,1,0],
+[1,1,1,0,1,0,1,1,1,1],
+[1,0,1,0,1,0,0,0,0,1]
+];
+
+/* ===== WORD MAP ===== */
+const words = [
+{ answer:"slowburn", clue:"the longest tension imaginable", dir:"across", row:0, col:0 },
+{ answer:"yearning", clue:"painfully romantic longing", dir:"down", row:0, col:4 },
+{ answer:"petals", clue:"spring falling softly", dir:"across", row:2, col:0 },
+{ answer:"tension", clue:"what makes it hurt good", dir:"down", row:1, col:7 },
+{ answer:"linger", clue:"he doesn’t rush", dir:"across", row:4, col:0 },
+{ answer:"spring", clue:"the season of almost", dir:"across", row:6, col:2 },
+{ answer:"devotion", clue:"he would burn the world", dir:"down", row:0, col:9 },
+{ answer:"bloom", clue:"what she slowly does", dir:"down", row:5, col:1 },
+{ answer:"ache", clue:"what slow burn causes", dir:"across", row:8, col:0 },
+{ answer:"finally", clue:"when they kiss", dir:"down", row:1, col:0 }
+];
+
+const cells = [];
+
+function getCell(x,y){
+  return cells.find(c=>c.x===x && c.y===y);
+}
+
+/* ===== BUILD GRID ===== */
+for(let y=0;y<SIZE;y++){
+  for(let x=0;x<SIZE;x++){
+
+    if(layout[y][x] === 1){
+
+      const div = document.createElement("div");
+      div.className = "sss-cw__cell";
+
+      const input = document.createElement("input");
+      input.maxLength = 1;
+
+      div.appendChild(input);
+      gridEl.appendChild(div);
+
+      cells.push({x,y,input,el:div});
+
+    } else {
+
+      const div = document.createElement("div");
+      div.className = "sss-cw__cell black";
+      gridEl.appendChild(div);
+
+    }
+
+  }
+}
+
+/* ===== ADD GRID NUMBERS ===== */
+let number = 1;
+
+words.forEach(word => {
+  const start = getCell(word.col, word.row);
+  if(start){
+    const num = document.createElement("span");
+    num.className = "cw-number";
+    num.textContent = number;
+    start.el.appendChild(num);
+    word.number = number;
+    number++;
+  }
+});
+
+/* ===== RENDER CLUES ===== */
+words.forEach(word=>{
+  const li = document.createElement("li");
+  li.textContent = word.number + ". " + word.clue;
+
+  if(word.dir==="across") acrossEl.appendChild(li);
+  else downEl.appendChild(li);
+});
+
+/* ===== CHECKING LOGIC ===== */
+const solved = new Set();
+
+function checkWord(wordObj){
+
+  let guess = "";
+
+  for(let i=0;i<wordObj.answer.length;i++){
+
+    const x = wordObj.dir==="across" ? wordObj.col+i : wordObj.col;
+    const y = wordObj.dir==="across" ? wordObj.row : wordObj.row+i;
+
+    const cell = getCell(x,y);
+    if(!cell) return;
+
+    guess += cell.input.value.toLowerCase();
+  }
+
+  if(guess === wordObj.answer){
+
+    for(let i=0;i<wordObj.answer.length;i++){
+      const x = wordObj.dir==="across" ? wordObj.col+i : wordObj.col;
+      const y = wordObj.dir==="across" ? wordObj.row : wordObj.row+i;
+      getCell(x,y).el.classList.add("correct");
+    }
+
+    solved.add(wordObj.answer);
+  }
+}
+
+function checkAll(){
+  words.forEach(checkWord);
+  if(solved.size === words.length){
+    unlock.hidden = false;
+  }
+}
+
+/* ===== DIRECTIONAL TYPING ===== */
+cells.forEach(c=>{
+
+  c.input.addEventListener("focus", ()=>{
+    direction = "across";
+  });
+
+  c.input.addEventListener("keydown", e=>{
+    if(e.key === "ArrowDown") direction = "down";
+    if(e.key === "ArrowRight") direction = "across";
+  });
+
+  c.input.addEventListener("input", e=>{
+
+    e.target.value = e.target.value.replace(/[^a-z]/gi,"").toUpperCase();
+
+    if(e.target.value.length === 1){
+
+      let nextX = c.x;
+      let nextY = c.y;
+
+      if(direction === "across") nextX++;
+      else nextY++;
+
+      const next = getCell(nextX,nextY);
+      if(next){
+        next.input.focus();
+      }
+    }
+
+    checkAll();
+  });
+
+  c.input.addEventListener("keydown", e=>{
+    if(e.key === "Backspace" && !c.input.value){
+
+      let prevX = c.x;
+      let prevY = c.y;
+
+      if(direction === "across") prevX--;
+      else prevY--;
+
+      const prev = getCell(prevX,prevY);
+      if(prev){
+        prev.input.focus();
+      }
+    }
+  });
+
+});
+
+})();
+</script>
+
+{% schema %}
+{
+"name":"sss crossword",
+"settings":[
+{ "type":"text","id":"kicker","label":"kicker","default":"little spring game" },
+{ "type":"text","id":"title","label":"title","default":"slow burn spring crossword" },
+{ "type":"textarea","id":"subtext","label":"subtext","default":"fill in the grid. auto-check is on. yearning counts." },
+{ "type":"color","id":"background","label":"background","default":"#0b0b0b" },
+{ "type":"color","id":"board_bg","label":"board background","default":"#151515" },
+{ "type":"color","id":"grid_line","label":"grid line","default":"#333333" },
+{ "type":"color","id":"accent","label":"accent","default":"#ff69b4" },
+{ "type":"color","id":"correct","label":"correct color","default":"#ff69b4" },
+{ "type":"color","id":"text_color","label":"text color","default":"#f6f6f6" },
+{ "type":"color","id":"clue_color","label":"clue color","default":"#c8c8c8" },
+{ "type":"text","id":"unlock_title","label":"unlock title","default":"you solved it." },
+{ "type":"textarea","id":"unlock_text","label":"unlock text","default":"slow burn always wins." }
+],
+"presets":[
+{ "name":"sss crossword" }
+]
+}
+{% endschema %}

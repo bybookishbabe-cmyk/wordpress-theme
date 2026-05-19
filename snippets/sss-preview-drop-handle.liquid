@@ -1,0 +1,41 @@
+{%- liquid
+  assign preview_handle = ''
+  if page and page.metafields.custom.preview_drop_handle != blank
+    assign preview_handle = page.metafields.custom.preview_drop_handle.value | default: page.metafields.custom.preview_drop_handle | strip
+  endif
+
+  assign resolved_preview_handle = preview_handle
+
+  if preview_handle != blank and shop.metaobjects.sss_drop != blank
+    assign direct_match = shop.metaobjects.sss_drop[preview_handle]
+    if direct_match != blank
+      assign resolved_preview_handle = direct_match.system.handle | default: direct_match.handle | default: preview_handle
+    else
+      assign preview_handle_key = preview_handle | handleize
+      for drop in shop.metaobjects.sss_drop.values
+        assign drop_handle = drop.system.handle | default: drop.handle | default: ''
+        assign drop_name = drop.name | default: ''
+        assign drop_name_key = drop_name | handleize
+        assign drop_handle_key = drop_handle | handleize
+        if drop_handle == preview_handle
+          assign resolved_preview_handle = drop_handle
+          break
+        endif
+        if drop_name == preview_handle
+          assign resolved_preview_handle = drop_handle
+          break
+        endif
+        if drop_name_key == preview_handle_key
+          assign resolved_preview_handle = drop_handle
+          break
+        endif
+        if drop_handle_key == preview_handle_key
+          assign resolved_preview_handle = drop_handle
+          break
+        endif
+      endfor
+    endif
+  endif
+
+  echo resolved_preview_handle
+-%}

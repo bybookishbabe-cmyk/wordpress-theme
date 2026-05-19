@@ -1,0 +1,399 @@
+{% assign article_books = books | default: article.metafields.custom.book.value %}
+{% assign anchor_book = article_books | first %}
+{% if anchor_book != blank %}
+  {% assign current_article_id = article.id | default: blank %}
+  {% assign current_article_handle = article.handle | default: '' %}
+  {% assign current_article_url = article.url | default: '' %}
+  {% assign article_trope_value = article_trope | default: article.metafields.custom.trope.value %}
+  {% if article_trope_value != blank and article_trope_value.name == blank %}
+    {% assign article_trope_first = article_trope_value | first %}
+    {% if article_trope_first != blank %}
+      {% assign article_trope_value = article_trope_first %}
+    {% endif %}
+  {% endif %}
+
+  {% assign readnext_context = guide_category_label | default: article.metafields.custom.guide_category.value.name | default: '' %}
+  {% assign anchor_shelf = anchor_book.shelf.value %}
+  {% if anchor_shelf != blank %}
+    {% assign readnext_context = readnext_context | append: ' ' | append: anchor_shelf.name %}
+  {% endif %}
+  {% if article_trope_value != blank %}
+    {% assign article_trope_label = article_trope_value.name | default: article_trope_value %}
+    {% assign readnext_context = readnext_context | append: ' ' | append: article_trope_label %}
+  {% endif %}
+  {% for anchor_trope in anchor_book.tropes.value %}
+    {% assign readnext_context = readnext_context | append: ' ' | append: anchor_trope.name %}
+  {% endfor %}
+
+  {% capture readnext_cluster %}
+    {% render 'blog-specific-map', context: readnext_context, mode: 'cluster' %}
+  {% endcapture %}
+  {% assign readnext_cluster = readnext_cluster | strip %}
+
+  {% capture readnext_page_handles %}
+    {% render 'blog-specific-map', context: readnext_context, mode: 'page_handles' %}
+  {% endcapture %}
+  {% assign readnext_page_handles = readnext_page_handles | strip | split: '|' %}
+
+  {% capture readnext_guide_handles %}
+    {% render 'blog-specific-map', context: readnext_context, mode: 'guide_handles' %}
+  {% endcapture %}
+  {% assign readnext_guide_handles = readnext_guide_handles | strip | split: '|' %}
+
+  {% assign anchor_title = anchor_book.title.value | default: anchor_book.title %}
+  {% assign anchor_handle = anchor_book.system.handle | default: '' %}
+  {% assign anchor_title_key = anchor_title | strip | downcase %}
+  {% assign anchor_shelf_handle = anchor_shelf.system.handle | default: anchor_shelf.name | handleize %}
+  {% assign anchor_shelf_name = anchor_shelf.name | default: '' | strip | downcase %}
+  {% assign anchor_spice = anchor_book.spice_level.value | default: 0 | plus: 0 %}
+  {% assign anchor_trope_tokens = '|' %}
+  {% for anchor_trope in anchor_book.tropes.value %}
+    {% assign anchor_trope_handle = anchor_trope.system.handle | default: anchor_trope.name | handleize %}
+    {% assign anchor_trope_tokens = anchor_trope_tokens | append: anchor_trope_handle | append: '|' %}
+  {% endfor %}
+
+  {% assign rec_book_title = '' %}
+  {% assign rec_book_handle = '' %}
+  {% assign rec_book_cover_url = '' %}
+  {% assign rec_book_score = -1 %}
+
+  {% for library_book in shop.metaobjects.sss_library.values %}
+    {% capture is_visible %}{% render 'sss-book-visible', book: library_book %}{% endcapture %}
+    {% assign is_visible_value = is_visible | strip %}
+    {% unless is_visible_value == 'true' %}
+      {% continue %}
+    {% endunless %}
+
+    {% assign library_book_handle = library_book.system.handle | default: '' %}
+    {% assign library_book_title = library_book.title.value | default: library_book.title %}
+    {% assign library_book_title_key = library_book_title | strip | downcase %}
+
+    {% if library_book_handle != blank and library_book_handle == anchor_handle %}
+      {% continue %}
+    {% endif %}
+    {% if library_book_title_key != blank and library_book_title_key == anchor_title_key %}
+      {% continue %}
+    {% endif %}
+
+    {% assign series_number_text = library_book.series_number.value | append: '' | strip %}
+    {% if library_book.series.value != blank and library_book.read_as_standalone.value != true and series_number_text != blank and series_number_text != '1' %}
+      {% continue %}
+    {% endif %}
+
+    {% assign score = 0 %}
+    {% assign library_shelf_handle = library_book.shelf.value.system.handle | default: library_book.shelf.value.name | handleize %}
+    {% assign library_shelf_name = library_book.shelf.value.name | default: '' | strip | downcase %}
+    {% if anchor_shelf_handle != blank and library_shelf_handle == anchor_shelf_handle %}
+      {% assign score = score | plus: 4 %}
+    {% elsif anchor_shelf_name != blank and library_shelf_name == anchor_shelf_name %}
+      {% assign score = score | plus: 4 %}
+    {% endif %}
+
+    {% assign trope_overlap_count = 0 %}
+    {% for linked_trope in library_book.tropes.value %}
+      {% assign linked_trope_handle = linked_trope.system.handle | default: linked_trope.name | handleize %}
+      {% assign linked_trope_token = '|' | append: linked_trope_handle | append: '|' %}
+      {% if anchor_trope_tokens contains linked_trope_token %}
+        {% assign trope_overlap_count = trope_overlap_count | plus: 1 %}
+      {% endif %}
+    {% endfor %}
+    {% assign score = score | plus: trope_overlap_count | plus: trope_overlap_count %}
+
+    {% assign library_spice = library_book.spice_level.value | default: 0 | plus: 0 %}
+    {% assign spice_diff = library_spice | minus: anchor_spice | abs %}
+    {% if anchor_spice > 0 and library_spice > 0 and spice_diff <= 1 %}
+      {% assign score = score | plus: 1 %}
+    {% endif %}
+
+    {% if readnext_cluster == 'stalker' %}
+      {% if library_book_handle == 'haunting-adeline' or library_book_title_key == 'haunting adeline' %}
+        {% assign score = score | plus: 6 %}
+      {% endif %}
+    {% endif %}
+
+    {% if readnext_cluster == 'romantasy' %}
+      {% if library_book_handle contains 'fae' or library_book_handle contains 'dragon' %}
+        {% assign score = score | plus: 1 %}
+      {% endif %}
+    {% endif %}
+
+    {% if score > rec_book_score %}
+      {% assign rec_book_score = score %}
+      {% assign rec_book_title = library_book_title %}
+      {% assign rec_book_handle = library_book_handle %}
+      {% assign rec_book_cover_value = library_book.cover.value | default: library_book.cover %}
+      {% assign rec_book_cover_url = rec_book_cover_value.url | default: rec_book_cover_value %}
+    {% endif %}
+  {% endfor %}
+
+  {% assign browse_page = blank %}
+  {% for page_handle in readnext_page_handles %}
+    {% if page_handle != blank %}
+      {% assign browse_page = pages[page_handle] %}
+      {% if browse_page != blank %}
+        {% break %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+
+  {% assign secondary_page = blank %}
+  {% for page_handle in readnext_page_handles offset: 1 %}
+    {% if page_handle != blank %}
+      {% assign secondary_page = pages[page_handle] %}
+      {% if secondary_page != blank %}
+        {% break %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+
+  {% assign guide_blog = blogs['curated-romance-guides'] | default: blog %}
+  {% assign rec_article = blank %}
+  {% assign rec_book_title_key = rec_book_title | strip | downcase %}
+  {% if guide_blog != blank %}
+    {% for post in guide_blog.articles %}
+      {% if current_article_id != blank and post.id == current_article_id %}
+        {% continue %}
+      {% endif %}
+      {% if current_article_handle != '' and post.handle == current_article_handle %}
+        {% continue %}
+      {% endif %}
+      {% if current_article_url != '' and post.url == current_article_url %}
+        {% continue %}
+      {% endif %}
+      {% assign post_book_match = false %}
+      {% assign post_books = post.metafields.custom.book.value %}
+      {% if rec_book_handle != blank and post_books != blank %}
+        {% for post_book in post_books %}
+          {% assign post_book_handle = post_book.system.handle | default: '' %}
+          {% assign post_book_title = post_book.title.value | default: post_book.title | strip | downcase %}
+          {% if post_book_handle == rec_book_handle or post_book_title == rec_book_title_key %}
+            {% assign post_book_match = true %}
+            {% break %}
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+      {% unless post_book_match %}
+        {% assign post_title_key = post.title | strip | downcase %}
+        {% if rec_book_title_key != blank and post_title_key contains rec_book_title_key %}
+          {% assign post_book_match = true %}
+        {% endif %}
+      {% endunless %}
+      {% if post_book_match %}
+        {% assign rec_article = post %}
+        {% break %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  {% if rec_article == blank and guide_blog != blank %}
+    {% for post in guide_blog.articles %}
+      {% if current_article_id != blank and post.id == current_article_id %}
+        {% continue %}
+      {% endif %}
+      {% if current_article_handle != '' and post.handle == current_article_handle %}
+        {% continue %}
+      {% endif %}
+      {% if current_article_url != '' and post.url == current_article_url %}
+        {% continue %}
+      {% endif %}
+      {% assign post_category = post.metafields.custom.guide_category.value %}
+      {% assign post_category_label = post_category.name.value | default: post_category.name | default: post_category.title.value | default: post_category.title | default: post_category | default: '' | strip | downcase %}
+      {% assign post_trope_value = post.metafields.custom.trope.value %}
+      {% if post_trope_value != blank and post_trope_value.name == blank %}
+        {% assign post_trope_first = post_trope_value | first %}
+        {% if post_trope_first != blank %}
+          {% assign post_trope_value = post_trope_first %}
+        {% endif %}
+      {% endif %}
+      {% assign post_trope_label = post_trope_value.name | default: post_trope_value | strip | downcase %}
+      {% if post_category_label != blank and readnext_context contains post_category_label %}
+        {% assign rec_article = post %}
+        {% break %}
+      {% endif %}
+      {% if post_trope_label != blank and readnext_context contains post_trope_label %}
+        {% assign rec_article = post %}
+        {% break %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  {% assign guide_article = blank %}
+  {% if guide_blog != blank %}
+    {% for guide_handle in readnext_guide_handles %}
+      {% if guide_handle != blank %}
+        {% for post in guide_blog.articles %}
+          {% if current_article_id != blank and post.id == current_article_id %}
+            {% continue %}
+          {% endif %}
+          {% if current_article_handle != '' and post.handle == current_article_handle %}
+            {% continue %}
+          {% endif %}
+          {% if current_article_url != '' and post.url == current_article_url %}
+            {% continue %}
+          {% endif %}
+          {% if rec_article != blank and post.id == rec_article.id %}
+            {% continue %}
+          {% endif %}
+          {% if post.handle == guide_handle %}
+            {% assign guide_article = post %}
+            {% break %}
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+      {% if guide_article != blank %}
+        {% break %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  {% if guide_article == blank and guide_blog != blank %}
+    {% for post in guide_blog.articles %}
+      {% if current_article_id != blank and post.id == current_article_id %}
+        {% continue %}
+      {% endif %}
+      {% if current_article_handle != '' and post.handle == current_article_handle %}
+        {% continue %}
+      {% endif %}
+      {% if current_article_url != '' and post.url == current_article_url %}
+        {% continue %}
+      {% endif %}
+      {% if rec_article != blank and post.id == rec_article.id %}
+        {% continue %}
+      {% endif %}
+      {% assign post_category = post.metafields.custom.guide_category.value %}
+      {% assign post_category_label = post_category.name.value | default: post_category.name | default: post_category.title.value | default: post_category.title | default: post_category | default: '' | strip | downcase %}
+      {% assign post_trope_value = post.metafields.custom.trope.value %}
+      {% if post_trope_value != blank and post_trope_value.name == blank %}
+        {% assign post_trope_first = post_trope_value | first %}
+        {% if post_trope_first != blank %}
+          {% assign post_trope_value = post_trope_first %}
+        {% endif %}
+      {% endif %}
+      {% assign post_trope_label = post_trope_value.name | default: post_trope_value | strip | downcase %}
+      {% if post_category_label != blank and readnext_context contains post_category_label %}
+        {% assign guide_article = post %}
+        {% break %}
+      {% endif %}
+      {% if post_trope_label != blank and readnext_context contains post_trope_label %}
+        {% assign guide_article = post %}
+        {% break %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  {% assign guide_label = '' %}
+  {% assign guide_blurb = 'the full list for readers who want more of this' %}
+  {% assign browse_label = browse_page.title | default: '' %}
+  {% assign browse_blurb = 'browse the full trope page' %}
+  {% assign rec_blurb = 'same energy, same tension, and the kind of pull that keeps you reading too late' %}
+  {% assign readnext_intro = "if this hit the right nerve — here's where to go next." %}
+  {% assign browse_emoji = '↗' %}
+  {% assign browse_badge = '✦' %}
+
+  {% case readnext_cluster %}
+    {% when 'stalker' %}
+      {% assign guide_label = 'the full dark romance list with morally gray men' %}
+      {% assign guide_blurb = 'everything that hits the same way. read the guide' %}
+      {% assign browse_label = 'browse all stalker romance books' %}
+      {% assign browse_blurb = 'the full trope page. stalker romance' %}
+      {% assign browse_emoji = '👤' %}
+      {% if rec_book_handle == 'haunting-adeline' or rec_book_title_key == 'haunting adeline' %}
+        {% assign rec_blurb = 'the stalker romance that made the trope famous. obsessive, dark, and fully committed.' %}
+      {% else %}
+        {% assign rec_blurb = 'stalker romance, obsessive energy, and the same kind of dark pull.' %}
+      {% endif %}
+    {% when 'romantasy' %}
+      {% assign guide_label = 'spicy romantasy' %}
+      {% assign guide_blurb = 'the hot side of the genre when you want more fantasy with more heat' %}
+      {% assign browse_label = 'browse all romantasy books' %}
+      {% assign browse_blurb = 'browse the full fantasy romance page' %}
+      {% assign browse_emoji = '🔮' %}
+      {% assign rec_blurb = 'romantasy, high stakes, and the kind of fantasy obsession that eats your whole night' %}
+    {% when 'sports' %}
+      {% assign guide_label = secondary_page.title | default: 'fake dating romance' %}
+      {% assign guide_blurb = 'the easiest next lane if you want the tension to stay fun and addictive' %}
+      {% assign browse_label = browse_page.title | default: 'browse all slow burn romance books' %}
+      {% assign browse_blurb = 'browse the full page' %}
+      {% assign browse_emoji = '🏒' %}
+      {% assign rec_blurb = 'chemistry, tension, and that same bingeable sports romance energy' %}
+    {% when 'slowburn' %}
+      {% assign guide_label = secondary_page.title | default: 'forced proximity' %}
+      {% assign guide_blurb = 'the next best move if you want the yearning turned all the way up' %}
+      {% assign browse_label = browse_page.title | default: 'browse all enemies to lovers books' %}
+      {% assign browse_blurb = 'browse the full trope page' %}
+      {% assign browse_emoji = '🫠' %}
+      {% assign rec_blurb = 'slow burn, emotional tension, and the kind of payoff worth waiting for' %}
+    {% when 'soft' %}
+      {% assign guide_label = secondary_page.title | default: 'friends to lovers' %}
+      {% assign guide_blurb = 'for readers who want more comfort, softness, and emotional payoff' %}
+      {% assign browse_label = browse_page.title | default: 'browse all slow burn books' %}
+      {% assign browse_blurb = 'browse the full page' %}
+      {% assign browse_emoji = '🤍' %}
+      {% assign rec_blurb = 'soft feelings, emotional payoff, and the kind of romance that lingers' %}
+    {% when 'morallygraymen' %}
+      {% assign guide_label = 'the full dark romance list with morally gray men' %}
+      {% assign guide_blurb = 'everything that hits the same way. read the guide' %}
+      {% assign browse_label = 'browse all dark romance books' %}
+      {% assign browse_blurb = 'browse the full page' %}
+      {% assign browse_emoji = '🖤' %}
+      {% assign rec_blurb = 'morally gray obsession, dark energy, and another hero you should not be rooting for' %}
+    {% else %}
+      {% assign guide_label = guide_article.title | default: secondary_page.title | default: 'dark romance books with morally gray men' %}
+      {% assign browse_blurb = 'browse the full page' %}
+    {% endcase %}
+
+  {% if guide_article != blank and guide_label == '' %}
+    {% assign guide_label = guide_article.title %}
+  {% endif %}
+  {% if guide_article == blank and guide_label == '' and secondary_page != blank %}
+    {% assign guide_label = secondary_page.title %}
+  {% endif %}
+
+  <section class="blog-readnext" aria-label="read these next">
+    <div class="blog-readnext__eyebrow">read these next</div>
+    <h2 class="blog-readnext__title">if you liked {{ anchor_title }}, read these next</h2>
+    <p class="blog-readnext__intro">{{ readnext_intro }}</p>
+    <div class="blog-readnext__list">
+      {% if rec_book_title != blank and rec_article != blank %}
+        <a class="blog-readnext__item blog-readnext__item--story" href="{{ rec_article.url }}">
+          <span class="blog-readnext__arrow" aria-hidden="true">→</span>
+          {% if rec_book_cover_url != blank %}
+            <span class="blog-readnext__media blog-readnext__media--book">
+              <img src="{{ rec_book_cover_url }}" alt="{{ rec_book_title | escape }}" loading="lazy">
+            </span>
+          {% endif %}
+          <span class="blog-readnext__body">
+            <span class="blog-readnext__label">{{ rec_book_title | downcase }}</span>
+            <span class="blog-readnext__meta">{{ rec_blurb }}</span>
+          </span>
+        </a>
+      {% endif %}
+
+      {% if guide_article != blank %}
+        <a class="blog-readnext__item blog-readnext__item--story" href="{{ guide_article.url }}">
+          <span class="blog-readnext__arrow" aria-hidden="true">→</span>
+          {% if guide_article.image %}
+            <span class="blog-readnext__media blog-readnext__media--article">
+              <img src="{{ guide_article.image | image_url: width: 320 }}" alt="{{ guide_article.title | escape }}" loading="lazy">
+            </span>
+          {% endif %}
+          <span class="blog-readnext__body">
+            <span class="blog-readnext__label">{{ guide_label }}</span>
+            <span class="blog-readnext__meta">{{ guide_blurb }}</span>
+          </span>
+        </a>
+      {% endif %}
+
+      {% if browse_page != blank and browse_label != blank %}
+        <a class="blog-readnext__item blog-readnext__item--browse" href="{{ browse_page.url }}">
+          <span class="blog-readnext__arrow" aria-hidden="true">→</span>
+          <span class="blog-readnext__media blog-readnext__media--badge" aria-hidden="true">{{ browse_emoji }}</span>
+          <span class="blog-readnext__body">
+            <span class="blog-readnext__label">{{ browse_label }}</span>
+            <span class="blog-readnext__meta">{{ browse_blurb }}</span>
+          </span>
+        </a>
+      {% endif %}
+    </div>
+  </section>
+{% endif %}

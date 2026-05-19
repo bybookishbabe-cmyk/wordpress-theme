@@ -1,0 +1,467 @@
+{% comment %}
+  sss-insert-library-folders.liquid
+  2-level accordion:
+    - Drop (folder) expands
+    - Each Design expands to reveal size file links (+ optional preview)
+  Uses blocks:
+    - drop (folder header)
+    - design (inside the most recent drop above it)
+{% endcomment %}
+
+<style>
+  .sss-foldlib{
+    background:#0b0b0b;
+    color:#f6f6f6;
+    padding:16px 12px;
+    font-family:"Libre Baskerville", Georgia, serif;
+    position:relative;
+    overflow:hidden;
+  }
+  .sss-foldlib:before{
+    content:"";
+    position:absolute; inset:-40px;
+    pointer-events:none;
+    background:
+      radial-gradient(900px 520px at 50% 80px, rgba(255,255,255,.08), transparent 70%),
+      repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,.03),
+        rgba(255,255,255,.03) 1px,
+        transparent 1px,
+        transparent 26px
+      );
+    opacity:.55;
+  }
+  .sss-foldlib__wrap{
+    max-width:1300px;
+    margin:0 auto;
+    padding:0 8px;
+    position:relative;
+    z-index:1;
+  }
+
+  .sss-foldlib__head{
+    margin:0 0 12px;
+  }
+  .sss-kicker{
+    margin:0;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:#c8c8c8;
+  }
+  .sss-title{
+    margin:6px 0 0;
+    font-size:18px;
+    font-weight:400;
+    text-transform:lowercase;
+  }
+  .sss-sub{
+    margin:8px 0 0;
+    font-size:12px;
+    color:rgba(246,246,246,.72);
+    line-height:1.55;
+  }
+
+  /* container card */
+  .sss-card{
+    background:rgba(21,21,21,.92);
+    border:1px solid #2a2a2a;
+    border-radius:18px;
+    box-shadow:0 12px 28px rgba(0,0,0,.45);
+    overflow:hidden;
+  }
+  .sss-card__inner{ padding:12px; }
+
+  /* folder (drop) button */
+  .sss-drop{
+    margin:12px 0;
+  }
+  .sss-dropbtn{
+    width:100%;
+    text-align:left;
+    cursor:pointer;
+    border:0;
+    background:linear-gradient(180deg, #bdbdbd, #a9a9a9);
+    color:#141414;
+    border-radius:14px;
+    padding:12px 12px;
+    position:relative;
+    box-shadow:0 12px 22px rgba(0,0,0,.25);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .sss-dropbtn:before{
+    content:"";
+    position:absolute;
+    left:12px;
+    top:-8px;
+    width:68px;
+    height:12px;
+    border-radius:10px 10px 0 0;
+    background:linear-gradient(180deg, #d0d0d0, #bdbdbd);
+    border:1px solid rgba(0,0,0,.14);
+    border-bottom:none;
+  }
+  .sss-dropbtn__left{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+  }
+  .sss-dropicon{
+    width:34px; height:34px;
+    border-radius:12px;
+    display:grid;
+    place-items:center;
+    background:rgba(0,0,0,.10);
+    border:1px solid rgba(0,0,0,.18);
+    font-size:14px;
+    flex:0 0 auto;
+  }
+  .sss-droptxt{ min-width:0; }
+  .sss-dropname{
+    margin:0;
+    font-size:13px;
+    text-transform:lowercase;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .sss-dropmeta{
+    margin:4px 0 0;
+    font-size:11px;
+    color:rgba(20,20,20,.70);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .sss-caret{
+    width:38px; height:38px;
+    border-radius:12px;
+    border:1px solid rgba(0,0,0,.18);
+    background:rgba(255,255,255,.45);
+    display:grid;
+    place-items:center;
+    font-size:18px;
+    flex:0 0 auto;
+    transition:transform .16s ease;
+  }
+  .sss-drop[open] .sss-caret{ transform:rotate(180deg); }
+
+  /* inner drop body */
+  .sss-dropbody{
+    padding:10px 6px 0;
+  }
+
+  /* design accordion inside drop */
+  .sss-design{
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:16px;
+    background:rgba(255,255,255,.03);
+    margin:10px 0;
+    overflow:hidden;
+  }
+  .sss-designbtn{
+    width:100%;
+    text-align:left;
+    cursor:pointer;
+    border:0;
+    background:transparent;
+    color:#f6f6f6;
+    padding:12px 12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .sss-designbtn:hover{ background:rgba(255,255,255,.03); }
+  .sss-designbtn__left{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+  }
+  .sss-fileicon{
+    width:32px; height:32px;
+    border-radius:12px;
+    display:grid;
+    place-items:center;
+    background:#000;
+    border:1px solid rgba(255,255,255,.12);
+    font-size:14px;
+    flex:0 0 auto;
+  }
+  .sss-designtxt{ min-width:0; }
+  .sss-designname{
+    margin:0;
+    font-size:13px;
+    text-transform:lowercase;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .sss-designdesc{
+    margin:4px 0 0;
+    font-size:11px;
+    color:rgba(246,246,246,.72);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .sss-designbody{
+    padding:0 12px 12px;
+  }
+
+  /* sizes grid */
+  .sss-sizes{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:8px;
+    margin-top:10px;
+  }
+  @media(min-width:700px){
+    .sss-sizes{ grid-template-columns:1fr 1fr; }
+  }
+  .sss-size{
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:14px;
+    background:rgba(0,0,0,.25);
+    padding:10px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .sss-size__label{
+    font-size:12px;
+    color:#f6f6f6;
+    text-transform:lowercase;
+  }
+  .sss-size__btn{
+    height:34px;
+    padding:0 10px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.12);
+    background:#000;
+    color:#fff;
+    font-size:12px;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    white-space:nowrap;
+  }
+  .sss-size__btn:hover{ background:#111; }
+
+  /* preview row */
+  .sss-previewrow{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap:10px;
+    margin-top:10px;
+  }
+  @media(min-width:990px){
+    .sss-previewrow{ grid-template-columns: .9fr 1.1fr; align-items:start; }
+  }
+  .sss-previmg{
+    width:100%;
+    height:auto;
+    max-height:360px;
+    object-fit:contain;
+    display:block;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.10);
+    background:#0f0f0f;
+    padding:8px;
+    box-sizing:border-box;
+  }
+  .sss-note{
+    font-size:12px;
+    color:rgba(246,246,246,.72);
+    line-height:1.55;
+  }
+
+  /* default <details> marker off */
+  details > summary { list-style:none; }
+  details > summary::-webkit-details-marker{ display:none; }
+</style>
+
+<section class="sss-foldlib">
+  <div class="sss-foldlib__wrap">
+    <div class="sss-foldlib__head">
+      <p class="sss-kicker">{{ section.settings.kicker }}</p>
+      <h3 class="sss-title">{{ section.settings.title }}</h3>
+      {% if section.settings.subtext != blank %}
+        <p class="sss-sub">{{ section.settings.subtext }}</p>
+      {% endif %}
+    </div>
+
+    <div class="sss-card">
+      <div class="sss-card__inner">
+
+        {% assign open_first = section.settings.open_first_drop %}
+        {% assign drop_index = 0 %}
+        {% assign in_drop = false %}
+
+        {% for block in section.blocks %}
+          {% if block.type == 'drop' %}
+            {% if in_drop %}
+              </div></details> {# close previous drop body #}
+            {% endif %}
+
+            {% assign drop_index = drop_index | plus: 1 %}
+            {% assign should_open = false %}
+            {% if open_first and drop_index == 1 %}
+              {% assign should_open = true %}
+            {% endif %}
+
+            <details class="sss-drop" {% if should_open %}open{% endif %} {{ block.shopify_attributes }}>
+              <summary class="sss-dropbtn">
+                <span class="sss-dropbtn__left">
+                  <span class="sss-dropicon" aria-hidden="true">{{ block.settings.icon }}</span>
+                  <span class="sss-droptxt">
+                    <p class="sss-dropname">{{ block.settings.name }}</p>
+                    {% if block.settings.meta != blank %}
+                      <p class="sss-dropmeta">{{ block.settings.meta }}</p>
+                    {% endif %}
+                  </span>
+                </span>
+                <span class="sss-caret" aria-hidden="true">⌄</span>
+              </summary>
+
+              <div class="sss-dropbody">
+            {% assign in_drop = true %}
+          {% endif %}
+
+          {% if block.type == 'design' %}
+            <details class="sss-design" {{ block.shopify_attributes }}>
+              <summary class="sss-designbtn">
+                <span class="sss-designbtn__left">
+                  <span class="sss-fileicon" aria-hidden="true">{{ block.settings.icon }}</span>
+                  <span class="sss-designtxt">
+                    <p class="sss-designname">{{ block.settings.title }}</p>
+                    {% if block.settings.desc != blank %}
+                      <p class="sss-designdesc">{{ block.settings.desc }}</p>
+                    {% endif %}
+                  </span>
+                </span>
+                <span class="sss-caret" aria-hidden="true">⌄</span>
+              </summary>
+
+              <div class="sss-designbody">
+                {% if block.settings.preview != blank or block.settings.note != blank %}
+                  <div class="sss-previewrow">
+                    {% if block.settings.preview != blank %}
+                      <img class="sss-previmg"
+                        src="{{ block.settings.preview | image_url: width: 1200 }}"
+                        alt="{{ block.settings.title | escape }}"
+                        loading="lazy">
+                    {% endif %}
+                    {% if block.settings.note != blank %}
+                      <div class="sss-note">{{ block.settings.note }}</div>
+                    {% endif %}
+                  </div>
+                {% endif %}
+
+                <div class="sss-sizes">
+                  {% if block.settings.url_12th != blank %}
+                    <div class="sss-size">
+                      <span class="sss-size__label">12th gen</span>
+                      <a class="sss-size__btn" href="{{ block.settings.url_12th }}" {% if section.settings.new_tab %}target="_blank" rel="noopener"{% endif %}>open</a>
+                    </div>
+                  {% endif %}
+                  {% if block.settings.url_11th != blank %}
+                    <div class="sss-size">
+                      <span class="sss-size__label">11th gen</span>
+                      <a class="sss-size__btn" href="{{ block.settings.url_11th }}" {% if section.settings.new_tab %}target="_blank" rel="noopener"{% endif %}>open</a>
+                    </div>
+                  {% endif %}
+                  {% if block.settings.url_6in != blank %}
+                    <div class="sss-size">
+                      <span class="sss-size__label">6 inch</span>
+                      <a class="sss-size__btn" href="{{ block.settings.url_6in }}" {% if section.settings.new_tab %}target="_blank" rel="noopener"{% endif %}>open</a>
+                    </div>
+                  {% endif %}
+                  {% if block.settings.url_10th != blank %}
+                    <div class="sss-size">
+                      <span class="sss-size__label">10th gen</span>
+                      <a class="sss-size__btn" href="{{ block.settings.url_10th }}" {% if section.settings.new_tab %}target="_blank" rel="noopener"{% endif %}>open</a>
+                    </div>
+                  {% endif %}
+
+                  {% unless block.settings.url_12th != blank or block.settings.url_11th != blank or block.settings.url_6in != blank or block.settings.url_10th != blank %}
+                    <div class="sss-size">
+                      <span class="sss-size__label">add file links</span>
+                      <span class="sss-size__btn" style="opacity:.55; cursor:not-allowed;">missing</span>
+                    </div>
+                  {% endunless %}
+                </div>
+              </div>
+            </details>
+          {% endif %}
+        {% endfor %}
+
+        {% if in_drop %}
+          </div></details>
+        {% endif %}
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "sss insert folders",
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "kicker", "default": "printable inserts" },
+    { "type": "text", "id": "title", "label": "title", "default": "file cabinet energy." },
+    { "type": "textarea", "id": "subtext", "label": "subtext", "default": "open a drop. pick a design. grab your size." },
+    { "type": "checkbox", "id": "open_first_drop", "label": "open first drop by default", "default": true },
+    { "type": "checkbox", "id": "new_tab", "label": "open links in new tab", "default": false }
+  ],
+  "blocks": [
+    {
+      "type": "drop",
+      "name": "drop folder",
+      "settings": [
+        { "type": "text", "id": "name", "label": "drop name", "default": "january drop — revival" },
+        { "type": "text", "id": "meta", "label": "drop meta (optional)", "default": "5 designs · 4 sizes each" },
+        { "type": "text", "id": "icon", "label": "icon (emoji)", "default": "🗂️" }
+      ]
+    },
+    {
+      "type": "design",
+      "name": "design (inside last drop)",
+      "settings": [
+        { "type": "text", "id": "title", "label": "design name", "default": "revival — dark library" },
+        { "type": "text", "id": "desc", "label": "1-line vibe", "default": "clean. dark. dangerously readable." },
+        { "type": "text", "id": "icon", "label": "icon (emoji)", "default": "📄" },
+        { "type": "image_picker", "id": "preview", "label": "preview image (optional)" },
+        { "type": "textarea", "id": "note", "label": "note (optional)", "default": "print at 100%. trim on the line. slide in like it was always meant to be there." },
+
+        { "type": "url", "id": "url_12th", "label": "12th gen link" },
+        { "type": "url", "id": "url_11th", "label": "11th gen link" },
+        { "type": "url", "id": "url_6in", "label": "6 inch link" },
+        { "type": "url", "id": "url_10th", "label": "10th gen link" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "sss insert library folders",
+      "blocks": [
+        { "type": "drop" },
+        { "type": "design" },
+        { "type": "design" },
+        { "type": "design" }
+      ]
+    }
+  ]
+}
+{% endschema %}

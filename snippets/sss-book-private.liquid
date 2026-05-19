@@ -1,0 +1,22 @@
+{% liquid
+  assign is_private = false
+  assign private_raw = blank
+  assign private_text = ''
+  assign private_json = ''
+
+  if book != blank
+    if book.private_shelf != blank and book.private_shelf.value != blank
+      assign private_raw = book.private_shelf.value
+    elsif book.private_shelf != blank
+      assign private_raw = book.private_shelf
+    endif
+
+    assign private_text = private_raw | append: '' | downcase | strip
+    assign private_json = private_raw | json | downcase | strip
+
+    if private_raw == true or private_text == 'true' or private_text == '1' or private_text == 'yes' or private_json == 'true' or private_json == '"true"' or private_json == '1'
+      assign is_private = true
+    endif
+  endif
+%}
+{{ is_private }}

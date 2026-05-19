@@ -1,0 +1,15 @@
+{
+  "sections": {
+    "main": {
+      "type": "quote-audit",
+      "settings": {
+        "kicker": "admin audit",
+        "title": "sss quote coverage",
+        "subtext": "a quick live check of which visible library books still do not have a linked quote in sss_quote."
+      }
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

@@ -1,0 +1,172 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "main-page",
+      "disabled": true,
+      "settings": {
+        "padding_top": 28,
+        "padding_bottom": 28
+      }
+    },
+    "sss_folder_tabs_qt9MD9": {
+      "type": "sss-folder-tabs",
+      "blocks": {
+        "tab_qFgfTU": {
+          "type": "tab",
+          "name": "main page",
+          "settings": {
+            "label": "main page",
+            "sub": "start here",
+            "icon": "📁",
+            "url": "shopify://pages/society-library"
+          }
+        },
+        "tab_PWabji": {
+          "type": "tab",
+          "name": "library",
+          "settings": {
+            "label": "library",
+            "sub": "books to read",
+            "icon": "📚",
+            "url": "shopify://pages/sss-library-page"
+          }
+        },
+        "tab_madeForYou": {
+          "type": "tab",
+          "name": "made for you",
+          "settings": {
+            "label": "made for you",
+            "sub": "your reader profile + recs",
+            "icon": "✨",
+            "url": "shopify://pages/sss-made-for-you"
+          }
+        },
+        "tab_YgJmrA": {
+          "type": "tab",
+          "name": "printable inserts",
+          "settings": {
+            "label": "printable inserts",
+            "sub": "all printable drops + sizes",
+            "icon": "🖨️",
+            "url": "shopify://pages/sss-printable-kindle-inserts"
+          }
+        },
+        "tab_WWExFw": {
+          "type": "tab",
+          "name": "bookish templates",
+          "settings": {
+            "label": "bookish templates",
+            "sub": "canva templates + tutorials",
+            "icon": "⌨️",
+            "url": "shopify://pages/sss-canva-templates"
+          }
+        },
+        "tab_XMQ6L6": {
+          "type": "tab",
+          "name": "free downloads",
+          "settings": {
+            "label": "free downloads",
+            "sub": "little gifts. no gatekeeping.",
+            "icon": "🎁",
+            "url": ""
+          }
+        },
+        "tab_ffeBTc": {
+          "type": "tab",
+          "name": "quote library",
+          "settings": {
+            "label": "quote library",
+            "sub": "lines i think about daily",
+            "icon": "\"",
+            "url": "shopify://pages/sss-quote-wall"
+          }
+        }
+      },
+      "block_order": [
+        "tab_qFgfTU",
+        "tab_PWabji",
+        "tab_madeForYou",
+        "tab_YgJmrA",
+        "tab_WWExFw",
+        "tab_XMQ6L6",
+        "tab_ffeBTc"
+      ],
+      "name": "sss folder tabs",
+      "settings": {
+        "kicker": "library files",
+        "hint": "pick a folder. dive in."
+      }
+    },
+    "sss_freebies_3tkmaw": {
+      "type": "sss-freebies",
+      "blocks": {
+        "freebie_Xtfb3G": {
+          "type": "freebie",
+          "settings": {
+            "category": "printable_distractions",
+            "title": "hot girl read printable art",
+            "desc": "guest check vibes",
+            "format": "printable art print",
+            "file_url": "https://www.dropbox.com/scl/fi/j2l5iolek9c3oh0yu3l5s/HotGirlsReadSpicyBooks_GuestCheck.png?rlkey=3erobuzmo7bcx6rcevvs9dmbb&st=8mv5x79t&dl=0",
+            "image_url": "https://previews.dropbox.com/p/thumb/AC77_H-npdxvcy_tFKazg3n9ogPRfcP_Bv7OiXBtsUJMfGCrarJbzfkJawuUmHjQ54ju2g1mMuOVFkcl_W8-pHKLGqg2MSu8P_0XMq0vyuMvf2OGKqZBA1V74PpaDv7e3SxbEzin1MgvuHrp9c6NMfvKZxfdprFsFzMGqOAFBvwgkcFz5n3Xfcxr5vUfs1vC6pUIIZ558NOVSm-_I1eH19Hi8NcBvyuELKUlFZOhqv9_dNRIk6AlLuveLakLhxUkptIh-hHzjWlG38dofU4VY0Jo8sZPFTfhspFAMnY9jKTUsnrjytNPDt9k8j002NxQY8o/p.png",
+            "emoji": "🖤"
+          }
+        },
+        "freebie_z9ipiE": {
+          "type": "freebie",
+          "settings": {
+            "category": "printable_distractions",
+            "title": "dark romance word search",
+            "desc": "morally gray men + questionable decisions.",
+            "format": "printable pdf",
+            "file_url": "",
+            "image_url": "",
+            "emoji": "🖤"
+          }
+        }
+      },
+      "block_order": [
+        "freebie_Xtfb3G",
+        "freebie_z9ipiE"
+      ],
+      "name": "sss freebies (accordion)",
+      "settings": {
+        "title": "freebies",
+        "subtext": "little gifts for readers — no gatekeeping.",
+        "tiny_line": "new freebies are added occasionally.",
+        "new_tab": true,
+        "open_first": true,
+        "single_open": false,
+        "cat1_title": "printable distractions",
+        "cat1_emoji": "🖨️",
+        "cat1_hint": "for when you want to unplug, but not really.",
+        "cat2_title": "phone & screen aesthetics",
+        "cat2_emoji": "📱",
+        "cat2_hint": "pretty things, but make them bookish.",
+        "cat3_title": "reader life essentials",
+        "cat3_emoji": "🖤",
+        "cat3_hint": "the things you actually use.",
+        "cat4_title": "cozy + creative",
+        "cat4_emoji": "✍️",
+        "cat4_hint": "for feelings after the last page.",
+        "cat5_title": "seasonal / limited",
+        "cat5_emoji": "✨",
+        "cat5_hint": "rotating treats + special drops."
+      }
+    }
+  },
+  "order": [
+    "main",
+    "sss_folder_tabs_qt9MD9",
+    "sss_freebies_3tkmaw"
+  ]
+}

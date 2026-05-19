@@ -1,0 +1,17 @@
+{% render 'sss-member-dashboard-core', preview_drop_handle_override: section.settings.preview_drop_handle %}
+
+{% schema %}
+{
+  "name": "sss member dashboard",
+  "settings": [
+    {
+      "type": "text",
+      "id": "preview_drop_handle",
+      "label": "preview drop handle (optional)"
+    }
+  ],
+  "presets": [
+    { "name": "sss member dashboard" }
+  ]
+}
+{% endschema %}

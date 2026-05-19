@@ -1,0 +1,579 @@
+{% comment %}
+  sss-canva-feature.liquid
+  Left: image slideshow (few images)
+  Right: library card w/ Canva template link (and optional 2nd link button)
+
+  Drop into: /sections/sss-canva-feature.liquid
+  Then add via Theme Editor.
+
+  Notes:
+  - Uses the same vibe as your sss-first-peek section (dark wrapper + "library card" right panel).
+  - No app dependencies.
+{% endcomment %}
+
+<style>
+  .sss-peek{
+    background:#0b0b0b;
+    color:#f6f6f6;
+    padding:18px 12px;
+    font-family:"Libre Baskerville", Georgia, serif;
+    position:relative;
+    overflow:hidden;
+  }
+  .sss-peek:before{
+    content:"";
+    position:absolute; inset:-40px;
+    pointer-events:none;
+    background:
+      radial-gradient(900px 520px at 50% 120px, rgba(255,255,255,.08), transparent 70%),
+      repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,.03),
+        rgba(255,255,255,.03) 1px,
+        transparent 1px,
+        transparent 26px
+      );
+    opacity:.55;
+  }
+  .sss-peek__wrap{
+    max-width:1300px;
+    margin:0 auto;
+    padding:0 8px;
+    position:relative;
+    z-index:1;
+  }
+  .sss-peek__grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:14px;
+    align-items:start;
+  }
+  @media(min-width:990px){
+    .sss-peek__grid{
+      grid-template-columns:.9fr 1.1fr;
+      gap:16px;
+    }
+  }
+
+  /* LEFT slideshow card */
+  .peek-photo{
+    background:rgba(21,21,21,.92);
+    border:1px solid #2a2a2a;
+    border-radius:18px;
+    box-shadow:0 12px 28px rgba(0,0,0,.45);
+    padding:12px;
+  }
+  .sss-slideshow{
+    position:relative;
+    border-radius:14px;
+    border:1px solid #2a2a2a;
+    background:#0f0f0f;
+    padding:8px;
+    box-sizing:border-box;
+    overflow:hidden;
+  }
+  .sss-slides{
+    display:flex;
+    gap:10px;
+    overflow-x:auto;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    border-radius:10px;
+  }
+  .sss-slides::-webkit-scrollbar{ height:8px; }
+  .sss-slides::-webkit-scrollbar-thumb{
+    background:rgba(255,255,255,.14);
+    border-radius:999px;
+  }
+  .sss-slide{
+    flex:0 0 100%;
+    scroll-snap-align:start;
+  }
+  .sss-slide img{
+    width:100%;
+    height:auto;
+    max-height:540px;
+    object-fit:contain;
+    display:block;
+    border-radius:10px;
+    background:#0f0f0f;
+  }
+
+  .sss-slide-nav{
+    position:absolute;
+    top:10px;
+    right:10px;
+    z-index:10;
+    display:flex;
+    gap:8px;
+  }
+  .sss-slide-nav button{
+    width:36px;
+    height:36px;
+    border-radius:12px;
+    border:1px solid #000;
+    background:#000;
+    color:#fff;
+    font-size:18px;
+    cursor:pointer;
+  }
+  .sss-slide-nav button:hover{ background:#111; border-color:#111; }
+
+  .sss-dots{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    padding:10px 4px 0;
+  }
+  .sss-dot{
+    width:7px; height:7px;
+    border-radius:999px;
+    background:rgba(255,255,255,.25);
+    border:1px solid rgba(255,255,255,.25);
+    cursor:pointer;
+    padding:0;
+  }
+  .sss-dot[aria-current="true"]{
+    background:#fff;
+    border-color:#fff;
+  }
+
+  .peek-photo__cap{
+    margin:10px 0 0;
+    font-size:12.5px;
+    line-height:1.55;
+    color:rgba(246,246,246,.78);
+    text-align:center;
+  }
+
+  /* RIGHT card shell */
+  .peek-card{
+    background:rgba(21,21,21,.92);
+    border:1px solid #2a2a2a;
+    border-radius:18px;
+    box-shadow:0 12px 28px rgba(0,0,0,.45);
+    overflow:hidden;
+  }
+  .peek-card__head{
+    padding:10px 12px 8px;
+    border-bottom:1px solid #2a2a2a;
+    background:rgba(255,255,255,.03);
+  }
+  .peek-card__kicker{
+    margin:0 0 6px;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:#c8c8c8;
+  }
+  .peek-card__title{
+    margin:0;
+    font-size:17px;
+    font-weight:400;
+    text-transform:lowercase;
+    color:#f6f6f6;
+  }
+  .peek-card__sub{
+    margin:6px 0 0;
+    font-size:12px;
+    line-height:1.55;
+    color:#c8c8c8;
+  }
+
+  /* library card inner */
+  .libcard{
+    margin:12px;
+    background:#F7F3EE;
+    background-image:repeating-linear-gradient(
+      to bottom,
+      rgba(30,27,28,.12) 0,
+      rgba(30,27,28,.12) 1px,
+      transparent 1px,
+      transparent 28px
+    );
+    border:2px solid rgba(30,27,28,.85);
+    border-radius:16px;
+    box-shadow:0 10px 24px rgba(0,0,0,.25);
+    color:#1E1B1C;
+    overflow:hidden;
+    position:relative;
+  }
+  .libcard:before{
+    content:"";
+    position:absolute;
+    top:12px; left:12px;
+    width:12px; height:12px;
+    border-radius:999px;
+    background:#000;
+    box-shadow:
+      0 0 0 3px rgba(247,243,238,.95),
+      0 0 0 4px rgba(30,27,28,.9);
+    z-index:2;
+  }
+  .libcard__head{
+    padding:12px 12px 10px;
+    border-bottom:1px solid rgba(30,27,28,.25);
+    background:rgba(30,27,28,.04);
+    text-align:center;
+  }
+  .libcard__name{
+    margin:0;
+    font-size:16px;
+    font-weight:600;
+    text-transform:lowercase;
+    color:#000;
+  }
+  .libcard__hint{
+    margin:6px 0 0;
+    font-size:12px;
+    color:rgba(30,27,28,.72);
+    line-height:1.5;
+  }
+
+  .libcard__body{
+    padding:12px;
+    display:grid;
+    gap:10px;
+  }
+
+  .preview{
+    border:1px solid rgba(30,27,28,.28);
+    border-radius:14px;
+    background:rgba(255,255,255,.65);
+    overflow:hidden;
+  }
+  .preview__top{
+    padding:8px 10px;
+    border-bottom:1px solid rgba(30,27,28,.18);
+    background:rgba(30,27,28,.03);
+    display:flex;
+    justify-content:center;
+  }
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-size:11px;
+    padding:5px 10px;
+    border-radius:999px;
+    background:#000;
+    color:#F7F3EE;
+    border:1px solid #000;
+    text-transform:lowercase;
+  }
+  .preview__media{ padding:8px; }
+  .preview__media img{
+    width:100%;
+    height:auto;
+    max-height:360px;
+    object-fit:contain;
+    display:block;
+    background:rgba(0,0,0,.04);
+    border:1px solid rgba(30,27,28,.25);
+    border-radius:12px;
+    padding:8px;
+    box-sizing:border-box;
+  }
+  .preview__note{
+    margin:6px 0 0;
+    font-size:11px;
+    color:rgba(30,27,28,.7);
+    text-align:center;
+    font-style:italic;
+    padding:0 10px 10px;
+  }
+
+  .btnwrap{ display:grid; gap:8px; padding:0 2px 2px; }
+  .btn{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    width:100%;
+    height:40px;
+    padding:0 12px;
+    border-radius:12px;
+    border:1px solid rgba(30,27,28,.4);
+    background:rgba(247,243,238,.95);
+    color:#1E1B1C;
+    cursor:pointer;
+    text-align:center;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    box-sizing:border-box;
+    font:inherit;
+    font-size:12.5px;
+    appearance:none;
+    -webkit-appearance:none;
+    margin:0;
+    text-decoration:none;
+  }
+  .btn:hover{
+    background:#fff;
+    border-color:rgba(30,27,28,.6);
+  }
+  .btn--dark{
+    background:#000;
+    color:#F7F3EE;
+    border-color:#000;
+  }
+  .btn--dark:hover{ background:#111; border-color:#111; }
+
+  /* tiny toast (optional) */
+  .sss-toast{
+    position:fixed;
+    left:50%;
+    bottom:26px;
+    transform:translateX(-50%);
+    background:#000;
+    border:1px solid rgba(255,255,255,.14);
+    color:#fff;
+    padding:10px 12px;
+    border-radius:14px;
+    font-size:13px;
+    line-height:1.3;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .18s ease, transform .18s ease;
+    z-index:9999;
+    text-align:center;
+    max-width:min(92vw, 520px);
+  }
+  .sss-toast span{ display:block; margin-top:4px; font-size:12px; opacity:.75; }
+  .sss-toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(-4px);
+  }
+</style>
+
+<section class="sss-peek" data-sss-canva-feature>
+  <div class="sss-peek__wrap">
+    <div class="sss-peek__grid">
+
+      <!-- LEFT slideshow -->
+      <div class="peek-photo">
+        <div class="sss-slideshow">
+          <div class="sss-slide-nav">
+            <button type="button" data-prev aria-label="previous">‹</button>
+            <button type="button" data-next aria-label="next">›</button>
+          </div>
+
+          <div class="sss-slides" data-slides>
+            {% assign slide_count = 0 %}
+
+            {% if section.settings.slide_1 != blank %}
+              {% assign slide_count = slide_count | plus: 1 %}
+              <div class="sss-slide">
+                {{ section.settings.slide_1 | image_url: width: 1800 | image_tag: loading: 'lazy', alt: 'template preview 1' }}
+              </div>
+            {% endif %}
+            {% if section.settings.slide_2 != blank %}
+              {% assign slide_count = slide_count | plus: 1 %}
+              <div class="sss-slide">
+                {{ section.settings.slide_2 | image_url: width: 1800 | image_tag: loading: 'lazy', alt: 'template preview 2' }}
+              </div>
+            {% endif %}
+            {% if section.settings.slide_3 != blank %}
+              {% assign slide_count = slide_count | plus: 1 %}
+              <div class="sss-slide">
+                {{ section.settings.slide_3 | image_url: width: 1800 | image_tag: loading: 'lazy', alt: 'template preview 3' }}
+              </div>
+            {% endif %}
+            {% if section.settings.slide_4 != blank %}
+              {% assign slide_count = slide_count | plus: 1 %}
+              <div class="sss-slide">
+                {{ section.settings.slide_4 | image_url: width: 1800 | image_tag: loading: 'lazy', alt: 'template preview 4' }}
+              </div>
+            {% endif %}
+            {% if section.settings.slide_5 != blank %}
+              {% assign slide_count = slide_count | plus: 1 %}
+              <div class="sss-slide">
+                {{ section.settings.slide_5 | image_url: width: 1800 | image_tag: loading: 'lazy', alt: 'template preview 5' }}
+              </div>
+            {% endif %}
+
+            {% if slide_count == 0 %}
+              <div class="sss-slide">
+                <div style="padding:24px; text-align:center; color:rgba(246,246,246,.75);">
+                  add slideshow images in the section settings 🤍
+                </div>
+              </div>
+            {% endif %}
+          </div>
+
+          {% if slide_count > 1 %}
+            <div class="sss-dots" data-dots aria-label="slideshow dots">
+              {% for i in (1..slide_count) %}
+                <button type="button" class="sss-dot" data-dot="{{ i | minus: 1 }}" aria-current="{% if forloop.first %}true{% else %}false{% endif %}" aria-label="go to slide {{ i }}"></button>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+
+        {% if section.settings.left_caption != blank %}
+          <p class="peek-photo__cap">{{ section.settings.left_caption }}</p>
+        {% endif %}
+      </div>
+
+      <!-- RIGHT canva link card -->
+      <article class="peek-card">
+        <div class="peek-card__head">
+          <p class="peek-card__kicker">{{ section.settings.kicker }}</p>
+          <h3 class="peek-card__title">{{ section.settings.title }}</h3>
+          {% if section.settings.subtext != blank %}
+            <p class="peek-card__sub">{{ section.settings.subtext }}</p>
+          {% endif %}
+        </div>
+
+        <div class="libcard">
+          <div class="libcard__head">
+            <h4 class="libcard__name">{{ section.settings.card_name }}</h4>
+            {% if section.settings.card_hint != blank %}
+              <p class="libcard__hint">{{ section.settings.card_hint }}</p>
+            {% endif %}
+          </div>
+
+          <div class="libcard__body">
+            <div class="preview">
+              <div class="preview__top">
+                <span class="pill">{{ section.settings.pill_text }}</span>
+              </div>
+
+              <div class="preview__media">
+                {% if section.settings.right_image != blank %}
+                  {{ section.settings.right_image | image_url: width: 1400 | image_tag: loading: 'lazy', alt: 'canva template preview' }}
+                {% else %}
+                  <div style="padding:18px; text-align:center; color:rgba(30,27,28,.7);">
+                    add a right-side preview image (optional)
+                  </div>
+                {% endif %}
+              </div>
+
+              {% if section.settings.note != blank %}
+                <p class="preview__note">{{ section.settings.note }}</p>
+              {% endif %}
+            </div>
+
+            <div class="btnwrap">
+              {% if section.settings.canva_url != blank %}
+                <a class="btn btn--dark" href="{{ section.settings.canva_url }}" target="_blank" rel="noopener">
+                  {{ section.settings.canva_button }}
+                </a>
+              {% else %}
+                <a class="btn btn--dark" href="#" onclick="return false;" aria-disabled="true">
+                  add your canva link
+                </a>
+              {% endif %}
+
+              {% if section.settings.secondary_url != blank %}
+                <a class="btn" href="{{ section.settings.secondary_url }}" target="_blank" rel="noopener">
+                  {{ section.settings.secondary_button }}
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+  var root = document.currentScript && document.currentScript.previousElementSibling
+    ? document.currentScript.previousElementSibling
+    : document.querySelector('[data-sss-canva-feature]');
+  if (!root) root = document.querySelector('[data-sss-canva-feature]');
+  if (!root) return;
+
+  var slides = root.querySelector('[data-slides]');
+  if (!slides) return;
+
+  var prev = root.querySelector('[data-prev]');
+  var next = root.querySelector('[data-next]');
+  var dotsWrap = root.querySelector('[data-dots]');
+
+  function getIndex(){
+    var w = slides.clientWidth || 1;
+    return Math.round(slides.scrollLeft / w);
+  }
+  function setDots(idx){
+    if (!dotsWrap) return;
+    dotsWrap.querySelectorAll('[data-dot]').forEach(function(b){
+      b.setAttribute('aria-current', String(Number(b.getAttribute('data-dot')) === idx));
+    });
+  }
+  function goTo(idx){
+    var w = slides.clientWidth || 1;
+    slides.scrollTo({ left: idx * w, behavior: 'smooth' });
+    setDots(idx);
+  }
+  function slideBy(dir){
+    var idx = getIndex() + dir;
+    if (idx < 0) idx = 0;
+    var max = slides.children.length - 1;
+    if (idx > max) idx = max;
+    goTo(idx);
+  }
+
+  if (prev) prev.addEventListener('click', function(){ slideBy(-1); });
+  if (next) next.addEventListener('click', function(){ slideBy(1); });
+
+  slides.addEventListener('scroll', function(){
+    window.requestAnimationFrame(function(){
+      setDots(getIndex());
+    });
+  });
+
+  if (dotsWrap){
+    dotsWrap.addEventListener('click', function(e){
+      var btn = e.target.closest('[data-dot]');
+      if (!btn) return;
+      goTo(Number(btn.getAttribute('data-dot')));
+    });
+  }
+
+  // Optional toast helper (kept consistent w/ your other sections)
+  if (!document.getElementById('sssToast')){
+    var t = document.createElement('div');
+    t.id = 'sssToast';
+    t.className = 'sss-toast';
+    document.body.appendChild(t);
+  }
+})();
+</script>
+
+{% schema %}
+{
+  "name": "sss canva feature",
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "right kicker", "default": "bookish templates" },
+    { "type": "text", "id": "title", "label": "right title", "default": "made to edit. made to post." },
+    { "type": "textarea", "id": "subtext", "label": "right subtext", "default": "a clean little canva template you can make yours in minutes." },
+
+    { "type": "image_picker", "id": "slide_1", "label": "left slideshow — image 1" },
+    { "type": "image_picker", "id": "slide_2", "label": "left slideshow — image 2" },
+    { "type": "image_picker", "id": "slide_3", "label": "left slideshow — image 3" },
+    { "type": "image_picker", "id": "slide_4", "label": "left slideshow — image 4" },
+    { "type": "image_picker", "id": "slide_5", "label": "left slideshow — image 5" },
+    { "type": "textarea", "id": "left_caption", "label": "left caption", "default": "a few ways to use it — swipe." },
+
+    { "type": "text", "id": "card_name", "label": "card title", "default": "canva template" },
+    { "type": "textarea", "id": "card_hint", "label": "1-line vibe", "default": "editable, drag + drop, very you." },
+
+    { "type": "text", "id": "pill_text", "label": "pill text", "default": "✨ editable in canva" },
+    { "type": "image_picker", "id": "right_image", "label": "right preview image (optional)" },
+    { "type": "text", "id": "note", "label": "tiny note", "default": "opens in a new tab. save a copy, then go feral." },
+
+    { "type": "url", "id": "canva_url", "label": "canva template link" },
+    { "type": "text", "id": "canva_button", "label": "canva button text", "default": "open in canva" },
+
+    { "type": "url", "id": "secondary_url", "label": "secondary link (optional)" },
+    { "type": "text", "id": "secondary_button", "label": "secondary button text", "default": "watch the quick tutorial" }
+  ],
+  "presets": [
+    { "name": "sss canva feature" }
+  ]
+}
+{% endschema %}

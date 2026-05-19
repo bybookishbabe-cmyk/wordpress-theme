@@ -1,0 +1,98 @@
+<a
+  class="header__icon bbb-bookshelf-header link focus-inset"
+  href="/pages/my-bookshelf"
+  aria-label="open your bookshelf"
+  data-bbb-bookshelf-link
+>
+  <span class="bbb-bookshelf-header__count" data-bbb-bookshelf-count hidden>0</span>
+  <span class="bbb-bookshelf-header__emoji" aria-hidden="true">📚</span>
+</a>
+
+<style>
+  .bbb-bookshelf-header{
+    position:relative;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:4.4rem;
+    height:4.4rem;
+    border-radius:50%;
+    background:#ffffff;
+    color:#111111;
+    border:1px solid rgba(17,17,17,.12);
+    text-decoration:none;
+    box-shadow:none;
+    transition:transform .22s ease, background .22s ease, color .22s ease;
+  }
+
+  .bbb-bookshelf-header:hover{
+    transform:translateY(-.1rem);
+    background:#111111;
+    color:#ffffff;
+  }
+
+  .bbb-bookshelf-header__emoji{
+    filter:grayscale(1) contrast(1.2);
+    font-size:2rem;
+    line-height:1;
+  }
+
+  .bbb-bookshelf-header__count{
+    position:absolute;
+    top:.15rem;
+    left:50%;
+    transform:translateX(-50%);
+    min-width:0;
+    height:auto;
+    padding:0;
+    border-radius:0;
+    background:transparent;
+    color:currentColor;
+    border:0;
+    font-size:.9rem;
+    line-height:1;
+    text-align:center;
+    font-weight:700;
+  }
+
+  @media (max-width:749px){
+    .bbb-bookshelf-header{
+      width:4rem;
+      height:4rem;
+    }
+
+    .bbb-bookshelf-header__emoji{
+      font-size:2rem;
+    }
+  }
+</style>
+
+<script>
+  (function(){
+    var countEl = document.querySelector('[data-bbb-bookshelf-count]');
+    if (!countEl) return;
+
+    function getShelfCount(){
+      try {
+        var shelf = JSON.parse(localStorage.getItem('sssMyShelf') || '[]') || [];
+        return Array.isArray(shelf) ? shelf.length : 0;
+      } catch(err){
+        return 0;
+      }
+    }
+
+    function renderCount(){
+      var count = getShelfCount();
+      countEl.textContent = count > 99 ? '99+' : String(count);
+      countEl.hidden = count <= 0;
+    }
+
+    renderCount();
+    document.addEventListener('sss:bookshelf-updated', renderCount);
+    document.addEventListener('bbb:shelf-saved', renderCount);
+    document.addEventListener('bbb:shelf-unsaved', renderCount);
+    window.addEventListener('storage', function(event){
+      if (event.key === 'sssMyShelf') renderCount();
+    });
+  })();
+</script>

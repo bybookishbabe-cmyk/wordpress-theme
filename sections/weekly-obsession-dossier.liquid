@@ -1,0 +1,1047 @@
+{% comment %}
+  weekly-obsession-dossier.liquid
+  Powered by:
+  - newsletter_issue metaobject for the weekly framing
+  - linked book reference on newsletter_issue for the featured book
+  - sss_quote metaobject via matching linked book reference
+{% endcomment %}
+
+
+{%- assign now_ts = 'now' | date: '%s' | plus: 0 -%}
+{%- assign current_issue = nil -%}
+{%- assign current_issue_ts = 0 -%}
+{%- assign issues = shop.metaobjects.newsletter_issue.values -%}
+
+{%- for issue in issues -%}
+  {%- if issue.publish_date.value == blank -%}
+    {%- continue -%}
+  {%- endif -%}
+
+  {%- assign issue_ts = issue.publish_date.value | date: '%s' | plus: 0 -%}
+  {%- assign live_ts = issue_ts | plus: 36000 -%}
+
+  {%- if live_ts <= now_ts and issue_ts >= current_issue_ts -%}
+    {%- assign current_issue = issue -%}
+    {%- assign current_issue_ts = issue_ts -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{%- assign featured_book = nil -%}
+{%- if current_issue != nil -%}
+  {%- assign featured_book = current_issue.book.value -%}
+  {%- if featured_book == blank -%}
+    {%- assign featured_book = current_issue.library_book.value -%}
+  {%- endif -%}
+{%- endif -%}
+
+{%- assign featured_quote = nil -%}
+{%- if featured_book != blank -%}
+  {%- assign quotes = shop.metaobjects.sss_quote.values -%}
+  {%- for quote_item in quotes -%}
+    {%- assign quote_book = quote_item.library_book.value -%}
+    {%- if quote_book == blank -%}
+      {%- assign quote_book = quote_item.book.value -%}
+    {%- endif -%}
+    {%- if quote_book != blank and quote_book.system.handle == featured_book.system.handle and quote_item.quote.value != blank -%}
+      {%- assign featured_quote = quote_item -%}
+      {%- break -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
+{%- assign issue_link = '' -%}
+{%- if current_issue != nil and current_issue.url.value != blank -%}
+  {%- if current_issue.url.value.url != blank -%}
+    {%- assign issue_link = current_issue.url.value.url -%}
+  {%- else -%}
+    {%- assign issue_link = current_issue.url.value -%}
+  {%- endif -%}
+{%- endif -%}
+
+{%- assign cover_url = '' -%}
+{%- if featured_book != blank and featured_book.cover.value != blank -%}
+  {%- if featured_book.cover.value.url != blank -%}
+    {%- assign cover_url = featured_book.cover.value.url -%}
+  {%- else -%}
+    {%- assign cover_url = featured_book.cover.value -%}
+  {%- endif -%}
+{%- endif -%}
+
+{%- assign boyfriend_name = '' -%}
+{%- if featured_book != blank -%}
+  {%- assign boyfriend_name = featured_book.boyfriend_name.value | strip -%}
+  {%- if boyfriend_name == blank -%}
+    {%- assign boyfriend_name = featured_book.boyfriend_type.value | strip -%}
+  {%- endif -%}
+{%- endif -%}
+
+{%- assign related_exact = '' -%}
+{%- assign related_shelf_trope = '' -%}
+{%- assign related_shelf_spice = '' -%}
+{%- assign related_boyfriend = '' -%}
+{%- assign related_shelf = '' -%}
+{%- assign related_trope = '' -%}
+{%- assign related_spice = '' -%}
+
+{%- if featured_book != blank -%}
+  {%- assign featured_shelf = featured_book.shelf.value.name | strip -%}
+  {%- if featured_shelf == 'private shelf' -%}
+    {%- assign featured_shelf = '' -%}
+  {%- endif -%}
+  {%- assign featured_boyfriend = featured_book.boyfriend_type.value | strip -%}
+  {%- assign featured_spice = featured_book.spice_level.value | plus: 0 -%}
+  {%- assign trope_one = '' -%}
+  {%- assign trope_two = '' -%}
+  {%- assign trope_three = '' -%}
+  {%- for trope in featured_book.tropes.value limit: 3 -%}
+    {%- if forloop.index == 1 -%}{%- assign trope_one = trope.name | strip -%}{%- endif -%}
+    {%- if forloop.index == 2 -%}{%- assign trope_two = trope.name | strip -%}{%- endif -%}
+    {%- if forloop.index == 3 -%}{%- assign trope_three = trope.name | strip -%}{%- endif -%}
+  {%- endfor -%}
+
+  {%- for rel_book in shop.metaobjects.sss_library.values -%}
+    {%- capture is_visible -%}{% render 'sss-book-visible', book: rel_book %}{%- endcapture -%}
+    {%- assign is_visible_value = is_visible | strip -%}
+    {%- unless is_visible_value == 'true' -%}
+      {%- continue -%}
+    {%- endunless -%}
+
+    {%- if rel_book.system.handle == featured_book.system.handle -%}
+      {%- continue -%}
+    {%- endif -%}
+
+    {%- assign rel_shelf = rel_book.shelf.value.name | strip -%}
+    {%- if rel_shelf == 'private shelf' -%}
+      {%- continue -%}
+    {%- endif -%}
+    {%- assign rel_boyfriend = rel_book.boyfriend_type.value | strip -%}
+    {%- assign rel_spice = rel_book.spice_level.value | plus: 0 -%}
+    {%- assign has_trope_overlap = false -%}
+
+    {%- for rel_trope in rel_book.tropes.value -%}
+      {%- assign rel_trope_name = rel_trope.name | strip -%}
+      {%- assign matches_featured_trope = false -%}
+      {%- if rel_trope_name != blank and rel_trope_name == trope_one -%}
+        {%- assign matches_featured_trope = true -%}
+      {%- endif -%}
+      {%- if rel_trope_name != blank and rel_trope_name == trope_two -%}
+        {%- assign matches_featured_trope = true -%}
+      {%- endif -%}
+      {%- if rel_trope_name != blank and rel_trope_name == trope_three -%}
+        {%- assign matches_featured_trope = true -%}
+      {%- endif -%}
+      {%- if matches_featured_trope -%}
+        {%- assign has_trope_overlap = true -%}
+        {%- break -%}
+      {%- endif -%}
+    {%- endfor -%}
+
+    {%- assign spice_diff = featured_spice | minus: rel_spice | abs -%}
+    {%- assign is_spice_close = false -%}
+    {%- if spice_diff <= 1 -%}
+      {%- assign is_spice_close = true -%}
+    {%- endif -%}
+
+    {%- capture book_markup -%}{% render 'sss-book-card', book: rel_book, mini: true %}{%- endcapture -%}
+
+    {%- if rel_shelf == featured_shelf and has_trope_overlap and is_spice_close and rel_boyfriend == featured_boyfriend -%}
+      {%- assign related_exact = related_exact | append: book_markup -%}
+    {%- elsif rel_shelf == featured_shelf and has_trope_overlap and is_spice_close -%}
+      {%- assign related_shelf_trope = related_shelf_trope | append: book_markup -%}
+    {%- elsif rel_shelf == featured_shelf and is_spice_close -%}
+      {%- assign related_shelf_spice = related_shelf_spice | append: book_markup -%}
+    {%- elsif has_trope_overlap and is_spice_close and rel_boyfriend == featured_boyfriend -%}
+      {%- assign related_boyfriend = related_boyfriend | append: book_markup -%}
+    {%- elsif rel_shelf == featured_shelf and has_trope_overlap -%}
+      {%- assign related_shelf = related_shelf | append: book_markup -%}
+    {%- elsif has_trope_overlap and is_spice_close -%}
+      {%- assign related_trope = related_trope | append: book_markup -%}
+    {%- elsif is_spice_close -%}
+      {%- assign related_spice = related_spice | append: book_markup -%}
+    {%- elsif rel_boyfriend == featured_boyfriend -%}
+      {%- assign related_boyfriend = related_boyfriend | append: book_markup -%}
+    {%- elsif has_trope_overlap -%}
+      {%- assign related_trope = related_trope | append: book_markup -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
+<section class="sss-lib sss-lib--weekly-obsession sss-wo" id="sss-wo-{{ section.id }}" data-sss-lib="public">
+  <div class="sss-lib__wrap sss-wo__wrap">
+    {% if current_issue != nil and featured_book != blank %}
+      <header class="sss-lib__head sss-wo__pageHead">
+        <p class="sss-lib__kicker">{{ section.settings.kicker }}</p>
+        <p class="sss-wo__introLine">the romance book you need to add to your tbr immediately. this week’s obsession from the smut &amp; sentiment society.</p>
+        <div class="sss-wo__masthead">
+          <div class="sss-wo__mastDivider" aria-hidden="true"></div>
+          <h1 class="sss-lib__title">{{ current_issue.title.value | default: section.settings.fallback_title }}</h1>
+          {% if current_issue.subtitle.value != blank %}
+            <p class="sss-lib__sub">{{ current_issue.subtitle.value }}</p>
+          {% endif %}
+        </div>
+      </header>
+
+      <div class="sss-wo__hero">
+        <div class="sss-wo__coverCol">
+          <div class="sss-wo__coverFrame">
+            <div class="sss-wo__heroBook">
+              {% render 'sss-book-card', book: featured_book %}
+            </div>
+          </div>
+        </div>
+
+        <div class="sss-wo__copyCol">
+          {% if issue_link != blank %}
+            <a class="sss-wo__stamp" href="{{ issue_link }}" target="_blank" rel="noopener">newsletter saw it first</a>
+          {% else %}
+            <div class="sss-wo__stamp">newsletter saw it first</div>
+          {% endif %}
+
+          <div class="sss-wo__bookMetaCard">
+            <div class="sss-wo__bookMetaHead">
+              <span class="sss-wo__bookMetaStamp">library card</span>
+              {% if current_issue.publish_date.value != blank %}
+                <span class="sss-wo__bookMetaDate">{{ current_issue.publish_date.value | date: "%b %e, %Y" }}</span>
+              {% endif %}
+            </div>
+
+            <div class="sss-wo__bookMeta">
+              <div class="sss-wo__bookLine">
+                <span class="sss-wo__bookLabel">book</span>
+                <span class="sss-wo__bookValue">{{ featured_book.title.value }}</span>
+              </div>
+              <div class="sss-wo__bookLine">
+                <span class="sss-wo__bookLabel">author</span>
+                <span class="sss-wo__bookValue">{{ featured_book.author.value }}</span>
+              </div>
+              {% if featured_shelf != blank %}
+                <div class="sss-wo__bookLine">
+                  <span class="sss-wo__bookLabel">shelf</span>
+                  <span class="sss-wo__bookValue">{{ featured_shelf }}</span>
+                </div>
+              {% endif %}
+              {% if featured_book.spice_level.value != blank %}
+                <div class="sss-wo__bookLine">
+                  <span class="sss-wo__bookLabel">spice</span>
+                  <span class="sss-wo__bookValue">
+                    {% for i in (1..featured_book.spice_level.value) %}🌶️{% endfor %}
+                  </span>
+                </div>
+              {% endif %}
+              <div class="sss-wo__bookLine">
+                <span class="sss-wo__bookLabel">kindle unlimited</span>
+                <span class="sss-wo__bookValue sss-wo__statusValue {% if featured_book.on_kindle_unlimited.value %}is-yes{% else %}is-no{% endif %}">
+                  <span class="sss-wo__statusBox" aria-hidden="true">{% if featured_book.on_kindle_unlimited.value %}✓{% else %}×{% endif %}</span>
+                  <span>{% if featured_book.on_kindle_unlimited.value %}yes{% else %}no{% endif %}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {% if current_issue.excerpt.value != blank %}
+            <div class="sss-wo__editorial">
+              <p>{{ current_issue.excerpt.value }}</p>
+            </div>
+          {% endif %}
+
+          {% if featured_book.tropes.value != blank %}
+            <div class="sss-wo__detailBlock">
+              <div class="sss-wo__detailKicker">tropes in the dossier</div>
+              <div class="sss-wo__chips">
+                {% for trope in featured_book.tropes.value limit: 6 %}
+                  {% assign trope_class = 'sss-wo__chip--ink' %}
+                  {% assign trope_handle = trope.system.handle | default: trope.name | handleize %}
+                  {% assign trope_handle_books = trope_handle | append: '-books' %}
+                  {% assign trope_url = '/pages/' | append: trope_handle %}
+                  {% if all_pages[trope_handle_books] != blank %}
+                    {% assign trope_url = all_pages[trope_handle_books].url %}
+                  {% elsif all_pages[trope_handle] != blank %}
+                    {% assign trope_url = all_pages[trope_handle].url %}
+                  {% else %}
+                    {% assign trope_url = '/pages/' | append: trope_handle_books %}
+                  {% endif %}
+                  {% case forloop.index0 | modulo: 6 %}
+                    {% when 0 %}
+                      {% assign trope_class = 'sss-wo__chip--ink' %}
+                    {% when 1 %}
+                      {% assign trope_class = 'sss-wo__chip--plum' %}
+                    {% when 2 %}
+                      {% assign trope_class = 'sss-wo__chip--berry' %}
+                    {% when 3 %}
+                      {% assign trope_class = 'sss-wo__chip--rose' %}
+                    {% when 4 %}
+                      {% assign trope_class = 'sss-wo__chip--blush' %}
+                    {% when 5 %}
+                      {% assign trope_class = 'sss-wo__chip--pearl' %}
+                  {% endcase %}
+                  <a class="sss-wo__chip {{ trope_class }}" href="{{ trope_url }}">{{ trope.name }}</a>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+
+          {% if boyfriend_name != blank %}
+            <div class="sss-wo__boyfriend">
+              <div class="sss-wo__detailKicker">the man causing the damage</div>
+              <div class="sss-wo__boyfriendName">{{ boyfriend_name }}</div>
+            </div>
+          {% endif %}
+
+          <div class="sss-wo__actions">
+            <a class="sss-wo__btn sss-wo__btn--ghost" href="/pages/library">
+              see the library
+            </a>
+            {% if issue_link != blank %}
+              <a class="sss-wo__btn sss-wo__btn--primary" href="{{ issue_link }}" target="_blank" rel="noopener">
+                read the newsletter
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      {% if featured_quote != nil %}
+        <div class="sss-wo__quoteBlock">
+          <div class="sss-wo__quoteKicker">a line that ruined us</div>
+          <blockquote class="sss-wo__quote">
+            “{{ featured_quote.quote.value | strip_html | escape }}”
+          </blockquote>
+          <div class="sss-wo__quoteMeta">
+            {{ featured_book.title.value }}{% if featured_book.author.value != blank %} by {{ featured_book.author.value }}{% endif %}
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="sss-wo__moreLikeThis">
+        <div class="sss-wo__sectionHead">
+          <div class="sss-wo__sectionKicker">keep the spiral going</div>
+          <h2 class="sss-wo__sectionTitle">more like this</h2>
+          <p class="sss-wo__sectionSub">same orbit. same damage. a few more books that belong in this week’s obsession.</p>
+        </div>
+
+        <div class="sss-wo__relatedRow">
+          {% assign related_rendered = 0 %}
+          {% assign related_sources = related_exact | append: related_shelf_trope | append: related_shelf_spice | append: related_boyfriend | append: related_shelf | append: related_trope | append: related_spice %}
+          {% assign related_cards = related_sources | split: '</button>' %}
+          {% for related_card in related_cards %}
+            {% if related_card == blank or related_rendered >= section.settings.related_limit %}
+              {% continue %}
+            {% endif %}
+            <div class="sss-wo__relatedItem">
+              {{ related_card }}</button>
+            </div>
+            {% assign related_rendered = related_rendered | plus: 1 %}
+          {% endfor %}
+        </div>
+      </div>
+    {% else %}
+      <div class="sss-wo__empty">
+        <p class="sss-wo__kicker">{{ section.settings.kicker }}</p>
+        <h2 class="sss-wo__emptyTitle">{{ section.settings.empty_title }}</h2>
+        <p class="sss-wo__emptySub">{{ section.settings.empty_subtext }}</p>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<style>
+  .sss-wo{
+    padding-bottom:44px;
+  }
+
+  .sss-wo__wrap{
+    position:relative;
+    z-index:1;
+  }
+
+  .sss-wo__pageHead{
+    display:block;
+    max-width:none;
+    width:100%;
+    margin-bottom:24px;
+    text-align:left;
+  }
+
+  .sss-lib--weekly-obsession .sss-lib__head{
+    max-width:none;
+    width:100%;
+    flex:none;
+  }
+
+  .sss-wo__pageHead .sss-lib__title,
+  .sss-wo__pageHead .sss-lib__sub{
+    display:block;
+    width:100%;
+    text-align:right;
+    margin-left:auto;
+    max-width:48rem;
+  }
+
+  .sss-wo__introLine{
+    margin:8px 0 14px;
+    max-width:56ch;
+    font-size:14px;
+    line-height:1.7;
+    color:rgba(246,246,246,.74);
+  }
+
+  .sss-wo__masthead{
+    margin-left:auto;
+    width:min(48rem, 100%);
+    max-width:48rem;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    text-align:right;
+    padding-top:0;
+    position:relative;
+  }
+
+  .sss-wo__mastDivider{
+    display:none;
+  }
+
+  .sss-wo__masthead::before{
+    content:"";
+    display:block;
+    width:min(12.5rem, 44%);
+    height:6px;
+    min-height:6px;
+    margin:0 0 10px auto;
+    border-radius:999px;
+    background:linear-gradient(90deg, #ff6fb8 0%, #ff8ac7 48%, #ffc3df 100%);
+    box-shadow:0 0 0 1px rgba(255,138,199,.14), 0 0 22px rgba(255,138,199,.28);
+    transform:rotate(-1.35deg);
+    transform-origin:right center;
+  }
+
+  .sss-wo__masthead .sss-lib__title,
+  .sss-wo__masthead .sss-lib__sub{
+    width:100%;
+    text-align:right;
+  }
+
+  .sss-wo__head{
+    display:flex;
+    justify-content:flex-start;
+    gap:12px;
+    align-items:center;
+    margin-bottom:18px;
+  }
+
+  .sss-wo__eyebrow,
+  .sss-wo__detailKicker,
+  .sss-wo__quoteKicker,
+  .sss-wo__sectionKicker{
+    margin:0;
+    font-size:11px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+  }
+
+  .sss-wo__detailKicker,
+  .sss-wo__quoteKicker,
+  .sss-wo__sectionKicker{
+    color:#c8c8c8;
+  }
+
+  .sss-wo__eyebrow{
+    color:rgba(246,246,246,.72);
+    padding:6px 10px;
+    border:1px solid rgba(255,255,255,.10);
+    background:rgba(255,255,255,.03);
+  }
+
+  .sss-wo__hero{
+    display:grid;
+    grid-template-columns:minmax(260px, 390px) minmax(0, 1fr);
+    gap:26px;
+    align-items:start;
+    padding:28px;
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:22px;
+    background:rgba(255,255,255,.03);
+    box-shadow:0 18px 40px rgba(0,0,0,.24);
+    animation:sssWoFadeUp .8s ease-out both;
+  }
+
+  .sss-wo__coverFrame{
+    position:relative;
+    padding:16px;
+    background:rgba(255,255,255,.02);
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:18px;
+  }
+
+  .sss-wo__heroBook{
+    width:100%;
+    margin:0;
+  }
+
+  .sss-wo__heroBook .sss-lib__book{
+    width:100%;
+  }
+
+  .sss-wo__heroBook .sss-lib__coverWrap{
+    width:100%;
+  }
+
+  .sss-wo__heroBook .sss-lib__under{
+    margin-top:12px;
+  }
+
+  .sss-wo__bookMetaCard{
+    margin-top:8px;
+    padding:16px 16px 14px;
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:18px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+  }
+
+  .sss-wo__bookMetaHead{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    padding-bottom:12px;
+    margin-bottom:12px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+
+  .sss-wo__bookMetaStamp,
+  .sss-wo__bookMetaDate{
+    font-size:10px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:rgba(246,246,246,.62);
+  }
+
+  .sss-wo__copyCol{
+    min-width:0;
+    animation:sssWoFadeUp .8s ease-out both;
+    animation-delay:.12s;
+  }
+
+  .sss-wo__stamp{
+    display:inline-flex;
+    align-items:center;
+    padding:6px 10px;
+    margin-bottom:16px;
+    border:1px solid rgba(255,255,255,.10);
+    background:rgba(255,255,255,.04);
+    font-size:10px;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    color:rgba(246,246,246,.82);
+    animation:sssWoStampPulse 2.6s ease-in-out infinite;
+    text-decoration:none;
+  }
+
+  .sss-wo__bookMeta{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:12px;
+  }
+
+  .sss-wo__bookLine{
+    display:grid;
+    gap:6px;
+    padding:12px 14px;
+    border:1px solid rgba(255,255,255,.10);
+    background:rgba(255,255,255,.03);
+    border-radius:16px;
+  }
+
+  .sss-wo__bookLabel{
+    font-size:10px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:rgba(246,246,246,.58);
+  }
+
+  .sss-wo__bookValue{
+    font-size:16px;
+    line-height:1.35;
+  }
+
+  .sss-wo__statusValue{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  .sss-wo__statusBox{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:22px;
+    height:22px;
+    border-radius:6px;
+    font-size:14px;
+    font-weight:700;
+    line-height:1;
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(255,255,255,.04);
+  }
+
+  .sss-wo__statusValue.is-yes{
+    color:#dbffe4;
+  }
+
+  .sss-wo__statusValue.is-yes .sss-wo__statusBox{
+    color:#0c1b0f;
+    background:#8fe0a3;
+    border-color:#8fe0a3;
+    box-shadow:0 0 16px rgba(143,224,163,.18);
+  }
+
+  .sss-wo__statusValue.is-no{
+    color:rgba(246,246,246,.76);
+  }
+
+  .sss-wo__statusValue.is-no .sss-wo__statusBox{
+    color:#f1c4d5;
+    background:rgba(255,255,255,.06);
+    border-color:rgba(255,255,255,.14);
+  }
+
+  .sss-wo__editorial{
+    margin-top:20px;
+    max-width:52ch;
+    font-size:15px;
+    line-height:1.85;
+    color:rgba(246,246,246,.78);
+  }
+
+  .sss-wo__editorial p{
+    margin:0;
+  }
+
+  .sss-wo__detailBlock,
+  .sss-wo__boyfriend{
+    margin-top:22px;
+  }
+
+  .sss-wo__chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:12px;
+  }
+
+  .sss-wo__chip{
+    display:inline-flex;
+    align-items:center;
+    padding:10px 14px;
+    border-radius:999px;
+    font-size:12px;
+    letter-spacing:.04em;
+    text-decoration:none;
+    transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease, filter .2s ease;
+  }
+
+  .sss-wo__chip:hover,
+  .sss-wo__chip:focus-visible{
+    transform:translateY(-3px) scale(1.02);
+    box-shadow:0 14px 26px rgba(0,0,0,.24);
+    filter:brightness(1.06);
+  }
+
+  .sss-wo__chip--rose{
+    background:rgba(255,138,199,.16);
+    border:1px solid rgba(255,138,199,.46);
+    color:#ffe1ef;
+  }
+
+  .sss-wo__chip--berry{
+    background:rgba(176,78,122,.20);
+    border:1px solid rgba(214,130,170,.42);
+    color:#fff0f6;
+  }
+
+  .sss-wo__chip--plum{
+    background:rgba(102,74,124,.34);
+    border:1px solid rgba(168,138,194,.34);
+    color:#f6edff;
+  }
+
+  .sss-wo__chip--blush{
+    background:rgba(255,208,226,.18);
+    border:1px solid rgba(255,208,226,.42);
+    color:#fff8fb;
+  }
+
+  .sss-wo__chip--pearl{
+    background:rgba(255,255,255,.18);
+    border:1px solid rgba(255,255,255,.34);
+    color:#ffffff;
+  }
+
+  .sss-wo__chip--ink{
+    background:rgba(35,35,42,.82);
+    border:1px solid rgba(126,126,146,.34);
+    color:#f6f6f6;
+  }
+
+  .sss-wo__boyfriendName{
+    margin-top:10px;
+    font-size:clamp(26px, 3.2vw, 40px);
+    line-height:1;
+    color:#f6f6f6;
+  }
+
+  .sss-wo__actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-top:26px;
+  }
+
+  .sss-wo__btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:50px;
+    padding:0 18px;
+    border:1px solid rgba(255,255,255,.14);
+    text-decoration:none;
+    font-size:11px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease, background-color .2s ease, filter .2s ease;
+  }
+
+  .sss-wo__btn:hover,
+  .sss-wo__btn:focus-visible{
+    transform:translateY(-4px);
+    box-shadow:0 18px 30px rgba(0,0,0,.26);
+    filter:brightness(1.04);
+  }
+
+  .sss-wo__btn--primary{
+    background:#ff8ac7;
+    color:#0b0b0b;
+    border-color:#ff8ac7;
+    box-shadow:0 14px 26px rgba(255,138,199,.18);
+  }
+
+  .sss-wo__btn--primary:hover,
+  .sss-wo__btn--primary:focus-visible{
+    background:#ff9fd2;
+    border-color:#ff9fd2;
+    box-shadow:0 22px 38px rgba(255,138,199,.28);
+  }
+
+  .sss-wo__btn--ghost{
+    color:#ff8ac7;
+    background:rgba(255,138,199,.08);
+    border-color:rgba(255,138,199,.42);
+  }
+
+  .sss-wo__btn--ghost:hover,
+  .sss-wo__btn--ghost:focus-visible{
+    background:rgba(255,138,199,.14);
+    border-color:rgba(255,138,199,.68);
+    box-shadow:0 20px 34px rgba(255,138,199,.14);
+  }
+
+  .sss-wo__quoteBlock{
+    margin-top:26px;
+    padding:28px 30px 22px;
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:22px;
+    background:rgba(255,255,255,.03);
+    animation:sssWoFadeUp .8s ease-out both;
+    animation-delay:.18s;
+  }
+
+  .sss-wo__quote{
+    margin:14px 0 0;
+    font-size:clamp(24px, 3vw, 38px);
+    line-height:1.45;
+    text-wrap:balance;
+  }
+
+  .sss-wo__quoteMeta{
+    margin-top:16px;
+    text-align:right;
+    font-size:12px;
+    color:rgba(246,246,246,.68);
+    letter-spacing:.05em;
+  }
+
+  .sss-wo__moreLikeThis{
+    margin-top:18px;
+    padding:12px 0 0;
+    animation:sssWoFadeUp .8s ease-out both;
+    animation-delay:.24s;
+  }
+
+  .sss-wo__sectionTitle{
+    margin:8px 0 0;
+    font-size:clamp(28px, 4vw, 44px);
+    line-height:1;
+    font-weight:400;
+    text-transform:lowercase;
+  }
+
+  .sss-wo__sectionSub{
+    margin:12px 0 0;
+    max-width:52ch;
+    font-size:14px;
+    line-height:1.7;
+    color:rgba(246,246,246,.72);
+  }
+
+  .sss-wo__relatedRow{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:14px;
+    margin-top:16px;
+    max-width:860px;
+    margin-left:auto;
+    margin-right:auto;
+  }
+
+  .sss-wo__relatedItem .sss-lib__book{
+    width:100%;
+    transition:transform .18s ease;
+  }
+
+  .sss-wo__relatedItem .sss-lib__coverWrap{
+    width:100%;
+  }
+
+  .sss-wo__relatedItem .sss-lib__book:hover{
+    transform:translateY(-3px);
+  }
+
+  .sss-wo__empty{
+    padding:40px 22px;
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:22px;
+    background:rgba(255,255,255,.03);
+  }
+
+  .sss-wo__emptyTitle{
+    margin:10px 0 0;
+    font-size:34px;
+    line-height:1;
+    font-weight:400;
+    text-transform:lowercase;
+  }
+
+  .sss-wo__emptySub{
+    margin:12px 0 0;
+    max-width:46ch;
+    font-size:14px;
+    line-height:1.7;
+    color:rgba(246,246,246,.72);
+  }
+
+  @keyframes sssWoFadeUp{
+    from{
+      opacity:0;
+      transform:translateY(18px);
+    }
+    to{
+      opacity:1;
+      transform:translateY(0);
+    }
+  }
+
+  @keyframes sssWoStampPulse{
+    0%, 100%{
+      box-shadow:0 0 0 0 rgba(255,138,199,0);
+      border-color:rgba(255,255,255,.10);
+      color:rgba(246,246,246,.82);
+    }
+    50%{
+      box-shadow:0 0 0 6px rgba(255,138,199,.08);
+      border-color:rgba(255,138,199,.34);
+      color:#ffb7d9;
+    }
+  }
+
+  @media(max-width:900px){
+    .sss-wo__hero{
+      grid-template-columns:1fr;
+    }
+
+    .sss-wo__bookMeta{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+
+    .sss-wo__relatedRow{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media(max-width:640px){
+    .sss-wo{
+      padding:20px 10px 32px;
+    }
+
+    .sss-wo__pageHead{
+      margin-bottom:14px;
+      text-align:left;
+    }
+
+    .sss-wo__introLine{
+      font-size:13px;
+      line-height:1.65;
+    }
+
+    .sss-wo__masthead{
+      margin-left:0;
+      max-width:none;
+      width:100%;
+      align-items:flex-start;
+      text-align:left;
+      padding-top:0;
+    }
+
+    .sss-wo__mastDivider{
+      display:none;
+    }
+
+    .sss-wo__masthead::before{
+      width:56%;
+      margin:0 0 8px;
+      transform:rotate(-1deg);
+      transform-origin:left center;
+    }
+
+    .sss-wo__masthead .sss-lib__title,
+    .sss-wo__masthead .sss-lib__sub{
+      text-align:left;
+    }
+
+    .sss-wo__pageHead .sss-lib__title,
+    .sss-wo__pageHead .sss-lib__sub{
+      text-align:left;
+      margin-left:0;
+      max-width:none;
+    }
+
+    .sss-wo__head{
+      margin-bottom:14px;
+    }
+
+    .sss-wo__hero{
+      gap:20px;
+      padding:18px 16px 20px;
+    }
+
+    .sss-wo__coverFrame{
+      padding:12px;
+    }
+
+    .sss-wo__heroBook{
+      width:190px;
+      margin:0 auto;
+    }
+
+    .sss-wo__stamp{
+      margin-bottom:14px;
+    }
+
+    .sss-wo__bookMeta{
+      grid-template-columns:1fr;
+    }
+
+    .sss-wo__editorial,
+    .sss-wo__sectionSub{
+      font-size:14px;
+    }
+
+    .sss-wo__quoteBlock{
+      padding:20px 16px 18px;
+    }
+
+    .sss-wo__relatedRow{
+      display:flex;
+      grid-template-columns:none;
+      gap:8px;
+      max-width:none;
+      overflow-x:auto;
+      padding:4px 0 14px;
+      margin-left:0;
+      margin-right:0;
+      scroll-snap-type:x mandatory;
+      -webkit-overflow-scrolling:touch;
+    }
+
+    .sss-wo__relatedRow::-webkit-scrollbar{
+      display:none;
+    }
+
+    .sss-wo__relatedItem{
+      flex:0 0 168px;
+      scroll-snap-align:start;
+    }
+
+    .sss-wo__relatedItem .sss-lib__coverWrap{
+      width:168px;
+      min-width:168px;
+    }
+
+    .sss-wo__relatedItem .sss-lib__under{
+      padding-right:2px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .sss-wo__stamp{
+      animation:none;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "weekly obsession dossier",
+  "settings": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Kicker",
+      "default": "weekly obsession"
+    },
+    {
+      "type": "text",
+      "id": "fallback_title",
+      "label": "Fallback title",
+      "default": "this week’s obsession"
+    },
+    {
+      "type": "text",
+      "id": "empty_title",
+      "label": "Empty state title",
+      "default": "next obsession is loading"
+    },
+    {
+      "type": "textarea",
+      "id": "empty_subtext",
+      "label": "Empty state subtext",
+      "default": "once the next newsletter issue is live and its monday handoff passes, this dossier will fill itself in."
+    },
+    {
+      "type": "range",
+      "id": "related_limit",
+      "label": "Related books",
+      "min": 2,
+      "max": 4,
+      "step": 1,
+      "default": 3
+    }
+  ],
+  "presets": [
+    {
+      "name": "weekly obsession dossier"
+    }
+  ]
+}
+{% endschema %}

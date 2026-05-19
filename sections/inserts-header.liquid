@@ -1,0 +1,260 @@
+<style>
+/* ---------- BASE ---------- */
+.bbb-lib {
+  --cream:#f7f3ee;
+  --ink:#1e1b1c;
+  background:#000;
+  color:var(--cream);
+  padding:72px 0;
+}
+
+.bbb-lib__wrap{
+  max-width:1100px;
+  margin:0 auto;
+  padding:0 20px;
+}
+
+/* ---------- PILL HEADERS ---------- */
+.bbb-pill{
+  display:inline-block;
+  background:#000;
+  color:var(--cream);
+  padding:12px 18px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.15);
+  box-shadow:0 12px 30px rgba(0,0,0,.45);
+}
+
+/* heading alignment */
+.bbb-lib__title{
+  text-align:left;
+  margin-bottom:18px;
+}
+
+.bbb-lib__section h2{
+  text-align:center;
+  margin-bottom:14px;
+}
+
+/* ---------- INTRO ---------- */
+.bbb-lib__meta{
+  text-align:center;
+  font-size:12px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  opacity:.7;
+  margin-bottom:10px;
+}
+
+.bbb-lib__subtitle{
+  text-align:left;
+  opacity:.85;
+  margin:0;
+  max-width:680px; /* keeps it editorial, not stretched */
+}
+<div class="bbb-lib__divider"></div>
+/* ---------- SECTION DIVIDER ---------- */
+.bbb-lib__section{
+  margin-top:56px;
+}
+
+/* ---------- FORMAT CARDS ---------- */
+/* format cards grid */
+.bbb-lib__grid{
+  display:grid;
+  grid-template-columns:1fr 1fr; /* side-by-side by default */
+  gap:16px;
+  margin-top:28px;
+}
+
+@media(min-width:750px){
+  .bbb-lib__grid{
+    gap:22px;
+  }
+}
+@media (max-width: 360px){
+  .bbb-lib__grid{ grid-template-columns: 1fr; }
+}
+
+.bbb-lib__card{
+  background:var(--cream);
+  color:var(--ink);
+  border-radius:16px;
+  padding:22px;
+  text-decoration:none;
+  box-shadow:0 22px 45px rgba(0,0,0,.45);
+  transition:transform .2s ease;
+}
+
+.bbb-lib__card:hover{
+  transform:translateY(-4px);
+}
+
+/* kill purple links */
+.bbb-lib__card,
+.bbb-lib__card:visited,
+.bbb-lib__card:hover,
+.bbb-lib__card *{
+  color:var(--ink);
+  text-decoration:none;
+}
+.bbb-lib__divider{
+  height:1px;
+  background:rgba(255,255,255,.14);
+  margin:22px 0 10px;
+  max-width:680px;
+}
+
+/* ---------- CARD MEDIA ---------- */
+/* ---------- CARD MEDIA (FIT TO IMAGE) ---------- */
+.bbb-lib__media{
+  border-radius:12px;
+  margin-bottom:14px;
+  background: transparent;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.bbb-lib__media img{
+  width:100%;
+  height:auto;
+  max-height:420px; /* controls vertical size without cropping */
+  object-fit:contain;
+  display:block;
+}
+
+
+/* ---------- CARD META ---------- */
+.bbb-lib__meta{
+  text-align:left;
+  font-size:12px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  opacity:.7;
+  margin-bottom:10px;
+}
+
+.bbb-lib__kv{
+  font-size:13px;
+  opacity:.8;
+  margin-top:10px;
+}
+
+.bbb-lib__btn{
+  margin-top:16px;
+  display:inline-block;
+  border:1px solid rgba(0,0,0,.35);
+  padding:10px 16px;
+  border-radius:999px;
+  font-size:14px;
+}
+@media(max-width:480px){
+  .bbb-lib__card{
+    padding:16px;
+  }
+
+  .bbb-lib__btn{
+    font-size:13px;
+    padding:8px 14px;
+  }
+}
+/* black pill badges for printable / physical */
+.bbb-lib__badge{
+  display:inline-block;
+  background:#000;
+  color:var(--cream);
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:11px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  margin-bottom:12px;
+  border:1px solid rgba(255,255,255,.15);
+}
+</style>
+
+<section class="bbb-lib">
+  <div class="bbb-lib__wrap">
+
+    {% if section.settings.meta_line != blank %}
+      <div class="bbb-lib__meta">{{ section.settings.meta_line }}</div>
+    {% endif %}
+
+    <h1 class="bbb-lib__title">{{ section.settings.title }}</h1>
+
+    {% if section.settings.subtitle != blank %}
+      <p class="bbb-lib__subtitle">{{ section.settings.subtitle }}</p>
+    {% endif %}
+
+    <!-- FORMAT CHOICE -->
+    <div class="bbb-lib__section">
+      <h2><span class="bbb-pill">{{ section.settings.prompt_heading }}</span></h2>
+
+      <div class="bbb-lib__grid">
+
+        <!-- PRINTABLE -->
+        <a class="bbb-lib__card" href="{{ section.settings.printable_link }}">
+          <span class="bbb-lib__badge">{{ section.settings.printable_badge }}</span>
+
+          {% if section.settings.printable_image %}
+            <div class="bbb-lib__media">
+              {{ section.settings.printable_image | image_url: width: 1000 | image_tag: loading: 'lazy' }}
+            </div>
+          {% endif %}
+
+          <h3>{{ section.settings.printable_heading }}</h3>
+          <p>{{ section.settings.printable_desc }}</p>
+          <p class="bbb-lib__kv"><strong>format:</strong> instant download · print at home</p>
+          <span class="bbb-lib__btn">shop printable ↗</span>
+        </a>
+
+        <!-- PHYSICAL -->
+        <a class="bbb-lib__card" href="{{ section.settings.physical_link }}">
+          <span class="bbb-lib__badge">{{ section.settings.physical_badge }}</span>
+
+          {% if section.settings.physical_image %}
+            <div class="bbb-lib__media">
+              {{ section.settings.physical_image | image_url: width: 1000 | image_tag: loading: 'lazy' }}
+            </div>
+          {% endif %}
+
+          <h3>{{ section.settings.physical_heading }}</h3>
+          <p>{{ section.settings.physical_desc }}</p>
+          <p class="bbb-lib__kv"><strong>format:</strong> printed · cut · shipped</p>
+          <span class="bbb-lib__btn">shop physical ↗</span>
+        </a>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "ki library header",
+  "settings": [
+    { "type": "text", "id": "meta_line", "label": "meta line", "default": "bb — kindle inserts — vol. i" },
+    { "type": "text", "id": "title", "label": "title", "default": "kindle inserts" },
+    { "type": "text", "id": "subtitle", "label": "subtitle", "default": "collectible inserts designed to make your kindle feel as personal as your bookshelf." },
+
+    { "type": "text", "id": "prompt_heading", "label": "prompt heading", "default": "how do you want yours?" },
+
+    { "type": "text", "id": "printable_badge", "label": "printable badge", "default": "printable" },
+    { "type": "text", "id": "printable_heading", "label": "printable heading", "default": "printable inserts" },
+    { "type": "text", "id": "printable_desc", "label": "printable description", "default": "instant download, print at home, swap whenever the mood changes." },
+    { "type": "image_picker", "id": "printable_image", "label": "printable image" },
+    { "type": "url", "id": "printable_link", "label": "printable link" },
+
+    { "type": "text", "id": "physical_badge", "label": "physical badge", "default": "physical" },
+    { "type": "text", "id": "physical_heading", "label": "physical heading", "default": "physical inserts" },
+    { "type": "text", "id": "physical_desc", "label": "physical description", "default": "professionally printed, giftable, and shipped straight to you." },
+    { "type": "image_picker", "id": "physical_image", "label": "physical image" },
+    { "type": "url", "id": "physical_link", "label": "physical link" }
+  ],
+  "presets": [
+    { "name": "ki library header" }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,47 @@
+{% if include_private_books == nil %}
+  {% assign include_private_books = true %}
+{% endif %}
+<div id="society-classics" class="sss-lib__shelf sss-lib__shelf--classics">
+
+  <div class="sss-lib__shelfHead">
+
+
+<div class="sss-lib__shelfTitle">
+  💌 society classics
+</div>
+
+<div class="sss-lib__shelfDesc">
+  (the permanent canon of the smut & sentiment society.)
+</div>
+
+
+  </div>
+
+  <div class="sss-lib__shelfRow">
+
+
+{% for book in books %}
+  {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+  {% assign is_visible_value = is_visible | strip %}
+  {% unless is_visible_value == 'true' %}
+    {% continue %}
+  {% endunless %}
+  {% capture is_private %}{% render 'sss-book-private', book: book %}{% endcapture %}
+  {% assign is_private_value = is_private | strip %}
+  {% if include_private_books != true and is_private_value == 'true' %}
+    {% continue %}
+  {% endif %}
+
+  {% assign top_shelf_value = book.top_shelf.value | default: book.top_shelf %}
+  {% if top_shelf_value == true %}
+
+    {% render 'sss-book-card', book: book, mini: true %}
+
+  {% endif %}
+
+{% endfor %}
+
+
+  </div>
+
+</div>

@@ -1,0 +1,509 @@
+{% comment %}
+  Society printable inserts library
+  - Vault-style grid instead of folders
+  - Uses the 3 most recent sss_drop entries by release_date
+  - Requires a Kindle size selection before showing available downloads
+{% endcomment %}
+
+{%- liquid
+  assign first_drop = nil
+  assign second_drop = nil
+  assign third_drop = nil
+  assign first_key = ''
+  assign second_key = ''
+  assign third_key = ''
+
+  if shop.metaobjects.sss_drop != blank
+    for drop in shop.metaobjects.sss_drop.values
+      assign linked_printable_products = drop.monthly_collection_printable_products.value | default: drop.monthly_collection_printable_products
+      assign linked_bonus_printable = drop.bonus_printable_product.value | default: drop.bonus_printable_product
+      assign has_printable_content = false
+
+      if linked_printable_products != blank or linked_bonus_printable != blank
+        assign has_printable_content = true
+      endif
+
+      if has_printable_content == false
+        continue
+      endif
+
+      if drop.release_date == blank
+        continue
+      endif
+
+      assign drop_key = drop.release_date | date: '%Y-%m-%d'
+
+      if first_key == '' or drop_key > first_key
+        assign third_drop = second_drop
+        assign third_key = second_key
+        assign second_drop = first_drop
+        assign second_key = first_key
+        assign first_drop = drop
+        assign first_key = drop_key
+      elsif second_key == '' or drop_key > second_key
+        assign third_drop = second_drop
+        assign third_key = second_key
+        assign second_drop = drop
+        assign second_key = drop_key
+      elsif third_key == '' or drop_key > third_key
+        assign third_drop = drop
+        assign third_key = drop_key
+      endif
+    endfor
+  endif
+
+  assign selected_count = 0
+  if first_drop != nil
+    assign selected_count = selected_count | plus: 1
+  endif
+  if second_drop != nil
+    assign selected_count = selected_count | plus: 1
+  endif
+  if third_drop != nil
+    assign selected_count = selected_count | plus: 1
+  endif
+-%}
+
+{%- capture drop_sections -%}
+  {%- for idx in (1..3) -%}
+    {%- liquid
+      assign drop = nil
+      if idx == 1
+        assign drop = first_drop
+      elsif idx == 2
+        assign drop = second_drop
+      elsif idx == 3
+        assign drop = third_drop
+      endif
+    -%}
+
+    {%- if drop == nil -%}
+      {%- continue -%}
+    {%- endif -%}
+
+    {%- assign linked_printable_products = drop.monthly_collection_printable_products.value | default: drop.monthly_collection_printable_products -%}
+    {%- assign linked_bonus_printable = drop.bonus_printable_product.value | default: drop.bonus_printable_product -%}
+    {%- assign rendered_product_ids = '|' -%}
+
+    <section class="sss-libgrid__drop" data-drop-block>
+      <div class="sss-libgrid__dropHead">
+        <div>
+          <p class="sss-libgrid__dropKicker">{{ drop.release_date | date: "%B %Y" }}</p>
+          <h3 class="sss-libgrid__dropTitle">{{ drop.name.value | default: drop.name }}</h3>
+        </div>
+        {% if idx == 1 %}
+          <span class="sss-libgrid__chip">latest drop</span>
+        {% endif %}
+      </div>
+
+      <div class="sss-libgrid__assetGrid">
+        {%- if linked_printable_products != blank -%}
+          {%- for product in linked_printable_products -%}
+            {%- capture rendered_product_ids -%}{{ rendered_product_ids }}{{ product.id }}|{%- endcapture -%}
+            {%- render 'sss-printable-library-card', product: product -%}
+          {%- endfor -%}
+        {%- endif -%}
+
+        {%- if linked_bonus_printable != blank -%}
+          {%- capture bonus_id_token -%}|{{ linked_bonus_printable.id }}|{%- endcapture -%}
+          {%- unless rendered_product_ids contains bonus_id_token -%}
+            {%- render 'sss-printable-library-card', product: linked_bonus_printable, featured: true -%}
+          {%- endunless -%}
+        {%- endif -%}
+      </div>
+    </section>
+  {%- endfor -%}
+{%- endcapture -%}
+
+<section class="sss-libgrid" data-sss-printable-library>
+  <div class="sss-libgrid__wrap">
+    <p class="sss-libgrid__kicker">{{ section.settings.kicker }}</p>
+    <h2 class="sss-libgrid__title">{{ section.settings.title }}</h2>
+    <p class="sss-libgrid__sub">{{ section.settings.subtext }}</p>
+
+    <div class="sss-libgrid__sizeGate">
+      <label class="sss-libgrid__label" for="sss-printable-size-{{ section.id }}">choose your kindle size first</label>
+      <select class="sss-libgrid__select" id="sss-printable-size-{{ section.id }}" data-library-size>
+        <option value="">select your size</option>
+        <option value="12th">12th Generation Kindle (2024 Release)</option>
+        <option value="11th">11th Generation Kindle (2021 Release)</option>
+        <option value="6in">6&quot; (2022 &amp; 2024 Release)</option>
+        <option value="10th">10th Generation Kindle (2018 Release)</option>
+      </select>
+      <p class="sss-libgrid__helper">once you choose your size, we’ll show the inserts from the last three society drops that actually fit.</p>
+    </div>
+
+    {%- if selected_count > 0 -%}
+      <div class="sss-libgrid__results" data-library-results hidden>
+        {{ drop_sections }}
+      </div>
+      <div class="sss-libgrid__empty" data-library-empty hidden>
+        <p>nothing in the last three drops matches that size yet.</p>
+      </div>
+    {%- else -%}
+      <div class="sss-libgrid__empty sss-libgrid__empty--static">
+        <p>no printable society drops are linked yet.</p>
+      </div>
+    {%- endif -%}
+  </div>
+</section>
+
+<style>
+  .sss-libgrid{
+    background:#0b0b0b;
+    color:#f6f6f6;
+    padding:20px 12px 26px;
+    position:relative;
+    overflow:hidden;
+    font-family:"Libre Baskerville", Georgia, serif;
+  }
+  .sss-libgrid:before{
+    content:"";
+    position:absolute;
+    inset:-40px;
+    pointer-events:none;
+    background:
+      radial-gradient(900px 520px at 50% 90px, rgba(255,255,255,.08), transparent 70%),
+      repeating-linear-gradient(to bottom, rgba(255,255,255,.03), rgba(255,255,255,.03) 1px, transparent 1px, transparent 26px);
+    opacity:.55;
+  }
+  .sss-libgrid__wrap{
+    position:relative;
+    z-index:1;
+    max-width:1320px;
+    margin:0 auto;
+    padding:0 8px;
+  }
+  .sss-libgrid__kicker{
+    margin:0;
+    font-size:12px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:#c8c8c8;
+  }
+  .sss-libgrid__title{
+    margin:8px 0 0;
+    font-size:clamp(24px, 4vw, 40px);
+    line-height:1.04;
+    font-weight:400;
+    text-transform:lowercase;
+  }
+  .sss-libgrid__sub{
+    margin:10px 0 0;
+    max-width:760px;
+    font-size:14px;
+    line-height:1.65;
+    color:rgba(246,246,246,.72);
+  }
+  .sss-libgrid__sizeGate{
+    margin-top:18px;
+    padding:16px;
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:18px;
+    background:rgba(20,20,20,.92);
+    box-shadow:0 12px 28px rgba(0,0,0,.35);
+  }
+  .sss-libgrid__label{
+    display:block;
+    margin:0 0 8px;
+    font-size:12px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:#ef89bf;
+  }
+  .sss-libgrid__select{
+    width:100%;
+    min-height:52px;
+    padding:0 16px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.16);
+    background:#111;
+    color:#f6f6f6;
+    font:inherit;
+  }
+  .sss-libgrid__helper{
+    margin:10px 0 0;
+    font-size:13px;
+    line-height:1.55;
+    color:rgba(246,246,246,.68);
+  }
+  .sss-libgrid__results{
+    margin-top:18px;
+    display:grid;
+    gap:18px;
+  }
+  .sss-libgrid__drop{
+    padding:18px;
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:24px;
+    background:rgba(18,18,18,.96);
+    box-shadow:0 14px 30px rgba(0,0,0,.35);
+  }
+  .sss-libgrid__dropHead{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    align-items:flex-start;
+    margin-bottom:14px;
+  }
+  .sss-libgrid__dropKicker{
+    margin:0 0 6px;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:rgba(246,246,246,.58);
+  }
+  .sss-libgrid__dropTitle{
+    margin:0;
+    font-size:clamp(20px, 3.2vw, 32px);
+    line-height:1.05;
+    font-weight:400;
+    text-transform:lowercase;
+  }
+  .sss-libgrid__chip{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:8px 12px;
+    border-radius:999px;
+    background:rgba(239,137,191,.12);
+    border:1px solid rgba(239,137,191,.26);
+    color:#ffd6ea;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+  .sss-libgrid__assetGrid{
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+    gap:16px;
+  }
+  .sss-libgrid__card{
+    display:block;
+    min-height:100%;
+    border-radius:16px;
+    overflow:hidden;
+    background:#f7f3ee;
+    color:#181511;
+    border:2px solid rgba(30,27,28,.85);
+    box-shadow:0 10px 24px rgba(0,0,0,.25);
+  }
+  .sss-libgrid__cardImageWrap{
+    aspect-ratio:auto;
+    background:#fff;
+    padding:12px 12px 0;
+  }
+  .sss-libgrid__cardImage{
+    width:100%;
+    height:auto;
+    max-height:260px;
+    object-fit:contain;
+    display:block;
+    border-radius:12px;
+    border:1px solid rgba(30,27,28,.22);
+    background:#fff;
+    padding:8px;
+    box-sizing:border-box;
+  }
+  .sss-libgrid__cardBody{
+    display:grid;
+    gap:6px;
+    padding:10px 12px 12px;
+    text-align:center;
+  }
+  .sss-libgrid__cardEyebrow{
+    margin:0;
+    font-size:11px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:rgba(24,21,17,.56);
+  }
+  .sss-libgrid__cardTitle{
+    margin:0;
+    font-size:18px;
+    line-height:1.2;
+    font-weight:800;
+    text-transform:lowercase;
+    color:#181511;
+  }
+  .sss-libgrid__button{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:48px;
+    padding:12px 18px;
+    border-radius:999px;
+    border:1px solid rgba(24,21,17,.18);
+    background:transparent;
+    color:#181511;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    text-decoration:none;
+    text-align:center;
+    transition:background-color .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;
+  }
+  .sss-libgrid__button:hover,
+  .sss-libgrid__button:focus-visible{
+    background:#ef89bf;
+    border-color:#ef89bf;
+    color:#181511;
+    transform:translateY(-1px);
+  }
+  .sss-libgrid__button[hidden]{
+    display:none !important;
+  }
+  .sss-libgrid__button--disabled{
+    opacity:.48;
+    pointer-events:none;
+  }
+  .sss-libgrid__empty{
+    margin-top:18px;
+    padding:20px;
+    border-radius:18px;
+    border:1px solid rgba(255,255,255,.1);
+    background:rgba(20,20,20,.92);
+    color:rgba(246,246,246,.72);
+  }
+  .sss-libgrid__empty p{
+    margin:0;
+    line-height:1.6;
+  }
+  @media screen and (max-width: 1080px){
+    .sss-libgrid__assetGrid{
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+    }
+  }
+  @media screen and (max-width: 749px){
+    .sss-libgrid{
+      padding:16px 10px 22px;
+    }
+    .sss-libgrid__wrap{
+      padding:0 4px;
+    }
+    .sss-libgrid__drop{
+      padding:14px;
+      border-radius:20px;
+    }
+    .sss-libgrid__dropHead{
+      flex-direction:column;
+      align-items:flex-start;
+      margin-bottom:12px;
+    }
+    .sss-libgrid__assetGrid{
+      display:flex;
+      flex-wrap:nowrap;
+      gap:12px;
+      overflow-x:auto;
+      overflow-y:hidden;
+      padding:6px 12px 8px;
+      margin:0 -8px;
+      scroll-snap-type:x mandatory;
+      -webkit-overflow-scrolling:touch;
+      overscroll-behavior-x:contain;
+      touch-action:pan-x;
+      scrollbar-width:none;
+    }
+    .sss-libgrid__assetGrid::-webkit-scrollbar{
+      display:none;
+    }
+    .sss-libgrid__card{
+      flex:0 0 78vw;
+      min-width:78vw;
+      scroll-snap-align:start;
+    }
+    .sss-libgrid__cardTitle{
+      font-size:18px;
+    }
+    .sss-libgrid__cardBody{
+      padding:12px;
+    }
+  }
+</style>
+
+<script>
+  (function(){
+    function initSSSPrintableLibrary(sectionRoot){
+      var root = sectionRoot || document;
+      root.querySelectorAll('[data-sss-printable-library]').forEach(function(section){
+        if (section.dataset.sssPrintableReady === 'true') return;
+        section.dataset.sssPrintableReady = 'true';
+
+        var sizeSelect = section.querySelector('[data-library-size]');
+        var results = section.querySelector('[data-library-results]');
+        var emptyState = section.querySelector('[data-library-empty]');
+        if (!sizeSelect || !results) return;
+
+        function applySize(){
+          var size = sizeSelect.value;
+          var visibleCards = 0;
+
+          if (!size) {
+            results.hidden = true;
+            if (emptyState) emptyState.hidden = true;
+            section.querySelectorAll('[data-download-button]').forEach(function(button){
+              button.hidden = true;
+            });
+            return;
+          }
+
+          results.hidden = false;
+
+          section.querySelectorAll('[data-drop-block]').forEach(function(drop){
+            var dropVisible = 0;
+
+            drop.querySelectorAll('[data-printable-card]').forEach(function(card){
+              var url = card.getAttribute('data-download-' + size) || '';
+              var label = card.getAttribute('data-size-label-' + size) || '';
+              var button = card.querySelector('[data-download-button]');
+
+              if (url && button) {
+                button.hidden = false;
+                button.classList.remove('sss-libgrid__button--disabled');
+                button.href = url;
+                button.textContent = label ? ('download ' + label) : 'download';
+                card.hidden = false;
+                dropVisible += 1;
+                visibleCards += 1;
+              } else {
+                card.hidden = true;
+                if (button) {
+                  button.hidden = true;
+                  button.removeAttribute('href');
+                }
+              }
+            });
+
+            drop.hidden = dropVisible === 0;
+          });
+
+          if (emptyState) emptyState.hidden = visibleCards !== 0;
+        }
+
+        sizeSelect.addEventListener('change', applySize);
+        applySize();
+      });
+    }
+
+    initSSSPrintableLibrary(document);
+    document.addEventListener('shopify:section:load', function(event){
+      initSSSPrintableLibrary(event.target);
+    });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "sss printable library",
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "kicker", "default": "printable inserts" },
+    { "type": "text", "id": "title", "label": "title", "default": "choose your size, then open the last three society drops." },
+    { "type": "textarea", "id": "subtext", "label": "subtext", "default": "same insert-vault feel, but just the newest three society drops for paid members." },
+    { "type": "checkbox", "id": "open_first_drop", "label": "legacy setting", "default": false }
+  ],
+  "presets": [
+    { "name": "sss printable library" }
+  ]
+}
+{% endschema %}

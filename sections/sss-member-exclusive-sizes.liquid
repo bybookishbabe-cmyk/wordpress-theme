@@ -1,0 +1,632 @@
+<style>
+/* =========================================================
+   SSS MEMBER EXCLUSIVE — LIBRARY CARD THEME
+   Cream paper card on black background
+   ========================================================= */
+
+.sss-me2{
+  --bg:#000;
+  --cream:#F7F3EE;
+  --ink:#1E1B1C;
+  --ink-muted:rgba(30,27,28,.72);
+  --paperline:rgba(30,27,28,.12);
+
+  background:var(--bg);
+  color:var(--cream);
+  padding:26px 18px;
+  font-family:"Libre Baskerville", Georgia, serif;
+  position:relative;
+  overflow:hidden;
+}
+
+/* subtle texture only (no florals) */
+.sss-me2:before{
+  content:"";
+  position:absolute;
+  inset:-40px;
+  pointer-events:none;
+  background:
+    radial-gradient(900px 520px at 50% 120px, rgba(255,255,255,.06), transparent 70%),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,.03),
+      rgba(255,255,255,.03) 1px,
+      transparent 1px,
+      transparent 26px
+    );
+  opacity:.55;
+}
+
+.sss-me2 a{ color:inherit; text-decoration:none; }
+
+.sss-me2__wrap{
+  max-width:1100px;
+  margin:0 auto;
+  position:relative;
+  z-index:1;
+  padding:0 12px;
+}
+
+/* kicker (outside card) */
+.sss-me2__kicker{
+  margin:0 0 10px;
+  font-size:12px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:rgba(247,243,238,.75);
+}
+
+/* ================== MAIN LIBRARY CARD ================== */
+
+.sss-me2__card{
+  position:relative;
+  background:var(--cream);
+  background-image:repeating-linear-gradient(
+    to bottom,
+    var(--paperline) 0,
+    var(--paperline) 1px,
+    transparent 1px,
+    transparent 28px
+  );
+  border:2px solid rgba(30,27,28,.9);
+  border-radius:14px;
+  box-shadow:0 18px 40px rgba(0,0,0,.4);
+  overflow:hidden;
+  color:var(--ink);
+}
+
+/* hole punch */
+.sss-me2__card:before{
+  content:"";
+  position:absolute;
+  top:14px;
+  left:14px;
+  width:14px;
+  height:14px;
+  border-radius:999px;
+  background:#000;
+  box-shadow:
+    0 0 0 3px rgba(247,243,238,.95),
+    0 0 0 4px rgba(30,27,28,.9);
+}
+
+/* header */
+.sss-me2__head{
+  padding:16px 16px 12px;
+  border-bottom:1px solid rgba(30,27,28,.25);
+  background:rgba(30,27,28,.03);
+}
+
+.sss-me2__title{
+  margin:0;
+  font-size:20px;
+  font-weight:600;
+  text-transform:lowercase;
+  color:var(--ink);
+}
+
+.sss-me2__sub{
+  margin:8px 0 0;
+  font-size:13px;
+  line-height:1.55;
+  color:var(--ink-muted);
+}
+
+/* ================== TWO PANELS ================== */
+
+.sss-me2__grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  padding:14px;
+}
+
+/* inner cards */
+.sss-me2__panel{
+  border:1px solid rgba(30,27,28,.3);
+  border-radius:14px;
+  background:rgba(255,255,255,.65);
+  overflow:hidden;
+}
+
+/* top strip */
+.sss-me2__panelTop{
+  padding:10px 12px;
+  border-bottom:1px solid rgba(30,27,28,.18);
+  background:rgba(30,27,28,.04);
+  display:flex;
+  justify-content:center;
+}
+
+/* black label pill */
+.sss-me2__pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-size:12px;
+  padding:6px 12px;
+  border-radius:999px;
+  background:#000;
+  color:var(--cream);
+  border:1px solid rgba(0,0,0,.9);
+  text-transform:lowercase;
+}
+
+/* images */
+.sss-me2__media{
+  padding:10px;
+}
+
+.sss-me2__media img{
+  width:100%;
+  height:auto;
+  max-height:340px;
+  object-fit:contain;
+  display:block;
+  background:rgba(0,0,0,.04);
+  border:1px solid rgba(30,27,28,.28);
+  border-radius:12px;
+  padding:10px;
+}
+
+/* notes */
+.sss-me2__note{
+  margin:10px 0 0;
+  font-size:12px;
+  color:rgba(30,27,28,.7);
+  text-align:center;
+  font-style:italic;
+  padding:0 12px 0;
+}
+
+/* buttons */
+.sss-me2__btnWrap{
+  padding:12px;
+}
+
+.sss-me2__btnGrid{
+  display:grid;
+  gap:10px;
+}
+
+.sss-me2__btn{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(30,27,28,.35);
+  background:rgba(247,243,238,.95);
+  color:var(--ink);
+  font-size:13px;
+  width:100%;
+  cursor:pointer;
+  text-align:center;
+}
+
+.sss-me2__btn:hover{
+  background:#fff;
+  border-color:rgba(30,27,28,.6);
+}
+
+.sss-me2__btn[disabled]{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+/* ================== CENTER TOAST ================== */
+
+.sss-toast{
+  position:fixed;
+  left:50%;
+  top:50%;
+  transform:translate(-50%, -50%) scale(.96);
+  background:rgba(0,0,0,.88);
+  border:1px solid rgba(255,255,255,.22);
+  color:#fff;
+  padding:14px 18px;
+  border-radius:18px;
+  font-size:14px;
+  line-height:1.35;
+  z-index:9999;
+  opacity:0;
+  pointer-events:none;
+  box-shadow:0 18px 40px rgba(0,0,0,.6);
+  transition:opacity .18s ease, transform .18s ease;
+  text-align:center;
+}
+
+.sss-toast span{
+  display:block;
+  margin-top:4px;
+  font-size:12px;
+  opacity:.75;
+}
+
+.sss-toast.show{
+  opacity:1;
+  transform:translate(-50%, -50%) scale(1);
+}
+/* =========================================================
+   RESET: keep library style OFF the outer card + header
+   ========================================================= */
+.sss-me2 .sss-me2__card{
+  background: rgba(21,21,21,.92) !important;
+  border: 1px solid #2a2a2a !important;
+  border-radius: 18px !important;
+  box-shadow: 0 12px 28px rgba(0,0,0,.45) !important;
+  color: #f6f6f6 !important;
+}
+
+.sss-me2 .sss-me2__card:before{
+  content: none !important; /* remove hole punch from the outer card */
+}
+
+.sss-me2 .sss-me2__head{
+  background: rgba(255,255,255,.03) !important;
+  border-bottom: 1px solid #2a2a2a !important;
+}
+
+.sss-me2 .sss-me2__title{
+  color: #f6f6f6 !important;
+  font-weight: 400 !important;
+}
+
+.sss-me2 .sss-me2__sub{
+  color: #c8c8c8 !important;
+}
+
+/* =========================================================
+   LIBRARY CARD: apply ONLY to Printable + Physical panels
+   ========================================================= */
+.sss-me2 .sss-me2__panel{
+  position: relative !important;
+  background: #F7F3EE !important;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(30,27,28,.12) 0,
+    rgba(30,27,28,.12) 1px,
+    transparent 1px,
+    transparent 28px
+  ) !important;
+  border: 2px solid rgba(30,27,28,.85) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,.25) !important;
+  color: #1E1B1C !important;
+}
+
+/* hole punch ONLY on panels */
+.sss-me2 .sss-me2__panel::before{
+  content:"" !important;
+  position:absolute !important;
+  top:12px !important;
+  left:12px !important;
+  width:12px !important;
+  height:12px !important;
+  border-radius:999px !important;
+  background:#000 !important;
+  box-shadow:
+    0 0 0 3px rgba(247,243,238,.95),
+    0 0 0 4px rgba(30,27,28,.9) !important;
+  z-index:2 !important;
+}
+
+/* panel top bar */
+.sss-me2 .sss-me2__panelTop{
+  background: rgba(30,27,28,.04) !important;
+  border-bottom: 1px solid rgba(30,27,28,.25) !important;
+}
+
+/* black pills inside panels */
+.sss-me2 .sss-me2__panel .sss-me2__pill{
+  background:#000 !important;
+  color:#F7F3EE !important;
+  border:1px solid #000 !important;
+}
+
+/* panel note text */
+.sss-me2 .sss-me2__panel .sss-me2__note{
+  color: rgba(30,27,28,.7) !important;
+}
+
+/* panel image frame */
+.sss-me2 .sss-me2__panel .sss-me2__media img{
+  background: rgba(0,0,0,.04) !important;
+  border: 1px solid rgba(30,27,28,.25) !important;
+}
+
+/* panel buttons (only) */
+.sss-me2 .sss-me2__panel .sss-me2__btn{
+  background: rgba(247,243,238,.95) !important;
+  color:#1E1B1C !important;
+  border:1px solid rgba(30,27,28,.4) !important;
+}
+.sss-me2 .sss-me2__panel .sss-me2__btn:hover{
+  background:#fff !important;
+  border-color: rgba(30,27,28,.6) !important;
+}
+
+/* make <a> and <button> size/align identically */
+.sss-me2 .sss-me2__btn{
+  box-sizing: border-box;
+  min-height: 42px;
+  line-height: 1.2;
+}
+
+/* normalize the physical <button> defaults */
+.sss-me2 button.sss-me2__btn{
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid rgba(30,27,28,.4); /* keeps your panel override consistent */
+  padding: 10px 12px;
+  margin: 0;
+  font: inherit;
+}
+
+/* normalize the printable <a> defaults */
+.sss-me2 a.sss-me2__btn{
+  display: flex;
+  padding: 10px 12px;
+}
+
+/* FORCE printable + physical buttons to match */
+.sss-me2 .sss-me2__panel .sss-me2__btn,
+.sss-me2 .sss-me2__panel a.sss-me2__btn,
+.sss-me2 .sss-me2__panel button.sss-me2__btn{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:100% !important;
+
+  /* same size */
+  height:44px !important;
+  padding:0 12px !important;
+  box-sizing:border-box !important;
+
+  /* stop wrapping (this is what was making physical taller) */
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+
+  /* normalize typography between <a> and <button> */
+  font: inherit !important;
+  font-size:13px !important;
+  line-height:1 !important;
+  margin:0 !important;
+}
+
+/* remove default button styling that can change sizing */
+.sss-me2 .sss-me2__panel button.sss-me2__btn{
+  appearance:none !important;
+  -webkit-appearance:none !important;
+}
+/* ===== tighten the whole card (less tall) ===== */
+.sss-me2{ padding:16px 12px !important; }
+
+.sss-me2__head{ padding:10px 12px 8px !important; }
+.sss-me2__title{ font-size:17px !important; }
+.sss-me2__sub{ font-size:12px !important; margin-top:6px !important; }
+
+.sss-me2__grid{ padding:10px !important; gap:10px !important; }
+
+.sss-me2__panelTop{ padding:8px 10px !important; }
+.sss-me2__pill{ font-size:11px !important; padding:5px 10px !important; }
+
+.sss-me2__media{ padding:8px !important; }
+.sss-me2__media img{ max-height:220px !important; padding:8px !important; }
+
+.sss-me2__note{ font-size:11px !important; margin-top:8px !important; }
+
+.sss-me2__btnWrap{ padding:10px !important; }
+.sss-me2__btnGrid{ gap:8px !important; }
+
+/* you already set button height; keep it but slightly smaller if you want */
+.sss-me2 .sss-me2__panel .sss-me2__btn{ height:40px !important; font-size:12.5px !important; }
+
+
+
+</style>
+
+
+<section class="sss-me2">
+  <div class="sss-me2__wrap">
+    <p class="sss-me2__kicker">{{ section.settings.kicker }}</p>
+
+    <article class="sss-me2__card">
+      <header class="sss-me2__head">
+        
+        <h2 class="sss-me2__title">{{ section.settings.title }}</h2>
+        {% if section.settings.subtext != blank %}
+          <p class="sss-me2__sub">{{ section.settings.subtext }}</p>
+        {% endif %}
+      </header>
+
+      <div class="sss-me2__grid">
+
+        <!-- PRINTABLE -->
+        <section class="sss-me2__panel">
+          <div class="sss-me2__panelTop">
+            <span class="sss-me2__pill">{{ section.settings.printable_pill }}</span>
+          </div>
+
+          <div class="sss-me2__media">
+            {% if section.settings.printable_image != blank %}
+              {{ section.settings.printable_image | image_url: width: 1600 | image_tag: loading: 'lazy', alt: 'Printable preview' }}
+            {% endif %}
+          </div>
+
+          {% if section.settings.printable_note != blank %}
+            <p class="sss-me2__note">{{ section.settings.printable_note }}</p>
+          {% endif %}
+
+          <div class="sss-me2__btnWrap">
+            <div class="sss-me2__btnGrid">
+              {% if section.settings.dl_12th != blank %}
+                <a class="sss-me2__btn" href="{{ section.settings.dl_12th }}" target="_blank" rel="noopener">12th gen (2024)</a>
+              {% endif %}
+              {% if section.settings.dl_11th != blank %}
+                <a class="sss-me2__btn" href="{{ section.settings.dl_11th }}" target="_blank" rel="noopener">11th gen (2021)</a>
+              {% endif %}
+              {% if section.settings.dl_6in != blank %}
+                <a class="sss-me2__btn" href="{{ section.settings.dl_6in }}" target="_blank" rel="noopener">6" (2022/2024)</a>
+              {% endif %}
+              {% if section.settings.dl_10th != blank %}
+                <a class="sss-me2__btn" href="{{ section.settings.dl_10th }}" target="_blank" rel="noopener">10th gen (2018)</a>
+              {% endif %}
+
+              {% if section.settings.dl_12th == blank and section.settings.dl_11th == blank and section.settings.dl_6in == blank and section.settings.dl_10th == blank %}
+                <button class="sss-me2__btn" disabled>add download links</button>
+              {% endif %}
+            </div>
+          </div>
+        </section>
+
+        <!-- PHYSICAL -->
+        <section class="sss-me2__panel">
+          <div class="sss-me2__panelTop">
+            <span class="sss-me2__pill">{{ section.settings.physical_pill }}</span>
+          </div>
+
+          <div class="sss-me2__media">
+            {% if section.settings.physical_image != blank %}
+              {{ section.settings.physical_image | image_url: width: 1600 | image_tag: loading: 'lazy', alt: 'Physical preview' }}
+            {% endif %}
+          </div>
+
+          {% if section.settings.physical_note != blank %}
+            <p class="sss-me2__note">{{ section.settings.physical_note }}</p>
+          {% endif %}
+
+          <div class="sss-me2__btnWrap">
+            <div class="sss-me2__btnGrid">
+              {% assign v12 = section.settings.v_12th | strip %}
+              {% assign v11 = section.settings.v_11th | strip %}
+              {% assign v6  = section.settings.v_6in  | strip %}
+              {% assign v10 = section.settings.v_10th | strip %}
+
+              {% assign show12 = 'false' %}
+              {% assign show11 = 'false' %}
+              {% assign show6  = 'false' %}
+              {% assign show10 = 'false' %}
+
+              {% if v12 != blank and v12 != '0' %}{% assign show12 = 'true' %}{% endif %}
+              {% if v11 != blank and v11 != '0' %}{% assign show11 = 'true' %}{% endif %}
+              {% if v6  != blank and v6  != '0' %}{% assign show6  = 'true' %}{% endif %}
+              {% if v10 != blank and v10 != '0' %}{% assign show10 = 'true' %}{% endif %}
+
+              {% if show12 == 'true' %}
+  <button class="sss-me2__btn" onclick="sssAdd({{ v12 | escape }}, '{{ section.settings.product_name }} · 12th gen')">
+    12th gen (2024) · $9
+  </button>
+{% endif %}
+
+{% if show11 == 'true' %}
+  <button class="sss-me2__btn" onclick="sssAdd({{ v11 | escape }}, '{{ section.settings.product_name }} · 11th gen')">
+    11th gen (2021) · $9
+  </button>
+{% endif %}
+
+{% if show6 == 'true' %}
+  <button class="sss-me2__btn" onclick="sssAdd({{ v6 | escape }}, '{{ section.settings.product_name }} · 6 inch')">
+    6" (2022/2024) · $9
+  </button>
+{% endif %}
+
+{% if show10 == 'true' %}
+  <button class="sss-me2__btn" onclick="sssAdd({{ v10 | escape }}, '{{ section.settings.product_name }} · 10th gen')">
+    10th gen (2018) · $9
+  </button>
+{% endif %}
+
+        
+
+              {% unless show12 == 'true' or show11 == 'true' or show6 == 'true' or show10 == 'true' %}
+                <button class="sss-me2__btn" disabled>add variant ids</button>
+              {% endunless %}
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </article>
+  </div>
+</section>
+
+<script>
+(function(){
+  if (document.getElementById('sssToast')) return;
+  const t = document.createElement('div');
+  t.id = 'sssToast';
+  t.className = 'sss-toast';
+  document.body.appendChild(t);
+})();
+
+function sssToast(msg, sub){
+  const el = document.getElementById('sssToast');
+  if (!el) return;
+  el.innerHTML = sub ? (msg + '<br><span>' + sub + '</span>') : msg;
+  el.classList.add('show');
+  setTimeout(function(){ el.classList.remove('show'); }, 2400);
+}
+
+function sssAdd(variantId, label){
+  fetch('/cart/add.js', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ id: Number(variantId), quantity: 1 })
+  })
+  .then(function(res){
+    if (res.ok){
+      sssToast('added to cart 🤍', label);
+      return;
+    }
+    return res.json().then(function(data){
+      var msg = "couldn't add";
+      if (data && (data.description || data.message)) msg = data.description || data.message;
+      sssToast('not added 🖤', msg);
+    }).catch(function(){
+      sssToast('not added 🖤', "couldn't add");
+    });
+  })
+  .catch(function(){
+    sssToast('not added 🖤', 'network error');
+  });
+}
+</script>
+
+{% schema %}
+{
+  "name": "sss exclusive",
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "kicker", "default": "society member exclusive" },
+    { 
+  "type": "text", 
+  "id": "product_name", 
+  "label": "product name (for cart popup)", 
+  "default": "january insert" 
+},
+
+    { "type": "text", "id": "title", "label": "title", "default": "choose your size" },
+    { "type": "textarea", "id": "subtext", "label": "subtext", "default": "printable is included with membership. physical is optional if you want it shipped." },
+
+    { "type": "text", "id": "printable_pill", "label": "printable pill", "default": "🖨️ printable · included" },
+    { "type": "image_picker", "id": "printable_image", "label": "printable image" },
+    { "type": "text", "id": "printable_note", "label": "printable note", "default": "click your kindle size to download." },
+    { "type": "url", "id": "dl_12th", "label": "download — 12th gen" },
+    { "type": "url", "id": "dl_11th", "label": "download — 11th gen" },
+    { "type": "url", "id": "dl_6in", "label": "download — 6 inch" },
+    { "type": "url", "id": "dl_10th", "label": "download — 10th gen" },
+
+    { "type": "text", "id": "physical_pill", "label": "physical pill", "default": "📬 physical · optional" },
+    { "type": "image_picker", "id": "physical_image", "label": "physical image" },
+    { "type": "text", "id": "physical_note", "label": "physical note", "default": "add your size to cart." },
+    { "type": "text", "id": "v_12th", "label": "variant id — 12th gen", "default": "0" },
+    { "type": "text", "id": "v_11th", "label": "variant id — 11th gen", "default": "0" },
+    { "type": "text", "id": "v_6in", "label": "variant id — 6 inch", "default": "0" },
+    { "type": "text", "id": "v_10th", "label": "variant id — 10th gen", "default": "0" }
+  ],
+  "presets": [
+    { "name": "sss exclusive" }
+  ]
+}
+{% endschema %}

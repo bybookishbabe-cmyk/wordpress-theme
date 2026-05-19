@@ -1,0 +1,1462 @@
+{{ 'template-collection.css' | asset_url | stylesheet_tag }}
+{{ 'component-card.css' | asset_url | stylesheet_tag }}
+{{ 'component-price.css' | asset_url | stylesheet_tag }}
+
+{% if section.settings.image_shape == 'blob' %}
+  {{ 'mask-blobs.css' | asset_url | stylesheet_tag }}
+{%- endif -%}
+
+{%- unless section.settings.quick_add == 'none' -%}
+  {{ 'quick-add.css' | asset_url | stylesheet_tag }}
+{%- endunless -%}
+
+{%- if section.settings.quick_add == 'standard' -%}
+  <script src="{{ 'quick-add.js' | asset_url }}" defer="defer"></script>
+  <script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
+{%- endif -%}
+
+{%- if section.settings.quick_add == 'bulk' -%}
+  <script src="{{ 'quick-add-bulk.js' | asset_url }}" defer="defer"></script>
+  <script src="{{ 'quantity-popover.js' | asset_url }}" defer="defer"></script>
+  <script src="{{ 'price-per-item.js' | asset_url }}" defer="defer"></script>
+  <script src="{{ 'quick-order-list.js' | asset_url }}" defer="defer"></script>
+{%- endif -%}
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  .collection-seasonal {
+    position: relative;
+    margin: 0 auto 2.4rem;
+    padding: 2rem 1.4rem 1.6rem;
+    border-radius: 28px;
+    border: 1px solid rgba(255, 179, 216, 0.22);
+    background:
+      radial-gradient(circle at 18% 22%, rgba(255, 194, 224, 0.16), transparent 32%),
+      radial-gradient(circle at 84% 28%, rgba(205, 255, 216, 0.09), transparent 28%),
+      linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015));
+    overflow: hidden;
+    color: rgb(var(--color-foreground));
+    box-shadow:
+      0 0 0 1px rgba(255, 154, 206, 0.08),
+      0 0 44px rgba(255, 126, 196, 0.08);
+  }
+
+  .collection-seasonal--spring {
+    background:
+      radial-gradient(circle at 14% 20%, rgba(255, 199, 223, 0.22), transparent 34%),
+      radial-gradient(circle at 78% 24%, rgba(207, 255, 214, 0.14), transparent 30%),
+      radial-gradient(circle at 84% 76%, rgba(255, 241, 184, 0.08), transparent 24%),
+      linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015));
+  }
+
+  .collection-seasonal--summer {
+    background:
+      radial-gradient(circle at 18% 18%, rgba(255, 221, 159, 0.2), transparent 34%),
+      radial-gradient(circle at 82% 24%, rgba(255, 183, 120, 0.13), transparent 26%),
+      linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015));
+  }
+
+  .collection-seasonal--fall,
+  .collection-seasonal--autumn {
+    background:
+      radial-gradient(circle at 14% 22%, rgba(209, 111, 57, 0.22), transparent 34%),
+      radial-gradient(circle at 80% 28%, rgba(255, 193, 113, 0.11), transparent 26%),
+      linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015));
+  }
+
+  .collection-seasonal--winter {
+    background:
+      radial-gradient(circle at 16% 18%, rgba(190, 220, 255, 0.18), transparent 34%),
+      radial-gradient(circle at 82% 26%, rgba(223, 234, 255, 0.1), transparent 28%),
+      linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015));
+  }
+
+  .collection-seasonal__float {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .collection-seasonal__float span {
+    position: absolute;
+    opacity: 0.22;
+    animation: collectionSeasonFloat 8s ease-in-out infinite;
+  }
+
+  .collection-seasonal__float span:nth-child(1) { top: 18px; left: 20px; font-size: 1.4rem; animation-delay: 0s; }
+  .collection-seasonal__float span:nth-child(2) { top: 26px; right: 56px; font-size: 1.15rem; animation-delay: 1.4s; }
+  .collection-seasonal__float span:nth-child(3) { bottom: 18px; left: 18%; font-size: 1.05rem; animation-delay: 2.3s; }
+  .collection-seasonal__float span:nth-child(4) { bottom: 22px; right: 14%; font-size: 1.25rem; animation-delay: 3.1s; }
+  .collection-seasonal__float span:nth-child(5) { top: 48%; left: 52%; font-size: 0.95rem; animation-delay: 1.8s; }
+
+  .collection-seasonal__inner {
+    position: relative;
+    z-index: 1;
+    max-width: 48rem;
+  }
+
+  .collection-seasonal__kicker {
+    margin: 0 0 0.55rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.62);
+  }
+
+  .collection-seasonal__title {
+    margin: 0;
+    font-size: clamp(2.3rem, 5vw, 4rem);
+    line-height: 0.94;
+    text-transform: lowercase;
+  }
+
+  .collection-seasonal__title em {
+    font-style: normal;
+    color: #ffc7df;
+  }
+
+  .collection-seasonal__sub {
+    margin: 0.9rem 0 0;
+    max-width: 42rem;
+    color: rgba(255,255,255,0.72);
+    line-height: 1.6;
+  }
+
+  .collection-seasonal__cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1.1rem;
+    padding: 0.9rem 1.35rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 183, 220, 0.3);
+    background: rgba(255, 188, 225, 0.08);
+    color: #ffd0e7;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+  }
+
+  .collection-seasonal__cta:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 188, 225, 0.13);
+    border-color: rgba(255, 198, 228, 0.45);
+  }
+
+  .collection-seasonal__row {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.4rem;
+    overflow-x: auto;
+    overflow-y: visible;
+    padding-bottom: 0.25rem;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .collection-seasonal__row::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  .collection-seasonal__row::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.16);
+    border-radius: 999px;
+  }
+
+  .collection-seasonal__card {
+    flex: 0 0 calc(25% - 0.75rem);
+    min-width: 190px;
+    text-decoration: none;
+    color: inherit;
+    scroll-snap-align: start;
+  }
+
+  .collection-seasonal__cardImage {
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.03);
+    box-shadow: 0 18px 30px rgba(0,0,0,0.22);
+  }
+
+  .collection-seasonal__cardImage img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: auto;
+    object-fit: contain;
+    display: block;
+  }
+
+  .collection-seasonal__cardTitle {
+    margin: 0.75rem 0 0;
+    font-size: 0.98rem;
+    line-height: 1.35;
+    color: rgba(255,255,255,0.9);
+  }
+
+  .collection-seasonal__cardPrice {
+    margin-top: 0.35rem;
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.74);
+  }
+
+  .collection-style-nav {
+    margin: 0 auto 2.4rem;
+  }
+
+  .collection-style-nav__head {
+    margin-bottom: 1.15rem;
+  }
+
+  .collection-style-nav__kicker {
+    margin: 0 0 0.55rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.56);
+  }
+
+  .collection-style-nav__title {
+    margin: 0;
+    font-size: clamp(2rem, 4vw, 3.4rem);
+    line-height: 0.96;
+    text-transform: lowercase;
+  }
+
+  .collection-style-nav__sub {
+    margin: 0.8rem 0 0;
+    max-width: 42rem;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.58;
+  }
+
+  .collection-style-nav__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    max-height: calc((210px * 2) + 1rem + 0.5rem);
+    overflow-y: auto;
+    padding-right: 0.35rem;
+    scrollbar-color: rgba(255, 183, 220, 0.42) rgba(255,255,255,0.06);
+  }
+
+  .collection-style-nav__tile {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 210px;
+    padding: 1.15rem;
+    border-radius: 24px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)),
+      rgba(11, 11, 11, 0.72);
+    text-decoration: none;
+    color: inherit;
+    overflow: hidden;
+    position: relative;
+    transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  }
+
+  .collection-style-nav__tile:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 183, 220, 0.24);
+    box-shadow: 0 0 32px rgba(255, 126, 196, 0.08);
+  }
+
+  .collection-style-nav__tileImage {
+    position: absolute;
+    inset: 0;
+    opacity: 0.88;
+  }
+
+  .collection-style-nav__tileImage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .collection-style-nav__tileOverlay {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgba(0,0,0,0.01), rgba(0,0,0,0.09) 62%, rgba(0,0,0,0.22)),
+      linear-gradient(135deg, rgba(255, 188, 225, 0.03), transparent 45%);
+  }
+
+  .collection-style-nav__tileContent {
+    position: relative;
+    z-index: 1;
+  }
+
+  .collection-style-nav__tileTitle {
+    margin: 0;
+    font-size: 1.3rem;
+    line-height: 1.05;
+    text-transform: lowercase;
+  }
+
+  .collection-style-nav__tileMeta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    margin: 0.7rem 0 0;
+    padding: 0.72rem 1rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 183, 220, 0.32);
+    background: rgba(239, 137, 191, 0.16);
+    color: #ffd0e7;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+  }
+
+  .collection-style-nav__tile:hover .collection-style-nav__tileMeta {
+    background: rgba(239, 137, 191, 0.24);
+    border-color: rgba(255, 203, 230, 0.48);
+    transform: translateY(-1px);
+  }
+
+  .collection-style-nav__grid::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .collection-style-nav__grid::-webkit-scrollbar-thumb {
+    background: rgba(255, 183, 220, 0.42);
+    border-radius: 999px;
+  }
+
+  .collection-style-nav__grid::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.06);
+    border-radius: 999px;
+  }
+
+  .collection-products-preview {
+    margin-top: 1.4rem;
+  }
+
+  .collection-products-preview__head {
+    margin-bottom: 1.15rem;
+  }
+
+  .collection-products-preview__kicker {
+    margin: 0 0 0.55rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.56);
+  }
+
+  .collection-products-preview__title {
+    margin: 0;
+    font-size: clamp(2rem, 4vw, 3.3rem);
+    line-height: 0.96;
+    text-transform: lowercase;
+  }
+
+  .collection-products-preview__sub {
+    margin: 0.8rem 0 0;
+    max-width: 42rem;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.58;
+  }
+
+  .collection-formatGroups {
+    display: grid;
+    gap: 2rem;
+  }
+
+  .collection-formatGroup {
+    padding: 1.2rem;
+    border-radius: 24px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)),
+      rgba(11, 11, 11, 0.72);
+  }
+
+  .collection-formatGroup--printable {
+    border-color: rgba(255, 183, 220, 0.24);
+    background:
+      radial-gradient(circle at 18% 18%, rgba(255, 197, 225, 0.12), transparent 32%),
+      linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)),
+      rgba(11, 11, 11, 0.76);
+    box-shadow:
+      0 0 0 1px rgba(255, 161, 210, 0.05),
+      0 0 34px rgba(255, 133, 199, 0.06);
+  }
+
+  .collection-formatGroup__head {
+    margin-bottom: 1rem;
+  }
+
+  .collection-formatGroup__kicker {
+    margin: 0 0 0.45rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.56);
+  }
+
+  .collection-formatGroup__title {
+    margin: 0;
+    font-size: clamp(1.5rem, 2.8vw, 2.2rem);
+    line-height: 0.96;
+    text-transform: lowercase;
+  }
+
+  .collection-formatGroup__sub {
+    margin: 0.6rem 0 0;
+    color: rgba(255,255,255,0.68);
+    line-height: 1.55;
+    max-width: 42rem;
+  }
+
+  @keyframes collectionSeasonFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.16; }
+    50% { transform: translateY(8px) rotate(4deg); opacity: 0.3; }
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .collection-seasonal {
+      margin-bottom: 1.8rem;
+      padding: 1.45rem 1rem 1.2rem;
+      border-radius: 22px;
+    }
+
+    .collection-seasonal__title {
+      font-size: 2.1rem;
+    }
+
+    .collection-seasonal__sub {
+      font-size: 0.95rem;
+    }
+
+    .collection-seasonal__row {
+      gap: 0.8rem;
+    }
+
+    .collection-seasonal__card {
+      flex-basis: 62%;
+      min-width: 62%;
+    }
+
+    .collection-style-nav__grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 0.85rem;
+      max-height: calc((170px * 4) + (0.85rem * 3) + 0.5rem);
+    }
+
+    .collection-style-nav__tile {
+      min-height: 170px;
+      padding: 0.95rem;
+      border-radius: 20px;
+    }
+
+    .collection-formatGroup {
+      padding: 1rem 0.85rem;
+      border-radius: 20px;
+    }
+
+  }
+{%- endstyle -%}
+
+<div class="section-{{ section.id }}-padding gradient color-{{ section.settings.color_scheme }}">
+  {%- paginate collection.products by section.settings.products_per_page -%}
+    {%- assign seasonal_collection = collections[section.settings.seasonal_collection] -%}
+    {%- assign show_auto_seasonal_band = false -%}
+    {%- assign collection_handle_downcase = collection.handle | downcase -%}
+    {%- assign collection_title_downcase = collection.title | downcase -%}
+    {%- assign printable_only_collection = false -%}
+    {%- assign physical_only_collection = false -%}
+    {%- assign is_physical_insert_collection = false -%}
+    {%- assign is_base_insert_collection = false -%}
+    {%- assign is_base_printable_insert_collection = false -%}
+    {%- assign is_insert_family_collection = false -%}
+    {%- if collection_handle_downcase contains 'physical'
+      or collection_handle_downcase contains 'printed'
+      or collection_handle_downcase contains 'shipped'
+      or collection_title_downcase contains 'physical'
+      or collection_title_downcase contains 'printed'
+      or collection_title_downcase contains 'shipped' -%}
+      {%- assign is_physical_insert_collection = true -%}
+    {%- endif -%}
+    {%- if collection_handle_downcase contains 'printable'
+      or collection_handle_downcase contains 'kindle'
+      or collection_title_downcase contains 'insert' -%}
+      {%- assign is_insert_family_collection = true -%}
+    {%- endif -%}
+    {%- if collection.all_tags contains 'Printable' -%}
+      {%- assign is_insert_family_collection = true -%}
+    {%- endif -%}
+    {%- if collection.all_tags contains 'Printed & Shipped' -%}
+      {%- assign is_insert_family_collection = true -%}
+    {%- endif -%}
+    {%- if collection.all_tags contains 'Printable' and is_insert_family_collection -%}
+      {%- assign printable_only_collection = true -%}
+    {%- endif -%}
+    {%- if collection.all_tags contains 'Printed & Shipped' and is_physical_insert_collection -%}
+      {%- assign physical_only_collection = true -%}
+    {%- endif -%}
+    {%- if collection_handle_downcase == 'printable-kindle-inserts'
+      or collection_handle_downcase == 'printable-kindle-inserts-1'
+      or collection_handle_downcase == 'kindle-inserts'
+      or collection_title_downcase == 'printable kindle inserts' -%}
+      {%- assign is_base_insert_collection = true -%}
+      {%- assign is_base_printable_insert_collection = true -%}
+    {%- endif -%}
+    {%- if collection_handle_downcase == 'physical-kindle-inserts'
+      or collection_handle_downcase == 'printed-kindle-inserts' -%}
+      {%- assign is_base_insert_collection = true -%}
+    {%- endif -%}
+    {%- if collection_title_downcase == 'physical kindle inserts' -%}
+      {%- assign is_base_insert_collection = true -%}
+    {%- endif -%}
+    {%- if is_physical_insert_collection -%}
+      {%- assign show_auto_seasonal_band = false -%}
+    {%- endif -%}
+    {%- assign show_seasonal_band = section.settings.show_seasonal_band -%}
+    {%- if show_seasonal_band != true and show_auto_seasonal_band -%}
+      {%- assign show_seasonal_band = true -%}
+    {%- endif -%}
+    {%- unless is_base_printable_insert_collection -%}
+      {%- assign show_seasonal_band = false -%}
+    {%- endunless -%}
+    {%- if is_base_insert_collection -%}
+      {%- assign show_seasonal_band = false -%}
+      {%- assign seasonal_collection = blank -%}
+    {%- endif -%}
+    {%- if is_physical_insert_collection or physical_only_collection -%}
+      {%- assign show_seasonal_band = false -%}
+      {%- assign seasonal_collection = blank -%}
+    {%- endif -%}
+    {%- if seasonal_collection == blank and show_auto_seasonal_band -%}
+      {%- assign seasonal_collection = collection -%}
+    {%- endif -%}
+    {%- assign seasonal_collection_is_current = false -%}
+    {%- if seasonal_collection != blank and seasonal_collection.handle == collection.handle -%}
+      {%- assign seasonal_collection_is_current = true -%}
+    {%- endif -%}
+    {%- assign seasonal_name_downcase = section.settings.season_name | downcase -%}
+    {%- assign seasonal_theme_class = '' -%}
+    {%- if seasonal_name_downcase contains 'spring' -%}
+      {%- assign seasonal_theme_class = ' collection-seasonal--spring' -%}
+    {%- elsif seasonal_name_downcase contains 'summer' -%}
+      {%- assign seasonal_theme_class = ' collection-seasonal--summer' -%}
+    {%- elsif seasonal_name_downcase contains 'fall' or seasonal_name_downcase contains 'autumn' -%}
+      {%- assign seasonal_theme_class = ' collection-seasonal--fall' -%}
+    {%- elsif seasonal_name_downcase contains 'winter' -%}
+      {%- assign seasonal_theme_class = ' collection-seasonal--winter' -%}
+    {%- endif -%}
+    {%- assign style_collection_1 = collections[section.settings.style_collection_1] -%}
+    {%- assign style_collection_2 = collections[section.settings.style_collection_2] -%}
+    {%- assign style_collection_3 = collections[section.settings.style_collection_3] -%}
+    {%- assign style_collection_4 = collections[section.settings.style_collection_4] -%}
+    {%- assign style_collection_5 = collections[section.settings.style_collection_5] -%}
+    {%- assign style_collection_6 = collections[section.settings.style_collection_6] -%}
+    {%- assign style_collection_7 = collections[section.settings.style_collection_7] -%}
+    {%- assign style_collection_8 = collections[section.settings.style_collection_8] -%}
+    {%- assign has_style_collections = false -%}
+    {%- if style_collection_1 != blank
+      or style_collection_2 != blank
+      or style_collection_3 != blank
+      or style_collection_4 != blank
+      or style_collection_5 != blank
+      or style_collection_6 != blank
+      or style_collection_7 != blank
+      or style_collection_8 != blank -%}
+      {%- assign has_style_collections = true -%}
+    {%- endif -%}
+    {% comment %} Sort is the first tabbable element when filter type is vertical {% endcomment %}
+    {%- if section.settings.enable_sorting and section.settings.filter_type == 'vertical' -%}
+      <facet-filters-form class="facets facets-vertical-sort page-width small-hide">
+        <form class="facets-vertical-form" id="FacetSortForm">
+          <div class="facet-filters sorting caption">
+            <div class="facet-filters__field">
+              <h2 class="facet-filters__label caption-large text-body">
+                <label for="SortBy">{{ 'products.facets.sort_by_label' | t }}</label>
+              </h2>
+              <div class="select">
+                {%- assign sort_by = collection.sort_by | default: collection.default_sort_by -%}
+                <select
+                  name="sort_by"
+                  class="facet-filters__sort select__select caption-large"
+                  id="SortBy"
+                  aria-describedby="a11y-refresh-page-message"
+                >
+                  {%- for option in collection.sort_options -%}
+                    <option
+                      value="{{ option.value | escape }}"
+                      {% if option.value == sort_by %}
+                        selected="selected"
+                      {% endif %}
+                    >
+                      {{ option.name | escape }}
+                    </option>
+                  {%- endfor -%}
+                </select>
+                <span class="svg-wrapper">
+                  {{- 'icon-caret.svg' | inline_asset_content -}}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="product-count-vertical light" role="status">
+            <h2 class="product-count__text text-body">
+              <span id="ProductCountDesktop">
+                {%- if collection.results_count -%}
+                  {{
+                    'templates.search.results_with_count'
+                    | t: terms: collection.terms, count: collection.results_count
+                  }}
+                {%- elsif collection.products_count == collection.all_products_count -%}
+                  {{ 'products.facets.product_count_simple' | t: count: collection.products_count }}
+                {%- else -%}
+                  {{
+                    'products.facets.product_count'
+                    | t: product_count: collection.products_count, count: collection.all_products_count
+                  }}
+                {%- endif -%}
+              </span>
+            </h2>
+            {%- render 'loading-spinner' -%}
+          </div>
+        </form>
+      </facet-filters-form>
+    {%- endif -%}
+
+    <div class="{% if section.settings.filter_type == 'vertical' %} facets-vertical page-width{% endif %}">
+      {%- assign show_native_collection_controls = false -%}
+      {%- if section.settings.filter_type != 'horizontal' -%}
+        {%- if section.settings.enable_filtering or section.settings.enable_sorting -%}
+          {%- assign show_native_collection_controls = true -%}
+        {%- endif -%}
+      {%- endif -%}
+
+      {%- if show_native_collection_controls -%}
+        {{ 'component-facets.css' | asset_url | stylesheet_tag }}
+        <script src="{{ 'facets.js' | asset_url }}" defer="defer"></script>
+      {%- endif -%}
+
+      {%- if show_native_collection_controls -%}
+        <aside
+          aria-labelledby="verticalTitle"
+          class="facets-wrapper{% unless section.settings.enable_filtering %} facets-wrapper--no-filters{% endunless %}{% if section.settings.filter_type != 'vertical' %} page-width{% endif %}"
+          id="main-collection-filters"
+          data-id="{{ section.id }}"
+        >
+          {% render 'facets',
+            results: collection,
+            enable_filtering: section.settings.enable_filtering,
+            enable_sorting: section.settings.enable_sorting,
+            filter_type: section.settings.filter_type,
+            paginate: paginate
+          %}
+        </aside>
+      {%- endif -%}
+
+      <div
+        class="product-grid-container"
+        id="ProductGridContainer"
+      >
+        {%- if show_seasonal_band and seasonal_collection != blank -%}
+            <div class="page-width">
+              <div class="collection-seasonal{{ seasonal_theme_class }}">
+                <div class="collection-seasonal__float" aria-hidden="true">
+                  <span>{{ section.settings.seasonal_emoji_one }}</span>
+                  <span>{{ section.settings.seasonal_emoji_two }}</span>
+                  <span>{{ section.settings.seasonal_emoji_three }}</span>
+                  <span>{{ section.settings.seasonal_emoji_four }}</span>
+                  <span>{{ section.settings.seasonal_emoji_five }}</span>
+                </div>
+                <div class="collection-seasonal__inner">
+                  <p class="collection-seasonal__kicker">{{ section.settings.seasonal_kicker }}</p>
+                  <h2 class="collection-seasonal__title">inserts for <em>{{ section.settings.season_name }}</em></h2>
+                  {%- if section.settings.seasonal_subtitle != blank -%}
+                    <p class="collection-seasonal__sub">{{ section.settings.seasonal_subtitle }}</p>
+                  {%- endif -%}
+                  {%- unless seasonal_collection_is_current -%}
+                    <a class="collection-seasonal__cta" href="{{ seasonal_collection.url }}">
+                      {{ section.settings.seasonal_button | default: 'shop the seasonal shelf' }}
+                    </a>
+                  {%- endunless -%}
+                </div>
+                {%- if seasonal_collection.products_count > 0 and seasonal_collection_is_current == false -%}
+                  <div class="collection-seasonal__row">
+                    {%- assign seasonal_preview_count = 0 -%}
+                    {%- for product in seasonal_collection.products -%}
+                      {%- if is_base_printable_insert_collection -%}
+                        {%- unless product.tags contains 'Printable' -%}
+                          {%- continue -%}
+                        {%- endunless -%}
+                      {%- endif -%}
+                      {%- if seasonal_preview_count >= 4 -%}
+                        {%- break -%}
+                      {%- endif -%}
+                      {%- assign seasonal_preview_count = seasonal_preview_count | plus: 1 -%}
+                      <a class="collection-seasonal__card" href="{{ product.url }}">
+                        <div class="collection-seasonal__cardImage">
+                          {%- if product.featured_image -%}
+                            {{ product.featured_image | image_url: width: 700 | image_tag: loading: 'lazy', alt: product.title }}
+                          {%- endif -%}
+                        </div>
+                        <p class="collection-seasonal__cardTitle">{{ product.title }}</p>
+                        <div class="collection-seasonal__cardPrice">
+                          {{ product.price | money }}
+                        </div>
+                      </a>
+                    {%- endfor -%}
+                  </div>
+                {%- endif -%}
+              </div>
+            </div>
+        {%- endif -%}
+
+        {%- if has_style_collections and is_base_insert_collection -%}
+          <div class="page-width">
+            <div class="collection-style-nav">
+              <div class="collection-style-nav__head">
+                <p class="collection-style-nav__kicker">{{ section.settings.style_kicker }}</p>
+                <h2 class="collection-style-nav__title">{{ section.settings.style_title }}</h2>
+                {%- if section.settings.style_subtitle != blank -%}
+                  <p class="collection-style-nav__sub">{{ section.settings.style_subtitle }}</p>
+                {%- endif -%}
+              </div>
+              <div class="collection-style-nav__grid">
+                {%- if style_collection_1 != blank -%}
+                  <a class="collection-style-nav__tile" href="{{ style_collection_1.url }}">
+                    {%- if style_collection_1.featured_image -%}
+                      <div class="collection-style-nav__tileImage">
+                        {{ style_collection_1.featured_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: style_collection_1.title }}
+                      </div>
+                      <div class="collection-style-nav__tileOverlay"></div>
+                    {%- endif -%}
+                    <div class="collection-style-nav__tileContent">
+                      <h3 class="collection-style-nav__tileTitle">{{ style_collection_1.title }}</h3>
+                      <p class="collection-style-nav__tileMeta">shop this style →</p>
+                    </div>
+                  </a>
+                {%- endif -%}
+                {%- if style_collection_2 != blank -%}
+                  <a class="collection-style-nav__tile" href="{{ style_collection_2.url }}">
+                    {%- if style_collection_2.featured_image -%}
+                      <div class="collection-style-nav__tileImage">
+                        {{ style_collection_2.featured_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: style_collection_2.title }}
+                      </div>
+                      <div class="collection-style-nav__tileOverlay"></div>
+                    {%- endif -%}
+                    <div class="collection-style-nav__tileContent">
+                      <h3 class="collection-style-nav__tileTitle">{{ style_collection_2.title }}</h3>
+                      <p class="collection-style-nav__tileMeta">shop this style →</p>
+                    </div>
+                  </a>
+                {%- endif -%}
+                {%- if style_collection_3 != blank -%}
+                  <a class="collection-style-nav__tile" href="{{ style_collection_3.url }}">
+                    {%- if style_collection_3.featured_image -%}
+                      <div class="collection-style-nav__tileImage">
+                        {{ style_collection_3.featured_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: style_collection_3.title }}
+                      </div>
+                      <div class="collection-style-nav__tileOverlay"></div>
+                    {%- endif -%}
+                    <div class="collection-style-nav__tileContent">
+                      <h3 class="collection-style-nav__tileTitle">{{ style_collection_3.title }}</h3>
+                      <p class="collection-style-nav__tileMeta">shop this style →</p>
+                    </div>
+                  </a>
+                {%- endif -%}
+                {%- if style_collection_4 != blank -%}
+                  <a class="collection-style-nav__tile" href="{{ style_collection_4.url }}">
+                    {%- if style_collection_4.featured_image -%}
+                      <div class="collection-style-nav__tileImage">
+                        {{ style_collection_4.featured_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: style_collection_4.title }}
+                      </div>
+                      <div class="collection-style-nav__tileOverlay"></div>
+                    {%- endif -%}
+                    <div class="collection-style-nav__tileContent">
+                      <h3 class="collection-style-nav__tileTitle">{{ style_collection_4.title }}</h3>
+                      <p class="collection-style-nav__tileMeta">shop this style →</p>
+                    </div>
+                  </a>
+                {%- endif -%}
+                {%- if style_collection_5 != blank -%}
+                  <a class="collection-style-nav__tile" href="{{ style_collection_5.url }}">
+                    {%- if style_collection_5.featured_image -%}
+                      <div class="collection-style-nav__tileImage">
+                        {{ style_collection_5.featured_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: style_collection_5.title }}
+                      </div>
+                      <div class="collection-style-nav__tileOverlay"></div>
+                    {%- endif -%}
+                    <div class="collection-style-nav__tileContent">
+                      <h3 class="collection-style-nav__tileTitle">{{ style_collection_5.title }}</h3>
+                      <p class="collection-style-nav__tileMeta">shop this style →</p>
+                    </div>
+                  </a>
+                {%- endif -%}
+                {%- if style_collection_6 != blank -%}
+                  <a class="collection-style-nav__tile" href="{{ style_collection_6.url }}">
+                    {%- if style_collection_6.featured_image -%}
+                      <div class="collection-style-nav__tileImage">
+                        {{ style_collection_6.featured_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: style_collection_6.title }}
+                      </div>
+                      <div class="collection-style-nav__tileOverlay"></div>
+                    {%- endif -%}
+                    <div class="collection-style-nav__tileContent">
+                      <h3 class="collection-style-nav__tileTitle">{{ style_collection_6.title }}</h3>
+                      <p class="collection-style-nav__tileMeta">shop this style →</p>
+                    </div>
+                  </a>
+                {%- endif -%}
+                {%- if style_collection_7 != blank -%}
+                  <a class="collection-style-nav__tile" href="{{ style_collection_7.url }}">
+                    {%- if style_collection_7.featured_image -%}
+                      <div class="collection-style-nav__tileImage">
+                        {{ style_collection_7.featured_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: style_collection_7.title }}
+                      </div>
+                      <div class="collection-style-nav__tileOverlay"></div>
+                    {%- endif -%}
+                    <div class="collection-style-nav__tileContent">
+                      <h3 class="collection-style-nav__tileTitle">{{ style_collection_7.title }}</h3>
+                      <p class="collection-style-nav__tileMeta">shop this style →</p>
+                    </div>
+                  </a>
+                {%- endif -%}
+                {%- if style_collection_8 != blank -%}
+                  <a class="collection-style-nav__tile" href="{{ style_collection_8.url }}">
+                    {%- if style_collection_8.featured_image -%}
+                      <div class="collection-style-nav__tileImage">
+                        {{ style_collection_8.featured_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: style_collection_8.title }}
+                      </div>
+                      <div class="collection-style-nav__tileOverlay"></div>
+                    {%- endif -%}
+                    <div class="collection-style-nav__tileContent">
+                      <h3 class="collection-style-nav__tileTitle">{{ style_collection_8.title }}</h3>
+                      <p class="collection-style-nav__tileMeta">shop this style →</p>
+                    </div>
+                  </a>
+                {%- endif -%}
+              </div>
+            </div>
+          </div>
+        {%- endif -%}
+
+        {%- if collection.products.size == 0 -%}
+          <div class="collection collection--empty page-width" id="product-grid" data-id="{{ section.id }}">
+            <div class="loading-overlay gradient"></div>
+            <div class="title-wrapper center">
+              <h2 class="title title--primary">
+                {{ 'sections.collection_template.empty' | t -}}
+                <br>
+                {{
+                  'sections.collection_template.use_fewer_filters_html'
+                  | t: link: collection.url, class: 'underlined-link link'
+                }}
+              </h2>
+            </div>
+          </div>
+        {%- else -%}
+          {%- if is_base_insert_collection -%}
+            <div class="collection-products-preview page-width">
+              <div class="collection-products-preview__head">
+                <p class="collection-products-preview__kicker">{{ section.settings.products_preview_kicker }}</p>
+                <h2 class="collection-products-preview__title">{{ section.settings.products_preview_title }}</h2>
+                {%- if section.settings.products_preview_subtitle != blank -%}
+                  <p class="collection-products-preview__sub">{{ section.settings.products_preview_subtitle }}</p>
+                {%- endif -%}
+              </div>
+              <div class="collection">
+                <div class="loading-overlay gradient"></div>
+                <ul
+                  id="product-grid"
+                  data-id="{{ section.id }}"
+                  class="
+                    grid product-grid grid--{{ section.settings.columns_mobile }}-col-tablet-down
+                    grid--{{ section.settings.columns_desktop }}-col-desktop
+                    {% if section.settings.quick_add == 'bulk' %} collection-quick-add-bulk{% endif %}
+                  "
+                >
+                  {% assign skip_card_product_styles = false %}
+                  {%- assign preview_count = 0 -%}
+                  {%- for product in collection.products -%}
+                    {%- if printable_only_collection -%}
+                      {%- unless product.tags contains 'Printable' -%}
+                        {%- continue -%}
+                      {%- endunless -%}
+                    {%- endif -%}
+                    {%- if physical_only_collection -%}
+                      {%- unless product.tags contains 'Printed & Shipped' -%}
+                        {%- continue -%}
+                      {%- endunless -%}
+                    {%- endif -%}
+                    {%- if preview_count >= 12 -%}
+                      {%- break -%}
+                    {%- endif -%}
+                    {% assign lazy_load = false %}
+                    {%- if preview_count > 1 -%}
+                      {%- assign lazy_load = true -%}
+                    {%- endif -%}
+                    <li class="grid__item">
+                      {% render 'card-product',
+                        card_product: product,
+                        media_aspect_ratio: section.settings.image_ratio,
+                        image_shape: section.settings.image_shape,
+                        show_secondary_image: section.settings.show_secondary_image,
+                        show_vendor: section.settings.show_vendor,
+                        show_rating: section.settings.show_rating,
+                        lazy_load: lazy_load,
+                        skip_styles: skip_card_product_styles,
+                        quick_add: section.settings.quick_add,
+                        section_id: section.id
+                      %}
+                    </li>
+                    {%- assign skip_card_product_styles = true -%}
+                    {%- assign preview_count = preview_count | plus: 1 -%}
+                  {%- endfor -%}
+                </ul>
+                {%- if paginate.pages > 1 -%}
+                  {% render 'pagination', paginate: paginate, anchor: '' %}
+                {%- endif -%}
+              </div>
+            </div>
+          {%- elsif is_insert_family_collection -%}
+            <div
+              class="collection{% if section.settings.filter_type != 'vertical' %} page-width{% endif %}"
+            >
+              <div class="loading-overlay gradient"></div>
+              {%- assign printable_count = 0 -%}
+              {%- assign physical_count = 0 -%}
+              {%- for product in collection.products -%}
+                {%- if product.tags contains 'Printable' -%}
+                  {%- assign printable_count = printable_count | plus: 1 -%}
+                {%- endif -%}
+                {%- if product.tags contains 'Printed & Shipped' -%}
+                  {%- assign physical_count = physical_count | plus: 1 -%}
+                {%- endif -%}
+              {%- endfor -%}
+              <div class="collection-formatGroups">
+                {%- if printable_count > 0 -%}
+                  <section class="collection-formatGroup collection-formatGroup--printable">
+                    <div class="collection-formatGroup__head">
+                      <p class="collection-formatGroup__kicker">format</p>
+                      <h2 class="collection-formatGroup__title">printable inserts</h2>
+                      <p class="collection-formatGroup__sub">instant download versions first, so the printable side is easiest to browse.</p>
+                    </div>
+                    <ul
+                      id="product-grid"
+                      data-id="{{ section.id }}"
+                      class="
+                        grid product-grid grid--{{ section.settings.columns_mobile }}-col-tablet-down
+                        grid--{{ section.settings.columns_desktop }}-col-desktop
+                        {% if section.settings.quick_add == 'bulk' %} collection-quick-add-bulk{% endif %}
+                      "
+                    >
+                      {% assign skip_card_product_styles = false %}
+                      {%- for product in collection.products -%}
+                        {%- unless product.tags contains 'Printable' -%}
+                          {%- continue -%}
+                        {%- endunless -%}
+                        {% assign lazy_load = false %}
+                        {%- if forloop.index > 2 -%}
+                          {%- assign lazy_load = true -%}
+                        {%- endif -%}
+                        <li class="grid__item">
+                          {% render 'card-product',
+                            card_product: product,
+                            media_aspect_ratio: section.settings.image_ratio,
+                            image_shape: section.settings.image_shape,
+                            show_secondary_image: section.settings.show_secondary_image,
+                            show_vendor: section.settings.show_vendor,
+                            show_rating: section.settings.show_rating,
+                            lazy_load: lazy_load,
+                            skip_styles: skip_card_product_styles,
+                            quick_add: section.settings.quick_add,
+                            section_id: section.id
+                          %}
+                        </li>
+                        {%- assign skip_card_product_styles = true -%}
+                      {%- endfor -%}
+                    </ul>
+                  </section>
+                {%- endif -%}
+
+                {%- if physical_count > 0 -%}
+                  <section class="collection-formatGroup">
+                    <div class="collection-formatGroup__head">
+                      <p class="collection-formatGroup__kicker">format</p>
+                      <h2 class="collection-formatGroup__title">printed &amp; shipped</h2>
+                      <p class="collection-formatGroup__sub">the physical versions grouped underneath, so both formats live together but stay easy to scan.</p>
+                    </div>
+                    <ul
+                      class="
+                        grid product-grid grid--{{ section.settings.columns_mobile }}-col-tablet-down
+                        grid--{{ section.settings.columns_desktop }}-col-desktop
+                        {% if section.settings.quick_add == 'bulk' %} collection-quick-add-bulk{% endif %}
+                      "
+                    >
+                      {% assign skip_card_product_styles = false %}
+                      {%- for product in collection.products -%}
+                        {%- unless product.tags contains 'Printed & Shipped' -%}
+                          {%- continue -%}
+                        {%- endunless -%}
+                        {% assign lazy_load = false %}
+                        {%- if forloop.index > 2 -%}
+                          {%- assign lazy_load = true -%}
+                        {%- endif -%}
+                        <li class="grid__item">
+                          {% render 'card-product',
+                            card_product: product,
+                            media_aspect_ratio: section.settings.image_ratio,
+                            image_shape: section.settings.image_shape,
+                            show_secondary_image: section.settings.show_secondary_image,
+                            show_vendor: section.settings.show_vendor,
+                            show_rating: section.settings.show_rating,
+                            lazy_load: lazy_load,
+                            skip_styles: skip_card_product_styles,
+                            quick_add: section.settings.quick_add,
+                            section_id: section.id
+                          %}
+                        </li>
+                        {%- assign skip_card_product_styles = true -%}
+                      {%- endfor -%}
+                    </ul>
+                  </section>
+                {%- endif -%}
+              </div>
+              {%- if paginate.pages > 1 -%}
+                {% render 'pagination', paginate: paginate, anchor: '' %}
+              {%- endif -%}
+            </div>
+          {%- else -%}
+            <div
+              class="collection{% if section.settings.filter_type != 'vertical' %} page-width{% endif %}"
+            >
+              <div class="loading-overlay gradient"></div>
+              <ul
+                id="product-grid"
+                data-id="{{ section.id }}"
+                class="
+                  grid product-grid grid--{{ section.settings.columns_mobile }}-col-tablet-down
+                  grid--{{ section.settings.columns_desktop }}-col-desktop
+                  {% if section.settings.quick_add == 'bulk' %} collection-quick-add-bulk{% endif %}
+                "
+              >
+                {% assign skip_card_product_styles = false %}
+                {%- for product in collection.products -%}
+                  {% assign lazy_load = false %}
+                  {%- if forloop.index > 2 -%}
+                    {%- assign lazy_load = true -%}
+                  {%- endif -%}
+                  <li class="grid__item">
+                    {% render 'card-product',
+                      card_product: product,
+                      media_aspect_ratio: section.settings.image_ratio,
+                      image_shape: section.settings.image_shape,
+                      show_secondary_image: section.settings.show_secondary_image,
+                      show_vendor: section.settings.show_vendor,
+                      show_rating: section.settings.show_rating,
+                      lazy_load: lazy_load,
+                      skip_styles: skip_card_product_styles,
+                      quick_add: section.settings.quick_add,
+                      section_id: section.id
+                    %}
+                  </li>
+                  {%- assign skip_card_product_styles = true -%}
+                {%- endfor -%}
+              </ul>
+              {%- if paginate.pages > 1 -%}
+                {% render 'pagination', paginate: paginate, anchor: '' %}
+              {%- endif -%}
+            </div>
+          {%- endif -%}
+        {%- endif -%}
+      </div>
+    </div>
+  {%- endpaginate -%}
+  {% if section.settings.image_shape == 'arch' %}
+    {{ 'mask-arch.svg' | inline_asset_content }}
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.main-collection-product-grid.name",
+  "class": "section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "seasonal band"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_seasonal_band",
+      "default": false,
+      "label": "show seasonal band"
+    },
+    {
+      "type": "collection",
+      "id": "seasonal_collection",
+      "label": "seasonal collection"
+    },
+    {
+      "type": "text",
+      "id": "seasonal_kicker",
+      "default": "seasonal vibes",
+      "label": "seasonal kicker"
+    },
+    {
+      "type": "text",
+      "id": "season_name",
+      "default": "spring",
+      "label": "season name"
+    },
+    {
+      "type": "text",
+      "id": "seasonal_subtitle",
+      "default": "fresh flowers, soft little details, and inserts that make your kindle feel like spring on your nightstand.",
+      "label": "seasonal subtitle"
+    },
+    {
+      "type": "text",
+      "id": "seasonal_button",
+      "default": "shop the spring shelf",
+      "label": "seasonal button"
+    },
+    {
+      "type": "header",
+      "content": "shop by style"
+    },
+    {
+      "type": "text",
+      "id": "style_kicker",
+      "default": "shop by style",
+      "label": "style kicker"
+    },
+    {
+      "type": "text",
+      "id": "style_title",
+      "default": "find your aesthetic",
+      "label": "style title"
+    },
+    {
+      "type": "text",
+      "id": "style_subtitle",
+      "default": "fictional affairs, somewhere in between, and the collections that give each mood its own space.",
+      "label": "style subtitle"
+    },
+    {
+      "type": "collection",
+      "id": "style_collection_1",
+      "label": "style collection 1"
+    },
+    {
+      "type": "collection",
+      "id": "style_collection_2",
+      "label": "style collection 2"
+    },
+    {
+      "type": "collection",
+      "id": "style_collection_3",
+      "label": "style collection 3"
+    },
+    {
+      "type": "collection",
+      "id": "style_collection_4",
+      "label": "style collection 4"
+    },
+    {
+      "type": "collection",
+      "id": "style_collection_5",
+      "label": "style collection 5"
+    },
+    {
+      "type": "collection",
+      "id": "style_collection_6",
+      "label": "style collection 6"
+    },
+    {
+      "type": "collection",
+      "id": "style_collection_7",
+      "label": "style collection 7"
+    },
+    {
+      "type": "collection",
+      "id": "style_collection_8",
+      "label": "style collection 8"
+    },
+    {
+      "type": "text",
+      "id": "products_preview_kicker",
+      "default": "shop all",
+      "label": "products preview kicker"
+    },
+    {
+      "type": "text",
+      "id": "products_preview_title",
+      "default": "browse the full insert wall",
+      "label": "products preview title"
+    },
+    {
+      "type": "text",
+      "id": "products_preview_subtitle",
+      "default": "a quick look at the first twelve inserts, then open the full collection when you want the rest.",
+      "label": "products preview subtitle"
+    },
+    {
+      "type": "text",
+      "id": "seasonal_emoji_one",
+      "default": "🌸",
+      "label": "seasonal emoji 1"
+    },
+    {
+      "type": "text",
+      "id": "seasonal_emoji_two",
+      "default": "🌷",
+      "label": "seasonal emoji 2"
+    },
+    {
+      "type": "text",
+      "id": "seasonal_emoji_three",
+      "default": "🌼",
+      "label": "seasonal emoji 3"
+    },
+    {
+      "type": "text",
+      "id": "seasonal_emoji_four",
+      "default": "🪻",
+      "label": "seasonal emoji 4"
+    },
+    {
+      "type": "text",
+      "id": "seasonal_emoji_five",
+      "default": "🍃",
+      "label": "seasonal emoji 5"
+    },
+    {
+      "type": "range",
+      "id": "products_per_page",
+      "min": 8,
+      "max": 36,
+      "step": 4,
+      "default": 16,
+      "label": "t:sections.main-collection-product-grid.settings.products_per_page.label"
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "default": 4,
+      "label": "t:sections.main-collection-product-grid.settings.columns_desktop.label"
+    },
+    {
+      "type": "select",
+      "id": "columns_mobile",
+      "default": "2",
+      "label": "t:sections.main-collection-product-grid.settings.columns_mobile.label",
+      "options": [
+        {
+          "value": "1",
+          "label": "t:sections.main-collection-product-grid.settings.columns_mobile.options__1.label"
+        },
+        {
+          "value": "2",
+          "label": "t:sections.main-collection-product-grid.settings.columns_mobile.options__2.label"
+        }
+      ]
+    },    
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "info": "t:sections.all.colors.has_cards_info",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.main-collection-product-grid.settings.header__3.content"
+    },
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "options": [
+        {
+          "value": "adapt",
+          "label": "t:sections.main-collection-product-grid.settings.image_ratio.options__1.label"
+        },
+        {
+          "value": "portrait",
+          "label": "t:sections.main-collection-product-grid.settings.image_ratio.options__2.label"
+        },
+        {
+          "value": "square",
+          "label": "t:sections.main-collection-product-grid.settings.image_ratio.options__3.label"
+        }
+      ],
+      "default": "adapt",
+      "label": "t:sections.main-collection-product-grid.settings.image_ratio.label"
+    },
+    {
+      "type": "select",
+      "id": "image_shape",
+      "options": [
+        {
+          "value": "default",
+          "label": "t:sections.all.image_shape.options__1.label"
+        },
+        {
+          "value": "arch",
+          "label": "t:sections.all.image_shape.options__2.label"
+        },
+        {
+          "value": "blob",
+          "label": "t:sections.all.image_shape.options__3.label"
+        },
+        {
+          "value": "chevronleft",
+          "label": "t:sections.all.image_shape.options__4.label"
+        },
+        {
+          "value": "chevronright",
+          "label": "t:sections.all.image_shape.options__5.label"
+        },
+        {
+          "value": "diamond",
+          "label": "t:sections.all.image_shape.options__6.label"
+        },
+        {
+          "value": "parallelogram",
+          "label": "t:sections.all.image_shape.options__7.label"
+        },
+        {
+          "value": "round",
+          "label": "t:sections.all.image_shape.options__8.label"
+        }
+      ],
+      "default": "default",
+      "label": "t:sections.all.image_shape.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_secondary_image",
+      "default": false,
+      "label": "t:sections.main-collection-product-grid.settings.show_secondary_image.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "default": false,
+      "label": "t:sections.main-collection-product-grid.settings.show_vendor.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_rating",
+      "default": false,
+      "label": "t:sections.main-collection-product-grid.settings.show_rating.label",
+      "info": "t:sections.main-collection-product-grid.settings.show_rating.info"
+    },
+    {
+      "type": "select",
+      "id": "quick_add",
+      "default": "none",
+      "label": "t:sections.main-collection-product-grid.settings.quick_add.label",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:sections.main-collection-product-grid.settings.quick_add.options.option_1"
+        },
+        {
+          "value": "standard",
+          "label": "t:sections.main-collection-product-grid.settings.quick_add.options.option_2"
+        },
+        {
+          "value": "bulk",
+          "label": "t:sections.main-collection-product-grid.settings.quick_add.options.option_3"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:sections.main-collection-product-grid.settings.header__1.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_filtering",
+      "default": true,
+      "label": "t:sections.main-collection-product-grid.settings.enable_filtering.label",
+      "info": "t:sections.main-collection-product-grid.settings.enable_filtering.info"
+    },
+    {
+      "type": "select",
+      "id": "filter_type",
+      "options": [
+        {
+          "value": "horizontal",
+          "label": "t:sections.main-collection-product-grid.settings.filter_type.options__1.label"
+        },
+        {
+          "value": "vertical",
+          "label": "t:sections.main-collection-product-grid.settings.filter_type.options__2.label"
+        },
+        {
+          "value": "drawer",
+          "label": "t:sections.main-collection-product-grid.settings.filter_type.options__3.label"
+        }
+      ],
+      "default": "horizontal",
+      "label": "t:sections.main-collection-product-grid.settings.filter_type.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_sorting",
+      "default": true,
+      "label": "t:sections.main-collection-product-grid.settings.enable_sorting.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 36
+    }
+  ]
+}
+{% endschema %}

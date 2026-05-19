@@ -1,0 +1,144 @@
+<section class="sss-privacy" id="sss-privacy-{{ section.id }}">
+  <div class="sss-privacy__wrap page-width">
+    <header class="sss-privacy__head">
+      <p class="sss-privacy__kicker">privacy policy</p>
+      <h1 class="sss-privacy__title">how bybookishbabe handles your information</h1>
+      <p class="sss-privacy__sub">last updated: March 17, 2026</p>
+    </header>
+
+    <div class="sss-privacy__body">
+      <p>
+        Bybookishbabe and The Smut &amp; Sentiment Society respect your privacy. This policy explains what information may be collected through this website, how it is used, how long it may be kept, and how to contact us about your data.
+      </p>
+
+      <h2>what information may be collected</h2>
+      <p>
+        Depending on how you use the site, we may collect information such as your name, email address, order details, newsletter subscription information, and the actions you take on the site.
+      </p>
+      <p>
+        This can include interactions such as opening book previews, saving books, clicking outgoing links, sharing content, viewing library items, and interacting with newsletter or society pages.
+      </p>
+
+      <h2>how your information is used</h2>
+      <p>
+        Information is used to operate the site, deliver products and newsletter content, improve the reading and shopping experience, understand what books or pages visitors engage with, and support features connected to the Pinterest API and other social content workflows.
+      </p>
+      <p>
+        Site activity data may also be used to understand which books, quotes, pages, or features are most useful so the site can be improved over time.
+      </p>
+
+      <h2>analytics and tracking</h2>
+      <p>
+        Bybookishbabe may collect limited analytics and event data such as page path, session activity, book interactions, saves, shares, and outbound clicks. This information is used for internal analytics and site optimization.
+      </p>
+      <p>
+        Analytics data may be stored using tools such as Shopify, Substack, Supabase, Pinterest, and similar service providers used to run the site and related content systems.
+      </p>
+
+      <h2>pinterest api use</h2>
+      <p>
+        If Pinterest integrations are used, data may be processed to create, publish, schedule, or measure Pinterest content connected to Bybookishbabe. This may include basic account authorization data, board access needed for publishing, and content performance information provided by Pinterest.
+      </p>
+
+      <h2>how long information may be kept</h2>
+      <p>
+        Different information may be kept for different periods depending on operational needs. Order and subscription records may be retained as needed for business, legal, or tax purposes. Analytics and event data may be retained for reporting, performance review, and internal site analysis until it is no longer needed.
+      </p>
+
+      <h2>whether information is shared</h2>
+      <p>
+        Bybookishbabe does not sell your personal information. Information may be shared with trusted third-party service providers only when necessary to operate the site, process payments, send newsletters, analyze site activity, fulfill orders, or support integrations such as Pinterest, Shopify, Substack, and Supabase.
+      </p>
+
+      <h2>your choices</h2>
+      <p>
+        You may choose not to submit certain information, although some features may not work without it. You may also unsubscribe from emails at any time using the unsubscribe link included in newsletter emails.
+      </p>
+
+      <h2>contact</h2>
+      <p>
+        If you have questions about this privacy policy or would like to contact us about your data, please email <a href="mailto:bybookishbabe@gmail.com">bybookishbabe@gmail.com</a>.
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  #sss-privacy-{{ section.id }}{
+    background:#0b0b0b;
+    color:#f6f6f6;
+    padding:42px 0 64px;
+    font-family:"Libre Baskerville", Georgia, serif;
+  }
+  #sss-privacy-{{ section.id }} .sss-privacy__wrap{
+    max-width:860px;
+  }
+  #sss-privacy-{{ section.id }} .sss-privacy__head{
+    margin-bottom:30px;
+  }
+  #sss-privacy-{{ section.id }} .sss-privacy__kicker{
+    margin:0 0 10px;
+    font-size:11px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:rgba(246,246,246,.66);
+  }
+  #sss-privacy-{{ section.id }} .sss-privacy__title{
+    margin:0;
+    font-size:clamp(30px, 4vw, 50px);
+    line-height:1.04;
+    font-weight:400;
+    text-transform:lowercase;
+  }
+  #sss-privacy-{{ section.id }} .sss-privacy__sub{
+    margin:12px 0 0;
+    font-size:13px;
+    color:rgba(246,246,246,.68);
+    line-height:1.6;
+    text-transform:lowercase;
+  }
+  #sss-privacy-{{ section.id }} .sss-privacy__body{
+    display:grid;
+    gap:14px;
+  }
+  #sss-privacy-{{ section.id }} h2{
+    margin:20px 0 0;
+    font-size:19px;
+    line-height:1.35;
+    font-weight:400;
+    text-transform:lowercase;
+    color:#ff8ac7;
+  }
+  #sss-privacy-{{ section.id }} p{
+    margin:0;
+    font-size:15px;
+    line-height:1.8;
+    color:rgba(246,246,246,.84);
+    text-transform:lowercase;
+  }
+  #sss-privacy-{{ section.id }} a{
+    color:#ff8ac7;
+  }
+  @media (max-width: 640px){
+    #sss-privacy-{{ section.id }}{
+      padding:30px 0 48px;
+    }
+    #sss-privacy-{{ section.id }} p{
+      font-size:14px;
+      line-height:1.75;
+    }
+    #sss-privacy-{{ section.id }} h2{
+      font-size:18px;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "sss privacy policy",
+  "settings": [],
+  "presets": [
+    { "name": "sss privacy policy" }
+  ]
+}
+{% endschema %}

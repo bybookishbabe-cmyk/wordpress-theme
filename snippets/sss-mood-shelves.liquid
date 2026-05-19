@@ -1,0 +1,179 @@
+{% if include_private_books == nil %}
+  {% assign include_private_books = true %}
+{% endif %}
+{% assign include_private_books_text = include_private_books | append: '' | downcase | strip %}
+{% assign shelf_list = "" %}
+
+{% for book in books %}
+  {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+  {% assign is_visible_value = is_visible | strip %}
+  {% unless is_visible_value == 'true' %}
+    {% continue %}
+  {% endunless %}
+  {% capture is_private %}{% render 'sss-book-private', book: book %}{% endcapture %}
+  {% assign is_private_value = is_private | strip %}
+  {% if include_private_books != true and include_private_books_text != 'true' and is_private_value == 'true' %}
+    {% continue %}
+  {% endif %}
+
+  {% assign shelf_name = book.shelf.value.name | strip %}
+
+  {% if shelf_name == blank %}
+    {% continue %}
+  {% endif %}
+
+  {% unless shelf_name == "society classics" %}
+
+    {% unless shelf_list contains shelf_name %}
+      {% assign shelf_list = shelf_list | append: shelf_name | append: "|" %}
+    {% endunless %}
+
+  {% endunless %}
+
+{% endfor %}
+
+{% assign shelves = shelf_list | split: "|" %}
+
+{% for shelf in shelves %}
+
+  {% if shelf == blank %}
+    {% continue %}
+  {% endif %}
+
+  {% assign shelf_sub = "" %}
+  {% assign shelf_handle = '' %}
+  {% assign shelf_url = '' %}
+
+  {% case shelf %}
+
+  {% when "romantasy" %}
+  {% assign shelf_sub = "dragons, magic, and men who would burn kingdoms for her" %}
+
+  {% when "sports romance" %}
+  {% assign shelf_sub = "locker rooms, tension, and the man who has abs" %}
+
+  {% when "dark romance" %}
+  {% assign shelf_sub = "morally questionable men doing unforgivable things for obsession" %}
+
+  {% when "mafia romance" %}
+  {% assign shelf_sub = "crime, arranged marriages, and dangerous devotion" %}
+
+  {% when "dystopian romance" %}
+  {% assign shelf_sub = "the world is ending but somehow the yearning survives" %}
+
+  {% when "historical romance" %}
+  {% assign shelf_sub = "reputations ruined by love" %}
+
+  {% when "paranormal romance" %}
+  {% assign shelf_sub = "immortals, fated mates, and supernatural obsession" %}
+
+  {% when "contemporary romance" %}
+  {% assign shelf_sub = "modern love stories that still ruin your emotional stability" %}
+
+  {% else %}
+  {% assign shelf_sub = "romance the society cannot stop thinking about" %}
+
+  {% endcase %}
+
+	{% capture shelf_books %}
+  {% assign shelf_book_count = 0 %}
+  {% assign shelf_preview_count = 0 %}
+
+	    {% for book in books %}
+	      {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+	      {% assign is_visible_value = is_visible | strip %}
+	      {% unless is_visible_value == 'true' %}
+        {% continue %}
+      {% endunless %}
+        {% capture is_private %}{% render 'sss-book-private', book: book %}{% endcapture %}
+        {% assign is_private_value = is_private | strip %}
+        {% if include_private_books != true and include_private_books_text != 'true' and is_private_value == 'true' %}
+          {% continue %}
+        {% endif %}
+
+	      {% assign book_shelf = book.shelf.value.name | strip %}
+        {% assign book_shelf_handle = book.shelf.value.system.handle | default: '' | strip %}
+
+	      {% if book_shelf == shelf %}
+        {% assign shelf_book_count = shelf_book_count | plus: 1 %}
+
+        {% if shelf_handle == blank and book_shelf_handle != blank %}
+          {% assign shelf_handle = book_shelf_handle %}
+          {% assign shelf_books_handle = shelf_handle | append: '-books' %}
+          {% if all_pages[shelf_books_handle] != blank %}
+            {% assign shelf_url = all_pages[shelf_books_handle].url %}
+          {% elsif all_pages[shelf_handle] != blank %}
+            {% assign shelf_url = all_pages[shelf_handle].url %}
+          {% else %}
+            {% assign shelf_url = '/pages/' | append: shelf_books_handle %}
+          {% endif %}
+        {% endif %}
+
+        {% assign has_series = false %}
+        {% if book.series.value != blank %}
+          {% assign has_series = true %}
+        {% endif %}
+        {% assign can_read_standalone = false %}
+        {% if book.read_as_standalone.value == true %}
+          {% assign can_read_standalone = true %}
+        {% endif %}
+        {% assign series_number_text = book.series_number.value | append: '' | strip %}
+
+        {% if has_series and can_read_standalone == false and series_number_text != blank and series_number_text != '1' %}
+          {% continue %}
+        {% endif %}
+
+        {% if shelf_preview_count >= 8 %}
+          {% continue %}
+        {% endif %}
+
+        {% assign shelf_preview_count = shelf_preview_count | plus: 1 %}
+
+	        {% render 'sss-book-card',
+	          book: book,
+	          mini: true
+        %}
+
+      {% endif %}
+
+    {% endfor %}
+
+	  {% endcapture %}
+
+	  {% if shelf_books != blank and shelf_book_count > 5 %}
+
+	    <div class="sss-lib__shelf">
+
+      <div class="sss-lib__shelfBreak">
+
+        {% if shelf_url != blank %}
+          <a class="sss-lib__shelfBreakLink" href="{{ shelf_url }}">
+        {% endif %}
+
+        <div class="sss-lib__shelfBreakTitle">
+          {{ shelf }}
+        </div>
+
+        <div class="sss-lib__shelfBreakSub">
+          {{ shelf_sub }}
+        </div>
+
+        <div class="sss-lib__shelfBreakCta">
+          see full shelf →
+        </div>
+
+        {% if shelf_url != blank %}
+          </a>
+        {% endif %}
+
+      </div>
+
+      <div class="sss-lib__shelfRow">
+        {{ shelf_books }}
+      </div>
+
+    </div>
+
+  {% endif %}
+
+{% endfor %}

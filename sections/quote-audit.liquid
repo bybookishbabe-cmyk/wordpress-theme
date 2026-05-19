@@ -1,0 +1,451 @@
+{% assign books = shop.metaobjects.sss_library.values %}
+{% assign quotes = shop.metaobjects.sss_quote.values %}
+{% assign visible_books = 0 %}
+{% assign missing_count = 0 %}
+{% assign matched_count = 0 %}
+{% assign multi_count = 0 %}
+{% assign missing_rows = '' %}
+{% assign genre_list = '|' %}
+{% assign trope_list = '|' %}
+
+{% for book in books %}
+  {% capture is_visible %}{% render 'sss-book-visible', book: book, allow_hidden_from_library: true %}{% endcapture %}
+  {% assign is_visible_value = is_visible | strip %}
+  {% unless is_visible_value == 'true' %}
+    {% continue %}
+  {% endunless %}
+
+  {% assign visible_books = visible_books | plus: 1 %}
+  {% assign quote_count = 0 %}
+  {% assign genre_name = book.shelf.value.name | default: '' | strip %}
+
+  {% if genre_name != blank %}
+    {% assign genre_token = '|' | append: genre_name | append: '|' %}
+    {% unless genre_list contains genre_token %}
+      {% assign genre_list = genre_list | append: genre_name | append: '|' %}
+    {% endunless %}
+  {% endif %}
+
+  {% for trope in book.tropes.value %}
+    {% assign trope_name = trope.name | default: '' | strip %}
+    {% if trope_name != blank %}
+      {% assign trope_token = '|' | append: trope_name | append: '|' %}
+      {% unless trope_list contains trope_token %}
+        {% assign trope_list = trope_list | append: trope_name | append: '|' %}
+      {% endunless %}
+    {% endif %}
+  {% endfor %}
+
+  {% for quote_item in quotes %}
+    {% assign linked_book = quote_item.library_book.value %}
+    {% if linked_book == blank %}
+      {% assign linked_book = quote_item.book.value %}
+    {% endif %}
+
+    {% if linked_book != blank and linked_book.system.handle == book.system.handle and quote_item.quote.value != blank %}
+      {% assign quote_count = quote_count | plus: 1 %}
+    {% endif %}
+  {% endfor %}
+
+  {% if quote_count == 0 %}
+    {% assign missing_count = missing_count | plus: 1 %}
+    {% capture row %}
+      <tr>
+        <td>{{ book.title.value }}</td>
+        <td>{{ book.author.value }}</td>
+        <td>{% if book.shelf.value.name != blank %}{{ book.shelf.value.name }}{% else %}<span class="qa-audit__muted">no shelf</span>{% endif %}</td>
+        <td>{% if book.boyfriend_name.value != blank %}{{ book.boyfriend_name.value }}{% elsif book.boyfriend_type.value != blank %}{{ book.boyfriend_type.value }}{% else %}<span class="qa-audit__muted">no boyfriend set</span>{% endif %}</td>
+        <td>
+          {% if book.system.handle != blank %}
+            <code>{{ book.system.handle }}</code>
+          {% else %}
+            <span class="qa-audit__muted">no handle</span>
+          {% endif %}
+        </td>
+      </tr>
+    {% endcapture %}
+    {% assign missing_rows = missing_rows | append: row %}
+  {% else %}
+    {% assign matched_count = matched_count | plus: 1 %}
+    {% if quote_count > 1 %}
+      {% assign multi_count = multi_count | plus: 1 %}
+    {% endif %}
+  {% endif %}
+{% endfor %}
+
+{% assign genre_rows = '' %}
+{% assign genres = genre_list | split: '|' | sort_natural %}
+{% for genre_name in genres %}
+  {% if genre_name == blank %}
+    {% continue %}
+  {% endif %}
+  {% assign genre_count = 0 %}
+  {% for book in books %}
+    {% capture is_visible %}{% render 'sss-book-visible', book: book, allow_hidden_from_library: true %}{% endcapture %}
+    {% assign is_visible_value = is_visible | strip %}
+    {% unless is_visible_value == 'true' %}
+      {% continue %}
+    {% endunless %}
+    {% assign book_genre_name = book.shelf.value.name | default: '' | strip %}
+    {% if book_genre_name == genre_name %}
+      {% assign genre_count = genre_count | plus: 1 %}
+    {% endif %}
+  {% endfor %}
+  {% capture genre_row %}
+    <tr>
+      <td>{{ genre_name }}</td>
+      <td>{{ genre_count }}</td>
+    </tr>
+  {% endcapture %}
+  {% assign genre_rows = genre_rows | append: genre_row %}
+{% endfor %}
+
+{% assign trope_rows = '' %}
+{% assign tropes = trope_list | split: '|' | sort_natural %}
+{% for trope_name in tropes %}
+  {% if trope_name == blank %}
+    {% continue %}
+  {% endif %}
+  {% assign trope_count = 0 %}
+  {% for book in books %}
+    {% capture is_visible %}{% render 'sss-book-visible', book: book, allow_hidden_from_library: true %}{% endcapture %}
+    {% assign is_visible_value = is_visible | strip %}
+    {% unless is_visible_value == 'true' %}
+      {% continue %}
+    {% endunless %}
+    {% assign trope_found = false %}
+    {% for trope in book.tropes.value %}
+      {% assign book_trope_name = trope.name | default: '' | strip %}
+      {% if book_trope_name == trope_name %}
+        {% assign trope_found = true %}
+        {% break %}
+      {% endif %}
+    {% endfor %}
+    {% if trope_found %}
+      {% assign trope_count = trope_count | plus: 1 %}
+    {% endif %}
+  {% endfor %}
+  {% capture trope_row %}
+    <tr>
+      <td>{{ trope_name }}</td>
+      <td>{{ trope_count }}</td>
+    </tr>
+  {% endcapture %}
+  {% assign trope_rows = trope_rows | append: trope_row %}
+{% endfor %}
+
+<section class="qa-audit">
+  <div class="qa-audit__wrap page-width">
+    <p class="qa-audit__kicker">{{ section.settings.kicker }}</p>
+    <h1 class="qa-audit__title">{{ section.settings.title }}</h1>
+    {% if section.settings.subtext != blank %}
+      <p class="qa-audit__sub">{{ section.settings.subtext }}</p>
+    {% endif %}
+
+    <div class="qa-audit__stats">
+      <div class="qa-audit__stat">
+        <span class="qa-audit__statLabel">library books checked</span>
+        <strong class="qa-audit__statValue">{{ visible_books }}</strong>
+      </div>
+      <div class="qa-audit__stat">
+        <span class="qa-audit__statLabel">missing a quote</span>
+        <strong class="qa-audit__statValue">{{ missing_count }}</strong>
+      </div>
+      <div class="qa-audit__stat">
+        <span class="qa-audit__statLabel">with at least one quote</span>
+        <strong class="qa-audit__statValue">{{ matched_count }}</strong>
+      </div>
+      <div class="qa-audit__stat">
+        <span class="qa-audit__statLabel">books with multiple quotes</span>
+        <strong class="qa-audit__statValue">{{ multi_count }}</strong>
+      </div>
+    </div>
+
+    <div class="qa-audit__summaryGrid">
+      <div class="qa-audit__panel">
+        <div class="qa-audit__panelHead">
+          <h2>books per genre</h2>
+          <p>using each visible book’s shelf as the genre bucket.</p>
+        </div>
+        {% if genre_rows != blank %}
+          <div class="qa-audit__tableWrap qa-audit__tableWrap--compact">
+            <table class="qa-audit__table qa-audit__table--compact">
+              <thead>
+                <tr>
+                  <th>genre</th>
+                  <th>books</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{ genre_rows }}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="qa-audit__empty">no genres found on visible books yet.</div>
+        {% endif %}
+      </div>
+
+      <div class="qa-audit__panel">
+        <div class="qa-audit__panelHead">
+          <h2>books per trope</h2>
+          <p>counts each visible book once for every trope attached to it.</p>
+        </div>
+        {% if trope_rows != blank %}
+          <div class="qa-audit__tableWrap qa-audit__tableWrap--compact">
+            <table class="qa-audit__table qa-audit__table--compact">
+              <thead>
+                <tr>
+                  <th>trope</th>
+                  <th>books</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{ trope_rows }}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="qa-audit__empty">no tropes found on visible books yet.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="qa-audit__panel">
+      <div class="qa-audit__panelHead">
+        <h2>books without an associated <code>sss_quote</code></h2>
+        <p>matching is based on the quote’s linked book reference.</p>
+      </div>
+
+      {% if missing_rows != blank %}
+        <div class="qa-audit__tableWrap">
+          <table class="qa-audit__table">
+            <thead>
+              <tr>
+                <th>title</th>
+                <th>author</th>
+                <th>shelf</th>
+                <th>boyfriend</th>
+                <th>handle</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{ missing_rows }}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="qa-audit__empty">
+          every visible library book has at least one linked quote.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<style>
+  .qa-audit{
+    background:#070709;
+    color:#f4efe9;
+    padding:48px 20px 72px;
+  }
+
+  .qa-audit__wrap{
+    max-width:1120px;
+  }
+
+  .qa-audit__kicker{
+    margin:0 0 10px;
+    font-size:12px;
+    letter-spacing:.28em;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.62);
+  }
+
+  .qa-audit__title{
+    margin:0;
+    font-family:"Cormorant Garamond", serif;
+    font-size:clamp(2.4rem, 4vw, 4rem);
+    line-height:.95;
+  }
+
+  .qa-audit__sub{
+    max-width:58ch;
+    margin:16px 0 0;
+    color:rgba(244,239,233,.72);
+    line-height:1.7;
+    font-size:15px;
+  }
+
+  .qa-audit__stats{
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+    gap:16px;
+    margin:28px 0 30px;
+  }
+
+  .qa-audit__stat,
+  .qa-audit__panel{
+    border:1px solid rgba(255,255,255,.1);
+    background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+    box-shadow:0 20px 50px rgba(0,0,0,.24);
+    border-radius:24px;
+  }
+
+  .qa-audit__stat{
+    padding:18px 18px 16px;
+  }
+
+  .qa-audit__statLabel{
+    display:block;
+    font-size:11px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.56);
+    margin-bottom:10px;
+  }
+
+  .qa-audit__statValue{
+    font-size:30px;
+    line-height:1;
+    font-weight:600;
+  }
+
+  .qa-audit__panel{
+    padding:24px;
+  }
+
+  .qa-audit__summaryGrid{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:16px;
+    margin-bottom:16px;
+  }
+
+  .qa-audit__panelHead h2{
+    margin:0;
+    font-size:20px;
+  }
+
+  .qa-audit__panelHead p{
+    margin:8px 0 0;
+    color:rgba(244,239,233,.68);
+    font-size:14px;
+  }
+
+  .qa-audit__tableWrap{
+    margin-top:20px;
+    overflow:auto;
+    border-radius:18px;
+    border:1px solid rgba(255,255,255,.08);
+  }
+
+  .qa-audit__table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:780px;
+    background:rgba(5,5,8,.76);
+  }
+
+  .qa-audit__tableWrap--compact .qa-audit__table{
+    min-width:0;
+  }
+
+  .qa-audit__table--compact td:last-child,
+  .qa-audit__table--compact th:last-child{
+    width:110px;
+  }
+
+  .qa-audit__table th,
+  .qa-audit__table td{
+    text-align:left;
+    padding:14px 16px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+    vertical-align:top;
+  }
+
+  .qa-audit__table th{
+    font-size:11px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.56);
+    background:rgba(255,255,255,.02);
+  }
+
+  .qa-audit__table td{
+    font-size:14px;
+    line-height:1.5;
+  }
+
+  .qa-audit__table code{
+    font-size:12px;
+    color:#ff9bcf;
+  }
+
+  .qa-audit__muted{
+    color:rgba(255,255,255,.42);
+  }
+
+  .qa-audit__empty{
+    margin-top:18px;
+    padding:18px 20px;
+    border-radius:18px;
+    background:rgba(255,255,255,.03);
+    color:rgba(244,239,233,.72);
+  }
+
+  @media (max-width: 900px){
+    .qa-audit__stats{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+
+    .qa-audit__summaryGrid{
+      grid-template-columns:1fr;
+    }
+  }
+
+  @media (max-width: 640px){
+    .qa-audit{
+      padding:36px 16px 56px;
+    }
+
+    .qa-audit__stats{
+      grid-template-columns:1fr;
+    }
+
+    .qa-audit__panel{
+      padding:18px;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Quote Audit",
+  "settings": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Kicker",
+      "default": "admin audit"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "sss quote coverage"
+    },
+    {
+      "type": "textarea",
+      "id": "subtext",
+      "label": "Subtext",
+      "default": "a quick live check of which visible library books still do not have a linked quote in sss_quote."
+    }
+  ],
+  "presets": [
+    {
+      "name": "Quote Audit"
+    }
+  ]
+}
+{% endschema %}

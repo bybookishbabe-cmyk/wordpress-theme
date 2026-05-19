@@ -1,0 +1,660 @@
+{%- liquid
+  assign printable_inserts_handle = section.settings.printable_inserts_collection | default: 'printable-kindle-inserts'
+  assign templates_handle = section.settings.templates_collection | default: 'bookish-templates'
+  assign printable_inserts = collections[printable_inserts_handle]
+  assign templates = collections[templates_handle]
+  assign printable_inserts_count = printable_inserts.products_count | default: 0 | plus: 0
+  assign templates_count = templates.products_count | default: 0 | plus: 0
+
+  assign has_insert_vault = false
+  if customer
+    assign has_insert_vault_value = customer.metafields.custom.has_kindle_insert_vault.value | default: customer.metafields.custom.has_kindle_insert_vault | append: '' | downcase
+    if has_insert_vault_value == 'true'
+      assign has_insert_vault = true
+    endif
+
+    if has_insert_vault == false
+      assign customer_vault_value = customer.metafields.custom.digital_vault_active.value | default: customer.metafields.custom.digital_vault_active | append: '' | downcase
+      assign customer_vault_tier = customer.metafields.custom.digital_vault_tier.value | default: customer.metafields.custom.digital_vault_tier | append: ''
+      if customer_vault_value == 'true'
+        if customer_vault_tier == 'kindle-inserts'
+          assign has_insert_vault = true
+        endif
+      endif
+    endif
+  endif
+
+  assign my_vault_url = section.settings.my_vault_url | default: '/pages/my-vault'
+  assign insert_vault_url = section.settings.insert_vault_url | default: '/pages/my-kindle-inserts'
+  assign insert_buy_url = section.settings.insert_buy_url | default: '/products/printable-kindle-insert-vault'
+
+  if my_vault_url contains 'shopify://pages/'
+    assign my_vault_url = my_vault_url | replace: 'shopify://pages/', '/pages/'
+  endif
+
+  if insert_vault_url contains 'shopify://pages/'
+    assign insert_vault_url = insert_vault_url | replace: 'shopify://pages/', '/pages/'
+  elsif insert_vault_url contains 'shopify://products/'
+    assign insert_vault_url = insert_vault_url | replace: 'shopify://products/', '/products/'
+  endif
+
+  if insert_vault_url == '/pages/my-vault'
+    assign insert_vault_url = '/pages/my-kindle-inserts'
+  endif
+
+  if insert_buy_url contains 'shopify://products/'
+    assign insert_buy_url = insert_buy_url | replace: 'shopify://products/', '/products/'
+  endif
+-%}
+
+<section class="bbb-ds" id="bbb-ds-{{ section.id }}">
+  <div class="bbb-ds__wrap">
+    <div class="bbb-ds__hero">
+      {% if section.settings.kicker != blank %}
+        <p class="bbb-ds__kicker">{{ section.settings.kicker }}</p>
+      {% endif %}
+
+      {% if section.settings.title != blank %}
+        <h1 class="bbb-ds__title">{{ section.settings.title }}</h1>
+      {% endif %}
+
+      {% if section.settings.subtitle != blank %}
+        <p class="bbb-ds__subtitle">{{ section.settings.subtitle }}</p>
+      {% endif %}
+
+    </div>
+
+    <article class="bbb-ds__vaultCard bbb-ds__vaultCard--feature">
+      <div class="bbb-ds__vaultFeature">
+        <div class="bbb-ds__vaultFeatureCopy">
+          <div class="bbb-ds__vaultTop">
+            <p class="bbb-ds__eyebrow">one-time vault access</p>
+            <span class="bbb-ds__state">$27</span>
+          </div>
+          <h2 class="bbb-ds__vaultTitle">printable kindle insert vault</h2>
+          <p class="bbb-ds__vaultText">the easiest way to stop buying inserts one by one. choose your kindle size once, unlock {% if printable_inserts_count > 0 %}{{ printable_inserts_count }} printable insert{% if printable_inserts_count != 1 %}s{% endif %}{% else %}the full printable vault{% endif %} for that size, and come back whenever you want a new mood.</p>
+          <div class="bbb-ds__vaultActions">
+            <a class="bbb-ds__button" href="{{ insert_buy_url }}">choose size + unlock for $27</a>
+            <a class="bbb-ds__button bbb-ds__button--ghost" href="{{ insert_vault_url }}">preview the vault</a>
+          </div>
+        </div>
+        {% if section.settings.vault_feature_image != blank %}
+          <div class="bbb-ds__vaultFeatureMedia">
+            {{
+              section.settings.vault_feature_image
+              | image_url: width: 1200
+              | image_tag:
+                class: 'bbb-ds__vaultFeatureImage',
+                loading: 'lazy',
+                alt: 'Printable Kindle Insert Vault preview'
+            }}
+          </div>
+        {% endif %}
+      </div>
+    </article>
+
+    <div class="bbb-ds__bubbleGrid">
+      <article class="bbb-ds__bubble">
+        <p class="bbb-ds__eyebrow">how it works</p>
+        <h3 class="bbb-ds__bubbleTitle">pick your kindle size once.</h3>
+        <p class="bbb-ds__bubbleText">your vault access is tied to your device size, so everything inside stays clean and ready to print for the kindle you actually use.</p>
+      </article>
+
+      <article class="bbb-ds__bubble">
+        <p class="bbb-ds__eyebrow">what you get</p>
+        <h3 class="bbb-ds__bubbleTitle">50+ printable inserts.</h3>
+        <p class="bbb-ds__bubbleText">not just one drop. not just one design. the full printable insert stack that matches your size, gathered in one place.</p>
+      </article>
+
+      <article class="bbb-ds__bubble">
+        <p class="bbb-ds__eyebrow">what happens next</p>
+        <h3 class="bbb-ds__bubbleTitle">future drops get added in.</h3>
+        <p class="bbb-ds__bubbleText">once you own the vault, new printable insert drops keep landing inside it. your account becomes the home for the whole collection.</p>
+      </article>
+    </div>
+
+    {% if printable_inserts_count > 0 %}
+      <section class="bbb-ds__shelfSection" id="bbb-ds-insert-preview-{{ section.id }}">
+        <div class="bbb-ds__sectionHead">
+          <div>
+            <p class="bbb-ds__eyebrow">preview the style</p>
+            <h2 class="bbb-ds__sectionTitle">a few inserts from the world inside</h2>
+            <p class="bbb-ds__sectionSub">the vault is the point, but here’s a little preview of the kinds of printable moods waiting inside it.</p>
+          </div>
+          <a class="bbb-ds__textLink" href="{{ printable_inserts.url }}">shop all printable inserts</a>
+        </div>
+
+        <div class="bbb-ds__shelfGrid">
+          {% for product in printable_inserts.products limit: section.settings.inserts_limit %}
+            <a class="bbb-ds__prod" href="{{ product.url }}">
+              <div class="bbb-ds__prodMedia">
+                {% if product.featured_image %}
+                  {{
+                    product.featured_image
+                    | image_url: width: 1200
+                    | image_tag:
+                      loading: 'lazy',
+                      alt: product.title,
+                      class: 'bbb-ds__prodImage'
+                  }}
+                {% endif %}
+              </div>
+              <div class="bbb-ds__prodBody">
+                <p class="bbb-ds__prodType">printable insert</p>
+                <h3 class="bbb-ds__prodTitle">{{ product.title }}</h3>
+                <p class="bbb-ds__prodPrice">
+                  {% if product.price_varies %}
+                    {{ product.price_min | money }}+
+                  {% else %}
+                    {{ product.price | money }}
+                  {% endif %}
+                </p>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    {% if templates_count > 0 %}
+      <section class="bbb-ds__shelfSection">
+        <div class="bbb-ds__sectionHead">
+          <div>
+            <p class="bbb-ds__eyebrow">shop one by one</p>
+            <h2 class="bbb-ds__sectionTitle">bookish canva templates</h2>
+            <p class="bbb-ds__sectionSub">not the vault yet — just the pretty little template side of the shop, easy to browse on its own.</p>
+          </div>
+          <a class="bbb-ds__textLink" href="{{ templates.url }}">shop all templates</a>
+        </div>
+
+        <div class="bbb-ds__shelfGrid">
+          {% for product in templates.products limit: section.settings.templates_limit %}
+            <a class="bbb-ds__prod" href="{{ product.url }}">
+              <div class="bbb-ds__prodMedia">
+                {% if product.featured_image %}
+                  {{
+                    product.featured_image
+                    | image_url: width: 1200
+                    | image_tag:
+                      loading: 'lazy',
+                      alt: product.title,
+                      class: 'bbb-ds__prodImage'
+                  }}
+                {% endif %}
+              </div>
+              <div class="bbb-ds__prodBody">
+                <p class="bbb-ds__prodType">bookish template</p>
+                <h3 class="bbb-ds__prodTitle">{{ product.title }}</h3>
+                <p class="bbb-ds__prodPrice">
+                  {% if product.price_varies %}
+                    {{ product.price_min | money }}+
+                  {% else %}
+                    {{ product.price | money }}
+                  {% endif %}
+                </p>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+  </div>
+</section>
+
+<style>
+  #bbb-ds-{{ section.id }}{
+    --bbb-ds-bg:#050505;
+    --bbb-ds-card:#111113;
+    --bbb-ds-card-2:#17171b;
+    --bbb-ds-ink:#f4efe8;
+    --bbb-ds-muted:rgba(244,239,232,.76);
+    --bbb-ds-line:rgba(244,239,232,.12);
+    --bbb-ds-pink:#ff8ac7;
+    --bbb-ds-pink-soft:rgba(255,138,199,.12);
+  }
+
+  #bbb-ds-{{ section.id }}.bbb-ds{
+    background:var(--bbb-ds-bg);
+    color:var(--bbb-ds-ink);
+    padding:64px 0 84px;
+    position:relative;
+    overflow:hidden;
+  }
+
+  #bbb-ds-{{ section.id }}.bbb-ds:before{
+    content:"";
+    position:absolute;
+    inset:-40px;
+    pointer-events:none;
+    background:
+      radial-gradient(900px 520px at 50% 110px, rgba(255,255,255,.08), transparent 70%),
+      repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,.03),
+        rgba(255,255,255,.03) 1px,
+        transparent 1px,
+        transparent 28px
+      );
+    opacity:.55;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__wrap{
+    max-width:1180px;
+    margin:0 auto;
+    padding:0 20px;
+    position:relative;
+    z-index:1;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__hero{
+    max-width:780px;
+    margin-bottom:28px;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__kicker,
+  #bbb-ds-{{ section.id }} .bbb-ds__eyebrow{
+    margin:0 0 10px;
+    font-size:12px;
+    line-height:1.2;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--bbb-ds-pink);
+    font-weight:800;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__title{
+    margin:0;
+    font-family:'Cormorant Garamond', serif;
+    font-size:clamp(3.6rem, 8vw, 7rem);
+    line-height:.94;
+    font-weight:500;
+    text-transform:lowercase;
+    color:#fff;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__subtitle{
+    margin:16px 0 0;
+    max-width:700px;
+    color:var(--bbb-ds-muted);
+    font-size:1.45rem;
+    line-height:1.7;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__heroActions,
+  #bbb-ds-{{ section.id }} .bbb-ds__vaultActions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-top:20px;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__button{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:44px;
+    padding:11px 18px;
+    border-radius:8px;
+    background:var(--bbb-ds-pink);
+    color:#160912;
+    text-decoration:none;
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    font-weight:800;
+    border:1px solid transparent;
+    transition:transform .2s ease, background .2s ease, border-color .2s ease;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__button:hover{
+    transform:translateY(-2px);
+    background:#ff9fd1;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__button--ghost{
+    background:transparent;
+    color:#ffb8dc;
+    border-color:rgba(255,138,199,.42);
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__vaultCard,
+  #bbb-ds-{{ section.id }} .bbb-ds__bubble,
+  #bbb-ds-{{ section.id }} .bbb-ds__prod{
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:8px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015)),
+      var(--bbb-ds-card);
+    box-shadow:0 18px 44px rgba(0,0,0,.26);
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__vaultCard{
+    padding:22px;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__vaultCard--feature{
+    background:
+      linear-gradient(180deg, rgba(255,138,199,.08), rgba(255,255,255,.015)),
+      var(--bbb-ds-card-2);
+    border-color:rgba(255,138,199,.2);
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__vaultFeature{
+    display:grid;
+    grid-template-columns:minmax(0, 1.15fr) minmax(300px, .85fr);
+    gap:24px;
+    align-items:center;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__vaultFeatureCopy{
+    min-width:0;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__vaultFeatureMedia{
+    min-width:0;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__vaultFeatureImage{
+    display:block;
+    width:100%;
+    height:auto;
+    border-radius:8px;
+    border:1px solid rgba(255,255,255,.1);
+    box-shadow:0 22px 52px rgba(0,0,0,.3);
+    object-fit:cover;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__vaultTop{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:14px;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__state{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:8px 12px;
+    border-radius:999px;
+    background:var(--bbb-ds-pink-soft);
+    border:1px solid rgba(255,138,199,.35);
+    color:#fff;
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__vaultTitle,
+  #bbb-ds-{{ section.id }} .bbb-ds__sectionTitle{
+    margin:0;
+    color:#fff;
+    font-family:'Cormorant Garamond', serif;
+    font-weight:500;
+    text-transform:lowercase;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__vaultTitle{
+    font-size:clamp(2.6rem, 4vw, 4.3rem);
+    line-height:.98;
+    margin-top:8px;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__vaultText,
+  #bbb-ds-{{ section.id }} .bbb-ds__sectionSub{
+    margin:14px 0 0;
+    color:var(--bbb-ds-muted);
+    font-size:1.32rem;
+    line-height:1.65;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__list{
+    margin:18px 0 0;
+    padding:0;
+    list-style:none;
+    display:grid;
+    gap:8px;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__list li{
+    position:relative;
+    padding-left:14px;
+    color:rgba(244,239,232,.78);
+    font-size:1.24rem;
+    line-height:1.55;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__list li:before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:.75em;
+    width:5px;
+    height:5px;
+    border-radius:999px;
+    background:var(--bbb-ds-pink);
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__bubbleGrid{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:18px;
+    margin-top:18px;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__bubble{
+    padding:18px;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__bubbleTitle{
+    font-size:2.4rem;
+    line-height:1.02;
+    margin-top:4px;
+    margin-bottom:0;
+    color:#fff;
+    font-family:'Cormorant Garamond', serif;
+    font-weight:500;
+    text-transform:lowercase;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__bubbleText{
+    margin:14px 0 0;
+    color:var(--bbb-ds-muted);
+    font-size:1.24rem;
+    line-height:1.65;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__shelfSection{
+    margin-top:34px;
+    padding-top:28px;
+    border-top:1px solid var(--bbb-ds-line);
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__sectionHead{
+    display:flex;
+    justify-content:space-between;
+    gap:18px;
+    align-items:flex-end;
+    margin-bottom:18px;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__sectionTitle{
+    font-size:clamp(2.6rem, 4vw, 4rem);
+    line-height:.98;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__textLink{
+    display:inline-flex;
+    align-items:center;
+    min-height:38px;
+    color:#ffb8dc;
+    text-decoration:none;
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__shelfGrid{
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+    gap:18px;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__prod{
+    display:block;
+    text-decoration:none;
+    color:inherit;
+    overflow:hidden;
+    transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__prod:hover{
+    transform:translateY(-4px);
+    border-color:rgba(255,138,199,.28);
+    box-shadow:0 22px 48px rgba(0,0,0,.28);
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__prodMedia{
+    background:#0f0f11;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__prodImage{
+    width:100%;
+    height:auto;
+    aspect-ratio:4 / 5;
+    object-fit:cover;
+    display:block;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__prodBody{
+    padding:14px;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__prodType{
+    margin:0 0 8px;
+    color:rgba(244,239,232,.58);
+    font-size:10px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__prodTitle{
+    margin:0;
+    color:#fff;
+    font-size:1.8rem;
+    line-height:1.2;
+    text-transform:lowercase;
+  }
+
+  #bbb-ds-{{ section.id }} .bbb-ds__prodPrice{
+    margin:8px 0 0;
+    color:var(--bbb-ds-muted);
+    font-size:1.3rem;
+  }
+
+  @media screen and (max-width: 989px){
+    #bbb-ds-{{ section.id }} .bbb-ds__vaultFeature{
+      grid-template-columns:1fr;
+    }
+
+    #bbb-ds-{{ section.id }} .bbb-ds__bubbleGrid,
+    #bbb-ds-{{ section.id }} .bbb-ds__shelfGrid{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+
+    #bbb-ds-{{ section.id }} .bbb-ds__sectionHead{
+      align-items:flex-start;
+      flex-direction:column;
+    }
+  }
+
+  @media screen and (max-width: 749px){
+    #bbb-ds-{{ section.id }}.bbb-ds{
+      padding:46px 0 64px;
+    }
+
+    #bbb-ds-{{ section.id }} .bbb-ds__wrap{
+      padding:0 14px;
+    }
+
+    #bbb-ds-{{ section.id }} .bbb-ds__title{
+      font-size:4.4rem;
+    }
+
+    #bbb-ds-{{ section.id }} .bbb-ds__subtitle,
+    #bbb-ds-{{ section.id }} .bbb-ds__vaultText,
+    #bbb-ds-{{ section.id }} .bbb-ds__sectionSub{
+      font-size:1.22rem;
+    }
+
+    #bbb-ds-{{ section.id }} .bbb-ds__bubbleGrid{
+      grid-template-columns:1fr;
+    }
+
+    #bbb-ds-{{ section.id }} .bbb-ds__shelfGrid{
+      display:flex;
+      gap:12px;
+      overflow-x:auto;
+      scroll-snap-type:x mandatory;
+      -webkit-overflow-scrolling:touch;
+      padding-bottom:6px;
+      margin-inline:-2px;
+      padding-inline:2px;
+    }
+
+    #bbb-ds-{{ section.id }} .bbb-ds__shelfGrid::-webkit-scrollbar{
+      height:6px;
+    }
+
+    #bbb-ds-{{ section.id }} .bbb-ds__shelfGrid::-webkit-scrollbar-track{
+      background:rgba(255,255,255,.08);
+      border-radius:999px;
+    }
+
+    #bbb-ds-{{ section.id }} .bbb-ds__shelfGrid::-webkit-scrollbar-thumb{
+      background:rgba(255,138,199,.52);
+      border-radius:999px;
+    }
+
+    #bbb-ds-{{ section.id }} .bbb-ds__prod{
+      flex:0 0 78%;
+      min-width:78%;
+      scroll-snap-align:start;
+    }
+
+    #bbb-ds-{{ section.id }} .bbb-ds__vaultTop{
+      flex-direction:column;
+      align-items:flex-start;
+    }
+
+    #bbb-ds-{{ section.id }} .bbb-ds__button{
+      width:100%;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "bbb shop hub",
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "kicker", "default": "digital shop" },
+    { "type": "text", "id": "title", "label": "title", "default": "the printable kindle insert vault" },
+    { "type": "textarea", "id": "subtitle", "label": "subtitle", "default": "one-time access to the full printable insert world for your kindle size. no piecing it together one insert at a time unless you want to." },
+    { "type": "image_picker", "id": "vault_feature_image", "label": "vault feature image" },
+    { "type": "text", "id": "primary_cta_label", "label": "primary cta label", "default": "unlock for $27" },
+    { "type": "text", "id": "secondary_cta_label", "label": "secondary cta label", "default": "open my vault" },
+    { "type": "url", "id": "my_vault_url", "label": "my vault url" },
+    { "type": "url", "id": "insert_vault_url", "label": "insert vault page url" },
+    { "type": "url", "id": "insert_buy_url", "label": "insert vault product url" },
+    { "type": "collection", "id": "printable_inserts_collection", "label": "printable inserts collection" },
+    { "type": "collection", "id": "templates_collection", "label": "templates collection" },
+    { "type": "range", "id": "inserts_limit", "label": "printable inserts to show", "min": 2, "max": 12, "step": 1, "default": 4 },
+    { "type": "range", "id": "templates_limit", "label": "templates to show", "min": 2, "max": 12, "step": 1, "default": 4 }
+  ],
+  "presets": [
+    { "name": "bbb shop hub" }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,2040 @@
+{% comment %}
+  auto-exclusive.liquid (based on your original sss-member-exclusive-gram)
+
+  Progressive render:
+  - Shows whatever is filled out (no minimums).
+  - Pulls current drop from metaobject sss_drop by most recent release_date <= today.
+  - Printable/Physical panels come from drop.items (sss_drop_item) by item_type.
+  - Gram card comes from fields on the drop.
+  - Fixes:
+    - DOES NOT rely on system.published_at (can be blank on storefront even when Active)
+    - Normalizes download links (supports url, value.url, or raw string)
+    - Physical add-to-cart normalizes variant ids + toast "added to cart 🖤"
+  - Optional: debug + preview mode (force a specific drop by handle or name).
+{% endcomment %}
+
+{%- assign active_drop = nil -%}
+{%- assign now_key = 'now' | date: '%Y-%m-%d' -%}
+{%- assign best_key = '' -%}
+{%- capture shared_preview_drop_handle -%}{% render 'sss-preview-drop-handle' %}{%- endcapture -%}
+{%- assign effective_preview_drop_handle = section.settings.preview_drop_handle | default: shared_preview_drop_handle | strip -%}
+
+{%- if shop.metaobjects.sss_drop != blank -%}
+  {%- for d in shop.metaobjects.sss_drop.values -%}
+    {%- if d.release_date != blank -%}
+      {%- assign d_key = d.release_date | date: '%Y-%m-%d' -%}
+      {%- if d_key <= now_key -%}
+        {%- if best_key == '' or d_key >= best_key -%}
+          {%- assign best_key = d_key -%}
+          {%- assign active_drop = d -%}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
+{%- comment -%}
+  Fallback while testing:
+  If none are <= today (timezone edge case or future-dated drops), use newest by release_date.
+{%- endcomment -%}
+{%- if active_drop == nil and shop.metaobjects.sss_drop != blank -%}
+  {%- assign newest_key = '' -%}
+  {%- assign newest_drop = nil -%}
+  {%- for d in shop.metaobjects.sss_drop.values -%}
+    {%- if d.release_date != blank -%}
+      {%- assign d_key = d.release_date | date: '%Y-%m-%d' -%}
+      {%- if newest_key == '' or d_key > newest_key -%}
+        {%- assign newest_key = d_key -%}
+        {%- assign newest_drop = d -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- if newest_drop != nil -%}
+    {%- assign active_drop = newest_drop -%}
+    {%- assign best_key = newest_key -%}
+  {%- endif -%}
+{%- endif -%}
+
+{%- comment -%}
+  PREVIEW MODE: force a specific drop (handle OR exact name)
+{%- endcomment -%}
+{%- if shop.metaobjects.sss_drop != blank and section.settings.preview_mode or shop.metaobjects.sss_drop != blank and effective_preview_drop_handle != blank -%}
+  {%- assign forced = nil -%}
+  {%- assign want_handle = effective_preview_drop_handle -%}
+  {%- assign want_name = section.settings.preview_drop_name | strip -%}
+  
+{%- if want_handle != blank -%}
+  {%- assign forced = shop.metaobjects.sss_drop[want_handle] -%}
+{%- endif -%}
+
+  {%- if forced == nil and want_name != blank -%}
+    {%- for d in shop.metaobjects.sss_drop.values -%}
+      {%- if d.name == want_name -%}
+        {%- assign forced = d -%}{%- break -%}
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endif -%}
+
+  {%- if forced != nil -%}
+    {%- assign active_drop = forced -%}
+    {%- if active_drop.release_date != blank -%}
+      {%- assign best_key = active_drop.release_date | date: '%Y-%m-%d' -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endif -%}
+
+{%- comment -%}Only render output if we found an active drop.{%- endcomment -%}
+{%- if active_drop != nil -%}
+
+  {%- assign quote_text = active_drop.quote_text -%}
+  {%- assign kicker     = '' -%}
+  {%- assign title      = 'printable kindle insert vault' -%}
+  {%- assign subtext    = 'the full printable insert set for this drop is included for paid members.' -%}
+
+  {%- assign gram_kicker  = active_drop.gram_kicker -%}
+  {%- assign gram_title   = active_drop.gram_title -%}
+  {%- assign gram_sub     = active_drop.gram_sub -%}
+  {%- assign gram_image   = active_drop.gram_image -%}
+  {%- assign gram_caption = active_drop.gram_caption -%}
+  {%- assign gram_url     = 'https://www.instagram.com/bybookishbabe/' -%}
+  {%- assign bonus_printable_product = active_drop.bonus_printable_product.value | default: active_drop.bonus_printable_product -%}
+  {%- assign bonus_physical_product  = active_drop.bonus_physical_product.value  | default: active_drop.bonus_physical_product -%}
+  {%- assign monthly_collection_printable_products = active_drop.monthly_collection_printable_products.value | default: active_drop.monthly_collection_printable_products -%}
+  {%- assign has_monthly_collection = false -%}
+  {%- if monthly_collection_printable_products != blank -%}
+    {%- assign has_monthly_collection = true -%}
+  {%- endif -%}
+
+  {%- assign printable_item = nil -%}
+  {%- assign physical_item  = nil -%}
+
+  {%- assign items_val = nil -%}
+  {%- if active_drop.items != blank -%}
+    {%- assign items_val = active_drop.items.value -%}
+  {%- endif -%}
+
+  {%- if items_val != nil -%}
+    {%- if items_val.size != blank -%}
+      {%- for it in items_val -%}
+        {%- assign t = it.item_type | downcase -%}
+        {%- if t == 'printable' and printable_item == nil -%}{%- assign printable_item = it -%}{%- endif -%}
+        {%- if t == 'physical'  and physical_item  == nil -%}{%- assign physical_item  = it -%}{%- endif -%}
+      {%- endfor -%}
+    {%- else -%}
+      {%- assign t = items_val.item_type | downcase -%}
+      {%- if t == 'printable' -%}{%- assign printable_item = items_val -%}{%- endif -%}
+      {%- if t == 'physical'  -%}{%- assign physical_item  = items_val -%}{%- endif -%}
+    {%- endif -%}
+  {%- endif -%}
+
+  {%- assign show_printable = false -%}
+  {%- assign show_physical  = false -%}
+  {%- assign show_gram      = false -%}
+
+  {%- if printable_item != nil -%}
+    {%- if printable_item.pill != blank or printable_item.image != blank or printable_item.note != blank or printable_item.dl_12th != blank or printable_item.dl_11th != blank or printable_item.dl_6in != blank or printable_item.dl_10th != blank -%}
+      {%- assign show_printable = true -%}
+    {%- endif -%}
+  {%- endif -%}
+
+  {%- assign show_physical = false -%}
+
+  {%- if gram_kicker != blank or gram_title != blank or gram_sub != blank or gram_image != blank or gram_caption != blank -%}
+    {%- assign show_gram = true -%}
+  {%- endif -%}
+
+  {%- comment -%}Printable fields{%- endcomment -%}
+  {%- assign printable_pill  = printable_item.pill -%}
+  {%- assign printable_image = printable_item.image -%}
+  {%- assign printable_note  = printable_item.note -%}
+  {%- assign dl12 = printable_item.dl_12th -%}
+  {%- assign dl11 = printable_item.dl_11th -%}
+  {%- assign dl6  = printable_item.dl_6in  -%}
+  {%- assign dl10 = printable_item.dl_10th -%}
+
+  {%- comment -%}
+    ✅ Normalize download URLs (file refs or raw strings)
+    Supports:
+    - dl12.url
+    - dl12.value.url
+    - dl12 (string)
+  {%- endcomment -%}
+  {%- assign dl12_url = dl12.url | default: dl12.value.url | default: dl12 -%}
+  {%- assign dl11_url = dl11.url | default: dl11.value.url | default: dl11 -%}
+  {%- assign dl6_url  = dl6.url  | default: dl6.value.url  | default: dl6  -%}
+  {%- assign dl10_url = dl10.url | default: dl10.value.url | default: dl10 -%}
+
+  {%- comment -%}Physical fields{%- endcomment -%}
+  {%- assign physical_pill  = physical_item.pill -%}
+  {%- assign physical_image = physical_item.image -%}
+  {%- assign physical_note  = physical_item.note -%}
+  {%- assign product_name   = physical_item.product_name | default: active_drop.name -%}
+  {%- assign price_label    = physical_item.price_label | default: '$9' -%}
+
+  {%- assign v12 = physical_item.v_12th -%}
+  {%- assign v11 = physical_item.v_11th -%}
+  {%- assign v6  = physical_item.v_6in  -%}
+  {%- assign v10 = physical_item.v_10th -%}
+
+  {%- comment -%}Normalize variant IDs: support numeric, variant object, or gid://{%- endcomment -%}
+  {%- assign v12_id = v12.id | default: v12 | append: '' | split: '/' | last | strip -%}
+  {%- assign v11_id = v11.id | default: v11 | append: '' | split: '/' | last | strip -%}
+  {%- assign v6_id  = v6.id  | default: v6  | append: '' | split: '/' | last | strip -%}
+  {%- assign v10_id = v10.id | default: v10 | append: '' | split: '/' | last | strip -%}
+
+  {%- capture label12 -%}{{ product_name }} · 12th gen{%- endcapture -%}
+  {%- capture label11 -%}{{ product_name }} · 11th gen{%- endcapture -%}
+  {%- capture label6  -%}{{ product_name }} · 6 inch{%- endcapture -%}
+  {%- capture label10 -%}{{ product_name }} · 10th gen{%- endcapture -%}
+
+  {%- assign show12 = false -%}
+  {%- assign show11 = false -%}
+  {%- assign show6  = false -%}
+  {%- assign show10 = false -%}
+  {%- if v12_id != blank and v12_id != '0' -%}{%- assign show12 = true -%}{%- endif -%}
+  {%- if v11_id != blank and v11_id != '0' -%}{%- assign show11 = true -%}{%- endif -%}
+  {%- if v6_id  != blank and v6_id  != '0' -%}{%- assign show6  = true -%}{%- endif -%}
+  {%- if v10_id != blank and v10_id != '0' -%}{%- assign show10 = true -%}{%- endif -%}
+
+  {%- assign printable_product_name = '' -%}
+  {%- assign printable_price_label = 'free' -%}
+  {%- assign printable_v12_id = '' -%}
+  {%- assign printable_v11_id = '' -%}
+  {%- assign printable_v6_id = '' -%}
+  {%- assign printable_v10_id = '' -%}
+  {%- assign printable_show12 = false -%}
+  {%- assign printable_show11 = false -%}
+  {%- assign printable_show6 = false -%}
+  {%- assign printable_show10 = false -%}
+  {%- assign printable_product_url = '' -%}
+
+  {%- if bonus_printable_product != blank -%}
+    {%- assign printable_pill = printable_pill | default: 'bonus printable' -%}
+    {%- assign printable_default_variant = bonus_printable_product.selected_or_first_available_variant -%}
+    {%- assign printable_image = bonus_printable_product.featured_image | default: bonus_printable_product.featured_media.preview_image | default: printable_default_variant.featured_image | default: printable_default_variant.image | default: bonus_printable_product.images.first | default: printable_image -%}
+    {%- assign printable_product_name = bonus_printable_product.title | strip -%}
+    {%- assign printable_product_url = bonus_printable_product.url -%}
+    {%- assign printable_dl12_url = '' -%}
+    {%- assign printable_dl11_url = '' -%}
+    {%- assign printable_dl6_url = '' -%}
+    {%- assign printable_dl10_url = '' -%}
+    {%- if printable_default_variant != blank -%}
+        {%- assign printable_price_label = 'free' -%}
+    {%- endif -%}
+    {%- for variant in bonus_printable_product.variants -%}
+      {%- assign variant_title = variant.title | downcase -%}
+      {%- assign variant_download_url = '' -%}
+      {%- if variant.metafields.custom.download_file.value != blank -%}
+        {%- if variant.metafields.custom.download_file.value.url != blank -%}
+          {%- assign variant_download_url = variant.metafields.custom.download_file.value.url -%}
+        {%- else -%}
+          {%- assign variant_download_url = variant.metafields.custom.download_file.value | file_url -%}
+        {%- endif -%}
+      {%- endif -%}
+      {%- if variant_download_url contains 'dropbox.com' -%}
+        {%- assign variant_download_url = variant_download_url | replace: 'www.dropbox.com', 'dl.dropboxusercontent.com' | replace: 'dropbox.com', 'dl.dropboxusercontent.com' | replace: '?dl=0', '?raw=1' | replace: '&dl=0', '&raw=1' -%}
+      {%- endif -%}
+      {%- if printable_v12_id == '' and variant_title contains '12th' -%}{%- assign printable_v12_id = variant.id | append: '' -%}{%- assign printable_dl12_url = variant_download_url -%}{%- endif -%}
+      {%- if printable_v11_id == '' and variant_title contains '11th' -%}{%- assign printable_v11_id = variant.id | append: '' -%}{%- assign printable_dl11_url = variant_download_url -%}{%- endif -%}
+      {%- if printable_v6_id == '' and variant_title contains '6' -%}{%- assign printable_v6_id = variant.id | append: '' -%}{%- assign printable_dl6_url = variant_download_url -%}{%- endif -%}
+      {%- if printable_v10_id == '' and variant_title contains '10th' -%}{%- assign printable_v10_id = variant.id | append: '' -%}{%- assign printable_dl10_url = variant_download_url -%}{%- endif -%}
+    {%- endfor -%}
+    {%- assign printable_product_download = '' -%}
+    {%- if bonus_printable_product.metafields.custom.download_file.value != blank -%}
+      {%- if bonus_printable_product.metafields.custom.download_file.value.url != blank -%}
+        {%- assign printable_product_download = bonus_printable_product.metafields.custom.download_file.value.url -%}
+      {%- else -%}
+        {%- assign printable_product_download = bonus_printable_product.metafields.custom.download_file.value | file_url -%}
+      {%- endif -%}
+    {%- endif -%}
+    {%- if printable_product_download contains 'dropbox.com' -%}
+      {%- assign printable_product_download = printable_product_download | replace: 'www.dropbox.com', 'dl.dropboxusercontent.com' | replace: 'dropbox.com', 'dl.dropboxusercontent.com' | replace: '?dl=0', '?raw=1' | replace: '&dl=0', '&raw=1' -%}
+    {%- endif -%}
+    {%- if printable_dl12_url == '' -%}{%- assign printable_dl12_url = printable_product_download -%}{%- endif -%}
+    {%- if printable_dl11_url == '' -%}{%- assign printable_dl11_url = printable_product_download -%}{%- endif -%}
+    {%- if printable_dl6_url == '' -%}{%- assign printable_dl6_url = printable_product_download -%}{%- endif -%}
+    {%- if printable_dl10_url == '' -%}{%- assign printable_dl10_url = printable_product_download -%}{%- endif -%}
+    {%- if printable_v12_id != '' -%}{%- assign printable_show12 = true -%}{%- endif -%}
+    {%- if printable_v11_id != '' -%}{%- assign printable_show11 = true -%}{%- endif -%}
+    {%- if printable_v6_id  != '' -%}{%- assign printable_show6  = true -%}{%- endif -%}
+    {%- if printable_v10_id != '' -%}{%- assign printable_show10 = true -%}{%- endif -%}
+    {%- if printable_show12 == false and printable_show11 == false and printable_show6 == false and printable_show10 == false and printable_default_variant != blank -%}
+      {%- assign printable_v12_id = printable_default_variant.id | append: '' -%}
+      {%- assign printable_show12 = true -%}
+    {%- endif -%}
+    {%- assign show_printable = true -%}
+  {%- endif -%}
+
+  {%- assign physical_product_url = '' -%}
+  {%- if bonus_physical_product != blank -%}
+    {%- assign physical_pill = physical_pill | default: 'bonus physical' -%}
+    {%- assign physical_default_variant = bonus_physical_product.selected_or_first_available_variant -%}
+    {%- assign physical_image = bonus_physical_product.featured_image | default: bonus_physical_product.featured_media.preview_image | default: physical_default_variant.featured_image | default: physical_default_variant.image | default: bonus_physical_product.images.first | default: physical_image -%}
+    {%- assign product_name = bonus_physical_product.title | strip -%}
+    {%- assign physical_product_url = bonus_physical_product.url -%}
+    {%- if physical_default_variant != blank -%}
+      {%- assign price_label = physical_default_variant.price | money_without_trailing_zeros -%}
+    {%- endif -%}
+    {%- assign v12_id = '' -%}
+    {%- assign v11_id = '' -%}
+    {%- assign v6_id = '' -%}
+    {%- assign v10_id = '' -%}
+    {%- for variant in bonus_physical_product.variants -%}
+      {%- assign variant_title = variant.title | downcase -%}
+      {%- if v12_id == '' and variant_title contains '12th' -%}{%- assign v12_id = variant.id | append: '' -%}{%- endif -%}
+      {%- if v11_id == '' and variant_title contains '11th' -%}{%- assign v11_id = variant.id | append: '' -%}{%- endif -%}
+      {%- if v6_id == '' and variant_title contains '6' -%}{%- assign v6_id = variant.id | append: '' -%}{%- endif -%}
+      {%- if v10_id == '' and variant_title contains '10th' -%}{%- assign v10_id = variant.id | append: '' -%}{%- endif -%}
+    {%- endfor -%}
+    {%- assign show12 = false -%}
+    {%- assign show11 = false -%}
+    {%- assign show6 = false -%}
+    {%- assign show10 = false -%}
+    {%- if v12_id != '' -%}{%- assign show12 = true -%}{%- endif -%}
+    {%- if v11_id != '' -%}{%- assign show11 = true -%}{%- endif -%}
+    {%- if v6_id  != '' -%}{%- assign show6  = true -%}{%- endif -%}
+    {%- if v10_id != '' -%}{%- assign show10 = true -%}{%- endif -%}
+    {%- if show12 == false and show11 == false and show6 == false and show10 == false and physical_default_variant != blank -%}
+      {%- assign v12_id = physical_default_variant.id | append: '' -%}
+      {%- assign show12 = true -%}
+    {%- endif -%}
+    {%- capture label12 -%}{{ product_name }} · 12th gen{%- endcapture -%}
+    {%- capture label11 -%}{{ product_name }} · 11th gen{%- endcapture -%}
+    {%- capture label6  -%}{{ product_name }} · 6 inch{%- endcapture -%}
+    {%- capture label10 -%}{{ product_name }} · 10th gen{%- endcapture -%}
+    {%- assign show_physical = true -%}
+  {%- endif -%}
+
+<style>
+  /* ===== OUTER WRAP (two-column layout) ===== */
+  .sss-mpg{
+    background:#0b0b0b;
+    color:#f6f6f6;
+    padding:18px 12px;
+    font-family:"Libre Baskerville", Georgia, serif;
+    position:relative;
+    overflow:hidden;
+  }
+  .sss-mpg:before{
+    content:"";
+    position:absolute; inset:-40px;
+    pointer-events:none;
+    background:
+      radial-gradient(900px 520px at 50% 120px, rgba(255,255,255,.08), transparent 70%),
+      repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,.035),
+        rgba(255,255,255,.035) 1px,
+        transparent 1px,
+        transparent 26px
+      );
+    opacity:.55;
+  }
+  .sss-mpg__wrap{
+    max-width:1300px;
+    margin:0 auto;
+    position:relative;
+    z-index:1;
+    padding:0 8px;
+  }
+  .sss-mpg__grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:14px;
+    align-items:start;
+  }
+  @media(min-width:990px){
+    .sss-mpg__grid{
+      grid-template-columns: 1.12fr .88fr;
+      gap:16px;
+    }
+  }
+
+  .sss-me2{ color:#f6f6f6; }
+  .sss-me2 a{ color:inherit; text-decoration:none; }
+
+  .sss-me2__kicker{
+    margin:0 0 10px;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:#c8c8c8;
+  }
+
+  .sss-me2__card{
+    background:rgba(21,21,21,.92);
+    border:1px solid #2a2a2a;
+    border-radius:18px;
+    box-shadow:0 12px 28px rgba(0,0,0,.45);
+    overflow:hidden;
+  }
+
+  .sss-me2__head{
+    padding:10px 12px 8px;
+    border-bottom:1px solid #2a2a2a;
+    background:rgba(255,255,255,.03);
+  }
+
+  .sss-me2__title{
+    margin:0;
+    font-size:17px;
+    font-weight:400;
+    text-transform:lowercase;
+  }
+
+  .sss-me2__sub{
+    margin:6px 0 0;
+    font-size:12px;
+    line-height:1.55;
+    color:#c8c8c8;
+  }
+
+  .sss-me2__collection{
+    margin:0 0 16px;
+    padding:10px;
+    border:1px solid #2a2a2a;
+    border-radius:18px;
+    background:rgba(21,21,21,.92);
+    box-shadow:0 12px 28px rgba(0,0,0,.45);
+    display:grid;
+    gap:14px;
+  }
+  .sss-mpg__monthlyTop{
+    display:grid;
+    gap:18px;
+    align-items:start;
+    margin:0 0 18px;
+  }
+  @media (min-width:990px){
+    .sss-mpg__monthlyTop--split{
+      grid-template-columns:minmax(0, 1fr);
+    }
+  }
+  .sss-me2__collectionIntro{
+    display:grid;
+    gap:4px;
+  }
+  .sss-me2__collectionPills{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:6px;
+  }
+  .sss-me2__collectionPill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:30px;
+    padding:0 14px;
+    border-radius:999px;
+    background:#050505;
+    border:1px solid rgba(255,255,255,.14);
+    color:#f7f3ee;
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    box-shadow:0 6px 16px rgba(0,0,0,.22);
+    cursor:pointer;
+    transition:background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+  }
+  .sss-me2__collectionPill:hover,
+  .sss-me2__collectionPill.is-active{
+    background:#10192b;
+    border-color:rgba(91,123,181,.48);
+    color:#d7e6ff;
+    transform:translateY(-1px);
+  }
+  .sss-me2__collectionPill.is-dim{
+    opacity:.88;
+  }
+  .sss-me2__collectionKicker{
+    margin:0;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:rgba(246,246,246,.62);
+  }
+  .sss-me2__collectionTitle{
+    margin:0;
+    font-size:22px;
+    line-height:1.08;
+    text-transform:lowercase;
+    color:#fff;
+  }
+  .sss-me2__collectionSub{
+    margin:0;
+    max-width:720px;
+    font-size:11px;
+    line-height:1.5;
+    color:rgba(246,246,246,.72);
+    text-transform:lowercase;
+  }
+  .sss-me2__collectionGrid{
+    display:block;
+  }
+  .sss-me2__collectionLabel{
+    margin:0;
+    font-size:10px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:rgba(246,246,246,.58);
+  }
+  .sss-me2__collectionRail{
+    display:flex;
+    flex-wrap:nowrap;
+    align-items:flex-start;
+    gap:12px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    padding-bottom:4px;
+    scroll-snap-type:x proximity;
+    -webkit-overflow-scrolling:touch;
+    touch-action:pan-x pinch-zoom;
+    scroll-padding-left:4px;
+    overscroll-behavior-x:contain;
+    scrollbar-width:thin;
+    scrollbar-color:rgba(102,133,191,.92) rgba(247,243,238,.18);
+    scrollbar-gutter:stable both-edges;
+    cursor:grab;
+    user-select:none;
+  }
+  .sss-me2__collectionRail.is-dragging{
+    cursor:grabbing;
+  }
+  .sss-me2__collectionRail--mixed{
+    padding-top:2px;
+  }
+  .sss-me2__collectionScroll{
+    display:none;
+    align-items:center;
+    gap:8px;
+    margin-top:10px;
+  }
+  .sss-me2__collectionScrollLabel{
+    font-size:9px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:rgba(246,246,246,.54);
+    flex:0 0 auto;
+  }
+  .sss-me2__collectionScrollTrack{
+    position:relative;
+    height:6px;
+    border-radius:999px;
+    background:rgba(247,243,238,.18);
+    overflow:hidden;
+    flex:1 1 auto;
+  }
+  .sss-me2__collectionScrollThumb{
+    position:absolute;
+    top:0;
+    left:0;
+    height:100%;
+    min-width:18%;
+    border-radius:999px;
+    background:linear-gradient(90deg, rgba(247,243,238,.88), rgba(214,179,198,.94));
+    box-shadow:0 0 10px rgba(214,179,198,.25);
+    transform:translateX(0);
+    transition:transform .12s linear, width .12s linear;
+  }
+  .sss-me2__productCard{
+    display:block;
+    width:240px;
+    min-width:240px;
+    flex:0 0 240px;
+    border-radius:16px;
+    border:2px solid rgba(30,27,28,.82);
+    background:#F7F3EE;
+    text-decoration:none;
+    color:#1E1B1C;
+    transition:transform .18s ease, border-color .18s ease, background .18s ease;
+    box-shadow:0 10px 24px rgba(0,0,0,.25);
+    position:relative;
+    scroll-snap-align:start;
+    user-select:none;
+    touch-action:pan-x pinch-zoom;
+    overflow:hidden;
+  }
+  .sss-me2__productCard img{
+    -webkit-user-drag:none;
+    user-drag:none;
+  }
+  .sss-me2__productCard--physical{
+    width:240px;
+    min-width:240px;
+    flex:0 0 240px;
+  }
+  .sss-me2__productCard--physical .sss-me2__productName{
+    font-size:13px;
+    line-height:1.35;
+  }
+  .sss-me2__productCard--physical .sss-me2__productPrice{
+    font-size:12px;
+  }
+  .sss-me2__productCard:hover{
+    transform:translateY(-2px);
+    border-color:rgba(214,179,198,.58);
+    background:#fbf7f3;
+    box-shadow:0 14px 30px rgba(127,66,98,.18);
+  }
+  .sss-me2__productImage{
+    width:100%;
+    aspect-ratio:1 / 1;
+    border-radius:0;
+    overflow:hidden;
+    background:#fff;
+    padding:12px 12px 0;
+    box-sizing:border-box;
+  }
+  .sss-me2__productImage,
+  .sss-me2__productMeta{
+    pointer-events:none;
+  }
+  .sss-me2__productImage img{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    display:block;
+    border-radius:12px;
+    border:1px solid rgba(30,27,28,.22);
+    background:#fff;
+    padding:8px;
+    box-sizing:border-box;
+  }
+  .sss-me2__productMeta{
+    display:grid;
+    gap:4px;
+    pointer-events:none;
+    padding:10px 12px 0;
+    text-align:center;
+  }
+  .sss-me2__productTag{
+    font-size:10px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:rgba(30,27,28,.58);
+  }
+  .sss-me2__productName{
+    margin:0;
+    font-size:13px;
+    line-height:1.3;
+    text-transform:lowercase;
+    color:#1E1B1C;
+    font-weight:800;
+    font-family:var(--font-heading-family);
+  }
+  .sss-me2__productPrice{
+    margin-top:2px;
+    font-size:12.5px;
+    color:rgba(30,27,28,.72);
+    text-transform:lowercase;
+  }
+  .sss-me2__productActions{
+    margin-top:8px;
+    display:grid;
+    gap:6px;
+    touch-action:pan-x pinch-zoom;
+    pointer-events:none;
+    padding:0 12px 12px;
+  }
+  .sss-me2__productChoice{
+    display:grid;
+    gap:6px;
+  }
+  .sss-me2__productChoiceLabel{
+    font-size:10px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:rgba(30,27,28,.56);
+  }
+  .sss-me2__sizeSelect{
+    width:100%;
+    min-height:42px;
+    border-radius:12px;
+    border:1px solid rgba(30,27,28,.28);
+    background:rgba(247,243,238,.96);
+    color:#1E1B1C;
+    font-size:12px;
+    padding:0 12px;
+    outline:none;
+    box-shadow:none;
+    appearance:none;
+    -webkit-appearance:none;
+    cursor:pointer;
+  }
+  .sss-me2__productCard--physical .sss-me2__productChoice{
+    gap:4px;
+  }
+  .sss-me2__productCard--physical .sss-me2__productActions{
+    gap:8px;
+  }
+  .sss-me2__productCard--physical .sss-me2__productActionsRow{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:8px;
+  }
+  .sss-me2__sizeSelect:focus{
+    border-color:rgba(214,179,198,.58);
+    box-shadow:0 0 0 3px rgba(214,179,198,.16);
+  }
+  .sss-me2__choiceRow{
+    display:flex;
+    flex-wrap:nowrap;
+    gap:6px;
+    overflow-x:auto;
+    padding-bottom:2px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .sss-me2__productCard--physical .sss-me2__choiceRow{
+    flex-wrap:wrap;
+    overflow:visible;
+    padding-bottom:0;
+  }
+  .sss-me2__choiceBtn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:32px;
+    padding:0 10px;
+    border-radius:999px;
+    border:1px solid rgba(30,27,28,.28);
+    background:rgba(247,243,238,.94);
+    color:#1E1B1C;
+    font-size:11px;
+    text-transform:lowercase;
+    cursor:pointer;
+    transition:background .18s ease, border-color .18s ease, transform .18s ease;
+  }
+  .sss-me2__productCard--physical .sss-me2__choiceBtn{
+    max-width:100%;
+    white-space:normal;
+    text-align:center;
+    line-height:1.2;
+    padding:8px 12px;
+    min-height:unset;
+  }
+  .sss-me2__choiceBtn:hover,
+  .sss-me2__choiceBtn.is-active{
+    background:rgba(214,179,198,.16);
+    border-color:rgba(214,179,198,.58);
+    color:#7f4262;
+    transform:translateY(-1px);
+  }
+  .sss-me2__collectionGroupHead{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .sss-me2__collectionAll{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:32px;
+    padding:0 12px;
+    border-radius:999px;
+    border:1px solid rgba(30,27,28,.34);
+    background:rgba(247,243,238,.96);
+    color:#1E1B1C;
+    text-decoration:none;
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:lowercase;
+    cursor:pointer;
+    transition:background .18s ease, border-color .18s ease, transform .18s ease;
+  }
+  .sss-me2__collectionAll:hover{
+    background:rgba(214,179,198,.16);
+    border-color:rgba(214,179,198,.58);
+    color:#7f4262;
+    transform:translateY(-1px);
+  }
+  .sss-me2__collectionRail::-webkit-scrollbar{
+    height:10px;
+  }
+  .sss-me2__collectionRail::-webkit-scrollbar-track{
+    background:rgba(247,243,238,.16);
+    border-radius:999px;
+  }
+  .sss-me2__collectionRail::-webkit-scrollbar-thumb{
+    background:linear-gradient(90deg, rgba(185,210,255,.96), rgba(102,133,191,.96));
+    border-radius:999px;
+    border:2px solid rgba(19,16,18,.32);
+    box-shadow:0 0 12px rgba(102,133,191,.26);
+  }
+  .sss-me2__productBtn{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    width:100%;
+    min-height:38px;
+    padding:0 12px;
+    border-radius:12px;
+    border:1px solid rgba(30,27,28,.28);
+    background:rgba(247,243,238,.96);
+    color:#1E1B1C;
+    text-decoration:none;
+    font-size:12px;
+    cursor:pointer;
+    transition:background .18s ease, border-color .18s ease, transform .18s ease;
+    touch-action:pan-x pinch-zoom;
+    pointer-events:auto;
+  }
+  .sss-me2__productCard--physical .sss-me2__productBtn{
+    min-height:42px;
+    white-space:normal;
+    line-height:1.25;
+    padding:8px 12px;
+  }
+  .sss-me2__productCard--physical .sss-me2__productActions{
+    gap:10px;
+  }
+  .sss-me2__productCard--physical .sss-me2__productImage{
+    aspect-ratio:1 / 1;
+  }
+  .sss-me2__productCard--physical .sss-me2__collectionAll{
+    width:100%;
+    margin-top:2px;
+  }
+  .sss-me2__productCard.is-hidden{
+    display:none;
+  }
+  .sss-me2__productBtn:hover{
+    background:rgba(214,179,198,.16);
+    border-color:rgba(214,179,198,.58);
+    color:#7f4262;
+    transform:translateY(-1px);
+  }
+  @media(max-width:749px){
+    .sss-mpg__grid{
+      justify-items:stretch;
+      min-width:0;
+    }
+    .sss-mpg__wrap,
+    .sss-mpg__monthlyTop,
+    .sss-me2,
+    .sss-me2__collection,
+    .sss-me2__collectionGrid{
+      width:100%;
+      max-width:100%;
+      min-width:0;
+    }
+    .sss-me2__collection{
+      padding:10px 10px 14px;
+      gap:10px;
+      overflow:hidden;
+    }
+    .sss-me2__collectionIntro{
+      gap:6px;
+    }
+    .sss-me2__collectionTitle{
+      font-size:16px;
+      line-height:1.12;
+    }
+    .sss-quote--collection{
+      margin:8px 0 4px;
+      padding-left:10px;
+      max-width:none;
+    }
+    .sss-quote__text{
+      font-size:12px;
+      line-height:1.45;
+    }
+    .sss-me2__collectionRail{
+      gap:12px;
+      padding:12px 12px 18px;
+      margin:0;
+      scroll-snap-type:x mandatory;
+      overflow-x:auto;
+      overflow-y:hidden;
+      width:100%;
+      max-width:100%;
+      scroll-padding-left:12px;
+      -webkit-overflow-scrolling:touch;
+      overscroll-behavior-x:contain;
+      touch-action:pan-x;
+      scrollbar-gutter:auto;
+      scrollbar-width:thin;
+      scrollbar-color:rgba(247,243,238,.75) rgba(247,243,238,.18);
+    }
+    .sss-me2__productCard{
+      width:78vw;
+      min-width:78vw;
+      flex:0 0 78vw;
+      gap:7px;
+      padding:10px;
+    }
+    .sss-me2__productCard--physical{
+      width:78vw;
+      min-width:78vw;
+      flex:0 0 78vw;
+      padding:10px;
+      gap:7px;
+    }
+    .sss-me2__productImage{
+      border-radius:12px;
+    }
+    .sss-me2__productName{
+      font-size:13px;
+      line-height:1.3;
+    }
+    .sss-me2__productPrice{
+      font-size:12px;
+    }
+    .sss-me2__productTag{
+      font-size:10px;
+    }
+    .sss-me2__productBtn{
+      min-height:38px;
+      padding:8px 10px;
+      font-size:11px;
+      line-height:1.2;
+      white-space:normal;
+      text-align:center;
+    }
+    .sss-me2__choiceBtn{
+      min-height:24px;
+      padding:4px 6px;
+      font-size:8px;
+      line-height:1.2;
+    }
+    .sss-me2__collectionRail::-webkit-scrollbar{
+      height:8px;
+    }
+    .sss-me2__collectionRail::-webkit-scrollbar-track{
+      background:rgba(247,243,238,.18);
+      border-radius:999px;
+    }
+    .sss-me2__collectionRail::-webkit-scrollbar-thumb{
+      background:rgba(247,243,238,.78);
+      border-radius:999px;
+      border:1px solid rgba(19,16,18,.28);
+      box-shadow:none;
+    }
+    .sss-me2__collectionScroll{
+      display:flex;
+    }
+  }
+
+  .sss-me2__grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    padding:10px;
+  }
+
+  .sss-me2__panel{
+    border:1px solid #2a2a2a;
+    border-radius:16px;
+    background:rgba(255,255,255,.02);
+    overflow:hidden;
+  }
+
+  .sss-me2__panelTop{
+    padding:8px 10px;
+    border-bottom:1px solid #2a2a2a;
+    background:rgba(255,255,255,.03);
+    display:flex;
+    justify-content:center;
+  }
+
+  .sss-me2__pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-size:11px;
+    padding:5px 10px;
+    border-radius:999px;
+    border:1px solid #2a2a2a;
+    background:rgba(255,255,255,.06);
+    color:#c8c8c8;
+    text-transform:lowercase;
+  }
+
+  .sss-me2__media{ padding:8px; }
+
+  /* ✅ HARD OVERRIDES to prevent theme cropping */
+  .sss-me2__media img,
+  .gramcard__img{
+    width:100% !important;
+    height:auto !important;
+    aspect-ratio:auto !important;
+    object-fit:contain !important;
+    object-position:center center !important;
+    max-height:none !important;
+    display:block !important;
+  }
+
+  .sss-me2__media img{
+    max-height:220px;
+    object-fit:contain;
+    background:#0f0f0f;
+    border:1px solid #2a2a2a;
+    border-radius:14px;
+    padding:8px;
+    box-sizing:border-box;
+  }
+
+  .sss-me2__note{
+    margin:8px 0 0;
+    font-size:11px;
+    color:#9e9e9e;
+    text-align:center;
+    font-style:italic;
+    padding:0 10px 0;
+  }
+
+  .sss-me2__btnWrap{ padding:10px; }
+
+  .sss-me2__productLine{
+    margin:0 0 10px;
+    font-size:12px;
+    line-height:1.45;
+    color:#1E1B1C;
+    text-align:center;
+    text-transform:lowercase;
+    padding:0 4px;
+  }
+
+  .sss-me2__btnGrid{
+    display:grid;
+    gap:8px;
+  }
+
+  .sss-me2__btn{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    width:100%;
+    height:40px;
+    padding:0 12px;
+    border-radius:12px;
+    border:1px solid #2a2a2a;
+    background:rgba(255,255,255,.06);
+    color:#f6f6f6;
+    font-size:12.5px;
+    cursor:pointer;
+    text-align:center;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    box-sizing:border-box;
+    appearance:none;
+    -webkit-appearance:none;
+    margin:0;
+    font:inherit;
+  }
+  .sss-me2__btn:hover{
+    background:rgba(255,255,255,.10);
+    border-color:#5a5a5a;
+  }
+  .sss-me2__btn[disabled]{
+    opacity:.55;
+    cursor:not-allowed;
+  }
+
+  .sss-me2__panel{
+    position:relative;
+    background:#F7F3EE;
+    background-image:repeating-linear-gradient(
+      to bottom,
+      rgba(30,27,28,.12) 0,
+      rgba(30,27,28,.12) 1px,
+      transparent 1px,
+      transparent 28px
+    );
+    border:2px solid rgba(30,27,28,.85);
+    box-shadow:0 10px 24px rgba(0,0,0,.25);
+    color:#1E1B1C;
+  }
+  .sss-me2__panel::before{
+    content:"";
+    position:absolute;
+    top:12px; left:12px;
+    width:12px; height:12px;
+    border-radius:999px;
+    background:#000;
+    box-shadow:
+      0 0 0 3px rgba(247,243,238,.95),
+      0 0 0 4px rgba(30,27,28,.9);
+    z-index:2;
+  }
+  .sss-me2__panelTop{
+    background:rgba(30,27,28,.04);
+    border-bottom:1px solid rgba(30,27,28,.25);
+  }
+  .sss-me2__panel .sss-me2__pill{
+    background:#000;
+    color:#F7F3EE;
+    border:1px solid #000;
+  }
+  .sss-me2__panel .sss-me2__note{ color:rgba(30,27,28,.7); }
+  .sss-me2__panel .sss-me2__media img{
+    background:rgba(0,0,0,.04);
+    border:1px solid rgba(30,27,28,.25);
+  }
+  .sss-me2__panel .sss-me2__btn{
+    background:rgba(247,243,238,.95);
+    color:#1E1B1C;
+    border:1px solid rgba(30,27,28,.4);
+  }
+  .sss-me2__panel .sss-me2__btn:hover{
+    background:#fff;
+    border-color:rgba(30,27,28,.6);
+  }
+
+  .gramcard{
+    background:rgba(21,21,21,.92);
+    border:1px solid #2a2a2a;
+    border-radius:18px;
+    box-shadow:0 12px 28px rgba(0,0,0,.45);
+    overflow:hidden;
+    color:#f6f6f6;
+  }
+  .gramcard__head{
+    padding:10px 12px 8px;
+    border-bottom:1px solid #2a2a2a;
+    background:rgba(255,255,255,.03);
+  }
+  .gramcard__kicker{
+    margin:0 0 6px;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:#c8c8c8;
+  }
+  .gramcard__title{
+    margin:0;
+    font-size:17px;
+    font-weight:400;
+    text-transform:lowercase;
+  }
+  .gramcard__sub{
+    margin:6px 0 0;
+    font-size:12px;
+    line-height:1.55;
+    color:#c8c8c8;
+  }
+  .gramcard__body{
+    padding:10px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    width:100%;
+    box-sizing:border-box;
+  }
+  .gramcard__imageLink{
+    display:block;
+    width:100%;
+    max-width:420px;
+    margin:0 auto;
+    align-self:center;
+  }
+
+  .gramcard__img{
+    width:100% !important;
+    max-height:460px;
+    object-fit:contain !important;
+    object-position:center center !important;
+    border-radius:14px;
+    border:1px solid #2a2a2a;
+    background:#0f0f0f;
+    padding:0;
+    box-sizing:border-box;
+    margin:0 auto;
+  }
+
+  .gramcard__caption{
+    margin:10px 0 0;
+    width:100%;
+    font-size:12.5px;
+    line-height:1.55;
+    color:rgba(246,246,246,.78);
+  }
+
+  .gramcard__btn{
+    margin-top:12px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid #2a2a2a;
+    background:rgba(255,255,255,.06);
+    color:#f6f6f6;
+    text-decoration:none;
+    font-size:13px;
+  }
+  .gramcard__btn:hover{
+    background:rgba(255,255,255,.10);
+    border-color:#5a5a5a;
+  }
+  @media (min-width:990px){
+    .gramcard{
+      margin-top:6px;
+      max-width:520px;
+      margin-left:auto;
+      margin-right:auto;
+    }
+  }
+  @media (max-width:749px){
+    .sss-mpg__monthlyTop{
+      justify-items:stretch;
+    }
+    .gramcard{
+      width:100%;
+      max-width:360px;
+      margin-left:0;
+      margin-right:auto;
+      justify-self:start;
+    }
+    .gramcard__body{
+      align-items:flex-start;
+      justify-items:start;
+    }
+    .gramcard__imageLink{
+      max-width:300px;
+      width:100%;
+      margin-left:0;
+      margin-right:auto;
+    }
+    .gramcard__img{
+      max-height:340px;
+      margin-left:0;
+      margin-right:auto;
+    }
+  }
+
+  .sss-toast{
+    position:fixed;
+    left:50%;
+    top:50%;
+    transform:translate(-50%, -50%) scale(.96);
+    background:rgba(0,0,0,.88);
+    border:1px solid rgba(255,255,255,.22);
+    color:#fff;
+    padding:14px 18px;
+    border-radius:18px;
+    font-size:14px;
+    line-height:1.35;
+    z-index:9999;
+    opacity:0;
+    pointer-events:none;
+    box-shadow:0 18px 40px rgba(0,0,0,.6);
+    transition:opacity .18s ease, transform .18s ease;
+    text-align:center;
+  }
+  .sss-toast span{
+    display:block;
+    margin-top:4px;
+    font-size:12px;
+    opacity:.75;
+  }
+  .sss-toast.show{
+    opacity:1;
+    transform:translate(-50%, -50%) scale(1);
+  }
+
+  @media (max-width:989px){
+    .sss-mpg__grid > .gramcard{ order:-1; }
+  }
+
+  .sss-quote{
+    max-width:1100px;
+    margin:0 auto 16px;
+    padding:6px 12px 6px 16px;
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+  }
+  .sss-quote__bar{
+    width:3px;
+    background:#b91c1c;
+    border-radius:2px;
+    flex-shrink:0;
+    margin-top:4px;
+  }
+  .sss-quote__text{
+    margin:0;
+    font-size:15px;
+    line-height:1.6;
+    color:#f6f6f6;
+    font-style:italic;
+  }
+  .sss-quote--collection{
+    margin:10px 0 6px;
+    padding:2px 0 0 14px;
+    max-width:760px;
+  }
+
+  .sss-debug{
+    margin:0 0 14px;
+    padding:10px 12px;
+    border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.06);
+    border-radius:14px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size:12px;
+    white-space:pre-wrap;
+    word-break:break-word;
+    color:#f6f6f6;
+  }
+</style>
+
+<section class="sss-mpg">
+  <div class="sss-mpg__wrap">
+
+    {% if section.settings.debug %}
+      <div class="sss-debug">
+now_key: {{ now_key }}
+best_key: {{ best_key }}
+shared_preview_drop_handle: {{ shared_preview_drop_handle }}
+effective_preview_drop_handle: {{ effective_preview_drop_handle }}
+page_preview_drop_handle: {% if page and page.metafields.custom.preview_drop_handle != blank %}{{ page.metafields.custom.preview_drop_handle.value | default: page.metafields.custom.preview_drop_handle }}{% else %}(blank){% endif %}
+
+active_drop:
+- name: {{ active_drop.name }}
+- handle: {{ active_drop.handle }}
+- release_date: {{ active_drop.release_date }}
+- items blank?: {% if active_drop.items == blank %}YES{% else %}NO{% endif %}
+
+download urls:
+- dl12_url: {{ dl12_url }}
+- dl11_url: {{ dl11_url }}
+- dl6_url:  {{ dl6_url }}
+- dl10_url: {{ dl10_url }}
+
+variant ids:
+- v12_id: {{ v12_id }}
+- v11_id: {{ v11_id }}
+- v6_id:  {{ v6_id }}
+- v10_id: {{ v10_id }}
+      </div>
+    {% endif %}
+
+    {% if has_monthly_collection %}
+      <div class="sss-mpg__monthlyTop{% if show_gram %} sss-mpg__monthlyTop--split{% endif %}">
+        <section class="sss-me2__collection">
+          <div class="sss-me2__collectionIntro">
+            <h3 class="sss-me2__collectionTitle">printable kindle inserts - {{ active_drop.name }}</h3>
+            {% if quote_text != blank %}
+              <div class="sss-quote sss-quote--collection">
+                <span class="sss-quote__bar"></span>
+                <blockquote class="sss-quote__text">{{ quote_text }}</blockquote>
+              </div>
+            {% endif %}
+          </div>
+          <div class="sss-me2__collectionGrid">
+            <div class="sss-me2__collectionRail sss-me2__collectionRail--mixed" data-collection-rail>
+            {% if monthly_collection_printable_products != blank %}
+                  {% for product in monthly_collection_printable_products %}
+                    {% assign product_image = product.featured_image | default: product.featured_media.preview_image | default: product.images.first %}
+                    {% assign product_variant = product.selected_or_first_available_variant %}
+                    <div class="sss-me2__productCard" data-collection-type="printable">
+                      <div class="sss-me2__productImage">
+                        {% if product_image != blank %}
+                          {{ product_image | image_url: width: 600 | image_tag: loading: 'lazy', alt: product.title }}
+                        {% endif %}
+                      </div>
+                      <div class="sss-me2__productMeta">
+                        <span class="sss-me2__productTag">printable</span>
+                        <p class="sss-me2__productName">{{ product.title }}</p>
+                        <span class="sss-me2__productPrice">free</span>
+                      </div>
+                      <div class="sss-me2__productActions">
+                        {% assign rendered_variant_buttons = false %}
+                        {% for variant in product.variants %}
+                          {% if variant.available %}
+                            {% assign variant_label = variant.title %}
+                            {% assign variant_download = '' %}
+                            {% assign variant_download = '' %}
+                            {% if variant.metafields.custom.download_file.value != blank %}
+                              {% if variant.metafields.custom.download_file.value.url != blank %}
+                                {% assign variant_download = variant.metafields.custom.download_file.value.url %}
+                              {% else %}
+                                {% assign variant_download = variant.metafields.custom.download_file.value | file_url %}
+                              {% endif %}
+                            {% elsif product.metafields.custom.download_file.value != blank %}
+                              {% if product.metafields.custom.download_file.value.url != blank %}
+                                {% assign variant_download = product.metafields.custom.download_file.value.url %}
+                              {% else %}
+                                {% assign variant_download = product.metafields.custom.download_file.value | file_url %}
+                              {% endif %}
+                            {% endif %}
+                            {% if variant_download contains 'dropbox.com' %}
+                              {% assign variant_download = variant_download | replace: 'www.dropbox.com', 'dl.dropboxusercontent.com' | replace: 'dropbox.com', 'dl.dropboxusercontent.com' | replace: '?dl=0', '?raw=1' | replace: '&dl=0', '&raw=1' %}
+                            {% endif %}
+                            {% if variant_label == blank or variant_label == 'Default Title' %}
+                              {% assign variant_label = 'download free' %}
+                            {% else %}
+                              {% assign variant_label = variant_label | append: ' · free' %}
+                            {% endif %}
+                            {% if variant_download != blank %}
+                              <a class="sss-me2__productBtn" href="{{ variant_download }}" target="_blank" rel="noopener" data-printable-download data-printable-source="collection" data-printable-product="{{ product.title | escape }}" data-printable-label="{{ variant_label | escape }}" data-printable-url="{{ variant_download | escape }}">{{ variant_label }}</a>
+                              {% assign rendered_variant_buttons = true %}
+                            {% endif %}
+                          {% endif %}
+                        {% endfor %}
+                        {% assign product_download = '' %}
+                        {% if product.metafields.custom.download_file.value != blank %}
+                          {% if product.metafields.custom.download_file.value.url != blank %}
+                            {% assign product_download = product.metafields.custom.download_file.value.url %}
+                          {% else %}
+                            {% assign product_download = product.metafields.custom.download_file.value | file_url %}
+                          {% endif %}
+                        {% endif %}
+                        {% if product_download contains 'dropbox.com' %}
+                          {% assign product_download = product_download | replace: 'www.dropbox.com', 'dl.dropboxusercontent.com' | replace: 'dropbox.com', 'dl.dropboxusercontent.com' | replace: '?dl=0', '?raw=1' | replace: '&dl=0', '&raw=1' %}
+                        {% endif %}
+                        {% if rendered_variant_buttons == false and product_download != blank %}
+                          <a class="sss-me2__productBtn" href="{{ product_download }}" target="_blank" rel="noopener" data-printable-download data-printable-source="collection" data-printable-product="{{ product.title | escape }}" data-printable-label="download free" data-printable-url="{{ product_download | escape }}">download free</a>
+                        {% elsif rendered_variant_buttons == false %}
+                          <span class="sss-me2__productBtn" aria-disabled="true">file coming soon</span>
+                        {% endif %}
+                      </div>
+                    </div>
+                  {% endfor %}
+            {% endif %}
+            </div>
+            <div class="sss-me2__collectionScroll" aria-hidden="true">
+              <span class="sss-me2__collectionScrollLabel">swipe</span>
+              <div class="sss-me2__collectionScrollTrack">
+                <span class="sss-me2__collectionScrollThumb" data-collection-scroll-thumb></span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {% if show_gram %}
+          <aside class="gramcard">
+            {% if gram_kicker != blank or gram_title != blank or gram_sub != blank %}
+              <div class="gramcard__head">
+                {% if gram_kicker != blank %}<p class="gramcard__kicker">{{ gram_kicker }}</p>{% endif %}
+                {% if gram_title != blank %}<h3 class="gramcard__title">{{ gram_title }}</h3>{% endif %}
+                {% if gram_sub != blank %}<p class="gramcard__sub">{{ gram_sub }}</p>{% endif %}
+              </div>
+            {% endif %}
+
+            <div class="gramcard__body">
+              {% if gram_image != blank %}
+                <a href="{{ gram_url }}" target="_blank" rel="noopener" class="gramcard__imageLink" aria-label="open bybookishbabe on instagram">
+                  {{ gram_image | image_url: width: 1600 | image_tag: class: 'gramcard__img', loading: 'lazy', alt: 'From the gram' }}
+                </a>
+              {% endif %}
+
+              {% if gram_caption != blank %}
+                <p class="gramcard__caption">{{ gram_caption }}</p>
+              {% endif %}
+
+            </div>
+          </aside>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <div class="sss-mpg__grid">
+
+      {% unless has_monthly_collection %}
+      {% if kicker != blank or title != blank or subtext != blank or show_printable or show_physical %}
+        <div class="sss-me2">
+          {% if kicker != blank %}
+            <p class="sss-me2__kicker">{{ kicker }}</p>
+          {% endif %}
+
+          <article class="sss-me2__card">
+
+            {% if title != blank or subtext != blank %}
+              <div class="sss-me2__head">
+                {% if title != blank %}<h3 class="sss-me2__title">{{ title }}</h3>{% endif %}
+                {% if subtext != blank %}<p class="sss-me2__sub">{{ subtext }}</p>{% endif %}
+              </div>
+            {% endif %}
+
+            {% if show_printable or show_physical %}
+              <section class="sss-me2__grid">
+
+                {% if show_printable %}
+                  <div class="sss-me2__panel">
+                    {% if printable_pill != blank %}
+                      <div class="sss-me2__panelTop">
+                        <span class="sss-me2__pill">{{ printable_pill }}</span>
+                      </div>
+                    {% endif %}
+
+                    <div class="sss-me2__media">
+                      {% if printable_image != blank %}
+                        {{ printable_image | image_url: width: 1200 | image_tag: loading: 'lazy', alt: 'Printable preview' }}
+                      {% endif %}
+                    </div>
+
+                    {% if printable_note != blank %}
+                      <p class="sss-me2__note">{{ printable_note }}</p>
+                    {% endif %}
+
+                    {% if bonus_printable_product != blank or dl12_url != blank or dl11_url != blank or dl6_url != blank or dl10_url != blank %}
+                      <div class="sss-me2__btnWrap">
+                        {% if printable_product_name != blank %}
+                          <p class="sss-me2__productLine">{{ printable_product_name }}</p>
+                        {% endif %}
+                        <div class="sss-me2__btnGrid">
+                          {% if bonus_printable_product != blank %}
+                            {% if printable_show12 and printable_dl12_url != blank %}<a class="sss-me2__btn" href="{{ printable_dl12_url }}" target="_blank" rel="noopener" data-printable-download data-printable-source="featured" data-printable-product="{{ printable_product_name | escape }}" data-printable-label="12th gen · {{ printable_price_label | escape }}" data-printable-url="{{ printable_dl12_url | escape }}">12th gen · {{ printable_price_label }}</a>{% endif %}
+                            {% if printable_show11 and printable_dl11_url != blank %}<a class="sss-me2__btn" href="{{ printable_dl11_url }}" target="_blank" rel="noopener" data-printable-download data-printable-source="featured" data-printable-product="{{ printable_product_name | escape }}" data-printable-label="11th gen · {{ printable_price_label | escape }}" data-printable-url="{{ printable_dl11_url | escape }}">11th gen · {{ printable_price_label }}</a>{% endif %}
+                            {% if printable_show6 and printable_dl6_url != blank %}<a class="sss-me2__btn" href="{{ printable_dl6_url }}" target="_blank" rel="noopener" data-printable-download data-printable-source="featured" data-printable-product="{{ printable_product_name | escape }}" data-printable-label="6 inch · {{ printable_price_label | escape }}" data-printable-url="{{ printable_dl6_url | escape }}">6 inch · {{ printable_price_label }}</a>{% endif %}
+                            {% if printable_show10 and printable_dl10_url != blank %}<a class="sss-me2__btn" href="{{ printable_dl10_url }}" target="_blank" rel="noopener" data-printable-download data-printable-source="featured" data-printable-product="{{ printable_product_name | escape }}" data-printable-label="10th gen · {{ printable_price_label | escape }}" data-printable-url="{{ printable_dl10_url | escape }}">10th gen · {{ printable_price_label }}</a>{% endif %}
+                            {% if printable_show12 == false and printable_show11 == false and printable_show6 == false and printable_show10 == false %}
+                              {% if printable_product_download != blank %}
+                                <a class="sss-me2__btn" href="{{ printable_product_download }}" target="_blank" rel="noopener" data-printable-download data-printable-source="featured" data-printable-product="{{ printable_product_name | escape }}" data-printable-label="download free" data-printable-url="{{ printable_product_download | escape }}">download free</a>
+                              {% elsif printable_product_url != blank %}
+                                <a class="sss-me2__btn" href="{{ printable_product_url }}">view product</a>
+                              {% endif %}
+                            {% endif %}
+                          {% else %}
+                            {% if dl12_url != blank %}<a class="sss-me2__btn" href="{{ dl12_url }}" target="_blank" rel="noopener" data-printable-download data-printable-source="featured" data-printable-product="{{ printable_product_name | escape }}" data-printable-label="12th gen" data-printable-url="{{ dl12_url | escape }}">12th gen</a>{% endif %}
+                            {% if dl11_url != blank %}<a class="sss-me2__btn" href="{{ dl11_url }}" target="_blank" rel="noopener" data-printable-download data-printable-source="featured" data-printable-product="{{ printable_product_name | escape }}" data-printable-label="11th gen" data-printable-url="{{ dl11_url | escape }}">11th gen</a>{% endif %}
+                            {% if dl6_url  != blank %}<a class="sss-me2__btn" href="{{ dl6_url  }}" target="_blank" rel="noopener" data-printable-download data-printable-source="featured" data-printable-product="{{ printable_product_name | escape }}" data-printable-label="6 inch" data-printable-url="{{ dl6_url | escape }}">6 inch</a>{% endif %}
+                            {% if dl10_url != blank %}<a class="sss-me2__btn" href="{{ dl10_url }}" target="_blank" rel="noopener" data-printable-download data-printable-source="featured" data-printable-product="{{ printable_product_name | escape }}" data-printable-label="10th gen" data-printable-url="{{ dl10_url | escape }}">10th gen</a>{% endif %}
+                          {% endif %}
+                        </div>
+                      </div>
+                    {% endif %}
+                  </div>
+                {% endif %}
+
+                {% if show_physical %}
+                  <div class="sss-me2__panel">
+                    {% if physical_pill != blank %}
+                      <div class="sss-me2__panelTop">
+                        <span class="sss-me2__pill">{{ physical_pill }}</span>
+                      </div>
+                    {% endif %}
+
+                    <div class="sss-me2__media">
+                      {% if physical_image != blank %}
+                        {{ physical_image | image_url: width: 1200 | image_tag: loading: 'lazy', alt: 'Physical preview' }}
+                      {% endif %}
+                    </div>
+
+                    {% if physical_note != blank %}
+                      <p class="sss-me2__note">{{ physical_note }}</p>
+                    {% endif %}
+
+                    
+
+                    {% if show12 or show11 or show6 or show10 %}
+                      <div class="sss-me2__btnWrap">
+                        {% if product_name != blank %}
+                          <p class="sss-me2__productLine">{{ product_name }}</p>
+                        {% endif %}
+                        <div class="sss-me2__btnGrid">
+                          {% if show12 %}
+                            <button class="sss-me2__btn" type="button"
+                              onclick='sssAdd({{ v12_id | json }}, {{ label12 | json }})''>
+                              12th gen · {{ price_label }}
+                            </button>
+                          {% endif %}
+                          {% if show11 %}
+                            <button class="sss-me2__btn" type="button"
+                              onclick='sssAdd({{ v11_id | json }}, {{ label11 | json }})''>
+                              11th gen · {{ price_label }}
+                            </button>
+                          {% endif %}
+                          {% if show6 %}
+                            <button class="sss-me2__btn" type="button"
+                              onclick='sssAdd({{ v6_id | json }}, {{ label6 | json }})''>
+                              6 inch · {{ price_label }}
+                            </button>
+                          {% endif %}
+                          {% if show10 %}
+                            <button class="sss-me2__btn" type="button"
+                              onclick='sssAdd({{ v10_id | json }}, {{ label10 | json }})''>
+                              10th gen · {{ price_label }}
+                            </button>
+                          {% endif %}
+                        </div>
+                      </div>
+                    {% endif %}
+                  </div>
+                {% endif %}
+
+              </section>
+            {% endif %}
+
+          </article>
+        </div>
+      {% endif %}
+      {% endunless %}
+
+      {% if show_gram and has_monthly_collection == false %}
+        <aside class="gramcard">
+          {% if gram_kicker != blank or gram_title != blank or gram_sub != blank %}
+            <div class="gramcard__head">
+              {% if gram_kicker != blank %}<p class="gramcard__kicker">{{ gram_kicker }}</p>{% endif %}
+              {% if gram_title != blank %}<h3 class="gramcard__title">{{ gram_title }}</h3>{% endif %}
+              {% if gram_sub != blank %}<p class="gramcard__sub">{{ gram_sub }}</p>{% endif %}
+            </div>
+          {% endif %}
+
+          <div class="gramcard__body">
+            {% if gram_image != blank %}
+              <a href="{{ gram_url }}" target="_blank" rel="noopener" class="gramcard__imageLink" aria-label="open bybookishbabe on instagram">
+                {{ gram_image | image_url: width: 1600 | image_tag: class: 'gramcard__img', loading: 'lazy', alt: 'From the gram' }}
+              </a>
+            {% endif %}
+
+            {% if gram_caption != blank %}
+              <p class="gramcard__caption">{{ gram_caption }}</p>
+            {% endif %}
+
+          </div>
+        </aside>
+      {% endif %}
+
+    </div>
+  </div>
+</section>
+
+<script>
+
+if (!document.getElementById('sssToast')) {
+  const t = document.createElement('div');
+  t.id = 'sssToast';
+  t.className = 'sss-toast';
+  document.body.appendChild(t);
+}
+
+function sssToast(msg, sub){
+  const el = document.getElementById('sssToast');
+  if (!el) return;
+
+  el.innerHTML = sub ? (msg + '<br><span>' + sub + '</span>') : msg;
+  el.classList.add('show');
+
+  setTimeout(function(){
+    el.classList.remove('show');
+  }, 2400);
+}
+
+function sssToast(msg, sub){
+  const el = document.getElementById('sssToast');
+  if (!el) return;
+  el.innerHTML = sub ? (msg + '<br><span>' + sub + '</span>') : msg;
+  el.classList.add('show');
+  setTimeout(function(){ el.classList.remove('show'); }, 2400);
+}
+
+function sssAdd(rawId, label){
+
+  var idStr = (rawId || '').toString().trim();
+  if (idStr.indexOf('gid://') === 0) idStr = idStr.split('/').pop();
+
+  var id = parseInt(idStr, 10);
+  if (!id || isNaN(id)) {
+    sssToast('not added 🖤', 'invalid variant id');
+    return;
+  }
+
+  var formData = new FormData();
+  formData.append('id', id);
+  formData.append('quantity', 1);
+
+  fetch('/cart/add', {
+    method: 'POST',
+    body: formData
+  })
+  .then(function(response){
+    if(response.ok){
+      sssToast('added to cart 🖤', label);
+    } else {
+      sssToast('not added 🖤', 'unavailable');
+    }
+  })
+  .catch(function(){
+    sssToast('not added 🖤', 'error');
+  });
+}
+
+function sssAddMany(rawIds, label){
+  var ids = (rawIds || []).map(function(rawId){
+    var idStr = (rawId || '').toString().trim();
+    if (idStr.indexOf('gid://') === 0) idStr = idStr.split('/').pop();
+    var id = parseInt(idStr, 10);
+    return (!id || isNaN(id)) ? null : id;
+  }).filter(Boolean);
+
+  if (!ids.length) {
+    sssToast('not added 🖤', 'invalid variant id');
+    return;
+  }
+
+  fetch('/cart/add.js', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      items: ids.map(function(id){
+        return { id: id, quantity: 1 };
+      })
+    })
+  })
+  .then(function(response){
+    if (response.ok){
+      sssToast('added to cart 🖤', label);
+    } else {
+      sssToast('not added 🖤', 'unavailable');
+    }
+  })
+  .catch(function(){
+    sssToast('not added 🖤', 'error');
+  });
+}
+
+function sssInitPhysicalCollection(){
+  document.querySelectorAll('[data-physical-card]').forEach(function(card){
+    if (card.dataset.physicalReady === 'true') return;
+    var image = card.querySelector('.sss-me2__physicalImage');
+    var sizeSelect = card.querySelector('[data-physical-sizes]');
+    var addButton = card.querySelector('[data-physical-add]');
+    var designSelect = card.querySelector('[data-physical-design]');
+    var jsonNode = card.querySelector('[data-physical-variants]');
+    if (!sizeSelect || !addButton || !jsonNode || !designSelect) return;
+
+    var variants = [];
+    try {
+      variants = JSON.parse(jsonNode.textContent || '[]');
+    } catch (e) {
+      variants = [];
+    }
+    variants = variants.filter(function(variant){ return !!variant && variant.available; });
+    if (!variants.length) return;
+
+    var activeDesign = designSelect.value || '';
+    var currentVariant = null;
+
+    function render(){
+      var filtered = variants.filter(function(variant){
+        return (variant.design || '') === activeDesign;
+      });
+      if (!filtered.length) filtered = variants;
+
+      if (image && filtered[0] && filtered[0].image){
+        image.src = filtered[0].image;
+        image.setAttribute('src', filtered[0].image);
+        image.removeAttribute('srcset');
+      }
+
+      sizeSelect.innerHTML = '';
+      var placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = 'choose a size';
+      sizeSelect.appendChild(placeholder);
+
+      filtered.forEach(function(variant){
+        var option = document.createElement('option');
+        option.value = String(variant.id);
+        option.textContent = (variant.size && variant.size !== 'Default Title' ? variant.size : 'default size') + ' · ' + variant.price;
+        option.dataset.label = variant.label;
+        sizeSelect.appendChild(option);
+      });
+
+      currentVariant = filtered[0] || null;
+      if (currentVariant) {
+        sizeSelect.value = String(currentVariant.id);
+        addButton.textContent = 'add to cart · ' + currentVariant.price;
+      } else {
+        sizeSelect.value = '';
+        addButton.textContent = 'add to cart';
+      }
+    }
+
+    designSelect.addEventListener('change', function(){
+      activeDesign = designSelect.value || '';
+      render();
+    });
+
+    sizeSelect.addEventListener('change', function(){
+      var selectedId = sizeSelect.value;
+      currentVariant = variants.find(function(variant){
+        return String(variant.id) === selectedId;
+      }) || currentVariant;
+
+      if (currentVariant) {
+        addButton.textContent = 'add to cart · ' + currentVariant.price;
+      } else {
+        addButton.textContent = 'add to cart';
+      }
+    });
+
+    addButton.addEventListener('click', function(){
+      if (!currentVariant) return;
+      sssAdd(currentVariant.id, currentVariant.label);
+    });
+
+    card.dataset.physicalReady = 'true';
+    render();
+  });
+}
+
+function sssInitCollectionFilters(){
+  document.querySelectorAll('.sss-me2__collection').forEach(function(section){
+    if (section.dataset.collectionReady === 'true') return;
+    var buttons = section.querySelectorAll('[data-collection-filter]');
+    var cards = section.querySelectorAll('[data-collection-type]');
+    if (!buttons.length || !cards.length) return;
+
+    function applyFilter(type){
+      buttons.forEach(function(button){
+        var active = !!type && button.getAttribute('data-collection-filter') === type;
+        button.classList.toggle('is-active', active);
+        button.classList.toggle('is-dim', !active);
+      });
+      cards.forEach(function(card){
+        card.classList.toggle('is-hidden', !!type && card.getAttribute('data-collection-type') !== type);
+      });
+    }
+
+    buttons.forEach(function(button){
+      button.addEventListener('click', function(){
+        var selectedType = button.getAttribute('data-collection-filter');
+        var nextType = button.classList.contains('is-active') ? '' : selectedType;
+        applyFilter(nextType);
+      });
+    });
+
+    applyFilter('');
+    section.dataset.collectionReady = 'true';
+  });
+}
+
+function sssInitCollectionRails(){
+  document.querySelectorAll('[data-collection-rail]').forEach(function(rail){
+    if (rail.dataset.dragReady === 'true') return;
+
+    rail.querySelectorAll('img').forEach(function(image){
+      image.setAttribute('draggable', 'false');
+      image.addEventListener('dragstart', function(event){
+        event.preventDefault();
+      });
+    });
+    rail.addEventListener('dragstart', function(event){
+      event.preventDefault();
+    });
+
+    var isCoarsePointer = false;
+    try {
+      isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+    } catch (e) {}
+
+    var pointerActive = false;
+    var startX = 0;
+    var startScroll = 0;
+    var moved = false;
+    var touchActive = false;
+    var touchDragging = false;
+    var startY = 0;
+    var scrollWrap = rail.parentElement;
+    var scrollThumb = scrollWrap ? scrollWrap.querySelector('[data-collection-scroll-thumb]') : null;
+
+    function syncThumb(){
+      if (!scrollThumb) return;
+      var maxScroll = rail.scrollWidth - rail.clientWidth;
+      if (maxScroll <= 0) {
+        scrollThumb.style.width = '100%';
+        scrollThumb.style.transform = 'translateX(0)';
+        return;
+      }
+
+      var visibleRatio = rail.clientWidth / rail.scrollWidth;
+      var thumbWidth = Math.max(visibleRatio * 100, 18);
+      var maxThumbTravel = 100 - thumbWidth;
+      var progress = rail.scrollLeft / maxScroll;
+      var thumbOffset = maxThumbTravel * progress;
+
+      scrollThumb.style.width = thumbWidth + '%';
+      scrollThumb.style.transform = 'translateX(' + thumbOffset + '%)';
+    }
+
+    rail.addEventListener('scroll', syncThumb, { passive: true });
+    window.addEventListener('resize', syncThumb);
+
+    if (!isCoarsePointer) {
+      rail.addEventListener('pointerdown', function(event){
+        if (event.target && event.target.closest('select, input, textarea')) return;
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+        pointerActive = true;
+        moved = false;
+        startX = event.clientX;
+        startScroll = rail.scrollLeft;
+        rail.classList.add('is-dragging');
+        if (rail.setPointerCapture) rail.setPointerCapture(event.pointerId);
+      });
+
+      rail.addEventListener('pointermove', function(event){
+        if (!pointerActive) return;
+        var delta = event.clientX - startX;
+        if (Math.abs(delta) > 6) moved = true;
+        rail.scrollLeft = startScroll - delta;
+      });
+
+      function endDrag(event){
+        if (!pointerActive) return;
+        pointerActive = false;
+        rail.classList.remove('is-dragging');
+        if (event && rail.releasePointerCapture) {
+          try { rail.releasePointerCapture(event.pointerId); } catch (e) {}
+        }
+      }
+
+      rail.addEventListener('pointerup', endDrag);
+      rail.addEventListener('pointercancel', endDrag);
+      rail.addEventListener('pointerleave', function(event){
+        if (event.pointerType === 'mouse') endDrag(event);
+      });
+
+      rail.querySelectorAll('a, button, select').forEach(function(control){
+        control.addEventListener('pointerdown', function(event){
+          event.stopPropagation();
+        });
+        control.addEventListener('click', function(event){
+          if (moved) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+        });
+      });
+    }
+
+    rail.dataset.dragReady = 'true';
+    syncThumb();
+  });
+}
+
+function sssInitPrintableDownloadTracking(){
+  var shouldDebugPrintable = {% if section.settings.debug %}true{% else %}false{% endif %};
+  document.querySelectorAll('[data-printable-download]').forEach(function(link){
+    if (link.dataset.printableTrackingReady === 'true') return;
+
+    link.addEventListener('click', function(event){
+      var product = (link.dataset.printableProduct || '').trim();
+      var label = (link.dataset.printableLabel || link.textContent || '').trim();
+      var url = (link.dataset.printableUrl || link.href || '').trim();
+      var inDesignMode = !!(window.Shopify && window.Shopify.designMode);
+      var printableKey = (product || label || 'printable')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '')
+        .slice(0, 120);
+
+      if (typeof trackSiteEvent === 'function') {
+        trackSiteEvent('printable_download_clicked', {
+          uiLocation: 'monthly_exclusive_printable',
+          metadata: {
+            printable: printableKey,
+            product: product,
+            label: label,
+            url: url,
+            source: link.dataset.printableSource || '',
+            link_text: (link.textContent || '').trim()
+          }
+        });
+      }
+
+      if (shouldDebugPrintable && typeof console !== 'undefined') {
+        console.log('[sss auto exclusive] printable click', {
+          product: product,
+          label: label,
+          url: url,
+          source: link.dataset.printableSource || '',
+          href: link.getAttribute('href') || ''
+        });
+      }
+
+      if (!url) {
+        event.preventDefault();
+        event.stopPropagation();
+        sssToast('download link missing', product || label || 'no file url found');
+        return;
+      }
+
+      if (!inDesignMode) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      try {
+        try {
+          if (window.top && typeof window.top.open === 'function') {
+            var topOpened = window.top.open(url, '_blank', 'noopener');
+            if (topOpened) {
+              return;
+            }
+          }
+          if (typeof window.open === 'function') {
+            var previewOpened = window.open(url, '_blank', 'noopener');
+            if (previewOpened) {
+              return;
+            }
+          }
+        } catch (topError) {
+          if (shouldDebugPrintable && typeof console !== 'undefined') {
+            console.warn('[sss auto exclusive] top window open failed, falling back to direct location', topError);
+          }
+        }
+
+        if (window.top && window.top.location) {
+          window.top.location.assign(url);
+        } else {
+          window.location.assign(url);
+        }
+      } catch (error) {
+        if (shouldDebugPrintable && typeof console !== 'undefined') {
+          console.warn('[sss auto exclusive] printable open failed, falling back to location.assign', error);
+        }
+        if (window.top && window.top.location) {
+          window.top.location.assign(url);
+        } else {
+          window.location.assign(url);
+        }
+      }
+    });
+
+    link.dataset.printableTrackingReady = 'true';
+  });
+}
+
+document.addEventListener('DOMContentLoaded', sssInitPhysicalCollection);
+document.addEventListener('DOMContentLoaded', sssInitCollectionFilters);
+document.addEventListener('DOMContentLoaded', sssInitCollectionRails);
+document.addEventListener('DOMContentLoaded', sssInitPrintableDownloadTracking);
+sssInitPhysicalCollection();
+sssInitCollectionFilters();
+sssInitCollectionRails();
+sssInitPrintableDownloadTracking();
+document.addEventListener('shopify:section:load', sssInitPhysicalCollection);
+document.addEventListener('shopify:section:load', sssInitCollectionFilters);
+document.addEventListener('shopify:section:load', sssInitCollectionRails);
+document.addEventListener('shopify:section:load', sssInitPrintableDownloadTracking);
+
+</script>
+
+{%- else -%}
+  <div style="padding:16px 12px; background:#0b0b0b; color:#f6f6f6; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
+    no active drop found — set a release_date on your sss_drop (and make sure it’s published).
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "auto exclusive",
+  "settings": [
+    { "type": "checkbox", "id": "debug", "label": "debug: show what the section sees", "default": false },
+    { "type": "checkbox", "id": "preview_mode", "label": "preview mode (force a specific drop)", "default": false },
+    { "type": "text", "id": "preview_drop_handle", "label": "preview drop handle (recommended)", "default": "romantically-unwell" },
+    { "type": "text", "id": "preview_drop_name", "label": "preview drop name (exact match)", "default": "romantically unwell" }
+  ],
+  "presets": [
+    { "name": "auto exclusive" }
+  ]
+}
+{% endschema %}

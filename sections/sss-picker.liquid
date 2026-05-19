@@ -1,0 +1,478 @@
+{% comment %}
+  sss-picker.liquid
+  Cute interactive picker powered by ACTIVE sss_drop -> items (sss_drop_item)
+
+  Flow: size -> design -> reveal download + falling hearts
+  - Filters to most recent sss_drop where release_date <= today
+  - Supports multiple rows per design
+{% endcomment %}
+{% assign active_drop = nil %}
+{%- capture shared_preview_drop_handle -%}{% render 'sss-preview-drop-handle' %}{%- endcapture -%}
+{%- assign preview_drop_handle = section.settings.preview_drop_handle | default: shared_preview_drop_handle | strip -%}
+{%- assign now_key = 'now' | date: '%Y-%m-%d' -%}
+{%- assign best_drop_key = '' -%}
+
+{% if preview_drop_handle != blank %}
+  {% assign active_drop = shop.metaobjects.sss_drop[preview_drop_handle] %}
+{% elsif shop.metaobjects.sss_drop != blank %}
+  {% for d in shop.metaobjects.sss_drop.values %}
+    {% if d.items.value.size > 0 and d.release_date != blank %}
+      {% assign d_key = d.release_date | date: '%Y-%m-%d' %}
+      {% if d_key <= now_key %}
+        {% if best_drop_key == '' or d_key >= best_drop_key %}
+          {% assign best_drop_key = d_key %}
+          {% assign active_drop = d %}
+        {% endif %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+
+  {% if active_drop == nil %}
+    {% for d in shop.metaobjects.sss_drop.values %}
+      {% if d.items.value.size > 0 %}
+        {% assign active_drop = d %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+{% endif %}
+
+{% assign items = active_drop.items.value %}
+
+<section class="sss-pk" data-sss-picker>
+  <div class="sss-pk__wrap">
+
+    <div class="sss-pk__top">
+      <p class="sss-pk__kicker">little matchmaking for your kindle</p>
+      <h2 class="sss-pk__title">pick a size. pick your design.</h2>
+      <p class="sss-pk__sub">when you finish, you’ll unlock your download.</p>
+    </div>
+
+    <div class="sss-pk__rail" id="sssRail" aria-live="polite">
+      <!-- STEP 1 -->
+      <div class="sss-pk__card" data-step="1">
+        <p class="sss-pk__label">step 1</p>
+        <h3 class="sss-pk__q">pick your kindle size</h3>
+        <select class="sss-pk__select" id="sssSize">
+          <option value="">select size</option>
+          <option value="12th">12th gen</option>
+          <option value="11th">11th gen</option>
+          <option value="6in">6 inch</option>
+          <option value="10th">10th gen</option>
+        </select>
+        <p class="sss-pk__hint">this decides which file you’ll unlock.</p>
+      </div>
+
+      <div class="sss-pk__card" data-step="2" aria-disabled="true">
+        <p class="sss-pk__label">step 2</p>
+        <h3 class="sss-pk__q">pick a design</h3>
+        <select class="sss-pk__select" id="sssBoy" disabled>
+          <option value="">select</option>
+        </select>
+
+        <p class="sss-pk__hint">this is between you and your tbr.</p>
+      </div>
+
+      <!-- RESULT -->
+      <div class="sss-pk__card sss-pk__card--result" data-step="3" aria-disabled="true">
+        <p class="sss-pk__label">unlocked</p>
+        <h3 class="sss-pk__q">your match is ready</h3>
+
+        <div class="sss-pk__recap" id="sssRecap" style="display:none;">
+          <div class="sss-pk__pill" id="recapSize"></div>
+          <div class="sss-pk__pill" id="recapDesign"></div>
+        </div>
+
+        <a class="sss-pk__btn" id="sssDownload" href="#" target="_blank" aria-disabled="true">
+          <span class="sss-pk__btnText">finish the steps to unlock</span>
+          <span class="sss-pk__btnSub">🖤</span>
+        </a>
+
+        <button class="sss-pk__reset" type="button" id="sssReset">start over</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- falling hearts layer -->
+  <div class="sss-hearts" id="sssHearts" aria-hidden="true"></div>
+</section>
+
+<style>
+.sss-pk{
+  background:#0b0b0b;
+  color:#f6f6f6;
+  padding:22px 12px;
+  font-family:"Libre Baskerville", Georgia, serif;
+  position:relative;
+  overflow:hidden;
+}
+.sss-pk::before{
+  content:"";
+  position:absolute; inset:-60px;
+  pointer-events:none;
+  background:
+    radial-gradient(1000px 560px at 50% 120px, rgba(255,255,255,.08), transparent 70%),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,.035),
+      rgba(255,255,255,.035) 1px,
+      transparent 1px,
+      transparent 26px
+    );
+  opacity:.55;
+}
+.sss-pk__wrap{
+  max-width:1100px;
+  margin:0 auto;
+  position:relative;
+  z-index:2;
+  padding:0 8px;
+}
+.sss-pk__top{
+  max-width:920px;
+  margin:0 auto 16px;
+  text-align:left;
+}
+.sss-pk__kicker{
+  margin:0 0 8px;
+  font-size:12px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:#c8c8c8;
+}
+.sss-pk__title{
+  margin:0;
+  font-size:20px;
+  font-weight:400;
+  text-transform:lowercase;
+}
+.sss-pk__sub{
+  margin:8px 0 0;
+  font-size:13px;
+  line-height:1.6;
+  color:rgba(246,246,246,.78);
+}
+
+.sss-pk__rail{
+  display:flex;
+  gap:12px;
+  overflow-x:auto;
+  scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;
+  padding:12px 4px 6px;
+}
+.sss-pk__rail::-webkit-scrollbar{ height:8px; }
+.sss-pk__rail::-webkit-scrollbar-thumb{
+  background:rgba(255,255,255,.14);
+  border-radius:999px;
+}
+
+.sss-pk__card{
+  scroll-snap-align:start;
+  flex:0 0 92%;
+  background:rgba(21,21,21,.92);
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:18px;
+  box-shadow:0 12px 28px rgba(0,0,0,.45);
+  padding:14px 14px 16px;
+  position:relative;
+  overflow:hidden;
+}
+@media(min-width:990px){
+  .sss-pk__card{ flex:0 0 360px; }
+}
+.sss-pk__card[aria-disabled="true"]{
+  opacity:.58;
+  filter:saturate(.9);
+}
+.sss-pk__label{
+  margin:0 0 8px;
+  font-size:11px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:rgba(200,200,200,.9);
+}
+.sss-pk__q{
+  margin:0 0 10px;
+  font-size:16px;
+  font-weight:400;
+  text-transform:lowercase;
+}
+.sss-pk__hint{
+  margin:10px 0 0;
+  font-size:12px;
+  line-height:1.55;
+  color:rgba(246,246,246,.72);
+}
+.sss-pk__select{
+  width:100%;
+  height:44px;
+  padding:0 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(255,255,255,.06);
+  color:#f6f6f6;
+  font-size:14px;
+  outline:none;
+  appearance:none;
+  -webkit-appearance:none;
+}
+.sss-pk__select:disabled{ cursor:not-allowed; }
+.sss-pk__select:focus{
+  border-color:rgba(255,255,255,.34);
+  box-shadow:0 0 0 3px rgba(255,255,255,.06);
+}
+
+.sss-pk__card--result{
+  border-color:rgba(185,28,28,.35);
+  box-shadow:0 12px 30px rgba(185,28,28,.10), 0 12px 28px rgba(0,0,0,.45);
+}
+.sss-pk__recap{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin:10px 0 12px;
+}
+.sss-pk__pill{
+  font-size:12px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(255,255,255,.06);
+  color:rgba(246,246,246,.86);
+  text-transform:lowercase;
+}
+.sss-pk__btn{
+  width:100%;
+  height:46px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:2px;
+  text-decoration:none;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(255,255,255,.06);
+  color:#f6f6f6;
+  transition:transform .16s ease, background .16s ease, border-color .16s ease;
+}
+.sss-pk__btn[aria-disabled="true"]{ pointer-events:none; opacity:.65; }
+.sss-pk__btnText{ font-size:13px; text-transform:lowercase; }
+.sss-pk__btnSub{ font-size:12px; opacity:.85; }
+.sss-pk__btn.is-ready{
+  background:rgba(185,28,28,.22);
+  border-color:rgba(185,28,28,.55);
+}
+.sss-pk__btn.is-ready:hover{
+  transform:translateY(-1px);
+  background:rgba(185,28,28,.28);
+  border-color:rgba(185,28,28,.70);
+}
+.sss-pk__reset{
+  margin-top:10px;
+  width:100%;
+  height:40px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.12);
+  background:transparent;
+  color:rgba(246,246,246,.78);
+  cursor:pointer;
+  font-size:12px;
+  text-transform:lowercase;
+}
+.sss-pk__reset:hover{ color:#f6f6f6; border-color:rgba(255,255,255,.26); }
+
+/* falling hearts */
+.sss-hearts{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:5;
+  overflow:hidden;
+}
+.sss-heart{
+  position:absolute;
+  top:-24px;
+  font-size:16px;
+  opacity:.85;
+  animation: sssFall linear forwards;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,.45));
+}
+@keyframes sssFall{
+  0%   { transform:translateY(-40px) rotate(0deg); opacity:0; }
+  10%  { opacity:.90; }
+  100% { transform:translateY(calc(140vh + 140px)) rotate(220deg); opacity:0; }
+}
+@media (max-width: 600px){
+  .sss-pk__rail{ padding:12px 10px 10px; gap:10px; }
+  .sss-pk__card{ flex:0 0 88%; }
+}
+</style>
+
+<script>
+window.SSS_PICKER_ROWS = [
+  {% assign first = true %}
+  {% for it in items %}
+    {% assign design_name = it.name | strip | downcase %}
+    {% unless design_name == 'exclusive' %}
+
+      {% unless first %},{% endunless %}
+      {
+        name: {{ design_name | json }},
+        name_label: {{ it.name | strip | json }},
+        color: {{ it.color | strip | downcase | json }},
+        dl12: {{ it.dl_12th.value.url | json }},
+        dl11: {{ it.dl_11th.value.url | json }},
+        dl6:  {{ it.dl_6in.value.url  | json }},
+        dl10: {{ it.dl_10th.value.url | json }}
+      }
+
+      {% assign first = false %}
+
+    {% endunless %}
+  {% endfor %}
+];
+</script>
+
+<script>
+(function(){
+
+  const root = document.querySelector('[data-sss-picker]');
+  if (!root) return;
+
+  const sizeSel   = document.getElementById('sssSize');
+  const designSel = document.getElementById('sssBoy');
+
+  const recap = document.getElementById('sssRecap');
+  const recapSize = document.getElementById('recapSize');
+  const recapDesign = document.getElementById('recapDesign');
+
+  const dlBtn = document.getElementById('sssDownload');
+  const resetBtn = document.getElementById('sssReset');
+
+  const rows = window.SSS_PICKER_ROWS || [];
+
+  /* ---------------- DESIGN OPTIONS ---------------- */
+
+  function buildDesignOptions(){
+    const seen = new Set();
+    designSel.innerHTML = '<option value="">select design</option>';
+
+    rows.forEach(r=>{
+      if (!r.name) return;
+      if (seen.has(r.name)) return;
+      seen.add(r.name);
+
+      const opt = document.createElement('option');
+      opt.value = r.name;
+      opt.textContent = r.name_label;
+      designSel.appendChild(opt);
+    });
+  }
+
+  /* ---------------- CLEAR ---------------- */
+
+  function clearDownload(){
+    dlBtn.href = '#';
+    dlBtn.setAttribute('aria-disabled','true');
+    dlBtn.classList.remove('is-ready');
+    dlBtn.querySelector('.sss-pk__btnText').textContent = 'finish the steps to unlock';
+    recap.style.display = 'none';
+  }
+
+  /* ---------------- SET DOWNLOAD ---------------- */
+
+  function setDownload(url, size, design){
+    dlBtn.href = url;
+    dlBtn.setAttribute('aria-disabled','false');
+    dlBtn.classList.add('is-ready');
+    dlBtn.querySelector('.sss-pk__btnText').textContent = 'click to download';
+
+    recapSize.textContent = size;
+    recapDesign.textContent = design;
+
+    recap.style.display = 'flex';
+  }
+
+  /* ---------------- FLOW ---------------- */
+
+  function updateFlow(){
+    const size   = sizeSel.value;
+    const design = designSel.value;
+
+    if (!size || !design){
+      clearDownload();
+      return;
+    }
+
+    const matches = rows.filter(r => r.name === design);
+    if (!matches.length){
+      clearDownload();
+      return;
+    }
+
+    let url = '';
+    matches.some(function(match){
+      if (size === '12th' && match.dl12){ url = match.dl12; return true; }
+      if (size === '11th' && match.dl11){ url = match.dl11; return true; }
+      if (size === '6in' && match.dl6){ url = match.dl6; return true; }
+      if (size === '10th' && match.dl10){ url = match.dl10; return true; }
+      return false;
+    });
+
+    if (!url){
+      clearDownload();
+      return;
+    }
+
+    setDownload(url, size, design);
+  }
+
+ /* ---------------- EVENTS ---------------- */
+
+sizeSel.addEventListener('change', function(){
+
+  if (sizeSel.value){
+    designSel.disabled = false;
+  } else {
+    designSel.disabled = true;
+  }
+
+  designSel.value = '';
+
+  clearDownload();
+});
+
+
+designSel.addEventListener('change', function(){
+  updateFlow();
+});
+
+  resetBtn.addEventListener('click', function(){
+    sizeSel.value = '';
+    designSel.value = '';
+
+    designSel.disabled = true;
+
+    clearDownload();
+  });
+
+  /* ---------------- INIT ---------------- */
+
+  buildDesignOptions();
+  designSel.disabled = true;
+  clearDownload();
+
+})();
+</script>
+
+
+{% schema %}
+{
+  "name": "sss interactive picker",
+  "presets": [
+    { "name": "sss interactive picker" }
+  ]
+}
+{% endschema %}

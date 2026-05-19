@@ -1,0 +1,2454 @@
+{{ 'sss-library.css' | asset_url | stylesheet_tag }}
+{{ 'sss-you-might-like.css' | asset_url | stylesheet_tag }}
+
+{% paginate shop.metaobjects.sss_library.values by 250 %}
+{% liquid
+  assign visible_books = shop.metaobjects.sss_library.values | sort: 'title'
+%}
+
+<section class="sss-lib bbb-next" id="bbb-next-{{ section.id }}" data-sss-lib="public">
+  <div class="sss-lib__wrap bbb-next__wrap">
+    <div class="sss-tropeTop">
+      <div class="sss-tropeTop__left">
+        <header class="sss-trope__header bbb-next__hero">
+          {% if section.settings.kicker != blank %}
+            <div class="sss-trope__eyebrow">{{ section.settings.kicker }}</div>
+          {% endif %}
+          {% if section.settings.title != blank %}
+            <h1 class="sss-trope__title bbb-next__title">{{ section.settings.title }}</h1>
+          {% endif %}
+          {% if section.settings.subtext != blank %}
+            <p class="sss-trope__desc bbb-next__sub">{{ section.settings.subtext }}</p>
+          {% endif %}
+        </header>
+      </div>
+
+      <div class="sss-tropeTop__right">
+        <div class="sss-tropeInvite bbb-next__societyInvite">
+          <div class="sss-tropeInvite__kicker">
+            the private layer
+          </div>
+
+          <div class="sss-tropeInvite__title">
+            one romance recommendation.
+            every sunday.
+          </div>
+
+          <div class="sss-tropeInvite__sub">
+            morally gray men delivered straight to you
+          </div>
+
+          <a
+            href="https://thesmutandsentimentsociety.substack.com/subscribe"
+            class="sss-tropeInvite__btn"
+            target="_blank"
+            rel="noopener"
+          >
+            join the society →
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="sss-trope__divider"></div>
+
+    <div class="bbb-next__panel">
+      <a
+        href="https://thesmutandsentimentsociety.substack.com/subscribe"
+        class="bbb-next__mobileInvite"
+        target="_blank"
+        rel="noopener"
+      >
+        <span class="bbb-next__mobileInviteCopy">the private layer: one romance recommendation every sunday</span>
+        <span class="bbb-next__mobileInviteCta">join the society →</span>
+      </a>
+
+      <div class="bbb-next__picker">
+        <span class="bbb-next__pickerLabel">{{ section.settings.select_label }}</span>
+        <div class="bbb-next__pickerWrap">
+          <button
+            id="bbbNextPicker-{{ section.id }}"
+            class="bbb-next__select bbb-next__selectBtn"
+            type="button"
+            data-next-picker-trigger
+            aria-haspopup="dialog"
+            aria-expanded="false"
+          >
+            <span data-next-picker-label>{{ section.settings.placeholder }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="bbb-next__source is-hidden" data-next-source style="display:none;">
+        <div class="bbb-next__sourceCoverWrap">
+          <span class="sss-lib__heart" data-next-source-heart role="button" aria-label="save to your bookshelf">
+            <span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♡</span>
+            <span class="sss-lib__heartLabel" data-heart-label>save</span>
+          </span>
+          <div class="sss-lib__statusRibbon" data-next-source-ribbon hidden></div>
+          <div class="sss-lib__floatSpice" data-next-source-spice hidden></div>
+          <img class="bbb-next__sourceCover" data-next-source-cover alt="" loading="lazy">
+        </div>
+        <div class="bbb-next__sourceBody">
+          <div class="bbb-next__sourceTop">
+            <div class="bbb-next__sourceLabel">{{ section.settings.source_label }}</div>
+            <button type="button" class="bbb-next__clearBtn" data-next-clear>clear</button>
+          </div>
+          <h2 class="bbb-next__sourceTitle" data-next-source-title></h2>
+          <p class="bbb-next__sourceAuthor" data-next-source-author></p>
+          <div class="bbb-next__sourceMeta" data-next-source-meta></div>
+          <p class="bbb-next__sourceWhy" data-next-source-why></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bbb-next__results is-hidden" data-next-results style="display:none;">
+      <div class="bbb-next__resultsHead">
+        <p class="bbb-next__resultsKicker">{{ section.settings.results_kicker }}</p>
+        <h2 class="bbb-next__resultsTitle">{{ section.settings.results_title }}</h2>
+        <p class="bbb-next__resultsSub">{{ section.settings.results_subtext }}</p>
+        <button type="button" class="bbb-next__refreshBtn" data-next-refresh>refresh picks</button>
+      </div>
+
+      <div class="bbb-next__cards">
+        <article class="bbb-next__card is-hidden" data-next-card="1" style="display:none;">
+          <div class="bbb-next__cardPill">closest match</div>
+          <div class="bbb-next__cardMood" data-next-mood></div>
+          <div class="bbb-next__cardInner">
+            <div class="bbb-next__cardCoverWrap" data-next-open role="button" tabindex="0" aria-label="open book details">
+              <span class="sss-lib__heart" data-next-heart role="button" aria-label="save to your bookshelf">
+                <span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♡</span>
+                <span class="sss-lib__heartLabel" data-heart-label>save</span>
+              </span>
+              <div class="sss-lib__statusRibbon" data-next-ribbon hidden></div>
+              <div class="sss-lib__floatSpice" data-next-spice hidden></div>
+              <img class="bbb-next__cardCover" data-next-cover alt="" loading="lazy">
+            </div>
+            <div class="bbb-next__cardBody">
+              <h3 class="bbb-next__cardTitle" data-next-title></h3>
+              <p class="bbb-next__cardAuthor" data-next-author></p>
+              <div class="bbb-next__cardMeta" data-next-meta></div>
+              <p class="bbb-next__cardReason" data-next-reason></p>
+              <div class="bbb-next__statusRow">
+                <button type="button" class="bbb-next__statusCheck" data-next-status="read">
+                  <span class="bbb-next__statusBox" aria-hidden="true"></span>
+                  <span>mark as read</span>
+                </button>
+                <button type="button" class="bbb-next__statusCheck" data-next-status="tbr">
+                  <span class="bbb-next__statusBox" aria-hidden="true"></span>
+                  <span>add to tbr</span>
+                </button>
+              </div>
+              <a class="bbb-next__cardLink" data-next-link href="#" hidden>go to my bookshelf →</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="bbb-next__card is-hidden" data-next-card="2" style="display:none;">
+          <div class="bbb-next__cardPill">similar vibes</div>
+          <div class="bbb-next__cardMood" data-next-mood></div>
+          <div class="bbb-next__cardInner">
+            <div class="bbb-next__cardCoverWrap" data-next-open role="button" tabindex="0" aria-label="open book details">
+              <span class="sss-lib__heart" data-next-heart role="button" aria-label="save to your bookshelf">
+                <span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♡</span>
+                <span class="sss-lib__heartLabel" data-heart-label>save</span>
+              </span>
+              <div class="sss-lib__statusRibbon" data-next-ribbon hidden></div>
+              <div class="sss-lib__floatSpice" data-next-spice hidden></div>
+              <img class="bbb-next__cardCover" data-next-cover alt="" loading="lazy">
+            </div>
+            <div class="bbb-next__cardBody">
+              <h3 class="bbb-next__cardTitle" data-next-title></h3>
+              <p class="bbb-next__cardAuthor" data-next-author></p>
+              <div class="bbb-next__cardMeta" data-next-meta></div>
+              <p class="bbb-next__cardReason" data-next-reason></p>
+              <div class="bbb-next__statusRow">
+                <button type="button" class="bbb-next__statusCheck" data-next-status="read">
+                  <span class="bbb-next__statusBox" aria-hidden="true"></span>
+                  <span>mark as read</span>
+                </button>
+                <button type="button" class="bbb-next__statusCheck" data-next-status="tbr">
+                  <span class="bbb-next__statusBox" aria-hidden="true"></span>
+                  <span>add to tbr</span>
+                </button>
+              </div>
+              <a class="bbb-next__cardLink" data-next-link href="#" hidden>go to my bookshelf →</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="bbb-next__card is-hidden" data-next-card="3" style="display:none;">
+          <div class="bbb-next__cardPill">maybe something new</div>
+          <div class="bbb-next__cardMood" data-next-mood></div>
+          <div class="bbb-next__cardInner">
+            <div class="bbb-next__cardCoverWrap" data-next-open role="button" tabindex="0" aria-label="open book details">
+              <span class="sss-lib__heart" data-next-heart role="button" aria-label="save to your bookshelf">
+                <span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♡</span>
+                <span class="sss-lib__heartLabel" data-heart-label>save</span>
+              </span>
+              <div class="sss-lib__statusRibbon" data-next-ribbon hidden></div>
+              <div class="sss-lib__floatSpice" data-next-spice hidden></div>
+              <img class="bbb-next__cardCover" data-next-cover alt="" loading="lazy">
+            </div>
+            <div class="bbb-next__cardBody">
+              <h3 class="bbb-next__cardTitle" data-next-title></h3>
+              <p class="bbb-next__cardAuthor" data-next-author></p>
+              <div class="bbb-next__cardMeta" data-next-meta></div>
+              <p class="bbb-next__cardReason" data-next-reason></p>
+              <div class="bbb-next__statusRow">
+                <button type="button" class="bbb-next__statusCheck" data-next-status="read">
+                  <span class="bbb-next__statusBox" aria-hidden="true"></span>
+                  <span>mark as read</span>
+                </button>
+                <button type="button" class="bbb-next__statusCheck" data-next-status="tbr">
+                  <span class="bbb-next__statusBox" aria-hidden="true"></span>
+                  <span>add to tbr</span>
+                </button>
+              </div>
+              <a class="bbb-next__cardLink" data-next-link href="#" hidden>go to my bookshelf →</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <div class="bbb-next__debug" data-next-debug hidden>
+      <div class="bbb-next__debugLabel">preview debug</div>
+      <div class="bbb-next__debugCount" data-next-debug-count></div>
+      <div class="bbb-next__debugList" data-next-debug-list></div>
+    </div>
+
+    <div class="sss-trope__actions bbb-next__actions">
+      <a
+        href="/pages/library"
+        class="sss-trope__actionLink"
+        target="_blank"
+        rel="noopener"
+      >
+        see the full romance library →
+      </a>
+
+      <a
+        href="/pages/reader-quizes"
+        class="sss-trope__actionLink"
+        target="_blank"
+        rel="noopener"
+      >
+        find your fictional boyfriend →
+      </a>
+    </div>
+
+    <div class="sss-you-might-like--mobile bbb-next__explore">
+      {% render 'sss-you-might-like' %}
+    </div>
+
+    <div class="sss-you-might-like--desktop bbb-next__explore">
+      {% render 'sss-you-might-like' %}
+    </div>
+  </div>
+
+  {% render 'sss-library-modal' %}
+
+  <div class="bbb-next__searchModal" data-next-search-modal hidden>
+    <div class="bbb-next__searchScrim" data-next-search-close></div>
+    <div class="bbb-next__searchPanel" role="dialog" aria-modal="true" aria-labelledby="bbb-next-search-title-{{ section.id }}">
+      <button type="button" class="bbb-next__searchClose" data-next-search-close aria-label="close">×</button>
+      <p class="bbb-next__searchKicker">choose your anchor book</p>
+      <h3 class="bbb-next__searchTitle" id="bbb-next-search-title-{{ section.id }}">what should we match from?</h3>
+      <p class="bbb-next__searchHint">start typing, or choose from the books below.</p>
+      <input type="search" class="bbb-next__searchInput" autocomplete="off" placeholder="search by title or author" data-next-picker>
+      <div class="bbb-next__searchResults" data-next-search-results></div>
+    </div>
+  </div>
+
+  <script type="application/json" data-next-books>
+    [
+      {% assign first_book = true %}
+      {% for book in visible_books %}
+        {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+        {% assign is_visible_value = is_visible | strip %}
+        {% unless is_visible_value == 'true' %}
+          {% continue %}
+        {% endunless %}
+
+        {% capture is_private %}{% render 'sss-book-private', book: book %}{% endcapture %}
+        {% assign is_private_value = is_private | strip %}
+        {% if is_private_value == 'true' %}
+          {% continue %}
+        {% endif %}
+
+        {% assign series_number = book.series_number.value | default: 0 | plus: 0 %}
+        {% assign read_as_standalone = book.read_as_standalone.value %}
+        {% if book.series.value != blank and series_number > 1 and read_as_standalone != true %}
+          {% continue %}
+        {% endif %}
+
+        {% unless first_book %},{% endunless %}
+        {% assign first_book = false %}
+        {
+          "handle": {{ book.system.handle | json }},
+          "label": {{ book.title.value | append: '' | json }},
+          "title": {{ book.title.value | json }},
+          "author": {{ book.author.value | json }},
+          "cover": {{ book.cover.value.url | default: book.cover.value | json }},
+          "why": {{ book.why_i_loved_it.value | strip_html | json }},
+          "mini": {{ book.mini_note.value | strip_html | json }},
+          "shelf": {{ book.shelf.value.name | strip | json }},
+          "spice": {{ book.spice_level.value | default: 0 | plus: 0 | json }},
+          "amazon": {{ book.amazon_link.value.url | default: book.amazon_link.value | json }},
+          "bookshop": {{ book.bookshop_link.value.url | default: book.bookshop_link.value | json }},
+          "newsletter": {{ book.newsletter_url.value | json }},
+          "tension": {{ book.tension_score.value | json }},
+          "damage": {{ book.emotional_damage_score.value | json }},
+          "darkness": {{ book.darkness_level.value | json }},
+          "yearning": {{ book.yearning_level.value | json }},
+          "boyfriend": {{ book.boyfriend_type.value | json }},
+          "reread": {{ book.reread_badge.value | json }},
+          "ku": {{ book.on_kindle_unlimited.value | json }},
+          "series": {{ book.series.value.system.handle | json }},
+          "seriesName": {{ book.series.value.title | json }},
+          "seriesNumber": {{ book.series_number.value | json }},
+          "url": {{ '/pages/library?book=' | append: book.system.handle | json }},
+          "tropes": [
+            {% for trope in book.tropes.value %}
+              {{ trope.name | strip | json }}{% unless forloop.last %},{% endunless %}
+            {% endfor %}
+          ]
+        }
+      {% endfor %}
+    ]
+  </script>
+
+  <script>
+    (function() {
+      var section = document.getElementById('bbb-next-{{ section.id }}');
+      if (!section) return;
+
+      var dataNode = section.querySelector('[data-next-books]');
+      var picker = section.querySelector('[data-next-picker]');
+      var pickerTrigger = section.querySelector('[data-next-picker-trigger]');
+      var pickerLabel = section.querySelector('[data-next-picker-label]');
+      var clearButton = section.querySelector('[data-next-clear]');
+      var refreshButton = section.querySelector('[data-next-refresh]');
+      var searchModal = section.querySelector('[data-next-search-modal]');
+      var searchResults = section.querySelector('[data-next-search-results]');
+      var debugWrap = section.querySelector('[data-next-debug]');
+      var debugCount = section.querySelector('[data-next-debug-count]');
+      var debugList = section.querySelector('[data-next-debug-list]');
+      var modal = section.querySelector('.sss-lib__modal');
+      var sourceWrap = section.querySelector('[data-next-source]');
+      var resultsWrap = section.querySelector('[data-next-results]');
+      if (!dataNode || !picker || !pickerTrigger || !pickerLabel || !searchModal || !searchResults || !modal || !sourceWrap || !resultsWrap) return;
+
+      var books = [];
+      try {
+        books = JSON.parse(dataNode.textContent);
+      } catch (error) {
+        console.error('what-to-read-next data failed to parse', error);
+        return;
+      }
+
+      if (!books.length) return;
+
+      var booksByHandle = {};
+      var booksByLabel = {};
+      var booksByTitle = {};
+      var currentSelectedHandle = '';
+      var currentRotationStep = 0;
+      books.forEach(function(book) {
+        var normalized = normalizeBook(book);
+        booksByHandle[normalized.handle] = normalized;
+        booksByHandle[String(normalized.handle).toLowerCase()] = normalized;
+        booksByLabel[String(normalized.label).toLowerCase()] = normalized;
+        if (normalized.title) {
+          booksByTitle[String(normalized.title).toLowerCase()] = normalized;
+        }
+      });
+
+      var sourceEls = {
+        heart: section.querySelector('[data-next-source-heart]'),
+        ribbon: section.querySelector('[data-next-source-ribbon]'),
+        cover: section.querySelector('[data-next-source-cover]'),
+        spice: section.querySelector('[data-next-source-spice]'),
+        title: section.querySelector('[data-next-source-title]'),
+        author: section.querySelector('[data-next-source-author]'),
+        meta: section.querySelector('[data-next-source-meta]'),
+        why: section.querySelector('[data-next-source-why]')
+      };
+
+      var modalEls = {
+        title: modal.querySelector('[data-mtitle]'),
+        author: modal.querySelector('[data-mauthor]'),
+        cover: modal.querySelector('[data-mcover]'),
+        amazon: modal.querySelector('[data-amazon-btn]'),
+        bookshop: modal.querySelector('[data-bookshop-btn]'),
+        newsletter: modal.querySelector('[data-newsletter-btn]'),
+        tropes: modal.querySelector('[data-mtropes]'),
+        why: modal.querySelector('[data-mwhy]'),
+        mini: modal.querySelector('[data-mmini]'),
+        tension: modal.querySelector('[data-mtension]'),
+        damage: modal.querySelector('[data-mdamage]'),
+        darkness: modal.querySelector('[data-mdarkness]'),
+        yearning: modal.querySelector('[data-myearning]'),
+        ku: modal.querySelector('[data-mku]'),
+        boyfriend: modal.querySelector('[data-mboyfriend]'),
+        reread: modal.querySelector('[data-mreread]'),
+        series: modal.querySelector('[data-mseries]'),
+        share: modal.querySelector('[data-modal-share-btn]'),
+        shareLabel: modal.querySelector('[data-modal-share-label]'),
+        shareIcon: modal.querySelector('.sss-lib__mshareIcon')
+      };
+
+      var cardEls = Array.prototype.slice.call(section.querySelectorAll('[data-next-card]')).map(function(card) {
+        return {
+          root: card,
+          coverWrap: card.querySelector('[data-next-open]'),
+          heart: card.querySelector('[data-next-heart]'),
+          ribbon: card.querySelector('[data-next-ribbon]'),
+          mood: card.querySelector('[data-next-mood]'),
+          cover: card.querySelector('[data-next-cover]'),
+          spice: card.querySelector('[data-next-spice]'),
+          title: card.querySelector('[data-next-title]'),
+          author: card.querySelector('[data-next-author]'),
+          meta: card.querySelector('[data-next-meta]'),
+          reason: card.querySelector('[data-next-reason]'),
+          link: card.querySelector('[data-next-link]')
+        };
+      });
+
+      function normalizeBook(book) {
+        return {
+          handle: book.handle || '',
+          label: book.author ? ((book.title || '') + ' by ' + book.author) : (book.label || book.title || ''),
+          title: book.title || '',
+          author: book.author || '',
+          cover: book.cover || '',
+          why: book.why || book.mini || '',
+          mini: book.mini || '',
+          shelf: book.shelf || '',
+          spice: Number(book.spice || 0),
+          amazon: book.amazon || '',
+          bookshop: book.bookshop || '',
+          newsletter: book.newsletter || '',
+          tension: book.tension || '',
+          damage: book.damage || '',
+          darkness: book.darkness || '',
+          yearning: book.yearning || '',
+          boyfriend: book.boyfriend || '',
+          reread: book.reread || '',
+          ku: book.ku || '',
+          series: book.series || '',
+          seriesName: book.seriesName || '',
+          seriesNumber: book.seriesNumber || '',
+          url: book.url || '',
+          tropes: Array.isArray(book.tropes) ? book.tropes.filter(Boolean) : []
+        };
+      }
+
+      function sharedTropes(baseBook, candidate) {
+        var selectedTropes = baseBook.tropes.map(function(trope) {
+          return String(trope).toLowerCase();
+        });
+        return candidate.tropes.filter(function(trope) {
+          return selectedTropes.indexOf(String(trope).toLowerCase()) !== -1;
+        });
+      }
+
+      function tropeAffinityScore(baseBook, candidate) {
+        var relatedMap = {
+          'touch her and die': ['trauma bonding', 'forced proximity', 'who did this to you', 'enemies to lovers', 'protective hero'],
+          'trauma bonding': ['touch her and die', 'forced proximity', 'who did this to you', 'enemies to lovers'],
+          'forced proximity': ['touch her and die', 'trauma bonding', 'marriage of convenience', 'enemies to lovers'],
+          'enemies to lovers': ['forced proximity', 'touch her and die', 'hate to love', 'rivals to lovers'],
+          'slow burn': ['yearning', 'forced proximity', 'enemies to lovers'],
+          'who did this to you': ['touch her and die', 'protective hero', 'trauma bonding']
+        };
+
+        var selected = (baseBook.tropes || []).map(function(trope) {
+          return String(trope).toLowerCase().trim();
+        });
+        var candidateTropes = (candidate.tropes || []).map(function(trope) {
+          return String(trope).toLowerCase().trim();
+        });
+        var score = 0;
+
+        selected.forEach(function(trope) {
+          var related = relatedMap[trope] || [];
+          related.forEach(function(relatedTrope) {
+            if (candidateTropes.indexOf(relatedTrope) !== -1) {
+              score += 1;
+            }
+          });
+        });
+
+        return score;
+      }
+
+      function scoreCandidate(baseBook, candidate) {
+        var shared = sharedTropes(baseBook, candidate);
+        var sameShelf = baseBook.shelf && candidate.shelf && String(baseBook.shelf).toLowerCase() === String(candidate.shelf).toLowerCase();
+        var spiceDiff = Math.abs(Number(baseBook.spice || 0) - Number(candidate.spice || 0));
+        var darknessDiff = Math.abs(Number(baseBook.darkness || 0) - Number(candidate.darkness || 0));
+        var tropeAffinity = tropeAffinityScore(baseBook, candidate);
+        var matchScore = (shared.length * 100) + (tropeAffinity * 28) + (sameShelf ? 150 : 0) - (spiceDiff * 10) - (darknessDiff * 8);
+        return {
+          book: candidate,
+          shared: shared,
+          sameShelf: sameShelf,
+          spiceDiff: spiceDiff,
+          darknessDiff: darknessDiff,
+          tropeAffinity: tropeAffinity,
+          matchScore: matchScore
+        };
+      }
+
+      function sortByStrength(a, b) {
+        if (b.matchScore !== a.matchScore) return b.matchScore - a.matchScore;
+        if (b.sameShelf !== a.sameShelf) return b.sameShelf ? 1 : -1;
+        if (b.shared.length !== a.shared.length) return b.shared.length - a.shared.length;
+        if (b.tropeAffinity !== a.tropeAffinity) return b.tropeAffinity - a.tropeAffinity;
+        if (a.darknessDiff !== b.darknessDiff) return a.darknessDiff - b.darknessDiff;
+        if (a.spiceDiff !== b.spiceDiff) return a.spiceDiff - b.spiceDiff;
+        return a.book.title.localeCompare(b.book.title);
+      }
+
+      function getPool(candidates, predicate) {
+        return candidates.filter(function(candidate) {
+          return predicate(candidate);
+        }).sort(sortByStrength);
+      }
+
+      function pickFromPool(pool, usedHandles, rotationStep) {
+        if (!pool || !pool.length) return null;
+        var startIndex = rotationStep % pool.length;
+        for (var i = 0; i < pool.length; i += 1) {
+          var candidate = pool[(startIndex + i) % pool.length];
+          if (usedHandles.indexOf(candidate.book.handle) === -1) return candidate;
+        }
+        return null;
+      }
+
+      function getMatchesForBook(handle, rotationStep) {
+        var selected = booksByHandle[handle];
+        if (!selected) return { sameShelfMatch: null, tropeMatch: null, spiceMatch: null };
+        var cycleStep = Number(rotationStep || 0);
+
+        var candidates = books
+          .filter(function(book) { return book.handle !== handle; })
+          .map(function(book) { return scoreCandidate(selected, book); });
+
+        var usedHandles = [];
+        var sameShelfPool = getPool(candidates, function(candidate) {
+          return candidate.sameShelf && candidate.shared.length >= 2;
+        });
+
+        if (!sameShelfPool.length) {
+          sameShelfPool = getPool(candidates, function(candidate) {
+            return candidate.sameShelf && candidate.shared.length >= 1;
+          });
+        }
+
+        var sameShelfFallbackPool = [];
+        if (!sameShelfPool.length) {
+          sameShelfFallbackPool = getPool(candidates, function(candidate) {
+            return candidate.sameShelf;
+          });
+        }
+
+        var sameShelfMatch = pickFromPool(sameShelfPool, usedHandles, cycleStep);
+        if (!sameShelfMatch && sameShelfFallbackPool.length) {
+          sameShelfMatch = pickFromPool(sameShelfFallbackPool, usedHandles, cycleStep);
+        }
+        if (sameShelfMatch) usedHandles.push(sameShelfMatch.book.handle);
+
+        var tropePool = getPool(candidates, function(candidate) {
+          return candidate.shared.length >= 2;
+        });
+
+        if (!tropePool.length) {
+          tropePool = getPool(candidates, function(candidate) {
+            return candidate.shared.length >= 1;
+          });
+        }
+
+        var tropeMatch = pickFromPool(tropePool, usedHandles, cycleStep + 1);
+        if (tropeMatch) usedHandles.push(tropeMatch.book.handle);
+
+        var spicePool = getPool(candidates, function(candidate) {
+          return candidate.shared.length >= 1 && candidate.spiceDiff === 0;
+        });
+
+        if (!spicePool.length) {
+          spicePool = getPool(candidates, function(candidate) {
+            return candidate.shared.length >= 1;
+          });
+        }
+
+        var spiceMatch = pickFromPool(spicePool, usedHandles, cycleStep + 2);
+        return { sameShelfMatch: sameShelfMatch, tropeMatch: tropeMatch, spiceMatch: spiceMatch };
+      }
+
+      function renderDebugSummary() {
+        if (!debugWrap || !window.Shopify || !window.Shopify.designMode) return;
+
+        var unmatched = books.filter(function(book) {
+          var matches = getMatchesForBook(book.handle);
+          return !matches.sameShelfMatch && !matches.tropeMatch && !matches.spiceMatch;
+        });
+
+        debugWrap.hidden = false;
+        debugCount.textContent = unmatched.length + ' books currently have no viable matches.';
+        debugList.textContent = unmatched.length
+          ? unmatched.slice(0, 24).map(function(book) { return book.title; }).join(' • ')
+          : 'Every picker-eligible book currently finds at least one recommendation path.';
+      }
+
+      function tropeListText(tropes) {
+        if (!tropes.length) return '';
+        if (tropes.length === 1) return tropes[0];
+        if (tropes.length === 2) return tropes[0] + ' and ' + tropes[1];
+        return tropes.slice(0, -1).join(', ') + ', and ' + tropes[tropes.length - 1];
+      }
+
+      function tropePlusText(tropes) {
+        return (tropes || []).filter(Boolean).slice(0, 2).join(' + ');
+      }
+
+      function buildWantText(parts) {
+        var clean = (parts || []).filter(Boolean).slice(0, 2);
+        return clean.join(' + ');
+      }
+
+      function spiceLabel(level) {
+        if (!level) return 'low spice';
+        if (level <= 2) return 'soft spice';
+        if (level === 3) return 'medium spice';
+        if (level === 4) return 'high spice';
+        return 'very high spice';
+      }
+
+      function spiceBadge(level) {
+        var value = Number(level || 0);
+        if (value <= 0) return '';
+        return Array(value + 1).join('🌶');
+      }
+
+      function getStatusMeta(status) {
+        var map = {
+          read: { label: 'read', className: 'is-read' },
+          reading: { label: 'reading', className: 'is-reading' },
+          tbr: { label: 'tbr', className: 'is-tbr' },
+          dnf: { label: 'dnf', className: 'is-dnf' }
+        };
+        return map[status] || null;
+      }
+
+      function syncShelfHeart(heart, book) {
+        if (!heart || !book) return;
+        var saved = isBookOnShelf(book);
+        heart.classList.toggle('is-saved', saved);
+        var icon = heart.querySelector('[data-heart-icon]');
+        var label = heart.querySelector('[data-heart-label]');
+        if (icon) icon.textContent = saved ? '♥' : '♡';
+        if (label) label.textContent = saved ? 'saved' : 'save';
+        heart.setAttribute('aria-label', saved ? 'remove from your bookshelf' : 'save to your bookshelf');
+        heart.onclick = function(event) {
+          event.preventDefault();
+          event.stopPropagation();
+          toggleBookOnShelf(book);
+          refreshShelfUI(book);
+        };
+      }
+
+      function syncStatusRibbon(ribbon, book) {
+        if (!ribbon || !book) return;
+        var statuses = getStoredStatuses();
+        var current = statuses[String(book.handle || '').toLowerCase()] || '';
+        var meta = getStatusMeta(current);
+        if (!meta) {
+          ribbon.hidden = true;
+          ribbon.className = 'sss-lib__statusRibbon';
+          ribbon.textContent = '';
+          return;
+        }
+        ribbon.hidden = false;
+        ribbon.className = 'sss-lib__statusRibbon ' + meta.className;
+        ribbon.textContent = meta.label;
+      }
+
+      function buildSelectedMeta(book) {
+        var bits = [];
+        if (book.shelf) bits.push(book.shelf);
+        if (book.tropes && book.tropes.length) bits.push(tropeListText(book.tropes.slice(0, 2)));
+        if (book.spice) bits.push(spiceLabel(book.spice));
+        return bits.join(' • ');
+      }
+
+      function buildCandidateMeta(book, shared) {
+        var bits = [];
+        if (book.shelf) bits.push(book.shelf);
+        if (shared && shared.length) bits.push(tropeListText(shared.slice(0, 3)));
+        if (book.spice) bits.push(spiceLabel(book.spice));
+        return bits.join(' • ');
+      }
+
+      function buildReason(type, selected, match) {
+        if (!match) return '';
+        var shared = match.shared.slice(0, 3);
+        if (type === 'shelf') {
+          return (match.book.shelf || selected.shelf || 'This lane') + ', plus ' + tropeListText(shared.slice(0, 2)) + '. This one feels closest to the same reading lane without being the exact same book.';
+        }
+        if (type === 'tropes') {
+          return 'This one keeps the pull of ' + tropeListText(shared.slice(0, 2)) + ', even if it takes you into a slightly different corner of the library.';
+        }
+        return 'If you are in the mood for ' + tropeListText(shared.slice(0, 1)) + ' with that same ' + spiceLabel(selected.spice) + ' energy, this is the one I would hand you next.';
+      }
+
+      function buildMood(type, selected, match) {
+        if (!match) return '';
+        if (type === 'shelf') {
+          return 'if you want ' + buildWantText([match.shared[0], match.book.shelf]);
+        }
+        if (type === 'tropes') {
+          return 'if you want ' + tropePlusText(match.shared.slice(0, 2));
+        }
+        return 'if you want ' + buildWantText([match.shared[0], match.book.shelf || selected.shelf]);
+      }
+
+      function getPickerLabel(book) {
+        if (!book) return '';
+        return book.label || (book.author ? (book.title + ' by ' + book.author) : book.title || '');
+      }
+
+      function escapeHtml(value) {
+        return String(value || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function tropeUrl(trope) {
+        var label = String(trope || '').trim().toLowerCase();
+        if (!label) return '#';
+
+        var specialMap = {
+          'captor x captive': '/pages/captor-captive-romance-books'
+        };
+
+        if (specialMap[label]) return specialMap[label];
+
+        var slug = label
+          .replace(/&/g, ' and ')
+          .replace(/\+/g, ' plus ')
+          .replace(/['’]/g, '')
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+
+        return slug ? ('/pages/' + slug + '-romance-books') : '#';
+      }
+
+      function resolveBook(value) {
+        var normalizedValue = String(value || '').trim().toLowerCase();
+        if (!normalizedValue) return null;
+        return booksByHandle[normalizedValue] || booksByLabel[normalizedValue] || booksByTitle[normalizedValue] || null;
+      }
+
+      function renderSearchResults(query) {
+        var normalizedQuery = String(query || '').trim().toLowerCase();
+        var matches = books.filter(function(book) {
+          if (!normalizedQuery) return true;
+          var combined = [book.title, book.author, book.shelf].filter(Boolean).join(' ').toLowerCase();
+          return combined.indexOf(normalizedQuery) !== -1;
+        });
+
+        if (!matches.length) {
+          searchResults.innerHTML = '<div class="bbb-next__searchEmpty">no books matched that search. try a title or author instead.</div>';
+          return;
+        }
+
+        searchResults.innerHTML = '';
+        matches.forEach(function(book) {
+          var button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'bbb-next__searchPick';
+          button.innerHTML =
+            (book.cover ? '<img src="' + book.cover + '" alt="' + (book.title || '') + '" loading="lazy">' : '') +
+            '<span class="bbb-next__searchPickTitle">' + (book.title || '') + '</span>' +
+            '<span class="bbb-next__searchPickMeta">' + (book.author || '') + '</span>';
+          button.addEventListener('click', function() {
+            selectBook(book);
+            closeSearch();
+          });
+          searchResults.appendChild(button);
+        });
+      }
+
+      function openSearch() {
+        searchModal.hidden = false;
+        pickerTrigger.setAttribute('aria-expanded', 'true');
+        renderSearchResults(picker.value || '');
+        setTimeout(function() {
+          picker.focus();
+          picker.select();
+        }, 30);
+      }
+
+      function closeSearch() {
+        searchModal.hidden = true;
+        pickerTrigger.setAttribute('aria-expanded', 'false');
+      }
+
+      function selectBook(book) {
+        if (!book) return;
+        picker.value = getPickerLabel(book);
+        pickerLabel.textContent = getPickerLabel(book);
+        currentSelectedHandle = book.handle || '';
+        currentRotationStep = 0;
+        updateRecommendations(book.handle);
+
+        var url = new URL(window.location.href);
+        url.searchParams.set('book', book.handle);
+        window.history.replaceState({}, '', url.toString());
+      }
+
+      function renderSource(book) {
+        sourceEls.cover.src = book.cover || '';
+        sourceEls.cover.alt = book.title ? ('Cover of ' + book.title) : '';
+        syncShelfHeart(sourceEls.heart, book);
+        syncStatusRibbon(sourceEls.ribbon, book);
+        if (sourceEls.spice) {
+          var sourceSpice = spiceBadge(book.spice);
+          sourceEls.spice.textContent = sourceSpice;
+          sourceEls.spice.hidden = !sourceSpice;
+        }
+        sourceEls.title.textContent = book.title || '';
+        sourceEls.author.textContent = book.author ? ('by ' + book.author) : '';
+        sourceEls.meta.textContent = buildSelectedMeta(book);
+        sourceEls.why.textContent = book.why || '';
+        sourceWrap.hidden = false;
+        sourceWrap.classList.remove('is-hidden');
+        sourceWrap.style.display = 'grid';
+      }
+
+      function clearResultsUI() {
+        currentSelectedHandle = '';
+        currentRotationStep = 0;
+        sourceWrap.hidden = true;
+        sourceWrap.classList.add('is-hidden');
+        sourceWrap.style.display = 'none';
+        resultsWrap.hidden = true;
+        resultsWrap.classList.add('is-hidden');
+        resultsWrap.style.display = 'none';
+
+        if (sourceEls.cover) {
+          sourceEls.cover.removeAttribute('src');
+          sourceEls.cover.alt = '';
+        }
+        if (sourceEls.spice) {
+          sourceEls.spice.textContent = '';
+          sourceEls.spice.hidden = true;
+        }
+        if (sourceEls.heart) {
+          sourceEls.heart.classList.remove('is-saved');
+          var sourceHeartIcon = sourceEls.heart.querySelector('[data-heart-icon]');
+          var sourceHeartLabel = sourceEls.heart.querySelector('[data-heart-label]');
+          if (sourceHeartIcon) sourceHeartIcon.textContent = '♡';
+          if (sourceHeartLabel) sourceHeartLabel.textContent = 'save';
+          sourceEls.heart.setAttribute('aria-label', 'save to your bookshelf');
+          sourceEls.heart.onclick = null;
+        }
+        if (sourceEls.ribbon) {
+          sourceEls.ribbon.hidden = true;
+          sourceEls.ribbon.className = 'sss-lib__statusRibbon';
+          sourceEls.ribbon.textContent = '';
+        }
+        if (sourceEls.title) sourceEls.title.textContent = '';
+        if (sourceEls.author) sourceEls.author.textContent = '';
+        if (sourceEls.meta) sourceEls.meta.textContent = '';
+        if (sourceEls.why) sourceEls.why.textContent = '';
+
+        cardEls.forEach(function(card) {
+          card.root.hidden = true;
+          card.root.classList.add('is-hidden');
+          card.root.style.display = 'none';
+          card.root.dataset.handle = '';
+          card.root.dataset.title = '';
+          card.root.dataset.author = '';
+          card.root.dataset.cover = '';
+          card.root.dataset.amazon = '';
+          card.root.dataset.bookshop = '';
+          card.root.dataset.spice = '';
+          card.root.dataset.tropes = '';
+          card.root.dataset.tropesDisplay = '';
+          card.root.dataset.why = '';
+          card.root.dataset.newsletter = '';
+          card.root.dataset.tension = '';
+          card.root.dataset.damage = '';
+          card.root.dataset.darkness = '';
+          card.root.dataset.yearning = '';
+          card.root.dataset.boyfriend = '';
+          card.root.dataset.reread = '';
+          card.root.dataset.ku = '';
+          card.root.dataset.mini = '';
+          card.root.dataset.series = '';
+          card.root.dataset.seriesName = '';
+          card.root.dataset.seriesNumber = '';
+          if (card.mood) card.mood.textContent = '';
+          if (card.cover) {
+            card.cover.removeAttribute('src');
+            card.cover.alt = '';
+          }
+          if (card.spice) {
+            card.spice.textContent = '';
+            card.spice.hidden = true;
+          }
+          if (card.heart) {
+            card.heart.classList.remove('is-saved');
+            var cardHeartIcon = card.heart.querySelector('[data-heart-icon]');
+            var cardHeartLabel = card.heart.querySelector('[data-heart-label]');
+            if (cardHeartIcon) cardHeartIcon.textContent = '♡';
+            if (cardHeartLabel) cardHeartLabel.textContent = 'save';
+            card.heart.setAttribute('aria-label', 'save to your bookshelf');
+            card.heart.onclick = null;
+          }
+          if (card.ribbon) {
+            card.ribbon.hidden = true;
+            card.ribbon.className = 'sss-lib__statusRibbon';
+            card.ribbon.textContent = '';
+          }
+          if (card.title) card.title.textContent = '';
+          if (card.author) card.author.textContent = '';
+          if (card.meta) card.meta.textContent = '';
+          if (card.reason) card.reason.textContent = '';
+          if (card.link) {
+            card.link.hidden = true;
+            card.link.removeAttribute('href');
+          }
+        });
+      }
+
+      function renderCard(el, type, selected, match) {
+        if (!match) {
+          el.root.hidden = true;
+          el.root.classList.add('is-hidden');
+          el.root.style.display = 'none';
+          return;
+        }
+
+        var book = match.book;
+        el.root.hidden = false;
+        el.root.classList.remove('is-hidden');
+        el.root.style.display = 'flex';
+        el.mood.textContent = buildMood(type, selected, match);
+        el.root.dataset.handle = book.handle || '';
+        el.root.dataset.title = book.title || '';
+        el.root.dataset.author = book.author || '';
+        el.root.dataset.cover = book.cover || '';
+        el.root.dataset.amazon = book.amazon || '';
+        el.root.dataset.bookshop = book.bookshop || '';
+        el.root.dataset.spice = String(book.spice || '');
+        el.root.dataset.tropes = (book.tropes || []).join(', ');
+        el.root.dataset.tropesDisplay = (book.tropes || []).join(', ');
+        el.root.dataset.why = book.why || '';
+        el.root.dataset.newsletter = book.newsletter || '';
+        el.root.dataset.tension = book.tension || '';
+        el.root.dataset.damage = book.damage || '';
+        el.root.dataset.darkness = book.darkness || '';
+        el.root.dataset.yearning = book.yearning || '';
+        el.root.dataset.boyfriend = book.boyfriend || '';
+        el.root.dataset.reread = book.reread || '';
+        el.root.dataset.ku = book.ku || '';
+        el.root.dataset.mini = book.mini || '';
+        el.root.dataset.series = book.series || '';
+        el.root.dataset.seriesName = book.seriesName || '';
+        el.root.dataset.seriesNumber = book.seriesNumber || '';
+        el.root.dataset.privateShelf = 'false';
+        el.cover.src = book.cover || '';
+        el.cover.alt = book.title ? ('Cover of ' + book.title) : '';
+        if (el.spice) {
+          var cardSpice = spiceBadge(book.spice);
+          el.spice.textContent = cardSpice;
+          el.spice.hidden = !cardSpice;
+        }
+        syncShelfHeart(el.heart, book);
+        syncStatusRibbon(el.ribbon, book);
+        el.title.textContent = book.title || '';
+        el.author.textContent = book.author ? ('by ' + book.author) : '';
+        el.meta.textContent = buildCandidateMeta(book, match.shared);
+        el.reason.textContent = buildReason(type, selected, match);
+        syncCardStatuses(el.root, book);
+
+        if (el.link) {
+          el.link.hidden = false;
+          el.link.href = '/pages/sss-library-page?shelf=open';
+        }
+      }
+
+      function openRecommendationModal(book) {
+        if (!book) return;
+
+        if (modalEls.title) modalEls.title.textContent = book.title || '';
+        if (modalEls.author) modalEls.author.textContent = book.author ? ('by ' + book.author) : '';
+
+        if (modalEls.cover) {
+          if (book.cover) {
+            modalEls.cover.src = book.cover;
+            modalEls.cover.alt = book.title || '';
+            modalEls.cover.style.display = '';
+          } else {
+            modalEls.cover.removeAttribute('src');
+            modalEls.cover.style.display = 'none';
+          }
+        }
+
+        if (modalEls.tropes) {
+          if (book.tropes && book.tropes.length) {
+            modalEls.tropes.innerHTML = 'tropes: ' + book.tropes.map(function(trope) {
+              var label = String(trope || '');
+              return '<a href="' + tropeUrl(label) + '">' + escapeHtml(label) + '</a>';
+            }).join(', ');
+          } else {
+            modalEls.tropes.innerHTML = '';
+          }
+        }
+
+        if (modalEls.why) modalEls.why.textContent = book.why || '';
+        if (modalEls.mini) modalEls.mini.textContent = book.mini ? ('quick summary: ' + book.mini) : '';
+        syncModalHeartState(book);
+        if (modalEls.tension) modalEls.tension.textContent = book.tension ? ('🔥 tension: ' + book.tension + '/5') : '';
+        if (modalEls.damage) modalEls.damage.textContent = book.damage ? ('💔 emotional damage: ' + book.damage + '/5') : '';
+        if (modalEls.darkness) modalEls.darkness.textContent = book.darkness ? ('💀 darkness: ' + book.darkness + '/5') : '';
+        if (modalEls.ku) {
+          var kuState = String(book.ku || '').toLowerCase().trim() === 'true';
+          modalEls.ku.className = 'sss-lib__mku ' + (kuState ? 'is-yes' : 'is-no');
+          modalEls.ku.textContent = (kuState ? '✓' : '✕') + ' on kindle unlimited: ' + (kuState ? 'yes' : 'no');
+        }
+        if (modalEls.boyfriend) modalEls.boyfriend.textContent = book.boyfriend ? ('book boyfriend type: ' + book.boyfriend) : '';
+        if (modalEls.reread) modalEls.reread.textContent = book.reread ? 'reread worthy' : '';
+
+        if (modalEls.yearning) {
+          if (!book.yearning) {
+            modalEls.yearning.innerHTML = '';
+          } else {
+            var level = parseInt(book.yearning, 10);
+            var labels = { 1: 'soft', 2: 'intrigued', 3: 'feral' };
+            modalEls.yearning.innerHTML = 'yearning <span class="sss-lib__yearningLabel sss-lib__yearningLabel--' + level + '">' + (labels[level] || '') + '</span>';
+          }
+        }
+
+        if (modalEls.series) {
+          if (book.seriesName || book.seriesNumber) {
+            var slug = String(book.series || '').toLowerCase().trim();
+            modalEls.series.href = slug ? '/pages/series?series=' + slug : '#';
+            modalEls.series.textContent = (book.seriesNumber ? ('#' + book.seriesNumber + ' • ') : '') + (book.seriesName ? (book.seriesName + ' series →') : '');
+            modalEls.series.hidden = false;
+            modalEls.series.style.display = '';
+          } else {
+            modalEls.series.hidden = true;
+            modalEls.series.style.display = 'none';
+            modalEls.series.removeAttribute('href');
+            modalEls.series.textContent = '';
+          }
+        }
+
+        [
+          { el: modalEls.amazon, href: book.amazon },
+          { el: modalEls.bookshop, href: book.bookshop },
+          { el: modalEls.newsletter, href: book.newsletter }
+        ].forEach(function(item) {
+          if (!item.el) return;
+          if (item.href) {
+            item.el.href = item.href;
+            item.el.style.display = '';
+          } else {
+            item.el.removeAttribute('href');
+            item.el.style.display = 'none';
+          }
+        });
+
+        if (modalEls.share) {
+          if (modalEls.shareLabel) modalEls.shareLabel.textContent = 'share';
+          if (modalEls.shareIcon) modalEls.shareIcon.textContent = '📲';
+          modalEls.share.onclick = function(e) {
+            e.preventDefault();
+            var shareUrl = window.location.origin + window.location.pathname + '?book=' + encodeURIComponent(book.handle || '');
+            if (navigator.share) {
+              navigator.share({
+                title: book.title || document.title,
+                text: book.author ? ('next book club read: ' + book.title + ' by ' + book.author) : 'share this book with your book bestie',
+                url: shareUrl
+              }).catch(function(){});
+              return;
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(shareUrl).then(function() {
+                if (modalEls.shareIcon) modalEls.shareIcon.textContent = '✓';
+                if (modalEls.shareLabel) modalEls.shareLabel.textContent = 'copied';
+              }).catch(function(){});
+            }
+          };
+        }
+
+        modal.hidden = false;
+        modal.setAttribute('aria-hidden', 'false');
+        document.documentElement.style.overflow = 'hidden';
+      }
+
+      function closeRecommendationModal() {
+        modal.hidden = true;
+        modal.setAttribute('aria-hidden', 'true');
+        document.documentElement.style.overflow = '';
+      }
+
+      function getStoredStatuses() {
+        try {
+          return JSON.parse(localStorage.getItem('sssBookStatuses') || '{}') || {};
+        } catch (error) {
+          return {};
+        }
+      }
+
+      function setStoredStatuses(statuses) {
+        localStorage.setItem('sssBookStatuses', JSON.stringify(statuses));
+        document.dispatchEvent(new CustomEvent('bbb:book-statuses-updated', {
+          detail: { statuses: statuses || {} }
+        }));
+      }
+
+      function getShelfItems() {
+        try {
+          var primary = JSON.parse(localStorage.getItem('sssMyShelf') || '[]') || [];
+          if (primary.length) return primary;
+          return JSON.parse(localStorage.getItem('sssShelf') || '[]') || [];
+        } catch (error) {
+          return [];
+        }
+      }
+
+      function setShelfItems(items) {
+        localStorage.setItem('sssMyShelf', JSON.stringify(items));
+        localStorage.setItem('sssShelf', JSON.stringify(items));
+        document.dispatchEvent(new CustomEvent('sss:shelf-updated', {
+          detail: { count: Array.isArray(items) ? items.length : 0 }
+        }));
+      }
+
+      function getLibraryStyleBookData(book) {
+        if (!book || !book.title) return null;
+        return {
+          handle: book.handle || '',
+          title: book.title || '',
+          author: book.author || '',
+          cover: book.cover || '',
+          amazon: book.amazon || '',
+          bookshop: book.bookshop || ''
+        };
+      }
+
+      function ensureBookOnShelf(book) {
+        var bookData = getLibraryStyleBookData(book);
+        if (!bookData) return false;
+        var shelf = getShelfItems();
+        var exists = shelf.some(function(item) {
+          return item.title === bookData.title;
+        });
+        if (exists) return false;
+        shelf.push(bookData);
+        setShelfItems(shelf);
+        document.dispatchEvent(new CustomEvent('bbb:shelf-saved', {
+          detail: {
+            count: shelf.length,
+            bookTitle: bookData.title || '',
+            bookHandle: bookData.handle || '',
+            book: bookData,
+            source: 'what-to-read-next'
+          }
+        }));
+        if (typeof window.renderMyShelf === 'function') {
+          window.renderMyShelf();
+        }
+        if (typeof window.showSaveToast === 'function') {
+          window.showSaveToast();
+        }
+        if (typeof window.triggerShelfSparkle === 'function') {
+          window.triggerShelfSparkle();
+        }
+        return true;
+      }
+
+      function removeBookFromShelf(book) {
+        var bookData = getLibraryStyleBookData(book);
+        if (!bookData) return;
+        var shelf = getShelfItems().filter(function(item) {
+          return item.title !== bookData.title;
+        });
+        setShelfItems(shelf);
+        document.dispatchEvent(new CustomEvent('bbb:shelf-unsaved', {
+          detail: {
+            count: shelf.length,
+            bookTitle: bookData.title || '',
+            bookHandle: bookData.handle || '',
+            book: bookData,
+            source: 'what-to-read-next'
+          }
+        }));
+        if (typeof window.renderMyShelf === 'function') {
+          window.renderMyShelf();
+        }
+      }
+
+      function isBookOnShelf(book) {
+        var bookData = getLibraryStyleBookData(book);
+        if (!bookData) return false;
+        return getShelfItems().some(function(item) {
+          return item.title === bookData.title;
+        });
+      }
+
+      function toggleBookOnShelf(book) {
+        if (!book) return false;
+        if (isBookOnShelf(book)) {
+          removeBookFromShelf(book);
+          return false;
+        }
+        ensureBookOnShelf(book);
+        return true;
+      }
+
+      function refreshShelfUI(book) {
+        syncModalHeartState(book);
+        syncShelfHeart(sourceEls.heart, book);
+        cardEls.forEach(function(card) {
+          if (String(card.root.dataset.handle || '').toLowerCase() === String(book.handle || '').toLowerCase()) {
+            syncCardStatuses(card.root, book);
+          }
+        });
+      }
+
+      function syncVisibleShelfState() {
+        if (currentSelectedHandle && booksByHandle[currentSelectedHandle]) {
+          var selectedBook = booksByHandle[currentSelectedHandle];
+          syncModalHeartState(selectedBook);
+          syncShelfHeart(sourceEls.heart, selectedBook);
+        }
+
+        cardEls.forEach(function(card) {
+          var handle = String(card.root.dataset.handle || '').toLowerCase();
+          if (!handle) return;
+          var book = booksByHandle[handle] || booksByHandle[card.root.dataset.handle || ''];
+          if (!book) return;
+          syncCardStatuses(card.root, book);
+        });
+      }
+
+      function syncModalHeartState(book) {
+        var heart = modal.querySelector('[data-modal-heart]');
+        if (!heart || !book) return;
+        syncShelfHeart(heart, book);
+      }
+
+      function syncCardStatuses(cardRoot, book) {
+        if (!cardRoot || !book) return;
+        var statuses = getStoredStatuses();
+        var current = statuses[String(book.handle || '').toLowerCase()] || '';
+        cardRoot.querySelectorAll('[data-next-status]').forEach(function(button) {
+          var value = button.getAttribute('data-next-status');
+          var active = value === current;
+          button.classList.toggle('is-active', active);
+          button.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+        syncStatusRibbon(cardRoot.querySelector('[data-next-ribbon]'), book);
+        syncShelfHeart(cardRoot.querySelector('[data-next-heart]'), book);
+      }
+
+      function updateRecommendations(handle) {
+        var selected = booksByHandle[handle];
+        if (!selected) {
+          clearResultsUI();
+          return;
+        }
+
+        currentSelectedHandle = handle;
+        var matches = getMatchesForBook(handle, currentRotationStep);
+
+        renderSource(selected);
+        renderCard(cardEls[0], 'shelf', selected, matches.sameShelfMatch);
+        renderCard(cardEls[1], 'tropes', selected, matches.tropeMatch);
+        renderCard(cardEls[2], 'spice', selected, matches.spiceMatch);
+        resultsWrap.hidden = false;
+        resultsWrap.classList.remove('is-hidden');
+        resultsWrap.style.display = 'block';
+      }
+
+      function syncPicker(value) {
+        var selected = resolveBook(value);
+        if (!selected) {
+          updateRecommendations('');
+          pickerLabel.textContent = '{{ section.settings.placeholder }}';
+          picker.value = '';
+          var clearedUrl = new URL(window.location.href);
+          clearedUrl.searchParams.delete('book');
+          window.history.replaceState({}, '', clearedUrl.toString());
+          return;
+        }
+
+        selectBook(selected);
+      }
+
+      pickerTrigger.addEventListener('click', function() {
+        openSearch();
+      });
+
+      searchModal.querySelectorAll('[data-next-search-close]').forEach(function(el) {
+        el.addEventListener('click', function() {
+          closeSearch();
+        });
+      });
+
+      picker.addEventListener('input', function(event) {
+        renderSearchResults(event.target.value || '');
+      });
+
+      picker.addEventListener('change', function(event) {
+        syncPicker(event.target.value || '');
+      });
+
+      picker.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          syncPicker(event.target.value || '');
+        }
+      });
+
+      if (clearButton) {
+        clearButton.addEventListener('click', function() {
+          syncPicker('');
+        });
+      }
+
+      if (refreshButton) {
+        refreshButton.addEventListener('click', function() {
+          if (!currentSelectedHandle) return;
+          currentRotationStep += 1;
+          updateRecommendations(currentSelectedHandle);
+        });
+      }
+
+      cardEls.forEach(function(card) {
+        if (card.coverWrap) {
+          var openCardModal = function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            var book = booksByHandle[String(card.root.dataset.handle || '').toLowerCase()] || booksByHandle[card.root.dataset.handle || ''];
+            openRecommendationModal(book);
+          };
+
+          card.coverWrap.addEventListener('click', openCardModal);
+          card.coverWrap.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+              openCardModal(event);
+            }
+          });
+        }
+
+        if (card.link) {
+          card.link.addEventListener('click', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            var href = card.link.getAttribute('href');
+            if (href) {
+              window.location.href = href;
+            }
+          });
+        }
+
+        card.root.querySelectorAll('[data-next-status]').forEach(function(button) {
+          button.addEventListener('click', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            var book = booksByHandle[String(card.root.dataset.handle || '').toLowerCase()] || booksByHandle[card.root.dataset.handle || ''];
+            if (!book) return;
+
+            var nextStatus = button.getAttribute('data-next-status');
+            var statuses = getStoredStatuses();
+            var key = String(book.handle || '').toLowerCase();
+            var current = statuses[key] || '';
+            var resolved = current === nextStatus ? '' : nextStatus;
+
+            if (resolved) {
+              statuses[key] = resolved;
+            } else {
+              delete statuses[key];
+            }
+
+            setStoredStatuses(statuses);
+            document.dispatchEvent(new CustomEvent('bbb:book-status-changed', {
+              detail: {
+                key: key,
+                status: resolved,
+                book: getLibraryStyleBookData(book),
+                source: 'what-to-read-next'
+              }
+            }));
+            if (resolved === 'tbr' || resolved === 'read') {
+              ensureBookOnShelf(book);
+            }
+            refreshShelfUI(book);
+            syncCardStatuses(card.root, book);
+          });
+        });
+      });
+
+      modal.querySelectorAll('[data-close]').forEach(function(el) {
+        el.addEventListener('click', function() {
+          closeRecommendationModal();
+        });
+      });
+
+      document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+          closeRecommendationModal();
+          closeSearch();
+        }
+      });
+
+      document.addEventListener('sss:bookshelf-updated', syncVisibleShelfState);
+      document.addEventListener('sss:shelf-updated', syncVisibleShelfState);
+      window.addEventListener('storage', function(event) {
+        if (event.key !== 'sssMyShelf' && event.key !== 'sssShelf') return;
+        syncVisibleShelfState();
+      });
+
+      var params = new URLSearchParams(window.location.search);
+      var initialHandle = params.get('book');
+      if (initialHandle && booksByHandle[initialHandle]) {
+        picker.value = getPickerLabel(booksByHandle[initialHandle]);
+        pickerLabel.textContent = getPickerLabel(booksByHandle[initialHandle]);
+      } else if (books.length) {
+        initialHandle = '';
+      }
+
+      if (initialHandle) {
+        updateRecommendations(initialHandle);
+      } else {
+        clearResultsUI();
+      }
+
+      renderDebugSummary();
+    })();
+  </script>
+  {{ 'sss-library.js' | asset_url | script_tag }}
+
+  <style>
+    #bbb-next-{{ section.id }} {
+      --bbb-next-paper: rgba(255, 255, 255, 0.04);
+      --bbb-next-paper-strong: rgba(255, 255, 255, 0.06);
+      --bbb-next-ink: #f6f6f6;
+      --bbb-next-muted: rgba(246, 246, 246, 0.72);
+      --bbb-next-line: rgba(255, 255, 255, 0.12);
+      --bbb-next-accent: {{ section.settings.accent_color }};
+      --bbb-next-accent-soft: rgba(255, 138, 199, 0.12);
+      --bbb-next-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+      color: var(--bbb-next-ink);
+      text-transform: lowercase;
+    }
+
+    #bbb-next-{{ section.id }} .is-hidden {
+      display: none !important;
+    }
+
+    #bbb-next-{{ section.id }} {
+      overflow-x: clip;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__wrap {
+      width: 100%;
+      min-width: 0;
+    }
+
+    #bbb-next-{{ section.id }} .sss-tropeTop {
+      grid-template-columns: minmax(0, 680px) 320px;
+      justify-content: space-between;
+      gap: 40px;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__hero {
+      margin-bottom: 0;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__hero .sss-trope__desc {
+      max-width: 600px;
+    }
+
+    #bbb-next-{{ section.id }} .sss-tropeTop,
+    #bbb-next-{{ section.id }} .bbb-next__panel,
+    #bbb-next-{{ section.id }} .bbb-next__results,
+    #bbb-next-{{ section.id }} .bbb-next__actions,
+    #bbb-next-{{ section.id }} .bbb-next__explore {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__eyebrow,
+    #bbb-next-{{ section.id }} .bbb-next__resultsKicker,
+    #bbb-next-{{ section.id }} .bbb-next__sourceLabel {
+      margin: 0 0 10px;
+      font-size: 0.98rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--bbb-next-accent);
+      line-height: 1.35;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__resultsTitle {
+      max-width: none;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__resultsSub {
+      max-width: 60ch;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__refreshBtn {
+      margin-top: 10px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: #ffb8e0;
+      font-size: 11px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255, 184, 224, 0.42);
+      width: max-content;
+      justify-self: center;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__refreshBtn:hover {
+      color: #ff8ac7;
+      border-bottom-color: rgba(255, 138, 199, 0.78);
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__panel {
+      display: grid;
+      gap: 22px;
+      grid-template-columns: 1fr minmax(280px, 0.95fr);
+      align-items: start;
+      background: var(--bbb-next-paper);
+      border: 1px solid var(--bbb-next-line);
+      border-radius: 18px;
+      box-shadow: var(--bbb-next-shadow);
+      padding: clamp(22px, 4vw, 36px);
+      margin-top: 0;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__noteText,
+    #bbb-next-{{ section.id }} .bbb-next__sourceWhy,
+    #bbb-next-{{ section.id }} .bbb-next__cardReason {
+      margin: 0;
+      color: var(--bbb-next-muted);
+      line-height: 1.65;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__picker {
+      display: block;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__pickerLabel {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #c8c8c8;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__pickerWrap {
+      position: relative;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__mobileInvite {
+      display: none;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__select {
+      width: 100%;
+      border: 1px solid var(--bbb-next-line);
+      border-radius: 999px;
+      background: #151515;
+      color: #f6f6f6;
+      padding: 16px 20px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__selectBtn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 52px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__selectBtn::after {
+      content: 'search';
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: #ff8ac7;
+      margin-left: 14px;
+      flex-shrink: 0;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__source,
+    #bbb-next-{{ section.id }} .bbb-next__card {
+      border-radius: 16px;
+      background: var(--bbb-next-paper);
+      border: 1px solid var(--bbb-next-line);
+      box-shadow: var(--bbb-next-shadow);
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__source {
+      display: grid;
+      grid-template-columns: 120px minmax(0, 1fr);
+      gap: 18px;
+      align-items: center;
+      padding: 18px;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__sourceTop {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__sourceCoverWrap,
+    #bbb-next-{{ section.id }} .bbb-next__cardCoverWrap {
+      position: relative;
+      border-radius: 18px;
+      overflow: hidden;
+      background: #eadfd3;
+      aspect-ratio: 3 / 4.3;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__cardCoverWrap[data-next-open] {
+      cursor: pointer;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__cardCoverWrap[data-next-open]:hover,
+    #bbb-next-{{ section.id }} .bbb-next__cardCoverWrap[data-next-open]:focus-visible {
+      box-shadow: 0 0 0 1px rgba(255, 138, 199, 0.42);
+      transform: translateY(-1px);
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__sourceCover,
+    #bbb-next-{{ section.id }} .bbb-next__cardCover {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__sourceTitle,
+    #bbb-next-{{ section.id }} .bbb-next__cardTitle,
+    #bbb-next-{{ section.id }} .bbb-next__noteTitle {
+      margin: 0;
+      line-height: 1.05;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__sourceAuthor,
+    #bbb-next-{{ section.id }} .bbb-next__cardAuthor {
+      margin: 8px 0 0;
+      color: var(--bbb-next-muted);
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__sourceMeta,
+    #bbb-next-{{ section.id }} .bbb-next__cardMeta {
+      margin: 12px 0 0;
+      color: var(--bbb-next-accent);
+      font-size: 1.02rem;
+      line-height: 1.7;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__sourceWhy {
+      margin-top: 14px;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__clearBtn {
+      appearance: none;
+      border: 1px solid rgba(255,255,255,.12);
+      background: transparent;
+      color: #ff8ac7;
+      border-radius: 999px;
+      min-height: 34px;
+      padding: 0 12px;
+      font: inherit;
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__clearBtn:hover,
+    #bbb-next-{{ section.id }} .bbb-next__clearBtn:focus-visible {
+      background: rgba(255,138,199,.08);
+      border-color: rgba(255,138,199,.32);
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__cards {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 22px;
+      min-width: 0;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__cardPill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.75);
+      font-size: 0.76rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      align-self: flex-start;
+    }
+
+    #bbb-next-{{ section.id }} [data-next-card="1"] .bbb-next__cardPill {
+      background: rgba(255, 62, 165, 0.24);
+      border: 1px solid rgba(255, 62, 165, 0.42);
+      color: #ffd6eb;
+      box-shadow: 0 0 24px rgba(255, 62, 165, 0.12);
+    }
+
+    #bbb-next-{{ section.id }} [data-next-card="2"] .bbb-next__cardPill {
+      background: rgba(255, 138, 199, 0.14);
+      border: 1px solid rgba(255, 138, 199, 0.26);
+      color: #ffc4e3;
+    }
+
+    #bbb-next-{{ section.id }} [data-next-card="3"] .bbb-next__cardPill {
+      background: rgba(255, 184, 224, 0.08);
+      border: 1px solid rgba(255, 184, 224, 0.16);
+      color: #ffdff0;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__results {
+      margin-top: 34px;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__card {
+      appearance: none;
+      width: 100%;
+      border: 1px solid var(--bbb-next-line);
+      padding: 18px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 14px;
+      min-height: 100%;
+      font: inherit;
+      color: inherit;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__cardMood {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.15;
+      min-height: 46px;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__cardInner {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: 108px minmax(0, 1fr);
+      align-items: start;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__cardBody {
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__cardReason {
+      margin-top: 12px;
+      flex: 1 1 auto;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__statusRow {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+      margin-bottom: 10px;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__statusCheck {
+      appearance: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: rgba(246,246,246,.76);
+      font: inherit;
+      font-size: 12px;
+      text-transform: lowercase;
+      cursor: pointer;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__statusBox {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,.28);
+      background: rgba(255,255,255,.03);
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__statusCheck.is-active {
+      color: #ffd6eb;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__statusCheck.is-active .bbb-next__statusBox {
+      border-color: rgba(255,138,199,.56);
+      background: rgba(255,138,199,.18);
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__statusCheck.is-active .bbb-next__statusBox::after {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border-radius: 2px;
+      background: #ff8ac7;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__cardLink {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #ff8ac7;
+      text-decoration: none;
+      font-weight: 600;
+      pointer-events: auto;
+      position: relative;
+      z-index: 3;
+      cursor: pointer;
+      transition: color .2s ease, transform .2s ease, border-color .2s ease;
+      border-bottom: 1px solid rgba(255, 138, 199, 0.4);
+      width: max-content;
+      padding-bottom: 2px;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__cardLink:hover,
+    #bbb-next-{{ section.id }} .bbb-next__cardLink:focus-visible {
+      color: #ffd2ea;
+      border-bottom-color: rgba(255, 210, 234, 0.92);
+      transform: translateX(2px);
+    }
+
+
+    #bbb-next-{{ section.id }} .bbb-next__searchModal[hidden] {
+      display: none !important;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__searchModal {
+      position: fixed;
+      inset: 0;
+      z-index: 10020;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__searchScrim {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,.72);
+      backdrop-filter: blur(6px);
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__searchPanel {
+      position: relative;
+      z-index: 1;
+      width: min(94vw, 1040px);
+      margin: 10vh auto 0;
+      padding: 28px 26px 24px;
+      max-height: 80vh;
+      overflow: auto;
+      overflow-x: hidden;
+      border-radius: 26px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: linear-gradient(180deg, rgba(18,18,20,.98), rgba(10,10,12,.98));
+      box-shadow: 0 30px 80px rgba(0,0,0,.48);
+      color: #f6f6f6;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__searchClose {
+      appearance: none;
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color: #fff;
+      font: inherit;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__searchKicker {
+      margin: 0 0 8px;
+      font-size: 11px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: rgba(246,246,246,.58);
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__searchTitle {
+      margin: 0;
+      font-size: 30px;
+      line-height: 1.02;
+      text-transform: lowercase;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__searchHint {
+      margin: 10px 0 0;
+      font-size: 12px;
+      color: rgba(255,138,199,.78);
+      text-transform: lowercase;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__searchInput {
+      width: 100%;
+      margin-top: 16px;
+      min-height: 46px;
+      padding: 0 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color: #fff;
+      font: inherit;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__searchResults {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+      max-height: 48vh;
+      overflow: auto;
+      overflow-x: hidden;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__explore {
+      overflow-x: clip;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__explore .sss-you-might-like {
+      max-width: 100%;
+      overflow-x: clip;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__explore .sss-you-might-like__grid {
+      max-width: 100%;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__searchPick {
+      appearance: none;
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.03);
+      border-radius: 18px;
+      padding: 10px;
+      color: #fff;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color .18s ease, background .18s ease, transform .18s ease;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__searchPick:hover {
+      border-color: rgba(255,62,165,.42);
+      background: rgba(255,62,165,.1);
+      transform: translateY(-1px);
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__searchPick img {
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      object-fit: cover;
+      border-radius: 12px;
+      display: block;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__searchPickTitle {
+      display: block;
+      margin-top: 8px;
+      font-size: 12px;
+      line-height: 1.4;
+      text-transform: lowercase;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__searchPickMeta {
+      display: block;
+      margin-top: 4px;
+      font-size: 11px;
+      color: rgba(246,246,246,.6);
+      text-transform: lowercase;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__searchEmpty {
+      grid-column: 1 / -1;
+      font-size: 13px;
+      color: rgba(246,246,246,.62);
+      text-transform: lowercase;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__debug {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px dashed rgba(255, 138, 199, 0.32);
+      background: rgba(255, 138, 199, 0.06);
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__debugLabel {
+      font-size: 10px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: rgba(255, 184, 224, 0.9);
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__debugCount {
+      margin-top: 8px;
+      color: #fff;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__debugList {
+      margin-top: 8px;
+      color: rgba(246,246,246,.72);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__resultsHead {
+      margin-top: 10px;
+      text-align: center;
+      max-width: 60ch;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__title,
+    #bbb-next-{{ section.id }} .bbb-next__resultsTitle,
+    #bbb-next-{{ section.id }} .bbb-next__sourceTitle,
+    #bbb-next-{{ section.id }} .bbb-next__cardTitle {
+      color: #f6f6f6;
+    }
+
+    #bbb-next-{{ section.id }} .bbb-next__cardMeta,
+    #bbb-next-{{ section.id }} .bbb-next__sourceMeta {
+      color: #ffb8e0;
+    }
+
+    @media screen and (max-width: 989px) {
+      #bbb-next-{{ section.id }} .bbb-next__panel,
+      #bbb-next-{{ section.id }} .bbb-next__cards {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media screen and (min-width: 750px) and (max-width: 989px) {
+      #bbb-next-{{ section.id }} .sss-tropeTop {
+        grid-template-columns: 1fr;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__searchPanel {
+        width: min(94vw, 860px);
+        padding: 24px 22px 22px;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__searchResults {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        max-height: 50vh;
+      }
+    }
+
+    @media screen and (max-width: 749px) {
+      #bbb-next-{{ section.id }} .sss-tropeTop {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+
+      #bbb-next-{{ section.id }} .sss-tropeTop__left,
+      #bbb-next-{{ section.id }} .sss-tropeTop__right {
+        max-width: 100%;
+        width: 100%;
+      }
+
+      #bbb-next-{{ section.id }} .sss-tropeTop__right {
+        justify-content: flex-start;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__hero {
+        padding-bottom: 0;
+        text-align: center;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__title {
+        font-size: clamp(2.6rem, 11vw, 3.2rem);
+        margin-bottom: 10px;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__sub {
+        margin-top: 0;
+        max-width: 22ch;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      #bbb-next-{{ section.id }} .sss-trope__divider {
+        margin: 0;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__societyInvite {
+        display: none;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__mobileInvite {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin: 0 0 8px;
+        padding: 8px 10px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 138, 199, 0.22);
+        background: rgba(255, 138, 199, 0.08);
+        color: #f6f6f6;
+        text-decoration: none;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__mobileInviteCopy {
+        display: block;
+        min-width: 0;
+        font-size: 10px;
+        line-height: 1.35;
+        color: rgba(246,246,246,.78);
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__mobileInviteCta {
+        flex-shrink: 0;
+        font-size: 9px;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: #ffb8e0;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__panel {
+        gap: 14px;
+        padding: 14px;
+        margin-top: 0;
+        border-radius: 16px;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__pickerLabel {
+        margin-bottom: 8px;
+        font-size: 12px;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__select {
+        padding: 16px 18px;
+        font-size: 15px;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__selectBtn {
+        min-height: 56px;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__selectBtn::after {
+        font-size: 10px;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__source,
+      #bbb-next-{{ section.id }} .bbb-next__cardInner {
+        grid-template-columns: 1fr;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__sourceCoverWrap,
+      #bbb-next-{{ section.id }} .bbb-next__cardCoverWrap {
+        max-width: 180px;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__cardPill {
+        padding: 10px 14px;
+        font-size: 0.88rem;
+        letter-spacing: 0.12em;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__cardMood {
+        font-size: 23px;
+        min-height: 0;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__statusRow {
+        gap: 12px;
+        margin-top: 16px;
+        margin-bottom: 12px;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__statusCheck {
+        gap: 10px;
+        min-height: 34px;
+        font-size: 13px;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__statusBox {
+        width: 18px;
+        height: 18px;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__searchPanel {
+        width: min(94vw, 520px);
+        margin: 4vh auto 0;
+        padding: 18px 14px 16px;
+        max-height: 88vh;
+        overflow-x: hidden;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__searchTitle {
+        font-size: 24px;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__searchInput {
+        margin-top: 12px;
+        min-height: 42px;
+        border-radius: 14px;
+        padding: 0 14px;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__searchResults {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+        max-height: 42vh;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__searchPick {
+        padding: 6px;
+        border-radius: 12px;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__searchPick img {
+        border-radius: 8px;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__searchPickTitle {
+        margin-top: 6px;
+        font-size: 10px;
+        line-height: 1.2;
+      }
+
+      #bbb-next-{{ section.id }} .bbb-next__searchPickMeta {
+        display: none;
+      }
+    }
+  </style>
+</section>
+{% endpaginate %}
+
+{% schema %}
+{
+  "name": "what to read next",
+  "settings": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Kicker",
+      "default": "reader rec engine"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "what to read next"
+    },
+    {
+      "type": "textarea",
+      "id": "subtext",
+      "label": "Subtext",
+      "default": "pick a book from the library and I’ll pull three next-read options based on shelf chemistry, trope overlap, and spice mood."
+    },
+    {
+      "type": "text",
+      "id": "panel_label",
+      "label": "Panel label",
+      "default": "start with a book you already loved"
+    },
+    {
+      "type": "textarea",
+      "id": "panel_copy",
+      "label": "Panel copy",
+      "default": "This page uses the book you choose as the anchor, then looks for the closest shelf twin, a trope-driven follow-up, and one moodier wildcard with familiar spice."
+    },
+    {
+      "type": "text",
+      "id": "select_label",
+      "label": "Select label",
+      "default": "Choose a book from the society library"
+    },
+    {
+      "type": "text",
+      "id": "placeholder",
+      "label": "Picker placeholder",
+      "default": "pick a book to start"
+    },
+    {
+      "type": "text",
+      "id": "source_label",
+      "label": "Selected book label",
+      "default": "you picked"
+    },
+    {
+      "type": "text",
+      "id": "note_one_pill",
+      "label": "Note 1 pill",
+      "default": "closest match"
+    },
+    {
+      "type": "text",
+      "id": "note_one_title",
+      "label": "Note 1 title",
+      "default": "same shelf + shared tropes"
+    },
+    {
+      "type": "textarea",
+      "id": "note_one_text",
+      "label": "Note 1 text",
+      "default": "The first rec stays in the same shelf when possible and tries to keep at least two familiar tropes in play."
+    },
+    {
+      "type": "text",
+      "id": "note_two_pill",
+      "label": "Note 2 pill",
+      "default": "trope-first"
+    },
+    {
+      "type": "text",
+      "id": "note_two_title",
+      "label": "Note 2 title",
+      "default": "two tropes still hitting"
+    },
+    {
+      "type": "textarea",
+      "id": "note_two_text",
+      "label": "Note 2 text",
+      "default": "The second rec loosens the shelf rules and follows the strongest two-trope overlap instead."
+    },
+    {
+      "type": "text",
+      "id": "note_three_pill",
+      "label": "Note 3 pill",
+      "default": "mood read"
+    },
+    {
+      "type": "text",
+      "id": "note_three_title",
+      "label": "Note 3 title",
+      "default": "one trope + same spice energy"
+    },
+    {
+      "type": "textarea",
+      "id": "note_three_text",
+      "label": "Note 3 text",
+      "default": "The last pick is the softer wildcard: at least one shared trope, but mainly chosen for matching the same spice mood."
+    },
+    {
+      "type": "text",
+      "id": "results_kicker",
+      "label": "Results kicker",
+      "default": "from me to you"
+    },
+    {
+      "type": "text",
+      "id": "results_title",
+      "label": "Results title",
+      "default": "here’s where I’d send you next"
+    },
+    {
+      "type": "textarea",
+      "id": "results_subtext",
+      "label": "Results subtext",
+      "default": "Start with the closest shelf twin, then move into the trope twin, then the spice-mood wildcard."
+    },
+    {
+      "type": "text",
+      "id": "card_one_pill",
+      "label": "Card 1 pill",
+      "default": "same shelf + 2 tropes"
+    },
+    {
+      "type": "text",
+      "id": "card_two_pill",
+      "label": "Card 2 pill",
+      "default": "2 trope match"
+    },
+    {
+      "type": "text",
+      "id": "card_three_pill",
+      "label": "Card 3 pill",
+      "default": "1 trope + spice mood"
+    },
+    {
+      "type": "text",
+      "id": "link_label",
+      "label": "Result link label",
+      "default": "go to my bookshelf →"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent color",
+      "default": "#a4303b"
+    }
+  ],
+  "presets": [
+    {
+      "name": "what to read next"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,82 @@
+{% assign books = shop.metaobjects.sss_library.values %}
+
+{% if section.settings.shelf_filter != blank %}
+
+<section class="metaobject-archive">
+  <div class="page-width">
+
+    <slider-component class="slider-mobile-gutter">
+      <ul class="slider slider--mobile" role="list">
+
+        {% for book in books %}
+          {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+          {% assign is_visible_value = is_visible | strip %}
+          {% unless is_visible_value == 'true' %}
+            {% continue %}
+          {% endunless %}
+          {% if book.shelf_categories contains section.settings.shelf_filter %}
+
+            <li class="slider__slide">
+              <div class="book-card">
+
+                {% if book.cover != blank %}
+                  <img 
+                    src="{{ book.cover | image_url: width: 600 }}" 
+                    alt="{{ book.title }} cover"
+                    loading="lazy"
+                  >
+                {% endif %}
+
+                <h3>{{ book.title }}</h3>
+                <p class="author">{{ book.author }}</p>
+
+                {% if book.why_i_loved_it != blank %}
+                  <p class="why">{{ book.why_i_loved_it }}</p>
+                {% endif %}
+
+                <p class="meta">
+                  tropes: {{ book.tropes }} <br>
+                  spice level: {{ book.spice_level }}/5 🌶️
+                </p>
+
+                <div class="buttons">
+                  {% if book.amazon_link.url != blank %}
+                    <a href="{{ book.amazon_link.url }}" target="_blank">
+                      read on amazon
+                    </a>
+                  {% endif %}
+
+                  {% if book.bookshop_link.url != blank %}
+                    <a href="{{ book.bookshop_link.url }}" target="_blank">
+                      shop on bookshop
+                    </a>
+                  {% endif %}
+                </div>
+
+              </div>
+            </li>
+
+          {% endif %}
+        {% endfor %}
+
+      </ul>
+    </slider-component>
+
+  </div>
+</section>
+
+{% endif %}
+
+{% schema %}
+{
+  "name": "Metaobject Archive",
+  "settings": [
+    {
+      "type": "text",
+      "id": "shelf_filter",
+      "label": "Shelf category to display",
+      "default": "morally gray lovers"
+    }
+  ]
+}
+{% endschema %}

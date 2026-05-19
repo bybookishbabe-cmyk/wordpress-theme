@@ -1,0 +1,83 @@
+{% comment %}
+  Renders a guide card for the book reviews page.
+  Required: article
+  Optional: is_trending, trending_label
+{% endcomment %}
+
+{%- liquid
+  assign review_value = article.metafields.custom.book_review.value
+  assign review_fallback = article.metafields.custom.review.value
+  assign has_review = false
+  assign review_object = blank
+
+  if review_value == true or review_fallback == true
+    assign has_review = true
+  endif
+
+  assign article_books = article.metafields.custom.book.value | default: article.metafields.custom.books.value
+  assign first_book = article_books.first | default: article_books
+  assign book_title = first_book.title.value | default: first_book.title
+  assign book_author = first_book.author.value | default: first_book.author
+  assign cover_value = first_book.cover.value | default: first_book.cover
+  assign cover_url = cover_value.url | default: cover_value
+  assign image_alt = article.image.alt | default: book_title | default: article.title
+  assign review_rating = review_object.rating.value | default: review_object.rating
+  assign review_label = review_object.label.value | default: review_object.label | default: review_object.verdict.value | default: review_object.verdict
+  assign review_excerpt = review_object.excerpt.value | default: review_object.summary.value | default: review_object.quote.value | default: review_object.excerpt | default: review_object.summary | default: review_object.quote
+  assign card_classes = 'bbb-review-card'
+  assign image_loading = 'lazy'
+
+  if is_trending
+    assign card_classes = 'bbb-review-card bbb-review-card--trending'
+    assign image_loading = 'eager'
+  endif
+-%}
+
+<a class="{{ card_classes }}" href="{{ article.url }}">
+  <div class="bbb-review-card__media">
+    {% if article.image != blank %}
+      {{ article.image | image_url: width: 900 | image_tag: loading: image_loading, alt: image_alt, class: 'bbb-review-card__blogImage' }}
+    {% elsif cover_url != blank %}
+      <img src="{{ cover_url }}" alt="{{ image_alt | escape }}" loading="{{ image_loading }}">
+    {% else %}
+      <div class="bbb-review-card__placeholder" aria-hidden="true">
+        <span>{{ article.title | slice: 0, 1 }}</span>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="bbb-review-card__body">
+    <div class="bbb-review-card__meta">
+      {% if is_trending %}
+        <span class="bbb-review-card__badge">{{ trending_label | default: 'trending now' }}</span>
+      {% elsif has_review %}
+        <span class="bbb-review-card__badge">reviewed</span>
+      {% endif %}
+      <time datetime="{{ article.published_at | date: '%Y-%m-%d' }}">
+        {{ article.published_at | date: '%b %e, %Y' }}
+      </time>
+    </div>
+
+    <h2 class="bbb-review-card__title">{{ article.title }}</h2>
+
+    {% if book_title != blank or book_author != blank %}
+      <p class="bbb-review-card__book">
+        {% if book_title != blank %}<span>{{ book_title }}</span>{% endif %}
+        {% if book_author != blank %}<span>by {{ book_author }}</span>{% endif %}
+      </p>
+    {% endif %}
+
+    {% if review_rating != blank or review_label != blank %}
+      <p class="bbb-review-card__reviewMeta">
+        {% if review_rating != blank %}<span>{{ review_rating }}</span>{% endif %}
+        {% if review_label != blank %}<span>{{ review_label }}</span>{% endif %}
+      </p>
+    {% endif %}
+
+    {% if review_excerpt != blank %}
+      <p class="bbb-review-card__excerpt">{{ review_excerpt | strip_html | truncatewords: 24 }}</p>
+    {% elsif article.excerpt != blank %}
+      <p class="bbb-review-card__excerpt">{{ article.excerpt | strip_html | truncatewords: 24 }}</p>
+    {% endif %}
+  </div>
+</a>

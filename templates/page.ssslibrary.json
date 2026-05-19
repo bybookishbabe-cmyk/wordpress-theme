@@ -1,0 +1,248 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-page",
+      "disabled": true,
+      "settings": {
+        "padding_top": 28,
+        "padding_bottom": 28
+      }
+    },
+    "sss_auto_mood_pills_YgMcVy": {
+      "type": "sss-auto-mood-pills",
+      "name": "auto reader mood pills",
+      "settings": {
+        "preview_drop_handle": ""
+      }
+    },
+    "society_member_dashboard": {
+      "type": "sss-member-dashboard",
+      "name": "society member dashboard",
+      "settings": {
+        "preview_drop_handle": ""
+      }
+    },
+    "sss_folder_tabs_qt9MD9": {
+      "type": "sss-folder-tabs",
+      "blocks": {
+        "tab_qFgfTU": {
+          "type": "tab",
+          "name": "main page",
+          "settings": {
+            "label": "main page",
+            "sub": "start here",
+            "icon": "\ud83d\udcc1",
+            "url": "shopify://pages/society-library"
+          }
+        },
+        "tab_PWabji": {
+          "type": "tab",
+          "name": "library",
+          "settings": {
+            "label": "library",
+            "sub": "books to read",
+            "icon": "\ud83d\udcda",
+            "url": "shopify://pages/sss-library-page"
+          }
+        },
+        "tab_madeForYou": {
+          "type": "tab",
+          "name": "made for you",
+          "settings": {
+            "label": "made for you",
+            "sub": "your reader profile + recs",
+            "icon": "\u2728",
+            "url": "shopify://pages/sss-made-for-you"
+          }
+        },
+        "tab_YgJmrA": {
+          "type": "tab",
+          "name": "printable inserts",
+          "settings": {
+            "label": "printable inserts",
+            "sub": "all printable drops + sizes",
+            "icon": "\ud83d\udda8\ufe0f",
+            "url": "shopify://pages/sss-printable-kindle-inserts"
+          }
+        },
+        "tab_WWExFw": {
+          "type": "tab",
+          "name": "bookish templates",
+          "settings": {
+            "label": "bookish templates",
+            "sub": "canva templates + tutorials",
+            "icon": "\u2328\ufe0f",
+            "url": "shopify://pages/sss-canva-templates"
+          }
+        },
+        "tab_XMQ6L6": {
+          "type": "tab",
+          "name": "free downloads",
+          "settings": {
+            "label": "free downloads",
+            "sub": "little gifts. no gatekeeping.",
+            "icon": "\ud83c\udf81",
+            "url": ""
+          }
+        },
+        "tab_ffeBTc": {
+          "type": "tab",
+          "name": "quote library",
+          "settings": {
+            "label": "quote library",
+            "sub": "lines i think about daily",
+            "icon": "\"",
+            "url": "shopify://pages/sss-quote-wall"
+          }
+        },
+        "tab_privateShelf": {
+          "type": "tab",
+          "name": "private shelf",
+          "settings": {
+            "label": "private shelf",
+            "sub": "between us",
+            "icon": "\ud83d\udd13",
+            "url": "shopify://pages/sss-private-shelf"
+          }
+        }
+      },
+      "block_order": [
+        "tab_qFgfTU",
+        "tab_PWabji",
+        "tab_madeForYou",
+        "tab_YgJmrA",
+        "tab_WWExFw",
+        "tab_XMQ6L6",
+        "tab_ffeBTc",
+        "tab_privateShelf"
+      ],
+      "name": "sss folder tabs",
+      "settings": {
+        "kicker": "member archive",
+        "hint": "private rooms inside the society.",
+        "preview_drop_handle": ""
+      }
+    },
+    "society_monthly_intro": {
+      "type": "custom-liquid",
+      "name": "society monthly intro",
+      "settings": {
+        "custom_liquid": "<section class=\"sss-monthlydashIntro\"><div class=\"sss-monthlydashIntro__wrap\"><p class=\"sss-monthlydashIntro__kicker\">this month inside the society</p><h2 class=\"sss-monthlydashIntro__title\">the current drop, your rituals, and the little things worth lingering in.</h2><p class=\"sss-monthlydashIntro__sub\">everything below should feel like yours - because it is.</p></div></section><style>.sss-monthlydashIntro{background:#0b0b0b;color:#f6f6f6;padding:4px 12px 14px}.sss-monthlydashIntro__wrap{max-width:1200px;margin:0 auto;padding:16px 18px 0;border-top:1px solid rgba(255,255,255,.1)}.sss-monthlydashIntro__kicker{margin:0 0 8px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(246,246,246,.62)}.sss-monthlydashIntro__title{margin:0;font-size:clamp(22px,3vw,34px);line-height:1.08;text-transform:lowercase}.sss-monthlydashIntro__sub{margin:10px 0 0;max-width:760px;color:rgba(246,246,246,.72);line-height:1.7;text-transform:lowercase}@media screen and (max-width:749px){.sss-monthlydashIntro{padding:0 12px 12px}.sss-monthlydashIntro__wrap{padding:14px 4px 0}}</style>",
+        "color_scheme": "",
+        "padding_top": 0,
+        "padding_bottom": 0
+      }
+    },
+    "sss_moodboard_playlist_c4GjcH": {
+      "type": "sss-moodboard-playlist",
+      "name": "sss moodboard",
+      "settings": {
+        "drop": "",
+        "preview_drop_handle": ""
+      }
+    },
+    "sss_auto_exclusive_GP3wxq": {
+      "type": "sss-auto-exclusive",
+      "name": "auto exclusive",
+      "settings": {
+        "debug": false,
+        "preview_mode": false,
+        "preview_drop_handle": "",
+        "preview_drop_name": ""
+      }
+    },
+    "sss_society_journal_JfALN3": {
+      "type": "sss-society-journal",
+      "name": "sss calendar + journal",
+      "settings": {
+        "drop": "",
+        "preview_drop_handle": ""
+      }
+    },
+    "sss_picker_CBjULn": {
+      "type": "sss-picker",
+      "disabled": true,
+      "name": "sss interactive picker",
+      "settings": {}
+    },
+    "sss_word_search_V6Hc73": {
+      "type": "sss-word-search",
+      "name": "sss word search",
+      "settings": {
+        "kicker": "member ritual",
+        "title": "a little ritual before you leave.",
+        "subtext": "find the words. stay in the mood a little longer. there is a small society reward waiting when you finish.",
+        "words": "almost\nforever\nunfinished\ntiming\nfate\nmemory\nlinger\npause\nagain\nwait\nsomeday\nreturn\necho\nstill\nalways",
+        "preview_drop_handle": "",
+        "unlock_title": "you did it, pretty.",
+        "unlock_subtext": "all words found. your reward is being objectively correct about fictional men.",
+        "unlock_url": "",
+        "unlock_btn": "claim your surprise \u2197"
+      }
+    },
+    "sss_wallpaper_drop_XaFNcH": {
+      "type": "sss-wallpaper-drop",
+      "disabled": true,
+      "name": "sss wallpaper drop",
+      "settings": {
+        "kicker": "society extra",
+        "title": "this month\u2019s iphone wallpaper",
+        "subtext": "a tiny obsession for your lockscreen. tap to unlock the download.",
+        "card_label": "wallpaper drop",
+        "card_title": "romantically unwell (but make it aesthetic)",
+        "card_sub": "a little reminder every time you open your phone. for the girls who read like it\u2019s oxygen.",
+        "preview_image": "shopify://shop_images/iPhoneMockup.png",
+        "caption": "if anyone asks, you\u2019re fine. (your lockscreen says otherwise.)",
+        "panel_kicker": "download",
+        "panel_title": "tap to unlock",
+        "panel_sub": "save it, set it, and let it emotionally damage you daily.",
+        "unlock_btn": "unlock wallpaper",
+        "reveal_line": "okay\u2026 here you go. try not to fall in love with your own lockscreen.",
+        "lockscreen_url": "https://www.dropbox.com/scl/fi/n0ggk43pv9xo5iwwar5fi/RomanticallyUnwellWallpaper300.png?rlkey=0m9nb0pqorma0x1ikgvdqyysv&st=aze2e65i&dl=0",
+        "homescreen_url": "",
+        "extra_note": "",
+        "tiny_line": "new each month for society members \ud83e\udd0d"
+      }
+    },
+    "sss_society_cipher_FkYhbN": {
+      "type": "sss-society-cipher",
+      "disabled": true,
+      "name": "sss society cipher",
+      "settings": {
+        "kicker": "society member fun",
+        "title": "the society cipher",
+        "subtext": "unscramble the words. prove you belong.",
+        "words": "slowburn,yearning,devotion,tension,finally||petals,bloom,linger,glance,softly||obsession,forbidden,ache,longing,almost",
+        "success_message": "slow burn always wins.",
+        "background": "#0b0b0b",
+        "card_bg": "#151515",
+        "accent": "#ff69b4",
+        "text_color": "#f6f6f6"
+      }
+    },
+    "sss_monthly_calendar_cxLm82": {
+      "type": "sss-monthly-calendar",
+      "name": "sss calendar",
+      "settings": {
+        "collection_name": "",
+        "subtitle": "a month of chaos, crushes, and fictional men",
+        "preview_drop_handle": ""
+      }
+    }
+  },
+  "order": [
+    "main",
+    "society_member_dashboard",
+    "sss_folder_tabs_qt9MD9",
+    "society_monthly_intro",
+    "sss_auto_mood_pills_YgMcVy",
+    "sss_moodboard_playlist_c4GjcH",
+    "sss_society_journal_JfALN3",
+    "sss_picker_CBjULn",
+    "sss_auto_exclusive_GP3wxq",
+    "sss_society_cipher_FkYhbN",
+    "sss_word_search_V6Hc73",
+    "sss_wallpaper_drop_XaFNcH",
+    "sss_monthly_calendar_cxLm82"
+  ]
+}

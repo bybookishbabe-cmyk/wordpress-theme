@@ -1,0 +1,1086 @@
+{{ 'component-article-card.css' | asset_url | stylesheet_tag }}
+{{ 'component-card.css' | asset_url | stylesheet_tag }}
+{{ 'section-main-blog.css' | asset_url | stylesheet_tag }}
+
+{%- paginate blog.articles by 10 -%}
+{%- liquid
+  assign trope_pages = pages | where: 'template_suffix', 'trope'
+  assign shelf_pages = pages | where: 'template_suffix', 'shelf'
+  assign guide_source_blog = blogs['curated-romance-guides'] | default: blog
+  assign show_discovery_sections = true
+  if paginate.current_page > 1
+    assign show_discovery_sections = false
+  endif
+-%}
+
+{%- assign now_ts = 'now' | date: '%s' | plus: 0 -%}
+{%- assign current_issue = nil -%}
+{%- assign current_issue_ts = 0 -%}
+{%- for issue in shop.metaobjects.newsletter_issue.values -%}
+  {%- if issue.publish_date.value == blank -%}
+    {%- continue -%}
+  {%- endif -%}
+  {%- assign issue_ts = issue.publish_date.value | date: '%s' | plus: 0 -%}
+  {%- assign live_ts = issue_ts | plus: 36000 -%}
+  {%- if live_ts <= now_ts and issue_ts >= current_issue_ts -%}
+    {%- assign current_issue = issue -%}
+    {%- assign current_issue_ts = issue_ts -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{%- assign obsession_book = nil -%}
+{%- assign obsession_trope_one = blank -%}
+{%- assign obsession_trope_two = blank -%}
+{%- assign obsession_url = '/pages/weekly-obsession' -%}
+{%- if current_issue != nil -%}
+  {%- assign obsession_book = current_issue.book.value -%}
+  {%- if obsession_book == blank -%}
+    {%- assign obsession_book = current_issue.library_book.value -%}
+  {%- endif -%}
+{%- endif -%}
+{%- if obsession_book != blank and obsession_book.tropes.value != blank -%}
+  {%- for obsession_trope in obsession_book.tropes.value limit: 2 -%}
+    {%- if forloop.first -%}
+      {%- assign obsession_trope_one = obsession_trope -%}
+    {%- elsif forloop.index == 2 -%}
+      {%- assign obsession_trope_two = obsession_trope -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
+{% assign tease_pick_title_key = section.settings.rec_pick_title | downcase | strip %}
+{% assign tease_result_title_key = section.settings.rec_result_title | downcase | strip %}
+{% assign tease_pick_handle_key = section.settings.rec_pick_title | handleize %}
+{% assign tease_result_handle_key = section.settings.rec_result_title | handleize %}
+{% assign tease_pick_cover_url = '' %}
+{% assign tease_result_cover_url = '' %}
+{% assign tease_pick_book = shop.metaobjects.sss_library[tease_pick_handle_key] %}
+{% assign tease_result_book = shop.metaobjects.sss_library[tease_result_handle_key] %}
+
+{% if tease_pick_book != blank %}
+  {% assign tease_pick_cover_value = tease_pick_book.cover.value | default: tease_pick_book.cover %}
+  {% assign tease_pick_cover_url = tease_pick_cover_value.url | default: tease_pick_cover_value %}
+{% endif %}
+
+{% if tease_result_book != blank %}
+  {% assign tease_result_cover_value = tease_result_book.cover.value | default: tease_result_book.cover %}
+  {% assign tease_result_cover_url = tease_result_cover_value.url | default: tease_result_cover_value %}
+{% endif %}
+{% assign tease_books = shop.metaobjects.sss_library.values %}
+{% for book in tease_books %}
+  {% assign book_title_value = book.title.value | default: book.title %}
+  {% assign book_title_key = book_title_value | downcase | strip %}
+  {% assign book_handle_key = book.system.handle | default: book.handle | handleize %}
+  {% assign book_cover_value = book.cover.value | default: book.cover %}
+  {% assign book_cover_url = book_cover_value.url | default: book_cover_value %}
+  {% if tease_pick_cover_url == blank and book_title_key == tease_pick_title_key or tease_pick_cover_url == blank and book_handle_key == tease_pick_handle_key %}
+    {% assign tease_pick_cover_url = book_cover_url %}
+  {% endif %}
+  {% if tease_result_cover_url == blank and book_title_key == tease_result_title_key or tease_result_cover_url == blank and book_handle_key == tease_result_handle_key %}
+    {% assign tease_result_cover_url = book_cover_url %}
+  {% endif %}
+{% endfor %}
+
+<div class="main-blog page-width">
+
+  <div class="main-blog__hero">
+    <p class="main-blog__eyebrow">romance guide archive</p>
+    <h1 class="title--primary">
+      {{ blog.title | escape }}
+    </h1>
+    <p class="main-blog__intro">
+      curated romance reading guides for readers looking for their next obsession, from trope deep dives to
+      booktok favorite series.
+    </p>
+  </div>
+
+  {%- if show_discovery_sections and trope_pages.size > 0 -%}
+    {%- if obsession_trope_one != blank -%}
+      <a class="blog-obsession-banner" href="{{ obsession_url }}" aria-label="see this week's weekly obsession">
+        <p class="blog-obsession-banner__eyebrow">see the book everyone is talking about</p>
+        <p class="blog-obsession-banner__text">
+          what the society is obsessed with this week...
+          think
+          <span class="blog-obsession-banner__trope">
+            {%- if obsession_trope_one.emoji != blank -%}<span class="blog-obsession-banner__tropeEmoji">{{ obsession_trope_one.emoji }}</span>{%- endif -%}
+            {{ obsession_trope_one.name }}
+          </span>
+          {%- if obsession_trope_two != blank -%}
+            and
+            <span class="blog-obsession-banner__trope">
+              {%- if obsession_trope_two.emoji != blank -%}<span class="blog-obsession-banner__tropeEmoji">{{ obsession_trope_two.emoji }}</span>{%- endif -%}
+              {{ obsession_trope_two.name }}
+            </span>
+          {%- endif -%}
+          <span class="blog-obsession-banner__cta">see the weekly obsession</span>
+        </p>
+      </a>
+    {%- endif -%}
+
+    <section class="blog-discovery blog-discovery--tropes" aria-labelledby="blog-discovery-tropes">
+      <div class="blog-discovery__header">
+        <p class="blog-discovery__kicker">start small</p>
+        <h2 class="blog-discovery__title" id="blog-discovery-tropes">explore books by trope</h2>
+      </div>
+
+      <div class="blog-discovery__tropeStage" data-trope-rotator>
+        {%- assign visible_trope_count = 0 -%}
+        {%- for p in trope_pages -%}
+          {%- assign trope = p.metafields.custom.trope.value -%}
+          {%- if trope != blank -%}
+            {%- assign visible_trope_count = visible_trope_count | plus: 1 -%}
+          {%- endif -%}
+        {%- endfor -%}
+
+        {%- assign rendered_trope_count = 0 -%}
+        {%- assign set_index = 0 -%}
+        {%- for p in trope_pages -%}
+          {%- assign trope = p.metafields.custom.trope.value -%}
+          {%- if trope == blank -%}
+            {%- continue -%}
+          {%- endif -%}
+          {%- assign trope_handle = trope.system.handle | default: trope.name | handleize -%}
+          {%- capture trope_colors -%}{% render 'trope-pill-colors', trope_handle: trope_handle %}{%- endcapture -%}
+          {%- assign trope_color_parts = trope_colors | strip | split: '|||' -%}
+          {%- assign trope_bg = trope_color_parts[0] | strip -%}
+          {%- assign trope_text = trope_color_parts[1] | strip -%}
+
+          {%- assign position_in_set = rendered_trope_count | modulo: 6 -%}
+          {%- if position_in_set == 0 -%}
+            <div class="blog-discovery__grid blog-discovery__grid--tropes blog-discovery__tropeSet{% if set_index == 0 %} is-active{% endif %}" data-trope-set{% unless set_index == 0 %} hidden{% endunless %}>
+            {%- assign set_index = set_index | plus: 1 -%}
+          {%- endif -%}
+
+          <a href="{{ p.url }}" class="blog-discovery__card blog-discovery__card--trope" style="--trope-bg: {{ trope_bg }}; --trope-text: {{ trope_text }};">
+            {%- if trope.emoji != blank -%}
+              <span class="blog-discovery__emoji">{{ trope.emoji }}</span>
+            {%- endif -%}
+            <span class="blog-discovery__name">{{ trope.name }}</span>
+          </a>
+
+          {%- assign rendered_trope_count = rendered_trope_count | plus: 1 -%}
+          {%- assign next_position_in_set = rendered_trope_count | modulo: 6 -%}
+          {%- if next_position_in_set == 0 or rendered_trope_count == visible_trope_count -%}
+            </div>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    </section>
+  {%- endif -%}
+
+  {%- if show_discovery_sections and shelf_pages.size > 0 -%}
+    <section class="blog-discovery blog-discovery--shelves" aria-labelledby="blog-discovery-shelves">
+      <div class="blog-discovery__header">
+        <p class="blog-discovery__kicker">go wider</p>
+        <h2 class="blog-discovery__title" id="blog-discovery-shelves">browse by genre</h2>
+      </div>
+
+      <div class="blog-discovery__grid blog-discovery__grid--shelves">
+        {%- for p in shelf_pages -%}
+          {%- assign shelf = p.metafields.custom.shelf.value -%}
+          {%- if shelf != blank -%}
+            <a href="{{ p.url }}" class="blog-discovery__card blog-discovery__card--shelf">
+              <div class="blog-discovery__content">
+                <div class="blog-discovery__line">
+                  {%- if shelf.emoji != blank -%}
+                    <span class="blog-discovery__emoji">{{ shelf.emoji }}</span>
+                  {%- endif -%}
+                  <span class="blog-discovery__name">{{ shelf.name }}</span>
+                </div>
+                {%- if shelf.description != blank -%}
+                  <p class="blog-discovery__description">{{ shelf.description }}</p>
+                {%- endif -%}
+              </div>
+            </a>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    </section>
+
+    <a class="blog-spice-callout" href="/pages/romance-books-by-spice-level">
+      <span class="blog-spice-callout__rain" aria-hidden="true">
+        <span>🌶</span><span>🌶</span><span>🌶</span><span>🌶</span><span>🌶</span>
+      </span>
+      <span class="blog-spice-callout__kicker">or choose the heat first</span>
+      <span class="blog-spice-callout__text">browse romance by spice level and go straight to the kind of spice you want →</span>
+    </a>
+  {%- endif -%}
+
+  {%- if show_discovery_sections -%}
+    <a href="{{ section.settings.rec_link | default: 'https://bybookishbabe.com/pages/what-to-read-next' }}" class="bbb-homeRecDemo bbb-homeRecDemo--guides">
+      <div class="bbb-homeRecDemo__copy">
+        <div class="bbb-homeRecDemo__kicker">{{ section.settings.rec_kicker }}</div>
+        <div class="bbb-homeRecDemo__title"><span>if you liked...</span></div>
+        <div class="bbb-homeRecDemo__sub">read this next</div>
+        <div class="bbb-homeRecDemo__cta">{{ section.settings.rec_title }}</div>
+      </div>
+
+      <div class="bbb-homeRecDemo__stage" aria-hidden="true">
+        <div class="bbb-homeRecDemo__book bbb-homeRecDemo__book--picked">
+          <div class="bbb-homeRecDemo__label">you picked</div>
+          {% if tease_pick_cover_url != blank %}
+            <img src="{{ tease_pick_cover_url }}" alt="{{ section.settings.rec_pick_title | escape }}" loading="lazy">
+          {% endif %}
+          <div class="bbb-homeRecDemo__meta">
+            <div class="bbb-homeRecDemo__bookTitle">{{ section.settings.rec_pick_title }}</div>
+          </div>
+        </div>
+
+        <div class="bbb-homeRecDemo__book bbb-homeRecDemo__book--result">
+          <div class="bbb-homeRecDemo__label">read this next</div>
+          {% if tease_result_cover_url != blank %}
+            <img src="{{ tease_result_cover_url }}" alt="{{ section.settings.rec_result_title | escape }}" loading="lazy">
+          {% endif %}
+          <div class="bbb-homeRecDemo__meta">
+            <div class="bbb-homeRecDemo__bookTitle">{{ section.settings.rec_result_title }}</div>
+          </div>
+        </div>
+      </div>
+    </a>
+  {%- endif -%}
+
+  <section class="main-blog__posts" aria-labelledby="main-blog-posts">
+    <div class="blog-discovery__header blog-discovery__header--posts">
+      <p class="blog-discovery__kicker">go deeper</p>
+      <h2 class="blog-discovery__title" id="main-blog-posts">from the romance guides</h2>
+    </div>
+
+    {% assign featured_guide_count = 3 %}
+    {% assign featured_guide_handles = '|the-ultimate-dark-romance-reading-guide|the-ultimate-romantasy-reading-guide|the-ultimate-sports-romance-reading-guide|' %}
+    {% assign featured_guide_urls = 'https://bybookishbabe.com/blogs/curated-romance-guides/the-ultimate-dark-romance-reading-guide||https://bybookishbabe.com/blogs/curated-romance-guides/the-ultimate-romantasy-reading-guide||https://bybookishbabe.com/blogs/curated-romance-guides/the-ultimate-sports-romance-reading-guide' | split: '||' %}
+    {% assign featured_guide_titles = 'best dark romance books - the ultimate list||the ultimate romantasy reading guide||the best sports romance books (the ultimate reading guide)' | split: '||' %}
+    {% assign featured_guide_dates = 'April 30, 2026||April 14, 2026||April 14, 2026' | split: '||' %}
+    {% capture ultimate_guides %}
+      {% for featured_guide_url in featured_guide_urls %}
+        {% assign featured_guide_index = forloop.index0 %}
+        <div class="blog-articles__article blog-articles__article--ultimate">
+          <article class="article-card-wrapper article-card-wrapper--list underline-links-hover">
+            <a href="{{ featured_guide_url }}" class="article-card article-card--list full-unstyled-link">
+              <div class="article-card__content article-card__content--list">
+                <div class="article-card__meta article-card__meta--list">
+                  <span class="article-card__info article-card__info--list">
+                    <time datetime="{{ featured_guide_dates[featured_guide_index] | date: '%Y-%m-%d' }}">{{ featured_guide_dates[featured_guide_index] }}</time>
+                  </span>
+                </div>
+                <h3 class="article-card__heading article-card__heading--list">
+                  {{ featured_guide_titles[featured_guide_index] }}
+                </h3>
+              </div>
+            </a>
+          </article>
+        </div>
+      {% endfor %}
+    {% endcapture %}
+
+    {% if show_discovery_sections and featured_guide_count > 0 %}
+      <div class="blog-ultimate-guides" aria-label="ultimate romance guide collection">
+        <div class="blog-ultimate-guides__head">
+          <p class="blog-ultimate-guides__kicker">ultimate guides</p>
+          <p class="blog-ultimate-guides__copy">start with the big, full-shelf guides first.</p>
+        </div>
+        <div class="blog-articles blog-articles--ultimate">
+          {{ ultimate_guides }}
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="blog-articles">
+
+    {% for article in blog.articles %}
+      {% assign featured_handle_token = '|' | append: article.handle | append: '|' %}
+      {% if show_discovery_sections and featured_guide_handles contains featured_handle_token %}
+        {% continue %}
+      {% endif %}
+
+      <div class="blog-articles__article">
+        {% render 'article-card',
+          blog: blog,
+          article: article,
+          show_image: false,
+          show_date: true,
+          show_author: false,
+          show_excerpt: false,
+          blog_list: true
+        %}
+      </div>
+
+    {% endfor %}
+
+    </div>
+  </section>
+
+  {% if paginate.pages > 1 %}
+    {% render 'pagination', paginate: paginate %}
+  {% endif %}
+
+</div>
+
+{%- endpaginate -%}
+
+<style>
+  .blog-obsession-banner{
+    display:block;
+    margin:0 0 28px;
+    padding:16px 18px;
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:18px;
+    background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+    box-shadow:0 12px 30px rgba(0,0,0,.16);
+    text-decoration:none;
+    color:inherit;
+    position:relative;
+    overflow:hidden;
+    transition:transform .32s ease, border-color .32s ease, box-shadow .32s ease;
+    animation:blogObsessionFloat 4.8s ease-in-out infinite;
+  }
+
+  .blog-obsession-banner::after{
+    content:"";
+    position:absolute;
+    top:-30%;
+    left:-18%;
+    width:40%;
+    height:180%;
+    background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,170,214,.12), rgba(255,255,255,0));
+    transform:rotate(14deg);
+    animation:blogObsessionShimmer 5.2s ease-in-out infinite;
+    pointer-events:none;
+  }
+
+  .blog-obsession-banner__eyebrow{
+    margin:0 0 8px;
+    font-size:11px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:rgba(246,246,246,.6);
+  }
+
+  .blog-obsession-banner__text{
+    margin:0;
+    font-size:clamp(2rem, 3vw, 2.8rem);
+    line-height:1.1;
+    color:#f6f6f6;
+    font-family:"Cormorant Garamond", Georgia, serif;
+  }
+
+  .blog-obsession-banner__trope{
+    display:inline-block;
+    margin:0 .15em;
+    padding:0;
+    border:none;
+    background:none;
+    font-style:italic;
+    font-weight:600;
+    animation:blogObsessionWiggle 2.6s ease-in-out infinite;
+    transform-origin:center bottom;
+  }
+
+  .blog-obsession-banner__trope:nth-of-type(1){
+    color:#ff9ccb;
+    animation-delay:.15s;
+  }
+
+  .blog-obsession-banner__trope:nth-of-type(2){
+    color:#cfa8ff;
+    animation-delay:.55s;
+  }
+
+  .blog-obsession-banner__tropeEmoji{
+    display:inline-block;
+    margin-right:.22em;
+    font-style:normal;
+  }
+
+  .blog-obsession-banner__cta{
+    display:block;
+    margin-top:.7em;
+    font-size:11px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:#ffb6da;
+    white-space:nowrap;
+  }
+
+  .blog-obsession-banner:hover{
+    transform:translateY(-3px);
+    border-color:rgba(255,138,199,.32);
+    box-shadow:0 18px 34px rgba(0,0,0,.22), 0 0 0 1px rgba(255,138,199,.12);
+  }
+
+  .blog-discovery__grid--tropes{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:18px;
+  }
+
+  .blog-discovery__tropeStage{
+    position:relative;
+  }
+
+  .blog-discovery__tropeSet{
+    transition:opacity .45s ease, transform .45s ease;
+  }
+
+  .blog-discovery__tropeSet.is-leaving{
+    opacity:0;
+    transform:translateY(8px);
+  }
+
+  .blog-discovery__tropeSet.is-entering{
+    opacity:0;
+    transform:translateY(8px);
+  }
+
+  .blog-discovery__tropeSet.is-active{
+    opacity:1;
+    transform:translateY(0);
+  }
+
+  .blog-discovery__grid--shelves{
+    display:grid;
+    grid-auto-flow:column;
+    grid-auto-columns:minmax(260px, 320px);
+    gap:18px;
+    overflow-x:auto;
+    overflow-y:visible;
+    overscroll-behavior-x:contain;
+    margin-top:-0.8rem;
+    padding-top:0.8rem;
+    padding-bottom:10px;
+    scroll-snap-type:x proximity;
+  }
+
+  .blog-discovery__grid--shelves .blog-discovery__card{
+    min-height:100%;
+    scroll-snap-align:start;
+  }
+
+  .blog-discovery__grid--shelves::-webkit-scrollbar{
+    height:8px;
+  }
+
+  .blog-discovery__grid--shelves::-webkit-scrollbar-track{
+    background:rgba(255,255,255,.05);
+    border-radius:999px;
+  }
+
+  .blog-discovery__grid--shelves::-webkit-scrollbar-thumb{
+    background:rgba(255,182,218,.5);
+    border-radius:999px;
+  }
+
+  .blog-spice-callout{
+    display:block;
+    margin:24px 0 38px;
+    padding:14px 18px;
+    border-radius:18px;
+    border:1px solid rgba(255,138,199,.18);
+    background:linear-gradient(180deg, rgba(255,138,199,.08), rgba(255,255,255,.02));
+    text-decoration:none;
+    color:inherit;
+    transition:border-color .2s ease, background .2s ease, transform .2s ease;
+    position:relative;
+    overflow:hidden;
+  }
+
+  .blog-spice-callout:hover,
+  .blog-spice-callout:focus-visible{
+    border-color:rgba(255,138,199,.42);
+    background:linear-gradient(180deg, rgba(255,138,199,.14), rgba(255,255,255,.03));
+    transform:translateY(-1px);
+    outline:none;
+  }
+
+  .blog-spice-callout__kicker{
+    display:block;
+    margin-bottom:6px;
+    font-size:10px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:rgba(246,246,246,.62);
+    position:relative;
+    z-index:1;
+  }
+
+  .blog-spice-callout__text{
+    display:block;
+    font-size:15px;
+    line-height:1.45;
+    color:#f6f6f6;
+    position:relative;
+    z-index:1;
+  }
+
+  .blog-spice-callout__rain{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    overflow:hidden;
+    opacity:.42;
+  }
+
+  .blog-spice-callout__rain span{
+    position:absolute;
+    top:-22px;
+    font-size:15px;
+    animation:blogSpiceFall 7.8s linear infinite;
+    filter:drop-shadow(0 0 6px rgba(255,138,199,.4));
+    text-shadow:0 0 10px rgba(255,138,199,.45);
+  }
+
+  .blog-spice-callout__rain span:nth-child(1){ left:7%; animation-delay:0s; }
+  .blog-spice-callout__rain span:nth-child(2){ left:24%; animation-delay:1.1s; }
+  .blog-spice-callout__rain span:nth-child(3){ left:47%; animation-delay:3s; }
+  .blog-spice-callout__rain span:nth-child(4){ left:68%; animation-delay:2.2s; }
+  .blog-spice-callout__rain span:nth-child(5){ left:87%; animation-delay:4.3s; }
+
+  .blog-ultimate-guides{
+    margin:0 0 24px;
+    padding:18px;
+    border:1px solid rgba(255,138,199,.34);
+    border-radius:22px;
+    background:
+      radial-gradient(circle at 16% 0%, rgba(255,138,199,.16), transparent 34%),
+      linear-gradient(180deg, rgba(255,138,199,.1), rgba(255,255,255,.025));
+    box-shadow:0 18px 44px rgba(0,0,0,.22), 0 0 0 1px rgba(255,138,199,.08);
+  }
+
+  .blog-ultimate-guides__head{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:12px;
+  }
+
+  .blog-ultimate-guides__kicker{
+    margin:0;
+    color:#ff9ccc;
+    font-size:10px;
+    line-height:1.2;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    font-weight:700;
+  }
+
+  .blog-ultimate-guides__copy{
+    margin:0;
+    max-width:22rem;
+    color:rgba(246,246,246,.68);
+    font-size:12px;
+    line-height:1.45;
+    text-align:right;
+  }
+
+  .blog-articles--ultimate{
+    gap:14px;
+  }
+
+  .blog-articles__article--ultimate .article-card--list{
+    border-color:rgba(255,138,199,.35);
+    background:rgba(255,138,199,.08);
+  }
+
+  .blog-articles__article--ultimate .article-card__heading--list{
+    color:#ffb8e0;
+  }
+
+  @keyframes blogObsessionFloat{
+    0%, 100%{
+      transform:translateY(0);
+    }
+    50%{
+      transform:translateY(-2px);
+    }
+  }
+
+  @keyframes blogObsessionShimmer{
+    0%, 100%{
+      opacity:0;
+      left:-20%;
+    }
+    18%{
+      opacity:1;
+    }
+    42%{
+      opacity:0;
+      left:92%;
+    }
+  }
+
+  @keyframes blogObsessionWiggle{
+    0%, 100%{
+      transform:rotate(0deg) translateY(0);
+    }
+    25%{
+      transform:rotate(-1.5deg) translateY(-1px);
+    }
+    50%{
+      transform:rotate(1.2deg) translateY(0);
+    }
+    75%{
+      transform:rotate(-.75deg) translateY(-1px);
+    }
+  }
+
+  @keyframes blogSpiceFall{
+    0%{ transform:translateY(-14px) rotate(0deg); opacity:0; }
+    12%{ opacity:.9; }
+    100%{ transform:translateY(92px) rotate(14deg); opacity:0; }
+  }
+
+  @media (max-width: 749px){
+    .main-blog .bbb-homeRecDemo--guides{
+      margin:10px 0 24px;
+      padding:18px;
+      display:grid;
+      grid-template-columns:1fr;
+      gap:18px;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:22px;
+      background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.02));
+      box-shadow:0 18px 36px rgba(0,0,0,.24);
+      text-decoration:none;
+      color:inherit;
+    }
+
+    .main-blog .bbb-homeRecDemo__title{
+      font-size:clamp(2rem, 8vw, 3rem);
+      line-height:1;
+    }
+
+    .main-blog .bbb-homeRecDemo__stage{
+      min-height:0;
+      display:flex;
+      align-items:flex-start;
+      justify-content:flex-start;
+      gap:12px;
+    }
+
+    .main-blog .bbb-homeRecDemo__book{
+      width:calc(50% - 6px);
+      max-width:170px;
+      padding:12px;
+    }
+
+    .main-blog .bbb-homeRecDemo__book--picked,
+    .main-blog .bbb-homeRecDemo__book--result{
+      transform:none;
+      animation:none;
+    }
+
+    .blog-obsession-banner{
+      margin:0 0 22px;
+      padding:14px 14px 15px;
+    }
+
+    .blog-obsession-banner__text{
+      font-size:1.9rem;
+      line-height:1.12;
+    }
+
+    .blog-discovery__grid--tropes{
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:10px;
+    }
+
+    .blog-discovery__grid--tropes .blog-discovery__card{
+      min-height:112px;
+      padding:14px 10px;
+    }
+
+    .blog-discovery__grid--tropes .blog-discovery__name{
+      font-size:14px;
+      line-height:1.25;
+    }
+
+    .blog-discovery__grid--shelves{
+      grid-auto-columns:minmax(240px, 82vw);
+      gap:14px;
+      margin-top:-1rem;
+      margin-right:-8px;
+      padding-top:1rem;
+      padding-right:8px;
+    }
+
+    .blog-spice-callout{
+      margin:18px 0 30px;
+      padding:12px 14px;
+      border-radius:16px;
+    }
+
+    .blog-ultimate-guides{
+      padding:14px;
+      border-radius:18px;
+    }
+
+    .blog-ultimate-guides__head{
+      display:block;
+      margin-bottom:10px;
+    }
+
+    .blog-ultimate-guides__copy{
+      margin-top:6px;
+      max-width:none;
+      text-align:left;
+    }
+  }
+
+  .main-blog .bbb-homeRecDemo--guides{
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) minmax(320px, 420px);
+    gap:28px;
+    max-width:760px;
+    margin:0 0 34px;
+    padding:26px 28px;
+    border-radius:24px;
+    border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg, rgba(255,138,199,.08), rgba(255,255,255,.03));
+    box-shadow:0 18px 50px rgba(0,0,0,.22);
+    text-decoration:none;
+    align-items:center;
+    text-align:left;
+    color:inherit;
+  }
+
+  .main-blog .bbb-homeRecDemo__kicker{
+    font-size:10px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:#ffb8e0;
+    margin-bottom:10px;
+  }
+
+  .main-blog .bbb-homeRecDemo__title{
+    font-family:'Cormorant', serif;
+    font-size:clamp(2.1rem, 4vw, 3rem);
+    line-height:1.02;
+    color:#f7f3ee;
+  }
+
+  .main-blog .bbb-homeRecDemo__title span{
+    color:#ff8ac7;
+    font-family:'Kaushan Script', cursive;
+    font-size:1.08em;
+    font-weight:400;
+    padding:0 .04em;
+  }
+
+  .main-blog .bbb-homeRecDemo__sub{
+    max-width:40ch;
+    margin:12px 0 0;
+    font-size:1.02rem;
+    line-height:1.65;
+    color:rgba(247,243,238,.72);
+  }
+
+  .main-blog .bbb-homeRecDemo__cta{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:max-content;
+    margin-top:18px;
+    padding:13px 22px;
+    border-radius:999px;
+    background:#ff8ac7;
+    color:#1b1016;
+    text-decoration:none;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    font-weight:700;
+  }
+
+  .main-blog .bbb-homeRecDemo__stage{
+    position:relative;
+    min-height:260px;
+  }
+
+  .main-blog .bbb-homeRecDemo__book{
+    position:absolute;
+    display:grid;
+    grid-template-columns:86px minmax(0, 1fr);
+    gap:14px;
+    width:100%;
+    padding:14px;
+    border-radius:22px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(15,15,18,.86);
+    box-shadow:0 18px 38px rgba(0,0,0,.26);
+  }
+
+  .main-blog .bbb-homeRecDemo__book--picked{
+    top:0;
+    left:0;
+    z-index:1;
+  }
+
+  .main-blog .bbb-homeRecDemo__book--result{
+    right:0;
+    bottom:0;
+    z-index:2;
+    transform:translate(8px, 8px) rotate(-2deg);
+    animation:bbbGuideRecSlide 3.6s ease-in-out infinite;
+  }
+
+  .main-blog .bbb-homeRecDemo__book img{
+    width:86px;
+    aspect-ratio:3 / 4.2;
+    object-fit:cover;
+    border-radius:14px;
+    display:block;
+  }
+
+  .main-blog .bbb-homeRecDemo__label{
+    grid-column:1 / -1;
+    font-size:10px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:#ffb8e0;
+  }
+
+  .main-blog .bbb-homeRecDemo__bookTitle{
+    font-family:'Cormorant', serif;
+    font-size:1.5rem;
+    line-height:1.02;
+    color:#f7f3ee;
+  }
+
+  @keyframes bbbGuideRecSlide{
+    0%, 18% { transform:translate(34px, 18px) rotate(-4deg); opacity:.22; }
+    34%, 100% { transform:translate(8px, 8px) rotate(-2deg); opacity:1; }
+  }
+
+  @media (max-width: 749px){
+    .main-blog .bbb-homeRecDemo--guides{
+      grid-template-columns:1fr;
+      gap:16px;
+      margin:0 0 24px;
+      padding:18px 16px;
+      border-radius:18px;
+    }
+
+    .main-blog .bbb-homeRecDemo__title{
+      font-size:clamp(1.8rem, 9vw, 2.4rem);
+    }
+
+    .main-blog .bbb-homeRecDemo__stage{
+      min-height:220px;
+    }
+
+    .main-blog .bbb-homeRecDemo__book{
+      grid-template-columns:72px minmax(0, 1fr);
+      gap:12px;
+      padding:12px;
+    }
+
+    .main-blog .bbb-homeRecDemo__book img{
+      width:72px;
+      border-radius:12px;
+    }
+
+    .main-blog .bbb-homeRecDemo__bookTitle{
+      font-size:1.3rem;
+    }
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  var rotators = document.querySelectorAll('[data-trope-rotator]');
+
+  rotators.forEach(function(stage){
+    var sets = Array.from(stage.querySelectorAll('[data-trope-set]'));
+    if (sets.length <= 1) return;
+
+    var allCards = [];
+    sets.forEach(function(set){
+      Array.from(set.querySelectorAll('.blog-discovery__card--trope')).forEach(function(card){
+        allCards.push(card.cloneNode(true));
+      });
+    });
+
+    if (allCards.length <= 6) {
+      sets.forEach(function(set, index){
+        set.hidden = index !== 0;
+        set.classList.toggle('is-active', index === 0);
+      });
+      return;
+    }
+
+    var pages = [];
+    for (var i = 0; i < allCards.length; i += 6) {
+      pages.push(allCards.slice(i, i + 6));
+    }
+
+    var lastPage = pages[pages.length - 1];
+    if (lastPage && lastPage.length < 6) {
+      for (var fillIndex = 0; lastPage.length < 6; fillIndex += 1) {
+        lastPage.push(allCards[fillIndex % allCards.length].cloneNode(true));
+      }
+    }
+
+    var activeSet = sets[0];
+    sets.slice(1).forEach(function(set){
+      set.remove();
+    });
+
+    function renderPage(pageIndex){
+      activeSet.innerHTML = '';
+      pages[pageIndex].forEach(function(card){
+        activeSet.appendChild(card.cloneNode(true));
+      });
+    }
+
+    var activeIndex = 0;
+    activeSet.hidden = false;
+    activeSet.classList.add('is-active');
+    renderPage(activeIndex);
+
+    window.setInterval(function(){
+      activeSet.classList.remove('is-active');
+      activeSet.classList.add('is-leaving');
+
+      var nextIndex = (activeIndex + 1) % pages.length;
+
+      window.setTimeout(function(){
+        renderPage(nextIndex);
+        activeSet.classList.remove('is-leaving');
+        activeSet.classList.add('is-entering');
+
+        window.requestAnimationFrame(function(){
+          activeSet.classList.add('is-active');
+          activeSet.classList.remove('is-entering');
+        });
+      }, 460);
+
+      activeIndex = nextIndex;
+    }, 8000);
+  });
+});
+</script>
+
+{% schema %}
+{
+  "name": "t:sections.main-blog.name",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "select",
+      "id": "layout",
+      "options": [
+        {
+          "value": "grid",
+          "label": "t:sections.main-blog.settings.layout.options__1.label"
+        },
+        {
+          "value": "collage",
+          "label": "t:sections.main-blog.settings.layout.options__2.label"
+        }
+      ],
+      "default": "collage",
+      "label": "t:sections.main-blog.settings.layout.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_image",
+      "default": true,
+      "label": "t:sections.main-blog.settings.show_image.label"
+    },
+    {
+      "type": "select",
+      "id": "image_height",
+      "options": [
+        {
+          "value": "adapt",
+          "label": "t:sections.main-blog.settings.image_height.options__1.label"
+        },
+        {
+          "value": "small",
+          "label": "t:sections.main-blog.settings.image_height.options__2.label"
+        },
+        {
+          "value": "medium",
+          "label": "t:sections.main-blog.settings.image_height.options__3.label"
+        },
+        {
+          "value": "large",
+          "label": "t:sections.main-blog.settings.image_height.options__4.label"
+        }
+      ],
+      "default": "medium",
+      "label": "t:sections.main-blog.settings.image_height.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_date",
+      "default": true,
+      "label": "t:sections.main-blog.settings.show_date.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_author",
+      "default": false,
+      "label": "t:sections.main-blog.settings.show_author.label"
+    },
+    {
+      "type": "header",
+      "content": "What to Read Next"
+    },
+    {
+      "type": "text",
+      "id": "rec_kicker",
+      "label": "Kicker",
+      "default": "reader chemistry"
+    },
+    {
+      "type": "text",
+      "id": "rec_pick_title",
+      "label": "Picked book title",
+      "default": "daggermouth"
+    },
+    {
+      "type": "text",
+      "id": "rec_result_title",
+      "label": "Recommended book title",
+      "default": "until i die"
+    },
+    {
+      "type": "text",
+      "id": "rec_title",
+      "label": "CTA text",
+      "default": "try what to read next →"
+    },
+    {
+      "type": "url",
+      "id": "rec_link",
+      "label": "CTA link"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 36
+    }
+  ]
+}
+{% endschema %}

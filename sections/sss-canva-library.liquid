@@ -1,0 +1,820 @@
+{% comment %}
+  sss-canva-library.liquid (swipeable + iphone mockup + canva/download button)
+
+  ✅ Fixes:
+  - removed broken nested <style> tags + extra </style> (was preventing styles/logic from “working”)
+  - swipeable rows (horizontal scroll + scroll-snap) per category
+  - iphone mockup triggers when:
+      category contains "iphone" or "wallpaper"
+      OR tags contains "iphone" or "wallpaper"
+  - button text:
+      if (category contains "canva") OR (href contains "canva.com") -> "open in canva"
+      else -> "download"
+  - no Canva badge
+{% endcomment %}
+
+<style>
+  .sss-canva{
+    background:#0b0b0b; color:#f6f6f6;
+    padding:18px 12px;
+    font-family:"Libre Baskerville", Georgia, serif;
+    position:relative; overflow:hidden;
+  }
+  .sss-canva:before{
+    content:""; position:absolute; inset:-40px; pointer-events:none;
+    background:
+      radial-gradient(900px 520px at 50% 90px, rgba(255,255,255,.08), transparent 70%),
+      repeating-linear-gradient(to bottom, rgba(255,255,255,.03), rgba(255,255,255,.03) 1px, transparent 1px, transparent 26px);
+    opacity:.55;
+  }
+  .sss-canva__wrap{ max-width:1200px; margin:0 auto; padding:0 8px; position:relative; z-index:1; }
+  .sss-kicker{ margin:0; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:#c8c8c8; }
+  .sss-title{ margin:6px 0 0; font-size:18px; font-weight:400; text-transform:lowercase; }
+  .sss-sub{ margin:8px 0 0; font-size:12px; color:rgba(246,246,246,.72); line-height:1.55; }
+
+  .sss-card{
+    margin-top:12px;
+    background:rgba(21,21,21,.92);
+    border:1px solid #2a2a2a;
+    border-radius:18px;
+    box-shadow:0 12px 28px rgba(0,0,0,.45);
+    overflow:hidden;
+  }
+  .sss-card__inner{ padding:12px; }
+
+  /* category chips */
+  .sss-chips{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:0 0 12px; }
+  .sss-chip{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:7px 10px; border-radius:999px;
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(0,0,0,.35);
+    color:#f6f6f6; font-size:12px;
+    text-decoration:none; line-height:1;
+    transition:transform .14s ease, background .14s ease, border-color .14s ease;
+  }
+  .sss-chip:hover{ transform:translateY(-1px); background:rgba(0,0,0,.5); border-color:rgba(255,255,255,.22); }
+  .sss-chip__dot{ width:8px; height:8px; border-radius:999px; background:rgba(255,255,255,.45); box-shadow:0 0 0 2px rgba(0,0,0,.25); }
+
+  .sss-cat{ margin:14px 0 10px; padding-top:6px; border-top:1px solid rgba(255,255,255,.08); }
+  .sss-cat:first-child{ border-top:none; padding-top:0; margin-top:0; }
+  .sss-catTitle{
+    margin:0; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:#c8c8c8;
+    display:flex; align-items:center; gap:10px;
+  }
+  .sss-catTitle:after{ content:""; height:1px; flex:1; background:linear-gradient(90deg, rgba(255,255,255,.18), transparent); }
+
+  /* ===== swipe row ===== */
+  .sss-rowWrap{ position:relative; margin-top:10px; }
+  .sss-row{
+    display:flex;
+    gap:12px;
+    overflow-x:auto;
+    padding:2px 2px 10px;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .sss-row::-webkit-scrollbar{ display:none; }
+
+  .sss-rowWrap:before,
+  .sss-rowWrap:after{
+    content:"";
+    position:absolute; top:0; bottom:0;
+    width:46px;
+    pointer-events:none;
+    z-index:2;
+  }
+  .sss-rowWrap:before{
+    left:-2px;
+    background:linear-gradient(90deg, rgba(21,21,21,.98), rgba(21,21,21,0));
+  }
+  .sss-rowWrap:after{
+    right:-2px;
+    background:linear-gradient(270deg, rgba(21,21,21,.98), rgba(21,21,21,0));
+  }
+
+  .sss-rowNav{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    z-index:3;
+    width:36px; height:36px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(0,0,0,.45);
+    color:#f6f6f6;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    user-select:none;
+    transition:transform .14s ease, filter .14s ease, background .14s ease;
+  }
+  .sss-rowNav:hover{ transform:translateY(-50%) scale(1.03); filter:brightness(1.05); background:rgba(0,0,0,.55); }
+  .sss-rowNav:active{ transform:translateY(-50%) scale(.99); }
+  .sss-rowNav--left{ left:6px; }
+  .sss-rowNav--right{ right:6px; }
+
+  @media(min-width:900px){
+    .sss-rowNav{ display:flex; }
+  }
+
+  /* ===== item card ===== */
+  .tpl{
+    scroll-snap-align:start;
+    flex:0 0 min(340px, 86vw);
+    border-radius:18px;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,.10);
+    background:rgba(255,255,255,.03);
+    box-shadow:0 10px 22px rgba(0,0,0,.25);
+    transition:transform .14s ease, filter .14s ease, border-color .14s ease;
+    position:relative;
+  }
+  .tpl:hover{ transform:translateY(-2px); filter:brightness(1.02); border-color:rgba(255,255,255,.16); }
+
+  .tpl__media{
+    background:#0f0f0f;
+    border-bottom:1px solid rgba(255,255,255,.08);
+    position:relative;
+    padding:12px;
+  }
+  .tpl__img{
+    width:100%;
+    height:auto;
+    display:block;
+    object-fit:contain;
+    border-radius:14px;
+  }
+
+  .tpl__body{ padding:12px; display:grid; gap:10px; }
+  .tpl__title{
+    margin:0;
+    font-size:14px;
+    text-transform:lowercase;
+    letter-spacing:.01em;
+    color:#f6f6f6;
+    line-height:1.3;
+  }
+  .tpl__desc{ margin:0; font-size:12px; color:rgba(246,246,246,.74); line-height:1.55; }
+
+  .tpl__metaRow{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .tpl__tags{ display:flex; flex-wrap:wrap; gap:8px; }
+  .tpl__tag{
+    font-size:11px;
+    padding:5px 9px;
+    border-radius:999px;
+    background:rgba(0,0,0,.45);
+    border:1px solid rgba(255,255,255,.14);
+    color:#f6f6f6;
+    text-transform:lowercase;
+    white-space:nowrap;
+  }
+
+  /* button */
+  .tpl__btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    height:40px;
+    padding:0 12px;
+    border-radius:12px;
+    border:1px solid #000;
+    background:#000;
+    color:#F7F3EE;
+    text-decoration:none;
+    font-size:12.5px;
+    white-space:nowrap;
+    transition:transform .14s ease, background .14s ease;
+    user-select:none;
+  }
+  .tpl__btn svg{ width:16px; height:16px; display:block; }
+  .tpl__btn:hover{ background:#111; transform:translateY(-1px); }
+  .tpl__btn:active{ transform:translateY(0); }
+
+  .sss-empty{ padding:10px 6px 14px; color:rgba(246,246,246,.72); font-size:12px; }
+  .sss-canva :is(p,span,div){ overflow-wrap:anywhere; }
+
+/* ===== iphone mockup (refined + smaller) ===== */
+
+.phone{
+  width:100%;
+  max-width:220px; /* was 300 */
+  margin:0 auto;
+  aspect-ratio: 9 / 19.5;
+  border-radius:20px;
+  position:relative;
+  background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+  box-shadow:
+    0 12px 28px rgba(0,0,0,.45),
+    inset 0 0 0 2px rgba(255,255,255,.10);
+  padding:8px;
+}
+  .phone:before{
+    content:"";
+    position:absolute; inset:6px;
+    border-radius:18px;
+    background:#080808;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.10);
+  }
+  .phone__screen{
+    position:relative;
+    z-index:2;
+    width:100%;
+    height:100%;
+    border-radius:16px;
+    overflow:hidden;
+    background:#0b0b0b;
+  }
+  .phone__screen img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .phone__notch{
+    position:absolute;
+    top:10px; left:50%;
+    transform:translateX(-50%);
+    width:44%;
+    height:18px;
+    background:#0a0a0a;
+    border-radius:0 0 12px 12px;
+    box-shadow:0 10px 18px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.08);
+    z-index:3;
+  }
+  .phone__speaker{
+    position:absolute;
+    top:15px; left:50%;
+    transform:translateX(-50%);
+    width:46px; height:5px;
+    border-radius:999px;
+    background:rgba(255,255,255,.10);
+    z-index:4;
+  }
+  .phone__home{
+    position:absolute;
+    bottom:12px; left:50%;
+    transform:translateX(-50%);
+    width:30%;
+    height:4px;
+    border-radius:999px;
+    background:rgba(255,255,255,.18);
+    z-index:4;
+  }
+  .phone__shine{
+    position:absolute;
+    inset:0;
+    border-radius:24px;
+    pointer-events:none;
+    background: radial-gradient(520px 220px at 30% 10%, rgba(255,255,255,.16), transparent 55%);
+    z-index:5;
+    mix-blend-mode:screen;
+    opacity:.65;
+  }
+
+  @media(max-width:520px){
+    .tpl{ flex-basis: 84vw; }
+    .tpl__btn{ width:100%; }
+    .tpl__media{ padding:10px; }
+    .phone{ max-width:180; }
+  }
+
+  .sss-canva a,
+  .sss-canva a:focus,
+  .sss-canva a:focus-visible,
+  .sss-canva a:active{
+    outline:none !important;
+    box-shadow:none !important;
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .tpl, .tpl:hover, .tpl__btn, .tpl__btn:hover, .sss-chip, .sss-chip:hover, .sss-rowNav, .sss-rowNav:hover{
+      transition:none !important; transform:none !important;
+    }
+  }
+
+  /* ===== pinned nav ===== */
+
+.sss-pinsNav{
+  margin:30px 0 40px;
+}
+
+.sss-pinsNav__row{
+  display:flex;
+  gap:22px;
+  overflow:auto;
+  scroll-snap-type:x mandatory;
+  padding-bottom:10px;
+}
+
+.sss-pinNav{
+  flex:0 0 200px; /* was 160px */
+  scroll-snap-align:start;
+  text-decoration:none;
+}
+
+.sss-pinNav{
+  flex:0 0 190px;
+  scroll-snap-align:start;
+  text-decoration:none;
+}
+
+.sss-pinNav__polaroid{
+  background:#f6f6f4;
+  padding:12px 12px 20px;
+  border-radius:6px;
+  box-shadow:
+    0 20px 40px rgba(0,0,0,.45),
+    inset 0 0 0 1px rgba(0,0,0,.05);
+  transform:rotate(-2deg);
+  transition:all .3s ease;
+  position:relative;
+}
+
+.sss-pinNav:nth-child(2n) .sss-pinNav__polaroid{
+  transform:rotate(1.5deg);
+}
+
+.sss-pinNav:nth-child(3n) .sss-pinNav__polaroid{
+  transform:rotate(-1deg);
+}
+
+.sss-pinNav__polaroid:hover{
+  transform:rotate(0deg) scale(1.06);
+}
+
+.sss-pinNav__polaroid:before{
+  content:"";
+  position:absolute;
+  top:-10px;
+  left:50%;
+  transform:translateX(-50%) rotate(-2deg);
+  width:50px;
+  height:18px;
+  background:rgba(255,255,255,.6);
+  box-shadow:0 2px 4px rgba(0,0,0,.2);
+}
+
+.sss-pinNav img{
+  width:100%;
+  display:block;
+  border-radius:4px;
+}
+
+.sss-pinNav__line{
+  margin:10px auto 0;
+  width:40%;
+  height:1px;
+  background:rgba(0,0,0,.3);
+}
+.sss-pinsNav__title{
+  font-size:12px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:#c8c8c8;
+  margin-bottom:18px;
+}
+/* scrapbook caption */
+
+.sss-pinNav__caption{
+  margin-top:10px;
+  font-size:13px;
+  font-style:italic;
+  font-family:"Libre Baskerville", serif;
+  text-align:center;
+  color:#111;
+  letter-spacing:.02em;
+}
+
+/* button row */
+
+.sss-pinNav__actions{
+  margin-top:8px;
+  display:flex;
+  justify-content:center;
+  gap:10px;
+}
+
+.sss-pinBtn{
+  width:34px;
+  height:34px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  background:#000;
+  color:#fff;
+  text-decoration:none;
+  font-size:14px;
+  transition:transform .2s ease, background .2s ease;
+}
+
+.sss-pinBtn:hover{
+  transform:scale(1.1);
+  background:#ff6ea9; /* your pink */
+}
+.sss-pinNav__polaroid{
+  position:relative;
+}
+@media(max-width:768px){
+
+  .sss-pinsNav{
+    margin-bottom: 40px;
+    padding-bottom: 30px;
+    position: relative;
+  }
+
+  .sss-pinsNav:after{
+    content:"";
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:0;
+    height:1px;
+    background:linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,.2),
+      transparent
+    );
+  }
+
+}
+</style>
+<section class="sss-canva" data-sss-canva-library>
+  <div class="sss-canva__wrap">
+
+    <p class="sss-kicker">{{ section.settings.kicker }}</p>
+    <h3 class="sss-title">{{ section.settings.title }}</h3>
+    {% if section.settings.subtext != blank %}
+      <p class="sss-sub">{{ section.settings.subtext }}</p>
+    {% endif %}
+
+    {%- assign pins = shop.metaobjects.pinterest_pin.values -%}
+    {%- assign template_collection = collections[section.settings.collection] -%}
+    {%- assign items = template_collection.products -%}
+    {%- assign legacy_items = shop.metaobjects.sss_canva_templates.values -%}
+    {%- assign eligible_count = 0 -%}
+    {%- for product in items -%}
+      {%- assign include_in_society_value = product.metafields.custom.include_in_society.value | default: product.metafields.custom.include_in_society | append: '' | downcase -%}
+      {%- assign canva_href = product.metafields.custom.canva_link.value.url | default: product.metafields.custom.canva_link.url | default: product.metafields.custom.canva_link.value | default: product.metafields.custom.canva_link | strip -%}
+      {%- if include_in_society_value == 'true' and canva_href != blank -%}
+        {%- assign eligible_count = eligible_count | plus: 1 -%}
+      {%- endif -%}
+    {%- endfor -%}
+    {%- assign legacy_cats = '' -%}
+    {%- assign legacy_wallpaper_count = 0 -%}
+    {%- for t in legacy_items -%}
+      {%- assign c = t.category.value | default: 'templates' | downcase | strip -%}
+      {%- assign tags_text = t.tags.value | default: '' | downcase -%}
+      {%- if c contains 'iphone' or c contains 'wallpaper' or tags_text contains 'iphone' or tags_text contains 'wallpaper' -%}
+        {%- assign legacy_wallpaper_count = legacy_wallpaper_count | plus: 1 -%}
+        {%- continue -%}
+      {%- endif -%}
+      {%- capture token -%}||{{ c }}||{%- endcapture -%}
+      {%- unless legacy_cats contains token -%}
+        {%- assign legacy_cats = legacy_cats | append: token -%}
+      {%- endunless -%}
+    {%- endfor -%}
+    {%- assign legacy_cats_arr = legacy_cats | split: '||' -%}
+
+    {% if section.settings.show_category_chips %}
+      <nav class="sss-chips" aria-label="categories">
+        {% if pins != blank %}
+          <a class="sss-chip" href="#pinned-for-you">
+            <span class="sss-chip__dot" aria-hidden="true"></span>
+            <span>collages</span>
+          </a>
+        {% endif %}
+        <a class="sss-chip" href="#cat-canva-templates">
+          <span class="sss-chip__dot" aria-hidden="true"></span>
+          <span>canva templates</span>
+        </a>
+        {% if legacy_wallpaper_count > 0 %}
+          <a class="sss-chip" href="#cat-iphone-wallpapers">
+            <span class="sss-chip__dot" aria-hidden="true"></span>
+            <span>iphone wallpapers</span>
+          </a>
+        {% endif %}
+      </nav>
+    {% endif %}
+
+    <div class="sss-card">
+<div class="sss-card__inner" style="padding-top:0;">
+
+{% if pins != blank %}
+<div class="sss-pinsNav" id="pinned-for-you" style="margin-top:10px;">
+
+  <div class="sss-pinsNav__title">pinned for you</div>
+
+  <div class="sss-pinsNav__row">
+    {% for pin in pins %}
+      {% assign target = pin.mood.value | handleize %}
+      {% assign pin_title = pin.title.value | default: "untitled" %}
+{% assign pin_link = '' %}
+{% if pin.pinterest_url.value != blank %}
+  {% if pin.pinterest_url.value.url != blank %}
+    {% assign pin_link = pin.pinterest_url.value.url %}
+  {% else %}
+    {% assign pin_link = pin.pinterest_url.value %}
+  {% endif %}
+{% endif %}
+
+{% assign download_link = '' %}
+{% if pin.download_file.value != blank %}
+  {% if pin.download_file.value.url != blank %}
+    {% assign download_link = pin.download_file.value.url %}
+  {% else %}
+    {% assign download_link = pin.download_file.value %}
+  {% endif %}
+{% endif %}
+
+      <div class="sss-pinNav">
+
+        <div class="sss-pinNav__polaroid">
+          <img src="{{ pin.image.value | image_url: width: 600 }}" alt="{{ pin_title }}" loading="lazy">
+          
+          <div class="sss-pinNav__caption">
+            {{ pin_title }}
+          </div>
+
+          <div class="sss-pinNav__actions">
+
+            {% if pin_link != blank %}
+              <a href="{{ pin_link }}" target="_blank" class="sss-pinBtn" aria-label="view on pinterest">
+                📌
+              </a>
+            {% endif %}
+
+            {% if download_link != blank %}
+              <a href="{{ download_link }}" target="_blank" class="sss-pinBtn" aria-label="download wallpaper">
+                📷
+              </a>
+            {% endif %}
+
+          </div>
+
+        </div>
+
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endif %}
+
+        {% if template_collection == blank and legacy_items == blank %}
+          <div class="sss-empty">
+            choose a collection or add legacy template entries first.
+          </div>
+        {% elsif eligible_count == 0 and legacy_items == blank %}
+          <div class="sss-empty">
+            no Society templates are ready yet.
+          </div>
+        {% else %}
+          {% if eligible_count > 0 or legacy_items != blank %}
+            <div class="sss-cat" id="cat-canva-templates">
+              <p class="sss-catTitle">canva templates</p>
+
+              <div class="sss-rowWrap" data-swipe-row>
+                <button class="sss-rowNav sss-rowNav--left" type="button">‹</button>
+                <button class="sss-rowNav sss-rowNav--right" type="button">›</button>
+
+                <div class="sss-row">
+                  {% assign any_in_cat = false %}
+
+                  {% for product in items %}
+                    {% assign include_in_society_value = product.metafields.custom.include_in_society.value | default: product.metafields.custom.include_in_society | append: '' | downcase %}
+                    {% if include_in_society_value != 'true' %}{% continue %}{% endif %}
+
+                    {% assign href = product.metafields.custom.canva_link.value.url | default: product.metafields.custom.canva_link.url | default: product.metafields.custom.canva_link.value | default: product.metafields.custom.canva_link | strip %}
+                    {% if href == blank %}{% continue %}{% endif %}
+                    {% assign any_in_cat = true %}
+
+                    {% assign title = product.title | default: 'untitled' | strip %}
+                    {% assign preview_src = '' %}
+                    {% if product.featured_image %}
+                      {% assign preview_src = product.featured_image | image_url: width: 1600 %}
+                    {% endif %}
+
+                    <article class="tpl">
+                      {% if preview_src != blank %}
+                        <div class="tpl__media">
+                          <img class="tpl__img"
+                               src="{{ preview_src }}"
+                               alt="{{ title | escape }}"
+                               loading="lazy">
+                        </div>
+                      {% endif %}
+
+                      <div class="tpl__body">
+                        <h4 class="tpl__title">{{ title }}</h4>
+
+                        <a class="tpl__btn"
+                           href="{{ href }}"
+                           {% if section.settings.open_new_tab %}target="_blank" rel="noopener"{% endif %}>
+                           open in canva
+                        </a>
+                      </div>
+                    </article>
+                  {% endfor %}
+
+                  {% for t in legacy_items %}
+                    {% assign legacy_category = t.category.value | default: 'templates' | downcase | strip %}
+                    {% assign legacy_tags_text = t.tags.value | default: '' | downcase %}
+                    {% if legacy_category contains 'iphone' or legacy_category contains 'wallpaper' or legacy_tags_text contains 'iphone' or legacy_tags_text contains 'wallpaper' %}
+                      {% continue %}
+                    {% endif %}
+                    {% assign any_in_cat = true %}
+
+                    {% assign title = t.title.value | default: t.name.value | default: 'untitled' | strip %}
+
+                    {% capture href %}
+                      {% assign x = t.canva_link.value %}
+                      {% if x != blank %}
+                        {% if x.url != blank %}{{ x.url }}{% else %}{{ x }}{% endif %}
+                      {% endif %}
+                    {% endcapture %}
+                    {% assign href = href | strip %}
+
+                    {% assign preview_src = '' %}
+                    {% assign p = t.preview.value %}
+                    {% capture preview_src %}
+                      {% if p != blank %}
+                        {% if p.url != blank %}
+                          {{ p.url }}
+                        {% elsif p.width != blank %}
+                          {{ p | image_url: width: 1600 }}
+                        {% elsif p.src != blank %}
+                          {{ p.src }}
+                        {% else %}
+                          {{ p }}
+                        {% endif %}
+                      {% endif %}
+                    {% endcapture %}
+                    {% assign preview_src = preview_src | strip %}
+
+                    <article class="tpl">
+                      {% if preview_src != blank %}
+                        <div class="tpl__media">
+                          <img class="tpl__img"
+                               src="{{ preview_src }}"
+                               alt="{{ title | escape }}"
+                               loading="lazy">
+                        </div>
+                      {% endif %}
+
+                      <div class="tpl__body">
+                        <h4 class="tpl__title">{{ title }}</h4>
+
+                        {% if href != blank %}
+                          <a class="tpl__btn"
+                             href="{{ href }}"
+                             {% if section.settings.open_new_tab %}target="_blank" rel="noopener"{% endif %}>
+                             open in canva
+                          </a>
+                        {% endif %}
+                      </div>
+                    </article>
+                  {% endfor %}
+
+                  {% unless any_in_cat %}
+                    <div class="sss-empty">no canva templates are ready yet.</div>
+                  {% endunless %}
+                </div>
+              </div>
+            </div>
+          {% endif %}
+
+          {% if legacy_wallpaper_count > 0 %}
+            <div class="sss-cat" id="cat-iphone-wallpapers">
+              <p class="sss-catTitle">iphone wallpapers</p>
+
+              <div class="sss-rowWrap" data-swipe-row>
+                <button class="sss-rowNav sss-rowNav--left" type="button">‹</button>
+                <button class="sss-rowNav sss-rowNav--right" type="button">›</button>
+
+                <div class="sss-row">
+                  {% for t in legacy_items %}
+                    {% assign legacy_category = t.category.value | default: 'templates' | downcase | strip %}
+                    {% assign legacy_tags_text = t.tags.value | default: '' | downcase %}
+                    {% unless legacy_category contains 'iphone' or legacy_category contains 'wallpaper' or legacy_tags_text contains 'iphone' or legacy_tags_text contains 'wallpaper' %}
+                      {% continue %}
+                    {% endunless %}
+
+                    {% assign title = t.title.value | default: t.name.value | default: 'untitled' | strip %}
+
+                    {% capture href %}
+                      {% assign x = t.canva_link.value %}
+                      {% if x != blank %}
+                        {% if x.url != blank %}{{ x.url }}{% else %}{{ x }}{% endif %}
+                      {% endif %}
+                    {% endcapture %}
+                    {% assign href = href | strip %}
+
+                    {% assign preview_src = '' %}
+                    {% assign p = t.preview.value %}
+                    {% capture preview_src %}
+                      {% if p != blank %}
+                        {% if p.url != blank %}
+                          {{ p.url }}
+                        {% elsif p.width != blank %}
+                          {{ p | image_url: width: 1600 }}
+                        {% elsif p.src != blank %}
+                          {{ p.src }}
+                        {% else %}
+                          {{ p }}
+                        {% endif %}
+                      {% endif %}
+                    {% endcapture %}
+                    {% assign preview_src = preview_src | strip %}
+
+                    <article class="tpl">
+                      {% if preview_src != blank %}
+                        <div class="tpl__media">
+                          <img class="tpl__img"
+                               src="{{ preview_src }}"
+                               alt="{{ title | escape }}"
+                               loading="lazy">
+                        </div>
+                      {% endif %}
+
+                      <div class="tpl__body">
+                        <h4 class="tpl__title">{{ title }}</h4>
+
+                        {% if href != blank %}
+                          <a class="tpl__btn"
+                             href="{{ href }}"
+                             {% if section.settings.open_new_tab %}target="_blank" rel="noopener"{% endif %}>
+                             open in canva
+                          </a>
+                        {% endif %}
+                      </div>
+                    </article>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          {% endif %}
+
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+  function initSwipeRows(){
+    document.querySelectorAll('[data-swipe-row]').forEach(function(wrap){
+      if (wrap.__bound) return;
+      wrap.__bound = true;
+
+      var row = wrap.querySelector('.sss-row');
+      var left = wrap.querySelector('.sss-rowNav--left');
+      var right = wrap.querySelector('.sss-rowNav--right');
+      if (!row || !left || !right) return;
+
+      function scrollByCard(dir){
+        var card = row.querySelector('.tpl');
+        var amt = card ? (card.getBoundingClientRect().width + 12) : 360;
+        row.scrollBy({ left: dir * amt, behavior: 'smooth' });
+      }
+
+      left.addEventListener('click', function(){ scrollByCard(-1); });
+      right.addEventListener('click', function(){ scrollByCard(1); });
+    });
+  }
+
+  initSwipeRows();
+  document.addEventListener('shopify:section:load', initSwipeRows);
+})();
+</script>
+
+{% schema %}
+{
+  "name": "sss canva library",
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "kicker", "default": "downloads" },
+    { "type": "text", "id": "title", "label": "title", "default": "pretty things. instant." },
+    { "type": "textarea", "id": "subtext", "label": "subtext", "default": "swipe through. tap. done." },
+    { "type": "collection", "id": "collection", "label": "template collection" },
+    { "type": "checkbox", "id": "show_category_chips", "label": "show category chips", "default": true },
+    { "type": "checkbox", "id": "open_new_tab", "label": "open links in new tab", "default": true }
+  ],
+  "presets": [
+    { "name": "sss canva library" }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,929 @@
+{% comment %}
+  SSS Read Tracker Calendar
+  Smaller calendar for the paid society library.
+{% endcomment %}
+
+{% assign tracker_date = 'now' %}
+{% assign tracker_month = tracker_date | date: '%m' %}
+{% assign tracker_year = tracker_date | date: '%Y' %}
+{% assign tracker_month_name = tracker_date | date: '%B' %}
+
+{% paginate shop.metaobjects.sss_library.values by 250 %}
+  {% assign tracker_books = shop.metaobjects.sss_library.values | sort: "title" %}
+{% endpaginate %}
+
+<section class="sss-readcal" id="sss-readcal-{{ section.id }}">
+  <div class="sss-readcal__wrap">
+    <header class="sss-readcal__head">
+      <p class="sss-readcal__kicker">{{ section.settings.kicker }}</p>
+      <p class="sss-readcal__month">{{ tracker_month_name }} {{ tracker_year }}</p>
+      <h2 class="sss-readcal__title">{{ section.settings.title }}</h2>
+      {% if section.settings.subtext != blank %}
+        <p class="sss-readcal__sub">{{ section.settings.subtext }}</p>
+      {% endif %}
+      <p class="sss-readcal__hint">tap a date to choose the book you read that day.</p>
+      <div class="sss-readcal__actions">
+        <button type="button" class="sss-readcal__actionBtn" id="sssReadcalShare-{{ section.id }}">share your calendar</button>
+        <button type="button" class="sss-readcal__actionBtn sss-readcal__actionBtn--ghost" id="sssReadcalSave-{{ section.id }}">save as png</button>
+      </div>
+    </header>
+
+    <div class="sss-readcal__weekdays">
+      <span>sun</span><span>mon</span><span>tue</span><span>wed</span><span>thu</span><span>fri</span><span>sat</span>
+    </div>
+
+    <div class="sss-readcal__grid" data-readcal-grid data-year="{{ tracker_year }}" data-month="{{ tracker_month | plus: 0 }}">
+      {% assign month_number = tracker_month | plus: 0 %}
+      {% if month_number == 2 %}
+        {% assign total_days = 28 %}
+      {% elsif month_number == 4 or month_number == 6 or month_number == 9 or month_number == 11 %}
+        {% assign total_days = 30 %}
+      {% else %}
+        {% assign total_days = 31 %}
+      {% endif %}
+
+      {% for day in (1..total_days) %}
+        {% capture padded_day %}{{ day | prepend: "0" | slice: -2, 2 }}{% endcapture %}
+        {% capture day_string %}{{ tracker_year }}-{{ tracker_month }}-{{ padded_day }}{% endcapture %}
+        <button
+          type="button"
+          class="sss-readcal__cell{% if day == 1 %} sss-readcal__cell--first{% endif %}"
+          data-readcal-day="{{ day_string }}"
+          aria-label="track a book for {{ tracker_month_name }} {{ day }}">
+          <span class="sss-readcal__num">{{ day }}</span>
+          <span class="sss-readcal__slot" data-readcal-slot></span>
+        </button>
+      {% endfor %}
+    </div>
+  </div>
+
+  <script type="application/json" id="sss-readcal-data-{{ section.id }}">
+    [
+      {% assign tracker_first = true %}
+      {% for book in tracker_books %}
+        {% if book == blank or book.title.value == blank %}
+          {% continue %}
+        {% endif %}
+
+        {%- assign tracker_cover = '' -%}
+        {% if book.cover.value != blank %}
+          {% if book.cover.value.url != blank %}
+            {% assign tracker_cover = book.cover.value.url %}
+          {% elsif book.cover.value contains 'http://' or book.cover.value contains 'https://' or book.cover.value contains '//' %}
+            {% assign tracker_cover = book.cover.value %}
+          {% else %}
+            {% assign tracker_cover = book.cover.value | image_url: width: 320 %}
+          {% endif %}
+        {% endif %}
+
+        {% unless tracker_first %},{% endunless %}
+        {% assign tracker_first = false %}
+        {
+          "handle": {{ book.system.handle | json }},
+          "title": {{ book.title.value | json }},
+          "author": {{ book.author.value | json }},
+          "cover": {{ tracker_cover | json }}
+        }
+      {% endfor %}
+    ]
+  </script>
+
+  <div class="sss-readcal__modal" id="sss-readcal-modal-{{ section.id }}" hidden>
+    <div class="sss-readcal__scrim" data-readcal-close></div>
+    <div class="sss-readcal__panel" role="dialog" aria-modal="true" aria-labelledby="sss-readcal-title-{{ section.id }}">
+      <button type="button" class="sss-readcal__close" data-readcal-close aria-label="close">×</button>
+      <p class="sss-readcal__modalKicker">track your reads</p>
+      <h3 class="sss-readcal__modalTitle" id="sss-readcal-title-{{ section.id }}">what did you read today?</h3>
+      <p class="sss-readcal__modalSub" id="sss-readcal-date-{{ section.id }}"></p>
+      <p class="sss-readcal__modalHint">start typing, or choose from the books below.</p>
+      <div class="sss-readcal__clear" id="sss-readcal-clear-{{ section.id }}" hidden>
+        <p class="sss-readcal__clearLabel">need a reset?</p>
+        <p class="sss-readcal__clearCopy">clear the book from this day and leave the date blank again.</p>
+        <button type="button" class="sss-readcal__remove" id="sss-readcal-remove-{{ section.id }}">clear this day</button>
+      </div>
+      <input type="search" class="sss-readcal__search" id="sss-readcal-search-{{ section.id }}" placeholder="search your library by title or author" autocomplete="off">
+      <div class="sss-readcal__results" id="sss-readcal-results-{{ section.id }}"></div>
+    </div>
+  </div>
+</section>
+
+<style>
+.sss-readcal{
+  background:#0b0b0b;
+  color:#f6f6f6;
+  padding:14px 12px 8px;
+}
+.sss-readcal__wrap{
+  max-width:1100px;
+  margin:0 auto;
+}
+.shopify-section:has(.sss-readcal) + .shopify-section .sss-lib{
+  padding-top:54px;
+  margin-top:-8px;
+}
+.sss-readcal__head{
+  max-width:700px;
+  margin-bottom:14px;
+}
+.sss-readcal__kicker{
+  margin:0 0 8px;
+  font-size:11px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:rgba(246,246,246,.58);
+}
+.sss-readcal__month{
+  margin:0 0 8px;
+  font-size:clamp(24px,3vw,34px);
+  line-height:1;
+  text-transform:lowercase;
+}
+.sss-readcal__title{
+  margin:0;
+  font-size:clamp(28px,4vw,42px);
+  line-height:1;
+  text-transform:lowercase;
+}
+.sss-readcal__sub{
+  margin:10px 0 0;
+  color:rgba(246,246,246,.72);
+  line-height:1.65;
+  text-transform:lowercase;
+}
+.sss-readcal__hint{
+  margin:10px 0 0;
+  font-size:12px;
+  color:rgba(255,138,199,.84);
+  line-height:1.5;
+  text-transform:lowercase;
+}
+.sss-readcal__actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:14px;
+}
+.sss-readcal__actionBtn{
+  appearance:none;
+  min-height:40px;
+  padding:0 16px;
+  border-radius:999px;
+  border:1px solid rgba(255,138,199,.34);
+  background:rgba(255,138,199,.12);
+  color:#fff;
+  font:inherit;
+  font-size:12px;
+  text-transform:lowercase;
+  cursor:pointer;
+  transition:background .18s ease, border-color .18s ease, color .18s ease;
+}
+.sss-readcal__actionBtn:hover{
+  background:rgba(255,138,199,.22);
+  border-color:rgba(255,138,199,.48);
+}
+.sss-readcal__actionBtn--ghost{
+  background:transparent;
+  border-color:rgba(255,255,255,.18);
+}
+.sss-readcal__actionBtn--ghost:hover{
+  background:rgba(255,255,255,.08);
+  border-color:rgba(255,255,255,.24);
+}
+.sss-readcal__weekdays{
+  display:grid;
+  grid-template-columns:repeat(7, 1fr);
+  gap:10px;
+  margin-bottom:8px;
+}
+.sss-readcal__weekdays span{
+  font-size:10px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:rgba(246,246,246,.44);
+  text-align:center;
+}
+.sss-readcal__grid{
+  display:grid;
+  grid-template-columns:repeat(7, 1fr);
+  gap:10px;
+}
+.sss-readcal__cell{
+  appearance:none;
+  position:relative;
+  min-height:112px;
+  padding:10px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.08);
+  background:linear-gradient(180deg, rgba(255,62,165,.08), rgba(255,255,255,.02));
+  color:#fff;
+  cursor:pointer;
+  text-align:left;
+  transition:border-color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.sss-readcal__cell--first{
+  grid-column:1;
+}
+.sss-readcal__cell:hover{
+  border-color:rgba(255,62,165,.42);
+  background:linear-gradient(180deg, rgba(255,62,165,.16), rgba(255,255,255,.04));
+  box-shadow:0 0 0 1px rgba(255,62,165,.14), 0 0 24px rgba(255,62,165,.1);
+  transform:translateY(-1px);
+}
+.sss-readcal__cell--empty{
+  min-height:0;
+  padding:0;
+  border:none;
+  background:transparent;
+  cursor:default;
+}
+.sss-readcal__num{
+  font-size:12px;
+  color:rgba(246,246,246,.72);
+}
+.sss-readcal__slot{
+  display:block;
+  margin-top:10px;
+}
+.sss-readcal__cover{
+  width:48px;
+  height:68px;
+  border-radius:10px;
+  object-fit:cover;
+  display:block;
+  box-shadow:0 10px 24px rgba(0,0,0,.28);
+}
+.sss-readcal__bookTitle{
+  display:block;
+  margin-top:8px;
+  font-size:11px;
+  line-height:1.35;
+  color:rgba(246,246,246,.8);
+  text-transform:lowercase;
+}
+.sss-readcal__modal[hidden]{
+  display:none !important;
+}
+.sss-readcal__modal{
+  position:fixed;
+  inset:0;
+  z-index:10000;
+}
+.sss-readcal__scrim{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.72);
+  backdrop-filter:blur(6px);
+}
+.sss-readcal__panel{
+  position:relative;
+  z-index:1;
+  width:min(92vw, 760px);
+  margin:10vh auto 0;
+  padding:26px 24px 22px;
+  max-height:80vh;
+  overflow:auto;
+  border-radius:26px;
+  border:1px solid rgba(255,255,255,.12);
+  background:linear-gradient(180deg, rgba(18,18,20,.98), rgba(10,10,12,.98));
+  box-shadow:0 30px 80px rgba(0,0,0,.48);
+  color:#f6f6f6;
+}
+.sss-readcal__close{
+  appearance:none;
+  position:absolute;
+  top:14px;
+  right:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:34px;
+  height:34px;
+  padding:0;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.04);
+  color:#fff;
+  font:inherit;
+  font-size:20px;
+  line-height:1;
+  cursor:pointer;
+}
+.sss-readcal__modalKicker{
+  margin:0 0 8px;
+  font-size:11px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:rgba(246,246,246,.58);
+}
+.sss-readcal__modalTitle{
+  margin:0;
+  font-size:30px;
+  line-height:1.02;
+  text-transform:lowercase;
+}
+.sss-readcal__modalSub{
+  margin:8px 0 0;
+  font-size:13px;
+  color:rgba(246,246,246,.66);
+  text-transform:lowercase;
+}
+.sss-readcal__modalHint{
+  margin:10px 0 0;
+  font-size:12px;
+  color:rgba(255,138,199,.78);
+  text-transform:lowercase;
+}
+.sss-readcal__search{
+  width:100%;
+  margin-top:16px;
+  min-height:46px;
+  padding:0 16px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.04);
+  color:#fff;
+  font:inherit;
+}
+.sss-readcal__results{
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0, 1fr));
+  gap:12px;
+  margin-top:16px;
+  max-height:40vh;
+  overflow:auto;
+}
+.sss-readcal__pick{
+  appearance:none;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.03);
+  border-radius:18px;
+  padding:10px;
+  color:#fff;
+  text-align:left;
+  cursor:pointer;
+  transition:border-color .18s ease, background .18s ease, transform .18s ease;
+}
+.sss-readcal__pick:hover{
+  border-color:rgba(255,62,165,.42);
+  background:rgba(255,62,165,.1);
+  transform:translateY(-1px);
+}
+.sss-readcal__pick img{
+  width:100%;
+  aspect-ratio:3/4;
+  object-fit:cover;
+  border-radius:12px;
+  display:block;
+}
+.sss-readcal__pickTitle{
+  display:block;
+  margin-top:8px;
+  font-size:12px;
+  line-height:1.4;
+  text-transform:lowercase;
+}
+.sss-readcal__pickMeta{
+  display:block;
+  margin-top:4px;
+  font-size:11px;
+  color:rgba(246,246,246,.6);
+  text-transform:lowercase;
+}
+.sss-readcal__clear{
+  margin-top:18px;
+  padding:14px 14px 16px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.03);
+}
+.sss-readcal__clearLabel{
+  margin:0;
+  font-size:10px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:rgba(246,246,246,.54);
+}
+.sss-readcal__clearCopy{
+  margin:8px 0 0;
+  font-size:12px;
+  line-height:1.55;
+  color:rgba(246,246,246,.68);
+  text-transform:lowercase;
+}
+.sss-readcal__remove{
+  margin-top:12px;
+  appearance:none;
+  border:1px solid rgba(255,255,255,.12);
+  background:transparent;
+  color:#ff8ac7;
+  border-radius:999px;
+  min-height:40px;
+  padding:0 16px;
+  font:inherit;
+  text-transform:lowercase;
+  cursor:pointer;
+}
+.sss-readcal__remove:hover{
+  border-color:rgba(255,138,199,.42);
+  background:rgba(255,138,199,.08);
+}
+.sss-readcal__empty{
+  grid-column:1/-1;
+  font-size:13px;
+  color:rgba(246,246,246,.62);
+  text-transform:lowercase;
+}
+@media (max-width: 989px){
+  .sss-readcal__results{
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 749px){
+  .sss-readcal{
+    padding:10px 12px 4px;
+  }
+  .shopify-section:has(.sss-readcal) + .shopify-section .sss-lib{
+    padding-top:40px;
+    margin-top:-4px;
+  }
+  .sss-readcal__weekdays{
+    gap:6px;
+  }
+  .sss-readcal__actions{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+  .sss-readcal__actionBtn{
+    width:100%;
+  }
+  .sss-readcal__grid{
+    gap:6px;
+  }
+  .sss-readcal__cell{
+    min-height:84px;
+    padding:8px;
+    border-radius:14px;
+  }
+  .sss-readcal__cover{
+    width:34px;
+    height:48px;
+    border-radius:8px;
+  }
+  .sss-readcal__bookTitle{
+    font-size:10px;
+  }
+  .sss-readcal__results{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:8px;
+    max-height:34vh;
+  }
+  .sss-readcal__panel{
+    width:min(94vw, 520px);
+    margin:4vh auto 0;
+    padding:18px 14px 16px;
+    max-height:88vh;
+  }
+  .sss-readcal__modalTitle{
+    font-size:24px;
+  }
+  .sss-readcal__modalHint,
+  .sss-readcal__modalSub{
+    font-size:11px;
+  }
+  .sss-readcal__search{
+    margin-top:12px;
+    min-height:42px;
+    border-radius:14px;
+    padding:0 14px;
+  }
+  .sss-readcal__pick{
+    padding:8px;
+    border-radius:14px;
+  }
+  .sss-readcal__pick img{
+    border-radius:10px;
+  }
+  .sss-readcal__pickTitle{
+    margin-top:6px;
+    font-size:11px;
+    line-height:1.3;
+  }
+  .sss-readcal__pickMeta{
+    margin-top:3px;
+    font-size:10px;
+  }
+  .sss-readcal__clear{
+    margin-top:12px;
+    padding:12px;
+    border-radius:16px;
+  }
+  .sss-readcal__clearCopy{
+    font-size:11px;
+    line-height:1.45;
+  }
+  .sss-readcal__remove{
+    width:100%;
+    min-height:38px;
+    margin-top:10px;
+  }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var grid = document.querySelector('#sss-readcal-{{ section.id }} [data-readcal-grid]');
+  if (!grid) return;
+  var year = parseInt(grid.getAttribute('data-year'), 10);
+  var month = parseInt(grid.getAttribute('data-month'), 10);
+  if (!year || !month) return;
+  var firstCell = grid.querySelector('.sss-readcal__cell--first');
+  if (!firstCell) return;
+  var firstWeekday = new Date(year, month - 1, 1).getDay();
+  firstCell.style.gridColumnStart = String(firstWeekday + 1);
+});
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script>
+(function(){
+  function initReadCal(){
+    var root = document.getElementById('sss-readcal-{{ section.id }}');
+    if(!root || root.dataset.ready === 'true') return;
+    root.dataset.ready = 'true';
+
+    var dataEl = document.getElementById('sss-readcal-data-{{ section.id }}');
+    var modal = document.getElementById('sss-readcal-modal-{{ section.id }}');
+    var search = document.getElementById('sss-readcal-search-{{ section.id }}');
+    var results = document.getElementById('sss-readcal-results-{{ section.id }}');
+    var dateLabel = document.getElementById('sss-readcal-date-{{ section.id }}');
+    var removeBtn = document.getElementById('sss-readcal-remove-{{ section.id }}');
+    var clearWrap = document.getElementById('sss-readcal-clear-{{ section.id }}');
+    var shareBtn = document.getElementById('sssReadcalShare-{{ section.id }}');
+    var saveBtn = document.getElementById('sssReadcalSave-{{ section.id }}');
+    var books = [];
+    var activeDate = '';
+    var storageKey = 'sssReadTrackerCalendar';
+
+    try {
+      books = JSON.parse(dataEl.textContent || '[]') || [];
+    } catch(err){
+      books = [];
+    }
+
+    var booksByHandle = {};
+    var booksByTitle = {};
+    function normalizeLookup(value){
+      return String(value || '')
+        .toLowerCase()
+        .replace(/&/g, 'and')
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim();
+    }
+    books.forEach(function(book){
+      var key = String(book && book.handle || '').toLowerCase();
+      if (key) booksByHandle[key] = book;
+      var titleKey = normalizeLookup(book && book.title);
+      if (titleKey) booksByTitle[titleKey] = book;
+    });
+
+    function getStatuses(){
+      try { return JSON.parse(localStorage.getItem('sssBookStatuses')) || {}; } catch(err){ return {}; }
+    }
+
+    function setState(next){
+      localStorage.setItem(storageKey, JSON.stringify(next));
+    }
+
+    function normalizeCover(rawCover){
+      var cover = typeof rawCover === 'string' ? rawCover.trim() : '';
+      if (!cover) return '';
+      if (cover.indexOf('//') === 0) return 'https:' + cover;
+      return cover;
+    }
+
+    function hydrateEntry(entry){
+      if(!entry) return null;
+      var handle = String(entry.handle || '').toLowerCase();
+      var title = normalizeLookup(entry.title);
+      var sourceBook = handle ? booksByHandle[handle] : null;
+      if(!sourceBook && title){
+        sourceBook = booksByTitle[title] || null;
+      }
+      return {
+        handle: entry.handle || (sourceBook && sourceBook.handle) || '',
+        title: entry.title || (sourceBook && sourceBook.title) || '',
+        author: entry.author || (sourceBook && sourceBook.author) || '',
+        cover: normalizeCover(sourceBook && sourceBook.cover) || normalizeCover(entry.cover)
+      };
+    }
+
+    function getState(){
+      var state;
+      try { state = JSON.parse(localStorage.getItem(storageKey)) || {}; } catch(err){ state = {}; }
+
+      var didChange = false;
+      Object.keys(state).forEach(function(date){
+        var hydrated = hydrateEntry(state[date]);
+        if(!hydrated) return;
+        if(
+          hydrated.cover !== ((state[date] && state[date].cover) || '') ||
+          hydrated.title !== ((state[date] && state[date].title) || '') ||
+          hydrated.author !== ((state[date] && state[date].author) || '')
+        ){
+          state[date] = hydrated;
+          didChange = true;
+        }
+      });
+
+      if(didChange) setState(state);
+      return state;
+    }
+
+    function getSelectableBooks(){
+      var statuses = getStatuses();
+      var readFirst = [];
+      var rest = [];
+      books.forEach(function(book){
+        var status = statuses[String(book.handle || '').toLowerCase()] || '';
+        if(status === 'read'){
+          readFirst.push(book);
+        } else {
+          rest.push(book);
+        }
+      });
+      return readFirst.concat(rest);
+    }
+
+    function renderCalendar(){
+      var state = getState();
+      root.querySelectorAll('[data-readcal-day]').forEach(function(cell){
+        var slot = cell.querySelector('[data-readcal-slot]');
+        var date = cell.getAttribute('data-readcal-day');
+        var entry = state[date];
+        slot.innerHTML = '';
+        if(!entry) return;
+
+        var img = document.createElement('img');
+        img.className = 'sss-readcal__cover';
+        img.src = entry.cover;
+        img.alt = entry.title || '';
+        img.crossOrigin = 'anonymous';
+        img.loading = 'eager';
+        img.decoding = 'async';
+
+        var label = document.createElement('span');
+        label.className = 'sss-readcal__bookTitle';
+        label.textContent = entry.title || '';
+
+        slot.appendChild(img);
+        slot.appendChild(label);
+      });
+    }
+
+    function renderResults(query){
+      var state = getState();
+      var current = activeDate ? state[activeDate] : null;
+      var sourceBooks = getSelectableBooks().filter(function(book){
+        return !!(book && book.title);
+      });
+      var list = sourceBooks.filter(function(book){
+        if(!query) return true;
+        var hay = ((book.title || '') + ' ' + (book.author || '')).toLowerCase();
+        return hay.indexOf(query.toLowerCase()) > -1;
+      });
+
+      results.innerHTML = '';
+
+      if(!sourceBooks.length){
+        results.innerHTML = '<div class="sss-readcal__empty">your library books did not load here yet. refresh the preview and try again.</div>';
+      } else if(!list.length){
+        results.innerHTML = '<div class="sss-readcal__empty">no books matched that search. try a title or author instead.</div>';
+      } else {
+        list.slice(0, 18).forEach(function(book){
+          var button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'sss-readcal__pick';
+          button.innerHTML = '<img src="' + (book.cover || '') + '" alt="">' +
+            '<span class="sss-readcal__pickTitle">' + (book.title || '') + '</span>' +
+            '<span class="sss-readcal__pickMeta">' + (book.author || '') + '</span>';
+          button.addEventListener('click', function(){
+            var next = getState();
+            next[activeDate] = {
+              handle: book.handle || '',
+              title: book.title || '',
+              author: book.author || '',
+              cover: book.cover || ''
+            };
+            setState(next);
+            renderCalendar();
+            closeModal();
+          });
+          results.appendChild(button);
+        });
+      }
+
+      if (clearWrap) clearWrap.hidden = !current;
+    }
+
+    function openModal(date){
+      activeDate = date;
+      if(dateLabel){
+        var pretty = new Date(date + 'T12:00:00');
+        dateLabel.textContent = pretty.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+      }
+      if(search) search.value = '';
+      renderResults('');
+      modal.hidden = false;
+      document.body.style.overflow = 'hidden';
+      if(search) search.focus();
+    }
+
+    function closeModal(){
+      modal.hidden = true;
+      document.body.style.overflow = '';
+    }
+
+    function exportCalendar(){
+      if(typeof html2canvas === 'undefined'){
+        alert('calendar export is still loading. try again in a second.');
+        return Promise.reject(new Error('html2canvas missing'));
+      }
+
+      var exportRoot = root.querySelector('.sss-readcal__wrap');
+
+      function waitForImages(){
+        var images = Array.prototype.slice.call(exportRoot.querySelectorAll('img'));
+        if(!images.length) return Promise.resolve();
+
+        return Promise.all(images.map(function(img){
+          if(img.complete && img.naturalWidth > 0){
+            return Promise.resolve();
+          }
+
+          return new Promise(function(resolve){
+            function done(){ resolve(); }
+            img.addEventListener('load', done, { once: true });
+            img.addEventListener('error', done, { once: true });
+            if(img.decode){
+              img.decode().then(done).catch(done);
+            }
+          });
+        }));
+      }
+
+      return waitForImages().then(function(){
+        return html2canvas(exportRoot, {
+          backgroundColor: '#0b0b0b',
+          scale: 3,
+          useCORS: true
+        });
+      });
+    }
+
+    function setShareFeedback(button, text, fallback){
+      if(!button) return;
+      var original = button.dataset.originalLabel || button.textContent;
+      button.dataset.originalLabel = original;
+      button.textContent = text;
+      window.setTimeout(function(){
+        button.textContent = fallback || original;
+      }, 1800);
+    }
+
+    root.querySelectorAll('[data-readcal-day]').forEach(function(cell){
+      function handleOpen(event){
+        if(event){
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        openModal(cell.getAttribute('data-readcal-day'));
+      }
+
+      cell.addEventListener('click', handleOpen);
+      cell.addEventListener('touchend', handleOpen, { passive: false });
+      cell.addEventListener('keydown', function(event){
+        if(event.key === 'Enter' || event.key === ' '){
+          handleOpen(event);
+        }
+      });
+    });
+
+    if(search){
+      search.addEventListener('input', function(){
+        renderResults(search.value || '');
+      });
+    }
+
+    if(removeBtn){
+      removeBtn.addEventListener('click', function(){
+        if(!activeDate) return;
+        var next = getState();
+        delete next[activeDate];
+        setState(next);
+        renderCalendar();
+        closeModal();
+      });
+    }
+
+    if(modal){
+      modal.querySelectorAll('[data-readcal-close]').forEach(function(closeEl){
+        closeEl.addEventListener('click', closeModal);
+      });
+    }
+
+    if(saveBtn){
+      saveBtn.addEventListener('click', function(){
+        exportCalendar().then(function(canvas){
+          var link = document.createElement('a');
+          link.href = canvas.toDataURL('image/png');
+          link.download = '{{ tracker_month_name | downcase | replace: " ", "-" }}-read-tracker.png';
+          link.click();
+          setShareFeedback(saveBtn, 'saved ✦');
+        }).catch(function(){});
+      });
+    }
+
+    if(shareBtn){
+      shareBtn.addEventListener('click', function(){
+        exportCalendar().then(function(canvas){
+          canvas.toBlob(function(blob){
+            if(!blob) return;
+            var file = new File([blob], '{{ tracker_month_name | downcase | replace: " ", "-" }}-read-tracker.png', { type: 'image/png' });
+
+            if(navigator.share && navigator.canShare && navigator.canShare({ files: [file] })){
+              navigator.share({
+                files: [file],
+                title: '{{ tracker_month_name }} read tracker',
+                text: 'my society reading calendar'
+              }).then(function(){
+                setShareFeedback(shareBtn, 'shared ✦');
+              }).catch(function(){});
+            } else {
+              var link = document.createElement('a');
+              link.href = URL.createObjectURL(blob);
+              link.download = file.name;
+              link.click();
+              window.setTimeout(function(){ URL.revokeObjectURL(link.href); }, 1500);
+              setShareFeedback(shareBtn, 'png ready ✦');
+            }
+          }, 'image/png');
+        }).catch(function(){});
+      });
+    }
+
+    document.addEventListener('keydown', function(event){
+      if(event.key === 'Escape' && modal && !modal.hidden){
+        closeModal();
+      }
+    });
+
+    renderCalendar();
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initReadCal);
+  } else {
+    initReadCal();
+  }
+
+  document.addEventListener('shopify:section:load', function(event){
+    if(event.detail && event.detail.sectionId === '{{ section.id }}'){
+      var root = document.getElementById('sss-readcal-{{ section.id }}');
+      if(root) root.dataset.ready = '';
+      initReadCal();
+    }
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "sss read tracker calendar",
+  "settings": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Kicker",
+      "default": "your reading life"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "track your reads"
+    },
+    {
+      "type": "textarea",
+      "id": "subtext",
+      "label": "Subtext",
+      "default": "click a day, choose the book you finished, and let the cover live there."
+    }
+  ],
+  "presets": [
+    {
+      "name": "sss read tracker calendar"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,700 @@
+{%- liquid
+  assign bbb_reader_is_society = false
+  assign bbb_reader_badge_label = 'guest reader'
+  assign bbb_bookshelf_login_url = routes.account_login_url | default: '/account/login'
+  assign bbb_bookshelf_login_url = bbb_bookshelf_login_url | append: '?return_url=%2Fpages%2Fmy-bookshelf'
+  assign bbb_library_button_url = '/pages/library'
+  if customer
+    assign bbb_reader_badge_label = 'society member'
+    if customer.tags contains 'society' or customer.tags contains 'Society' or customer.tags contains 'paid' or customer.tags contains 'Paid'
+      assign bbb_reader_is_society = true
+      assign bbb_reader_badge_label = 'secret society member'
+      assign bbb_library_button_url = '/pages/sss-library-page'
+    endif
+  endif
+-%}
+
+<section
+  class="bbb-account-shelf"
+  data-account-shelf
+  data-sss-lib="public"
+  data-logged-in="{% if customer %}true{% else %}false{% endif %}"
+  data-customer-id="{% if customer %}{{ customer.id }}{% endif %}"
+  data-customer-email="{% if customer %}{{ customer.email | escape }}{% endif %}"
+  data-is-society="{% if bbb_reader_is_society %}true{% else %}false{% endif %}"
+>
+  <div class="bbb-account-shelf__wrap">
+    <div class="bbb-account-shelf__hero">
+      <p class="bbb-account-shelf__kicker">your reader dashboard</p>
+      <div
+        class="bbb-account-shelf__memberBadge{% if bbb_reader_is_society %} bbb-account-shelf__memberBadge--secret{% endif %}"
+        data-account-shelf-badge
+      >
+        <span aria-hidden="true">{% if bbb_reader_is_society %}♥{% else %}📚{% endif %}</span>
+        <span data-account-shelf-badge-label>{{ bbb_reader_badge_label }}</span>
+      </div>
+      <h1 class="bbb-account-shelf__title">my bookshelf</h1>
+      <p class="bbb-account-shelf__sub">
+        saved books, current obsessions, and the beginning of your personal romance archive.
+      </p>
+
+      <div class="bbb-account-shelf__actions">
+        <a class="bbb-account-shelf__button" href="{{ bbb_library_button_url }}">browse the library</a>
+        {% if customer %}
+          <a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="{{ routes.account_url }}">account</a>
+        {% else %}
+          <a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="{{ bbb_bookshelf_login_url }}">log in to sync</a>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if customer %}
+      <div class="bbb-account-shelf__status" data-account-shelf-status>
+        <span class="bbb-account-shelf__statusIcon">📚</span>
+        <div>
+          <strong>syncing your shelf...</strong>
+          <span>local saves show first, account saves follow when they load.</span>
+        </div>
+      </div>
+    {% else %}
+      <div class="bbb-account-shelf__status bbb-account-shelf__status--login">
+        <span class="bbb-account-shelf__statusIcon">📚</span>
+        <div>
+          <strong>log in to keep your shelf across devices.</strong>
+          <span>you can still save books on this device, but an account makes the shelf yours everywhere.</span>
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="bbb-account-shelf__grid" data-account-shelf-grid></div>
+
+    <div class="bbb-account-shelf__empty" data-account-shelf-empty hidden>
+      <div class="bbb-account-shelf__emptyIcon">📖</div>
+      <h2>your shelf is waiting.</h2>
+      <p>save a few books from the library and they’ll collect here.</p>
+      <a href="{{ bbb_library_button_url }}">find your first save →</a>
+    </div>
+
+    <div class="bbb-account-shelf__perk">
+      <p class="bbb-account-shelf__perkKicker" data-account-shelf-tier>free shelf</p>
+      <h2 data-account-shelf-perk-title>save books now. unlock smarter recs later.</h2>
+      <p data-account-shelf-perk-copy>
+        free readers can keep a saved bookshelf. Society readers can become the private layer: richer notes, extra shelves, and future custom recommendation unlocks.
+      </p>
+      <a href="/pages/smut-sentiment-society" data-account-shelf-perk-link>enter the society →</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .bbb-account-shelf{
+    background:#050505;
+    color:#f7f3ee;
+    padding:72px 20px 88px;
+  }
+
+  .bbb-account-shelf__wrap{
+    max-width:1060px;
+    margin:0 auto;
+  }
+
+  .bbb-account-shelf__hero{
+    border-bottom:1px solid rgba(255,255,255,.18);
+    padding-bottom:28px;
+    margin-bottom:28px;
+  }
+
+  .bbb-account-shelf__kicker,
+  .bbb-account-shelf__perkKicker{
+    margin:0 0 10px;
+    color:#ff8ac7;
+    font-size:12px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    font-weight:700;
+  }
+
+  .bbb-account-shelf__title{
+    margin:0;
+    color:#fff;
+    font-family:'Cormorant Garamond', serif;
+    font-size:clamp(3rem, 7vw, 6rem);
+    line-height:.95;
+  }
+
+  .bbb-account-shelf__sub{
+    max-width:620px;
+    margin:16px 0 0;
+    color:rgba(247,243,238,.72);
+    font-size:1.5rem;
+    line-height:1.65;
+  }
+
+  .bbb-account-shelf__memberBadge{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    width:fit-content;
+    margin:0 0 16px;
+    padding:8px 12px;
+    border-radius:8px;
+    border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.055);
+    color:rgba(247,243,238,.86);
+    font-size:11px;
+    line-height:1;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    font-weight:800;
+  }
+
+  .bbb-account-shelf__memberBadge--secret{
+    border-color:rgba(255,138,199,.7);
+    background:linear-gradient(135deg, rgba(255,138,199,.18), rgba(255,255,255,.045));
+    color:#ffb8dc;
+    box-shadow:0 0 28px rgba(255,138,199,.12);
+  }
+
+  .bbb-account-shelf__actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-top:22px;
+  }
+
+  .bbb-account-shelf__button,
+  .bbb-account-shelf__empty a,
+  .bbb-account-shelf__perk a{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:42px;
+    padding:12px 20px;
+    border-radius:8px;
+    background:#ff8ac7;
+    color:#160912;
+    text-decoration:none;
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    font-weight:800;
+    transition:transform .22s ease, background .22s ease, border-color .22s ease;
+  }
+
+  .bbb-account-shelf__button:hover,
+  .bbb-account-shelf__empty a:hover,
+  .bbb-account-shelf__perk a:hover{
+    transform:translateY(-2px);
+    background:#ff9fd1;
+  }
+
+  .bbb-account-shelf__button--ghost{
+    background:transparent;
+    color:#ffb8dc;
+    border:1px solid rgba(255,138,199,.42);
+  }
+
+  .bbb-account-shelf__status,
+  .bbb-account-shelf__perk,
+  .bbb-account-shelf__empty{
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:8px;
+    background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.025));
+    box-shadow:0 18px 46px rgba(0,0,0,.22);
+  }
+
+  .bbb-account-shelf__status{
+    display:flex;
+    gap:14px;
+    align-items:center;
+    padding:16px 18px;
+    margin-bottom:24px;
+    color:rgba(247,243,238,.72);
+  }
+
+  .bbb-account-shelf__status strong{
+    display:block;
+    color:#fff;
+    margin-bottom:4px;
+  }
+
+  .bbb-account-shelf__statusIcon{
+    font-size:26px;
+  }
+
+  .bbb-account-shelf__grid{
+    display:grid;
+    grid-template-columns:repeat(5, minmax(0, 1fr));
+    gap:18px;
+    align-items:start;
+  }
+
+  .bbb-account-shelf__book{
+    display:block;
+    min-width:0;
+    padding:0;
+    border:0;
+    background:transparent;
+    color:inherit;
+    text-align:left;
+    width:100%;
+    cursor:pointer;
+  }
+
+  .bbb-account-shelf__cover{
+    width:100%;
+    aspect-ratio:2 / 3;
+    border-radius:8px;
+    background:#191919;
+    border:1px solid rgba(255,255,255,.12);
+    object-fit:cover;
+    box-shadow:0 16px 32px rgba(0,0,0,.28);
+  }
+
+  .bbb-account-shelf .sss-lib__coverWrap{
+    position:relative;
+  }
+
+  .bbb-account-shelf .sss-lib__heart{
+    z-index:3;
+  }
+
+  .bbb-account-shelf__bookTitle{
+    margin-top:10px;
+    color:#fff;
+    font-size:1.35rem;
+    line-height:1.25;
+    font-weight:700;
+  }
+
+  .bbb-account-shelf__bookAuthor{
+    margin-top:3px;
+    color:rgba(247,243,238,.58);
+    font-size:1.15rem;
+  }
+
+  .bbb-account-shelf__empty{
+    padding:38px 24px;
+    text-align:center;
+  }
+
+  .bbb-account-shelf__emptyIcon{
+    font-size:38px;
+  }
+
+  .bbb-account-shelf__empty h2{
+    color:#fff;
+    margin:12px 0 8px;
+  }
+
+  .bbb-account-shelf__empty p{
+    margin:0 auto 18px;
+    max-width:420px;
+    color:rgba(247,243,238,.68);
+  }
+
+  .bbb-account-shelf__perk{
+    margin-top:34px;
+    padding:24px;
+  }
+
+  .bbb-account-shelf__perk h2{
+    margin:0;
+    color:#fff;
+    font-family:'Cormorant Garamond', serif;
+    font-size:clamp(2.3rem, 4vw, 3.3rem);
+  }
+
+  .bbb-account-shelf__perk p:not(.bbb-account-shelf__perkKicker){
+    max-width:680px;
+    color:rgba(247,243,238,.7);
+    line-height:1.65;
+  }
+
+  @media (max-width:900px){
+    .bbb-account-shelf__grid{
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width:560px){
+    .bbb-account-shelf{
+      padding:54px 16px 72px;
+    }
+
+    .bbb-account-shelf__grid{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:16px 12px;
+    }
+  }
+</style>
+
+<script>
+  (function(){
+    var root = document.querySelector('[data-account-shelf]');
+    if (!root) return;
+
+    var grid = root.querySelector('[data-account-shelf-grid]');
+    var empty = root.querySelector('[data-account-shelf-empty]');
+    var status = root.querySelector('[data-account-shelf-status]');
+    var tier = root.querySelector('[data-account-shelf-tier]');
+    var memberBadge = root.querySelector('[data-account-shelf-badge]');
+    var memberBadgeLabel = root.querySelector('[data-account-shelf-badge-label]');
+    var perkTitle = root.querySelector('[data-account-shelf-perk-title]');
+    var perkCopy = root.querySelector('[data-account-shelf-perk-copy]');
+    var perkLink = root.querySelector('[data-account-shelf-perk-link]');
+    var isLoggedIn = root.dataset.loggedIn === 'true';
+    var isSociety = root.dataset.isSociety === 'true' || hasSocietyLocalAccess();
+    var customerId = root.dataset.customerId || '';
+    var email = (root.dataset.customerEmail || '').trim().toLowerCase();
+    var supabaseClient = window.supabase && window.supabase.createClient
+      ? window.supabase.createClient('https://efmrfxsmgbeikfgtrxjv.supabase.co', 'sb_publishable_iwjASe3QwixdDvHovaXZBQ_gbXU0Utk')
+      : null;
+    var libraryLookup = {};
+    var libraryBooks = [
+      {% paginate shop.metaobjects.sss_library.values by 250 %}
+        {% for library_book in shop.metaobjects.sss_library.values %}
+          {% capture is_visible %}{% render 'sss-book-visible', book: library_book %}{% endcapture %}
+          {% assign is_visible_value = is_visible | strip %}
+          {% unless is_visible_value == 'true' %}
+            {% continue %}
+          {% endunless %}
+          {% capture is_private %}{% render 'sss-book-private', book: library_book %}{% endcapture %}
+          {% assign is_private_value = is_private | strip %}
+          {% if is_private_value == 'true' and bbb_reader_is_society != true %}
+            {% continue %}
+          {% endif %}
+          {% assign library_cover = library_book.cover.value.url | default: library_book.cover.value | default: library_book.cover %}
+          {% capture library_tropes_display %}{% for trope in library_book.tropes.value %}{% if trope.emoji != blank %}{{ trope.emoji }} {% endif %}{{ trope.name }}{% unless forloop.last %}, {% endunless %}{% endfor %}{% endcapture %}
+          {
+            handle: {{ library_book.system.handle | json }},
+            title: {{ library_book.title.value | default: library_book.title | json }},
+            author: {{ library_book.author.value | default: library_book.author | json }},
+            cover: {{ library_cover | json }},
+            amazon: {{ library_book.amazon_link.value.url | default: library_book.amazon_link.value | json }},
+            bookshop: {{ library_book.bookshop_link.value.url | default: library_book.bookshop_link.value | json }},
+            spice: {{ library_book.spice_level.value | default: '' | json }},
+            darkness: {{ library_book.darkness_level.value | default: '' | json }},
+            tropes: {{ library_book.tropes.value | map: 'name' | join: ', ' | json }},
+            tropesDisplay: {{ library_tropes_display | strip | json }},
+            why: {{ library_book.why_i_loved_it.value | default: '' | json }},
+            newsletter: {{ library_book.newsletter_url.value | default: '' | json }},
+            tension: {{ library_book.tension_score.value | default: '' | json }},
+            damage: {{ library_book.emotional_damage_score.value | default: '' | json }},
+            yearning: {{ library_book.yearning_level.value | default: '' | json }},
+            boyfriend: {{ library_book.boyfriend_type.value | default: '' | json }},
+            reread: {{ library_book.reread_badge.value | default: '' | json }},
+            ku: {{ library_book.on_kindle_unlimited.value | default: '' | json }},
+            mini: {{ library_book.mini_note.value | default: '' | json }},
+            series: {{ library_book.series.value.system.handle | default: '' | json }},
+            seriesName: {{ library_book.series.value.title | default: '' | json }},
+            seriesNumber: {{ library_book.series_number.value | default: '' | json }},
+            privateShelf: {{ is_private_value | json }}
+          }{% unless forloop.last %},{% endunless %}
+        {% endfor %}
+      {% endpaginate %}
+    ];
+
+    libraryBooks.forEach(function(book){
+      var handleKey = String(book.handle || '').toLowerCase();
+      var titleKey = String(book.title || '').toLowerCase();
+      if (handleKey) libraryLookup[handleKey] = book;
+      if (titleKey) libraryLookup[titleKey] = book;
+    });
+
+    function hasSocietyLocalAccess(){
+      try {
+        if (localStorage.getItem('bbbSocietyUnlocked') === 'true') return true;
+        if (localStorage.getItem('sssSocietyUnlocked') === 'true') return true;
+        if (localStorage.getItem('societyUnlocked') === 'true') return true;
+        for (var i = 0; i < localStorage.length; i += 1){
+          var key = localStorage.key(i);
+          if (key && key.indexOf('sss-access-') === 0 && localStorage.getItem(key) === 'true') return true;
+        }
+      } catch(err) {}
+      return false;
+    }
+
+    function getLocalShelf(){
+      try {
+        var shelf = JSON.parse(localStorage.getItem('sssMyShelf') || '[]') || [];
+        return Array.isArray(shelf) ? shelf : [];
+      } catch(err){
+        return [];
+      }
+    }
+
+    function normalizeBook(book){
+      if (!book) return null;
+      var lookupKey = String(book.handle || book.book_handle || book.title || book.book_title || '').toLowerCase();
+      var lookup = libraryLookup[lookupKey] || {};
+      return {
+        handle: book.handle || book.book_handle || lookup.handle || '',
+        title: book.title || book.book_title || lookup.title || '',
+        author: book.author || lookup.author || '',
+        cover: book.cover || lookup.cover || '',
+        amazon: book.amazon || lookup.amazon || '',
+        bookshop: book.bookshop || lookup.bookshop || '',
+        spice: book.spice || book.spice_level || lookup.spice || '',
+        darkness: book.darkness || book.darkness_level || lookup.darkness || '',
+        tropes: Array.isArray(book.tropes) ? book.tropes.join(', ') : (book.tropes || lookup.tropes || ''),
+        tropesDisplay: book.tropesDisplay || book.tropes_display || lookup.tropesDisplay || (Array.isArray(book.tropes) ? book.tropes.join(', ') : (book.tropes || lookup.tropes || '')),
+        why: book.why || lookup.why || '',
+        newsletter: book.newsletter || lookup.newsletter || '',
+        tension: book.tension || lookup.tension || '',
+        damage: book.damage || lookup.damage || '',
+        yearning: book.yearning || lookup.yearning || '',
+        boyfriend: book.boyfriend || lookup.boyfriend || '',
+        reread: book.reread || lookup.reread || '',
+        ku: book.ku || lookup.ku || '',
+        mini: book.mini || lookup.mini || '',
+        series: book.series || lookup.series || '',
+        seriesName: book.seriesName || book.series_name || lookup.seriesName || '',
+        seriesNumber: book.seriesNumber || book.series_number || lookup.seriesNumber || '',
+        privateShelf: book.privateShelf || book.private_shelf || lookup.privateShelf || 'false'
+      };
+    }
+
+    function mergeBooks(localBooks, remoteBooks){
+      var seen = {};
+      return localBooks.concat(remoteBooks).map(normalizeBook).filter(function(book){
+        if (!book || !book.title) return false;
+        var key = String(book.handle || book.title).toLowerCase();
+        if (seen[key]) return false;
+        seen[key] = true;
+        return true;
+      });
+    }
+
+    function renderBooks(books){
+      if (!grid || !empty) return;
+
+      if (!books.length){
+        grid.innerHTML = '';
+        empty.hidden = false;
+        return;
+      }
+
+      empty.hidden = true;
+      grid.innerHTML = books.map(function(book){
+        var cover = book.cover || '';
+        var spice = Number(book.spice || 0);
+        var spiceMarkup = '';
+        if (spice > 0){
+          spiceMarkup = '<div class="sss-lib__floatSpice">' + Array(Math.min(spice, 5) + 1).join('🌶') + '</div>';
+        }
+        return [
+          '<button type="button"',
+            ' class="sss-lib__book sss-lib__book--mini bbb-account-shelf__book"',
+            ' data-handle="' + escapeHtml(book.handle) + '"',
+            ' data-title="' + escapeHtml(book.title) + '"',
+            ' data-author="' + escapeHtml(book.author) + '"',
+            ' data-cover="' + escapeHtml(cover) + '"',
+            ' data-amazon="' + escapeHtml(book.amazon) + '"',
+            ' data-bookshop="' + escapeHtml(book.bookshop) + '"',
+            ' data-spice="' + escapeHtml(book.spice) + '"',
+            ' data-tropes="' + escapeHtml(book.tropes) + '"',
+            ' data-tropes-display="' + escapeHtml(book.tropesDisplay) + '"',
+            ' data-why="' + escapeHtml(book.why) + '"',
+            ' data-newsletter="' + escapeHtml(book.newsletter) + '"',
+            ' data-tension="' + escapeHtml(book.tension) + '"',
+            ' data-damage="' + escapeHtml(book.damage) + '"',
+            ' data-yearning="' + escapeHtml(book.yearning) + '"',
+            ' data-boyfriend="' + escapeHtml(book.boyfriend) + '"',
+            ' data-reread="' + escapeHtml(book.reread) + '"',
+            ' data-ku="' + escapeHtml(book.ku) + '"',
+            ' data-darkness="' + escapeHtml(book.darkness) + '"',
+            ' data-mini="' + escapeHtml(book.mini) + '"',
+            ' data-series="' + escapeHtml(book.series) + '"',
+            ' data-series-name="' + escapeHtml(book.seriesName) + '"',
+            ' data-series-number="' + escapeHtml(book.seriesNumber) + '"',
+            ' data-private-shelf="' + escapeHtml(book.privateShelf) + '"',
+          '>',
+            '<div class="sss-lib__coverWrap">',
+              '<span class="sss-lib__heart is-saved" data-heart role="button" aria-label="remove from your bookshelf">',
+                '<span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♥</span>',
+                '<span class="sss-lib__heartLabel" data-heart-label>saved</span>',
+              '</span>',
+              spiceMarkup,
+              cover ? '<img class="sss-lib__cover bbb-account-shelf__cover" src="' + escapeHtml(cover) + '" alt="' + escapeHtml(book.title) + '" loading="lazy">' : '<div class="sss-lib__cover bbb-account-shelf__cover"></div>',
+            '</div>',
+            '<div class="sss-lib__under">',
+              '<div class="sss-lib__name bbb-account-shelf__bookTitle">' + escapeHtml(book.title) + '</div>',
+              book.author ? '<div class="sss-lib__author bbb-account-shelf__bookAuthor">' + escapeHtml(book.author) + '</div>' : '',
+            '</div>',
+          '</button>'
+        ].join('');
+      }).join('');
+    }
+
+    function setLocalShelf(books){
+      try {
+        localStorage.setItem('sssMyShelf', JSON.stringify(books));
+        document.dispatchEvent(new CustomEvent('sss:bookshelf-updated', {
+          detail: { count: books.length }
+        }));
+      } catch(err) {}
+    }
+
+    function removeBookFromShelf(book){
+      var shelf = getLocalShelf();
+      var title = String(book && book.title || '').toLowerCase();
+      var handle = String(book && book.handle || '').toLowerCase();
+      var nextShelf = shelf.filter(function(item){
+        var itemTitle = String(item && item.title || '').toLowerCase();
+        var itemHandle = String(item && item.handle || '').toLowerCase();
+        if (handle && itemHandle && handle === itemHandle) return false;
+        if (title && itemTitle && title === itemTitle) return false;
+        return true;
+      });
+
+      setLocalShelf(nextShelf);
+      document.dispatchEvent(new CustomEvent('bbb:shelf-unsaved', {
+        detail: {
+          count: nextShelf.length,
+          bookTitle: book.title || '',
+          bookHandle: book.handle || '',
+          book: book,
+          source: 'my-bookshelf'
+        }
+      }));
+      renderBooks(nextShelf);
+    }
+
+    if (grid){
+      grid.addEventListener('click', function(event){
+        var heart = event.target.closest('[data-heart]');
+        if (!heart) return;
+        var card = heart.closest('.sss-lib__book');
+        if (!card) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        removeBookFromShelf({
+          handle: card.dataset.handle || '',
+          title: card.dataset.title || '',
+          author: card.dataset.author || '',
+          cover: card.dataset.cover || '',
+          amazon: card.dataset.amazon || '',
+          bookshop: card.dataset.bookshop || '',
+          spice: card.dataset.spice || '',
+          darkness: card.dataset.darkness || '',
+          tropes: card.dataset.tropes || '',
+          tropesDisplay: card.dataset.tropesDisplay || ''
+        });
+      });
+    }
+
+    function escapeHtml(value){
+      return String(value || '').replace(/[&<>"']/g, function(match){
+        return {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        }[match];
+      });
+    }
+
+    function renderTier(){
+      if (!tier || !perkTitle || !perkCopy || !perkLink) return;
+      if (isSociety){
+        if (memberBadge) memberBadge.classList.add('bbb-account-shelf__memberBadge--secret');
+        if (memberBadgeLabel) memberBadgeLabel.textContent = 'secret society member';
+        tier.textContent = 'society shelf';
+        perkTitle.textContent = 'your private reader layer is ready.';
+        perkCopy.textContent = 'Society features can build from here: private notes, richer unlocks, mood shelves, and custom recommendations based on what you save.';
+        perkLink.textContent = 'open the society library →';
+        perkLink.href = '/pages/sss-library-page';
+      }
+    }
+
+    async function fetchRemoteShelf(){
+      if (!supabaseClient || !isLoggedIn || (!customerId && !email)) return [];
+
+      var query = supabaseClient
+        .from('bookshelf_saved_books')
+        .select('book_handle,book_title,author,cover,amazon,bookshop,spice_level,darkness_level,tropes,saved_at')
+        .eq('is_active', true)
+        .order('saved_at', { ascending: false })
+        .limit(80);
+
+      if (customerId){
+        query = query.eq('shopify_customer_id', customerId);
+      } else {
+        query = query.eq('email_normalized', email);
+      }
+
+      var response = await query;
+      if (response.error) throw response.error;
+      return response.data || [];
+    }
+
+    async function syncLocalShelfToAccount(localShelf){
+      if (!supabaseClient || !isLoggedIn || !email || !localShelf.length) return;
+      var payload = localShelf.map(function(book){
+        var normalized = normalizeBook(book);
+        if (!normalized || !normalized.title) return null;
+        return {
+          email_normalized: email,
+          shopify_customer_id: customerId || null,
+          customer_email: email,
+          book_key: String(normalized.handle || normalized.title).toLowerCase(),
+          book_handle: normalized.handle || null,
+          book_title: normalized.title,
+          author: normalized.author || null,
+          cover: normalized.cover || null,
+          amazon: normalized.amazon || null,
+          bookshop: normalized.bookshop || null,
+          spice_level: Number(normalized.spice || 0) || null,
+          darkness_level: Number(normalized.darkness || 0) || null,
+          tropes: normalized.tropes ? String(normalized.tropes).split(',').map(function(trope){ return trope.trim(); }).filter(Boolean) : [],
+          source: 'shopify_account',
+          is_active: true,
+          removed_at: null
+        };
+      }).filter(Boolean);
+
+      if (!payload.length) return;
+      await supabaseClient.from('bookshelf_saved_books').upsert(payload, {
+        onConflict: 'email_normalized,book_key'
+      });
+    }
+
+    async function init(){
+      var localShelf = getLocalShelf();
+      renderTier();
+      renderBooks(localShelf);
+
+      try {
+        if (isLoggedIn){
+          await syncLocalShelfToAccount(localShelf);
+          var remoteShelf = await fetchRemoteShelf();
+          var merged = mergeBooks(localShelf, remoteShelf);
+          renderBooks(merged);
+          if (status){
+            status.querySelector('strong').textContent = merged.length ? 'your bookshelf is synced.' : 'your account shelf is ready.';
+            status.querySelector('span:not(.bbb-account-shelf__statusIcon)').textContent = merged.length ? merged.length + ' saved books are connected to this account.' : 'save a book and it will follow this login.';
+          }
+        }
+      } catch(err){
+        if (status){
+          status.querySelector('strong').textContent = 'local shelf loaded.';
+          status.querySelector('span:not(.bbb-account-shelf__statusIcon)').textContent = 'account sync will retry next time you open this page.';
+        }
+        console.log('Account bookshelf sync failed', err);
+      }
+    }
+
+    init();
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "customer bookshelf page",
+  "settings": []
+}
+{% endschema %}

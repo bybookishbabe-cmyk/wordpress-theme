@@ -388,7 +388,7 @@ if (rereadEl) rereadEl.textContent = spice ? "🌶 " + spice + "/5 spice" : "";
 
 if (seriesEl) {
   if (seriesName) {
-    const seriesHref = series ? `${(window.bbbUrls && window.bbbUrls.seriesBase) || "/book-series/"}${encodeURIComponent(series || "")}/` : "#";
+    const seriesHref = series ? `/pages/series?series=${encodeURIComponent(series || "")}` : "#";
     seriesEl.hidden = false;
     seriesEl.innerHTML = `<a href="${seriesHref}" class="sss-lib__seriesLink">${seriesName} series →</a>`;
   } else {

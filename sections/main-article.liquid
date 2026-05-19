@@ -1,0 +1,3046 @@
+{{ 'section-blog-post.css' | asset_url | stylesheet_tag }}
+{{ 'sss-library.css' | asset_url | stylesheet_tag }}
+{{ 'blog-system.css' | asset_url | stylesheet_tag }}
+{{ 'blog-signoff.css' | asset_url | stylesheet_tag }}
+{{ 'sss-you-might-like.css' | asset_url | stylesheet_tag }}
+
+{%- assign now_ts = 'now' | date: '%s' | plus: 0 -%}
+{%- assign current_issue = nil -%}
+{%- assign current_issue_ts = 0 -%}
+{%- for issue in shop.metaobjects.newsletter_issue.values -%}
+  {%- if issue.publish_date.value == blank -%}
+    {%- continue -%}
+  {%- endif -%}
+  {%- assign issue_ts = issue.publish_date.value | date: '%s' | plus: 0 -%}
+  {%- assign live_ts = issue_ts | plus: 36000 -%}
+  {%- if live_ts <= now_ts and issue_ts >= current_issue_ts -%}
+    {%- assign current_issue = issue -%}
+    {%- assign current_issue_ts = issue_ts -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{%- assign obsession_book = nil -%}
+{%- assign obsession_trope_one = blank -%}
+{%- assign obsession_trope_two = blank -%}
+{%- assign obsession_url = '/pages/weekly-obsession' -%}
+{%- if current_issue != nil -%}
+  {%- assign obsession_book = current_issue.book.value -%}
+  {%- if obsession_book == blank -%}
+    {%- assign obsession_book = current_issue.library_book.value -%}
+  {%- endif -%}
+{%- endif -%}
+{%- if obsession_book != blank and obsession_book.tropes.value != blank -%}
+  {%- for obsession_trope in obsession_book.tropes.value limit: 2 -%}
+    {%- if forloop.first -%}
+      {%- assign obsession_trope_one = obsession_trope -%}
+    {%- elsif forloop.index == 2 -%}
+      {%- assign obsession_trope_two = obsession_trope -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
+{%- assign has_pillar = false -%}
+{%- if article.content contains '[pillar]' or article.content contains '[Pillar]' or article.content contains '[PILLAR]' or article.content contains '[pillarnav]' or article.content contains '[Pillarnav]' or article.content contains '[PILLARNAV]' or article.content contains '[pillar nav]' or article.content contains '[Pillar Nav]' or article.content contains '[PILLAR NAV]' -%}
+  {%- assign has_pillar = true -%}
+{%- endif -%}
+
+<article class="article-template">
+  {%- for block in section.blocks -%}
+    {%- case block.type -%}
+      {%- when '@app' -%}
+        <div class="page-width page-width--narrow">
+          {% render block %}
+        </div>
+      {%- when 'featured_image' -%}
+
+  {% assign books = shop.metaobjects.sss_library.values %}
+  {% assign hero_count = 0 %}
+
+  <div class="article-template__hero-container">
+
+    <div class="sss-article-hero">
+
+      <div class="sss-article-hero__collage">
+
+        {% for book in books %}
+          {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+          {% assign is_visible_value = is_visible | strip %}
+          {% unless is_visible_value == 'true' %}
+            {% continue %}
+          {% endunless %}
+          {% if book.shelf_categories.value == "morally gray lovers" and hero_count < 3 %}
+
+            {% assign hero_count = hero_count | plus: 1 %}
+
+            {% assign cover_url = '' %}
+            {% if book.cover.value != blank %}
+              {% if book.cover.value.url != blank %}
+                {% assign cover_url = book.cover.value.url %}
+              {% else %}
+                {% assign cover_url = book.cover.value %}
+              {% endif %}
+            {% endif %}
+
+            {% if cover_url != blank %}
+              <div class="sss-article-hero__book book-{{ hero_count }}">
+                <img 
+                  src="{{ cover_url }}" 
+                  alt="{{ book.title.value | escape }}"
+                  loading="eager"
+                >
+              </div>
+            {% endif %}
+
+          {% endif %}
+        {% endfor %}
+
+      </div>
+
+      <div class="sss-article-hero__title">
+        <h1>{{ article.title }}</h1>
+      </div>
+      <p>articles count: {{ blog.articles_count }}</p>
+
+    </div>
+
+  </div>
+
+      {%- when 'title' -%}
+        <header
+          class="page-width page-width--narrow{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}"
+          {{ block.shopify_attributes }}
+        >
+          <h1
+            class="article-template__title"
+          >
+            {{ article.title | escape }}
+          </h1>
+          {%- if block.settings.blog_show_date -%}
+            <span class="circle-divider caption-with-letter-spacing">
+              {{- article.published_at | time_tag: format: 'date' -}}
+            </span>
+          {%- endif -%}
+          {%- if block.settings.blog_show_author -%}
+            <span class="caption-with-letter-spacing">
+              <span>{{ article.author }}</span>
+            </span>
+          {%- endif -%}
+        </header>
+
+
+
+
+{%- when 'content' -%}
+
+<div class="article-template__content page-width page-width--narrow rte">
+{% assign content = article.content %}
+{% assign books = article.metafields.custom.book.value %}
+{% assign article_trope = article.metafields.custom.trope.value %}
+{% assign article_series = article.metafields.custom.sss_series.value | default: article.metafields.custom.series.value %}
+{% capture inline_export_button %}
+<div class="article-inline-book-export">
+  <button
+    type="button"
+    class="sss-lib__exportBtn guide-bookcard__export"
+    data-guide-export-inline
+    data-guide-title="{{ article.title | escape }}"
+  >
+    save this list
+  </button>
+  <div class="guide-bookcard__affiliate-note">
+    some links may be affiliate links, so thank you for supporting the recs. <3
+  </div>
+</div>
+{% endcapture %}
+
+{% if article_trope != blank and article_trope.name == blank %}
+  {% assign article_trope_first = article_trope | first %}
+  {% if article_trope_first != blank %}
+    {% assign article_trope = article_trope_first %}
+  {% endif %}
+{% endif %}
+
+{% assign guide_category_value = article.metafields.custom.guide_category.value %}
+{% assign guide_category_label = guide_category_value.name.value | default: guide_category_value.name | default: guide_category_value.title.value | default: guide_category_value.title | default: guide_category_value | default: '' %}
+{% assign guide_category_handle = guide_category_value.system.handle | default: guide_category_label | handleize %}
+
+{% assign pillar_label = guide_category_label %}
+{% if pillar_label == blank and article_trope != blank %}
+  {% assign pillar_label = article_trope.name | default: article_trope %}
+{% endif %}
+
+{% capture weekly_obsession_banner %}
+{% if obsession_trope_one != blank %}
+<a class="blog-obsession-banner blog-obsession-banner--article" href="{{ obsession_url }}" aria-label="see this week's weekly obsession">
+  <p class="blog-obsession-banner__text">
+    see the book everyone is talking about...
+    think
+    <span class="blog-obsession-banner__trope">
+      {%- if obsession_trope_one.emoji != blank -%}<span class="blog-obsession-banner__tropeEmoji">{{ obsession_trope_one.emoji }}</span>{%- endif -%}
+      {{ obsession_trope_one.name }}
+    </span>
+    {%- if obsession_trope_two != blank -%}
+      and
+      <span class="blog-obsession-banner__trope">
+        {%- if obsession_trope_two.emoji != blank -%}<span class="blog-obsession-banner__tropeEmoji">{{ obsession_trope_two.emoji }}</span>{%- endif -%}
+        {{ obsession_trope_two.name }}
+      </span>
+    {%- endif -%}
+    <span class="blog-obsession-banner__cta">see the weekly obsession</span>
+  </p>
+</a>
+{% endif %}
+{% endcapture %}
+
+{% assign next_read_first_cover = '' %}
+{% assign next_read_first_title = '' %}
+{% assign next_read_second_cover = '' %}
+{% assign next_read_second_title = '' %}
+{% assign next_read_anchor_handle = '' %}
+{% assign next_read_anchor_title = '' %}
+{% assign next_read_anchor_shelf_handle = '' %}
+{% assign next_read_anchor_shelf_name = '' %}
+{% assign next_read_anchor_spice = 0 %}
+{% assign next_read_anchor_trope_handles = '|' %}
+{% assign next_read_context = guide_category_label | default: '' %}
+{% if next_read_context == blank and article_trope != blank %}
+  {% assign next_read_context = article_trope.name | default: article_trope %}
+{% endif %}
+{% if next_read_context == blank %}
+  {% assign next_read_context = 'romance' %}
+{% endif %}
+
+{% if books != blank %}
+  {% assign first_linked_book = books | first %}
+  {% if first_linked_book != blank %}
+    {% assign next_read_first_cover = first_linked_book.cover.value.url %}
+    {% if next_read_first_cover == blank %}
+      {% assign first_cover_value = first_linked_book.cover.value | append: '' %}
+      {% if first_cover_value contains 'http' or first_cover_value contains '//' %}
+        {% assign next_read_first_cover = first_cover_value %}
+      {% endif %}
+    {% endif %}
+    {% assign next_read_first_title = first_linked_book.title.value | default: first_linked_book.title %}
+    {% assign next_read_anchor_handle = first_linked_book.system.handle | default: '' %}
+    {% assign next_read_anchor_title = next_read_first_title | strip | downcase %}
+    {% assign next_read_anchor_shelf_handle = first_linked_book.shelf.value.system.handle | default: first_linked_book.shelf.value.name | handleize %}
+    {% assign next_read_anchor_shelf_name = first_linked_book.shelf.value.name | default: '' | strip | downcase %}
+    {% assign next_read_anchor_spice = first_linked_book.spice_level.value | default: 0 | plus: 0 %}
+    {% for linked_trope in first_linked_book.tropes.value %}
+      {% assign linked_trope_handle = linked_trope.system.handle | default: linked_trope.name | handleize %}
+      {% assign next_read_anchor_trope_handles = next_read_anchor_trope_handles | append: linked_trope_handle | append: '|' %}
+    {% endfor %}
+  {% endif %}
+{% endif %}
+
+{% if next_read_first_cover != blank and next_read_second_cover == blank %}
+  {% for library_book in shop.metaobjects.sss_library.values %}
+    {% capture is_visible %}{% render 'sss-book-visible', book: library_book %}{% endcapture %}
+    {% assign is_visible_value = is_visible | strip %}
+    {% unless is_visible_value == 'true' %}
+      {% continue %}
+    {% endunless %}
+
+    {% assign library_book_handle = library_book.system.handle | default: '' %}
+    {% assign library_book_title = library_book.title.value | default: library_book.title | strip | downcase %}
+    {% if library_book_handle != blank and library_book_handle == next_read_anchor_handle %}
+      {% continue %}
+    {% endif %}
+    {% if library_book_title != blank and library_book_title == next_read_anchor_title %}
+      {% continue %}
+    {% endif %}
+
+    {% assign series_number_text = library_book.series_number.value | append: '' | strip %}
+    {% if library_book.series.value != blank and library_book.read_as_standalone.value != true and series_number_text != blank and series_number_text != '1' %}
+      {% continue %}
+    {% endif %}
+
+    {% assign library_book_spice = library_book.spice_level.value | default: 0 | plus: 0 %}
+    {% assign spice_diff = library_book_spice | minus: next_read_anchor_spice | abs %}
+    {% assign library_shelf_handle = library_book.shelf.value.system.handle | default: library_book.shelf.value.name | handleize %}
+    {% assign library_shelf_name = library_book.shelf.value.name | default: '' | strip | downcase %}
+    {% assign shelf_match = false %}
+    {% if next_read_anchor_shelf_handle != blank and library_shelf_handle == next_read_anchor_shelf_handle %}
+      {% assign shelf_match = true %}
+    {% elsif next_read_anchor_shelf_name != blank and library_shelf_name == next_read_anchor_shelf_name %}
+      {% assign shelf_match = true %}
+    {% endif %}
+
+    {% assign trope_match = false %}
+    {% for linked_trope in library_book.tropes.value %}
+      {% assign linked_trope_handle = linked_trope.system.handle | default: linked_trope.name | handleize %}
+      {% assign linked_trope_token = '|' | append: linked_trope_handle | append: '|' %}
+      {% if next_read_anchor_trope_handles contains linked_trope_token %}
+        {% assign trope_match = true %}
+        {% break %}
+      {% endif %}
+    {% endfor %}
+
+    {% assign guide_match = false %}
+    {% if guide_category_handle != blank %}
+      {% assign guide_category_name_downcase = guide_category_label | default: '' | strip | downcase %}
+      {% if library_shelf_handle == guide_category_handle or library_shelf_name == guide_category_name_downcase %}
+        {% assign guide_match = true %}
+      {% endif %}
+      {% unless guide_match %}
+        {% for linked_trope in library_book.tropes.value %}
+          {% assign linked_trope_handle = linked_trope.system.handle | default: linked_trope.name | handleize %}
+          {% assign linked_trope_name = linked_trope.name | default: '' | strip | downcase %}
+          {% if linked_trope_handle == guide_category_handle or linked_trope_name == guide_category_name_downcase %}
+            {% assign guide_match = true %}
+            {% break %}
+          {% endif %}
+        {% endfor %}
+      {% endunless %}
+    {% endif %}
+
+    {% unless trope_match or shelf_match or guide_match %}
+      {% continue %}
+    {% endunless %}
+    {% if next_read_anchor_spice > 0 and library_book_spice > 0 and spice_diff > 1 and trope_match == false %}
+      {% continue %}
+    {% endif %}
+
+    {% assign cover_url = library_book.cover.value.url %}
+    {% if cover_url == blank %}
+      {% assign cover_value = library_book.cover.value | append: '' %}
+      {% if cover_value contains 'http' or cover_value contains '//' %}
+        {% assign cover_url = cover_value %}
+      {% endif %}
+    {% endif %}
+
+    {% if cover_url != blank and cover_url != next_read_first_cover %}
+      {% assign next_read_second_cover = cover_url %}
+      {% assign next_read_second_title = library_book.title.value | default: library_book.title %}
+      {% break %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% if next_read_first_cover == blank and guide_category_handle != blank %}
+  {% for library_book in shop.metaobjects.sss_library.values %}
+    {% capture is_visible %}{% render 'sss-book-visible', book: library_book %}{% endcapture %}
+    {% assign is_visible_value = is_visible | strip %}
+    {% unless is_visible_value == 'true' %}
+      {% continue %}
+    {% endunless %}
+
+    {% assign category_match = false %}
+    {% assign book_shelf_handle = library_book.shelf.value.system.handle | default: library_book.shelf.value.name | handleize %}
+    {% assign book_shelf_name = library_book.shelf.value.name | default: '' | strip | downcase %}
+    {% assign guide_category_name_downcase = guide_category_label | default: '' | strip | downcase %}
+
+    {% if book_shelf_handle == guide_category_handle or book_shelf_name == guide_category_name_downcase %}
+      {% assign category_match = true %}
+    {% endif %}
+
+    {% unless category_match %}
+      {% for linked_trope in library_book.tropes.value %}
+        {% assign linked_trope_handle = linked_trope.system.handle | default: linked_trope.name | handleize %}
+        {% assign linked_trope_name = linked_trope.name | default: '' | strip | downcase %}
+        {% if linked_trope_handle == guide_category_handle or linked_trope_name == guide_category_name_downcase %}
+          {% assign category_match = true %}
+          {% break %}
+        {% endif %}
+      {% endfor %}
+    {% endunless %}
+
+    {% unless category_match %}
+      {% continue %}
+    {% endunless %}
+
+    {% assign series_number_text = library_book.series_number.value | append: '' | strip %}
+    {% if library_book.series.value != blank and library_book.read_as_standalone.value != true and series_number_text != blank and series_number_text != '1' %}
+      {% continue %}
+    {% endif %}
+
+    {% assign cover_url = library_book.cover.value.url %}
+    {% if cover_url == blank %}
+      {% assign cover_value = library_book.cover.value | append: '' %}
+      {% if cover_value contains 'http' or cover_value contains '//' %}
+        {% assign cover_url = cover_value %}
+      {% endif %}
+    {% endif %}
+
+    {% if cover_url != blank %}
+      {% if next_read_first_cover == blank %}
+        {% assign next_read_first_cover = cover_url %}
+        {% assign next_read_first_title = library_book.title.value | default: library_book.title %}
+      {% elsif next_read_second_cover == blank and cover_url != next_read_first_cover %}
+        {% assign next_read_second_cover = cover_url %}
+        {% assign next_read_second_title = library_book.title.value | default: library_book.title %}
+        {% break %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% if next_read_first_cover == blank and article_trope != blank %}
+  {% for library_book in shop.metaobjects.sss_library.values %}
+    {% capture is_visible %}{% render 'sss-book-visible', book: library_book %}{% endcapture %}
+    {% assign is_visible_value = is_visible | strip %}
+    {% unless is_visible_value == 'true' %}
+      {% continue %}
+    {% endunless %}
+    {% assign trope_match = false %}
+    {% for linked_trope in library_book.tropes.value %}
+      {% if linked_trope.system.handle == article_trope.system.handle %}
+        {% assign trope_match = true %}
+        {% break %}
+      {% endif %}
+    {% endfor %}
+    {% unless trope_match %}
+      {% continue %}
+    {% endunless %}
+    {% assign cover_url = library_book.cover.value.url %}
+    {% if cover_url == blank %}
+      {% assign cover_value = library_book.cover.value | append: '' %}
+      {% if cover_value contains 'http' or cover_value contains '//' %}
+        {% assign cover_url = cover_value %}
+      {% endif %}
+    {% endif %}
+    {% if cover_url != blank %}
+      {% if next_read_first_cover == blank %}
+        {% assign next_read_first_cover = cover_url %}
+        {% assign next_read_first_title = library_book.title.value | default: library_book.title %}
+      {% elsif next_read_second_cover == blank %}
+        {% assign next_read_second_cover = cover_url %}
+        {% assign next_read_second_title = library_book.title.value | default: library_book.title %}
+        {% break %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% if next_read_first_cover == blank and obsession_book != blank %}
+  {% assign next_read_first_cover = obsession_book.cover.value.url %}
+  {% if next_read_first_cover == blank %}
+    {% assign obsession_first_cover_value = obsession_book.cover.value | append: '' %}
+    {% if obsession_first_cover_value contains 'http' or obsession_first_cover_value contains '//' %}
+      {% assign next_read_first_cover = obsession_first_cover_value %}
+    {% endif %}
+  {% endif %}
+  {% assign next_read_first_title = obsession_book.title.value | default: obsession_book.title %}
+{% endif %}
+
+{% if next_read_second_cover == blank and obsession_book != blank %}
+  {% assign obsession_cover_url = obsession_book.cover.value.url %}
+  {% if obsession_cover_url == blank %}
+    {% assign obsession_second_cover_value = obsession_book.cover.value | append: '' %}
+    {% if obsession_second_cover_value contains 'http' or obsession_second_cover_value contains '//' %}
+      {% assign obsession_cover_url = obsession_second_cover_value %}
+    {% endif %}
+  {% endif %}
+  {% if obsession_cover_url != blank and obsession_cover_url != next_read_first_cover %}
+    {% assign next_read_second_cover = obsession_cover_url %}
+    {% assign next_read_second_title = obsession_book.title.value | default: obsession_book.title %}
+  {% endif %}
+{% endif %}
+
+{% capture what_to_read_next_cta %}
+<a class="blog-next-read blog-next-read--article" href="https://bybookishbabe.com/pages/what-to-read-next" aria-label="find your next {{ next_read_context | escape }} read">
+  {% if next_read_first_cover != blank or next_read_second_cover != blank %}
+    <span class="blog-next-read__stage" aria-hidden="true">
+      {% if next_read_first_cover != blank %}
+        <span class="blog-next-read__book">
+          <span class="blog-next-read__bookCover">
+            <img src="{{ next_read_first_cover }}" alt="{{ next_read_first_title | escape }}" loading="lazy">
+          </span>
+          <span class="blog-next-read__bookLabel">start here</span>
+        </span>
+      {% endif %}
+      <span class="blog-next-read__arrow">→</span>
+      {% if next_read_second_cover != blank %}
+        <span class="blog-next-read__book">
+          <span class="blog-next-read__bookCover">
+            <img src="{{ next_read_second_cover }}" alt="{{ next_read_second_title | escape }}" loading="lazy">
+          </span>
+          <span class="blog-next-read__bookLabel">try next</span>
+        </span>
+      {% endif %}
+    </span>
+  {% endif %}
+  <span class="blog-next-read__copy">find your next {{ next_read_context | escape }} read →</span>
+</a>
+{% endcapture %}
+
+{% capture pillar_nav %}
+{% render 'blog-pillar-nav', article: article, books: books, pillar_label: pillar_label %}
+{% endcapture %}
+
+{% capture pillar_spice_1 %}
+{% render 'blog-pillar-spice-section',
+  anchor: 'spice-1',
+  label: 'spice 1',
+  title: 'soft open door',
+  copy: 'for tension, tenderness, and the kind of romance that lets the feelings do most of the damage.',
+  heat: '🌶'
+%}
+{% endcapture %}
+
+{% capture pillar_spice_2 %}
+{% render 'blog-pillar-spice-section',
+  anchor: 'spice-2',
+  label: 'spice 2',
+  title: 'some heat',
+  copy: 'a little more touch, a little more trouble, and enough heat to make the chemistry impossible to ignore.',
+  heat: '🌶 🌶'
+%}
+{% endcapture %}
+
+{% capture pillar_spice_3 %}
+{% render 'blog-pillar-spice-section',
+  anchor: 'spice-3',
+  label: 'spice 3',
+  title: 'balanced',
+  copy: 'the sweet spot: plot, obsession, feelings, and heat all pulling their weight.',
+  heat: '🌶 🌶 🌶'
+%}
+{% endcapture %}
+
+{% capture pillar_spice_4 %}
+{% render 'blog-pillar-spice-section',
+  anchor: 'spice-4',
+  label: 'spice 4',
+  title: 'high spice',
+  copy: 'do not read in public unless you enjoy pretending your screen brightness is not the problem.',
+  heat: '🌶 🌶 🌶 🌶'
+%}
+{% endcapture %}
+
+{% capture pillar_spice_5 %}
+{% render 'blog-pillar-spice-section',
+  anchor: 'spice-5',
+  label: 'spice 5',
+  title: 'wreck me',
+  copy: 'the cancel-your-plans shelf. high heat, high chaos, and absolutely no emotional safety equipment.',
+  heat: '🌶 🌶 🌶 🌶 🌶'
+%}
+{% endcapture %}
+
+{% assign content = content | replace: '[pillar]', pillar_nav %}
+{% assign content = content | replace: '[Pillar]', pillar_nav %}
+{% assign content = content | replace: '[PILLAR]', pillar_nav %}
+{% assign content = content | replace: '[pillarnav]', pillar_nav %}
+{% assign content = content | replace: '[Pillarnav]', pillar_nav %}
+{% assign content = content | replace: '[PILLARNAV]', pillar_nav %}
+{% assign content = content | replace: '[pillar nav]', pillar_nav %}
+{% assign content = content | replace: '[Pillar Nav]', pillar_nav %}
+{% assign content = content | replace: '[PILLAR NAV]', pillar_nav %}
+{% assign content = content | replace: '[spice:1]', pillar_spice_1 %}
+{% assign content = content | replace: '[spice:soft]', pillar_spice_1 %}
+{% assign content = content | replace: '[spice:soft open door]', pillar_spice_1 %}
+{% assign content = content | replace: '[spice:2]', pillar_spice_2 %}
+{% assign content = content | replace: '[spice:some heat]', pillar_spice_2 %}
+{% assign content = content | replace: '[spice:3]', pillar_spice_3 %}
+{% assign content = content | replace: '[spice:medium]', pillar_spice_3 %}
+{% assign content = content | replace: '[spice:balanced]', pillar_spice_3 %}
+{% assign content = content | replace: '[spice:4]', pillar_spice_4 %}
+{% assign content = content | replace: '[spice:hot]', pillar_spice_4 %}
+{% assign content = content | replace: '[spice:high]', pillar_spice_4 %}
+{% assign content = content | replace: '[spice:high spice]', pillar_spice_4 %}
+{% assign content = content | replace: '[spice:5]', pillar_spice_5 %}
+{% assign content = content | replace: '[spice:feral]', pillar_spice_5 %}
+{% assign content = content | replace: '[spice:wreck me]', pillar_spice_5 %}
+
+{% capture latest_newsletter_preview %}
+{% if current_issue != nil %}
+  {% render 'blog-newsletter-preview', issue: current_issue %}
+{% endif %}
+{% endcapture %}
+
+{% assign content = content | replace: '[newsletter]', latest_newsletter_preview %}
+{% assign content = content | replace: '[NEWSLETTER]', latest_newsletter_preview %}
+{% assign content = content | replace: '[newsletter preview]', latest_newsletter_preview %}
+{% assign content = content | replace: '[NEWSLETTER PREVIEW]', latest_newsletter_preview %}
+
+{% for newsletter_issue in shop.metaobjects.newsletter_issue.values %}
+  {% capture issue_preview %}
+    {% render 'blog-newsletter-preview', issue: newsletter_issue %}
+  {% endcapture %}
+
+  {% assign issue_handle_token = '[newsletter:' | append: newsletter_issue.system.handle | append: ']' %}
+  {% assign content = content | replace: issue_handle_token, issue_preview %}
+
+  {% if newsletter_issue.url.value != blank %}
+    {% assign issue_url = newsletter_issue.url.value.url | default: newsletter_issue.url.value %}
+    {% assign issue_url_token = '[newsletter:' | append: issue_url | append: ']' %}
+    {% assign content = content | replace: issue_url_token, issue_preview %}
+  {% endif %}
+{% endfor %}
+
+{% if books != blank %}
+  {% assign first_article_book = books %}
+  {% assign first_article_book_title = first_article_book.title.value | default: first_article_book.title %}
+  {% if first_article_book_title == blank %}
+    {% for linked_book in books limit: 1 %}
+      {% assign first_article_book = linked_book %}
+    {% endfor %}
+  {% endif %}
+
+  {% for book in books %}
+    {% assign index = forloop.index %}
+    {% assign token = '[book:' | append: index | append: ']' %}
+    {% assign quickstats_token = '[quickstats:' | append: index | append: ']' %}
+
+    {% capture card %}
+    {% if index == 1 %}
+    {{ inline_export_button }}
+    {% endif %}
+    {% render 'blog-book-card', book: book %}
+    {% endcapture %}
+
+    {% capture quickstats %}
+      {% render 'blog-quick-stats', book: book %}
+    {% endcapture %}
+
+    {% assign quickstats_paragraph = '<p>' | append: quickstats_token | append: '</p>' %}
+    {% assign content = content | replace: token, card %}
+    {% assign content = content | replace: quickstats_paragraph, quickstats %}
+    {% assign content = content | replace: quickstats_token, quickstats %}
+  {% endfor %}
+
+  {% capture first_quickstats %}
+    {% render 'blog-quick-stats', book: first_article_book %}
+  {% endcapture %}
+  {% assign content = content | replace: '<p>[quickstats]</p>', first_quickstats %}
+  {% assign content = content | replace: '<p>[Quickstats]</p>', first_quickstats %}
+  {% assign content = content | replace: '<p>[QUICKSTATS]</p>', first_quickstats %}
+  {% assign content = content | replace: '[quickstats]', first_quickstats %}
+  {% assign content = content | replace: '[Quickstats]', first_quickstats %}
+  {% assign content = content | replace: '[QUICKSTATS]', first_quickstats %}
+  {% assign content = content | replace: '<p>[quickstats:1]</p>', first_quickstats %}
+  {% assign content = content | replace: '[quickstats:1]', first_quickstats %}
+{% elsif article_trope != blank %}
+  {% for i in (1..12) %}
+    {% assign token = '[book:' | append: i | append: ']' %}
+    {% if content contains token %}
+      {% capture card %}
+      {% if i == 1 %}
+      {{ inline_export_button }}
+      {% endif %}
+      {% render 'article-trope-book-card', trope: article_trope, index: i %}
+      {% endcapture %}
+      {% assign content = content | replace: token, card %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% capture bookcard %}
+{% if has_pillar %}
+  {% render 'blog-pillar-bookcard', article: article, books: books, weekly_obsession_banner: weekly_obsession_banner %}
+{% else %}
+  {% render 'blog-bookcard-row', article: article, trope: article_trope, weekly_obsession_banner: weekly_obsession_banner %}
+{% endif %}
+{% endcapture %}
+
+{% capture pillar_bookcard %}
+{% render 'blog-pillar-bookcard', article: article, books: books, weekly_obsession_banner: weekly_obsession_banner %}
+{% endcapture %}
+
+{% assign content = content | replace: '[bookcard]', bookcard %}
+{% assign content = content | replace: '[Bookcard]', bookcard %}
+{% assign content = content | replace: '[BOOKCARD]', bookcard %}
+{% assign content = content | replace: '[pillarbookcard]', pillar_bookcard %}
+{% assign content = content | replace: '[Pillarbookcard]', pillar_bookcard %}
+{% assign content = content | replace: '[PILLARBOOKCARD]', pillar_bookcard %}
+{% assign content = content | replace: '[pillar bookcard]', pillar_bookcard %}
+{% assign content = content | replace: '[Pillar Bookcard]', pillar_bookcard %}
+{% assign content = content | replace: '[PILLAR BOOKCARD]', pillar_bookcard %}
+
+{% capture library %}
+{% render 'blog-library', article: article %}
+{% endcapture %}
+
+{% assign content = content | replace: '[library]', library %}
+
+{% capture read_next_block %}
+{% render 'blog-read-next', article: article, books: books, guide_category_label: guide_category_label, article_trope: article_trope %}
+{% endcapture %}
+
+{% assign content = content | replace: '[readnext]', read_next_block %}
+{% assign content = content | replace: '[Readnext]', read_next_block %}
+{% assign content = content | replace: '[READNEXT]', read_next_block %}
+{% assign content = content | replace: '[read next]', read_next_block %}
+{% assign content = content | replace: '[Read Next]', read_next_block %}
+{% assign content = content | replace: '[READ NEXT]', read_next_block %}
+
+{% capture series_block %}
+{% render 'blog-series-block', article: article, series: article_series %}
+{% endcapture %}
+
+{% assign content = content | replace: '[series]', series_block %}
+{% assign content = content | replace: '[Series]', series_block %}
+{% assign content = content | replace: '[SERIES]', series_block %}
+
+{% capture ku_cta %}
+<div class="blog-ku-cta">
+  <p class="blog-ku-cta__intro">most of the recs in the library are on kindle unlimited...</p>
+  <p class="blog-ku-cta__outro">
+    <span class="blog-ku-cta__outroText">(i have it, use it all the time, and can't recommend it enough.)</span>
+    <a class="blog-ku-cta__accent" href="https://amzn.to/4uZ8Y3a" target="_blank" rel="noopener sponsored" aria-label="try kindle unlimited">try it here →</a>
+  </p>
+</div>
+{% endcapture %}
+
+{% assign specific_context = guide_category_handle | append: ' ' | append: guide_category_label | append: ' ' %}
+{% if article_trope != blank %}
+  {% assign article_trope_label = article_trope.name | default: article_trope %}
+  {% assign article_trope_handle = article_trope.system.handle | default: article_trope_label | handleize %}
+  {% assign specific_context = specific_context | append: article_trope_handle | append: ' ' | append: article_trope_label %}
+{% endif %}
+{% assign specific_context = specific_context | downcase %}
+{% assign specific_prompt_override = article.metafields.custom.specific_prompt.value | default: '' %}
+{% assign specific_blog_links_override = article.metafields.custom.specific_blog_links.value %}
+{% assign specific_page_links_override = article.metafields.custom.specific_pages.value %}
+{% assign specific_prompt_text = specific_prompt_override | default: 'looking for something specific?' %}
+{% capture specific_links_custom %}
+  {% if specific_blog_links_override != blank or specific_page_links_override != blank %}
+    <nav class="blog-specific-links" aria-label="specific related links">
+      <span class="blog-specific-links__prompt">{{ specific_prompt_text }}</span>
+      <span class="blog-specific-links__arrow" aria-hidden="true">→</span>
+      <span class="blog-specific-links__items">
+        {% assign specific_item_count = 0 %}
+        {% for linked_article in specific_blog_links_override %}
+          {% if linked_article != blank %}
+            {% if specific_item_count > 0 %}<span aria-hidden="true">·</span>{% endif %}
+            <a href="{{ linked_article.url }}">
+              <span class="blog-specific-links__itemIcon" aria-hidden="true">📖</span>
+              <span>{{ linked_article.title }}</span>
+            </a>
+            {% assign specific_item_count = specific_item_count | plus: 1 %}
+          {% endif %}
+        {% endfor %}
+        {% for linked_page in specific_page_links_override %}
+          {% if linked_page != blank %}
+            {% assign linked_page_emoji = linked_page.metafields.custom.trope.value.emoji | default: linked_page.metafields.custom.shelf.value.emoji | default: linked_page.metafields.custom.genre.value.emoji | default: '📚' %}
+            {% if specific_item_count > 0 %}<span aria-hidden="true">·</span>{% endif %}
+            <a href="{{ linked_page.url }}">
+              <span class="blog-specific-links__itemIcon" aria-hidden="true">{{ linked_page_emoji }}</span>
+              <span>{{ linked_page.title }}</span>
+            </a>
+            {% assign specific_item_count = specific_item_count | plus: 1 %}
+          {% endif %}
+        {% endfor %}
+      </span>
+    </nav>
+  {% endif %}
+{% endcapture %}
+{% capture bigspecific_links_custom %}
+  {% if specific_blog_links_override != blank or specific_page_links_override != blank %}
+    <nav class="blog-bigspecific-links" aria-label="specific related links">
+      {% for linked_article in specific_blog_links_override %}
+        {% if linked_article != blank %}
+          <a href="{{ linked_article.url }}">
+            <span class="blog-bigspecific-links__itemIcon" aria-hidden="true">📖</span>
+            <span>{{ linked_article.title }}</span>
+          </a>
+        {% endif %}
+      {% endfor %}
+      {% for linked_page in specific_page_links_override %}
+        {% if linked_page != blank %}
+          {% assign linked_page_emoji = linked_page.metafields.custom.trope.value.emoji | default: linked_page.metafields.custom.shelf.value.emoji | default: linked_page.metafields.custom.genre.value.emoji | default: '📚' %}
+          <a href="{{ linked_page.url }}">
+            <span class="blog-bigspecific-links__itemIcon" aria-hidden="true">{{ linked_page_emoji }}</span>
+            <span>{{ linked_page.title }}</span>
+          </a>
+        {% endif %}
+      {% endfor %}
+    </nav>
+  {% endif %}
+{% endcapture %}
+{% capture specific_links %}
+  {% render 'blog-specific-map', context: 'dark', mode: 'nav', prompt: specific_prompt_override %}
+{% endcapture %}
+{% capture specific_links_morallygraymen %}
+  {% render 'blog-specific-map', context: 'morally gray men', mode: 'nav', prompt: specific_prompt_override %}
+{% endcapture %}
+{% capture specific_links_darkobsession %}
+  {% render 'blog-specific-map', context: 'dark obsession', mode: 'nav', prompt: specific_prompt_override %}
+{% endcapture %}
+{% capture specific_links_stalker %}
+  {% render 'blog-specific-map', context: 'stalker', mode: 'nav', prompt: specific_prompt_override %}
+{% endcapture %}
+{% capture specific_links_sports %}
+  {% render 'blog-specific-map', context: 'sports', mode: 'nav', prompt: specific_prompt_override %}
+{% endcapture %}
+{% capture specific_links_romantasy %}
+  {% render 'blog-specific-map', context: 'romantasy', mode: 'nav', prompt: specific_prompt_override %}
+{% endcapture %}
+{% capture specific_links_morallygrayfantasy %}
+  {% render 'blog-specific-map', context: 'morally gray fantasy', mode: 'nav', prompt: specific_prompt_override %}
+{% endcapture %}
+{% capture specific_links_soft %}
+  {% render 'blog-specific-map', context: 'soft', mode: 'nav', prompt: specific_prompt_override %}
+{% endcapture %}
+{% capture specific_links_slowburn %}
+  {% render 'blog-specific-map', context: 'slow burn', mode: 'nav', prompt: specific_prompt_override %}
+{% endcapture %}
+{% capture specific_links_auto %}
+  {% render 'blog-specific-map', context: specific_context, mode: 'nav', prompt: specific_prompt_override %}
+{% endcapture %}
+{% assign specific_links_default = specific_links_auto %}
+{% if specific_links_custom != blank %}
+  {% assign specific_links_default = specific_links_custom %}
+{% endif %}
+{% assign bigspecific_links_default = bigspecific_links_custom %}
+{% if bigspecific_links_default == blank %}
+  {% capture bigspecific_links_default %}
+    <nav class="blog-bigspecific-links" aria-label="specific related links">
+      {% assign bigspecific_item_count = 0 %}
+      {% if specific_guide_handles != blank %}
+        {% assign preferred_guide_handles = specific_guide_handles | split: '|' %}
+        {% for preferred_handle in preferred_guide_handles %}
+          {% if preferred_handle != blank and guide_blog and bigspecific_item_count < 3 %}
+            {% for post in guide_blog.articles %}
+              {% if post.handle == preferred_handle %}
+                <a href="{{ post.url }}">
+                  <span class="blog-bigspecific-links__itemIcon" aria-hidden="true">📖</span>
+                  <span>{{ post.title }}</span>
+                </a>
+                {% assign bigspecific_item_count = bigspecific_item_count | plus: 1 %}
+                {% break %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+      {% if specific_page_handles != blank and bigspecific_item_count < 3 %}
+        {% assign preferred_page_handles = specific_page_handles | split: '|' %}
+        {% for preferred_page_handle in preferred_page_handles %}
+          {% if preferred_page_handle != blank and bigspecific_item_count < 3 %}
+            {% assign matched_page = pages[preferred_page_handle] %}
+            {% if matched_page != blank %}
+              {% assign matched_page_emoji = matched_page.metafields.custom.trope.value.emoji | default: matched_page.metafields.custom.shelf.value.emoji | default: matched_page.metafields.custom.genre.value.emoji | default: '📚' %}
+              <a href="{{ matched_page.url }}">
+                <span class="blog-bigspecific-links__itemIcon" aria-hidden="true">{{ matched_page_emoji }}</span>
+                <span>{{ matched_page.title }}</span>
+              </a>
+              {% assign bigspecific_item_count = bigspecific_item_count | plus: 1 %}
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    </nav>
+  {% endcapture %}
+{% endif %}
+
+{% capture signoff %}
+{% render 'blog-signoff' %}
+{% endcapture %}
+
+{% assign content = content | replace: '[signoff]', signoff %}
+{% assign content = content | replace: '[ku]', ku_cta %}
+{% assign content = content | replace: '[KU]', ku_cta %}
+{% assign content = content | replace: '[specific]', specific_links_default %}
+{% assign content = content | replace: '[Specific]', specific_links_default %}
+{% assign content = content | replace: '[SPECIFIC]', specific_links_default %}
+{% assign content = content | replace: '[bigspecific]', bigspecific_links_default %}
+{% assign content = content | replace: '[Bigspecific]', bigspecific_links_default %}
+{% assign content = content | replace: '[BIGSPECIFIC]', bigspecific_links_default %}
+{% assign content = content | replace: '[specific links]', specific_links_default %}
+{% assign content = content | replace: '[SPECIFIC LINKS]', specific_links_default %}
+{% assign content = content | replace: '[looking for something specific]', specific_links_default %}
+{% assign content = content | replace: '[LOOKING FOR SOMETHING SPECIFIC]', specific_links_default %}
+{% assign content = content | replace: '[specific:dark]', specific_links %}
+{% assign content = content | replace: '[SPECIFIC:DARK]', specific_links %}
+{% assign content = content | replace: '[specific:sports]', specific_links_sports %}
+{% assign content = content | replace: '[SPECIFIC:SPORTS]', specific_links_sports %}
+{% assign content = content | replace: '[specific:romantasy]', specific_links_romantasy %}
+{% assign content = content | replace: '[SPECIFIC:ROMANTASY]', specific_links_romantasy %}
+{% assign content = content | replace: '[specific:morallygrayfantasy]', specific_links_morallygrayfantasy %}
+{% assign content = content | replace: '[SPECIFIC:MORALLYGRAYFANTASY]', specific_links_morallygrayfantasy %}
+{% assign content = content | replace: '[specific:morally-gray-fantasy]', specific_links_morallygrayfantasy %}
+{% assign content = content | replace: '[SPECIFIC:MORALLY-GRAY-FANTASY]', specific_links_morallygrayfantasy %}
+{% assign content = content | replace: '[specific:morallygraymen]', specific_links_morallygraymen %}
+{% assign content = content | replace: '[SPECIFIC:MORALLYGRAYMEN]', specific_links_morallygraymen %}
+{% assign content = content | replace: '[specific:morally-gray-men]', specific_links_morallygraymen %}
+{% assign content = content | replace: '[SPECIFIC:MORALLY-GRAY-MEN]', specific_links_morallygraymen %}
+{% assign content = content | replace: '[specific:darkobsession]', specific_links_darkobsession %}
+{% assign content = content | replace: '[SPECIFIC:DARKOBSESSION]', specific_links_darkobsession %}
+{% assign content = content | replace: '[specific:dark-obsession]', specific_links_darkobsession %}
+{% assign content = content | replace: '[SPECIFIC:DARK-OBSESSION]', specific_links_darkobsession %}
+{% assign content = content | replace: '[specific:stalker]', specific_links_stalker %}
+{% assign content = content | replace: '[SPECIFIC:STALKER]', specific_links_stalker %}
+{% assign content = content | replace: '[specific:slowburn]', specific_links_slowburn %}
+{% assign content = content | replace: '[SPECIFIC:SLOWBURN]', specific_links_slowburn %}
+{% assign content = content | replace: '[specific:slow-burn]', specific_links_slowburn %}
+{% assign content = content | replace: '[SPECIFIC:SLOW-BURN]', specific_links_slowburn %}
+{% assign content = content | replace: '[specific:soft]', specific_links_soft %}
+{% assign content = content | replace: '[SPECIFIC:SOFT]', specific_links_soft %}
+{% assign content = content | replace: '[what to read next]', what_to_read_next_cta %}
+{% assign content = content | replace: '[WHAT TO READ NEXT]', what_to_read_next_cta %}
+{% assign content = content | replace: '[whattoreadnext]', what_to_read_next_cta %}
+{% assign content = content | replace: '[WHATTOREADNEXT]', what_to_read_next_cta %}
+{% assign content = content | replace: '[weekly obsession]', weekly_obsession_banner %}
+{% assign content = content | replace: '[WEEKLY OBSESSION]', weekly_obsession_banner %}
+{% assign content = content | replace: '[weeklyobsession]', weekly_obsession_banner %}
+{% assign content = content | replace: '[WEEKLYOBSESSION]', weekly_obsession_banner %}
+
+{% if content contains '[faq]' or content contains '[FAQ]' %}
+  {% assign faq_content = content | replace: '<p>[faq]</p>', '[faq]' | replace: '<p>[/faq]</p>', '[/faq]' | replace: '<p>[FAQ]</p>', '[faq]' | replace: '<p>[/FAQ]</p>', '[/faq]' | replace: '[FAQ]', '[faq]' | replace: '[/FAQ]', '[/faq]' | replace: '[Q]', '[q]' | replace: '[/Q]', '[/q]' | replace: '[A]', '[a]' | replace: '[/A]', '[/a]' %}
+  {% assign faq_sections = faq_content | split: '[faq]' %}
+  {% capture rebuilt_faq_content %}{{ faq_sections.first }}{% endcapture %}
+
+  {% for faq_section in faq_sections offset: 1 %}
+    {% if faq_section contains '[/faq]' %}
+      {% assign faq_parts = faq_section | split: '[/faq]' %}
+      {% assign faq_body = faq_parts.first %}
+      {% capture faq_after %}
+        {% for faq_after_part in faq_parts offset: 1 %}
+          {% unless forloop.first %}[/faq]{% endunless %}{{ faq_after_part }}
+        {% endfor %}
+      {% endcapture %}
+
+      {% capture rendered_faq %}
+        <section class="blog-faq" aria-label="frequently asked questions">
+          <div class="blog-faq__kicker">questions readers ask</div>
+          <h2 class="blog-faq__title">frequently asked questions</h2>
+          <div class="blog-faq__list">
+            {% assign faq_items = faq_body | split: '[q]' %}
+            {% for faq_item in faq_items offset: 1 %}
+              {% if faq_item contains '[/q]' and faq_item contains '[a]' and faq_item contains '[/a]' %}
+                {% assign question_split = faq_item | split: '[/q]' %}
+                {% assign faq_question = question_split.first | strip_html | strip %}
+                {% capture answer_source %}
+                  {% for answer_source_part in question_split offset: 1 %}
+                    {% unless forloop.first %}[/q]{% endunless %}{{ answer_source_part }}
+                  {% endfor %}
+                {% endcapture %}
+                {% assign answer_split = answer_source | split: '[a]' %}
+                {% assign answer_chunk = '' %}
+                {% for answer_part in answer_split offset: 1 %}
+                  {% if forloop.first %}
+                    {% assign answer_chunk = answer_part %}
+                  {% endif %}
+                {% endfor %}
+                {% assign faq_answer = answer_chunk | split: '[/a]' | first | strip %}
+                {% if faq_question != blank and faq_answer != blank %}
+                  <details class="blog-faq__item">
+                    <summary class="blog-faq__question">
+                      <span>{{ faq_question }}</span>
+                      <span class="blog-faq__arrow" aria-hidden="true">⌄</span>
+                    </summary>
+                    <div class="blog-faq__answer">
+                      {{ faq_answer }}
+                    </div>
+                  </details>
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+          </div>
+        </section>
+      {% endcapture %}
+
+      {% capture rebuilt_faq_content %}{{ rebuilt_faq_content }}{{ rendered_faq }}{{ faq_after }}{% endcapture %}
+    {% else %}
+      {% capture rebuilt_faq_content %}{{ rebuilt_faq_content }}[faq]{{ faq_section }}{% endcapture %}
+    {% endif %}
+  {% endfor %}
+
+  {% assign content = rebuilt_faq_content %}
+{% endif %}
+{{ content }}
+
+</div>
+
+{%- when 'share' -%}
+
+
+        <div
+          class="article-template__social-sharing page-width page-width--narrow{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
+          {{ block.shopify_attributes }}
+        >
+          {% assign share_url = request.origin | append: article.url %}
+          {% render 'share-button', block: block, share_link: share_url %}
+        </div>
+    {%- endcase -%}
+  {%- endfor -%}
+
+  {% assign current_category = guide_category_value %}
+  {% assign current_category_handle = guide_category_handle %}
+
+{% if current_category != blank %}
+
+{% capture guide_popup_cards %}
+{% assign shown = 0 %}
+{% for post in blog.articles %}
+  {% if post.id != article.id %}
+    {% assign post_category = post.metafields.custom.guide_category.value %}
+    {% assign post_category_label = post_category.name.value | default: post_category.name | default: post_category.title.value | default: post_category.title | default: post_category | default: '' %}
+    {% assign post_category_handle = post_category.system.handle | default: post_category_label | handleize %}
+
+    {% if current_category_handle != blank and post_category_handle == current_category_handle %}
+      {% if shown < 2 %}
+        <a href="{{ post.url }}" class="bbbGuideSuggest__card" target="_blank" rel="noopener">
+          <span class="bbbGuideSuggest__arrow" aria-hidden="true">→</span>
+          <div class="bbbGuideSuggest__copy">
+            <div class="bbbGuideSuggest__title">
+            {{ post.title }}
+            </div>
+          </div>
+        </a>
+
+        {% assign shown = shown | plus: 1 %}
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endfor %}
+{% endcapture %}
+
+{% if shown > 0 %}
+<div id="bbbGuidePopup">
+
+<div class="bbbGuideSuggest__label">
+you'll love this →
+</div>
+
+<div class="bbbGuideSuggest__row">
+{{ guide_popup_cards }}
+
+</div>
+</div>
+{% endif %}
+
+{% endif %}
+
+{% render 'sss-you-might-like', article: article, blog: blog %}
+
+<style>
+  .blog-quickstats{
+    margin:3rem 0;
+    padding:1.4rem;
+    border:1px solid rgba(255,138,199,.28);
+    border-radius:2rem;
+    background:
+      linear-gradient(180deg, rgba(255,138,199,.08), rgba(255,255,255,.025)),
+      #0d0b0c;
+    box-shadow:0 1.8rem 4rem rgba(0,0,0,.22);
+    color:#f6f6f6;
+  }
+
+  .blog-quickstats__head{
+    margin-bottom:1rem;
+    padding-bottom:.9rem;
+    border-bottom:1px solid rgba(255,255,255,.1);
+  }
+
+  .blog-quickstats__kicker{
+    margin:0;
+    font-size:clamp(2.1rem, 3.2vw, 3.4rem);
+    line-height:1.05;
+    letter-spacing:0;
+    text-transform:none;
+    color:#ff9ccb;
+  }
+
+  .blog-quickstats__list{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:.55rem;
+    margin:0;
+  }
+
+  .blog-quickstats__row{
+    min-width:0;
+    padding:.85rem .95rem;
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:1.4rem;
+    background:rgba(255,255,255,.035);
+  }
+
+  .blog-quickstats__row--wide{
+    grid-column:1 / -1;
+  }
+
+  .blog-quickstats dt{
+    margin:0 0 .28rem;
+    font-size:.78rem;
+    letter-spacing:.11em;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.55);
+  }
+
+  .blog-quickstats dd{
+    margin:0;
+    font-size:1.08rem;
+    line-height:1.28;
+    color:#f7f1f4;
+  }
+
+  .blog-quickstats__availability{
+    display:inline-flex;
+    align-items:center;
+    gap:.32rem;
+    font-weight:800;
+  }
+
+  .blog-quickstats__availability--yes{
+    color:#74e0a4;
+  }
+
+  .blog-quickstats__availability--no{
+    color:#ff7f8f;
+  }
+
+  .blog-quickstats__scale,
+  .blog-quickstats__dot{
+    color:rgba(255,255,255,.5);
+  }
+
+  .blog-quickstats__dot{
+    display:inline-block;
+    margin:0 .45rem;
+  }
+
+  .blog-obsession-banner{
+    display:block;
+    margin:0 0 28px;
+    padding:16px 18px;
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:18px;
+    background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+    box-shadow:0 12px 30px rgba(0,0,0,.16);
+    text-decoration:none;
+    color:inherit;
+    position:relative;
+    overflow:hidden;
+    transition:transform .32s ease, border-color .32s ease, box-shadow .32s ease;
+    animation:blogObsessionFloat 4.8s ease-in-out infinite;
+  }
+
+  .blog-obsession-banner::after{
+    content:"";
+    position:absolute;
+    top:-30%;
+    left:-18%;
+    width:40%;
+    height:180%;
+    background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,170,214,.12), rgba(255,255,255,0));
+    transform:rotate(14deg);
+    animation:blogObsessionShimmer 5.2s ease-in-out infinite;
+    pointer-events:none;
+  }
+
+  .blog-obsession-banner--article{
+    margin-top:8px;
+  }
+
+  .blog-obsession-banner__eyebrow{
+    margin:0 0 8px;
+    font-size:11px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:rgba(246,246,246,.6);
+  }
+
+  .blog-obsession-banner__text{
+    margin:0;
+    font-size:clamp(1.5rem, 2vw, 1.9rem);
+    line-height:1.45;
+    color:#f6f6f6;
+    font-family:"Cormorant Garamond", Georgia, serif;
+  }
+
+  .blog-obsession-banner__trope{
+    display:inline-block;
+    margin:0 .15em;
+    padding:0;
+    border:none;
+    background:none;
+    font-style:italic;
+    font-weight:600;
+    animation:blogObsessionWiggle 2.6s ease-in-out infinite;
+    transform-origin:center bottom;
+  }
+
+  .blog-obsession-banner__trope:nth-of-type(1){
+    color:#ff9ccb;
+    animation-delay:.15s;
+  }
+
+  .blog-obsession-banner__trope:nth-of-type(2){
+    color:#cfa8ff;
+    animation-delay:.55s;
+  }
+
+  .blog-obsession-banner__tropeEmoji{
+    display:inline-block;
+    margin-right:.22em;
+    font-style:normal;
+  }
+
+  .blog-obsession-banner__cta{
+    display:block;
+    margin-top:.7em;
+    font-size:11px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:#ffb6da;
+    white-space:nowrap;
+  }
+
+  .blog-obsession-banner:hover{
+    transform:translateY(-3px);
+    border-color:rgba(255,138,199,.32);
+    box-shadow:0 18px 34px rgba(0,0,0,.22), 0 0 0 1px rgba(255,138,199,.12);
+  }
+
+  @keyframes blogObsessionFloat{
+    0%, 100%{ transform:translateY(0); }
+    50%{ transform:translateY(-2px); }
+  }
+
+  @keyframes blogObsessionShimmer{
+    0%, 100%{ opacity:0; left:-20%; }
+    18%{ opacity:1; }
+    42%{ opacity:0; left:92%; }
+  }
+
+  @keyframes blogObsessionWiggle{
+    0%, 100%{ transform:rotate(0deg) translateY(0); }
+    25%{ transform:rotate(-1.5deg) translateY(-1px); }
+    50%{ transform:rotate(1.2deg) translateY(0); }
+    75%{ transform:rotate(-.75deg) translateY(-1px); }
+  }
+
+  .blog-next-read{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:10px;
+    margin:10px 0 28px;
+    padding:16px 18px;
+    border:1px solid rgba(255,138,199,.14);
+    border-radius:18px;
+    background:linear-gradient(135deg, rgba(255,138,199,.055), rgba(255,255,255,.018));
+    text-decoration:none;
+    color:inherit;
+    width:min(100%, 36rem);
+  }
+
+  .blog-next-read--article{
+    margin-top:8px;
+  }
+
+  .blog-next-read__copy{
+    font-size:16px;
+    letter-spacing:.08em;
+    text-transform:lowercase;
+    color:#ffb8e0;
+    border-bottom:1px solid rgba(255,184,224,.48);
+    padding-bottom:2px;
+    transition:color .24s ease, border-color .24s ease;
+    align-self:flex-start;
+  }
+
+  .blog-next-read__stage{
+    display:flex;
+    align-items:center;
+    justify-content:flex-start;
+    gap:18px;
+    width:100%;
+    min-width:0;
+  }
+
+  .blog-next-read__book{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:9px;
+    min-width:120px;
+  }
+
+  .blog-next-read__bookCover{
+    display:block;
+    width:112px;
+    max-width:112px;
+    border-radius:16px;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,.14);
+    box-shadow:0 16px 30px rgba(0,0,0,.26);
+    background:#120f15;
+  }
+
+  .blog-next-read__bookCover img{
+    width:100% !important;
+    max-width:100% !important;
+    aspect-ratio:3 / 4.25;
+    object-fit:cover;
+    display:block;
+  }
+
+  .blog-next-read__bookLabel{
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:rgba(246,246,246,.7);
+    text-align:center;
+    white-space:nowrap;
+  }
+
+  .blog-next-read__arrow{
+    font-size:30px;
+    line-height:1;
+    color:#ff8ac7;
+    transform:translateY(-14px);
+  }
+
+  .blog-next-read:hover .blog-next-read__copy{
+    color:#ff8ac7;
+    border-color:rgba(255,138,199,.78);
+  }
+
+  .blog-next-read:hover{
+    border-color:rgba(255,138,199,.3);
+  }
+
+  .blog-next-read:hover .blog-next-read__bookCover{
+    border-color:rgba(255,138,199,.32);
+  }
+
+  .blog-next-read__book:last-child{
+    animation:blogNextReadSlideIn 3.2s ease-in-out infinite;
+  }
+
+  .blog-next-read__arrow{
+    animation:blogNextReadArrowNudge 3.2s ease-in-out infinite;
+  }
+
+  .blog-ku-cta{
+    width:min(100%, 58rem);
+    margin:12px 0 28px;
+  }
+
+  .blog-ku-cta__intro{
+    margin:0 0 10px;
+    color:rgba(246,246,246,.8);
+    font-size:clamp(1.08rem, 1.65vw, 1.26rem);
+    line-height:1.7;
+  }
+
+  .blog-ku-cta__outro{
+    margin:0;
+    color:rgba(246,246,246,.8);
+    font-size:clamp(1.08rem, 1.65vw, 1.26rem);
+    line-height:1.7;
+    font-style:italic;
+  }
+
+  .blog-ku-cta__outroText{
+    color:inherit;
+  }
+
+  .blog-ku-cta__accent{
+    display:inline-block;
+    color:#ff8ac7;
+    text-decoration:none;
+    transition:color .2s ease, transform .2s ease;
+  }
+
+  .blog-ku-cta__accent:hover{
+    color:#ffb6da;
+    transform:translateX(3px);
+  }
+
+  .blog-specific-links{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:flex-start;
+    gap:8px 10px;
+    margin:18px 0 4px;
+    padding:10px 0 4px;
+    border-top:1px solid rgba(255,138,199,.24);
+    border-bottom:1px solid rgba(255,138,199,.24);
+    color:rgba(247,243,238,.8);
+    font-size:clamp(1.04rem, 1.45vw, 1.14rem);
+    line-height:1.42;
+  }
+
+  .blog-specific-links__prompt{
+    color:#f7f3ee;
+    font-family:'Cormorant Garamond', 'Cormorant', serif;
+    font-size:clamp(1.42rem, 2.5vw, 2rem);
+    font-weight:700;
+    line-height:1;
+    text-transform:lowercase;
+  }
+
+  .blog-specific-links__items{
+    display:flex;
+    flex:1 1 100%;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:8px 10px;
+    min-width:0;
+  }
+
+  .blog-specific-links__arrow,
+  .blog-specific-links__dot{
+    color:#ff8ac7;
+    font-weight:800;
+  }
+
+  .blog-specific-links__items > span[aria-hidden="true"]{
+    color:rgba(255,138,199,.6);
+    flex:0 0 auto;
+  }
+
+  .blog-specific-links a{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    color:#ff8ac7;
+    text-decoration:none;
+    padding:4px 0 2px;
+    border-bottom:1px solid rgba(255,138,199,.28);
+    transition:color .2s ease, border-color .2s ease, transform .2s ease;
+  }
+
+  .blog-specific-links__itemIcon{
+    flex:0 0 auto;
+    font-size:.96em;
+    line-height:1;
+    transform:translateY(-.02em);
+  }
+
+  .blog-specific-links a:hover{
+    color:#ffb6da;
+    border-color:#ffb6da;
+    transform:translateY(-1px);
+  }
+
+  .blog-specific-links + h2,
+  .blog-specific-links + h3,
+  .blog-specific-links + .h2,
+  .blog-specific-links + .h3{
+    margin-top:8px;
+  }
+
+  .blog-bigspecific-links{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:12px;
+    margin:18px 0 10px;
+    padding:0;
+    align-items:stretch;
+  }
+
+  .blog-bigspecific-links a{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+    min-height:100%;
+    padding:12px 13px;
+    color:#f7f3ee;
+    text-decoration:none;
+    background:linear-gradient(180deg, rgba(34,26,31,.92), rgba(23,17,20,.96));
+    border:1px solid rgba(255,138,199,.2);
+    border-radius:0;
+    box-shadow:0 1px 0 rgba(255,138,199,.08);
+    transition:transform .2s ease, border-color .2s ease, background .2s ease;
+  }
+
+  .blog-bigspecific-links a:hover{
+    transform:translateY(-1px);
+    border-color:rgba(255,138,199,.42);
+    background:linear-gradient(180deg, rgba(40,30,36,.96), rgba(28,20,24,.98));
+  }
+
+  .blog-bigspecific-links__itemIcon{
+    flex:0 0 auto;
+    color:#ff8ac7;
+    font-size:1.02rem;
+    line-height:1;
+  }
+
+  .blog-bigspecific-links a span:last-child{
+    min-width:0;
+    font-size:1rem;
+    line-height:1.22;
+    letter-spacing:.01em;
+    text-wrap:balance;
+  }
+
+  .blog-bigspecific-links + blockquote:empty,
+  .blog-bigspecific-links + p:empty,
+  .blog-bigspecific-links + div blockquote:empty{
+    display:none;
+  }
+
+  @media (max-width: 749px){
+    .blog-specific-links{
+      gap:8px;
+      margin:14px 0 2px;
+      padding:9px 0 4px;
+    }
+
+    .blog-specific-links__prompt{
+      font-size:1.24rem;
+    }
+
+    .blog-specific-links__items{
+      gap:6px 8px;
+    }
+
+    .blog-specific-links a{
+      padding:3px 0 2px;
+      font-size:.98rem;
+      line-height:1.32;
+    }
+
+    .blog-specific-links__itemIcon{
+      font-size:.94em;
+    }
+
+    .blog-specific-links + h2,
+    .blog-specific-links + h3,
+    .blog-specific-links + .h2,
+    .blog-specific-links + .h3{
+      margin-top:4px;
+    }
+
+    .blog-bigspecific-links{
+      grid-template-columns:1fr;
+      gap:10px;
+      margin:14px 0 8px;
+    }
+
+    .blog-bigspecific-links a{
+      padding:10px 11px;
+    }
+
+    .blog-bigspecific-links a span:last-child{
+      font-size:.98rem;
+      line-height:1.28;
+    }
+  }
+
+  .blog-readnext{
+    margin:30px 0 38px;
+    padding-top:14px;
+    border-top:1px solid rgba(255,255,255,.14);
+  }
+
+  .blog-readnext__eyebrow{
+    margin:0 0 10px;
+    color:#ff8ac7;
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+  }
+
+  .blog-readnext__title{
+    margin:0 0 10px;
+    color:#f7f3ee;
+    font-family:'Cormorant Garamond', 'Cormorant', serif;
+    font-size:clamp(1.7rem, 3.2vw, 2.45rem);
+    line-height:1.08;
+    text-transform:lowercase;
+  }
+
+  .blog-readnext__intro{
+    margin:0 0 12px;
+    color:rgba(247,243,238,.72);
+    font-size:0.96rem;
+    line-height:1.52;
+  }
+
+  .blog-readnext__list{
+    display:grid;
+    gap:6px;
+  }
+
+  .blog-readnext__item{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    color:inherit;
+    text-decoration:none;
+    padding:10px 0;
+    border-top:1px solid rgba(255,255,255,.08);
+  }
+
+  .blog-readnext__item:first-child{
+    border-top:none;
+    padding-top:0;
+  }
+
+  .blog-readnext__arrow{
+    flex:0 0 auto;
+    color:#ff8ac7;
+    font-size:17px;
+    line-height:1.2;
+    transform:translateY(2px);
+  }
+
+  .blog-readnext__body{
+    display:grid;
+    gap:4px;
+    min-width:0;
+    flex:1 1 auto;
+  }
+
+  .blog-readnext__media{
+    display:block;
+    flex:0 0 auto;
+    width:48px;
+    height:66px;
+    border-radius:6px;
+    overflow:hidden;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.12);
+    box-shadow:0 8px 18px rgba(0,0,0,.16);
+  }
+
+  .blog-readnext__media img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+    max-width:none;
+  }
+
+  .blog-readnext__media--article{
+    width:72px;
+    height:48px;
+    border-radius:8px;
+  }
+
+  .blog-readnext__media--article img{
+    object-fit:contain;
+    background:#0b0b0b;
+  }
+
+  .blog-readnext__media--badge{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:44px;
+    height:44px;
+    border-radius:12px;
+    font-size:20px;
+    line-height:1;
+    background:rgba(255,138,199,.1);
+    border-color:rgba(255,138,199,.24);
+  }
+
+  .blog-readnext__label{
+    color:#f7f3ee;
+    font-size:1rem;
+    font-weight:700;
+    line-height:1.24;
+    text-decoration:underline;
+    text-decoration-color:rgba(255,138,199,.3);
+    text-underline-offset:3px;
+  }
+
+  .blog-readnext__meta{
+    color:rgba(247,243,238,.72);
+    font-size:0.9rem;
+    line-height:1.45;
+  }
+
+  .blog-readnext__item:hover .blog-readnext__label{
+    color:#ffb6da;
+    text-decoration-color:#ffb6da;
+  }
+
+  @media (max-width: 749px){
+    .blog-readnext{
+      margin:24px 0 30px;
+      padding-top:12px;
+    }
+
+    .blog-readnext__title{
+      font-size:1.65rem;
+      line-height:1.1;
+    }
+
+    .blog-readnext__intro{
+      font-size:0.9rem;
+      line-height:1.48;
+    }
+
+    .blog-readnext__label{
+      font-size:0.96rem;
+    }
+
+    .blog-readnext__meta{
+      font-size:0.84rem;
+    }
+
+    .blog-readnext__list{
+      display:flex;
+      gap:12px;
+      overflow-x:auto;
+      overflow-y:hidden;
+      padding:2px 2px 8px;
+      scroll-snap-type:x proximity;
+      scrollbar-width:none;
+      -webkit-overflow-scrolling:touch;
+    }
+
+    .blog-readnext__list::-webkit-scrollbar{
+      display:none;
+    }
+
+    .blog-readnext__item{
+      flex:0 0 86%;
+      min-width:86%;
+      padding:12px;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:12px;
+      background:rgba(255,255,255,.02);
+      scroll-snap-align:start;
+    }
+
+    .blog-readnext__item:first-child{
+      padding-top:12px;
+    }
+
+    .blog-readnext__media{
+      width:40px;
+      height:54px;
+    }
+
+    .blog-readnext__media--article{
+      width:64px;
+      height:42px;
+    }
+
+    .blog-readnext__media--badge{
+      width:38px;
+      height:38px;
+      border-radius:11px;
+      font-size:18px;
+    }
+  }
+
+  .blog-faq{
+    margin:34px 0;
+    padding:22px;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:18px;
+    background:linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+    box-shadow:0 16px 44px rgba(0,0,0,.2);
+  }
+
+  .blog-faq__kicker{
+    margin:0 0 8px;
+    color:#ff8ac7;
+    font-size:11px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    font-weight:800;
+  }
+
+  .blog-faq__title{
+    margin:0 0 16px;
+    color:#f7f3ee;
+    font-family:'Cormorant Garamond', 'Cormorant', serif;
+    font-size:clamp(2rem, 4vw, 3rem);
+    line-height:1.05;
+    text-transform:lowercase;
+  }
+
+  .blog-faq__list{
+    display:grid;
+    gap:10px;
+  }
+
+  .blog-faq__item{
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:8px;
+    background:rgba(0,0,0,.22);
+    overflow:hidden;
+  }
+
+  .blog-faq__question{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    padding:15px 16px;
+    color:#f7f3ee;
+    cursor:pointer;
+    list-style:none;
+    font-weight:800;
+    line-height:1.35;
+  }
+
+  .blog-faq__question::-webkit-details-marker{
+    display:none;
+  }
+
+  .blog-faq__arrow{
+    flex:0 0 auto;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:26px;
+    height:26px;
+    border-radius:999px;
+    border:1px solid rgba(255,138,199,.35);
+    color:#ff8ac7;
+    transition:transform .22s ease, background .22s ease;
+  }
+
+  .blog-faq__item[open] .blog-faq__arrow{
+    transform:rotate(180deg);
+    background:rgba(255,138,199,.12);
+  }
+
+  .blog-faq__answer{
+    padding:0 16px 16px;
+    color:rgba(247,243,238,.76);
+    line-height:1.72;
+  }
+
+  .blog-faq__answer p{
+    margin:0 0 10px;
+  }
+
+  .blog-faq__answer p:last-child{
+    margin-bottom:0;
+  }
+
+  .blog-pillar-nav{
+    width:100%;
+    margin:30px 0 34px;
+    padding:20px;
+    border:1px solid rgba(255,138,199,.18);
+    border-radius:24px;
+    background:
+      radial-gradient(circle at 18% 0%, rgba(255,138,199,.12), transparent 36%),
+      linear-gradient(135deg, rgba(255,255,255,.055), rgba(255,255,255,.018));
+    box-shadow:0 22px 48px rgba(0,0,0,.22);
+  }
+
+  .blog-pillar-nav__eyebrow,
+  .blog-pillar-spice__label{
+    margin:0;
+    color:#ff9ccc;
+    font-size:10px;
+    line-height:1.2;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    font-weight:700;
+  }
+
+  .blog-pillar-nav__header{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:18px;
+    margin-top:8px;
+  }
+
+  .blog-pillar-nav__title{
+    margin:0;
+    color:#f6f6f6;
+    font-family:"Cormorant Garamond", Georgia, serif;
+    font-size:clamp(2.2rem, 3.7vw, 3.8rem);
+    line-height:1;
+    font-weight:500;
+    text-transform:lowercase;
+  }
+
+  .blog-pillar-nav__count{
+    margin:0;
+    max-width:18rem;
+    color:rgba(246,246,246,.68);
+    font-size:12px;
+    line-height:1.45;
+    text-align:right;
+  }
+
+  .blog-pillar-nav__links{
+    display:flex;
+    flex-wrap:nowrap;
+    gap:10px;
+    margin-top:18px;
+  }
+
+  .article-template__content .blog-pillar-nav__links a{
+    display:flex !important;
+    flex:1 1 0;
+    min-width:0;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:center;
+    gap:4px;
+    min-height:64px;
+    padding:12px 14px;
+    border:1px solid rgba(255,255,255,.12) !important;
+    border-radius:18px;
+    background:rgba(255,255,255,.04);
+    color:#f6f6f6 !important;
+    text-align:left;
+    text-decoration:none !important;
+    font-size:10px;
+    line-height:1.2;
+    letter-spacing:.11em;
+    text-transform:uppercase;
+    font-weight:700;
+    transition:transform .22s ease, background .22s ease, border-color .22s ease, color .22s ease;
+  }
+
+  .article-template__content .blog-pillar-nav__links a span{
+    display:block;
+    color:#fff;
+    font-size:12px;
+    line-height:1;
+    letter-spacing:.03em;
+  }
+
+  .article-template__content .blog-pillar-nav__links a:hover{
+    transform:translateY(-1px);
+    border-color:rgba(255,138,199,.46) !important;
+    background:rgba(255,138,199,.12);
+    color:#ffbadc !important;
+  }
+
+  .article-template__content .blog-pillar-nav__links a.is-disabled{
+    cursor:not-allowed;
+    opacity:.42;
+    text-decoration:line-through !important;
+    text-decoration-thickness:1px !important;
+    text-decoration-color:rgba(255,156,204,.82) !important;
+  }
+
+  .article-template__content .blog-pillar-nav__links a.is-disabled:hover{
+    transform:none;
+    border-color:rgba(255,255,255,.12) !important;
+    background:rgba(255,255,255,.04);
+    color:#f6f6f6 !important;
+  }
+
+  .blog-pillar-spice{
+    scroll-margin-top:110px;
+    width:100%;
+    margin:46px 0 18px;
+  }
+
+  .blog-pillar-spice__line{
+    width:100%;
+    height:1px;
+    margin-bottom:18px;
+    background:linear-gradient(90deg, rgba(255,138,199,.42), rgba(255,255,255,.08), transparent);
+  }
+
+  .blog-pillar-spice__head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:18px;
+  }
+
+  .blog-pillar-spice__title{
+    margin:6px 0 0;
+    color:#f7f2f4;
+    font-family:"Cormorant Garamond", Georgia, serif;
+    font-size:clamp(2.15rem, 3.4vw, 3.45rem);
+    line-height:1.02;
+    font-weight:500;
+    text-transform:lowercase;
+  }
+
+  .blog-pillar-spice__heat{
+    flex:0 0 auto;
+    color:#ff6fae;
+    font-size:15px;
+    letter-spacing:.04em;
+    white-space:nowrap;
+    filter:drop-shadow(0 0 10px rgba(255,111,174,.22));
+  }
+
+  .blog-pillar-spice__copy{
+    max-width:44rem;
+    margin:10px 0 0;
+    color:rgba(246,246,246,.74);
+    font-size:clamp(1.16rem, 1.45vw, 1.34rem);
+    line-height:1.55;
+  }
+
+  .guide-bookcard--pillar{
+    margin-top:34px;
+  }
+
+  .guide-bookcard--series{
+    margin:28px 0 34px;
+  }
+
+  .guide-bookcard__head--series{
+    align-items:flex-end;
+    gap:18px;
+  }
+
+  .guide-bookcard__eyebrow{
+    display:block;
+    margin:0 0 8px;
+    color:rgba(255,255,255,.62);
+    font-size:11px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+  }
+
+  .guide-bookcard__seriesTitle{
+    margin:0;
+    color:#f6f6f6;
+    font-family:"Cormorant Garamond", Georgia, serif;
+    font-size:clamp(2.2rem, 3vw, 3.1rem);
+    line-height:1.02;
+    font-weight:500;
+    text-transform:lowercase;
+  }
+
+  .guide-bookcard__seriesMeta{
+    margin:6px 0 0;
+    color:rgba(246,246,246,.64);
+    font-size:12px;
+    line-height:1.45;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+
+  .guide-bookcard__seriesLink{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    color:#ff8ac7;
+    font-size:12px;
+    line-height:1.2;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    text-decoration:none;
+    border-bottom:1px solid rgba(255,138,199,.42);
+    white-space:nowrap;
+    transition:color .22s ease, border-color .22s ease, transform .22s ease;
+  }
+
+  .guide-bookcard__seriesLink:hover{
+    color:#ffb6da;
+    border-color:rgba(255,182,218,.78);
+    transform:translateX(3px);
+  }
+
+  .guide-bookcard__list--series{
+    margin-top:18px;
+  }
+
+  .guide-bookcard__item--series{
+    display:block;
+  }
+
+  .pillar-bookcard{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .pillar-bookcard__section + .pillar-bookcard__section{
+    margin-top:18px;
+  }
+
+  .guide-bookcard__item--pillar{
+    display:block;
+  }
+
+  .pillar-bookcard__list{
+    margin-top:18px;
+  }
+
+  .pillar-bookcard__empty{
+    margin:14px 0 0;
+    color:rgba(246,246,246,.58);
+    font-size:13px;
+    line-height:1.5;
+    font-style:italic;
+  }
+
+  #sssBackToTop.blog-pillar-backtop{
+    position:fixed;
+    right:28px;
+    bottom:158px;
+    z-index:10000;
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+    transform:translateY(10px);
+    transition:opacity .25s ease, transform .25s ease, visibility .25s ease;
+  }
+
+  #sssBackToTop.blog-pillar-backtop.is-visible{
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+    transform:translateY(0);
+  }
+
+  #sssBackToTop.blog-pillar-backtop .sss-lib__backTopBtn{
+    width:44px;
+    height:44px;
+    border-radius:50%;
+    border:1px solid #e85a9b;
+    background:#e85a9b;
+    color:#fff;
+    font-size:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    box-shadow:0 18px 40px rgba(0,0,0,.45);
+    transition:transform .2s ease, box-shadow .2s ease;
+  }
+
+  #sssBackToTop.blog-pillar-backtop .sss-lib__backTopBtn:hover{
+    transform:scale(1.08);
+    box-shadow:0 22px 50px rgba(0,0,0,.5);
+  }
+
+  .blog-newsletter-preview{
+    width:100%;
+    margin:24px 0 8px;
+    color:#f6f6f6;
+  }
+
+  .blog-newsletter-preview__card{
+    display:grid !important;
+    grid-template-columns:76px minmax(0, 1fr);
+    align-items:center;
+    gap:16px;
+    width:100%;
+    max-width:none;
+    padding:12px 0 10px;
+    color:inherit;
+    text-decoration:none;
+    border-top:1px solid rgba(255,255,255,.1);
+    border-bottom:1px solid rgba(255,255,255,.1);
+    transition:transform .24s ease, border-color .24s ease;
+  }
+
+  .blog-newsletter-preview__thumb{
+    display:block;
+    width:76px;
+    height:76px;
+    border-radius:3px;
+    overflow:hidden;
+    background:#151515;
+  }
+
+  .blog-newsletter-preview__thumb img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+    filter:saturate(.88) contrast(1.04);
+    transition:transform .36s ease;
+  }
+
+  .blog-newsletter-preview__copy{
+    display:flex;
+    min-width:0;
+    flex-direction:column;
+    gap:3px;
+  }
+
+  .blog-newsletter-preview__title{
+    color:#f6f6f6;
+    font-size:clamp(1.42rem, 1.7vw, 1.72rem);
+    line-height:1.22;
+    font-weight:700;
+    letter-spacing:.01em;
+  }
+
+  .blog-newsletter-preview__meta{
+    color:rgba(246,246,246,.52);
+    font-size:10px;
+    line-height:1.3;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+  }
+
+  .blog-newsletter-preview__excerpt{
+    display:block;
+    max-width:44rem;
+    margin-top:1px;
+    color:rgba(246,246,246,.72);
+    font-size:clamp(1.12rem, 1.3vw, 1.28rem);
+    line-height:1.45;
+  }
+
+  .blog-newsletter-preview__cta{
+    width:max-content;
+    margin-top:3px;
+    color:#ff8ac7;
+    font-size:12px;
+    line-height:1.2;
+    letter-spacing:.06em;
+    border-bottom:1px solid rgba(255,138,199,.46);
+    transition:transform .24s ease, color .24s ease, border-color .24s ease;
+  }
+
+  .blog-newsletter-preview__card:hover{
+    transform:translateX(5px);
+    border-color:rgba(255,138,199,.24);
+  }
+
+  .blog-newsletter-preview__card:hover .blog-newsletter-preview__thumb img{
+    transform:scale(1.06);
+  }
+
+  .blog-newsletter-preview__card:hover .blog-newsletter-preview__cta{
+    color:#ffb6da;
+    border-color:rgba(255,182,218,.78);
+    transform:translateX(3px);
+  }
+
+  @keyframes blogNextReadSlideIn{
+    0%, 18%{
+      opacity:.3;
+      transform:translateX(24px);
+    }
+    32%, 100%{
+      opacity:1;
+      transform:translateX(0);
+    }
+  }
+
+  @keyframes blogNextReadArrowNudge{
+    0%, 18%{
+      opacity:.4;
+      transform:translateY(-14px) translateX(0);
+    }
+    32%, 100%{
+      opacity:1;
+      transform:translateY(-14px) translateX(4px);
+    }
+  }
+
+  @media (max-width: 749px){
+    .blog-quickstats{
+      margin:2.4rem 0;
+      padding:1.1rem;
+      border-radius:1.6rem;
+    }
+
+    .blog-quickstats__head{
+      margin-bottom:1.2rem;
+      padding-bottom:1rem;
+    }
+
+    .blog-quickstats__list{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+
+    .blog-quickstats__kicker{
+      font-size:clamp(1.9rem, 8vw, 2.8rem);
+    }
+
+    .blog-quickstats__row{
+      padding:.85rem;
+    }
+
+    .blog-quickstats__row--mobile-wide{
+      grid-column:1 / -1;
+    }
+
+    .blog-quickstats dd{
+      font-size:1rem;
+    }
+
+    .blog-obsession-banner{
+      margin:0 0 22px;
+      padding:14px 14px 15px;
+    }
+
+    .blog-obsession-banner__text{
+      font-size:1.28rem;
+      line-height:1.5;
+    }
+
+    .blog-next-read{
+      gap:10px;
+      margin:4px 0 22px;
+      padding:14px;
+      align-items:flex-start;
+      width:100%;
+    }
+
+    .blog-next-read__copy{
+      font-size:13px;
+    }
+
+    .blog-next-read__stage{
+      width:auto;
+      justify-content:flex-start;
+      gap:10px;
+    }
+
+    .blog-next-read__book{
+      min-width:82px;
+      gap:7px;
+    }
+
+    .blog-next-read__bookCover{
+      width:74px;
+      border-radius:12px;
+    }
+
+    .blog-next-read__bookLabel{
+      font-size:9px;
+      letter-spacing:.1em;
+    }
+
+  .blog-next-read__arrow{
+    font-size:24px;
+    transform:translateY(-10px);
+  }
+  }
+
+  @media (max-width: 749px){
+    .blog-ku-cta{
+      margin:8px 0 22px;
+    }
+
+    .blog-ku-cta__intro{
+      font-size:15px;
+      line-height:1.6;
+      margin-bottom:8px;
+    }
+
+    .blog-ku-cta__outro{
+      font-size:15px;
+    }
+
+    .blog-ku-cta__accent{
+      padding-bottom:0;
+    }
+
+    .blog-pillar-nav{
+      margin:24px 0 28px;
+      padding:16px;
+      border-radius:20px;
+    }
+
+    .blog-pillar-nav__header{
+      display:block;
+    }
+
+    .blog-pillar-nav__count{
+      margin-top:8px;
+      max-width:none;
+      text-align:left;
+    }
+
+    .blog-pillar-nav__links{
+      flex-wrap:wrap;
+      gap:10px;
+    }
+
+    .article-template__content .blog-pillar-nav__links a{
+      flex:1 1 calc(50% - 5px);
+      min-width:calc(50% - 5px);
+      min-height:58px;
+      padding:12px 14px;
+      font-size:9px;
+    }
+
+    .blog-pillar-spice{
+      margin:38px 0 14px;
+    }
+
+    .blog-pillar-spice__head{
+      display:block;
+    }
+
+    .blog-pillar-spice__heat{
+      margin-top:8px;
+      font-size:13px;
+    }
+
+    .blog-pillar-spice__copy{
+      font-size:1.13rem;
+    }
+
+    .pillar-bookcard__section + .pillar-bookcard__section{
+      margin-top:10px;
+    }
+
+    .guide-bookcard__head--series{
+      align-items:flex-start;
+    }
+
+    .guide-bookcard__seriesLink{
+      margin-top:6px;
+    }
+
+    #sssBackToTop.blog-pillar-backtop{
+      right:14px;
+      bottom:74px;
+      top:auto;
+      left:auto;
+      transform:translateY(10px);
+    }
+
+    #sssBackToTop.blog-pillar-backtop.is-visible{
+      transform:translateY(0);
+    }
+
+    #sssBackToTop.blog-pillar-backtop .sss-lib__backTopBtn{
+      width:42px;
+      height:42px;
+      font-size:15px;
+      box-shadow:0 14px 34px rgba(0,0,0,.38);
+    }
+
+    .blog-newsletter-preview{
+      margin:20px 0 4px;
+    }
+
+    .blog-newsletter-preview__card{
+      grid-template-columns:64px minmax(0, 1fr);
+      gap:12px;
+      max-width:100%;
+      padding:10px 0 9px;
+    }
+
+    .blog-newsletter-preview__thumb{
+      width:64px;
+      height:64px;
+    }
+
+    .blog-newsletter-preview__title{
+      font-size:1.28rem;
+    }
+
+    .blog-newsletter-preview__excerpt{
+      font-size:1.05rem;
+      line-height:1.38;
+    }
+  }
+</style>
+
+<script>
+  (function() {
+    function buildGuideBookList(cardWrap) {
+      if (!cardWrap) return '';
+
+      var guideTitle = cardWrap.dataset.guideTitle || document.title || 'romance guide';
+      var books = Array.from(cardWrap.querySelectorAll('[data-book-preview]'));
+      if (!books.length) return '';
+
+      var text = 'books from ' + guideTitle + '\n\n';
+
+      books.forEach(function(book, index) {
+        var bookTitle = book.dataset.title || '';
+        var author = book.dataset.author || '';
+        var amazon = book.dataset.amazon || '';
+        var bookshop = book.dataset.bookshop || '';
+
+        text += (index + 1) + '. ' + bookTitle + '\n';
+
+        if (author) {
+          text += '   by ' + author + '\n';
+        }
+
+        if (amazon) {
+          text += '   amazon: ' + amazon + '\n';
+        }
+
+        if (bookshop) {
+          text += '   bookshop: ' + bookshop + '\n';
+        }
+
+        text += '\n';
+      });
+
+      return text;
+    }
+
+    function copyGuideBookList(text) {
+      if (!text) return Promise.reject(new Error('No text to copy'));
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(text);
+      }
+
+      return new Promise(function(resolve, reject) {
+        var textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'absolute';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+
+        try {
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+          resolve();
+        } catch (error) {
+          document.body.removeChild(textarea);
+          reject(error);
+        }
+      });
+    }
+
+    document.querySelectorAll('[data-guide-export]').forEach(function(button) {
+      button.addEventListener('click', function() {
+        var cardWrap = button.closest('[data-guide-bookcard]');
+        var text = buildGuideBookList(cardWrap);
+        if (!text) return;
+
+        copyGuideBookList(text).then(function() {
+          button.textContent = 'saved ✨';
+
+          window.setTimeout(function() {
+            button.textContent = 'save this list';
+          }, 2000);
+        }).catch(function() {});
+      });
+    });
+
+    document.querySelectorAll('[data-guide-export-inline]').forEach(function(button) {
+      var exportWrap = button.closest('.article-inline-book-export');
+
+      if (exportWrap) {
+        exportWrap.classList.remove('article-inline-book-export--with-rule');
+        var previous = exportWrap.previousElementSibling;
+
+        while (previous) {
+          if (/^H[1-6]$/.test(previous.tagName)) {
+            var next = previous.nextElementSibling;
+
+            if (next && next.tagName === 'HR') {
+              next.parentNode.insertBefore(exportWrap, next);
+              exportWrap.classList.add('article-inline-book-export--with-rule');
+            } else {
+              previous.insertAdjacentElement('afterend', exportWrap);
+            }
+            break;
+          }
+
+          previous = previous.previousElementSibling;
+        }
+      }
+
+      button.addEventListener('click', function() {
+        var guideTitle = button.dataset.guideTitle || document.title || 'romance guide';
+        var content = button.closest('.article-template__content');
+        if (!content) return;
+
+        var books = Array.from(content.querySelectorAll('[data-book-preview]')).filter(function(item) {
+          return !item.closest('[data-guide-bookcard]') && !item.closest('.sss-blog-library');
+        });
+
+        if (!books.length) return;
+
+        var text = 'books from ' + guideTitle + '\n\n';
+
+        books.forEach(function(book, index) {
+          var bookTitle = book.dataset.title || '';
+          var author = book.dataset.author || '';
+          var amazon = book.dataset.amazon || '';
+          var bookshop = book.dataset.bookshop || '';
+
+          text += (index + 1) + '. ' + bookTitle + '\n';
+
+          if (author) {
+            text += '   by ' + author + '\n';
+          }
+
+          if (amazon) {
+            text += '   amazon: ' + amazon + '\n';
+          }
+
+          if (bookshop) {
+            text += '   bookshop: ' + bookshop + '\n';
+          }
+
+          text += '\n';
+        });
+
+        copyGuideBookList(text).then(function() {
+          button.textContent = 'saved ✨';
+
+          window.setTimeout(function() {
+            button.textContent = 'save this list';
+          }, 2000);
+        }).catch(function() {});
+      });
+    });
+
+    function getBlogShelf(){
+      try {
+        return JSON.parse(localStorage.getItem('sssMyShelf')) || [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function setBlogShelf(data){
+      localStorage.setItem('sssMyShelf', JSON.stringify(data));
+      localStorage.setItem('sssShelf', JSON.stringify(data));
+      document.dispatchEvent(new CustomEvent('sss:bookshelf-updated', {
+        detail: { count: Array.isArray(data) ? data.length : 0 }
+      }));
+    }
+
+    function getBlogBookKey(card){
+      if (!card) return '';
+      return String(card.dataset.handle || card.dataset.title || '').trim().toLowerCase();
+    }
+
+    function buildBlogShelfBook(card){
+      if (!card) return null;
+      return {
+        handle: card.dataset.handle || '',
+        title: card.dataset.title || '',
+        author: card.dataset.author || '',
+        cover: card.dataset.cover || '',
+        amazon: card.dataset.amazon || '',
+        bookshop: card.dataset.bookshop || ''
+      };
+    }
+
+    function isBlogBookSaved(card){
+      var key = getBlogBookKey(card);
+      if (!key) return false;
+
+      return getBlogShelf().some(function(item){
+        var itemKey = String(item.handle || item.title || '').trim().toLowerCase();
+        return itemKey && itemKey === key;
+      });
+    }
+
+    function syncBlogBookHearts(){
+      document.querySelectorAll('[data-blog-heart]').forEach(function(heart){
+        var card = heart.closest('[data-book-preview]');
+        if (!card) return;
+
+        var isSaved = isBlogBookSaved(card);
+        heart.classList.toggle('is-saved', isSaved);
+        var icon = heart.querySelector('.article-book-card__heartIcon');
+        var label = heart.querySelector('.article-book-card__heartLabel');
+        if (icon) icon.textContent = isSaved ? '♥' : '♡';
+        if (label) label.textContent = isSaved ? 'saved' : 'save';
+        heart.setAttribute('aria-label', isSaved ? 'remove from your bookshelf' : 'save to your bookshelf');
+      });
+    }
+
+    document.querySelectorAll('[data-blog-heart]').forEach(function(heart){
+      if (heart.dataset.heartBound === 'true') return;
+      heart.dataset.heartBound = 'true';
+
+      heart.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+
+        var card = heart.closest('[data-book-preview]');
+        var book = buildBlogShelfBook(card);
+        if (!book || !book.title) return;
+
+        var shelf = getBlogShelf();
+        var key = getBlogBookKey(card);
+        var exists = shelf.some(function(item){
+          var itemKey = String(item.handle || item.title || '').trim().toLowerCase();
+          return itemKey && itemKey === key;
+        });
+
+        if (exists){
+          shelf = shelf.filter(function(item){
+            var itemKey = String(item.handle || item.title || '').trim().toLowerCase();
+            return itemKey !== key;
+          });
+        } else {
+          shelf.push(book);
+          document.dispatchEvent(new CustomEvent('bbb:shelf-saved', {
+            detail: {
+              count: shelf.length,
+              bookTitle: book.title || '',
+              bookHandle: book.handle || '',
+              source: document.body.dataset.template || 'blog'
+            }
+          }));
+        }
+
+        setBlogShelf(shelf);
+        syncBlogBookHearts();
+      });
+    });
+
+    syncBlogBookHearts();
+  })();
+
+</script>
+
+{% if has_pillar %}
+<div id="sssBackToTop" class="blog-pillar-backtop">
+  <button class="sss-lib__backTopBtn" type="button" aria-label="Back to top">↑</button>
+</div>
+
+<script>
+  (function() {
+    var backTopWrap = document.getElementById('sssBackToTop');
+    if (!backTopWrap || !backTopWrap.classList.contains('blog-pillar-backtop')) return;
+
+    var backTopBtn = backTopWrap.querySelector('.sss-lib__backTopBtn');
+
+    function updateBackTopVisibility() {
+      var scrollTop = window.scrollY || window.pageYOffset || 0;
+      var doc = document.documentElement;
+      var scrollableHeight = doc.scrollHeight - window.innerHeight;
+
+      if (scrollableHeight <= 0) {
+        backTopWrap.classList.remove('is-visible');
+        return;
+      }
+
+      backTopWrap.classList.toggle('is-visible', scrollTop >= 360 || (scrollTop / scrollableHeight) >= 0.16);
+    }
+
+    if (backTopBtn) {
+      backTopBtn.addEventListener('click', function() {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      });
+    }
+
+    window.addEventListener('scroll', updateBackTopVisibility, { passive: true });
+    window.addEventListener('resize', updateBackTopVisibility);
+    updateBackTopVisibility();
+  })();
+</script>
+{% endif %}
+
+<!-- BACK TO BLOG BUTTON -->
+  <div class="article-template__back element-margin-top center{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
+    <a href="{{ blog.url }}" class="article-template__link link animate-arrow">
+      <span class="icon-wrap">
+        <span class="svg-wrapper">
+          {{- 'icon-arrow.svg' | inline_asset_content -}}
+        </span>
+      </span>
+      return to the curated romance guides
+    </a>
+  </div>
+  {%- if blog.comments_enabled? -%}
+    <div class="article-template__comment-wrapper background-secondary">
+      <div
+        id="comments"
+        class="page-width page-width--narrow{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}"
+      >
+        {%- if article.comments_count > 0 -%}
+          {%- assign anchorId = '#Comments-' | append: article.id -%}
+
+          <h2 id="Comments-{{ article.id }}" tabindex="-1">
+            {{ 'blogs.article.comments' | t: count: article.comments_count }}
+          </h2>
+          {% paginate article.comments by 5 %}
+            <div class="article-template__comments">
+              {%- if comment.status == 'pending' and comment.content -%}
+                <article id="{{ comment.id }}" class="article-template__comments-comment">
+                  {{ comment.content }}
+                  <footer class="right">
+                    <span class="circle-divider caption-with-letter-spacing">{{ comment.author }}</span>
+                  </footer>
+                </article>
+              {%- endif -%}
+
+              {%- for comment in article.comments -%}
+                <article id="{{ comment.id }}" class="article-template__comments-comment">
+                  {{ comment.content }}
+                  <footer class="right">
+                    <span class="circle-divider caption-with-letter-spacing">{{ comment.author }}</span
+                    ><span class="caption-with-letter-spacing">
+                      {{- comment.created_at | time_tag: format: 'date' -}}
+                    </span>
+                  </footer>
+                </article>
+              {%- endfor -%}
+              {% render 'pagination', paginate: paginate, anchor: anchorId %}
+            </div>
+          {% endpaginate %}
+        {%- endif -%}
+        {% form 'new_comment', article %}
+          {%- liquid
+            assign post_message = 'blogs.article.success'
+            if blog.moderated? and comment.status == 'unapproved'
+              assign post_message = 'blogs.article.success_moderated'
+            endif
+          -%}
+          <h2>{{ 'blogs.article.comment_form_title' | t }}</h2>
+          {%- if form.errors -%}
+            <div class="form__message" role="alert">
+              <h3 class="form-status caption-large text-body" tabindex="-1" autofocus>
+                <span class="svg-wrapper">
+                  {{- 'icon-error.svg' | inline_asset_content -}}
+                </span>
+                {{ 'templates.contact.form.error_heading' | t }}
+              </h3>
+            </div>
+            <ul class="form-status-list caption-large">
+              {%- for field in form.errors -%}
+                <li>
+                  <a href="#CommentForm-{{ field }}" class="link">
+                    {%- if form.errors.translated_fields[field] contains 'author' -%}
+                      {{ 'blogs.article.name' | t }}
+                    {%- elsif form.errors.translated_fields[field] contains 'body' -%}
+                      {{ 'blogs.article.message' | t }}
+                    {%- else -%}
+                      {{ form.errors.translated_fields[field] }}
+                    {%- endif -%}
+                    {{ form.errors.messages[field] }}
+                  </a>
+                </li>
+              {%- endfor -%}
+            </ul>
+          {%- elsif form.posted_successfully? -%}
+            <div class="form-status-list form__message" role="status">
+              <h3 class="form-status" tabindex="-1" autofocus>
+                <span class="svg-wrapper">
+                  {{- 'icon-success.svg' | inline_asset_content -}}
+                </span>
+                {{ post_message | t }}
+              </h3>
+            </div>
+          {%- endif -%}
+
+          <div
+            {% if blog.moderated? == false %}
+              class="article-template__comments-fields"
+            {% endif %}
+          >
+            <div class="article-template__comment-fields">
+              <div class="field field--with-error">
+                <input
+                  type="text"
+                  name="comment[author]"
+                  id="CommentForm-author"
+                  class="field__input"
+                  autocomplete="name"
+                  value="{{ form.author }}"
+                  aria-required="true"
+                  required
+                  {% if form.errors contains 'author' %}
+                    aria-invalid="true"
+                    aria-describedby="CommentForm-author-error"
+                  {% endif %}
+                  placeholder="{{ 'blogs.article.name' | t }}"
+                >
+                <label class="field__label" for="CommentForm-author">
+                  {{- 'blogs.article.name' | t }}
+                  <span aria-hidden="true">*</span></label
+                >
+                {%- if form.errors contains 'author' -%}
+                  <small id="CommentForm-author-error">
+                    <span class="form__message">
+                      <span class="svg-wrapper">
+                        {{- 'icon-error.svg' | inline_asset_content -}}
+                      </span>
+                      {{- 'blogs.article.name' | t }}
+                      {{ form.errors.messages.author }}.</span
+                    >
+                  </small>
+                {%- endif -%}
+              </div>
+              <div class="field field--with-error">
+                <input
+                  type="email"
+                  name="comment[email]"
+                  id="CommentForm-email"
+                  autocomplete="email"
+                  class="field__input"
+                  value="{{ form.email }}"
+                  autocorrect="off"
+                  autocapitalize="off"
+                  aria-required="true"
+                  required
+                  {% if form.errors contains 'email' %}
+                    aria-invalid="true"
+                    aria-describedby="CommentForm-email-error"
+                  {% endif %}
+                  placeholder="{{ 'blogs.article.email' | t }}"
+                >
+                <label class="field__label" for="CommentForm-email">
+                  {{- 'blogs.article.email' | t }}
+                  <span aria-hidden="true">*</span></label
+                >
+                {%- if form.errors contains 'email' -%}
+                  <small id="CommentForm-email-error">
+                    <span class="form__message">
+                      <span class="svg-wrapper">
+                        {{- 'icon-error.svg' | inline_asset_content -}}
+                      </span>
+                      {{- 'blogs.article.email' | t }}
+                      {{ form.errors.messages.email }}.</span
+                    >
+                  </small>
+                {%- endif -%}
+              </div>
+            </div>
+            <div class="field field--with-error">
+              <textarea
+                rows="5"
+                name="comment[body]"
+                id="CommentForm-body"
+                class="text-area field__input"
+                aria-required="true"
+                required
+                {% if form.errors contains 'body' %}
+                  aria-invalid="true"
+                  aria-describedby="CommentForm-body-error"
+                {% endif %}
+                placeholder="{{ 'blogs.article.message' | t }}"
+              >{{ form.body }}</textarea>
+              <label class="form__label field__label" for="CommentForm-body">
+                {{- 'blogs.article.message' | t }}
+                <span aria-hidden="true">*</span></label
+              >
+            </div>
+            {%- if form.errors contains 'body' -%}
+              <small id="CommentForm-body-error">
+                <span class="form__message">
+                  <span class="svg-wrapper">
+                    {{- 'icon-error.svg' | inline_asset_content -}}
+                  </span>
+                  {{- 'blogs.article.message' | t }}
+                  {{ form.errors.messages.body }}.</span
+                >
+              </small>
+            {%- endif -%}
+          </div>
+          {%- if blog.moderated? -%}
+            <p class="article-template__comment-warning caption">{{ 'blogs.article.moderated' | t }}</p>
+          {%- endif -%}
+          <input type="submit" class="button" value="{{ 'blogs.article.post' | t }}">
+        {% endform %}
+      </div>
+    </div>
+  {%- endif -%}
+
+  <div id="bbbFloatingShare">
+
+  <button id="bbbSharePost" class="bbb-floatingShareBtn">
+    📲
+  </button>
+
+</div>
+<div id="bbbShelfPopup">
+
+  <div class="bbbShelfPopup__card">
+
+    <div class="bbbShelfPopup__text">
+      added to your reading list 🖤
+    </div>
+
+    <a href="/pages/library#sssMyShelfSection" class="bbbShelfPopup__btn">
+      take me to my list
+    </a>
+
+  </div>
+
+</div>
+
+{% render 'sss-library-modal',
+  modal_id: 'bbbBookPreview',
+  share_id: 'bbbPreviewShare',
+  close_id: 'bbbPreviewClose'
+%}
+</article>
+
+
+<script type="application/ld+json">
+  {{ article | structured_data }}
+</script>
+
+
+
+{{ 'blog-system.js' | asset_url | script_tag }}
+
+{% schema %}
+{
+  "name": "t:sections.main-article.name",
+  "tag": "section",
+  "class": "section",
+  "blocks": [
+    {
+      "type": "@app"
+    },
+    {
+      "type": "featured_image",
+      "name": "t:sections.main-article.blocks.featured_image.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "select",
+          "id": "image_height",
+          "options": [
+            {
+              "value": "adapt",
+              "label": "t:sections.main-article.blocks.featured_image.settings.image_height.options__1.label"
+            },
+            {
+              "value": "small",
+              "label": "t:sections.main-article.blocks.featured_image.settings.image_height.options__2.label"
+            },
+            {
+              "value": "medium",
+              "label": "t:sections.main-article.blocks.featured_image.settings.image_height.options__3.label"
+            },
+            {
+              "value": "large",
+              "label": "t:sections.main-article.blocks.featured_image.settings.image_height.options__4.label"
+            }
+          ],
+          "default": "adapt",
+          "label": "t:sections.main-article.blocks.featured_image.settings.image_height.label"
+        }
+      ]
+    },
+    {
+      "type": "title",
+      "name": "t:sections.main-article.blocks.title.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "blog_show_date",
+          "default": true,
+          "label": "t:sections.main-article.blocks.title.settings.blog_show_date.label"
+        },
+        {
+          "type": "checkbox",
+          "id": "blog_show_author",
+          "default": false,
+          "label": "t:sections.main-article.blocks.title.settings.blog_show_author.label"
+        }
+      ]
+    },
+    {
+      "type": "content",
+      "name": "t:sections.main-article.blocks.content.name",
+      "limit": 1
+    },
+    {
+      "type": "share",
+      "name": "t:sections.main-article.blocks.share.name",
+      "limit": 2,
+      "settings": [
+        {
+          "type": "text",
+          "id": "share_label",
+          "label": "t:sections.main-article.blocks.share.settings.text.label",
+          "default": "t:sections.main-article.blocks.share.settings.text.default"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

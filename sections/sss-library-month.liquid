@@ -1,0 +1,367 @@
+{% comment %}
+  sss-library-month.liquid (links-only)
+  - Same structure: hero + two column (left panels + right carousel) + tracker + members get it first
+  - Printable + Physical are simple links to collections/products (no file downloads, no variant add-to-cart)
+{% endcomment %}
+
+<style>
+  .sss-scope{
+    --bg:#0b0b0b; --card:#151515; --line:#2a2a2a; --ink:#f6f6f6; --muted:#c8c8c8;
+    background:var(--bg);
+    color:var(--ink);
+    padding:34px 18px;
+    font-family:"Libre Baskerville", Georgia, serif;
+    position:relative;
+    overflow:hidden;
+  }
+  .sss-scope a{ color:inherit; text-decoration:none; }
+  .sss-scope:before{
+    content:"";
+    position:absolute; inset:-40px;
+    pointer-events:none;
+    background:
+      radial-gradient(900px 520px at 50% 120px, rgba(255,255,255,.08), transparent 70%),
+      linear-gradient(rgba(255,255,255,.06), rgba(255,255,255,0) 40%),
+      repeating-linear-gradient(to bottom,
+        rgba(255,255,255,.035),
+        rgba(255,255,255,.035) 1px,
+        transparent 1px,
+        transparent 26px
+      );
+    opacity:.55;
+  }
+
+  .sss-fullbleed{ width:100vw; margin-left:calc(50% - 50vw); margin-right:calc(50% - 50vw); }
+  .sss-wrap{ max-width:1600px; margin:0 auto; position:relative; z-index:1; padding:0 12px; }
+  @media (min-width:1100px){ .sss-wrap{ padding:0 24px; } }
+
+  .sss-hero{ text-align:center; padding:8px 0 18px; }
+  .sss-hero h1{ margin:0; font-weight:400; font-size:32px; letter-spacing:.02em; }
+  .sss-hero p{ margin:8px 0 0; opacity:.82; text-transform:lowercase; }
+
+  .sss-kicker{
+    margin:22px 0 10px;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--muted);
+  }
+
+  .sss-two-col{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:18px;
+    align-items:start;
+  }
+  @media(min-width:1100px){
+    .sss-two-col{ grid-template-columns: 1.05fr .95fr; }
+  }
+
+  .sss-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:18px;
+    box-shadow:0 10px 24px rgba(0,0,0,.40);
+    overflow:hidden;
+  }
+  .sss-card .head{
+    padding:14px 14px 10px;
+    border-bottom:1px solid var(--line);
+    background:rgba(255,255,255,.03);
+  }
+  .sss-card .head h2{
+    margin:0;
+    font-size:18px;
+    font-weight:400;
+    text-transform:lowercase;
+  }
+  .sss-card .body{ padding:14px; }
+
+  .sss-split{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:14px;
+  }
+  @media(min-width:780px){
+    .sss-split{ grid-template-columns:1fr 1fr; }
+  }
+
+  .sss-panel{
+    border:1px solid var(--line);
+    border-radius:16px;
+    background:rgba(255,255,255,.02);
+    overflow:hidden;
+  }
+  .sss-panel-top{
+    padding:10px 12px;
+    border-bottom:1px solid var(--line);
+    background:rgba(255,255,255,.03);
+    display:flex;
+    justify-content:center;
+  }
+  .sss-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-size:12px;
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.06);
+    color:var(--muted);
+    text-transform:lowercase;
+  }
+
+  .sss-thumb{
+    width:100%;
+    max-height:360px;
+    height:auto;
+    object-fit:contain;
+    background:#0f0f0f;
+    border-radius:14px;
+    border:1px solid var(--line);
+    padding:10px;
+    box-sizing:border-box;
+    display:block;
+    margin:12px auto 10px;
+  }
+
+  .sss-note{
+    margin:0 0 10px;
+    font-size:12px;
+    color:#9e9e9e;
+    text-align:center;
+    font-style:italic;
+  }
+
+  .sss-btns{ display:grid; gap:10px; margin-top:10px; }
+  .sss-btn{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.06);
+    color:var(--ink);
+    font-size:13px;
+  }
+  .sss-btn:hover{ background:rgba(255,255,255,.10); border-color:#5a5a5a; }
+
+  /* Carousel */
+  .sss-carousel{
+    overflow-x:auto;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    border-radius:18px;
+  }
+  .sss-track{
+    display:flex;
+    gap:14px;
+    padding:2px 2px 14px;
+  }
+  .sss-slide{
+    flex:0 0 92%;
+    scroll-snap-align:start;
+  }
+  @media(min-width:900px){
+    .sss-slide{ flex-basis: 78%; }
+  }
+  .sss-swipe-hint{
+    margin-top:8px;
+    text-align:center;
+    font-size:12px;
+    color:var(--muted);
+    opacity:.9;
+  }
+
+  /* Bottom "missed last month" */
+  .sss-archive-card{
+    background:rgba(21,21,21,.9);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:16px;
+    box-shadow:0 10px 28px rgba(0,0,0,.45);
+    margin-top:28px;
+  }
+  .sss-archive-card h3{
+    margin:0 0 6px;
+    font-size:18px;
+    font-weight:400;
+    text-transform:lowercase;
+  }
+  .sss-archive-helper{
+    margin:0 0 12px;
+    font-size:13px;
+    opacity:.85;
+    line-height:1.5;
+    color:var(--muted);
+  }
+  .sss-archive-link{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.05);
+    font-size:13.5px;
+  }
+</style>
+
+<div class="sss-fullbleed">
+  <div class="sss-scope">
+    <div class="sss-wrap">
+
+      <div class="sss-hero">
+        <h1>{{ section.settings.hero_title }}</h1>
+        <p>{{ section.settings.hero_subtitle }}</p>
+      </div>
+
+      <div class="sss-two-col">
+
+        <!-- LEFT: MEMBERSHIP EXCLUSIVE (links only) -->
+        <div>
+          <div class="sss-kicker">{{ section.settings.left_kicker }}</div>
+
+          {% for block in section.blocks %}
+            {% if block.type == 'slide' %}
+              <div class="sss-card" style="margin-bottom:16px;" {{ block.shopify_attributes }}>
+                <div class="head"><h2>{{ block.settings.title }}</h2></div>
+                <div class="body">
+                  <div class="sss-split">
+
+                    <!-- PRINTABLE -->
+                    <div class="sss-panel">
+                      <div class="sss-panel-top"><span class="sss-pill">🖨️ printable</span></div>
+                      {% if block.settings.printable_image != blank %}
+                        {{ block.settings.printable_image | image_url: width: 1200 | image_tag: class: 'sss-thumb', loading: 'lazy' }}
+                      {% endif %}
+                      <p class="sss-note">{{ block.settings.printable_note }}</p>
+                      <div class="sss-btns">
+                        {% if block.settings.printable_url != blank %}
+                          <a class="sss-btn" href="{{ block.settings.printable_url }}">{{ block.settings.printable_btn }}</a>
+                        {% else %}
+                          <div class="sss-btn" style="opacity:.6;">add printable link</div>
+                        {% endif %}
+                      </div>
+                    </div>
+
+                    <!-- PHYSICAL -->
+                    <div class="sss-panel">
+                      <div class="sss-panel-top"><span class="sss-pill">📬 physical</span></div>
+                      {% if block.settings.physical_image != blank %}
+                        {{ block.settings.physical_image | image_url: width: 1200 | image_tag: class: 'sss-thumb', loading: 'lazy' }}
+                      {% endif %}
+                      <p class="sss-note">{{ block.settings.physical_note }}</p>
+                      <div class="sss-btns">
+                        {% if block.settings.physical_url != blank %}
+                          <a class="sss-btn" href="{{ block.settings.physical_url }}">{{ block.settings.physical_btn }}</a>
+                        {% else %}
+                          <div class="sss-btn" style="opacity:.6;">add physical link</div>
+                        {% endif %}
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+
+        <!-- RIGHT: CAROUSEL (previews only) -->
+        <div>
+          <div class="sss-kicker">{{ section.settings.right_kicker }}</div>
+
+          <div class="sss-carousel" aria-label="Collection carousel">
+            <div class="sss-track">
+              {% for block in section.blocks %}
+                {% if block.type == 'slide' %}
+                  <div class="sss-slide" {{ block.shopify_attributes }}>
+                    <article class="sss-card">
+                      <div class="head"><h2>{{ block.settings.title }}</h2></div>
+                      <div class="body">
+                        <div class="sss-split">
+                          <div class="sss-panel">
+                            <div class="sss-panel-top"><span class="sss-pill">preview</span></div>
+                            {% if block.settings.printable_image != blank %}
+                              {{ block.settings.printable_image | image_url: width: 1200 | image_tag: class: 'sss-thumb', loading: 'lazy' }}
+                            {% endif %}
+                            <p class="sss-note">printable</p>
+                          </div>
+                          <div class="sss-panel">
+                            <div class="sss-panel-top"><span class="sss-pill">preview</span></div>
+                            {% if block.settings.physical_image != blank %}
+                              {{ block.settings.physical_image | image_url: width: 1200 | image_tag: class: 'sss-thumb', loading: 'lazy' }}
+                            {% endif %}
+                            <p class="sss-note">physical</p>
+                          </div>
+                        </div>
+                      </div>
+                    </article>
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="sss-swipe-hint">← swipe me →</div>
+        </div>
+
+      </div>
+
+      <!-- MISSED LAST MONTH (BOTTOM) -->
+      <div class="sss-archive-card">
+        <h3>{{ section.settings.last_month_title }}</h3>
+        <p class="sss-archive-helper">{{ section.settings.last_month_helper }}</p>
+        {% if section.settings.last_month_url != blank %}
+          <a class="sss-archive-link" href="{{ section.settings.last_month_url }}">{{ section.settings.last_month_link_text }}</a>
+        {% else %}
+          <div class="sss-archive-link" style="opacity:.6;">add last month link</div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "sss monthly library",
+  "settings": [
+    { "type": "text", "id": "hero_title", "label": "hero title", "default": "vol. iii — revival" },
+    { "type": "text", "id": "hero_subtitle", "label": "hero subtitle", "default": "members-only" },
+
+    { "type": "text", "id": "left_kicker", "label": "left kicker", "default": "membership exclusive" },
+    { "type": "text", "id": "right_kicker", "label": "right kicker", "default": "the collection" },
+
+    { "type": "text", "id": "last_month_title", "label": "missed last month title", "default": "missed last month?" },
+    { "type": "text", "id": "last_month_helper", "label": "missed last month helper", "default": "last month’s drop is filed right here." },
+    { "type": "url", "id": "last_month_url", "label": "last month url" },
+    { "type": "text", "id": "last_month_link_text", "label": "last month link text", "default": "open last month ↗" }
+  ],
+  "blocks": [
+    {
+      "type": "slide",
+      "name": "collection slide",
+      "settings": [
+        { "type": "text", "id": "title", "label": "title", "default": "january insert" },
+
+        { "type": "image_picker", "id": "printable_image", "label": "printable preview image" },
+        { "type": "text", "id": "printable_note", "label": "printable note", "default": "included in membership" },
+        { "type": "url", "id": "printable_url", "label": "printable link (collection/product)" },
+        { "type": "text", "id": "printable_btn", "label": "printable button text", "default": "shop printable ↗" },
+
+        { "type": "image_picker", "id": "physical_image", "label": "physical preview image" },
+        { "type": "text", "id": "physical_note", "label": "physical note", "default": "purchase me" },
+        { "type": "url", "id": "physical_url", "label": "physical link (collection/product)" },
+        { "type": "text", "id": "physical_btn", "label": "physical button text", "default": "shop physical ↗" }
+      ]
+    }
+  ],
+  "presets": [
+    { "name": "sss monthly library" }
+  ]
+}
+{% endschema %}

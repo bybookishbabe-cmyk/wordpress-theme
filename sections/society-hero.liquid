@@ -1,0 +1,502 @@
+{% comment %}
+  Section: newsletter cta
+  - Pulls latest newsletter_issue metaobject by publish_date
+  - Shows title, subtitle, preview image, NEW badge
+  - Pinterest-coded two-box layout + slow falling emoji background
+{% endcomment %}
+
+{%- assign issues = shop.metaobjects.newsletter_issue.values -%}
+
+{%- assign now_ts = "now" | date: "%s" | plus: 0 -%}
+{%- assign latest_issue = nil -%}
+{%- assign latest_ts = 0 -%}
+
+{%- for issue in issues -%}
+  {%- if issue.publish_date.value != blank -%}
+    {%- assign ts = issue.publish_date.value | date: "%s" | plus: 0 -%}
+    {%- assign live_ts = ts | plus: 36000 -%}
+    {%- if live_ts <= now_ts and ts > latest_ts -%}
+      {%- assign latest_ts = ts -%}
+      {%- assign latest_issue = issue -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{%- assign latest_url = "" -%}
+{%- if latest_issue != nil and latest_issue.url.value != blank -%}
+  {%- capture clean_url -%}{{ latest_issue.url.value }}{%- endcapture -%}
+  {%- assign latest_url = clean_url | strip -%}
+{%- endif -%}
+
+
+{%- assign latest_img = "" -%}
+{%- if latest_issue != nil and latest_issue.preview.value != blank -%}
+  {%- if latest_issue.preview.value.url != blank -%}
+    {%- assign latest_img = latest_issue.preview.value.url -%}
+  {%- elsif latest_issue.preview.value.preview_image != blank -%}
+    {%- assign latest_img = latest_issue.preview.value.preview_image | image_url: width: 900 -%}
+  {%- else -%}
+    {%- assign latest_img = latest_issue.preview.value | image_url: width: 900 -%}
+  {%- endif -%}
+{%- endif -%}
+
+{%- assign is_new = false -%}
+{%- if latest_issue != nil and latest_issue.publish_date.value != blank -%}
+  {%- assign latest_live_ts = latest_ts | plus: 36000 -%}
+  {%- assign diff = now_ts | minus: latest_live_ts -%}
+  {%- if diff < 604800 -%}{% comment %}7 days{% endcomment %}
+    {%- assign is_new = true -%}
+  {%- endif -%}
+{%- endif -%}
+
+<section class="bbb-newsletter-cta" id="bbb-newsletter-cta-{{ section.id }}">
+  <div class="bbb-newsletter-cta__rain" aria-hidden="true"></div>
+
+  <div class="bbb-newsletter-cta__wrap page-width">
+
+    <header class="bbb-newsletter-cta__head">
+      <p class="bbb-newsletter-cta__kicker">{{ section.settings.kicker }}</p>
+      <h2 class="bbb-newsletter-cta__title">{{ section.settings.title }}</h2>
+      <p class="bbb-newsletter-cta__sub">{{ section.settings.subtitle }}</p>
+    </header>
+
+    <div class="bbb-newsletter-cta__grid">
+
+      <!-- LEFT: latest edition -->
+      <article class="bbb-nc bbb-nc--latest">
+        {% if latest_issue != nil %}
+          <a
+            class="bbb-nc__latestLink"
+            href="{{ latest_issue.url.value.url | default: latest_issue.url.value }}"
+            target="_blank"
+            rel="noopener"
+          >
+          <div class="bbb-nc__latest">
+            <div class="bbb-nc__copy">
+              <div class="bbb-nc__meta">
+                <span>
+                  {% if latest_issue.publish_date.value != blank %}
+                    {{ latest_issue.publish_date.value | date: "%b %e, %Y" }}
+                  {% endif %}
+                </span>
+                <span>
+                  {% if latest_issue.issue_no.value != blank %}
+                    issue {{ latest_issue.issue_no.value }}
+                  {% endif %}
+                </span>
+              </div>
+
+              <div class="bbb-nc__top">
+                {% if latest_issue.label.value != blank %}
+                  <p class="bbb-nc__kicker">{{ latest_issue.label.value }}</p>
+                {% else %}
+                  <p class="bbb-nc__kicker">latest edition ✦</p>
+                {% endif %}
+
+                {% if is_new %}
+                  <span class="bbb-nc__badge" aria-label="New">new</span>
+                {% endif %}
+              </div>
+
+              <div class="bbb-nc__rule"></div>
+
+              <h3 class="bbb-nc__title">
+                {{ latest_issue.title.value }}
+              </h3>
+
+              {% if latest_issue.subtitle.value != blank %}
+                <p class="bbb-nc__desc">
+                  {{ latest_issue.subtitle.value }}
+                </p>
+              {% else %}
+                <p class="bbb-nc__desc">
+                  one book a week. quotes, recs, and reader-core chaos.
+                </p>
+              {% endif %}
+
+              {% if latest_img != blank %}
+                <div class="bbb-nc__img">
+                  <img
+                    src="{{ latest_img }}"
+                    alt="{{ latest_issue.title.value | escape }}"
+                    loading="lazy"
+                  >
+                </div>
+              {% endif %}
+
+              <div class="bbb-nc__link bbb-nc__link--primary">
+                read the latest newsletter →
+              </div>
+
+
+            </div>
+          </div>
+          </a>
+        {% else %}
+          <p class="bbb-nc__desc">no newsletter issues found yet — add one under Content → Metaobjects → newsletter_issue.</p>
+        {% endif %}
+      </article>
+
+      <!-- RIGHT: society -->
+      <article class="bbb-nc bbb-nc--society">
+        <a class="bbb-nc__societyLink" href="{{ section.settings.society_url }}">
+          <div class="bbb-nc__societyInner">
+            <p class="bbb-nc__kicker">the society ♡</p>
+            <h3 class="bbb-nc__title">{{ section.settings.society_title }}</h3>
+            <p class="bbb-nc__desc">{{ section.settings.society_text }}</p>
+
+            <div class="bbb-nc__link">
+              learn more →
+            </div>
+
+            <p class="bbb-nc__fineprint">🖤 includes the archive, reading lists, and fictional-men problems (organized).</p>
+          </div>
+        </a>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<style>
+  .bbb-newsletter-cta{
+    position: relative;
+    overflow: hidden;
+    padding: clamp(44px, 6vw, 92px) 0;
+    background: #0b0b0b;
+    color: #f6f6f6;
+  }
+
+  .bbb-newsletter-cta__wrap{ position: relative; z-index: 2; }
+
+  /* header */
+  .bbb-newsletter-cta__head{
+    max-width: 980px;
+    margin: 0 auto 22px;
+  }
+  .bbb-newsletter-cta__kicker{
+    margin: 0 0 10px;
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    opacity: .7;
+  }
+  .bbb-newsletter-cta__title{
+    margin: 0;
+    font-size: clamp(30px, 4.2vw, 52px);
+    line-height: 1.02;
+    font-weight: 400;
+    text-transform: lowercase;
+  }
+  .bbb-newsletter-cta__sub{
+    margin: 10px 0 0;
+    max-width: 70ch;
+    font-size: 14px;
+    line-height: 1.65;
+    color: rgba(246,246,246,.72);
+    text-transform: lowercase;
+  }
+
+  /* grid */
+  .bbb-newsletter-cta__grid{
+    max-width: 980px;
+    margin: 26px auto 0;
+    display: grid;
+    grid-template-columns: 1.15fr .85fr;
+    gap: 0;
+    align-items: stretch;
+  }
+
+  /* cards */
+  .bbb-nc{
+    position: relative;
+    border-radius: 0;
+    border: 1px solid rgba(255,255,255,.14);
+    background: rgba(255,255,255,.04);
+    box-shadow: 0 18px 46px rgba(0,0,0,.38);
+    overflow: hidden;
+  }
+
+  .bbb-nc__latestLink{
+    display:block;
+    height:100%;
+    color:inherit;
+    text-decoration:none;
+  }
+  .bbb-nc__societyLink{
+    display:flex;
+    height:100%;
+    color:inherit;
+    text-decoration:none;
+  }
+
+  .bbb-nc:before{
+    content:"";
+    position:absolute;
+    inset: -2px -2px auto -2px;
+    height: 46px;
+    background: linear-gradient(180deg, rgba(255,255,255,.05), transparent);
+    pointer-events:none;
+  }
+
+  .bbb-nc__top{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .bbb-nc__meta{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    align-items:flex-end;
+    font-size:10px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:rgba(246,246,246,.58);
+  }
+
+  .bbb-nc__kicker{
+    margin: 0;
+    font-size: 10px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: rgba(246,246,246,.70);
+  }
+
+  .bbb-nc__badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 10px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #111;
+    background: rgba(255,255,255,.92);
+  }
+
+  .bbb-nc__rule{
+    height:1px;
+    background:rgba(255,255,255,.10);
+    margin:12px 0;
+  }
+
+  /* latest layout */
+  .bbb-nc__latest{
+    padding: 14px;
+    display:block;
+  }
+
+  .bbb-nc__img{
+    width: min(100%, 220px);
+    margin-top:12px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,.16);
+    overflow: hidden;
+    background: rgba(255,255,255,.02);
+  }
+  .bbb-nc__img img{
+    width:100%;
+    height:auto;
+    aspect-ratio: 4/5;
+    object-fit: cover;
+    display:block;
+    transform: scale(1.01);
+  }
+
+  .bbb-nc__title{
+    margin: 0;
+    font-size: 17px;
+    line-height: 1.18;
+    font-weight: 400;
+    text-transform: lowercase;
+    color: #fff;
+  }
+
+  .bbb-nc__desc{
+    margin: 8px 0 0;
+    font-size: 12px;
+    line-height: 1.55;
+    color: rgba(246,246,246,.76);
+    text-transform: lowercase;
+  }
+
+  .bbb-nc__link{
+    display:inline-block;
+    margin-top: 12px;
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: #ff8ac7;
+    border-bottom: 1px solid rgba(255,138,199,.75);
+    padding-bottom: 2px;
+  }
+
+  .bbb-nc__link--primary{
+    color: #ff8ac7;
+    border-bottom-color: #ff8ac7;
+  }
+
+  .bbb-nc__fineprint{
+    margin: 14px 18px 18px;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: rgba(246,246,246,.60);
+    text-transform: lowercase;
+  }
+
+  /* society card spacing */
+  .bbb-nc--society{
+    padding: 0;
+    border-top-right-radius: 22px;
+    border-bottom-right-radius: 22px;
+  }
+  .bbb-nc__societyInner{
+    padding: 18px;
+    display:flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height:100%;
+  }
+  .bbb-nc--society .bbb-nc__title{ font-size: 22px; }
+  .bbb-nc--society .bbb-nc__fineprint{ margin: 14px 0 0; padding: 0; }
+
+  /* emoji rain */
+  .bbb-newsletter-cta__rain{
+    position:absolute;
+    inset:0;
+    z-index: 1;
+    pointer-events:none;
+    overflow:hidden;
+  }
+  .bbb-rain-emoji{
+    position:absolute;
+    top:-40px;
+    opacity:.22;
+    filter: blur(.0px) drop-shadow(0 10px 24px rgba(0,0,0,.35));
+    animation: bbb-fall var(--dur, 22s) linear infinite;
+    transform: translateY(-40px);
+    font-size: var(--size, 20px);
+  }
+  @keyframes bbb-fall{
+    to{
+      transform:
+        translateY(120vh)
+        translateX(var(--drift, 0px))
+        rotate(var(--rot, 0deg));
+    }
+  }
+  .bbb-nc--latest{
+    max-width: none;
+    justify-self: stretch;
+    border-top-left-radius: 22px;
+    border-bottom-left-radius: 22px;
+    border-right-width: 0;
+  }
+
+  /* responsive */
+  @media (max-width: 860px){
+    .bbb-newsletter-cta__grid{ grid-template-columns: 1fr; }
+    .bbb-nc--latest{
+      border-radius: 22px 22px 0 0;
+      border-right-width: 1px;
+      border-bottom-width: 0;
+    }
+    .bbb-nc--society{
+      border-radius: 0 0 22px 22px;
+    }
+    .bbb-nc__img{
+      width:min(100%, 260px);
+    }
+  }
+</style>
+
+<script>
+  (function(){
+    const section = document.getElementById('bbb-newsletter-cta-{{ section.id }}');
+    if(!section) return;
+
+    const rain = section.querySelector('.bbb-newsletter-cta__rain');
+    if(!rain) return;
+
+    // More / slower / constant
+    const EMOJIS = ['📚','🖤','🤍','📖','✨'];
+    const COUNT = 26;
+
+    // avoid duplicating in theme editor re-renders
+    rain.innerHTML = '';
+
+    for(let i=0;i<COUNT;i++){
+      const el = document.createElement('span');
+      el.className = 'bbb-rain-emoji';
+      el.textContent = EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
+
+      const left = Math.random() * 100;
+      const size = 14 + Math.random() * 18;           // 14–32px
+      const dur = 18 + Math.random() * 22;            // 18–40s (slow)
+      const delay = Math.random() * dur * -1;         // stagger so it’s already “falling”
+      const drift = (Math.random() * 120 - 60);       // -60..60px
+      const rot = (Math.random() * 140 - 70) + 'deg'; // -70..70deg
+
+      el.style.left = left + '%';
+      el.style.setProperty('--size', size + 'px');
+      el.style.setProperty('--dur', dur + 's');
+      el.style.setProperty('--drift', drift + 'px');
+      el.style.setProperty('--rot', rot);
+      el.style.animationDelay = delay + 's';
+
+      rain.appendChild(el);
+    }
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "newsletter cta",
+  "settings": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Kicker",
+      "default": "for the bookaholics who love romance"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "the smut & sentiment society"
+    },
+    {
+      "type": "text",
+      "id": "subtitle",
+      "label": "Subtitle",
+      "default": "weekly letters, obsessive recs, and reader-core you pretend you’re not addicted to."
+    },
+    {
+      "type": "text",
+      "id": "society_title",
+      "label": "Society box title",
+      "default": "inside the society"
+    },
+    {
+      "type": "textarea",
+      "id": "society_text",
+      "label": "Society box text",
+      "default": "the archive. reading lists. the fictional men problem. a tasteful amount of chaos."
+    },
+    {
+      "type": "text",
+      "id": "society_url",
+      "label": "Society page URL",
+      "default": "/pages/smut-sentiment-society"
+    }
+  ],
+  "presets": [
+    { "name": "newsletter cta" }
+  ]
+}
+{% endschema %}

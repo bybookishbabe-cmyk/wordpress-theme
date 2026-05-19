@@ -1,0 +1,2474 @@
+<div id="fictional-boyfriend-quiz"></div>
+
+{% comment %}
+Fictional Boyfriend Quiz (bybookishbabe)
+- 5 questions + dramatic reveal
+- "what you should read next" uses library tile markup
+- visible retailer links (amazon pink) + optional modal on tile click
+{% endcomment %}
+
+<section class="bbb-quiz" id="bbb-quiz-{{ section.id }}" data-bbb-quiz>
+  <div class="bbb-quiz__topbar" aria-label="quiz navigation">
+    <a class="bbb-quiz__back" href="/pages/reader-quizes">back to all quizzes</a>
+    <button class="bbb-quiz__again" type="button" data-quiz-again>retake quiz</button>
+  </div>
+
+  {% if section.settings.title != blank %}
+    <header class="bbb-quiz__head">
+      <p class="bbb-quiz__kicker">{{ section.settings.kicker }}</p>
+      <h2 class="bbb-quiz__title">{{ section.settings.title }}</h2>
+      {% if section.settings.subtext != blank %}
+        <p class="bbb-quiz__sub">{{ section.settings.subtext }}</p>
+      {% endif %}
+      <button class="bbb-quiz__cta" type="button" data-quiz-begin>{{ section.settings.cta_label | default: 'meet him' }}</button>
+      {% if section.settings.tagline != blank %}
+        <p class="bbb-quiz__tagline">{{ section.settings.tagline }}</p>
+      {% endif %}
+    </header>
+  {% endif %}
+
+  <div class="quiz-track" id="quizTrack-{{ section.id }}" data-quiz-track>
+
+  <!-- Q1 -->
+<div class="quiz-slide">
+  <h2>pick the line that would absolutely ruin you.</h2>
+  <div class="quiz-answers">
+
+    <button class="quiz-answer"
+      data-type="morally gray villain"
+      data-trope="power, control">
+      you don’t belong to the world. you belong to me.
+    </button>
+
+    <button class="quiz-answer"
+      data-type="obsessive protector"
+      data-trope="devotion, angst">
+      i would burn for you. happily.
+    </button>
+
+    <button class="quiz-answer"
+      data-type="academic rival"
+      data-trope="tension, rivalry">
+      try to beat me. i dare you.
+    </button>
+
+  </div>
+</div>
+
+  <!-- Q2 -->
+<div class="quiz-slide">
+  <h2>your weakness is…</h2>
+  <div class="quiz-answers">
+
+    <button class="quiz-answer"
+      data-type="athlete with heart"
+      data-trope="sports, soft devotion">
+      protective, competitive, secretly soft.
+    </button>
+
+    <button class="quiz-answer"
+      data-type="mafia boss"
+      data-trope="crime, dominance">
+      calm power. everyone else is afraid of him.
+    </button>
+
+    <button class="quiz-answer"
+      data-type="tortured prince"
+      data-trope="royalty, angst">
+      duty-bound, emotionally repressed, tragic.
+    </button>
+
+  </div>
+</div>
+
+  <!-- Q3 -->
+<div class="quiz-slide">
+  <h2>you always fall for…</h2>
+  <div class="quiz-answers">
+
+    <button class="quiz-answer"
+      data-type="obsessed stalker"
+      data-trope="dark, obsession">
+      the one who watches from the shadows.
+    </button>
+
+    <button class="quiz-answer"
+      data-type="morally gray villain"
+      data-trope="enemies, tension">
+      the villain who chooses her.
+    </button>
+
+    <button class="quiz-answer"
+      data-type="academic rival"
+      data-trope="enemies to lovers">
+      the one who argues with you in public and ruins you in private.
+    </button>
+
+  </div>
+</div>
+
+  <!-- Q4 -->
+<div class="quiz-slide">
+  <h2>your ideal dynamic is…</h2>
+  <div class="quiz-answers">
+
+    <button class="quiz-answer"
+      data-type="athlete with heart"
+      data-trope="loyalty, softness">
+      touch her and you die energy.
+    </button>
+
+    <button class="quiz-answer"
+      data-type="mafia boss"
+      data-trope="danger, control">
+      public indifference. private obsession.
+    </button>
+
+    <button class="quiz-answer"
+      data-type="tortured prince"
+      data-trope="slow burn, royalty">
+      longing that almost destroys him.
+    </button>
+
+  </div>
+</div>
+
+  <!-- Q5 -->
+<div class="quiz-slide">
+  <h2>your perfect scene is…</h2>
+  <div class="quiz-answers">
+
+    <button class="quiz-answer"
+      data-type="obsessive protector"
+      data-trope="intensity, devotion">
+      he looks at you like you’re oxygen.
+    </button>
+
+    <button class="quiz-answer"
+      data-type="mafia boss"
+      data-trope="power, dominance">
+      he speaks softly. everyone listens.
+    </button>
+
+    <button class="quiz-answer"
+      data-type="tortured prince"
+      data-trope="yearning, fate">
+      he wants you. he just won’t admit it.
+    </button>
+
+  </div>
+</div>
+
+    <!-- RESULT -->
+    <div class="quiz-slide quiz-result">
+      <div id="quizResult-{{ section.id }}"></div>
+      <div class="sss-emoji-layer" data-emoji-layer aria-hidden="true"></div>
+
+  
+
+
+
+    </div>
+
+  </div>
+</section>
+
+{%- comment -%} Hidden pool of real library cards {%- endcomment -%}
+
+{% render 'sss-library-modal' %}
+
+{%- comment -%} -------- BUILD BOOK POOLS FROM METAOBJECTS -------- {%- endcomment -%}
+<script type="application/json" id="quiz-books-{{ section.id }}">
+{
+  {% assign all = shop.metaobjects.sss_library.values %}
+
+  {% assign types = all | map: "boyfriend_type" | uniq %}
+
+  {% for type in types %}
+    {% assign type_string = type.value | downcase | strip %}
+
+    "{{ type_string }}": [
+      {% assign first = true %}
+      {% for book in all %}
+        {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+        {% assign is_visible_value = is_visible | strip %}
+        {% unless is_visible_value == 'true' %}
+          {% continue %}
+        {% endunless %}
+        {% if book.boyfriend_type.value == type.value %}
+          {% unless first %},{% endunless %}
+          {
+            "title": {{ book.title.value | json }},
+            "handle": {{ book.system.handle | json }},
+            "author": {{ book.author.value | json }},
+            "cover": {{ book.cover.value.url | default: book.cover.value | json }},
+            "spice": {{ book.spice_level.value | json }},
+            "tropes": {{ book.tropes.value | json }},
+            "tropes_display": {{ book.tropes.value | map: 'name' | join: ', ' | json }},
+            "mini": {{ book.mini_note.value | json }},
+            "amazon": {{ book.amazon_link.value.url | json }},
+            "bookshop": {{ book.bookshop_link.value.url | json }},
+            "boyfriend_name": {{ book.boyfriend_name.value | json }},
+            "boyfriend_type": {{ book.boyfriend_type.value | json }}
+          }
+          {% assign first = false %}
+        {% endif %}
+      {% endfor %}
+    ]{% unless forloop.last %},{% endunless %}
+  {% endfor %}
+}
+</script>
+
+<style>
+  /* header */
+  #bbb-quiz-{{ section.id }} .bbb-quiz__head{
+    padding: 0 24px 22px;
+    margin: 0 auto 18px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: opacity .28s ease, transform .28s ease, max-height .28s ease, margin .28s ease, padding .28s ease;
+  }
+
+  #bbb-quiz-{{ section.id }}.is-showing-result .bbb-quiz__head{
+    max-height:0;
+    margin:0;
+    padding-top:0;
+    padding-bottom:0;
+    opacity:0;
+    transform:translateY(-10px);
+    pointer-events:none;
+    overflow:hidden;
+  }
+  #bbb-quiz-{{ section.id }} .bbb-quiz__kicker{
+    margin:0;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    opacity:.62;
+  }
+  #bbb-quiz-{{ section.id }} .bbb-quiz__title{
+    margin:10px 0 0;
+    font-size:30px;
+    font-weight:400;
+    text-transform:lowercase;
+    letter-spacing:-.02em;
+  }
+  #bbb-quiz-{{ section.id }} .bbb-quiz__sub{
+    margin:10px 0 0;
+    font-size:13px;
+    color:rgba(246,246,246,.72);
+    line-height:1.6;
+    max-width:70ch;
+  }
+
+  /* intro CTA + tagline */
+  #bbb-quiz-{{ section.id }} .bbb-quiz__cta{
+    position:relative;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:100%;
+    max-width:440px;
+    min-height:60px;
+    margin-top:32px;
+    border-radius:18px;
+    border:1px solid #ff8ac7;
+    background:#ff8ac7;
+    color:#0b0b0b;
+    font-size:17px;
+    font-family:"Libre Baskerville",Georgia,serif;
+    cursor:pointer;
+    transition:transform .18s ease, filter .18s ease, box-shadow .18s ease;
+    letter-spacing:.01em;
+    box-shadow:0 14px 30px rgba(255,138,199,.18);
+    overflow:hidden;
+  }
+  #bbb-quiz-{{ section.id }} .bbb-quiz__cta:before{
+    content:"";
+    position:absolute;
+    top:-45%;
+    bottom:-45%;
+    left:-42%;
+    width:36%;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,.5), transparent);
+    transform:skewX(-18deg) translateX(-120%);
+    transition:transform .68s ease;
+    pointer-events:none;
+  }
+  #bbb-quiz-{{ section.id }} .bbb-quiz__cta:after{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:inherit;
+    box-shadow:inset 0 0 0 0 rgba(255,255,255,.26);
+    transition:box-shadow .18s ease;
+    pointer-events:none;
+  }
+  #bbb-quiz-{{ section.id }} .bbb-quiz__cta:hover{
+    transform:translateY(-2px);
+    filter:brightness(1.04);
+    box-shadow:0 18px 36px rgba(255,138,199,.26);
+  }
+  #bbb-quiz-{{ section.id }} .bbb-quiz__cta:hover:before{
+    transform:skewX(-18deg) translateX(520%);
+  }
+  #bbb-quiz-{{ section.id }} .bbb-quiz__cta:hover:after{
+    box-shadow:inset 0 0 0 2px rgba(255,255,255,.22);
+  }
+  #bbb-quiz-{{ section.id }} .bbb-quiz__tagline{
+    margin:14px 0 0;
+    font-size:12px;
+    opacity:.45;
+    letter-spacing:.05em;
+  }
+
+  /* hide quiz until 'meet him' clicked */
+  #bbb-quiz-{{ section.id }} [data-quiz-track]{
+    display:none;
+  }
+  #bbb-quiz-{{ section.id }}.is-started [data-quiz-track]{
+    display:flex;
+  }
+  /* collapse header once quiz is in progress */
+  #bbb-quiz-{{ section.id }}.is-started .bbb-quiz__head{
+    max-height:0;
+    margin:0;
+    padding-top:0;
+    padding-bottom:0;
+    opacity:0;
+    transform:translateY(-10px);
+    pointer-events:none;
+    overflow:hidden;
+  }
+
+  /* base quiz */
+  #bbb-quiz-{{ section.id }}.bbb-quiz{
+    position:relative;
+    max-width:760px;
+    margin:120px auto;
+    color:#f6f6f6;
+    overflow:hidden;
+    font-family:"Libre Baskerville", Georgia, serif;
+  }
+
+  #bbb-quiz-{{ section.id }} .bbb-quiz__topbar{
+    position:relative;
+    z-index:4;
+    display:none;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:0 24px;
+    margin:0 0 28px;
+  }
+
+  #bbb-quiz-{{ section.id }} .bbb-quiz__back,
+  #bbb-quiz-{{ section.id }} .bbb-quiz__again{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:38px;
+    padding:0 15px;
+    border-radius:999px;
+    border:1px solid rgba(255,138,199,.42);
+    background:rgba(255,138,199,.12);
+    color:#ff8ac7;
+    font-size:.78rem;
+    font-weight:800;
+    letter-spacing:.11em;
+    text-transform:uppercase;
+    cursor:pointer;
+    text-decoration:none;
+    transition:opacity .2s ease, transform .2s ease, background .2s ease, color .2s ease, border-color .2s ease;
+  }
+
+  #bbb-quiz-{{ section.id }} .bbb-quiz__again{
+    opacity:1;
+    transform:none;
+    pointer-events:auto;
+  }
+
+  #bbb-quiz-{{ section.id }}.is-showing-result .bbb-quiz__topbar{
+    display:flex;
+  }
+
+  #bbb-quiz-{{ section.id }} .bbb-quiz__back:hover,
+  #bbb-quiz-{{ section.id }} .bbb-quiz__again:hover{
+    background:#ff8ac7;
+    border-color:#ff8ac7;
+    color:#0b0b0b;
+    transform:translateY(-2px);
+  }
+
+  @media(max-width:640px){
+    #bbb-quiz-{{ section.id }} .bbb-quiz__topbar{
+      padding:0 14px;
+      margin-bottom:24px;
+    }
+
+    #bbb-quiz-{{ section.id }} .bbb-quiz__back,
+    #bbb-quiz-{{ section.id }} .bbb-quiz__again{
+      min-height:34px;
+      padding:0 10px;
+      font-size:.62rem;
+      letter-spacing:.08em;
+    }
+  }
+  #bbb-quiz-{{ section.id }} .quiz-track{
+    display:none;
+    transition:transform .6s cubic-bezier(.2,.85,.2,1);
+    will-change:transform;
+  }
+  #bbb-quiz-{{ section.id }}.is-started .quiz-track{
+    display:flex;
+  }
+  #bbb-quiz-{{ section.id }} .quiz-slide{
+    min-width:100%;
+    padding:0 24px;
+  }
+  #bbb-quiz-{{ section.id }} .quiz-slide h2{
+    font-size:2.2rem;
+    font-weight:400;
+    margin:0 0 44px;
+    letter-spacing:-.01em;
+    text-transform:lowercase;
+  }
+
+  /* answers */
+  #bbb-quiz-{{ section.id }} .quiz-answers{
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+  #bbb-quiz-{{ section.id }} .quiz-answer{
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.15);
+    border-radius:999px;
+    padding:20px 26px;
+    font-size:1.3rem;
+    color:#fff;
+    cursor:pointer;
+    text-align:left;
+    transition:transform .14s ease, background-color .14s ease, border-color .14s ease, box-shadow .14s ease;
+  }
+  #bbb-quiz-{{ section.id }} .quiz-answer:hover{
+    transform:translateY(-1px);
+    background:rgba(255,255,255,.08);
+  }
+  #bbb-quiz-{{ section.id }} .quiz-answer.selected{
+    background:#ff8ac7;
+    color:#0b0b0b;
+    border-color:#ff8ac7;
+    box-shadow:0 0 0 4px rgba(255,138,199,.22);
+  }
+  #bbb-quiz-{{ section.id }} .sss-lib__tropes{
+  font-size:11px;
+  color:rgba(246,246,246,.78);
+  line-height:1.35;
+}
+
+#bbb-quiz-{{ section.id }} .sss-lib__spice{
+  font-size:12px;
+}
+
+
+  /* result */
+  #bbb-quiz-{{ section.id }} .quiz-result{
+    position:relative;
+    padding-bottom:10px;
+  }
+  #bbb-quiz-{{ section.id }} .quiz-result .kicker{
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    opacity:.62;
+    margin:0 0 12px;
+  }
+  #bbb-quiz-{{ section.id }} .quiz-result h3{
+    font-size:3rem;
+    font-weight:400;
+    margin:0 0 14px;
+    letter-spacing:-.02em;
+    text-transform:lowercase;
+  }
+  #bbb-quiz-{{ section.id }} .quiz-result p{
+    font-size:1.3rem;
+    line-height:1.7;
+    margin:0 0 26px;
+    color:rgba(246,246,246,.86);
+  }
+  /* library tile markup */
+  #bbb-quiz-{{ section.id }} .sss-lib__book{
+    padding:0;
+    border:0;
+    background:transparent;
+    color:inherit;
+    text-align:left;
+    cursor:pointer;
+  }
+  #bbb-quiz-{{ section.id }} .sss-lib__book[disabled]{ cursor:not-allowed; opacity:.65; }
+
+  #bbb-quiz-{{ section.id }} .sss-lib__coverWrap{
+    position:relative;
+    border-radius:10px;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.04);
+  }
+  #bbb-quiz-{{ section.id }} .sss-lib__cover{
+    width:100%;
+    aspect-ratio:2/3;
+    object-fit:cover;
+    display:block;
+    filter:brightness(.92);
+    transition:transform .22s ease, filter .22s ease;
+  }
+  #bbb-quiz-{{ section.id }} .sss-lib__cover--empty{
+    aspect-ratio:2/3;
+    background:rgba(255,255,255,.06);
+  }
+  #bbb-quiz-{{ section.id }} .sss-lib__under{ margin-top:10px; }
+  #bbb-quiz-{{ section.id }} .sss-lib__name{ font-size:12px; line-height:1.35; }
+  #bbb-quiz-{{ section.id }} .sss-lib__author{ margin-top:3px; font-size:11px; color:rgba(246,246,246,.6); }
+
+  /* subtle hover overlay */
+  #bbb-quiz-{{ section.id }} .sss-lib__hover{
+    position:absolute;
+    inset:0;
+    padding:12px;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    gap:8px;
+    background:linear-gradient(to top, rgba(0,0,0,.92), rgba(0,0,0,.4) 60%, transparent);
+    opacity:0;
+    transform:translateY(6px);
+    transition:opacity .22s ease, transform .22s ease;
+    z-index:2;
+    pointer-events:none;
+  }
+  #bbb-quiz-{{ section.id }} .sss-lib__book:hover .sss-lib__hover{
+    opacity:1;
+    transform:translateY(0);
+  }
+  #bbb-quiz-{{ section.id }} .sss-lib__book:hover .sss-lib__cover{
+    transform:scale(1.04);
+    filter:brightness(1);
+  }
+
+  /* visible retailer pills (THIS is what you asked for) */
+  #bbb-quiz-{{ section.id }} .bbb-next__links{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:10px;
+  }
+  #bbb-quiz-{{ section.id }} .bbb-next__pill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:999px;
+    padding:10px 14px;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    text-decoration:none;
+    background:transparent;
+    color:#f6f6f6;
+    border:1px solid rgba(246,246,246,.28);
+    transition:transform .14s ease, background-color .14s ease, border-color .14s ease;
+  }
+  #bbb-quiz-{{ section.id }} .bbb-next__pill:hover{
+    transform:translateY(-1px);
+    background:rgba(246,246,246,.06);
+    border-color:rgba(246,246,246,.34);
+  }
+  #bbb-quiz-{{ section.id }} .bbb-next__pill--pink{
+    background:rgba(255,138,199,.92);
+    color:#0b0b0b;
+    border-color:rgba(255,138,199,.92);
+  }
+  #bbb-quiz-{{ section.id }} .bbb-next__pill--pink:hover{
+    background:rgba(255,138,199,1);
+  }
+
+  /* emoji rain */
+  #bbb-quiz-{{ section.id }} .sss-emoji-layer{
+    display:none;
+  }
+  .sss-quiz-confetti-layer{
+    position:fixed;
+    inset:0;
+    z-index:9999;
+    pointer-events:none;
+    overflow:hidden;
+  }
+  .sss-quiz-confetti{
+    position:absolute;
+    top:-12vh;
+    font-size:var(--size, 22px);
+    filter:drop-shadow(0 10px 18px rgba(0,0,0,.34));
+    opacity:.95;
+    transform:translate3d(0,-12vh,0) rotate(0deg);
+    animation:bbbDrop var(--dur, 9200ms) linear forwards;
+  }
+  @keyframes bbbDrop{
+    0%{
+      opacity:0;
+      transform:translate3d(0,-12vh,0) rotate(0deg);
+    }
+    9%{
+      opacity:.95;
+    }
+    82%{
+      opacity:.95;
+    }
+    to{
+      transform:translate3d(var(--drift, 0px),118vh,0) rotate(var(--rot, 360deg));
+      opacity:0;
+    }
+  }
+
+  /* modal (optional) */
+#bbb-quiz-{{ section.id }} .sss-lib__modal{
+  position:fixed;
+  inset:0;
+  z-index:2147483647; /* max safe z-index */
+}
+  #bbb-quiz-{{ section.id }} .sss-lib__backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.72); }
+  #bbb-quiz-{{ section.id }} .sss-lib__dialog{
+    position:absolute;
+    left:50%; top:50%;
+    transform:translate(-50%, -50%);
+    width:min(720px, calc(100% - 28px));
+    border-radius:18px;
+    border:1px solid rgba(246,246,246,.14);
+    background:rgba(11,11,11,.96);
+    box-shadow:0 30px 80px rgba(0,0,0,.55);
+    padding:16px;
+  }
+  #bbb-quiz-{{ section.id }} .sss-lib__x{
+    position:absolute;
+    top:10px; right:12px;
+    width:34px; height:34px;
+    border-radius:999px;
+    border:1px solid rgba(246,246,246,.18);
+    background:rgba(246,246,246,.06);
+    color:#f6f6f6;
+    cursor:pointer;
+    font-size:18px;
+    line-height:1;
+  }
+  #bbb-quiz-{{ section.id }} .sss-lib__mhead{ padding-right:40px; }
+  #bbb-quiz-{{ section.id }} .sss-lib__mkicker{
+    font-size:10px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:rgba(246,246,246,.68);
+  }
+  #bbb-quiz-{{ section.id }} .sss-lib__mtitle{ margin-top:8px; font-size:18px; text-transform:lowercase; }
+  #bbb-quiz-{{ section.id }} .sss-lib__mauthor{ margin-top:6px; font-size:12px; color:rgba(246,246,246,.65); }
+  #bbb-quiz-{{ section.id }} .sss-lib__mbody{
+    margin-top:14px;
+    display:grid;
+    grid-template-columns: 140px 1fr;
+    gap:14px;
+    align-items:start;
+  }
+  #bbb-quiz-{{ section.id }} .sss-lib__mcoverWrap{
+    border-radius:12px;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.04);
+  }
+  #bbb-quiz-{{ section.id }} .sss-lib__mcover{
+    width:100%;
+    aspect-ratio:2/3;
+    object-fit:cover;
+    display:block;
+  }
+  #bbb-quiz-{{ section.id }} .sss-lib__mcta{ display:flex; flex-direction:column; gap:10px; }
+  #bbb-quiz-{{ section.id }} .sss-lib__mbtn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:999px;
+    padding:10px 14px;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    text-decoration:none;
+    background:#ff8ac7;
+    color:#0b0b0b;
+    border:1px solid #ff8ac7;
+  }
+  #bbb-quiz-{{ section.id }} .sss-lib__mbtn--ghost{
+    background:#e85a9b;
+    color:#fff;
+    border:1px solid #e85a9b;
+  }
+  #bbb-quiz-{{ section.id }} .sss-lib__mnote{
+    margin-top:2px;
+    font-size:12px;
+    color:rgba(246,246,246,.72);
+  }
+
+  @media(max-width:640px){
+    #bbb-quiz-{{ section.id }}.bbb-quiz{
+      margin:72px auto;
+      max-width:min(100%, 430px);
+      padding-inline:10px;
+      overflow:visible;
+    }
+    #bbb-quiz-{{ section.id }} .bbb-quiz__head{ padding: 0 18px 18px; }
+    #bbb-quiz-{{ section.id }} .quiz-slide{
+      padding:0 20px;
+      text-align:center;
+    }
+    #bbb-quiz-{{ section.id }} .quiz-slide h2{ margin-bottom:28px; }
+    #bbb-quiz-{{ section.id }} .sss-lib__mbody{ grid-template-columns: 110px 1fr; }
+  }
+  #bbb-quiz-{{ section.id }} .bbb-next__grid{
+  grid-template-columns: 1fr;
+}
+#bbb-quiz-{{ section.id }} .sss-lib__topshelfRow{
+  display:flex;
+  gap:14px;
+  overflow:auto;
+  scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:6px;
+}
+
+#bbb-quiz-{{ section.id }} .sss-lib__topshelfItem{
+  flex:0 0 150px;
+  width:150px;
+  scroll-snap-align:start;
+}
+
+#bbb-quiz-{{ section.id }} .sss-lib__topshelfCover{
+  width:100%;
+  aspect-ratio:2/3;
+  object-fit:cover;
+}
+#bbb-quiz-{{ section.id }} .sss-lib__dialog{
+  position:relative;
+  z-index:2147483647;
+}
+.bbb-next__card{
+  display:flex;
+  gap:16px;
+  margin-bottom:28px;
+  align-items:flex-start;
+}
+
+.bbb-next__coverWrap{
+  flex:0 0 110px;
+  border-radius:10px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.04);
+}
+
+.bbb-next__cover{
+  width:100%;
+  aspect-ratio:2/3;
+  object-fit:cover;
+  display:block;
+}
+
+.bbb-next__meta{
+  flex:1;
+}
+
+.bbb-next__title{
+  font-size:16px;
+  margin-bottom:4px;
+}
+
+.bbb-next__author{
+  font-size:13px;
+  color:rgba(246,246,246,.6);
+  margin-bottom:6px;
+}
+
+.bbb-next__spice{
+  font-size:13px;
+  margin-bottom:8px;
+}
+
+.bbb-next__links{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.bbb-next__pill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:999px;
+  padding:8px 12px;
+  font-size:10px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  text-decoration:none;
+  background:transparent;
+  color:#f6f6f6;
+  border:1px solid rgba(246,246,246,.28);
+  transition:.15s ease;
+}
+
+.bbb-next__pill:hover{
+  background:rgba(246,246,246,.06);
+}
+
+.bbb-next__pill--pink{
+  background:#ff8ac7;
+  color:#0b0b0b;
+  border-color:#ff8ac7;
+}
+/* MAIN MATCH */
+/* =====================================
+   QUIZ RESULT — CLEAN FINAL VERSION
+===================================== */
+
+.bbb-result__main{
+  margin-top:60px;
+}
+
+.bbb-result__text .kicker{
+  font-size:11px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  opacity:.6;
+  margin:0 0 8px;
+}
+
+.bbb-result__text h3{
+  font-size:42px;
+  font-weight:400;
+  margin:0;
+  letter-spacing:-.02em;
+}
+
+/* MAIN CARD */
+
+.bbb-result__book{
+  margin-top:36px;
+  display:flex;
+  gap:28px;
+  align-items:flex-start;
+  padding:26px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.03);
+}
+
+.bbb-result__coverWrap{
+  flex:0 0 160px;
+  border-radius:14px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.14);
+}
+
+.bbb-result__cover{
+  width:100%;
+  aspect-ratio:2/3;
+  object-fit:cover;
+  display:block;
+}
+
+.bbb-result__meta{
+  flex:1;
+}
+
+.bbb-result__title{
+  font-size:22px;
+  margin-bottom:6px;
+}
+
+.bbb-result__author{
+  font-size:14px;
+  opacity:.6;
+  margin-bottom:12px;
+}
+
+.bbb-result__spice{
+  font-size:15px;
+  margin-bottom:16px;
+}
+
+.bbb-result__buttons{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.bbb-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:8px 16px;
+  font-size:10px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  border-radius:999px;
+  border:1px solid rgba(246,246,246,.28);
+  background:transparent;
+  color:#f6f6f6;
+  text-decoration:none;
+}
+
+.bbb-btn--pink{
+  background:#ff8ac7;
+  border-color:#ff8ac7;
+  color:#0b0b0b;
+}
+
+/* OTHER BOOKS */
+
+.bbb-result__more{
+  margin-top:34px;
+  padding-top:24px;
+  border-top:1px solid rgba(255,255,255,.08);
+}
+
+.bbb-result__moreTitle{
+  font-size:18px;
+  margin-bottom:24px;
+  opacity:.8;
+}
+
+.bbb-result__grid{
+  display:flex;
+  gap:24px;
+  overflow-x:auto;
+  scroll-snap-type:x mandatory;
+}
+
+.bbb-card{
+  flex:0 0 150px;
+  scroll-snap-align:start;
+}
+
+.bbb-card__cover{
+  width:100%;
+  aspect-ratio:2/3;
+  object-fit:cover;
+  border-radius:12px;
+  margin-bottom:10px;
+}
+
+.bbb-card__title{
+  font-size:13px;
+  margin-bottom:8px;
+}
+
+.bbb-card__buttons{
+  display:flex;
+  gap:8px;
+}
+
+/* MOBILE */
+
+@media(max-width:640px){
+
+  .bbb-result__book{
+    display:block;          /* 🔥 remove flex entirely on mobile */
+    padding:20px;
+  }
+
+  .bbb-result__coverWrap{
+    width:100%;
+    max-width:240px;
+    margin:0 auto 20px;
+    aspect-ratio:2/3;
+    display:block;
+  }
+
+  .bbb-result__cover{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+  }
+
+}
+.sss-lib__quizBanner{
+
+margin-bottom:30px;
+padding:14px 20px;
+
+background:rgba(255,255,255,.06);
+border:1px solid rgba(255,255,255,.15);
+
+border-radius:12px;
+
+font-size:14px;
+letter-spacing:.03em;
+
+text-align:center;
+
+animation: fadeQuizBanner .6s ease;
+
+}
+
+@keyframes fadeQuizBanner{
+
+from{
+opacity:0;
+transform:translateY(-6px);
+}
+
+to{
+opacity:1;
+transform:none;
+}
+
+}
+.bbb-result__coverWrap a{
+display:block;
+}
+
+.bbb-result__cover{
+transition:transform .25s ease, filter .25s ease;
+}
+
+.bbb-result__coverWrap:hover .bbb-result__cover{
+transform:scale(1.05);
+filter:brightness(1.1);
+}
+.bbb-result__explain{
+
+margin-top:10px;
+max-width:420px;
+
+font-size:15px;
+line-height:1.6;
+
+color:rgba(246,246,246,.75);
+
+}
+.bbb-result__cta{
+  margin:22px 0 10px;
+  display:flex;
+  justify-content:flex-start;
+}
+.bbb-result__bestieShare{
+  position:relative;
+  display:grid;
+  grid-template-columns:72px minmax(0,1fr) auto;
+  align-items:center;
+  gap:16px;
+  margin:22px 0 10px;
+  padding:14px 14px 14px 16px;
+  border-radius:20px;
+  border:1px solid rgba(255,138,199,.32);
+  background:
+    radial-gradient(circle at 12% 28%, rgba(255,138,199,.18), transparent 38%),
+    linear-gradient(135deg, rgba(255,255,255,.07), rgba(255,255,255,.025));
+  box-shadow:0 18px 50px rgba(0,0,0,.28), 0 0 34px rgba(255,138,199,.09);
+  overflow:hidden;
+  animation:bestieShareSlide .58s ease both;
+}
+
+.bbb-result__libraryPreview{
+  position:relative;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:18px;
+  margin:28px 0 4px;
+  padding:18px;
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,.12);
+  background:
+    radial-gradient(circle at 8% 20%, rgba(255,138,199,.12), transparent 34%),
+    linear-gradient(135deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+}
+
+.bbb-result__libraryStack{
+  display:flex;
+  align-items:center;
+  min-width:126px;
+}
+
+.bbb-result__libraryStack img,
+.bbb-result__libraryStack span{
+  width:56px;
+  aspect-ratio:2/3;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.16);
+  object-fit:cover;
+  background:rgba(255,255,255,.06);
+  box-shadow:0 12px 28px rgba(0,0,0,.28);
+  transform-origin:50% 100%;
+  animation:libraryPreviewFloat 4.8s ease-in-out infinite;
+}
+
+.bbb-result__libraryStack img + img,
+.bbb-result__libraryStack img + span,
+.bbb-result__libraryStack span + img{
+  margin-left:-20px;
+}
+
+.bbb-result__libraryStack img:nth-child(1),
+.bbb-result__libraryStack span:nth-child(1){
+  transform:rotate(-7deg);
+  animation-delay:0s;
+}
+
+.bbb-result__libraryStack img:nth-child(2),
+.bbb-result__libraryStack span:nth-child(2){
+  transform:translateY(-5px) rotate(2deg);
+  animation-delay:.35s;
+}
+
+.bbb-result__libraryStack img:nth-child(3),
+.bbb-result__libraryStack span:nth-child(3){
+  transform:rotate(7deg);
+  animation-delay:.7s;
+}
+
+.bbb-result__libraryCopy{
+  min-width:0;
+}
+
+.bbb-result__libraryKicker{
+  margin:0 0 5px;
+  color:#ff8ac7;
+  font-size:.72rem;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+}
+
+.bbb-result__libraryText{
+  margin:0;
+  color:rgba(246,246,246,.78);
+  font-size:1rem;
+  line-height:1.45;
+}
+
+.bbb-result__libraryButton{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:44px;
+  padding:0 18px;
+  border-radius:999px;
+  border:1px solid rgba(255,138,199,.5);
+  color:#ff8ac7;
+  font-size:.78rem;
+  font-weight:800;
+  letter-spacing:.12em;
+  text-decoration:none;
+  text-transform:uppercase;
+  transition:transform .18s ease, background .18s ease, color .18s ease;
+}
+
+.bbb-result__libraryButton:hover{
+  transform:translateY(-2px);
+  background:#ff8ac7;
+  color:#0b0b0b;
+}
+
+.bbb-result__bestieShare::after{
+  content:"";
+  position:absolute;
+  inset:-50% auto auto -10%;
+  width:42%;
+  height:200%;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.16), transparent);
+  transform:rotate(18deg);
+  animation:bestieShareShine 4.2s ease-in-out infinite;
+  pointer-events:none;
+}
+
+.bbb-result__bestieCover{
+  width:72px;
+  aspect-ratio:2/3;
+  border-radius:12px;
+  object-fit:cover;
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:0 12px 22px rgba(0,0,0,.34);
+}
+
+.bbb-result__bestieText{
+  min-width:0;
+}
+
+.bbb-result__bestieLine{
+  margin:0;
+  color:rgba(246,246,246,.9);
+  font-size:1.08rem;
+  line-height:1.35;
+}
+
+.bbb-result__bestieLine strong{
+  color:#ff8ac7;
+  font-weight:700;
+}
+
+.bbb-result__bestieSub{
+  margin:4px 0 0;
+  color:rgba(246,246,246,.58);
+  font-size:.82rem;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+
+.bbb-result__bestieButton{
+  position:relative;
+  z-index:1;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:46px;
+  padding:0 18px;
+  border-radius:999px;
+  border:1px solid #ff8ac7;
+  background:#ff8ac7;
+  color:#0b0b0b;
+  font-size:.82rem;
+  font-weight:800;
+  letter-spacing:.11em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:transform .18s ease, filter .18s ease, box-shadow .18s ease;
+  animation:bestieSharePulse 2.8s ease-in-out infinite;
+}
+
+.bbb-result__bestieButton:hover{
+  transform:translateY(-2px);
+  filter:brightness(1.05);
+  box-shadow:0 0 0 5px rgba(255,138,199,.14);
+}
+
+@keyframes bestieShareSlide{
+  from{opacity:0; transform:translateY(14px) scale(.98);}
+  to{opacity:1; transform:none;}
+}
+
+@keyframes bestieSharePulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(255,138,199,.28);}
+  50%{box-shadow:0 0 0 7px rgba(255,138,199,0);}
+}
+
+@keyframes bestieShareShine{
+  0%,58%{transform:translateX(-120%) rotate(18deg); opacity:0;}
+  68%{opacity:1;}
+  100%{transform:translateX(330%) rotate(18deg); opacity:0;}
+}
+
+@keyframes libraryPreviewFloat{
+  0%,100%{translate:0 0;}
+  50%{translate:0 -7px;}
+}
+
+@media(max-width:640px){
+  #bbb-quiz-{{ section.id }} .quiz-result{
+    text-align:center;
+  }
+
+  .bbb-result__main{
+    margin-top:34px;
+    text-align:center;
+  }
+
+  .bbb-result__text .kicker,
+  .bbb-result__text h3{
+    text-align:center;
+  }
+
+  .bbb-result__text h3{
+    font-size:clamp(2.45rem, 12vw, 3.6rem);
+    line-height:1.04;
+  }
+
+  .bbb-result__explain{
+    margin:12px auto 28px;
+    max-width:32rem;
+    text-align:center;
+  }
+
+  #quiz-main-book{
+    display:flex;
+    justify-content:center;
+  }
+
+  #quiz-main-book .sss-lib__book{
+    width:min(100%, 260px);
+    text-align:center;
+  }
+
+  #quiz-main-book .sss-lib__under,
+  #quiz-main-book .sss-lib__mtitle,
+  #quiz-main-book .sss-lib__mauthor{
+    text-align:center;
+  }
+
+  .bbb-result__bestieShare{
+    grid-template-columns:58px minmax(0,1fr);
+    gap:12px;
+    padding:13px;
+    margin:32px auto 24px;
+    text-align:center;
+  }
+
+  .bbb-result__bestieCover{
+    width:58px;
+  }
+
+  .bbb-result__bestieText{
+    text-align:center;
+  }
+
+  .bbb-result__bestieButton{
+    grid-column:1 / -1;
+    width:100%;
+  }
+
+  .bbb-result__more{
+    margin-top:30px;
+    padding-top:30px;
+    text-align:center;
+  }
+
+  .bbb-result__moreTitle{
+    max-width:24rem;
+    margin-inline:auto;
+    line-height:1.45;
+  }
+
+  .bbb-result__grid{
+    gap:18px;
+    padding:4px 12px 12px;
+    scroll-padding-inline:20px;
+  }
+
+  .bbb-result__grid .sss-lib__book{
+    flex:0 0 150px;
+    text-align:center;
+  }
+
+  .bbb-result__libraryPreview{
+    grid-template-columns:1fr;
+    gap:12px;
+    padding:16px;
+    margin-top:32px;
+    justify-items:center;
+    text-align:center;
+  }
+
+  .bbb-result__libraryStack{
+    justify-content:center;
+  }
+
+  .bbb-result__libraryCopy{
+    text-align:center;
+  }
+
+  .bbb-result__libraryButton{
+    width:100%;
+  }
+}
+
+/* =============================================
+   NEW RESULT LAYOUT
+============================================= */
+
+.bbb-result__header{
+  margin-top:60px;
+  text-align:center;
+}
+
+.bbb-result__kicker{
+  margin:0 0 8px;
+  font-size:11px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  opacity:.6;
+}
+
+.bbb-result__matchCover{
+  position:relative;
+  width:118px;
+  margin:0 auto 18px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 18px 38px rgba(0,0,0,.34);
+  overflow:hidden;
+  background:rgba(255,255,255,.05);
+}
+
+.bbb-result__matchCover img{
+  position:relative;
+  z-index:1;
+  width:100%;
+  aspect-ratio:2/3;
+  object-fit:cover;
+  display:block;
+}
+
+.bbb-result__coverRain{
+  position:absolute;
+  inset:0;
+  z-index:2;
+  pointer-events:none;
+  overflow:hidden;
+}
+
+.bbb-result__coverHeart{
+  position:absolute;
+  top:-24%;
+  left:var(--x, 50%);
+  font-size:var(--size, 14px);
+  filter:drop-shadow(0 5px 8px rgba(0,0,0,.55));
+  opacity:.9;
+  animation:bbbBoyfriendCoverDrop var(--dur, 4200ms) linear infinite;
+  animation-delay:var(--delay, 0ms);
+}
+
+@keyframes bbbBoyfriendCoverDrop{
+  0%{ transform:translate3d(0,-12%,0) rotate(0deg); opacity:0; }
+  12%{ opacity:.9; }
+  86%{ opacity:.9; }
+  to{ transform:translate3d(var(--drift, 0px),156px,0) rotate(var(--rot, 180deg)); opacity:0; }
+}
+
+.bbb-result__type{
+  font-size:clamp(2.2rem,8vw,3.2rem);
+  font-weight:400;
+  margin:0 0 20px;
+  letter-spacing:-.02em;
+  line-height:1.1;
+}
+
+.bbb-result__traits{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:10px;
+  max-width:520px;
+  margin:0 auto 24px;
+  padding:0;
+  list-style:none;
+}
+
+@keyframes bbb-pill-in{
+  from{ opacity:0; transform:translateY(10px); }
+  to{   opacity:1; transform:none; }
+}
+
+.bbb-result__trait{
+  padding:10px 12px;
+  border-radius:8px;
+  border:1px solid rgba(255,138,199,.36);
+  background:rgba(255,138,199,.08);
+  color:#ff8ac7;
+  font-size:13px;
+  line-height:1.35;
+  opacity:0;
+  animation:bbb-pill-in .42s ease forwards;
+}
+
+.bbb-result__desc{
+  display:block;
+  max-width:52ch;
+  margin:0 auto;
+  font-size:16px;
+  line-height:1.75;
+  color:rgba(246,246,246,.82);
+  text-align:center !important;
+  text-wrap:balance;
+}
+
+.bbb-result__divider{
+  border:none;
+  border-top:1px solid rgba(255,255,255,.1);
+  margin:36px 0;
+}
+.bbb-result__divider--slim{
+  margin:28px 0 0;
+  border-top-color:rgba(255,255,255,.07);
+}
+
+.bbb-result__booksKicker{
+  margin:0 0 22px;
+  font-size:11px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  opacity:.5;
+}
+
+/* individual book rows */
+.bbb-book-item{
+  padding:20px 0;
+  cursor:pointer;
+}
+
+/* exact match — pink glow border */
+.bbb-book-item--match{
+  padding:20px 16px;
+  border-radius:16px;
+  border:1px solid rgba(255,138,199,.35);
+  background:rgba(255,138,199,.04);
+  margin-bottom:4px;
+}
+
+.bbb-book-item__inner{
+  display:flex;
+  gap:20px;
+  align-items:flex-start;
+}
+
+/* cover wrapper — position relative for overlays */
+.bbb-bi__coverWrap{
+  position:relative;
+  flex:0 0 80px;
+  width:80px;
+}
+
+.bbb-bi__cover{
+  width:80px;
+  aspect-ratio:2/3;
+  object-fit:cover;
+  display:block;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.1);
+}
+
+.bbb-bi__cover--empty{
+  background:rgba(255,255,255,.07);
+}
+
+.bbb-bi__coverWrap .sss-lib__floatSpice{
+  position:absolute;
+  top:6px;
+  right:6px;
+  z-index:3;
+  background:rgba(0,0,0,.75);
+  backdrop-filter:blur(6px);
+  padding:3px 7px;
+  border-radius:999px;
+  font-size:10px;
+  letter-spacing:.04em;
+  box-shadow:0 6px 16px rgba(0,0,0,.35);
+  pointer-events:none;
+}
+
+.bbb-bi__coverWrap .sss-lib__heart.bbb-bi__heart{
+  position:absolute;
+  bottom:6px;
+  left:6px;
+  min-width:30px;
+  height:30px;
+  padding:0 9px;
+  gap:5px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.25);
+  background:rgba(0,0,0,.75);
+  backdrop-filter:blur(6px);
+  color:#fff;
+  font-size:12px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 6px 16px rgba(0,0,0,.4);
+  z-index:6;
+  cursor:pointer;
+  line-height:1;
+  transition:all .18s ease;
+}
+
+.bbb-bi__coverWrap .sss-lib__heart.bbb-bi__heart:hover{
+  transform:translateY(-2px) scale(1.05);
+}
+
+.bbb-bi__coverWrap .sss-lib__heart.bbb-bi__heart.is-saved{
+  background:#e85a9b;
+  border-color:#e85a9b;
+  color:#fff;
+}
+
+.bbb-bi__coverWrap .sss-lib__heartLabel{
+  font-size:10px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+.bbb-book-item__content{
+  flex:1;
+  min-width:0;
+}
+
+.bbb-book-item__title{
+  margin:0 0 4px;
+  font-size:18px;
+  font-weight:400;
+}
+
+.bbb-book-item__author{
+  margin:0 0 10px;
+  font-size:13px;
+  opacity:.6;
+}
+
+.bbb-book-item__desc{
+  margin:0 0 14px;
+  font-size:14px;
+  line-height:1.65;
+  color:rgba(246,246,246,.72);
+}
+
+.bbb-book-item__buttons{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.bbb-book-item__btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:10px 18px;
+  border-radius:12px;
+  border:1px solid rgba(246,246,246,.26);
+  background:transparent;
+  color:#f6f6f6;
+  font-size:13px;
+  font-family:"Libre Baskerville",Georgia,serif;
+  text-decoration:none;
+  cursor:pointer;
+  transition:background .18s ease, border-color .18s ease, color .18s ease;
+  white-space:nowrap;
+}
+
+.bbb-book-item__btn--a:hover,
+.bbb-book-item__btn--shop:hover{
+  background:#ff8ac7;
+  border-color:#ff8ac7;
+  color:#0b0b0b;
+}
+
+.bbb-book-item__btn--b:hover{
+  background:#ff8ac7;
+  border-color:#ff8ac7;
+  color:#0b0b0b;
+}
+
+.bbb-book-item__btn--b.is-saved,
+.bbb-book-item__btn--b.is-saved:hover{
+  background:#e85a9b;
+  border-color:#e85a9b;
+  color:#fff;
+}
+
+/* newsletter card */
+.bbb-result__newsletter{
+  margin-top:16px;
+  padding:28px;
+  border-radius:16px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.1);
+}
+
+.bbb-result__newsletterTitle{
+  margin:0 0 8px;
+  font-size:18px;
+  font-weight:400;
+}
+
+.bbb-result__newsletterSub{
+  margin:0 0 20px;
+  font-size:13px;
+  line-height:1.65;
+  color:rgba(246,246,246,.62);
+}
+
+.bbb-result__newsletterForm{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.bbb-result__emailInput{
+  flex:1;
+  min-width:200px;
+  padding:13px 18px;
+  border-radius:12px;
+  border:1px solid rgba(246,246,246,.2);
+  background:rgba(255,255,255,.06);
+  color:#f6f6f6;
+  font-size:15px;
+  font-family:"Libre Baskerville",Georgia,serif;
+  outline:none;
+}
+
+.bbb-result__emailInput::placeholder{
+  color:rgba(246,246,246,.38);
+}
+
+.bbb-result__emailInput:focus{
+  border-color:rgba(246,246,246,.42);
+}
+
+.bbb-result__joinBtn{
+  padding:13px 22px;
+  border-radius:12px;
+  border:1px solid rgba(246,246,246,.28);
+  background:transparent;
+  color:#f6f6f6;
+  font-size:15px;
+  font-family:"Libre Baskerville",Georgia,serif;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:background .18s ease, border-color .18s ease;
+}
+
+.bbb-result__joinBtn:hover{
+  background:#ff8ac7;
+  border-color:#ff8ac7;
+  color:#0b0b0b;
+}
+
+.bbb-result__newsletterFine{
+  margin:12px 0 0;
+  font-size:11px;
+  text-align:center;
+  opacity:.38;
+  letter-spacing:.04em;
+}
+
+/* action buttons */
+.bbb-result__actions{
+  display:flex;
+  gap:12px;
+  justify-content:center;
+  margin-top:40px;
+  margin-bottom:20px;
+  flex-wrap:wrap;
+}
+
+.bbb-result__shareBtn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:14px 28px;
+  border-radius:14px;
+  border:1px solid rgba(246,246,246,.26);
+  background:transparent;
+  color:#f6f6f6;
+  font-size:15px;
+  font-family:"Libre Baskerville",Georgia,serif;
+  cursor:pointer;
+  transition:background .18s ease, border-color .18s ease;
+}
+
+.bbb-result__shareBtn:hover{
+  background:#ff8ac7;
+  border-color:#ff8ac7;
+  color:#0b0b0b;
+}
+
+@media(max-width:640px){
+  .bbb-result__header{
+    margin-top:34px;
+  }
+  .bbb-book-item__inner{
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+  }
+  .bbb-bi__coverWrap{
+    flex:unset;
+    width:100%;
+    max-width:120px;
+    margin:0 auto;
+  }
+  .bbb-bi__cover{
+    width:100%;
+  }
+  .bbb-result__newsletterForm{
+    flex-direction:column;
+  }
+  .bbb-result__joinBtn{
+    width:100%;
+  }
+  .bbb-result__actions{
+    flex-direction:column;
+    align-items:stretch;
+  }
+  .bbb-result__shareBtn{
+    width:100%;
+  }
+  .bbb-result__traits{
+    grid-template-columns:1fr;
+  }
+}
+
+</style>
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+const root = document.getElementById("bbb-quiz-{{ section.id }}");
+if(!root) return;
+
+let slide = 0;
+
+const track = document.getElementById("quizTrack-{{ section.id }}");
+const slides = root.querySelectorAll(".quiz-slide");
+const answers = root.querySelectorAll(".quiz-answer");
+
+let scores = {};
+let tropeScores = {};
+
+/* -------------------------
+SLIDE CONTROL
+------------------------- */
+
+function goTo(i){
+  slide = i;
+  track.style.transform = `translateX(-${slide * 100}%)`;
+}
+
+function resetQuiz(){
+  scores = {};
+  tropeScores = {};
+  answers.forEach(function(answer){
+    answer.classList.remove("selected");
+  });
+  root.classList.remove("is-showing-result");
+  root.classList.remove("is-started");
+  goTo(0);
+}
+
+const againBtn = root.querySelector("[data-quiz-again]");
+if(againBtn){
+  againBtn.addEventListener("click", resetQuiz);
+}
+
+const beginBtn = root.querySelector("[data-quiz-begin]");
+if(beginBtn){
+  beginBtn.addEventListener("click", function(){
+    root.classList.add("is-started");
+  });
+}
+
+/* -------------------------
+QUIZ ANSWERS
+------------------------- */
+
+answers.forEach(btn=>{
+  btn.addEventListener("click",()=>{
+
+    if(btn.classList.contains("selected")) return;
+
+    slides[slide]
+      .querySelectorAll(".quiz-answer")
+      .forEach(b=> b.disabled = true);
+
+    btn.classList.add("selected");
+
+const type = btn.dataset.type;
+const trope = btn.dataset.trope;
+
+/* boyfriend scoring */
+
+if(!scores[type]) scores[type] = 0;
+scores[type]++;
+
+/* trope scoring */
+
+if(trope){
+  trope.split(",").forEach(t=>{
+    const key = t.trim();
+    if(!tropeScores[key]) tropeScores[key] = 0;
+    tropeScores[key]++;
+  });
+}
+
+    if(!scores[type]) scores[type] = 0;
+    scores[type]++;
+
+    setTimeout(()=>{
+      const next = slide + 1;
+      goTo(next);
+
+      if(next === slides.length - 1){
+        showResult();
+      }
+
+    },320);
+
+  });
+});
+
+/* -------------------------
+LOAD BOOK POOLS
+------------------------- */
+
+function getPools(){
+
+  const el = document.getElementById("quiz-books-{{ section.id }}");
+  if(!el) return {};
+
+  try{
+    return JSON.parse(el.textContent);
+  }catch(e){
+    return {};
+  }
+
+}
+
+/* -------------------------
+BUILD LIBRARY CARD
+------------------------- */
+
+
+const boyfriendData = {
+  "morally gray villain": {
+    tags: ["possessive", "obsessive", "emotionally unavailable", "would actually ruin your life"],
+    desc: "he doesn't do soft. he does intense, consuming, and slightly terrifying. he's chosen you and that's the most dangerous thing that's ever happened to you. you love it."
+  },
+  "obsessive protector": {
+    tags: ["devoted", "territorial", "will not share you", "dangerously intense"],
+    desc: "he'd burn down cities before he let anything hurt you. the devotion is overwhelming. the protection is suffocating in the best way possible. you are his entire reason."
+  },
+  "academic rival": {
+    tags: ["competitive", "sharp-tongued", "secretly soft", "infuriatingly attractive"],
+    desc: "he argues with you in public and can't stop thinking about you in private. the banter is foreplay. the rivalry is a love language. he'll never admit he's losing."
+  },
+  "athlete with heart": {
+    tags: ["protective", "competitive", "quietly devoted", "dangerously loyal"],
+    desc: "strong enough to wreck you, soft enough to make you cry about it. he shows up every single time without being asked. you are his favorite thing about being alive."
+  },
+  "mafia boss": {
+    tags: ["controlled", "quietly terrifying", "dominant", "yours and only yours"],
+    desc: "everyone in the room is afraid of him. he lets you be the only one who isn't. that's the most dangerous position you've ever been in. you don't want out."
+  },
+  "tortured prince": {
+    tags: ["brooding", "duty-bound", "tragically devoted", "emotionally repressed"],
+    desc: "he wants you so badly it's destroying him. he's carrying a hundred obligations and you're the one thing he can't let himself have. yet. the yearning is excruciating."
+  },
+  "obsessed stalker": {
+    tags: ["darkly devoted", "haunting", "obsessive", "terrifyingly attentive"],
+    desc: "he was watching before you knew he existed. he knows you better than you know yourself. it should terrify you. it really doesn't. that's the problem."
+  }
+};
+
+const bookPools = getPools();
+
+/* -------------------------
+SHOW RESULT
+------------------------- */
+
+function showResult(){
+
+root.classList.add("is-showing-result");
+
+const keys = Object.keys(scores);
+if(!keys.length) return;
+
+const winner = keys
+  .reduce((a,b)=> scores[a] >= scores[b] ? a : b)
+  .toLowerCase()
+  .trim();
+
+const pool = (bookPools[winner] || []).slice();
+
+const books =
+[...pool]
+.sort(()=>0.5-Math.random())
+.slice(0,3);
+
+const main = books[0] || null;
+const resultBoyfriend = main?.boyfriend_name || winner;
+const resultCover = main?.cover || "";
+const resultTitle = main?.title || "";
+const libraryPreviewCovers = books
+  .map(function(entry){
+    return {
+      cover: entry?.cover || "",
+      title: entry?.title || ""
+    };
+  })
+  .filter(function(item){
+    return item.cover;
+  })
+  .slice(0,3);
+
+const result =
+document.getElementById("quizResult-{{ section.id }}");
+
+const data = boyfriendData[winner] || { tags: [], desc: "" };
+const traitItems = (data.tags || []).map(function(tag, i){
+  return `<li class="bbb-result__trait" style="animation-delay:${0.08 + i * 0.18}s">${escape(tag)}</li>`;
+}).join("");
+const coverRain = coverHeartRainHtml();
+
+result.innerHTML = `
+
+<div class="bbb-result__header">
+  ${resultCover ? `<div class="bbb-result__matchCover"><img src="${escape(resultCover)}" alt="${escape(resultTitle || resultBoyfriend)}" loading="lazy"><div class="bbb-result__coverRain" aria-hidden="true">${coverRain}</div></div>` : ""}
+  <p class="bbb-result__kicker">your fictional boyfriend is</p>
+  <h3 class="bbb-result__type">${escape(resultBoyfriend)}</h3>
+  <ul class="bbb-result__traits">${traitItems}</ul>
+  <p class="bbb-result__desc">${escape(data.desc || "")}</p>
+</div>
+
+<hr class="bbb-result__divider">
+
+<div class="bbb-result__books">
+  <p class="bbb-result__booksKicker">books with his exact energy</p>
+  <div class="bbb-result__bookList" id="bbb-bookList-{{ section.id }}"></div>
+</div>
+
+<div class="bbb-result__newsletter">
+  <p class="bbb-result__newsletterTitle">get a new fictional man every sunday</p>
+  <p class="bbb-result__newsletterSub">the smut &amp; sentiment society — one perfectly curated rec, delivered weekly. morally gray men a specialty.</p>
+  <form class="bbb-result__newsletterForm" action="/contact#contact_form" method="post" accept-charset="UTF-8">
+    <input type="hidden" name="form_type" value="customer">
+    <input type="hidden" name="utf8" value="✓">
+    <input type="hidden" name="contact[tags]" value="newsletter">
+    <input class="bbb-result__emailInput" type="email" name="contact[email]" placeholder="your email" required>
+    <button class="bbb-result__joinBtn" type="submit">join the society</button>
+  </form>
+  <p class="bbb-result__newsletterFine">free to join. unsubscribe any time.</p>
+</div>
+
+<div class="bbb-result__actions">
+  <button class="bbb-result__shareBtn" type="button" data-quiz-bestie-share data-quiz-result-name="${escape(resultBoyfriend)}">share your result</button>
+</div>
+
+`;
+
+/* build a single book row */
+function makeBookItem(book, isMatch){
+  if(!book) return null;
+  const cover    = book.cover || "";
+  const title    = book.title || "";
+  const author   = book.author || "";
+  const mini     = book.mini || "";
+  const amazon   = book.amazon || "";
+  const bookshop = book.bookshop || "";
+  const handle   = book.handle || "";
+  const spice    = parseInt(book.spice) || 0;
+  const tropes   = Array.isArray(book.tropes) ? book.tropes.join(", ") : (book.tropes || "");
+  const tropesDisplay = book.tropes_display || tropes;
+  const spiceHtml = spice > 0
+    ? `<div class="sss-lib__floatSpice">${"🌶".repeat(Math.min(spice,5))}</div>`
+    : "";
+  const item = document.createElement("div");
+  item.className = "bbb-book-item" + (isMatch ? " bbb-book-item--match" : "");
+  item.dataset.bkTitle    = title;
+  item.dataset.bkAuthor   = author;
+  item.dataset.bkCover    = cover;
+  item.dataset.bkAmazon   = amazon;
+  item.dataset.bkBookshop = bookshop;
+  item.dataset.bkMini     = mini;
+  item.dataset.bkTropes   = tropes;
+  item.dataset.bkTropesDisplay = tropesDisplay;
+  item.dataset.bkHandle   = handle;
+  item.innerHTML = `
+    <div class="bbb-book-item__inner" data-open-book>
+      <div class="bbb-bi__coverWrap">
+        ${cover
+          ? `<img class="bbb-bi__cover" src="${escape(cover)}" alt="${escape(title)}" loading="lazy">`
+          : `<div class="bbb-bi__cover bbb-bi__cover--empty"></div>`}
+        ${spiceHtml}
+        <button class="sss-lib__heart bbb-bi__heart" type="button" data-book-save data-book-handle="${escape(handle)}" aria-label="save to shelf">
+          <span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♡</span>
+          <span class="sss-lib__heartLabel" data-heart-label>save</span>
+        </button>
+      </div>
+      <div class="bbb-book-item__content">
+        <p class="bbb-book-item__title">${escape(title)}</p>
+        <p class="bbb-book-item__author">${escape(author)}</p>
+        ${mini ? `<p class="bbb-book-item__desc">${escape(mini)}</p>` : ""}
+        ${tropesDisplay ? `<p class="bbb-book-item__desc">tropes: ${escape(tropesDisplay)}</p>` : ""}
+        <div class="bbb-book-item__buttons">
+          ${amazon ? `<a class="bbb-book-item__btn bbb-book-item__btn--a" href="${escape(amazon)}" target="_blank" rel="noopener sponsored">amazon</a>` : ""}
+          ${bookshop ? `<a class="bbb-book-item__btn bbb-book-item__btn--shop" href="${escape(bookshop)}" target="_blank" rel="noopener sponsored">bookshop</a>` : ""}
+          <button class="bbb-book-item__btn bbb-book-item__btn--b" type="button" data-book-save data-book-handle="${escape(handle)}">save to shelf</button>
+        </div>
+      </div>
+    </div>
+  `;
+  return item;
+}
+
+const bookList = result.querySelector("#bbb-bookList-{{ section.id }}");
+const mainBook    = books[0];
+const suggestBooks = books.slice(1);
+
+if(mainBook){
+  const el = makeBookItem(mainBook, true);
+  if(el) bookList.appendChild(el);
+}
+
+if(suggestBooks.length){
+  const sep = document.createElement("div");
+  sep.innerHTML = `
+    <hr class="bbb-result__divider bbb-result__divider--slim">
+    <p class="bbb-result__booksKicker" style="margin-top:24px">he would also suggest</p>
+  `;
+  bookList.appendChild(sep);
+  suggestBooks.forEach(function(book){
+    const el = makeBookItem(book, false);
+    if(el) bookList.appendChild(el);
+  });
+}
+
+books.forEach(function(book){
+  if(!book) return;
+  updateQuizSaveButtons(book.handle || "", quizBookIsSaved(quizBookData(book)));
+});
+
+startRain(winner);
+
+}
+
+/* save-to-shelf */
+function getQuizShelf(){
+  try {
+    return JSON.parse(localStorage.getItem("sssMyShelf")) || [];
+  } catch(err){
+    return [];
+  }
+}
+
+function setQuizShelf(nextShelf){
+  localStorage.setItem("sssMyShelf", JSON.stringify(nextShelf));
+  document.dispatchEvent(new CustomEvent("sss:bookshelf-updated", {
+    detail: { count: Array.isArray(nextShelf) ? nextShelf.length : 0 }
+  }));
+}
+
+function quizBookData(card){
+  if(!card) return null;
+  return {
+    handle: card.handle || card.dataset && (card.dataset.handle || card.dataset.bkHandle) || "",
+    title: card.title || card.dataset && (card.dataset.title || card.dataset.bkTitle) || "",
+    author: card.author || card.dataset && (card.dataset.author || card.dataset.bkAuthor) || "",
+    cover: card.cover || card.dataset && (card.dataset.cover || card.dataset.bkCover) || "",
+    amazon: card.amazon || card.dataset && (card.dataset.amazon || card.dataset.bkAmazon) || "",
+    bookshop: card.bookshop || card.dataset && (card.dataset.bookshop || card.dataset.bkBookshop) || ""
+  };
+}
+
+function quizBookIsSaved(bookData){
+  if(!bookData || !bookData.title) return false;
+  return getQuizShelf().some(function(book){
+    return book.title === bookData.title || (bookData.handle && book.handle === bookData.handle);
+  });
+}
+
+function updateQuizHeart(heart, isSaved){
+  if(!heart) return;
+  heart.classList.toggle("is-saved", !!isSaved);
+
+  const icon = heart.querySelector("[data-heart-icon]");
+  const label = heart.querySelector("[data-heart-label]");
+
+  if(icon) icon.textContent = isSaved ? "♥" : "♡";
+  if(label) label.textContent = isSaved ? "saved" : "save";
+  heart.setAttribute("aria-label", isSaved ? "remove from your bookshelf" : "save to your bookshelf");
+}
+
+function syncQuizSourceHeart(handle, isSaved){
+  if(!handle) return;
+  updateQuizSaveButtons(handle, isSaved);
+}
+
+function toggleQuizShelfBook(bookData){
+  if(!bookData || !bookData.title) return false;
+  let shelf = getQuizShelf();
+  const exists = shelf.some(function(book){
+    return book.title === bookData.title || (bookData.handle && book.handle === bookData.handle);
+  });
+
+  if(exists){
+    shelf = shelf.filter(function(book){
+      return book.title !== bookData.title && (!bookData.handle || book.handle !== bookData.handle);
+    });
+  } else {
+    shelf.push(bookData);
+  }
+
+  setQuizShelf(shelf);
+  document.dispatchEvent(new CustomEvent(exists ? "bbb:shelf-unsaved" : "bbb:shelf-saved", {
+    detail: {
+      count: shelf.length,
+      bookTitle: bookData.title,
+      bookHandle: bookData.handle,
+      book: bookData,
+      source: "fictional_boyfriend_quiz"
+    }
+  }));
+
+  return !exists;
+}
+
+function updateQuizSaveButtons(handle, isSaved){
+  root.querySelectorAll("[data-book-save]").forEach(function(btn){
+    if(btn.dataset.bookHandle !== handle) return;
+    btn.classList.toggle("is-saved", !!isSaved);
+
+    const icon = btn.querySelector("[data-heart-icon]");
+    const label = btn.querySelector("[data-heart-label]");
+
+    if(icon) icon.textContent = isSaved ? "♥" : "♡";
+    if(label) label.textContent = isSaved ? "saved" : "save";
+    if(!icon && !label) btn.textContent = isSaved ? "saved" : "save to shelf";
+  });
+}
+
+root.addEventListener("click", function(e){
+  const saveBtn = e.target.closest("[data-book-save]");
+  if(!saveBtn) return;
+  e.stopPropagation();
+  const handle = saveBtn.dataset.bookHandle;
+  if(!handle) return;
+  const resultCard = saveBtn.closest(".bbb-book-item");
+  let sourceBook = null;
+  Object.keys(bookPools).some(function(key){
+    const match = (bookPools[key] || []).find(function(book){ return book.handle === handle; });
+    if(match){
+      sourceBook = match;
+      return true;
+    }
+    return false;
+  });
+  const isSaved = toggleQuizShelfBook(quizBookData(sourceBook || resultCard));
+  updateQuizSaveButtons(handle, isSaved);
+  syncQuizSourceHeart(handle, isSaved);
+});
+
+/* open modal when clicking a book item */
+root.addEventListener("click", function(e){
+  if(e.target.closest("[data-book-save]")) return;
+  if(e.target.closest("a")) return;
+  const inner = e.target.closest("[data-open-book]");
+  if(!inner) return;
+  const item = inner.closest(".bbb-book-item");
+  if(!item) return;
+  const modal = document.querySelector(".sss-lib__modal:not([data-quiz-modal])");
+  if(!modal) return;
+  const titleEl  = modal.querySelector("[data-mtitle]");
+  const authorEl = modal.querySelector("[data-mauthor]");
+  const coverEl  = modal.querySelector("[data-mcover]");
+  const amazonEl = modal.querySelector("[data-amazon-btn]");
+  const shopEl   = modal.querySelector("[data-bookshop-btn]");
+  const miniEl   = modal.querySelector("[data-mmini]");
+  const tropesEl = modal.querySelector("[data-mtropes]");
+  const bfEl     = modal.querySelector("[data-mboyfriend]");
+  const spiceEl  = modal.querySelector("[data-mspice]");
+  const modalHeart = modal.querySelector("[data-modal-heart]");
+  if(titleEl)  titleEl.textContent  = item.dataset.bkTitle || "";
+  if(authorEl) authorEl.textContent = "by " + (item.dataset.bkAuthor || "");
+  if(coverEl)  coverEl.src          = item.dataset.bkCover || "";
+  if(amazonEl) amazonEl.href        = item.dataset.bkAmazon || "#";
+  if(shopEl)   shopEl.href          = item.dataset.bkBookshop || "#";
+  if(miniEl)   miniEl.textContent   = item.dataset.bkMini || "";
+  if(tropesEl){
+    const modalTropes = item.dataset.bkTropesDisplay || item.dataset.bkTropes || "";
+    tropesEl.textContent = modalTropes ? "tropes: " + modalTropes : "";
+  }
+  if(bfEl)     bfEl.textContent     = "";
+  if(spiceEl)  spiceEl.textContent  = "";
+  modal.dataset.quizBookHandle = item.dataset.bkHandle || "";
+  modal.dataset.quizBookTitle = item.dataset.bkTitle || "";
+  modal.dataset.quizBookAuthor = item.dataset.bkAuthor || "";
+  modal.dataset.quizBookCover = item.dataset.bkCover || "";
+  modal.dataset.quizBookAmazon = item.dataset.bkAmazon || "";
+  modal.dataset.quizBookBookshop = item.dataset.bkBookshop || "";
+  updateQuizHeart(modalHeart, quizBookIsSaved(quizBookData(item)));
+  modal.hidden = false;
+});
+
+document.addEventListener("click", function(e){
+  const modalHeart = e.target.closest("[data-modal-heart]");
+  if(!modalHeart) return;
+  const modal = modalHeart.closest(".sss-lib__modal");
+  if(!modal || !modal.dataset.quizBookTitle) return;
+  e.preventDefault();
+  e.stopPropagation();
+
+  const bookData = {
+    handle: modal.dataset.quizBookHandle || "",
+    title: modal.dataset.quizBookTitle || "",
+    author: modal.dataset.quizBookAuthor || "",
+    cover: modal.dataset.quizBookCover || "",
+    amazon: modal.dataset.quizBookAmazon || "",
+    bookshop: modal.dataset.quizBookBookshop || ""
+  };
+  const isSaved = toggleQuizShelfBook(bookData);
+  updateQuizHeart(modalHeart, isSaved);
+  updateQuizSaveButtons(bookData.handle, isSaved);
+  syncQuizSourceHeart(bookData.handle, isSaved);
+});
+
+root.addEventListener("click", function(e){
+if(e.target.closest("[data-quiz-again]")){
+  resetQuiz();
+  return;
+}
+
+const shareBtn = e.target.closest("[data-quiz-bestie-share]");
+if(!shareBtn) return;
+
+const quizUrl = window.location.origin + window.location.pathname;
+const resultName = shareBtn.dataset.quizResultName || "a fictional man";
+const shareText = "i got " + resultName + " and you have to take this";
+const shareTitle = "fictional boyfriend test";
+const shareMessage = shareText + "\n" + quizUrl;
+
+if(navigator.share){
+  navigator.share({
+    title: shareTitle,
+    text: shareText,
+    url: quizUrl
+  }).catch(function(){});
+  return;
+}
+
+if(navigator.clipboard && navigator.clipboard.writeText){
+  navigator.clipboard.writeText(shareMessage).then(function(){
+    shareBtn.textContent = "link copied";
+    setTimeout(function(){
+      shareBtn.textContent = "share your result";
+    }, 1800);
+  });
+}
+});
+
+/* -------------------------
+MODAL
+------------------------- */
+
+root.addEventListener("click", function(e){
+
+const book = e.target.closest(".sss-lib__book");
+if(!book) return;
+
+const modal = document.querySelector(".sss-lib__modal:not([data-quiz-modal])");
+if(!modal) return;
+
+/* populate modal fields */
+
+modal.querySelector("[data-mtitle]").textContent = book.dataset.title || "";
+modal.querySelector("[data-mauthor]").textContent = "by " + (book.dataset.author || "");
+
+modal.querySelector("[data-mcover]").src = book.dataset.cover || "";
+
+modal.querySelector("[data-amazon-btn]").href = book.dataset.amazon || "#";
+modal.querySelector("[data-bookshop-btn]").href = book.dataset.bookshop || "#";
+
+modal.querySelector("[data-mmini]").textContent = book.dataset.mini || "";
+const modalBoyfriend = modal.querySelector("[data-mboyfriend]");
+if(modalBoyfriend){
+modalBoyfriend.textContent = "";
+}
+
+const modalTropes = book.dataset.tropesDisplay || book.dataset.tropes || "";
+modal.querySelector("[data-mtropes]").textContent = modalTropes ? "tropes: " + modalTropes : "";
+
+const modalSpice = modal.querySelector("[data-mspice]");
+if(modalSpice){
+modalSpice.textContent = "";
+}
+
+modal.hidden = false;
+
+});
+
+document.querySelectorAll("[data-close]").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    const modal = document.querySelector(".sss-lib__modal");
+    if(modal) modal.hidden = true;
+  });
+});
+
+/* -------------------------
+UTILS
+------------------------- */
+
+function resolveUrl(v){
+if(!v) return "";
+if(typeof v === "string") return v;
+if(v.url) return v.url;
+return "";
+}
+
+function escape(str){
+return String(str || "")
+.replaceAll("&","&amp;")
+.replaceAll("<","&lt;")
+.replaceAll(">","&gt;");
+}
+
+/* -------------------------
+EMOJI RAIN
+------------------------- */
+
+function startRain(type){
+
+const existingLayer = document.querySelector(".sss-quiz-confetti-layer");
+if(existingLayer) existingLayer.remove();
+
+const layer = document.createElement("div");
+layer.className = "sss-quiz-confetti-layer";
+layer.setAttribute("aria-hidden", "true");
+document.body.appendChild(layer);
+
+const emoji = "🖤";
+
+for(let i=0;i<62;i++){
+
+const el = document.createElement("span");
+
+el.className = "sss-quiz-confetti";
+el.textContent = emoji;
+
+el.style.left = Math.random()*100 + "vw";
+el.style.setProperty("--size", (14 + Math.random()*18) + "px");
+el.style.setProperty("--dur", (7600 + Math.random()*5200) + "ms");
+el.style.setProperty("--drift", ((Math.random() * 180) - 90) + "px");
+el.style.setProperty("--rot", ((Math.random() * 720) - 360) + "deg");
+el.style.animationDelay = (Math.random()*2600) + "ms";
+
+layer.appendChild(el);
+
+}
+
+window.setTimeout(function(){
+  if(layer && layer.parentNode) layer.remove();
+}, 14200);
+
+}
+
+function coverHeartRainHtml(){
+  let html = "";
+  for(let i = 0; i < 14; i++){
+    html += '<span class="bbb-result__coverHeart" style="--x:' + (8 + Math.random() * 84) + '%; --size:' + (11 + Math.random() * 9) + 'px; --dur:' + (3200 + Math.random() * 2400) + 'ms; --delay:-' + (Math.random() * 4200) + 'ms; --drift:' + ((Math.random() * 30) - 15) + 'px; --rot:' + ((Math.random() * 260) - 130) + 'deg;">🖤</span>';
+  }
+  return html;
+}
+
+});
+</script>
+{% schema %}
+{
+  "name":"Fictional Boyfriend Quiz",
+  "settings":[
+    { "type":"text", "id":"kicker", "label":"Kicker", "default":"reader quiz" },
+    { "type":"text", "id":"title", "label":"Title", "default":"who is your fictional boyfriend?" },
+    { "type":"textarea", "id":"subtext", "label":"Subtext", "default":"5 questions. one fictional man. books that will ruin your sleep." },
+    { "type":"text", "id":"cta_label", "label":"CTA Button Text", "default":"meet him" },
+    { "type":"text", "id":"tagline", "label":"Tagline (below button)", "default":"quick. dramatic. painfully accurate." }
+  ],
+  "presets":[{"name":"Fictional Boyfriend Quiz"}]
+}
+{% endschema %}

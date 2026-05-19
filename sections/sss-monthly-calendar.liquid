@@ -1,0 +1,759 @@
+{% comment %}
+  SSS Newsletter Calendar — Clean, Newsletter Driven
+{% endcomment %}
+
+{% comment %}
+  SSS Newsletter Calendar — Clean Final
+{% endcomment %}
+
+{%- assign active_drop = nil -%}
+{%- assign best_drop = nil -%}
+{%- assign best_drop_key = '' -%}
+{%- capture shared_preview_drop_handle -%}{% render 'sss-preview-drop-handle' %}{%- endcapture -%}
+{%- assign preview_drop_handle = section.settings.preview_drop_handle | default: shared_preview_drop_handle | strip -%}
+{%- assign now_key = 'now' | date: '%Y-%m-%d' -%}
+
+{%- if preview_drop_handle != blank -%}
+  {%- assign active_drop = shop.metaobjects.sss_drop[preview_drop_handle] -%}
+{%- elsif shop.metaobjects.sss_drop != blank -%}
+  {%- for d in shop.metaobjects.sss_drop.values -%}
+    {%- if d.release_date != blank -%}
+      {%- assign d_key = d.release_date | date: '%Y-%m-%d' -%}
+      {%- if d_key <= now_key -%}
+        {%- if best_drop_key == '' or d_key >= best_drop_key -%}
+          {%- assign best_drop = d -%}
+          {%- assign best_drop_key = d_key -%}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+
+  {%- if best_drop != nil -%}
+    {%- assign active_drop = best_drop -%}
+  {%- endif -%}
+{%- endif -%}
+
+{%- assign calendar_date = 'now' -%}
+{%- if active_drop != nil and active_drop.release_date != blank -%}
+  {%- assign calendar_date = active_drop.release_date -%}
+{%- endif -%}
+
+{%- assign current_month = calendar_date | date: "%m" -%}
+{%- assign current_year = calendar_date | date: "%Y" -%}
+{%- assign current_month_name = calendar_date | date: "%B" -%}
+{%- assign now_ts = "now" | date: "%s" | plus: 0 -%}
+{%- assign today_string = "now" | date: "%Y-%m-%d" -%}
+{%- assign issues = shop.metaobjects.newsletter_issue.values -%}
+{%- assign prompts_source = active_drop.prompts.value | default: active_drop.prompts | default: '' -%}
+{%- assign calendar_accent = '#ff3ea5' -%}
+{%- assign calendar_card_bg = '#151515' -%}
+{%- assign calendar_text = '#f6f6f6' -%}
+{%- if active_drop != nil -%}
+  {%- if active_drop.mood_accent != blank -%}{%- assign calendar_accent = active_drop.mood_accent -%}{%- endif -%}
+  {%- if active_drop.mood_pill_bg != blank -%}{%- assign calendar_card_bg = active_drop.mood_pill_bg -%}{%- endif -%}
+  {%- if active_drop.mood_pill_ink != blank -%}{%- assign calendar_text = active_drop.mood_pill_ink -%}{%- endif -%}
+{%- endif -%}
+
+<section
+  class="sss-calendar"
+  id="sss-calendar-{{ section.id }}"
+  data-calendar-year="{{ current_year }}"
+  data-calendar-month="{{ current_month }}"
+>
+  <div class="sss-calendar__wrap">
+
+    <!-- HEADER -->
+<header class="sss-calendar__header">
+
+  <p class="sss-calendar__overline">
+    stay up to date on the latest reads
+  </p>
+
+  <h2>
+    {{ current_month_name }} — {% if section.settings.collection_name != blank %}{{ section.settings.collection_name }}{% elsif active_drop != nil and active_drop.name != blank %}{{ active_drop.name }}{% endif %}
+  </h2>
+
+  <p class="sss-calendar__subtitle">
+    {{ section.settings.subtitle }}
+  </p>
+
+</header>
+    <div class="sss-calendar__weekdays" aria-hidden="true">
+      <span>sun</span>
+      <span>mon</span>
+      <span>tue</span>
+      <span>wed</span>
+      <span>thu</span>
+      <span>fri</span>
+      <span>sat</span>
+    </div>
+    <!-- GRID -->
+    <div class="sss-calendar__grid">
+
+      {% assign month_number = current_month | plus: 0 %}
+
+      {% if month_number == 2 %}
+        {% assign total_days = 28 %}
+      {% elsif month_number == 4 or month_number == 6 or month_number == 9 or month_number == 11 %}
+        {% assign total_days = 30 %}
+      {% else %}
+        {% assign total_days = 31 %}
+      {% endif %}
+
+      {% comment %} Count total Sundays {% endcomment %}
+      {% assign total_sundays = 0 %}
+      {% assign first_sunday_day = 0 %}
+      {% for d in (1..total_days) %}
+        {% capture temp_day %}{{ current_year }}-{{ current_month }}-{{ d | prepend: "0" | slice: -2, 2 }}{% endcapture %}
+        {% assign temp_weekday = temp_day | date: "%w" | plus: 0 %}
+        {% if temp_weekday == 0 %}
+          {% assign total_sundays = total_sundays | plus: 1 %}
+          {% if first_sunday_day == 0 %}
+            {% assign first_sunday_day = d %}
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+
+      {% if first_sunday_day == 1 %}
+        {% assign first_day_column_start = 1 %}
+      {% else %}
+        {% assign first_day_column_start = 9 | minus: first_sunday_day %}
+      {% endif %}
+
+      {% for day in (1..total_days) %}
+
+        {% capture padded_day %}{{ day | prepend: "0" | slice: -2, 2 }}{% endcapture %}
+        {% capture day_string %}{{ current_year }}-{{ current_month }}-{{ padded_day }}{% endcapture %}
+
+        {% assign matched_issue = nil %}
+        {% for issue in issues %}
+          {% if issue.publish_date.value != blank %}
+            {% assign issue_ts = issue.publish_date.value | date: "%s" | plus: 0 %}
+            {% assign live_ts = issue_ts | plus: 36000 %}
+            {% if live_ts > now_ts %}
+              {% continue %}
+            {% endif %}
+            {% assign issue_date = issue.publish_date.value | date: "%Y-%m-%d" %}
+            {% if issue_date == day_string %}
+              {% assign matched_issue = issue %}
+              {% break %}
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+
+        <div class="sss-calendar__cell
+          {% if matched_issue %}has-newsletter{% endif %}
+          {% if day_string == today_string %}is-today{% endif %}
+          {% if day_string < today_string %}is-past{% endif %}
+          {% if prompts_source != blank %}sss-calendar__cell--prompt{% endif %}
+        "
+        {% if forloop.first %}
+          data-calendar-first-day
+          style="grid-column-start: {{ first_day_column_start }};"
+        {% endif %}>
+
+          {% if prompts_source != blank %}
+            <button
+              type="button"
+              class="sss-calendar__promptHit"
+              data-prompt-day="{{ day }}"
+              aria-label="open daily prompt for day {{ day }}">
+            </button>
+          {% endif %}
+
+          <div class="sss-calendar__date">{{ day }}</div>
+
+          {% assign weekday = day_string | date: "%w" | plus: 0 %}
+
+          {% if weekday == 0 %}
+            {% assign sunday_position = 0 %}
+            {% for d in (1..day) %}
+              {% capture temp_day %}{{ current_year }}-{{ current_month }}-{{ d | prepend: "0" | slice: -2, 2 }}{% endcapture %}
+              {% assign temp_weekday = temp_day | date: "%w" | plus: 0 %}
+              {% if temp_weekday == 0 %}
+                {% assign sunday_position = sunday_position | plus: 1 %}
+              {% endif %}
+            {% endfor %}
+
+            <div class="sss-calendar__badge">
+              {% if sunday_position == 1 %}
+                smutty sunday
+              {% elsif sunday_position == 2 %}
+                sentimental sunday
+              {% elsif sunday_position == 3 %}
+                trope report
+              {% elsif sunday_position == total_sundays %}
+                chapter’s end
+              {% else %}
+                extra, extra
+              {% endif %}
+            </div>
+          {% endif %}
+
+          {% if matched_issue %}
+            {%- assign issue_link = matched_issue.url.value.url -%}
+            {% if issue_link != blank %}
+              <a class="sss-calendar__open"
+                href="{{ issue_link }}"
+                target="_blank">
+                view →
+              </a>
+            {% endif %}
+          {% elsif weekday == 0 and day_string > today_string %}
+            <div class="sss-calendar__loading">
+              newsletter loading…
+            </div>
+          {% endif %}
+
+        </div>
+
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<div class="sss-calendar__promptModal" id="sssCalendarPromptModal-{{ section.id }}" hidden>
+  <div class="sss-calendar__promptScrim" data-prompt-close></div>
+  <div class="sss-calendar__promptCard" role="dialog" aria-modal="true" aria-labelledby="sssCalendarPromptTitle-{{ section.id }}">
+    <button type="button" class="sss-calendar__promptClose" data-prompt-close aria-label="close prompt">×</button>
+    <p class="sss-calendar__promptEyebrow">daily prompt</p>
+    <h3 class="sss-calendar__promptTitle" id="sssCalendarPromptTitle-{{ section.id }}">day 1</h3>
+    <p class="sss-calendar__promptText" id="sssCalendarPromptText-{{ section.id }}"></p>
+  </div>
+</div>
+
+<style>
+  /* HARD RESET HEADER FLOW */
+
+#sss-calendar-{{ section.id }} .sss-calendar__header{
+  position:relative !important;
+  display:block !important;
+  margin-bottom:50px !important;
+  z-index:1;
+}
+
+#sss-calendar-{{ section.id }} .sss-calendar__header h2{
+  position:relative !important;
+  display:block !important;
+  margin:0 0 10px 0 !important;
+}
+
+#sss-calendar-{{ section.id }} .sss-calendar__grid{
+  position:relative !important;
+  z-index:2;
+  margin-top:0 !important;
+}
+/* ======================================
+   SSS CALENDAR — STABLE VERSION
+====================================== */
+
+.sss-calendar{
+  --sss-calendar-accent: {{ calendar_accent }};
+  --sss-calendar-card-bg: {{ calendar_card_bg }};
+  --sss-calendar-text: {{ calendar_text }};
+  --sss-calendar-line: color-mix(in srgb, var(--sss-calendar-accent) 24%, rgba(255,255,255,.12));
+  --sss-calendar-soft: color-mix(in srgb, var(--sss-calendar-accent) 14%, transparent);
+  --sss-calendar-glow: color-mix(in srgb, var(--sss-calendar-accent) 24%, transparent);
+  --sss-calendar-surface: color-mix(in srgb, var(--sss-calendar-card-bg) 82%, white 18%);
+  --sss-calendar-surface-strong: color-mix(in srgb, var(--sss-calendar-card-bg) 68%, white 32%);
+  --sss-calendar-ink: color-mix(in srgb, var(--sss-calendar-text) 84%, #111 16%);
+  --sss-calendar-muted: color-mix(in srgb, var(--sss-calendar-text) 56%, transparent);
+  background:
+    radial-gradient(circle at top center, color-mix(in srgb, var(--sss-calendar-accent) 12%, transparent), transparent 52%),
+    linear-gradient(180deg, color-mix(in srgb, var(--sss-calendar-card-bg) 28%, #0b0b0b 72%), #0b0b0b 40%);
+  padding:60px 20px;
+  color:var(--sss-calendar-text);
+}
+
+.sss-calendar__wrap{
+  max-width:1100px;
+  margin:0 auto;
+}
+
+/* ================= HEADER ================= */
+
+.sss-calendar__header{
+  margin-bottom:40px;
+}
+
+.sss-calendar__header h2{
+  font-size:28px;
+  font-weight:400;
+  line-height:1.2;
+  margin:0;
+  text-transform:lowercase;
+  color:var(--sss-calendar-text);
+}
+
+.sss-calendar__subtitle{
+  margin-top:8px;
+  font-size:14px;
+  color:color-mix(in srgb, var(--sss-calendar-text) 74%, transparent);
+}
+
+.sss-calendar__weekdays{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:12px;
+  margin:0 0 12px;
+}
+
+.sss-calendar__weekdays span{
+  font-size:10px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:color-mix(in srgb, var(--sss-calendar-text) 54%, transparent);
+  text-align:left;
+  padding:0 4px;
+}
+
+/* ================= GRID ================= */
+
+.sss-calendar__grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:12px;
+}
+
+/* ================= CELL ================= */
+
+.sss-calendar__cell{
+  aspect-ratio:1 / 1;
+  background:var(--sss-calendar-surface);
+  border:1px solid var(--sss-calendar-line);
+  border-radius:16px;
+  padding:10px;
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  transition:background .3s ease, border .3s ease;
+  color:var(--sss-calendar-ink);
+}
+
+.sss-calendar__cell--prompt{
+  cursor:pointer;
+}
+
+.sss-calendar__promptHit{
+  appearance:none;
+  position:absolute;
+  inset:0;
+  display:block;
+  width:100%;
+  height:100%;
+  z-index:1;
+  border:0;
+  border-radius:16px;
+  background:transparent;
+  cursor:pointer;
+}
+
+.sss-calendar__cell--empty{
+  background:transparent;
+  border:none;
+  pointer-events:none;
+}
+
+/* ================= DATE ================= */
+
+.sss-calendar__date{
+  position:relative;
+  z-index:2;
+  font-size:12px;
+  color:var(--sss-calendar-muted);
+}
+
+/* ================= PAST DAYS ================= */
+
+.is-past{
+  background:color-mix(in srgb, var(--sss-calendar-surface) 84%, var(--sss-calendar-accent) 16%);
+  border-color:color-mix(in srgb, var(--sss-calendar-accent) 18%, rgba(255,255,255,.1));
+}
+
+.is-past:not(.has-newsletter){
+  opacity:.8;
+}
+.sss-calendar__open{
+  position:relative;
+  z-index:3;
+  pointer-events:auto;
+}
+/* ================= TODAY ================= */
+
+.is-today{
+  border:1px solid color-mix(in srgb, var(--sss-calendar-accent) 52%, white 18%);
+  box-shadow:0 0 25px color-mix(in srgb, var(--sss-calendar-accent) 20%, transparent);
+  background:var(--sss-calendar-surface-strong);
+}
+
+/* ================= NEWSLETTER DAYS ================= */
+
+.has-newsletter:not(.is-past){
+  border:1px solid color-mix(in srgb, var(--sss-calendar-accent) 46%, white 8%);
+}
+
+/* ================= BADGE ================= */
+
+.sss-calendar__badge{
+  position:relative;
+  z-index:2;
+  font-size:10px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:color-mix(in srgb, var(--sss-calendar-accent) 54%, var(--sss-calendar-ink) 46%);
+  font-weight:600;
+}
+
+/* ================= BUTTON ================= */
+
+.sss-calendar__open{
+  background:none;
+  border:none;
+  color:var(--sss-calendar-ink);
+  font-size:11px;
+  text-align:left;
+  padding:0;
+  cursor:pointer;
+  opacity:.72;
+}
+
+.sss-calendar__open:hover{
+  opacity:1;
+}
+
+.sss-calendar__cell--prompt:hover{
+  background:color-mix(in srgb, var(--sss-calendar-surface) 76%, var(--sss-calendar-accent) 24%);
+  border-color:color-mix(in srgb, var(--sss-calendar-accent) 32%, white 8%);
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--sss-calendar-accent) 18%, transparent), 0 0 24px color-mix(in srgb, var(--sss-calendar-accent) 18%, transparent);
+}
+
+.sss-calendar__promptHit:focus-visible{
+  outline:2px solid var(--sss-calendar-accent);
+  outline-offset:-2px;
+}
+
+/* ================= LOADING ================= */
+
+.sss-calendar__loading{
+  position:relative;
+  z-index:2;
+  font-size:11px;
+  color:color-mix(in srgb, var(--sss-calendar-accent) 52%, var(--sss-calendar-ink) 48%);
+}
+
+/* ================= MODAL ================= */
+
+.sss-calendar__modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.75);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  opacity:0;
+  pointer-events:none;
+  transition:.3s ease;
+  z-index:9999;
+}
+
+.sss-calendar__promptModal[hidden]{
+  display:none !important;
+}
+
+.sss-calendar__promptModal{
+  position:fixed;
+  inset:0;
+  z-index:10000;
+}
+
+.sss-calendar__promptScrim{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.72);
+  backdrop-filter:blur(6px);
+}
+
+.sss-calendar__promptCard{
+  position:relative;
+  z-index:1;
+  width:min(92vw, 520px);
+  margin:14vh auto 0;
+  padding:26px 24px 24px;
+  border-radius:24px;
+  border:1px solid rgba(255,255,255,.12);
+  background:linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--sss-calendar-card-bg) 76%, white 24%),
+    color-mix(in srgb, var(--sss-calendar-card-bg) 64%, white 36%)
+  );
+  color:var(--sss-calendar-ink);
+  box-shadow:0 30px 80px rgba(0,0,0,.48);
+}
+
+.sss-calendar__promptClose{
+  appearance:none;
+  position:absolute;
+  top:14px;
+  right:14px;
+  width:34px;
+  height:34px;
+  border-radius:999px;
+  border:1px solid rgba(0,0,0,.12);
+  background:rgba(0,0,0,.04);
+  color:var(--sss-calendar-ink);
+  font:inherit;
+  font-size:20px;
+  cursor:pointer;
+}
+
+.sss-calendar__promptEyebrow{
+  margin:0 0 8px;
+  font-size:11px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:color-mix(in srgb, var(--sss-calendar-ink) 56%, transparent);
+}
+
+.sss-calendar__promptTitle{
+  margin:0;
+  font-size:30px;
+  line-height:1.02;
+  text-transform:lowercase;
+}
+
+.sss-calendar__promptText{
+  margin:14px 0 0;
+  font-size:16px;
+  line-height:1.7;
+  color:color-mix(in srgb, var(--sss-calendar-ink) 84%, transparent);
+  text-transform:lowercase;
+}
+
+.sss-calendar__modal.is-open{
+  opacity:1;
+  pointer-events:auto;
+}
+
+.sss-calendar__modalInner{
+  background:#111;
+  padding:30px;
+  border-radius:20px;
+  max-width:420px;
+  width:90%;
+  text-align:center;
+  position:relative;
+}
+
+.sss-calendar__modalInner img{
+  width:100%;
+  border-radius:12px;
+  margin-bottom:16px;
+}
+
+.sss-calendar__close{
+  position:absolute;
+  top:12px;
+  right:16px;
+  background:none;
+  border:none;
+  font-size:26px;
+  color:#fff;
+  cursor:pointer;
+}
+
+/* ================= MOBILE ================= */
+
+@media (max-width: 768px){
+
+  .sss-calendar{
+    padding:40px 14px;
+  }
+
+  .sss-calendar__header h2{
+    font-size:22px;
+  }
+
+  .sss-calendar__grid{
+    gap:8px;
+  }
+
+  .sss-calendar__cell{
+    border-radius:12px;
+    padding:8px;
+  }
+
+  .sss-calendar__date{
+    font-size:11px;
+  }
+
+}
+/* Sunday Identity Badge */
+
+.sss-calendar__badge{
+  font-size:10px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  margin-top:6px;
+  opacity:.85;
+}
+
+/* Give Sundays subtle identity glow */
+
+.sss-calendar__cell .sss-calendar__badge{
+  color:color-mix(in srgb, var(--sss-calendar-accent) 54%, var(--sss-calendar-ink) 46%);
+}
+@media (max-width:768px){
+
+  .sss-calendar{
+    padding:32px 12px;
+  }
+
+  .sss-calendar__grid{
+    gap:6px;
+  }
+
+  /* Let cells grow instead of forcing square */
+  .sss-calendar__cell{
+    aspect-ratio:auto;
+    min-height:90px;
+    padding:8px 6px;
+  }
+
+  .sss-calendar__date{
+    font-size:11px;
+  }
+
+  .sss-calendar__badge{
+    font-size:8px;
+    letter-spacing:.08em;
+  }
+
+  .sss-calendar__open{
+    font-size:9px;
+  }
+
+  .sss-calendar__loading{
+    font-size:9px;
+  }
+
+}
+.sss-calendar__overline{
+  font-size:11px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.62);
+  margin:0 0 14px 0;
+}
+</style>
+
+<script>
+(function(){
+  function initSssMonthlyCalendar{{ section.id }}(){
+    var root = document.getElementById('sss-calendar-{{ section.id }}');
+    if(!root || root.dataset.promptReady === 'true') return;
+    root.dataset.promptReady = 'true';
+
+  const promptModal = document.getElementById('sssCalendarPromptModal-{{ section.id }}');
+  const promptTitle = document.getElementById('sssCalendarPromptTitle-{{ section.id }}');
+  const promptText = document.getElementById('sssCalendarPromptText-{{ section.id }}');
+  const promptValues = `{{ prompts_source | escape }}`.split('||').map(function(item){ return item.trim(); });
+
+  function setPromptContrast(){
+    const promptCards = root.querySelectorAll('.sss-calendar__cell');
+    promptCards.forEach(function(card){
+      const bg = window.getComputedStyle(card).backgroundColor;
+      const match = bg && bg.match(/\d+(\.\d+)?/g);
+      if(!match || match.length < 3) return;
+      const r = Number(match[0]);
+      const g = Number(match[1]);
+      const b = Number(match[2]);
+      const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+      if(luminance > 0.64){
+        card.style.color = 'rgba(20,20,20,.88)';
+      }
+    });
+  }
+
+  root.querySelectorAll('.sss-calendar__promptHit[data-prompt-day]').forEach(function(hitArea){
+    function openDayPrompt(){
+      const day = Number(hitArea.getAttribute('data-prompt-day'));
+      if(!promptModal || !promptTitle || !promptText || !promptValues[day - 1]) return;
+      promptTitle.textContent = 'day ' + day;
+      promptText.textContent = promptValues[day - 1];
+      promptModal.hidden = false;
+      document.body.style.overflow = 'hidden';
+    }
+
+    hitArea.addEventListener('click', openDayPrompt);
+    hitArea.addEventListener('keydown', function(event){
+      if(event.key === 'Enter' || event.key === ' '){
+        event.preventDefault();
+        openDayPrompt();
+      }
+    });
+  });
+
+  if(promptModal){
+    promptModal.querySelectorAll('[data-prompt-close]').forEach(function(closeEl){
+      closeEl.addEventListener('click', function(){
+        promptModal.hidden = true;
+        document.body.style.overflow = '';
+      });
+    });
+  }
+
+  document.addEventListener('keydown', function(event){
+    if(event.key === 'Escape' && promptModal && !promptModal.hidden){
+      promptModal.hidden = true;
+      document.body.style.overflow = '';
+    }
+  });
+
+  setPromptContrast();
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initSssMonthlyCalendar{{ section.id }});
+  } else {
+    initSssMonthlyCalendar{{ section.id }}();
+  }
+
+  document.addEventListener('shopify:section:load', function(event){
+    if(event.detail && event.detail.sectionId === '{{ section.id }}'){
+      var root = document.getElementById('sss-calendar-{{ section.id }}');
+      if(root) root.dataset.promptReady = '';
+      initSssMonthlyCalendar{{ section.id }}();
+    }
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "sss calendar",
+  "settings": [
+    {
+      "type": "text",
+      "id": "collection_name",
+      "label": "Collection Name",
+      "default": "romantically unwell"
+    },
+    {
+      "type": "text",
+      "id": "subtitle",
+      "label": "Subtitle",
+      "default": "a month of chaos, crushes, and fictional men"
+    },
+    {
+      "type": "text",
+      "id": "preview_drop_handle",
+      "label": "Preview Drop Handle",
+      "info": "Optional. Use this to stage the next drop and month before it goes live."
+    }
+  ],
+  "presets":[
+    {"name":"sss calendar"}
+  ]
+}
+{% endschema %}

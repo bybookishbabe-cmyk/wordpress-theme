@@ -1,0 +1,250 @@
+{% assign books = shop.metaobjects.sss_library.values %}
+{% assign trope_tokens = '|' %}
+{% assign trope_rows = '' %}
+{% assign trope_total = 0 %}
+
+{% for book in books %}
+  {% capture is_visible %}{% render 'sss-book-visible', book: book, allow_hidden_from_library: true %}{% endcapture %}
+  {% assign is_visible_value = is_visible | strip %}
+  {% unless is_visible_value == 'true' %}
+    {% continue %}
+  {% endunless %}
+
+  {% for trope in book.tropes.value %}
+    {% assign trope_name = trope.name | default: trope | strip %}
+    {% if trope_name == blank %}
+      {% continue %}
+    {% endif %}
+    {% assign trope_token = '|' | append: trope_name | append: '|' %}
+    {% unless trope_tokens contains trope_token %}
+      {% assign trope_tokens = trope_tokens | append: trope_name | append: '|' %}
+    {% endunless %}
+  {% endfor %}
+{% endfor %}
+
+{% assign trope_list = trope_tokens | split: '|' | sort_natural %}
+{% for trope_name in trope_list %}
+  {% if trope_name == blank %}
+    {% continue %}
+  {% endif %}
+
+  {% assign trope_total = trope_total | plus: 1 %}
+  {% assign trope_count = 0 %}
+  {% assign trope_handle = trope_name | handleize %}
+  {% assign trope_page = blank %}
+  {% assign trope_page_handle_books = trope_handle | append: '-books' %}
+
+  {% if all_pages[trope_page_handle_books] != blank %}
+    {% assign trope_page = all_pages[trope_page_handle_books] %}
+  {% elsif all_pages[trope_handle] != blank %}
+    {% assign trope_page = all_pages[trope_handle] %}
+  {% endif %}
+
+  {% for book in books %}
+    {% capture is_visible %}{% render 'sss-book-visible', book: book, allow_hidden_from_library: true %}{% endcapture %}
+    {% assign is_visible_value = is_visible | strip %}
+    {% unless is_visible_value == 'true' %}
+      {% continue %}
+    {% endunless %}
+
+    {% assign trope_found = false %}
+    {% for trope in book.tropes.value %}
+      {% assign book_trope_name = trope.name | default: trope | strip %}
+      {% if book_trope_name == trope_name %}
+        {% assign trope_found = true %}
+        {% break %}
+      {% endif %}
+    {% endfor %}
+
+    {% if trope_found %}
+      {% assign trope_count = trope_count | plus: 1 %}
+    {% endif %}
+  {% endfor %}
+
+  {% capture trope_row %}
+    <tr>
+      <td>{{ trope_name }}</td>
+      <td>{{ trope_count }}</td>
+      <td>
+        {% if trope_page != blank %}
+          <span class="sss-tropeAudit__status sss-tropeAudit__status--yes">yes</span>
+        {% else %}
+          <span class="sss-tropeAudit__status sss-tropeAudit__status--no">no</span>
+        {% endif %}
+      </td>
+      <td>
+        {% if trope_page != blank %}
+          <a class="sss-tropeAudit__link" href="{{ trope_page.url }}" target="_blank" rel="noopener">{{ trope_page.handle }}</a>
+        {% else %}
+          <span class="sss-tropeAudit__muted">no linked page</span>
+        {% endif %}
+      </td>
+    </tr>
+  {% endcapture %}
+  {% assign trope_rows = trope_rows | append: trope_row %}
+{% endfor %}
+
+<section class="sss-tropeAudit">
+  <div class="sss-tropeAudit__wrap page-width">
+    <p class="sss-tropeAudit__kicker">{{ section.settings.kicker }}</p>
+    <h2 class="sss-tropeAudit__heading">{{ section.settings.heading }}</h2>
+    <p class="sss-tropeAudit__sub">{{ trope_total }} tropes across visible library books.</p>
+
+    {% if trope_rows != blank %}
+      <div class="sss-tropeAudit__tableWrap">
+        <table class="sss-tropeAudit__table">
+          <thead>
+            <tr>
+              <th>trope</th>
+              <th>books</th>
+              <th>page?</th>
+              <th>linked handle</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{ trope_rows }}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="sss-tropeAudit__empty">No visible tropes found yet.</div>
+    {% endif %}
+  </div>
+</section>
+
+<style>
+  .sss-tropeAudit{
+    background:#070709;
+    color:#f4efe9;
+    padding:24px 20px 72px;
+  }
+
+  .sss-tropeAudit__wrap{
+    max-width:1160px;
+  }
+
+  .sss-tropeAudit__kicker{
+    margin:0 0 10px;
+    font-size:12px;
+    letter-spacing:.28em;
+    text-transform:uppercase;
+    color:rgba(244,239,233,.62);
+  }
+
+  .sss-tropeAudit__heading{
+    margin:0;
+    font-size:clamp(2.4rem,4vw,4.2rem);
+    line-height:1;
+    font-weight:500;
+  }
+
+  .sss-tropeAudit__sub{
+    margin:12px 0 0;
+    font-size:15px;
+    line-height:1.7;
+    color:rgba(244,239,233,.72);
+  }
+
+  .sss-tropeAudit__tableWrap{
+    margin-top:24px;
+    border-radius:20px;
+    overflow:auto;
+    border:1px solid rgba(255,255,255,.08);
+    background:rgba(255,255,255,.04);
+    box-shadow:0 16px 30px rgba(0,0,0,.25);
+  }
+
+  .sss-tropeAudit__table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:680px;
+  }
+
+  .sss-tropeAudit__table th,
+  .sss-tropeAudit__table td{
+    padding:14px 16px;
+    text-align:left;
+    border-bottom:1px solid rgba(255,255,255,.08);
+    vertical-align:top;
+  }
+
+  .sss-tropeAudit__table th{
+    font-size:11px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:rgba(244,239,233,.6);
+    background:rgba(255,255,255,.03);
+  }
+
+  .sss-tropeAudit__status{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:42px;
+    min-height:28px;
+    padding:0 10px;
+    border-radius:999px;
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+
+  .sss-tropeAudit__status--yes{
+    background:rgba(150, 204, 172, .14);
+    border:1px solid rgba(150, 204, 172, .32);
+    color:#c4efd1;
+  }
+
+  .sss-tropeAudit__status--no{
+    background:rgba(255,138,199,.08);
+    border:1px solid rgba(255,138,199,.2);
+    color:#ffb3da;
+  }
+
+  .sss-tropeAudit__link{
+    color:#b7cdfb;
+    text-decoration:none;
+  }
+
+  .sss-tropeAudit__link:hover{
+    text-decoration:underline;
+  }
+
+  .sss-tropeAudit__muted{
+    color:rgba(244,239,233,.52);
+  }
+
+  .sss-tropeAudit__empty{
+    margin-top:24px;
+    padding:18px 20px;
+    border-radius:18px;
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.08);
+    color:rgba(244,239,233,.72);
+  }
+</style>
+
+{% schema %}
+{
+  "name": "sss trope audit",
+  "settings": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "kicker",
+      "default": "library cleanup"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "heading",
+      "default": "trope page audit"
+    }
+  ],
+  "presets": [
+    {
+      "name": "sss trope audit"
+    }
+  ]
+}
+{% endschema %}

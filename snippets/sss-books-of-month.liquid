@@ -1,0 +1,181 @@
+{% comment %}
+===============================================================
+BOOKS OF THE MONTH
+Used in both Public + Society libraries
+===============================================================
+{% endcomment %}
+
+{% assign current_month = 'now' | date: "%Y-%m" %}
+{% assign today_date = 'now' | date: "%Y-%m-%d" %}
+{% if include_private_books == nil %}
+  {% assign include_private_books = true %}
+{% endif %}
+
+{% assign current_month_number = 'now' | date: "%m" | plus: 0 %}
+{% assign current_month_padded = 'now' | date: "%m" %}
+{% assign current_year = 'now' | date: "%Y" %}
+
+{% if current_month_number == 2 %}
+  {% assign total_days = 28 %}
+{% elsif current_month_number == 4 or current_month_number == 6 or current_month_number == 9 or current_month_number == 11 %}
+  {% assign total_days = 30 %}
+{% else %}
+  {% assign total_days = 31 %}
+{% endif %}
+
+{% assign total_sundays = 0 %}
+{% for d in (1..total_days) %}
+{% capture temp_day %}{{ current_year }}-{{ current_month_padded }}-{{ d | prepend: "0" | slice: -2, 2 }}{% endcapture %}
+{% assign temp_weekday = temp_day | date: "%w" | plus: 0 %}
+{% if temp_weekday == 0 %}
+{% assign total_sundays = total_sundays | plus: 1 %}
+  {% endif %}
+{% endfor %}
+
+{% assign issue_types_string = "smutty|sentimental|trope report|chapter's end" %}
+{% if total_sundays >= 5 %}
+  {% assign issue_types_string = "smutty|sentimental|trope report|extra extra|chapter's end" %}
+{% endif %}
+{% assign issue_types = issue_types_string | split: "|" %}
+
+<div id="monthly" class="sss-lib__monthlyIntro">
+
+<div class="sss-lib__divider"></div>
+
+{% assign current_month_name = 'now' | date: "%B %Y" %}
+
+<div class="sss-lib__monthlyTitle">
+books of the month
+</div>
+
+<div class="sss-lib__monthlySub">
+what we’re obsessed with in {{ current_month_name }}
+</div>
+
+</div>
+
+
+<div id="topshelf" class="sss-lib__topshelf">
+
+<div class="sss-lib__topshelfHead">
+
+<div class="sss-lib__topshelfTitle">
+
+<span class="sss-lib__topshelfMonth">
+currently reading
+</span>
+
+</div>
+
+</div>
+
+
+<div class="sss-lib__topshelfRow">
+
+{% for issue in issue_types %}
+
+{% assign matched_book = nil %}
+
+{% for book in books %}
+{% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+{% assign is_visible_value = is_visible | strip %}
+{% unless is_visible_value == 'true' %}
+{% continue %}
+{% endunless %}
+{% capture is_private %}{% render 'sss-book-private', book: book %}{% endcapture %}
+{% assign is_private_value = is_private | strip %}
+{% if include_private_books != true and is_private_value == 'true' %}
+{% continue %}
+{% endif %}
+
+{% assign book_month = '' %}
+
+{% if book.featured_in_newsletter_date.value != blank %}
+{% assign featured_date = book.featured_in_newsletter_date.value | date: "%Y-%m-%d" %}
+{% if featured_date > today_date %}
+{% continue %}
+{% endif %}
+{% assign book_month = book.featured_in_newsletter_date.value | date: "%Y-%m" %}
+{% endif %}
+
+{% if book_month == current_month %}
+
+{% assign issue_day = book.featured_in_newsletter_date.value | date: "%d" | plus: 0 %}
+{% assign sunday_index = 0 %}
+{% for d in (1..issue_day) %}
+{% capture temp_day %}{{ current_year }}-{{ current_month_padded }}-{{ d | prepend: "0" | slice: -2, 2 }}{% endcapture %}
+{% assign temp_weekday = temp_day | date: "%w" | plus: 0 %}
+{% if temp_weekday == 0 %}
+{% assign sunday_index = sunday_index | plus: 1 %}
+{% endif %}
+{% endfor %}
+
+{% assign book_issue = '' %}
+
+{% case sunday_index %}
+{% when 1 %}{% assign book_issue = "smutty" %}
+{% when 2 %}{% assign book_issue = "sentimental" %}
+{% when 3 %}{% assign book_issue = "trope report" %}
+{% when 4 %}
+{% if total_sundays >= 5 %}
+{% assign book_issue = "extra extra" %}
+{% else %}
+{% assign book_issue = "chapter's end" %}
+{% endif %}
+{% when 5 %}{% assign book_issue = "chapter's end" %}
+{% endcase %}
+
+{% if book_issue == issue %}
+{% assign matched_book = book %}
+{% break %}
+{% endif %}
+
+{% endif %}
+
+{% endfor %}
+
+
+<div class="sss-lib__topshelfItem">
+
+<div class="sss-lib__topshelfIssue">
+{{ issue }}
+</div>
+
+{% if matched_book %}
+
+{% render 'sss-book-card', book: matched_book %}
+
+{% else %}
+
+{% assign target_sunday_index = forloop.index %}
+{% assign found_issue_date = '' %}
+{% assign running_sunday_index = 0 %}
+{% for d in (1..total_days) %}
+{% capture temp_day %}{{ current_year }}-{{ current_month_padded }}-{{ d | prepend: "0" | slice: -2, 2 }}{% endcapture %}
+{% assign temp_weekday = temp_day | date: "%w" | plus: 0 %}
+{% if temp_weekday == 0 %}
+{% assign running_sunday_index = running_sunday_index | plus: 1 %}
+{% if running_sunday_index == target_sunday_index %}
+{% assign found_issue_date = temp_day | date: "%B %d" | replace: " 0", " " %}
+{% break %}
+{% endif %}
+{% endif %}
+{% endfor %}
+
+
+<div class="sss-lib__topshelfPlaceholder">
+{% if found_issue_date != blank %}
+<span>revealing {{ found_issue_date }}</span>
+{% else %}
+<span>revealing soon</span>
+{% endif %}
+</div>
+
+{% endif %}
+
+</div>
+
+{% endfor %}
+
+</div>
+</div>

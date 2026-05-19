@@ -1,0 +1,1062 @@
+{% comment %}
+  Editable media kit page for bybookishbabe.
+  Uses blocks so stats, facts, offers, audience notes, and partner rows can be edited in the theme editor.
+{% endcomment %}
+
+{%- liquid
+  assign contact_href = section.settings.contact_link
+  if contact_href == blank and section.settings.contact_email != blank
+    assign contact_href = 'mailto:' | append: section.settings.contact_email
+  endif
+-%}
+
+<section class="bbb-mk" id="bbb-mk-{{ section.id }}">
+  <div class="bbb-mk__hero">
+    <div class="bbb-mk__halo" aria-hidden="true"></div>
+    <div class="bbb-mk__wrap bbb-mk__heroInner">
+      {% if section.settings.eyebrow != blank %}
+        <p class="bbb-mk__eyebrow">{{ section.settings.eyebrow }}</p>
+      {% endif %}
+
+      {% if section.settings.title != blank %}
+        <h1 class="bbb-mk__title">{{ section.settings.title }}</h1>
+      {% endif %}
+
+      {% if section.settings.subtitle != blank %}
+        <p class="bbb-mk__subtitle">{{ section.settings.subtitle }}</p>
+      {% endif %}
+
+      {% if section.settings.ornament != blank %}
+        <p class="bbb-mk__ornament">{{ section.settings.ornament }}</p>
+      {% endif %}
+
+      <div class="bbb-mk__heroStats" aria-label="media kit highlights">
+        {% for block in section.blocks %}
+          {% if block.type == 'hero_stat' %}
+            <div class="bbb-mk__heroStat" {{ block.shopify_attributes }}>
+              <span class="bbb-mk__heroStatNum">{{ block.settings.value }}</span>
+              <span class="bbb-mk__heroStatLabel">{{ block.settings.label }}</span>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      {% if section.settings.tagline != blank %}
+        <p class="bbb-mk__tagline">{{ section.settings.tagline }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="bbb-mk__band">
+    <div class="bbb-mk__wrap">
+      <div class="bbb-mk__section bbb-mk__about">
+        <div class="bbb-mk__sectionHead">
+          <p class="bbb-mk__kicker">{{ section.settings.about_kicker }}</p>
+          <h2 class="bbb-mk__sectionTitle">{{ section.settings.about_title }}</h2>
+        </div>
+
+        <div class="bbb-mk__aboutGrid">
+          {% if section.settings.about_body != blank %}
+            <div class="bbb-mk__copy">{{ section.settings.about_body | newline_to_br }}</div>
+          {% endif %}
+
+          <div class="bbb-mk__factList" aria-label="brand facts">
+            {% for block in section.blocks %}
+              {% if block.type == 'fact' %}
+                <div class="bbb-mk__fact" {{ block.shopify_attributes }}>
+                  <span class="bbb-mk__factKey">{{ block.settings.label }}</span>
+                  <span class="bbb-mk__factValue">{{ block.settings.value }}</span>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bbb-mk__band bbb-mk__band--alt">
+    <div class="bbb-mk__wrap">
+      <div class="bbb-mk__section">
+        <div class="bbb-mk__sectionHead">
+          <p class="bbb-mk__kicker">{{ section.settings.numbers_kicker }}</p>
+          <h2 class="bbb-mk__sectionTitle">{{ section.settings.numbers_title }}</h2>
+        </div>
+
+        <div class="bbb-mk__numbers">
+          {% for block in section.blocks %}
+            {% if block.type == 'number' %}
+              <article class="bbb-mk__numberCard" {{ block.shopify_attributes }}>
+                <p class="bbb-mk__numberValue">{{ block.settings.value }}</p>
+                <h3 class="bbb-mk__cardLabel">{{ block.settings.label }}</h3>
+                <p class="bbb-mk__smallText">{{ block.settings.text }}</p>
+              </article>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bbb-mk__band">
+    <div class="bbb-mk__wrap">
+      <div class="bbb-mk__section">
+        <div class="bbb-mk__sectionHead">
+          <p class="bbb-mk__kicker">{{ section.settings.platforms_kicker }}</p>
+          <h2 class="bbb-mk__sectionTitle">{{ section.settings.platforms_title }}</h2>
+        </div>
+
+        <div class="bbb-mk__platforms">
+          {% for block in section.blocks %}
+            {% if block.type == 'platform' %}
+              <article class="bbb-mk__platform" {{ block.shopify_attributes }}>
+                <div>
+                  <h3 class="bbb-mk__platformTitle">{{ block.settings.title }}</h3>
+                  <p class="bbb-mk__handle">{{ block.settings.handle }}</p>
+                </div>
+                <p class="bbb-mk__platformText">{{ block.settings.text }}</p>
+                {% if block.settings.badge != blank %}
+                  <span class="bbb-mk__badge">{{ block.settings.badge }}</span>
+                {% endif %}
+              </article>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bbb-mk__band bbb-mk__band--alt">
+    <div class="bbb-mk__wrap">
+      <div class="bbb-mk__section">
+        <div class="bbb-mk__sectionHead">
+          <p class="bbb-mk__kicker">{{ section.settings.content_kicker }}</p>
+          <h2 class="bbb-mk__sectionTitle">{{ section.settings.content_title }}</h2>
+        </div>
+
+        <div class="bbb-mk__cards">
+          {% for block in section.blocks %}
+            {% if block.type == 'content_card' %}
+              <article class="bbb-mk__card" {{ block.shopify_attributes }}>
+                {% if block.settings.icon != blank %}
+                  <span class="bbb-mk__icon">{{ block.settings.icon }}</span>
+                {% endif %}
+                <h3 class="bbb-mk__cardTitle">{{ block.settings.title }}</h3>
+                <p class="bbb-mk__smallText">{{ block.settings.text }}</p>
+              </article>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bbb-mk__band">
+    <div class="bbb-mk__wrap">
+      <div class="bbb-mk__section">
+        <div class="bbb-mk__sectionHead">
+          <p class="bbb-mk__kicker">{{ section.settings.packages_kicker }}</p>
+          <h2 class="bbb-mk__sectionTitle">{{ section.settings.packages_title }}</h2>
+        </div>
+
+        <div class="bbb-mk__packages">
+          {% for block in section.blocks %}
+            {% if block.type == 'package' %}
+              <article class="bbb-mk__package{% if block.settings.featured %} bbb-mk__package--featured{% endif %}" {{ block.shopify_attributes }}>
+                {% if block.settings.featured and block.settings.featured_label != blank %}
+                  <span class="bbb-mk__ribbon">{{ block.settings.featured_label }}</span>
+                {% endif %}
+                <p class="bbb-mk__packageNum">{{ block.settings.number }}</p>
+                <p class="bbb-mk__packageType">{{ block.settings.type_label }}</p>
+                <h3 class="bbb-mk__packageTitle">{{ block.settings.title }}</h3>
+                <p class="bbb-mk__packageText">{{ block.settings.text }}</p>
+                {% if block.settings.includes != blank %}
+                  <div class="bbb-mk__includes">{{ block.settings.includes | newline_to_br }}</div>
+                {% endif %}
+              </article>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bbb-mk__band bbb-mk__band--alt">
+    <div class="bbb-mk__wrap">
+      <div class="bbb-mk__section">
+        <div class="bbb-mk__sectionHead">
+          <p class="bbb-mk__kicker">{{ section.settings.audience_kicker }}</p>
+          <h2 class="bbb-mk__sectionTitle">{{ section.settings.audience_title }}</h2>
+        </div>
+
+        <div class="bbb-mk__audience">
+          {% for block in section.blocks %}
+            {% if block.type == 'audience' %}
+              <article class="bbb-mk__audienceCard" {{ block.shopify_attributes }}>
+                <p class="bbb-mk__cardLabel">{{ block.settings.label }}</p>
+                <h3 class="bbb-mk__audienceTitle">{{ block.settings.title }}</h3>
+                <p class="bbb-mk__smallText">{{ block.settings.text }}</p>
+                {% if block.settings.tags != blank %}
+                  <div class="bbb-mk__tags">
+                    {% assign tags = block.settings.tags | split: ',' %}
+                    {% for tag in tags %}
+                      {% assign clean_tag = tag | strip %}
+                      {% if clean_tag != blank %}
+                        <span class="bbb-mk__tag">{{ clean_tag }}</span>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </article>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bbb-mk__band">
+    <div class="bbb-mk__wrap">
+      <div class="bbb-mk__section">
+        <div class="bbb-mk__sectionHead">
+          <p class="bbb-mk__kicker">{{ section.settings.partners_kicker }}</p>
+          <h2 class="bbb-mk__sectionTitle">{{ section.settings.partners_title }}</h2>
+        </div>
+
+        <div class="bbb-mk__partners">
+          {% for block in section.blocks %}
+            {% if block.type == 'partner' %}
+              <article class="bbb-mk__partner" {{ block.shopify_attributes }}>
+                <span class="bbb-mk__dot" aria-hidden="true"></span>
+                <p><strong>{{ block.settings.title }}</strong>{{ block.settings.text }}</p>
+              </article>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bbb-mk__closing">
+    <div class="bbb-mk__wrap bbb-mk__closingInner">
+      {% if section.settings.closing_title != blank %}
+        <h2 class="bbb-mk__closingTitle">{{ section.settings.closing_title }}</h2>
+      {% endif %}
+      {% if section.settings.closing_text != blank %}
+        <p class="bbb-mk__closingText">{{ section.settings.closing_text }}</p>
+      {% endif %}
+      {% if section.settings.contact_label != blank and contact_href != blank %}
+        <a class="bbb-mk__cta" href="{{ contact_href }}">{{ section.settings.contact_label }}</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<style>
+  #bbb-mk-{{ section.id }}{
+    --mk-bg: {{ section.settings.background }};
+    --mk-panel: {{ section.settings.panel }};
+    --mk-panel-soft: {{ section.settings.panel_soft }};
+    --mk-ink: {{ section.settings.text_color }};
+    --mk-muted: {{ section.settings.muted_color }};
+    --mk-accent: {{ section.settings.accent }};
+    --mk-accent-soft: {{ section.settings.accent_soft }};
+    --mk-border: rgba(255, 255, 255, .13);
+    --mk-border-soft: rgba(255, 255, 255, .08);
+    background: var(--mk-bg);
+    color: var(--mk-ink);
+    font-family: var(--font-body-family);
+  }
+
+  #bbb-mk-{{ section.id }} *{
+    box-sizing:border-box;
+  }
+
+  #bbb-mk-{{ section.id }} p,
+  #bbb-mk-{{ section.id }} h1,
+  #bbb-mk-{{ section.id }} h2,
+  #bbb-mk-{{ section.id }} h3{
+    margin:0;
+  }
+
+  .bbb-mk__wrap{
+    width:min(1120px, calc(100% - 36px));
+    margin:0 auto;
+  }
+
+  .bbb-mk__hero{
+    min-height:78vh;
+    display:grid;
+    place-items:center;
+    padding:94px 0 70px;
+    position:relative;
+    overflow:hidden;
+    border-bottom:1px solid var(--mk-border-soft);
+  }
+
+  .bbb-mk__hero:before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.04), transparent 34%, rgba(0,0,0,.18)),
+      radial-gradient(720px 420px at 50% 20%, var(--mk-accent-soft), transparent 72%),
+      repeating-linear-gradient(to bottom, rgba(255,255,255,.035), rgba(255,255,255,.035) 1px, transparent 1px, transparent 34px);
+    opacity:.9;
+  }
+
+  .bbb-mk__halo{
+    position:absolute;
+    width:min(58vw, 620px);
+    aspect-ratio:1;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:999px;
+    transform:rotate(-12deg);
+  }
+
+  .bbb-mk__heroInner{
+    position:relative;
+    z-index:1;
+    text-align:center;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .bbb-mk__eyebrow,
+  .bbb-mk__kicker,
+  .bbb-mk__tagline,
+  .bbb-mk__cardLabel,
+  .bbb-mk__handle,
+  .bbb-mk__badge,
+  .bbb-mk__packageType{
+    font-size:1rem;
+    line-height:1.4;
+    letter-spacing:.18em;
+    text-transform:lowercase;
+    color:var(--mk-accent);
+  }
+
+  .bbb-mk__eyebrow{
+    margin-bottom:22px;
+  }
+
+  .bbb-mk__title{
+    max-width:920px;
+    color:var(--mk-ink);
+    font-family:var(--font-heading-family);
+    font-size:clamp(4.8rem, 10vw, 11.4rem);
+    font-weight:400;
+    line-height:.88;
+    letter-spacing:0;
+    text-transform:lowercase;
+  }
+
+  .bbb-mk__subtitle{
+    max-width:560px;
+    margin-top:24px;
+    color:var(--mk-muted);
+    font-size:clamp(1.45rem, 1.8vw, 1.9rem);
+    line-height:1.7;
+  }
+
+  .bbb-mk__ornament{
+    margin-top:22px;
+    color:var(--mk-accent);
+    font-family:var(--font-heading-family);
+    font-size:1.7rem;
+    font-style:italic;
+  }
+
+  .bbb-mk__heroStats{
+    margin-top:32px;
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+    width:min(900px, 100%);
+    border:1px solid var(--mk-border);
+    border-radius:10px;
+    background:rgba(0,0,0,.24);
+    overflow:hidden;
+    box-shadow:0 24px 70px rgba(0,0,0,.32);
+  }
+
+  .bbb-mk__heroStat{
+    min-height:120px;
+    padding:24px 18px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    border-right:1px solid var(--mk-border-soft);
+  }
+
+  .bbb-mk__heroStat:last-child{
+    border-right:0;
+  }
+
+  .bbb-mk__heroStatNum,
+  .bbb-mk__numberValue{
+    color:var(--mk-ink);
+    font-family:var(--font-heading-family);
+    font-size:clamp(3rem, 4vw, 4.8rem);
+    line-height:.95;
+    font-weight:500;
+  }
+
+  .bbb-mk__heroStatLabel{
+    color:var(--mk-muted);
+    font-size:1rem;
+    line-height:1.35;
+    letter-spacing:.14em;
+    text-transform:lowercase;
+  }
+
+  .bbb-mk__tagline{
+    margin-top:26px;
+    color:var(--mk-muted);
+  }
+
+  .bbb-mk__band{
+    border-bottom:1px solid var(--mk-border-soft);
+    background:var(--mk-bg);
+  }
+
+  .bbb-mk__band--alt{
+    background:var(--mk-panel-soft);
+  }
+
+  .bbb-mk__section{
+    padding:82px 0;
+  }
+
+  .bbb-mk__sectionHead{
+    margin-bottom:36px;
+  }
+
+  .bbb-mk__kicker{
+    margin-bottom:10px;
+  }
+
+  .bbb-mk__sectionTitle{
+    max-width:720px;
+    color:var(--mk-ink);
+    font-family:var(--font-heading-family);
+    font-size:clamp(3.3rem, 5vw, 5.8rem);
+    font-weight:400;
+    line-height:1;
+    letter-spacing:0;
+    text-transform:lowercase;
+  }
+
+  .bbb-mk__aboutGrid{
+    display:grid;
+    grid-template-columns:minmax(0, 1.1fr) minmax(320px, .9fr);
+    gap:42px;
+    align-items:start;
+  }
+
+  .bbb-mk__copy{
+    color:var(--mk-muted);
+    font-size:1.5rem;
+    line-height:1.9;
+    max-width:650px;
+  }
+
+  .bbb-mk__factList,
+  .bbb-mk__numbers,
+  .bbb-mk__partners{
+    border:1px solid var(--mk-border);
+    border-radius:10px;
+    overflow:hidden;
+    background:rgba(255,255,255,.02);
+    box-shadow:0 18px 42px rgba(0,0,0,.25);
+  }
+
+  .bbb-mk__fact{
+    display:flex;
+    justify-content:space-between;
+    gap:20px;
+    padding:16px 22px;
+    border-bottom:1px solid var(--mk-border-soft);
+  }
+
+  .bbb-mk__fact:last-child{
+    border-bottom:0;
+  }
+
+  .bbb-mk__factKey{
+    flex-shrink:0;
+    color:var(--mk-muted);
+    font-size:1rem;
+    letter-spacing:.14em;
+    text-transform:lowercase;
+  }
+
+  .bbb-mk__factValue{
+    color:var(--mk-ink);
+    font-family:var(--font-heading-family);
+    font-size:1.6rem;
+    font-style:italic;
+    text-align:right;
+    line-height:1.35;
+  }
+
+  .bbb-mk__numbers{
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+    gap:1px;
+    background:var(--mk-border-soft);
+  }
+
+  .bbb-mk__numberCard,
+  .bbb-mk__card,
+  .bbb-mk__package,
+  .bbb-mk__audienceCard,
+  .bbb-mk__partner,
+  .bbb-mk__platform{
+    background:var(--mk-panel);
+    border:1px solid var(--mk-border-soft);
+    border-radius:10px;
+  }
+
+  .bbb-mk__numberCard{
+    padding:34px 24px;
+    border:0;
+    border-radius:0;
+    position:relative;
+    overflow:hidden;
+  }
+
+  .bbb-mk__numberCard:after{
+    content:"";
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:0;
+    height:2px;
+    background:linear-gradient(90deg, var(--mk-accent), transparent);
+    opacity:.75;
+  }
+
+  .bbb-mk__cardLabel{
+    margin-top:10px;
+    color:var(--mk-accent);
+  }
+
+  .bbb-mk__smallText,
+  .bbb-mk__platformText,
+  .bbb-mk__packageText,
+  .bbb-mk__partner p{
+    color:var(--mk-muted);
+    font-size:1.3rem;
+    line-height:1.75;
+  }
+
+  .bbb-mk__smallText{
+    margin-top:14px;
+  }
+
+  .bbb-mk__platforms{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .bbb-mk__platform{
+    display:grid;
+    grid-template-columns:190px 1fr auto;
+    gap:28px;
+    align-items:center;
+    padding:28px 30px;
+  }
+
+  .bbb-mk__platformTitle,
+  .bbb-mk__cardTitle,
+  .bbb-mk__packageTitle,
+  .bbb-mk__audienceTitle{
+    color:var(--mk-ink);
+    font-family:var(--font-heading-family);
+    font-size:2.4rem;
+    line-height:1.1;
+    font-weight:500;
+    text-transform:lowercase;
+  }
+
+  .bbb-mk__handle{
+    margin-top:6px;
+  }
+
+  .bbb-mk__badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:34px;
+    padding:7px 15px;
+    border:1px solid var(--mk-border);
+    border-radius:999px;
+    color:var(--mk-muted);
+    white-space:nowrap;
+  }
+
+  .bbb-mk__cards,
+  .bbb-mk__packages{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:12px;
+  }
+
+  .bbb-mk__card{
+    padding:28px 24px;
+  }
+
+  .bbb-mk__icon{
+    display:inline-flex;
+    margin-bottom:16px;
+    color:var(--mk-accent);
+    font-family:var(--font-heading-family);
+    font-size:2.2rem;
+    line-height:1;
+  }
+
+  .bbb-mk__package{
+    padding:34px 28px;
+    position:relative;
+    overflow:hidden;
+  }
+
+  .bbb-mk__package--featured{
+    border-color:var(--mk-accent);
+    box-shadow:0 22px 48px rgba(0,0,0,.3);
+    background:linear-gradient(180deg, var(--mk-accent-soft), var(--mk-panel) 52%);
+  }
+
+  .bbb-mk__ribbon{
+    position:absolute;
+    top:0;
+    right:0;
+    padding:7px 16px;
+    background:var(--mk-accent);
+    color:#000;
+    border-bottom-left-radius:10px;
+    font-size:.95rem;
+    letter-spacing:.14em;
+    text-transform:lowercase;
+  }
+
+  .bbb-mk__packageNum{
+    color:rgba(255,255,255,.08);
+    font-family:var(--font-heading-family);
+    font-size:6.2rem;
+    line-height:.86;
+  }
+
+  .bbb-mk__packageType{
+    margin-top:10px;
+  }
+
+  .bbb-mk__packageTitle{
+    margin-top:8px;
+  }
+
+  .bbb-mk__packageText{
+    margin-top:14px;
+  }
+
+  .bbb-mk__includes{
+    margin-top:20px;
+    padding-top:18px;
+    border-top:1px solid var(--mk-border-soft);
+    color:var(--mk-muted);
+    font-size:1.25rem;
+    line-height:1.9;
+  }
+
+  .bbb-mk__audience{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:12px;
+  }
+
+  .bbb-mk__audienceCard{
+    padding:32px;
+  }
+
+  .bbb-mk__audienceTitle{
+    margin-top:12px;
+    font-size:2.8rem;
+    line-height:1.18;
+  }
+
+  .bbb-mk__tags{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:18px;
+  }
+
+  .bbb-mk__tag{
+    display:inline-flex;
+    padding:6px 12px;
+    border:1px solid var(--mk-border);
+    border-radius:999px;
+    color:var(--mk-muted);
+    background:rgba(255,255,255,.03);
+    font-size:1.15rem;
+    line-height:1.2;
+  }
+
+  .bbb-mk__partners{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:1px;
+    background:var(--mk-border-soft);
+  }
+
+  .bbb-mk__partner{
+    border:0;
+    border-radius:0;
+    padding:22px 24px;
+    display:grid;
+    grid-template-columns:8px 1fr;
+    gap:14px;
+  }
+
+  .bbb-mk__dot{
+    width:6px;
+    height:6px;
+    border-radius:999px;
+    background:var(--mk-accent);
+    margin-top:10px;
+  }
+
+  .bbb-mk__partner strong{
+    display:block;
+    color:var(--mk-ink);
+    font-weight:600;
+    margin-bottom:3px;
+  }
+
+  .bbb-mk__closing{
+    padding:96px 0;
+    position:relative;
+    overflow:hidden;
+    background:
+      radial-gradient(620px 360px at 50% 35%, var(--mk-accent-soft), transparent 74%),
+      var(--mk-bg);
+  }
+
+  .bbb-mk__closingInner{
+    text-align:center;
+  }
+
+  .bbb-mk__closingTitle{
+    max-width:720px;
+    margin:0 auto;
+    color:var(--mk-ink);
+    font-family:var(--font-heading-family);
+    font-size:clamp(3rem, 4.8vw, 5.6rem);
+    font-weight:400;
+    line-height:1.08;
+    text-transform:lowercase;
+  }
+
+  .bbb-mk__closingText{
+    max-width:560px;
+    margin:20px auto 0;
+    color:var(--mk-muted);
+    font-size:1.45rem;
+    line-height:1.8;
+  }
+
+  .bbb-mk__cta{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:48px;
+    margin-top:32px;
+    padding:13px 34px;
+    border:1px solid var(--mk-accent);
+    border-radius:999px;
+    color:var(--mk-ink);
+    text-decoration:none;
+    font-size:1.05rem;
+    letter-spacing:.16em;
+    text-transform:lowercase;
+    transition:background .2s ease, transform .2s ease;
+  }
+
+  .bbb-mk__cta:hover,
+  .bbb-mk__cta:focus-visible{
+    background:var(--mk-accent-soft);
+    transform:translateY(-1px);
+  }
+
+  @media (max-width: 980px){
+    .bbb-mk__heroStats,
+    .bbb-mk__numbers{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+
+    .bbb-mk__heroStat:nth-child(2n){
+      border-right:0;
+    }
+
+    .bbb-mk__heroStat{
+      border-bottom:1px solid var(--mk-border-soft);
+    }
+
+    .bbb-mk__heroStat:nth-last-child(-n+2){
+      border-bottom:0;
+    }
+
+    .bbb-mk__aboutGrid,
+    .bbb-mk__audience{
+      grid-template-columns:1fr;
+    }
+
+    .bbb-mk__platform{
+      grid-template-columns:1fr;
+      gap:12px;
+    }
+
+    .bbb-mk__badge{
+      width:fit-content;
+    }
+
+    .bbb-mk__cards,
+    .bbb-mk__packages,
+    .bbb-mk__partners{
+      grid-template-columns:1fr;
+    }
+  }
+
+  @media (max-width: 640px){
+    .bbb-mk__wrap{
+      width:min(100% - 24px, 1120px);
+    }
+
+    .bbb-mk__hero{
+      min-height:auto;
+      padding:72px 0 54px;
+    }
+
+    .bbb-mk__title{
+      font-size:clamp(3.7rem, 16vw, 5.8rem);
+    }
+
+    .bbb-mk__subtitle{
+      font-size:1.35rem;
+    }
+
+    .bbb-mk__heroStats,
+    .bbb-mk__numbers{
+      grid-template-columns:1fr;
+    }
+
+    .bbb-mk__heroStat,
+    .bbb-mk__heroStat:nth-child(2n){
+      border-right:0;
+      border-bottom:1px solid var(--mk-border-soft);
+    }
+
+    .bbb-mk__heroStat:last-child{
+      border-bottom:0;
+    }
+
+    .bbb-mk__section{
+      padding:58px 0;
+    }
+
+    .bbb-mk__sectionHead{
+      margin-bottom:26px;
+    }
+
+    .bbb-mk__sectionTitle{
+      font-size:clamp(2.7rem, 12vw, 4rem);
+    }
+
+    .bbb-mk__fact{
+      flex-direction:column;
+      gap:4px;
+    }
+
+    .bbb-mk__factValue{
+      text-align:left;
+    }
+
+    .bbb-mk__platform,
+    .bbb-mk__card,
+    .bbb-mk__package,
+    .bbb-mk__audienceCard,
+    .bbb-mk__partner{
+      padding:22px 18px;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "media kit",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "hero eyebrow", "default": "media kit 2026" },
+    { "type": "text", "id": "title", "label": "hero title", "default": "bybookishbabe" },
+    { "type": "textarea", "id": "subtitle", "label": "hero subtitle", "default": "smut meets sentiment for soft hearts with sinful taste." },
+    { "type": "text", "id": "ornament", "label": "hero line", "default": "the smut & sentiment society" },
+    { "type": "text", "id": "tagline", "label": "hero tagline", "default": "paid partnerships only - bybookishbabe.com" },
+
+    { "type": "header", "content": "About section" },
+    { "type": "text", "id": "about_kicker", "label": "about kicker", "default": "about" },
+    { "type": "text", "id": "about_title", "label": "about title", "default": "the brand" },
+    { "type": "textarea", "id": "about_body", "label": "about body", "default": "bybookishbabe is a romance book recommendation platform built for readers who take their reading life seriously and enjoy it sinfully. home to the smut & sentiment society, a weekly newsletter featuring one curated romance recommendation delivered every sunday.\n\nthe brand lives at the intersection of aesthetic curation and genuine reader obsession. content is specific, intentional, and deeply embedded in the booktok and romance reading community.\n\nno lazy roundups. no algorithmic filler. just one-reader-to-another recs, delivered with taste." },
+
+    { "type": "header", "content": "Section headings" },
+    { "type": "text", "id": "numbers_kicker", "label": "numbers kicker", "default": "by the numbers" },
+    { "type": "text", "id": "numbers_title", "label": "numbers title", "default": "real stats, real readers" },
+    { "type": "text", "id": "platforms_kicker", "label": "platforms kicker", "default": "where i live" },
+    { "type": "text", "id": "platforms_title", "label": "platforms title", "default": "platforms" },
+    { "type": "text", "id": "content_kicker", "label": "content kicker", "default": "content" },
+    { "type": "text", "id": "content_title", "label": "content title", "default": "what i create" },
+    { "type": "text", "id": "packages_kicker", "label": "packages kicker", "default": "collaboration" },
+    { "type": "text", "id": "packages_title", "label": "packages title", "default": "ways to work together" },
+    { "type": "text", "id": "audience_kicker", "label": "audience kicker", "default": "who's reading" },
+    { "type": "text", "id": "audience_title", "label": "audience title", "default": "the audience" },
+    { "type": "text", "id": "partners_kicker", "label": "partners kicker", "default": "ideal brands" },
+    { "type": "text", "id": "partners_title", "label": "partners title", "default": "who i work with" },
+
+    { "type": "header", "content": "Closing" },
+    { "type": "text", "id": "closing_title", "label": "closing title", "default": "a small, obsessed audience outperforms a large, distracted one." },
+    { "type": "textarea", "id": "closing_text", "label": "closing text", "default": "all collaborations are paid. i bring editorial care, intentionality, and a community that reads every word. let's make something worth reading." },
+    { "type": "text", "id": "contact_label", "label": "contact button label", "default": "bybookishbabe@gmail.com" },
+    { "type": "text", "id": "contact_email", "label": "contact email fallback", "default": "bybookishbabe@gmail.com" },
+    { "type": "url", "id": "contact_link", "label": "contact button link" },
+
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "background", "label": "background", "default": "#080808" },
+    { "type": "color", "id": "panel", "label": "card background", "default": "#101010" },
+    { "type": "color", "id": "panel_soft", "label": "alternate band", "default": "#0d0d0d" },
+    { "type": "color", "id": "text_color", "label": "text", "default": "#f7f3ee" },
+    { "type": "color", "id": "muted_color", "label": "muted text", "default": "#b8adae" },
+    { "type": "color", "id": "accent", "label": "accent", "default": "#ff8ac7" },
+    { "type": "color", "id": "accent_soft", "label": "soft accent glow", "default": "#2b111f" }
+  ],
+  "blocks": [
+    {
+      "type": "hero_stat",
+      "name": "hero stat",
+      "settings": [
+        { "type": "text", "id": "value", "label": "value", "default": "2,000" },
+        { "type": "text", "id": "label", "label": "label", "default": "subscribers" }
+      ]
+    },
+    {
+      "type": "fact",
+      "name": "about fact",
+      "settings": [
+        { "type": "text", "id": "label", "label": "label", "default": "platform" },
+        { "type": "text", "id": "value", "label": "value", "default": "substack + blog" }
+      ]
+    },
+    {
+      "type": "number",
+      "name": "number card",
+      "settings": [
+        { "type": "text", "id": "value", "label": "value", "default": "2k" },
+        { "type": "text", "id": "label", "label": "label", "default": "subscribers" },
+        { "type": "textarea", "id": "text", "label": "description", "default": "opted-in newsletter readers who actively chose to receive these recs." }
+      ]
+    },
+    {
+      "type": "platform",
+      "name": "platform row",
+      "settings": [
+        { "type": "text", "id": "title", "label": "title", "default": "newsletter" },
+        { "type": "text", "id": "handle", "label": "handle", "default": "the smut & sentiment society" },
+        { "type": "textarea", "id": "text", "label": "description", "default": "the core. opted-in readers receive one curated romance rec every sunday." },
+        { "type": "text", "id": "badge", "label": "badge", "default": "primary" }
+      ]
+    },
+    {
+      "type": "content_card",
+      "name": "content card",
+      "settings": [
+        { "type": "text", "id": "icon", "label": "icon or symbol", "default": "*" },
+        { "type": "text", "id": "title", "label": "title", "default": "newsletter features" },
+        { "type": "textarea", "id": "text", "label": "description", "default": "dedicated sponsor spotlights inside a weekly edition, written in my editorial voice." }
+      ]
+    },
+    {
+      "type": "package",
+      "name": "package",
+      "settings": [
+        { "type": "checkbox", "id": "featured", "label": "featured", "default": false },
+        { "type": "text", "id": "featured_label", "label": "featured label", "default": "most popular" },
+        { "type": "text", "id": "number", "label": "number", "default": "01" },
+        { "type": "text", "id": "type_label", "label": "type label", "default": "newsletter" },
+        { "type": "text", "id": "title", "label": "title", "default": "newsletter feature" },
+        { "type": "textarea", "id": "text", "label": "description", "default": "a dedicated mention or spotlight inside the weekly smut & sentiment society." },
+        { "type": "textarea", "id": "includes", "label": "includes, one per line", "default": "personal recommendation write-up\nyour link + optional promo code\npost-send performance stats" }
+      ]
+    },
+    {
+      "type": "audience",
+      "name": "audience card",
+      "settings": [
+        { "type": "text", "id": "label", "label": "label", "default": "who they are" },
+        { "type": "text", "id": "title", "label": "title", "default": "romance readers who live in their kindle and shop for the whole experience." },
+        { "type": "textarea", "id": "text", "label": "description", "default": "these are not passive social followers. they opted into an email list and actively seek recs they trust." },
+        { "type": "textarea", "id": "tags", "label": "tags, comma separated", "default": "romance readers, booktok community, active buyers, kindle devotees" }
+      ]
+    },
+    {
+      "type": "partner",
+      "name": "partner type",
+      "settings": [
+        { "type": "text", "id": "title", "label": "title", "default": "book subscription boxes" },
+        { "type": "textarea", "id": "text", "label": "description", "default": "subscription boxes, special editions, and indie alternatives. this audience subscribes." }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "media kit",
+      "blocks": [
+        { "type": "hero_stat", "settings": { "value": "2,000", "label": "subscribers" } },
+        { "type": "hero_stat", "settings": { "value": "32-50%", "label": "open rate" } },
+        { "type": "hero_stat", "settings": { "value": "1.2k", "label": "avg views / post" } },
+        { "type": "hero_stat", "settings": { "value": "weekly", "label": "every sunday" } },
+        { "type": "fact", "settings": { "label": "platform", "value": "substack + blog" } },
+        { "type": "fact", "settings": { "label": "niche", "value": "romance / booktok lifestyle" } },
+        { "type": "fact", "settings": { "label": "cadence", "value": "every sunday" } },
+        { "type": "fact", "settings": { "label": "also on", "value": "tiktok / instagram / pinterest" } },
+        { "type": "fact", "settings": { "label": "collab terms", "value": "paid only" } },
+        { "type": "fact", "settings": { "label": "contact", "value": "bybookishbabe@gmail.com" } },
+        { "type": "number", "settings": { "value": "2k", "label": "subscribers", "text": "opted-in newsletter readers who actively chose to receive these recs." } },
+        { "type": "number", "settings": { "value": "50%", "label": "peak open rate", "text": "top editions reach 50% open rate, with sponsor content placed inside that trust window." } },
+        { "type": "number", "settings": { "value": "1.2k", "label": "avg views / post", "text": "consistent per-post readership across recent editions and evergreen blog content." } },
+        { "type": "number", "settings": { "value": "52x", "label": "per year", "text": "52 sundays. 52 editions. a recurring slot inside a trusted weekly ritual." } },
+        { "type": "platform", "settings": { "title": "newsletter", "handle": "the smut & sentiment society", "text": "the core. readers receive one curated romance rec every sunday, with no feed algorithm between us.", "badge": "primary" } },
+        { "type": "platform", "settings": { "title": "blog", "handle": "bybookishbabe.com", "text": "long-form reviews, trope guides, spice-level breakdowns, reading orders, and recommendation engines.", "badge": "evergreen seo" } },
+        { "type": "platform", "settings": { "title": "social", "handle": "tiktok / instagram / pinterest", "text": "supplementary reach across the booktok ecosystem, with roads leading back to the newsletter and blog.", "badge": "supplementary" } },
+        { "type": "content_card", "settings": { "icon": "01", "title": "newsletter features", "text": "dedicated sponsor spotlights inside a weekly edition, written in my editorial voice." } },
+        { "type": "content_card", "settings": { "icon": "02", "title": "book reviews", "text": "honest long-form reviews with spice ratings, trope breakdowns, and reader-first verdicts." } },
+        { "type": "content_card", "settings": { "icon": "03", "title": "curated reading lists", "text": "trope-based, mood-based, and seasonal lists that catch readers mid-decision." } },
+        { "type": "content_card", "settings": { "icon": "04", "title": "brand spotlights", "text": "dedicated posts or sections for brands that fit the society's taste and standards." } },
+        { "type": "content_card", "settings": { "icon": "05", "title": "affiliate + promo codes", "text": "unique codes embedded naturally into content for measurable partnership performance." } },
+        { "type": "content_card", "settings": { "icon": "06", "title": "unboxing + hauls", "text": "book box openings and bookish haul content for drops, subscriptions, and new arrivals." } },
+        { "type": "package", "settings": { "number": "01", "type_label": "newsletter", "title": "newsletter feature", "text": "a dedicated mention or spotlight inside the weekly smut & sentiment society.", "includes": "personal recommendation write-up\nyour link + optional promo code\npost-send performance stats" } },
+        { "type": "package", "settings": { "featured": true, "number": "02", "type_label": "newsletter + blog", "title": "full partnership bundle", "text": "newsletter feature driving readers to a dedicated long-form blog post for maximum reach and evergreen value.", "includes": "newsletter spotlight\ndedicated blog post\nsocial amplification\nperformance report" } },
+        { "type": "package", "settings": { "number": "03", "type_label": "blog", "title": "sponsored blog post", "text": "a standalone review, guide, or feature permanently hosted on bybookishbabe.com.", "includes": "long-form review or brand feature\nevergreen seo placement\nnewsletter archive backlink" } },
+        { "type": "audience", "settings": { "label": "who they are", "title": "romance readers who live in their kindle and shop for the whole experience.", "text": "they buy books, accessories, and anything that makes reading feel like a ritual.", "tags": "romance readers, booktok community, active buyers, kindle devotees, box subscribers" } },
+        { "type": "audience", "settings": { "label": "what converts", "title": "genuine recs over ad copy. they can always tell the difference.", "text": "what works: products woven into editorial content in a voice they trust.", "tags": "editorial tone, trust-based recs, community-first, moody aesthetics" } },
+        { "type": "partner", "settings": { "title": "book subscription boxes", "text": "special editions, romance boxes, and indie alternatives. this audience subscribes." } },
+        { "type": "partner", "settings": { "title": "reading apps + e-readers", "text": "tools that make reading easier, more social, or more beautiful." } },
+        { "type": "partner", "settings": { "title": "publishers + imprints", "text": "arc campaigns, launch features, and review partnerships for romance titles." } },
+        { "type": "partner", "settings": { "title": "independent authors", "text": "paid spotlight placements targeting engaged romance readers who act on recommendations." } },
+        { "type": "partner", "settings": { "title": "bookish stationery + merch", "text": "reading journals, bookmarks, annotation kits, literary prints, and desk goods." } },
+        { "type": "partner", "settings": { "title": "cozy lifestyle brands", "text": "candles, teas, and anything that belongs in a reading nook." } }
+      ]
+    }
+  ]
+}
+{% endschema %}

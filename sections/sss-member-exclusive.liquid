@@ -1,0 +1,267 @@
+{% comment %}
+  sss-member-exclusive.liquid
+  Library-card style section: Society member exclusive
+  - Printable (free access link)
+  - Physical (shop link)
+{% endcomment %}
+
+<style>
+  .sss-me{
+    --bg:#0b0b0b; --card:#151515; --line:#2a2a2a; --ink:#f6f6f6; --muted:#c8c8c8;
+    background:var(--bg);
+    color:var(--ink);
+    padding:26px 18px;
+    font-family:"Libre Baskerville", Georgia, serif;
+    position:relative;
+    overflow:hidden;
+  }
+  .sss-me a{ color:inherit; text-decoration:none; }
+
+  /* subtle “paper + filing lines” vibe */
+  .sss-me:before{
+    content:"";
+    position:absolute; inset:-40px;
+    pointer-events:none;
+    background:
+      radial-gradient(900px 520px at 50% 120px, rgba(255,255,255,.08), transparent 70%),
+      repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,.035),
+        rgba(255,255,255,.035) 1px,
+        transparent 1px,
+        transparent 26px
+      );
+    opacity:.55;
+  }
+
+  .sss-me__wrap{
+    max-width:1100px;
+    margin:0 auto;
+    position:relative;
+    z-index:1;
+    padding:0 12px;
+  }
+
+  .sss-me__kicker{
+    margin:0 0 10px;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--muted);
+  }
+
+  .sss-me__card{
+    background:rgba(21,21,21,.92);
+    border:1px solid var(--line);
+    border-radius:18px;
+    box-shadow:0 12px 28px rgba(0,0,0,.45);
+    overflow:hidden;
+  }
+
+  .sss-me__head{
+    padding:14px 14px 12px;
+    border-bottom:1px solid var(--line);
+    background:rgba(255,255,255,.03);
+  }
+  .sss-me__title{
+    margin:0;
+    font-size:20px;
+    font-weight:400;
+    text-transform:lowercase;
+  }
+  .sss-me__sub{
+    margin:8px 0 0;
+    font-size:13px;
+    line-height:1.55;
+    color:var(--muted);
+  }
+
+  .sss-me__grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:14px;
+    padding:14px;
+  }
+  @media (min-width:820px){
+    .sss-me__grid{ grid-template-columns:1fr 1fr; }
+  }
+
+  .sss-me__panel{
+    border:1px solid var(--line);
+    border-radius:16px;
+    background:rgba(255,255,255,.02);
+    overflow:hidden;
+  }
+
+  .sss-me__panelTop{
+    padding:10px 12px;
+    border-bottom:1px solid var(--line);
+    background:rgba(255,255,255,.03);
+    display:flex;
+    justify-content:center;
+  }
+
+  .sss-me__pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-size:12px;
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.06);
+    color:var(--muted);
+    text-transform:lowercase;
+  }
+
+  .sss-me__media{
+    padding:10px;
+  }
+  /* fit to image (no crop) */
+  .sss-me__media img{
+    width:100%;
+    height:auto;
+    max-height:340px;
+    object-fit:contain;
+    display:block;
+    background:#0f0f0f;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:10px;
+    box-sizing:border-box;
+  }
+
+  .sss-me__note{
+    margin:10px 0 0;
+    font-size:12px;
+    color:#9e9e9e;
+    text-align:center;
+    font-style:italic;
+    padding:0 12px 12px;
+  }
+
+  .sss-me__btnWrap{
+    padding:0 12px 14px;
+  }
+  .sss-me__btn{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.06);
+    color:var(--ink);
+    font-size:13px;
+    width:100%;
+  }
+  .sss-me__btn:hover{
+    background:rgba(255,255,255,.10);
+    border-color:#5a5a5a;
+  }
+  .sss-me__btn.is-disabled{
+    opacity:.55;
+    pointer-events:none;
+  }
+</style>
+
+<section class="sss-me">
+  <div class="sss-me__wrap">
+
+    <p class="sss-me__kicker">{{ section.settings.kicker }}</p>
+
+    <article class="sss-me__card">
+      <header class="sss-me__head">
+        <h2 class="sss-me__title">{{ section.settings.title }}</h2>
+        {% if section.settings.subtext != blank %}
+          <p class="sss-me__sub">{{ section.settings.subtext }}</p>
+        {% endif %}
+      </header>
+
+      <div class="sss-me__grid">
+
+        <!-- Printable -->
+        <section class="sss-me__panel">
+          <div class="sss-me__panelTop">
+            <span class="sss-me__pill">{{ section.settings.printable_pill }}</span>
+          </div>
+
+          <div class="sss-me__media">
+            {% if section.settings.printable_image != blank %}
+              {{ section.settings.printable_image | image_url: width: 1600 | image_tag: loading: 'lazy', alt: 'Printable preview' }}
+            {% endif %}
+          </div>
+
+          {% if section.settings.printable_note != blank %}
+            <p class="sss-me__note">{{ section.settings.printable_note }}</p>
+          {% endif %}
+
+          <div class="sss-me__btnWrap">
+            {% if section.settings.printable_url != blank %}
+              <a class="sss-me__btn" href="{{ section.settings.printable_url }}">
+                {{ section.settings.printable_btn }}
+              </a>
+            {% else %}
+              <div class="sss-me__btn is-disabled">add printable link</div>
+            {% endif %}
+          </div>
+        </section>
+
+        <!-- Physical -->
+        <section class="sss-me__panel">
+          <div class="sss-me__panelTop">
+            <span class="sss-me__pill">{{ section.settings.physical_pill }}</span>
+          </div>
+
+          <div class="sss-me__media">
+            {% if section.settings.physical_image != blank %}
+              {{ section.settings.physical_image | image_url: width: 1600 | image_tag: loading: 'lazy', alt: 'Physical preview' }}
+            {% endif %}
+          </div>
+
+          {% if section.settings.physical_note != blank %}
+            <p class="sss-me__note">{{ section.settings.physical_note }}</p>
+          {% endif %}
+
+          <div class="sss-me__btnWrap">
+            {% if section.settings.physical_url != blank %}
+              <a class="sss-me__btn" href="{{ section.settings.physical_url }}">
+                {{ section.settings.physical_btn }}
+              </a>
+            {% else %}
+              <div class="sss-me__btn is-disabled">add physical link</div>
+            {% endif %}
+          </div>
+        </section>
+
+      </div>
+    </article>
+
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "sss member card",
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "kicker", "default": "society member exclusive" },
+    { "type": "text", "id": "title", "label": "title", "default": "your member access" },
+    { "type": "textarea", "id": "subtext", "label": "subtext", "default": "printable is included with your membership. physical is optional if you want it shipped." },
+
+    { "type": "text", "id": "printable_pill", "label": "printable pill", "default": "🖨️ printable · included" },
+    { "type": "image_picker", "id": "printable_image", "label": "printable image" },
+    { "type": "text", "id": "printable_note", "label": "printable note", "default": "free for paid members" },
+    { "type": "url", "id": "printable_url", "label": "printable link (collection/page/product)" },
+    { "type": "text", "id": "printable_btn", "label": "printable button text", "default": "open printable ↗" },
+
+    { "type": "text", "id": "physical_pill", "label": "physical pill", "default": "📬 physical · optional" },
+    { "type": "image_picker", "id": "physical_image", "label": "physical image" },
+    { "type": "text", "id": "physical_note", "label": "physical note", "default": "purchase if you want it shipped" },
+    { "type": "url", "id": "physical_url", "label": "physical link (collection/page/product)" },
+    { "type": "text", "id": "physical_btn", "label": "physical button text", "default": "shop physical ↗" }
+  ],
+  "presets": [
+    { "name": "sss member card" }
+  ]
+}
+{% endschema %}

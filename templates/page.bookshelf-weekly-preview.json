@@ -1,0 +1,14 @@
+{
+  "sections": {
+    "bookshelf_weekly_preview": {
+      "type": "bookshelf-weekly-preview",
+      "settings": {
+        "metafield_namespace": "custom",
+        "metafield_key": "bookshelf_weekly_preview"
+      }
+    }
+  },
+  "order": [
+    "bookshelf_weekly_preview"
+  ]
+}

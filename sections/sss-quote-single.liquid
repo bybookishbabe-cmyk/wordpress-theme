@@ -1,0 +1,259 @@
+{% comment %}
+  sss-quote-single.liquid
+  One-quote preview pulled from metaobject: sss_quote
+  Does NOT modify your main quote wall section.
+{% endcomment %}
+
+<style>
+  .sss-q1{
+    background:#0b0b0b; color:#f6f6f6;
+    padding:18px 12px;
+    font-family:"Libre Baskerville", Georgia, serif;
+    position:relative; overflow:hidden;
+  }
+  .sss-q1:before{
+    content:""; position:absolute; inset:-40px; pointer-events:none;
+    background:
+      radial-gradient(900px 520px at 50% 90px, rgba(255,255,255,.08), transparent 70%),
+      repeating-linear-gradient(to bottom, rgba(255,255,255,.03), rgba(255,255,255,.03) 1px, transparent 1px, transparent 26px);
+    opacity:.55;
+  }
+  .sss-q1__wrap{ max-width:980px; margin:0 auto; padding:0 8px; position:relative; z-index:1; }
+  .sss-kicker{ margin:0; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:#d9d1d7; }
+  .sss-title{ margin:6px 0 0; font-size:18px; font-weight:400; text-transform:lowercase; }
+  .sss-sub{ margin:8px 0 0; font-size:12px; color:rgba(246,246,246,.72); line-height:1.55; }
+
+  .q1-item{ display:flex; justify-content:flex-start; margin-top:18px; }
+
+  .qw-card{
+    width:min(760px, 96%);
+    color:inherit;
+    display:block;
+    border-radius:0;
+    transition:transform .16s ease, box-shadow .16s ease, background-color .16s ease;
+    border:0;
+    padding:0;
+    text-align:left;
+    cursor:pointer;
+    appearance:none;
+    background:transparent;
+  }
+  .qw-card:hover{
+    transform:translateY(-2px);
+  }
+
+  .qw-paper{
+    background:#171717;
+    color:#f6f1f4;
+    border:1px solid rgba(255,255,255,.04);
+    border-radius:0;
+    box-shadow:0 18px 40px rgba(0,0,0,.28);
+    padding:24px 30px 22px;
+    position:relative;
+    overflow:hidden;
+  }
+  .qw-paper:before{
+    content:"";
+    position:absolute;
+    left:18px;
+    top:22px;
+    bottom:22px;
+    width:7px;
+    border-radius:0;
+    pointer-events:none;
+    background:#ff8ac7;
+    opacity:1;
+  }
+  .qw-paper:after{
+    content:none;
+  }
+
+  .qw-quote{
+    margin:0;
+    font-family:"Libre Baskerville", Georgia, serif;
+    font-size:28px;
+    line-height:1.7;
+    letter-spacing:.01em;
+    position:relative;
+    z-index:2;
+    color:#fbf8fa;
+    text-wrap:balance;
+    padding-left:34px;
+  }
+
+  .hl{
+    display:inline;
+    position:relative;
+    z-index:2;
+    padding:0;
+    border-radius:0;
+    -webkit-box-decoration-break:clone;
+    box-decoration-break:clone;
+  }
+  .hl--sentimental{
+    background:none;
+    box-shadow:none;
+  }
+  .hl--romantasy{
+    background:none;
+    box-shadow:none;
+  }
+  .hl--dark{
+    background:none;
+    box-shadow:none;
+  }
+  .hl--default{
+    background:none;
+    box-shadow:none;
+  }
+
+  .qw-meta{
+    margin-top:16px;
+    display:block;
+    position:relative;
+    z-index:2;
+    padding-left:34px;
+  }
+  .qw-book{
+    font-family:"Libre Baskerville", Georgia, serif;
+    font-size:12px;
+    line-height:1.6;
+    color:rgba(246,241,244,.70);
+    font-style:italic;
+  }
+
+  @media (max-width: 640px){
+    .sss-q1{ padding:16px 10px; }
+    .sss-q1__wrap{ padding:0 6px; }
+    .qw-paper{ padding:18px 18px 16px; }
+    .qw-paper:before{
+      left:14px;
+      top:18px;
+      bottom:18px;
+      width:6px;
+    }
+    .qw-quote{
+      font-size:19px;
+      line-height:1.72;
+      padding-left:24px;
+    }
+    .qw-meta{ padding-left:24px; }
+    .qw-book{ font-size:12px; line-height:1.55; }
+  }
+
+  .sss-q1 a,
+  .sss-q1 a:focus,
+  .sss-q1 a:focus-visible,
+  .sss-q1 a:active{
+    outline:none !important;
+    box-shadow:none !important;
+    -webkit-tap-highlight-color:transparent;
+  }
+</style>
+
+<section class="sss-q1" data-sss-lib="society">
+  <div class="sss-q1__wrap">
+    <p class="sss-kicker">{{ section.settings.kicker }}</p>
+    <h3 class="sss-title">{{ section.settings.title }}</h3>
+    {% if section.settings.subtext != blank %}
+      <p class="sss-sub">{{ section.settings.subtext }}</p>
+    {% endif %}
+
+    {% assign quotes = shop.metaobjects.sss_quote.values %}
+    {% assign shown = false %}
+
+    <div class="q1-item">
+      {% for q in quotes %}
+        {% assign quote_txt = q.quote.value %}
+        {% if quote_txt == blank %}{% continue %}{% endif %}
+
+        {% assign linked_book = q.library_book.value %}
+        {% if linked_book == blank %}{% continue %}{% endif %}
+        {% capture is_visible %}{% render 'sss-book-visible', book: linked_book %}{% endcapture %}
+        {% assign is_visible_value = is_visible | strip %}
+        {% unless is_visible_value == 'true' %}{% continue %}{% endunless %}
+        {% assign linked_cover = linked_book.cover.value.url | default: linked_book.cover.value %}
+        {% assign book_txt = linked_book.title.value | strip %}
+        {% assign author_txt = linked_book.author.value | strip %}
+        {% assign tag_txt = q.tag.value | strip %}
+        {% assign tag_key = tag_txt | downcase | strip | handleize %}
+
+        {% assign hl_class = 'hl--default' %}
+        {% if tag_key contains 'dark' %}
+          {% assign hl_class = 'hl--dark' %}
+        {% elsif tag_key contains 'romantasy' or tag_key contains 'fantasy-romance' %}
+          {% assign hl_class = 'hl--romantasy' %}
+        {% elsif tag_key contains 'sentimental' %}
+          {% assign hl_class = 'hl--sentimental' %}
+        {% endif %}
+
+        <button
+          type="button"
+          class="qw-card"
+          data-handle="{{ linked_book.system.handle }}"
+          data-title="{{ linked_book.title.value | escape }}"
+          data-author="{{ linked_book.author.value | escape }}"
+          data-cover="{{ linked_cover | escape }}"
+          data-amazon="{{ linked_book.amazon_link.value.url | default: linked_book.amazon_link.value | escape }}"
+          data-bookshop="{{ linked_book.bookshop_link.value.url | default: linked_book.bookshop_link.value | escape }}"
+          data-spice="{{ linked_book.spice_level.value }}"
+          data-tropes="{% for trope in linked_book.tropes.value %}{{ trope.name }}{% unless forloop.last %}, {% endunless %}{% endfor %}"
+          data-why="{{ linked_book.why_i_loved_it.value | escape }}"
+          data-newsletter="{{ linked_book.newsletter_url.value | escape }}"
+          data-mini="{{ linked_book.mini_note.value | escape }}"
+          data-tension="{{ linked_book.tension_score.value }}"
+          data-damage="{{ linked_book.emotional_damage_score.value }}"
+          data-yearning="{{ linked_book.yearning_level.value | escape }}"
+          data-boyfriend="{{ linked_book.boyfriend_type.value | escape }}"
+          data-reread="{{ linked_book.reread_badge.value }}"
+          data-darkness="{{ linked_book.darkness_level.value }}"
+          data-standalone="{% if linked_book.read_as_standalone.value == true %}true{% else %}false{% endif %}"
+          data-ku="{{ linked_book.on_kindle_unlimited.value }}"
+          {% if linked_book.series.value %}
+            data-series="{{ linked_book.series.value.system.handle }}"
+            data-series-name="{{ linked_book.series.value.title | escape }}"
+          {% endif %}
+          data-series-number="{{ linked_book.series_number.value }}">
+          <div class="qw-paper">
+            <p class="qw-quote">
+              <span class="hl {{ hl_class }}">“{{ quote_txt | strip_html | escape }}”</span>
+            </p>
+
+            <div class="qw-meta">
+              <div class="qw-book">
+                {% if book_txt != blank %}{{ book_txt | escape }}{% endif %}
+                {% if author_txt != blank %} — {{ author_txt | escape }}{% endif %}
+              </div>
+            </div>
+          </div>
+        </button>
+
+        {% assign shown = true %}
+        {% break %}
+      {% endfor %}
+    </div>
+
+    {% if shown == false %}
+      <div style="color:rgba(246,246,246,.72); font-size:12px; padding:10px 0;">
+        no quotes yet. add one in <strong>Content → Metaobjects → sss_quote</strong>.
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% render 'sss-library-modal', modal_type: 'society' %}
+
+{% schema %}
+{
+  "name": "sss quote (single)",
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "kicker", "default": "a taste from the society library" },
+    { "type": "text", "id": "title", "label": "title", "default": "one quote. one click. one problem." },
+    { "type": "textarea", "id": "subtext", "label": "subtext", "default": "want the full wall? join the society." },
+    { "type": "url", "id": "fallback_link", "label": "fallback link (if quote has no link)" },
+    { "type": "checkbox", "id": "new_tab", "label": "open links in new tab", "default": false }
+  ],
+  "presets": [
+    { "name": "sss quote (single)" }
+  ]
+}
+{% endschema %}

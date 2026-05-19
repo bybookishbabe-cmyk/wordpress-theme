@@ -1,0 +1,27 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-page",
+      "disabled": true,
+      "settings": {
+        "padding_top": 28,
+        "padding_bottom": 28
+      }
+    },
+    "my_vault": {
+      "type": "bbb-my-vault",
+      "settings": {
+        "kicker": "my vault",
+        "title": "everything you own, in one place.",
+        "subtext": "your digital bybookishbabe things live here. vaults first, chaos reduced, and room to keep growing.",
+        "insert_buy_url": "shopify://products/printable-kindle-insert-vault",
+        "insert_vault_url": "shopify://pages/my-kindle-inserts",
+        "canva_buy_url": "shopify://pages/bookish-templates"
+      }
+    }
+  },
+  "order": [
+    "main",
+    "my_vault"
+  ]
+}

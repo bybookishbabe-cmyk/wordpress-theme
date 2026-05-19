@@ -1,0 +1,612 @@
+{% comment %}
+  sss-first-peek.liquid
+  Left: teaser photo
+  Right: swipeable shelf with:
+    - 1 slide = Insert (printable downloads + physical add-to-cart by size)
+    - 1 slide = Art print (add-to-cart)
+{% endcomment %}
+
+<style>
+  .sss-peek{
+    background:#0b0b0b;
+    color:#f6f6f6;
+    padding:18px 12px;
+    font-family:"Libre Baskerville", Georgia, serif;
+    position:relative;
+    overflow:hidden;
+  }
+  .sss-peek:before{
+    content:"";
+    position:absolute; inset:-40px;
+    pointer-events:none;
+    background:
+      radial-gradient(900px 520px at 50% 120px, rgba(255,255,255,.08), transparent 70%),
+      repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,.03),
+        rgba(255,255,255,.03) 1px,
+        transparent 1px,
+        transparent 26px
+      );
+    opacity:.55;
+  }
+  .sss-peek__wrap{
+    max-width:1300px;
+    margin:0 auto;
+    padding:0 8px;
+    position:relative;
+    z-index:1;
+  }
+  .sss-peek__grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:14px;
+    align-items:start;
+  }
+  @media(min-width:990px){
+    .sss-peek__grid{
+      grid-template-columns:.9fr 1.1fr;
+      gap:16px;
+    }
+  }
+
+  /* LEFT photo */
+  .peek-photo{
+    background:rgba(21,21,21,.92);
+    border:1px solid #2a2a2a;
+    border-radius:18px;
+    box-shadow:0 12px 28px rgba(0,0,0,.45);
+    padding:12px;
+  }
+  .peek-photo img{
+    width:100%;
+    height:auto;
+    max-height:540px;
+    object-fit:contain;
+    display:block;
+    border-radius:14px;
+    border:1px solid #2a2a2a;
+    background:#0f0f0f;
+    padding:8px;
+    box-sizing:border-box;
+  }
+  .peek-photo__cap{
+    margin:10px 0 0;
+    font-size:12.5px;
+    line-height:1.55;
+    color:rgba(246,246,246,.78);
+    text-align:center;
+  }
+
+  /* RIGHT outer card */
+  .peek-card{
+    background:rgba(21,21,21,.92);
+    border:1px solid #2a2a2a;
+    border-radius:18px;
+    box-shadow:0 12px 28px rgba(0,0,0,.45);
+    overflow:hidden;
+  }
+  .peek-card__head{
+    padding:10px 12px 8px;
+    border-bottom:1px solid #2a2a2a;
+    background:rgba(255,255,255,.03);
+  }
+  .peek-card__kicker{
+    margin:0 0 6px;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:#c8c8c8;
+  }
+  .peek-card__title{
+    margin:0;
+    font-size:17px;
+    font-weight:400;
+    text-transform:lowercase;
+    color:#f6f6f6;
+  }
+  .peek-card__sub{
+    margin:6px 0 0;
+    font-size:12px;
+    line-height:1.55;
+    color:#c8c8c8;
+  }
+
+  /* swipe shelf */
+  .peek-shelf{ position:relative; }
+  .peek-track{
+    display:flex;
+    gap:12px;
+    overflow-x:auto;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    padding:12px;
+  }
+  .peek-track::-webkit-scrollbar{ height:8px; }
+  .peek-track::-webkit-scrollbar-thumb{
+    background:rgba(255,255,255,.14);
+    border-radius:999px;
+  }
+  .peek-slide{
+    flex:0 0 92%;
+    scroll-snap-align:start;
+  }
+
+  /* arrows on top */
+  .peek-nav{
+    position:absolute;
+    top:8px;
+    right:8px;
+    z-index:50;
+    display:flex;
+    gap:8px;
+  }
+  .peek-nav button{
+    width:36px;
+    height:36px;
+    border-radius:12px;
+    border:1px solid #000;
+    background:#000;
+    color:#fff;
+    font-size:18px;
+    cursor:pointer;
+    position:relative;
+    z-index:51;
+  }
+  .peek-nav button:hover{ background:#111; border-color:#111; }
+
+  /* inner "library card" slide */
+  .libcard{
+    background:#F7F3EE;
+    background-image:repeating-linear-gradient(
+      to bottom,
+      rgba(30,27,28,.12) 0,
+      rgba(30,27,28,.12) 1px,
+      transparent 1px,
+      transparent 28px
+    );
+    border:2px solid rgba(30,27,28,.85);
+    border-radius:16px;
+    box-shadow:0 10px 24px rgba(0,0,0,.25);
+    color:#1E1B1C;
+    overflow:hidden;
+    position:relative;
+  }
+  .libcard:before{
+    content:"";
+    position:absolute;
+    top:12px; left:12px;
+    width:12px; height:12px;
+    border-radius:999px;
+    background:#000;
+    box-shadow:
+      0 0 0 3px rgba(247,243,238,.95),
+      0 0 0 4px rgba(30,27,28,.9);
+    z-index:2;
+  }
+  .libcard__head{
+    padding:12px 12px 10px;
+    border-bottom:1px solid rgba(30,27,28,.25);
+    background:rgba(30,27,28,.04);
+    text-align:center;
+  }
+  .libcard__name{
+    margin:0;
+    font-size:16px;
+    font-weight:600;
+    text-transform:lowercase;
+    color:#000;
+  }
+  .libcard__hint{
+    margin:6px 0 0;
+    font-size:12px;
+    color:rgba(30,27,28,.72);
+    line-height:1.5;
+  }
+
+  /* insert slide: two panels */
+  .libcard__grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    padding:10px;
+  }
+  .panel{
+    border:1px solid rgba(30,27,28,.28);
+    border-radius:14px;
+    background:rgba(255,255,255,.65);
+    overflow:hidden;
+  }
+  .panel__top{
+    padding:8px 10px;
+    border-bottom:1px solid rgba(30,27,28,.18);
+    background:rgba(30,27,28,.03);
+    display:flex;
+    justify-content:center;
+  }
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-size:11px;
+    padding:5px 10px;
+    border-radius:999px;
+    background:#000;
+    color:#F7F3EE;
+    border:1px solid #000;
+    text-transform:lowercase;
+  }
+  .panel__media{ padding:8px; }
+  .panel__media img{
+    width:100%;
+    height:auto;
+    max-height:210px;
+    object-fit:contain;
+    display:block;
+    background:rgba(0,0,0,.04);
+    border:1px solid rgba(30,27,28,.25);
+    border-radius:12px;
+    padding:8px;
+    box-sizing:border-box;
+  }
+  .panel__note{
+    margin:6px 0 0;
+    font-size:11px;
+    color:rgba(30,27,28,.7);
+    text-align:center;
+    font-style:italic;
+    padding:0 10px;
+  }
+
+  .btnwrap{ padding:10px; }
+  .btngrid{ display:grid; gap:8px; }
+
+  .btn{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    width:100%;
+    height:40px;
+    padding:0 12px;
+    border-radius:12px;
+    border:1px solid rgba(30,27,28,.4);
+    background:rgba(247,243,238,.95);
+    color:#1E1B1C;
+    cursor:pointer;
+    text-align:center;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    box-sizing:border-box;
+    font:inherit;
+    font-size:12.5px;
+    appearance:none;
+    -webkit-appearance:none;
+    margin:0;
+    text-decoration:none;
+  }
+  .btn:hover{
+    background:#fff;
+    border-color:rgba(30,27,28,.6);
+  }
+  .btn[disabled]{
+    opacity:.55;
+    cursor:not-allowed;
+  }
+
+  /* art print slide */
+  .apbody{ padding:12px; }
+  .apimg{
+    width:100%;
+    height:auto;
+    max-height:420px;
+    object-fit:contain;
+    display:block;
+    border-radius:14px;
+    border:1px solid rgba(30,27,28,.25);
+    background:#fff;
+    padding:8px;
+    box-sizing:border-box;
+  }
+  .apcap{
+    margin:10px 0 0;
+    font-size:12.5px;
+    line-height:1.55;
+    color:rgba(30,27,28,.75);
+    text-align:center;
+  }
+</style>
+
+<section class="sss-peek">
+  <div class="sss-peek__wrap">
+    <div class="sss-peek__grid">
+
+      <!-- LEFT photo -->
+      <div class="peek-photo">
+        {% if section.settings.photo != blank %}
+          {{ section.settings.photo | image_url: width: 1600 | image_tag: loading: 'lazy', alt: 'first peek' }}
+        {% endif %}
+        {% if section.settings.photo_caption != blank %}
+          <p class="peek-photo__cap">{{ section.settings.photo_caption }}</p>
+        {% endif %}
+      </div>
+
+      <!-- RIGHT swipe shelf -->
+      <article class="peek-card">
+        <div class="peek-card__head">
+          <p class="peek-card__kicker">{{ section.settings.kicker }}</p>
+          <h3 class="peek-card__title">{{ section.settings.title }}</h3>
+          {% if section.settings.subtext != blank %}
+            <p class="peek-card__sub">{{ section.settings.subtext }}</p>
+          {% endif %}
+        </div>
+
+        <div class="peek-shelf">
+          <div class="peek-nav">
+            <button type="button" class="peek-prev" aria-label="previous">‹</button>
+            <button type="button" class="peek-next" aria-label="next">›</button>
+          </div>
+
+          <div class="peek-track" data-track>
+
+            {% for block in section.blocks %}
+              {% if block.type == 'insert' %}
+                {% assign dl12 = block.settings.dl_12th %}
+                {% assign dl11 = block.settings.dl_11th %}
+                {% assign dl6  = block.settings.dl_6in %}
+                {% assign dl10 = block.settings.dl_10th %}
+
+                {% assign v12 = block.settings.v_12th %}
+                {% assign v11 = block.settings.v_11th %}
+                {% assign v6  = block.settings.v_6in %}
+                {% assign v10 = block.settings.v_10th %}
+
+                {% assign show12 = false %}
+                {% assign show11 = false %}
+                {% assign show6  = false %}
+                {% assign show10 = false %}
+
+                {% if v12 != blank and v12 != '0' %}{% assign show12 = true %}{% endif %}
+                {% if v11 != blank and v11 != '0' %}{% assign show11 = true %}{% endif %}
+                {% if v6  != blank and v6  != '0' %}{% assign show6  = true %}{% endif %}
+                {% if v10 != blank and v10 != '0' %}{% assign show10 = true %}{% endif %}
+
+                <div class="peek-slide" {{ block.shopify_attributes }}>
+                  <div class="libcard">
+                    <div class="libcard__head">
+                      <h4 class="libcard__name">{{ block.settings.name }}</h4>
+                      {% if block.settings.hint != blank %}
+                        <p class="libcard__hint">{{ block.settings.hint }}</p>
+                      {% endif %}
+                    </div>
+
+                    <div class="libcard__grid">
+
+                      <!-- printable -->
+                      <div class="panel">
+                        <div class="panel__top">
+                          <span class="pill">{{ block.settings.printable_pill }}</span>
+                        </div>
+
+                        <div class="panel__media">
+                          {% if block.settings.printable_image != blank %}
+                            {{ block.settings.printable_image | image_url: width: 1200 | image_tag: loading: 'lazy', alt: 'Printable preview' }}
+                          {% endif %}
+                        </div>
+
+                        {% if block.settings.printable_note != blank %}
+                          <p class="panel__note">{{ block.settings.printable_note }}</p>
+                        {% endif %}
+
+                        <div class="btnwrap">
+                          <div class="btngrid">
+                            {% if dl12 != blank %}<a class="btn" href="{{ dl12 }}">12th gen</a>{% endif %}
+                            {% if dl11 != blank %}<a class="btn" href="{{ dl11 }}">11th gen</a>{% endif %}
+                            {% if dl6  != blank %}<a class="btn" href="{{ dl6 }}">6 inch</a>{% endif %}
+                            {% if dl10 != blank %}<a class="btn" href="{{ dl10 }}">10th gen</a>{% endif %}
+                            {% unless dl12 != blank or dl11 != blank or dl6 != blank or dl10 != blank %}
+                              <a class="btn" href="#" onclick="return false;" aria-disabled="true">add download links</a>
+                            {% endunless %}
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- physical -->
+                      <div class="panel">
+                        <div class="panel__top">
+                          <span class="pill">{{ block.settings.physical_pill }}</span>
+                        </div>
+
+                        <div class="panel__media">
+                          {% if block.settings.physical_image != blank %}
+                            {{ block.settings.physical_image | image_url: width: 1200 | image_tag: loading: 'lazy', alt: 'Physical preview' }}
+                          {% endif %}
+                        </div>
+
+                        {% if block.settings.physical_note != blank %}
+                          <p class="panel__note">{{ block.settings.physical_note }}</p>
+                        {% endif %}
+
+                        <div class="btnwrap">
+                          <div class="btngrid">
+                            {% if show12 %}<button class="btn" type="button" onclick="sssAddSafe({{ v12 | escape }}, '{{ block.settings.product_name }} · 12th gen')">12th gen · $9</button>{% endif %}
+                            {% if show11 %}<button class="btn" type="button" onclick="sssAddSafe({{ v11 | escape }}, '{{ block.settings.product_name }} · 11th gen')">11th gen · $9</button>{% endif %}
+                            {% if show6 %}<button class="btn" type="button" onclick="sssAddSafe({{ v6  | escape }}, '{{ block.settings.product_name }} · 6 inch')">6 inch · $9</button>{% endif %}
+                            {% if show10 %}<button class="btn" type="button" onclick="sssAddSafe({{ v10 | escape }}, '{{ block.settings.product_name }} · 10th gen')">10th gen · $9</button>{% endif %}
+                            {% unless show12 or show11 or show6 or show10 %}
+                              <button class="btn" type="button" disabled>add variant ids</button>
+                            {% endunless %}
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+              {% endif %}
+
+              {% if block.type == 'artprint' %}
+                <div class="peek-slide" {{ block.shopify_attributes }}>
+                  <div class="libcard">
+                    <div class="libcard__head">
+                      <h4 class="libcard__name">{{ block.settings.name }}</h4>
+                      {% if block.settings.hint != blank %}
+                        <p class="libcard__hint">{{ block.settings.hint }}</p>
+                      {% endif %}
+                    </div>
+
+                    <div class="apbody">
+                      {% if block.settings.image != blank %}
+                        {{ block.settings.image | image_url: width: 1400 | image_tag: class: 'apimg', loading: 'lazy', alt: 'Art print' }}
+                      {% endif %}
+
+                      {% if block.settings.caption != blank %}
+                        <p class="apcap">{{ block.settings.caption }}</p>
+                      {% endif %}
+
+                      <div class="btnwrap">
+                        {% if block.settings.variant_id != blank and block.settings.variant_id != '0' %}
+                          <button class="btn" type="button"
+                            onclick="sssAddSafe({{ block.settings.variant_id | escape }}, '{{ block.settings.product_name }}')">
+                            {{ block.settings.button_text }}
+                          </button>
+                        {% elsif block.settings.url != blank %}
+                          <a class="btn" href="{{ block.settings.url }}">{{ block.settings.button_text }}</a>
+                        {% else %}
+                          <button class="btn" type="button" disabled>add art print variant id</button>
+                        {% endif %}
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              {% endif %}
+            {% endfor %}
+
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+  var section = document.currentScript.closest('.sss-peek');
+  if (!section) return;
+
+  var track = section.querySelector('[data-track]');
+  if (!track) return;
+
+  var prev = section.querySelector('.peek-prev');
+  var next = section.querySelector('.peek-next');
+
+  function slideBy(dir){
+    track.scrollBy({ left: dir * (track.clientWidth * 0.9), behavior: 'smooth' });
+  }
+  if (prev) prev.addEventListener('click', function(){ slideBy(-1); });
+  if (next) next.addEventListener('click', function(){ slideBy(1); });
+
+  // Ensure toast exists if other section isn't on page
+  if (!document.getElementById('sssToast')){
+    var t = document.createElement('div');
+    t.id = 'sssToast';
+    t.className = 'sss-toast';
+    document.body.appendChild(t);
+  }
+})();
+
+function sssToastSafe(msg, sub){
+  if (typeof sssToast === 'function'){ sssToast(msg, sub); return; }
+  var el = document.getElementById('sssToast');
+  if (!el) return;
+  el.innerHTML = sub ? (msg + '<br><span>' + sub + '</span>') : msg;
+  el.classList.add('show');
+  setTimeout(function(){ el.classList.remove('show'); }, 2400);
+}
+
+function sssAddSafe(variantId, label){
+  if (typeof sssAdd === 'function'){ sssAdd(variantId, label); return; }
+  fetch('/cart/add.js', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ id: Number(variantId), quantity: 1 })
+  })
+  .then(function(res){
+    if (res.ok){
+      sssToastSafe('added to cart 🤍', label);
+      return;
+    }
+    return res.json().then(function(data){
+      var msg = "couldn't add";
+      if (data && (data.description || data.message)) msg = data.description || data.message;
+      sssToastSafe('not added 🖤', msg);
+    }).catch(function(){
+      sssToastSafe('not added 🖤', "couldn't add");
+    });
+  })
+  .catch(function(){
+    sssToastSafe('not added 🖤', 'network error');
+  });
+}
+</script>
+
+{% schema %}
+{
+  "name": "sss first peek",
+  "settings": [
+    { "type": "image_picker", "id": "photo", "label": "left photo" },
+    { "type": "textarea", "id": "photo_caption", "label": "photo caption", "default": "a glimpse of what’s coming next." },
+
+    { "type": "text", "id": "kicker", "label": "right kicker", "default": "first peek" },
+    { "type": "text", "id": "title", "label": "right title", "default": "still unfolding" },
+    { "type": "textarea", "id": "subtext", "label": "right subtext", "default": "printable + physical sizes, plus the next art print." }
+  ],
+  "blocks": [
+    {
+      "type": "insert",
+      "name": "upcoming insert",
+      "settings": [
+        { "type": "text", "id": "name", "label": "insert name", "default": "upcoming kindle insert" },
+        { "type": "textarea", "id": "hint", "label": "1-line vibe", "default": "printable included. physical available to purchase." },
+        { "type": "text", "id": "product_name", "label": "product name (toast)", "default": "upcoming insert" },
+
+        { "type": "text", "id": "printable_pill", "label": "printable pill", "default": "🖨️ printable" },
+        { "type": "image_picker", "id": "printable_image", "label": "printable image" },
+        { "type": "text", "id": "printable_note", "label": "printable note", "default": "download your size." },
+        { "type": "url", "id": "dl_12th", "label": "download — 12th gen" },
+        { "type": "url", "id": "dl_11th", "label": "download — 11th gen" },
+        { "type": "url", "id": "dl_6in", "label": "download — 6 inch" },
+        { "type": "url", "id": "dl_10th", "label": "download — 10th gen" },
+
+        { "type": "text", "id": "physical_pill", "label": "physical pill", "default": "📬 physical" },
+        { "type": "image_picker", "id": "physical_image", "label": "physical image" },
+        { "type": "text", "id": "physical_note", "label": "physical note", "default": "add your size to cart." },
+        { "type": "text", "id": "v_12th", "label": "variant id — 12th gen", "default": "0" },
+        { "type": "text", "id": "v_11th", "label": "variant id — 11th gen", "default": "0" },
+        { "type": "text", "id": "v_6in", "label": "variant id — 6 inch", "default": "0" },
+        { "type": "text", "id": "v_10th", "label": "variant id — 10th gen", "default": "0" }
+      ]
+    },
+    {
+      "type": "artprint",
+      "name": "upcoming art print",
+      "settings": [
+        { "type": "text", "id": "name", "label": "art print name", "default": "upcoming art print" },
+        { "type": "textarea", "id": "hint", "label": "1-line vibe", "default": "limited + collectible." },
+        { "type": "image_picker", "id": "image", "label": "art print image" },
+        { "type": "textarea", "id": "caption", "label": "caption", "default": "add it to your wall like a quiet threat." },
+        { "type": "text", "id": "product_name", "label": "product name (toast)", "default": "upcoming art print" },
+        { "type": "text", "id": "variant_id", "label": "variant id", "default": "0" },
+        { "type": "url", "id": "url", "label": "link (if no variant id)" },
+        { "type": "text", "id": "button_text", "label": "button text", "default": "add art print" }
+      ]
+    }
+  ],
+  "max_blocks": 2,
+  "presets": [
+    { "name": "sss first peek" }
+  ]
+}
+{% endschema %}

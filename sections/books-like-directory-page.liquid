@@ -1,0 +1,442 @@
+{% liquid
+  assign source_blog = blogs[section.settings.blog_handle] | default: blogs['curated-romance-guides']
+%}
+
+<section class="bbb-books-like-directory">
+  <div class="bbb-books-like-directory__wrap">
+    {% if source_blog == blank %}
+      <div class="bbb-books-like-directory__empty">
+        <p class="bbb-books-like-directory__emptyKicker">setup needed</p>
+        <h2>choose a source blog</h2>
+        <p>Set the source blog for this page section, then mark the relevant articles with <code>custom.books_like = true</code>.</p>
+      </div>
+    {% else %}
+      {% paginate source_blog.articles by 250 %}
+        {% assign category_tokens = '' %}
+        {% assign books_like_count = 0 %}
+
+        {% for article in source_blog.articles %}
+          {% assign books_like_value = article.metafields.custom.books_like.value | append: '' | downcase | strip %}
+          {% unless books_like_value == 'true' %}
+            {% continue %}
+          {% endunless %}
+
+          {% assign books_like_count = books_like_count | plus: 1 %}
+
+          {% assign article_books = article.metafields.custom.book.value %}
+          {% assign article_book = '' %}
+          {% if article_books != blank %}
+            {% assign single_article_book_title = article_books.title.value | default: article_books.title %}
+            {% if single_article_book_title != blank %}
+              {% assign article_book = article_books %}
+            {% else %}
+              {% assign article_book = article_books | first %}
+            {% endif %}
+          {% endif %}
+          {% if article_book == blank %}
+            {% assign article_books = article.metafields.custom.books.value %}
+            {% if article_books != blank %}
+              {% assign single_article_book_title = article_books.title.value | default: article_books.title %}
+              {% if single_article_book_title != blank %}
+                {% assign article_book = article_books %}
+              {% else %}
+                {% assign article_book = article_books | first %}
+              {% endif %}
+            {% endif %}
+          {% endif %}
+          {% if article_book == blank %}
+            {% assign inferred_book_title = '' %}
+            {% assign article_title_down = article.title | downcase | strip %}
+            {% if article_title_down contains 'books like ' %}
+              {% assign inferred_book_title = article_title_down | remove_first: 'books like ' | split: '(' | first | strip %}
+            {% endif %}
+            {% if inferred_book_title != blank %}
+              {% assign inferred_book_handle = inferred_book_title | handleize %}
+              {% for library_book in shop.metaobjects.sss_library.values %}
+                {% assign candidate_title = library_book.title.value | default: library_book.title | downcase | strip %}
+                {% assign candidate_handle = library_book.system.handle | default: candidate_title | handleize %}
+                {% if candidate_handle == inferred_book_handle or candidate_title == inferred_book_title %}
+                  {% assign article_book = library_book %}
+                  {% break %}
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+          {% endif %}
+          {% assign book_shelf = article_book.shelf.value %}
+          {% assign article_category = article.metafields.custom.guide_category.value %}
+          {% assign category_name = book_shelf.name | default: article_category.name | default: 'more books like' %}
+          {% assign category_handle = book_shelf.system.handle | default: article_category.system.handle | default: category_name | handleize %}
+          {% capture category_token %}|{{ category_handle }}::{{ category_name }}|{% endcapture %}
+          {% unless category_tokens contains category_token %}
+            {% assign category_tokens = category_tokens | append: category_token %}
+          {% endunless %}
+        {% endfor %}
+
+        {% if books_like_count == 0 %}
+          <div class="bbb-books-like-directory__empty">
+            <p class="bbb-books-like-directory__emptyKicker">setup needed</p>
+            <h2>mark the blog posts you want</h2>
+            <p>Add a blog post metafield named <code>custom.books_like</code> as a true/false field, then turn it on for the guides you want on this page.</p>
+          </div>
+        {% else %}
+          <header class="bbb-books-like-directory__hero">
+            {% if section.settings.kicker != blank %}
+              <p class="bbb-books-like-directory__kicker">{{ section.settings.kicker }}</p>
+            {% endif %}
+            <h1 class="bbb-books-like-directory__title">
+              {% if section.settings.heading != blank %}
+                {{ section.settings.heading }}
+              {% else %}
+                {{ page.title }}
+              {% endif %}
+            </h1>
+            {% if section.settings.subtext != blank %}
+              <p class="bbb-books-like-directory__subtext">{{ section.settings.subtext }}</p>
+            {% endif %}
+          </header>
+
+          <div class="bbb-books-like-directory__groups">
+            {% assign category_entries = category_tokens | split: '|' %}
+            {% for entry in category_entries %}
+              {% if entry == blank %}
+                {% continue %}
+              {% endif %}
+              {% assign entry_parts = entry | split: '::' %}
+              {% assign target_category_handle = entry_parts[0] %}
+              {% assign target_category_name = entry_parts[1] %}
+
+              <section class="bbb-books-like-directory__group">
+                <p class="bbb-books-like-directory__groupTitle">{{ target_category_name }}</p>
+                <div class="bbb-books-like-directory__grid">
+                  {% for article in source_blog.articles %}
+                    {% assign books_like_value = article.metafields.custom.books_like.value | append: '' | downcase | strip %}
+                    {% unless books_like_value == 'true' %}
+                      {% continue %}
+                    {% endunless %}
+
+                    {% assign article_books = article.metafields.custom.book.value %}
+                    {% assign article_book = '' %}
+                    {% if article_books != blank %}
+                      {% assign single_article_book_title = article_books.title.value | default: article_books.title %}
+                      {% if single_article_book_title != blank %}
+                        {% assign article_book = article_books %}
+                      {% else %}
+                        {% assign article_book = article_books | first %}
+                      {% endif %}
+                    {% endif %}
+                    {% if article_book == blank %}
+                      {% assign article_books = article.metafields.custom.books.value %}
+                      {% if article_books != blank %}
+                        {% assign single_article_book_title = article_books.title.value | default: article_books.title %}
+                        {% if single_article_book_title != blank %}
+                          {% assign article_book = article_books %}
+                        {% else %}
+                          {% assign article_book = article_books | first %}
+                        {% endif %}
+                      {% endif %}
+                    {% endif %}
+                    {% if article_book == blank %}
+                      {% assign inferred_book_title = '' %}
+                      {% assign article_title_down = article.title | downcase | strip %}
+                      {% if article_title_down contains 'books like ' %}
+                        {% assign inferred_book_title = article_title_down | remove_first: 'books like ' | split: '(' | first | strip %}
+                      {% endif %}
+                      {% if inferred_book_title != blank %}
+                        {% assign inferred_book_handle = inferred_book_title | handleize %}
+                        {% for library_book in shop.metaobjects.sss_library.values %}
+                          {% assign candidate_title = library_book.title.value | default: library_book.title | downcase | strip %}
+                          {% assign candidate_handle = library_book.system.handle | default: candidate_title | handleize %}
+                          {% if candidate_handle == inferred_book_handle or candidate_title == inferred_book_title %}
+                            {% assign article_book = library_book %}
+                            {% break %}
+                          {% endif %}
+                        {% endfor %}
+                      {% endif %}
+                    {% endif %}
+                    {% assign book_shelf = article_book.shelf.value %}
+                    {% assign article_category = article.metafields.custom.guide_category.value %}
+                    {% assign article_category_handle = book_shelf.system.handle | default: article_category.system.handle | default: book_shelf.name | default: article_category.name | default: 'more books like' | handleize %}
+                    {% unless article_category_handle == target_category_handle %}
+                      {% continue %}
+                    {% endunless %}
+
+                    {% liquid
+                      assign card_title = article_book.title.value | default: article_book.title | default: article.title
+                      assign card_subtitle = ''
+                      assign trope_count = 0
+                      for trope in article_book.tropes.value
+                        if trope_count >= 3
+                          break
+                        endif
+                        if card_subtitle != blank
+                          assign card_subtitle = card_subtitle | append: ' · '
+                        endif
+                        if trope.emoji != blank
+                          assign card_subtitle = card_subtitle | append: trope.emoji | append: ' '
+                        endif
+                        assign card_subtitle = card_subtitle | append: trope.name
+                        assign trope_count = trope_count | plus: 1
+                      endfor
+                      if card_subtitle == blank
+                        assign card_subtitle = article_book.author.value | default: article_book.author | default: article_category.name
+                      endif
+                      assign card_cover = ''
+                      assign cover_value = article_book.cover.value | default: article_book.cover
+                      if cover_value != blank
+                        assign card_cover = cover_value.url | default: cover_value
+                      elsif article.image != blank
+                        assign card_cover = article.image | image_url: width: 600
+                      endif
+                    %}
+
+                    <a class="bbb-books-like-directory__card" href="{{ article.url }}">
+                      {% if card_cover != blank %}
+                        <span class="bbb-books-like-directory__cardMedia">
+                          <img src="{{ card_cover }}" alt="{{ card_title | escape }}" loading="lazy">
+                        </span>
+                      {% endif %}
+                      <span class="bbb-books-like-directory__cardCopy">
+                        <strong>{{ card_title }}</strong>
+                        {% if card_subtitle != blank %}
+                          <small>{{ card_subtitle }}</small>
+                        {% endif %}
+                      </span>
+                      <span class="bbb-books-like-directory__arrow" aria-hidden="true">→</span>
+                    </a>
+                  {% endfor %}
+                </div>
+              </section>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endpaginate %}
+    {% endif %}
+
+    {% if section.settings.footer_note != blank %}
+      <p class="bbb-books-like-directory__note">{{ section.settings.footer_note }}</p>
+    {% endif %}
+  </div>
+</section>
+
+<style>
+  .bbb-books-like-directory {
+    background: #050505;
+    color: #f5f1ec;
+    padding: 40px 0 64px;
+  }
+
+  .bbb-books-like-directory__wrap {
+    width: min(1320px, calc(100% - 64px));
+    margin: 0 auto;
+  }
+
+  .bbb-books-like-directory__kicker,
+  .bbb-books-like-directory__groupTitle,
+  .bbb-books-like-directory__emptyKicker {
+    margin: 0 0 10px;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(245, 241, 236, 0.66);
+  }
+
+  .bbb-books-like-directory__hero {
+    margin-bottom: 34px;
+    max-width: 760px;
+  }
+
+  .bbb-books-like-directory__title {
+    margin: 0 0 10px;
+    font-size: clamp(2.6rem, 5vw, 4.4rem);
+    line-height: 0.98;
+    font-weight: 500;
+    color: #f7f1eb;
+    font-style: italic;
+  }
+
+  .bbb-books-like-directory__subtext,
+  .bbb-books-like-directory__note,
+  .bbb-books-like-directory__empty p {
+    margin: 0;
+    color: rgba(245, 241, 236, 0.8);
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  .bbb-books-like-directory__group {
+    border-top: 1px solid rgba(245, 241, 236, 0.14);
+    padding-top: 24px;
+    margin-top: 24px;
+  }
+
+  .bbb-books-like-directory__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .bbb-books-like-directory__card {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    min-height: 116px;
+    padding: 14px;
+    border: 1px solid rgba(245, 241, 236, 0.16);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.015);
+    text-decoration: none;
+    transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+  }
+
+  .bbb-books-like-directory__cardMedia {
+    display: block;
+    width: 88px;
+    aspect-ratio: 0.72;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .bbb-books-like-directory__cardMedia img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .bbb-books-like-directory__card:hover,
+  .bbb-books-like-directory__card:focus-visible {
+    border-color: rgba(245, 137, 191, 0.45);
+    background: rgba(245, 137, 191, 0.04);
+    transform: translateY(-1px);
+  }
+
+  .bbb-books-like-directory__cardCopy {
+    display: block;
+    min-width: 0;
+  }
+
+  .bbb-books-like-directory__cardCopy strong {
+    display: block;
+    margin: 0 0 4px;
+    color: #f6efe9;
+    font-size: 18px;
+    line-height: 1.15;
+    font-weight: 500;
+    font-style: italic;
+  }
+
+  .bbb-books-like-directory__cardCopy small {
+    display: block;
+    color: rgba(245, 241, 236, 0.58);
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .bbb-books-like-directory__arrow {
+    color: rgba(245, 241, 236, 0.55);
+    font-size: 14px;
+    flex: 0 0 auto;
+  }
+
+  .bbb-books-like-directory__note {
+    margin-top: 18px;
+    text-align: center;
+    font-size: 12px;
+    color: rgba(245, 241, 236, 0.55);
+  }
+
+  .bbb-books-like-directory__empty {
+    border: 1px solid rgba(245, 241, 236, 0.14);
+    border-radius: 22px;
+    padding: 22px;
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .bbb-books-like-directory__empty h2 {
+    margin: 0 0 10px;
+    font-size: 30px;
+    line-height: 1.05;
+    font-weight: 400;
+    color: #f7f1eb;
+  }
+
+  .bbb-books-like-directory code {
+    font-family: monospace;
+    font-size: 0.95em;
+    color: #f589bf;
+  }
+
+  @media (max-width: 749px) {
+    .bbb-books-like-directory {
+      padding: 28px 0 44px;
+    }
+
+    .bbb-books-like-directory__wrap {
+      width: min(100%, calc(100% - 24px));
+    }
+
+    .bbb-books-like-directory__grid {
+      grid-template-columns: 1fr;
+    }
+
+    .bbb-books-like-directory__card {
+      grid-template-columns: 76px minmax(0, 1fr) auto;
+      min-height: 98px;
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .bbb-books-like-directory__cardMedia {
+      width: 76px;
+    }
+
+    .bbb-books-like-directory__cardCopy strong {
+      font-size: 16px;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Books Like Directory",
+  "settings": [
+    {
+      "type": "text",
+      "id": "blog_handle",
+      "label": "Source blog handle",
+      "default": "curated-romance-guides"
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Kicker",
+      "default": "reading guides"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "books like x"
+    },
+    {
+      "type": "textarea",
+      "id": "subtext",
+      "label": "Intro copy",
+      "default": "finished something that wrecked you and have no idea what to read next? start here. every list has been read, curated, and personally recommended."
+    },
+    {
+      "type": "text",
+      "id": "footer_note",
+      "label": "Footer note",
+      "default": "each card links directly to its blog post · grouped by genre · author and main trope visible at a glance"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Books Like Directory"
+    }
+  ]
+}
+{% endschema %}

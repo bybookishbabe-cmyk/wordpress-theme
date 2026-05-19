@@ -1,0 +1,214 @@
+{% assign books = books | default: article.metafields.custom.book.value %}
+{% assign guide_category = article.metafields.custom.guide_category.value %}
+{% assign guide_category_label = guide_category.name.value | default: guide_category.name | default: guide_category.title.value | default: guide_category.title | default: guide_category | default: '' | strip %}
+{% assign guide_category_handle = guide_category.system.handle | default: guide_category_label | handleize %}
+{% assign guide_category_name = guide_category_label | downcase %}
+{% assign article_trope = article.metafields.custom.trope.value %}
+
+{% if guide_category_handle == blank and article_trope != blank %}
+  {% if article_trope.name == blank %}
+    {% assign article_trope_first = article_trope | first %}
+    {% if article_trope_first != blank %}
+      {% assign article_trope = article_trope_first %}
+    {% endif %}
+  {% endif %}
+
+  {% assign guide_category_label = article_trope.name | default: article_trope | default: '' | strip %}
+  {% assign guide_category_handle = article_trope.system.handle | default: guide_category_label | handleize %}
+  {% assign guide_category_name = guide_category_label | downcase %}
+{% endif %}
+
+{% assign spice_1_count = 0 %}
+{% assign spice_2_count = 0 %}
+{% assign spice_3_count = 0 %}
+{% assign spice_4_count = 0 %}
+{% assign spice_5_count = 0 %}
+{% assign spice_1_books = '' %}
+{% assign spice_2_books = '' %}
+{% assign spice_3_books = '' %}
+{% assign spice_4_books = '' %}
+{% assign spice_5_books = '' %}
+
+{% if books != blank %}
+  {% for book in books %}
+    {% assign book_spice = book.spice_level.value | default: 0 | plus: 0 %}
+    {% capture book_markup %}
+      <div class="guide-bookcard__item guide-bookcard__item--pillar js-scroll-reveal">
+        {% render 'blog-book-card', book: book, show_why: true %}
+      </div>
+    {% endcapture %}
+
+    {% case book_spice %}
+      {% when 1 %}
+        {% assign spice_1_count = spice_1_count | plus: 1 %}
+        {% assign spice_1_books = spice_1_books | append: book_markup %}
+      {% when 2 %}
+        {% assign spice_2_count = spice_2_count | plus: 1 %}
+        {% assign spice_2_books = spice_2_books | append: book_markup %}
+      {% when 3 %}
+        {% assign spice_3_count = spice_3_count | plus: 1 %}
+        {% assign spice_3_books = spice_3_books | append: book_markup %}
+      {% when 4 %}
+        {% assign spice_4_count = spice_4_count | plus: 1 %}
+        {% assign spice_4_books = spice_4_books | append: book_markup %}
+      {% when 5 %}
+        {% assign spice_5_count = spice_5_count | plus: 1 %}
+        {% assign spice_5_books = spice_5_books | append: book_markup %}
+    {% endcase %}
+  {% endfor %}
+{% elsif guide_category_handle != blank %}
+  {% paginate shop.metaobjects.sss_library.values by 250 %}
+    {% for book in shop.metaobjects.sss_library.values %}
+      {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+      {% assign is_visible_value = is_visible | strip %}
+      {% unless is_visible_value == 'true' %}
+        {% continue %}
+      {% endunless %}
+
+      {% assign category_match = false %}
+      {% assign book_shelf_handle = book.shelf.value.system.handle | default: book.shelf.value.name | handleize %}
+      {% assign book_shelf_name = book.shelf.value.name | default: '' | strip | downcase %}
+
+      {% if book_shelf_handle == guide_category_handle or book_shelf_name == guide_category_name %}
+        {% assign category_match = true %}
+      {% endif %}
+
+      {% unless category_match %}
+        {% for linked_trope in book.tropes.value %}
+          {% assign linked_trope_handle = linked_trope.system.handle | default: linked_trope.name | handleize %}
+          {% assign linked_trope_name = linked_trope.name | default: '' | strip | downcase %}
+          {% if linked_trope_handle == guide_category_handle or linked_trope_name == guide_category_name %}
+            {% assign category_match = true %}
+            {% break %}
+          {% endif %}
+        {% endfor %}
+      {% endunless %}
+
+      {% unless category_match %}
+        {% continue %}
+      {% endunless %}
+
+      {% assign series_number_text = book.series_number.value | append: '' | strip %}
+      {% if book.series.value != blank and book.read_as_standalone.value != true and series_number_text != blank and series_number_text != '1' %}
+        {% continue %}
+      {% endif %}
+
+      {% assign book_spice = book.spice_level.value | default: 0 | plus: 0 %}
+      {% capture book_markup %}
+        <div class="guide-bookcard__item guide-bookcard__item--pillar js-scroll-reveal">
+          {% render 'blog-book-card', book: book, show_why: true %}
+        </div>
+      {% endcapture %}
+
+      {% case book_spice %}
+        {% when 1 %}
+          {% assign spice_1_count = spice_1_count | plus: 1 %}
+          {% assign spice_1_books = spice_1_books | append: book_markup %}
+        {% when 2 %}
+          {% assign spice_2_count = spice_2_count | plus: 1 %}
+          {% assign spice_2_books = spice_2_books | append: book_markup %}
+        {% when 3 %}
+          {% assign spice_3_count = spice_3_count | plus: 1 %}
+          {% assign spice_3_books = spice_3_books | append: book_markup %}
+        {% when 4 %}
+          {% assign spice_4_count = spice_4_count | plus: 1 %}
+          {% assign spice_4_books = spice_4_books | append: book_markup %}
+        {% when 5 %}
+          {% assign spice_5_count = spice_5_count | plus: 1 %}
+          {% assign spice_5_books = spice_5_books | append: book_markup %}
+      {% endcase %}
+    {% endfor %}
+  {% endpaginate %}
+{% endif %}
+
+{% assign total_books = spice_1_count | plus: spice_2_count | plus: spice_3_count | plus: spice_4_count | plus: spice_5_count %}
+
+{% if total_books > 0 %}
+  <div class="guide-bookcard guide-bookcard--pillar" data-guide-bookcard data-guide-title="{{ article.title | escape }}">
+    <div class="guide-bookcard__head">
+      <div class="guide-bookcard__header">
+        books by spice level
+      </div>
+      <button type="button" class="sss-lib__exportBtn guide-bookcard__export" data-guide-export>
+        save this list
+      </button>
+    </div>
+
+    <div class="guide-bookcard__affiliate-note">
+      some links may be affiliate links, so thank you for supporting the recs. <3
+    </div>
+
+    <div class="pillar-bookcard">
+      {% if spice_1_count > 0 %}
+        <div class="pillar-bookcard__section">
+          {% render 'blog-pillar-spice-section',
+            anchor: 'spice-1',
+            label: 'spice 1',
+            title: 'soft open door',
+            copy: 'for tension, tenderness, and the kind of romance that lets the feelings do most of the damage.',
+            heat: '🌶'
+          %}
+          <div class="guide-bookcard__list pillar-bookcard__list">{{ spice_1_books }}</div>
+        </div>
+      {% endif %}
+
+      {% if spice_2_count > 0 %}
+        <div class="pillar-bookcard__section">
+          {% render 'blog-pillar-spice-section',
+            anchor: 'spice-2',
+            label: 'spice 2',
+            title: 'some heat',
+            copy: 'a little more touch, a little more trouble, and enough heat to make the chemistry impossible to ignore.',
+            heat: '🌶 🌶'
+          %}
+          <div class="guide-bookcard__list pillar-bookcard__list">{{ spice_2_books }}</div>
+        </div>
+      {% endif %}
+
+      {% if spice_3_count > 0 %}
+        <div class="pillar-bookcard__section">
+          {% render 'blog-pillar-spice-section',
+            anchor: 'spice-3',
+            label: 'spice 3',
+            title: 'balanced',
+            copy: 'the sweet spot: plot, obsession, feelings, and heat all pulling their weight.',
+            heat: '🌶 🌶 🌶'
+          %}
+          <div class="guide-bookcard__list pillar-bookcard__list">{{ spice_3_books }}</div>
+        </div>
+
+        {% if weekly_obsession_banner != blank %}
+          <div class="guide-bookcard__obsession pillar-bookcard__obsession">
+            {{ weekly_obsession_banner }}
+          </div>
+        {% endif %}
+      {% endif %}
+
+      {% if spice_4_count > 0 %}
+        <div class="pillar-bookcard__section">
+          {% render 'blog-pillar-spice-section',
+            anchor: 'spice-4',
+            label: 'spice 4',
+            title: 'high spice',
+            copy: 'do not read in public unless you enjoy pretending your screen brightness is not the problem.',
+            heat: '🌶 🌶 🌶 🌶'
+          %}
+          <div class="guide-bookcard__list pillar-bookcard__list">{{ spice_4_books }}</div>
+        </div>
+      {% endif %}
+
+      {% if spice_5_count > 0 %}
+        <div class="pillar-bookcard__section">
+          {% render 'blog-pillar-spice-section',
+            anchor: 'spice-5',
+            label: 'spice 5',
+            title: 'wreck me',
+            copy: 'the cancel-your-plans shelf. high heat, high chaos, and absolutely no emotional safety equipment.',
+            heat: '🌶 🌶 🌶 🌶 🌶'
+          %}
+          <div class="guide-bookcard__list pillar-bookcard__list">{{ spice_5_books }}</div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}

@@ -1,0 +1,556 @@
+{% comment %}
+bybookishbabe · Soft Contact (Footer Section)
+- Matches Society / Library aesthetic (dark, lined-paper glow, soft borders)
+- Uses Shopify's built-in contact form
+- Add this section to your Footer in Theme Editor
+
+HOW TO USE
+1) Online Store → Themes → Edit code
+2) Add new section: sections/bbb-soft-contact-footer.liquid
+3) Paste this whole file
+4) Customize → Footer → Add section → “bbb · Soft contact (footer)”
+{% endcomment %}
+
+{%- liquid
+  assign sid = section.id
+-%}
+
+<section id="bbb-contact-{{ sid }}" class="bbb-contact" data-bbb-contact>
+  <div class="bbb-contact__wrap">
+    <button class="bbb-contact__toggle" type="button" aria-expanded="false" aria-controls="bbb-contact-panel-{{ sid }}" data-contact-toggle>
+      <span class="bbb-contact__toggleCopy">
+        <span class="bbb-contact__kicker">{{ section.settings.kicker }}</span>
+
+        <span class="bbb-contact__title">
+          <span class="bbb-contact__script">{{ section.settings.script_word }}</span>
+          <span class="bbb-contact__main">{{ section.settings.main_word }}</span>
+        </span>
+
+        {% if section.settings.subtext != blank %}
+          <span class="bbb-contact__sub">{{ section.settings.subtext }}</span>
+        {% endif %}
+      </span>
+      <span class="bbb-contact__chev" aria-hidden="true">▾</span>
+    </button>
+
+    <div class="bbb-contact__panel" id="bbb-contact-panel-{{ sid }}" data-contact-panel>
+    {%- if section.settings.show_email_line and section.settings.email != blank -%}
+      <p class="bbb-contact__email">
+        <span class="bbb-contact__emailLabel">{{ section.settings.email_label }}</span>
+        <a class="bbb-contact__emailLink" href="mailto:{{ section.settings.email | escape }}">{{ section.settings.email }}</a>
+      </p>
+    {%- endif -%}
+
+{% form 'contact', class: 'bbb-contact__form' %}
+      {% if form.posted_successfully? %}
+        <div class="bbb-contact__notice bbb-contact__notice--success" role="status">
+          {{ section.settings.success_message }}
+        </div>
+      {% endif %}
+
+      {% if form.errors %}
+        <div class="bbb-contact__notice bbb-contact__notice--error" role="alert">
+          {{ section.settings.error_message }}
+          <div class="bbb-contact__errors">
+            {{ form.errors | default_errors }}
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="bbb-contact__grid">
+        <div class="bbb-field">
+          <label class="bbb-field__label" for="ContactFormName-{{ sid }}">name</label>
+          <input
+            class="bbb-field__input"
+            id="ContactFormName-{{ sid }}"
+            type="text"
+            name="contact[name]"
+            autocomplete="name"
+            placeholder="{{ section.settings.ph_name }}"
+            required
+          >
+        </div>
+
+        <div class="bbb-field">
+          <label class="bbb-field__label" for="ContactFormEmail-{{ sid }}">email</label>
+          <input
+            class="bbb-field__input"
+            id="ContactFormEmail-{{ sid }}"
+            type="email"
+            name="contact[email]"
+            autocomplete="email"
+            placeholder="{{ section.settings.ph_email }}"
+            required
+          >
+        </div>
+      </div>
+
+      {% if section.settings.enable_subject %}
+        <div class="bbb-field">
+          <label class="bbb-field__label" for="ContactFormSubject-{{ sid }}">subject</label>
+          <input
+            class="bbb-field__input"
+            id="ContactFormSubject-{{ sid }}"
+            type="text"
+            name="contact[subject]"
+            placeholder="{{ section.settings.ph_subject }}"
+          >
+        </div>
+      {% endif %}
+
+      <div class="bbb-field">
+        <label class="bbb-field__label" for="ContactFormMessage-{{ sid }}">message</label>
+        <textarea
+          class="bbb-field__textarea"
+          id="ContactFormMessage-{{ sid }}"
+          name="contact[body]"
+          rows="5"
+          placeholder="{{ section.settings.ph_message }}"
+          required
+        ></textarea>
+
+        {% if section.settings.helper_note != blank %}
+          <p class="bbb-contact__helper">{{ section.settings.helper_note }}</p>
+        {% endif %}
+      </div>
+
+      <div class="bbb-contact__actions">
+        <button class="bbb-contact__btn" type="submit">
+          {{ section.settings.button_label }}
+        </button>
+
+        {% if section.settings.alt_note != blank %}
+          <p class="bbb-contact__alt">{{ section.settings.alt_note }}</p>
+        {% endif %}
+      </div>
+
+      <input type="hidden" name="contact[tags]" value="bbb-footer-contact">
+    {% endform %}
+    </div>
+  </div>
+</section>
+
+<style>
+  /* --- scope --- */
+  #bbb-contact-{{ sid }}.bbb-contact{
+    --bbb-ink:#f6f6f6;
+    --bbb-muted:rgba(246,246,246,.72);
+    --bbb-border:rgba(255,255,255,.12);
+    --bbb-surface:rgba(255,255,255,.04);
+    --bbb-surface2:rgba(255,255,255,.06);
+    --bbb-pink:{{ section.settings.accent }};
+    --bbb-black:#0b0b0b;
+
+    color:var(--bbb-ink);
+    background:transparent;
+    position:relative;
+    overflow:hidden;
+    font-family:"Libre Baskerville", Georgia, serif;
+  }
+
+  /* soft library glow + lined-paper texture (subtle) */
+  #bbb-contact-{{ sid }} .bbb-contact__wrap{
+    position:relative;
+    border:1px solid var(--bbb-border);
+    border-radius:16px;
+    padding:18px 16px;
+    background:rgba(255,255,255,.03);
+    box-shadow:0 18px 40px rgba(0,0,0,.35);
+    overflow:hidden;
+  }
+
+  #bbb-contact-{{ sid }} .bbb-contact__wrap:before{
+    content:"";
+    position:absolute;
+    inset:-40px;
+    pointer-events:none;
+    background:
+      radial-gradient(760px 360px at 20% 0%, rgba(255,255,255,.08), transparent 65%),
+      repeating-linear-gradient(to bottom, rgba(255,255,255,.03), rgba(255,255,255,.03) 1px, transparent 1px, transparent 26px);
+    opacity:.55;
+  }
+
+  #bbb-contact-{{ sid }} .bbb-contact__wrap > *{
+    position:relative;
+    z-index:1;
+  }
+
+  /* header */
+  #bbb-contact-{{ sid }} .bbb-contact__toggle{
+    width:100%;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+    margin:0;
+    padding:0;
+    border:0;
+    background:transparent;
+    color:inherit;
+    text-align:left;
+    cursor:pointer;
+  }
+  #bbb-contact-{{ sid }} .bbb-contact__toggleCopy{
+    display:block;
+    min-width:0;
+  }
+  #bbb-contact-{{ sid }} .bbb-contact__chev{
+    display:block;
+    flex:0 0 auto;
+    margin-top:8px;
+    font-size:18px;
+    line-height:1;
+    color:rgba(246,246,246,.9);
+    transform:rotate(0deg);
+    transition:transform .25s ease;
+  }
+  #bbb-contact-{{ sid }} .bbb-contact__toggle[aria-expanded="true"] .bbb-contact__chev{
+    transform:rotate(180deg);
+  }
+
+  #bbb-contact-{{ sid }} .bbb-contact__kicker{
+    margin:0;
+    font-size:10px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:rgba(246,246,246,.62);
+  }
+
+  #bbb-contact-{{ sid }} .bbb-contact__title{
+    margin:10px 0 0;
+    line-height:1;
+    display:flex;
+    align-items:baseline;
+    gap:.25em;
+    flex-wrap:wrap;
+  }
+
+  #bbb-contact-{{ sid }} .bbb-contact__script{
+    font-family: "Georgia", "Times New Roman", serif;
+    font-style: italic;
+    font-size:26px;
+    opacity:.92;
+    letter-spacing:-.02em;
+  }
+
+  #bbb-contact-{{ sid }} .bbb-contact__main{
+    font-size:20px;
+    font-weight:400;
+    text-transform:lowercase;
+    letter-spacing:-.02em;
+    opacity:.96;
+  }
+
+  #bbb-contact-{{ sid }} .bbb-contact__sub{
+    margin:10px 0 0;
+    font-size:12px;
+    line-height:1.6;
+    color:var(--bbb-muted);
+    max-width:62ch;
+  }
+
+  /* email line */
+  #bbb-contact-{{ sid }} .bbb-contact__email{
+    margin:10px 0 14px;
+    font-size:12px;
+    color:var(--bbb-muted);
+  }
+  #bbb-contact-{{ sid }} .bbb-contact__emailLabel{
+    margin-right:8px;
+    letter-spacing:.08em;
+    text-transform:lowercase;
+    opacity:.9;
+  }
+  #bbb-contact-{{ sid }} .bbb-contact__emailLink{
+    color:var(--bbb-ink);
+    text-decoration:underline;
+    text-underline-offset:3px;
+    text-decoration-color:rgba(255,255,255,.35);
+  }
+  #bbb-contact-{{ sid }} .bbb-contact__emailLink:hover{
+    text-decoration-color:rgba(255,255,255,.6);
+  }
+
+  /* notices */
+  #bbb-contact-{{ sid }} .bbb-contact__notice{
+    border-radius:14px;
+    padding:12px 12px;
+    margin:0 0 12px;
+    border:1px solid var(--bbb-border);
+    background:rgba(255,255,255,.04);
+    font-size:12px;
+    line-height:1.5;
+  }
+  #bbb-contact-{{ sid }} .bbb-contact__notice--success{
+    border-color:rgba(255,138,199,.35);
+    background:rgba(255,138,199,.10);
+  }
+  #bbb-contact-{{ sid }} .bbb-contact__notice--error{
+    border-color:rgba(255,255,255,.18);
+    background:rgba(255,255,255,.04);
+  }
+  #bbb-contact-{{ sid }} .bbb-contact__errors{
+    margin-top:8px;
+    color:rgba(246,246,246,.85);
+  }
+
+  /* form layout */
+  #bbb-contact-{{ sid }} .bbb-contact__form{ margin:0; }
+  #bbb-contact-{{ sid }} .bbb-contact__panel{
+    max-height:0;
+    opacity:0;
+    margin-top:0;
+    overflow:hidden;
+    visibility:hidden;
+    transition:max-height .32s ease, opacity .25s ease, margin-top .25s ease, visibility 0s linear .32s;
+  }
+  #bbb-contact-{{ sid }} .bbb-contact__toggle[aria-expanded="true"] + .bbb-contact__panel{
+    max-height:1200px;
+    opacity:1;
+    margin-top:12px;
+    visibility:visible;
+    transition:max-height .32s ease, opacity .25s ease, margin-top .25s ease;
+  }
+  #bbb-contact-{{ sid }} .bbb-contact__grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+
+  #bbb-contact-{{ sid }} .bbb-field{ margin:12px 0 0; }
+  #bbb-contact-{{ sid }} .bbb-field__label{
+    display:block;
+    font-size:10px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:rgba(246,246,246,.68);
+    margin:0 0 8px;
+  }
+
+  #bbb-contact-{{ sid }} .bbb-field__input,
+  #bbb-contact-{{ sid }} .bbb-field__textarea{
+    width:100%;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(11,11,11,.38);
+    color:var(--bbb-ink);
+    padding:12px 12px;
+    font-size:12px;
+    outline:none;
+    transition:border-color .16s ease, box-shadow .16s ease, background-color .16s ease;
+  }
+
+  #bbb-contact-{{ sid }} .bbb-field__textarea{
+    min-height:120px;
+    resize:vertical;
+  }
+
+  #bbb-contact-{{ sid }} .bbb-field__input::placeholder,
+  #bbb-contact-{{ sid }} .bbb-field__textarea::placeholder{
+    color:rgba(246,246,246,.40);
+  }
+
+  #bbb-contact-{{ sid }} .bbb-field__input:focus,
+  #bbb-contact-{{ sid }} .bbb-field__textarea:focus{
+    border-color:rgba(255,138,199,.55);
+    box-shadow:0 0 0 3px rgba(255,138,199,.18);
+    background:rgba(11,11,11,.46);
+  }
+
+  #bbb-contact-{{ sid }} .bbb-contact__helper{
+    margin:10px 2px 0;
+    font-size:11px;
+    color:rgba(246,246,246,.62);
+    line-height:1.5;
+  }
+
+  /* actions */
+  #bbb-contact-{{ sid }} .bbb-contact__actions{
+    margin-top:14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  #bbb-contact-{{ sid }} .bbb-contact__btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:999px;
+    padding:11px 14px;
+    font-size:11px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    cursor:pointer;
+    border:1px solid rgba(255,138,199,.92);
+    background:rgba(255,138,199,.92);
+    color:#0b0b0b;
+    box-shadow:0 12px 26px rgba(0,0,0,.45);
+    transition:transform .16s ease, filter .16s ease, letter-spacing .16s ease;
+  }
+  #bbb-contact-{{ sid }} .bbb-contact__btn:hover{
+    transform:translateY(-2px);
+    filter:brightness(1.03);
+    letter-spacing:.19em;
+  }
+  #bbb-contact-{{ sid }} .bbb-contact__btn:active{ transform:translateY(0); }
+
+  #bbb-contact-{{ sid }} .bbb-contact__alt{
+    margin:0;
+    font-size:11px;
+    color:rgba(246,246,246,.66);
+    line-height:1.5;
+  }
+
+  /* responsive */
+  @media (max-width: 740px){
+    #bbb-contact-{{ sid }} .bbb-contact__grid{
+      grid-template-columns:1fr;
+    }
+    #bbb-contact-{{ sid }} .bbb-contact__wrap{
+      padding:16px 14px;
+    }
+    #bbb-contact-{{ sid }} .bbb-field__input,
+    #bbb-contact-{{ sid }} .bbb-field__textarea{
+      font-size:16px;
+    }
+  }
+</style>
+
+<script>
+  (function(){
+    var root = document.getElementById('bbb-contact-{{ sid }}');
+    if (!root) return;
+
+    var toggle = root.querySelector('[data-contact-toggle]');
+    if (!toggle) return;
+
+    toggle.addEventListener('click', function(){
+      var expanded = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+    });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "bbb · Soft contact",
+  "settings": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Kicker",
+      "default": "leave a note"
+    },
+    {
+      "type": "text",
+      "id": "script_word",
+      "label": "Script word",
+      "default": "dear"
+    },
+    {
+      "type": "text",
+      "id": "main_word",
+      "label": "Main word",
+      "default": "reader"
+    },
+    {
+      "type": "textarea",
+      "id": "subtext",
+      "label": "Subtext",
+      "default": "questions, collabs, or you just want to say hi — i’m listening."
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_subject",
+      "label": "Show subject field",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_email_line",
+      "label": "Show email line above form",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "email_label",
+      "label": "Email label",
+      "default": "or email:"
+    },
+    {
+      "type": "text",
+      "id": "email",
+      "label": "Email address",
+      "default": "bybookishbabe@gmail.com"
+    },
+    {
+      "type": "text",
+      "id": "ph_name",
+      "label": "Placeholder: name",
+      "default": "your name"
+    },
+    {
+      "type": "text",
+      "id": "ph_email",
+      "label": "Placeholder: email",
+      "default": "your email"
+    },
+    {
+      "type": "text",
+      "id": "ph_subject",
+      "label": "Placeholder: subject",
+      "default": "what’s this about?"
+    },
+    {
+      "type": "textarea",
+      "id": "ph_message",
+      "label": "Placeholder: message",
+      "default": "leave your note here…"
+    },
+    {
+      "type": "textarea",
+      "id": "helper_note",
+      "label": "Helper note under message",
+      "default": "bonus points if you tell me what you’re reading right now."
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label",
+      "default": "send note"
+    },
+    {
+      "type": "textarea",
+      "id": "alt_note",
+      "label": "Alt note next to button",
+      "default": "i reply within 1–2 business days."
+    },
+    {
+      "type": "text",
+      "id": "success_message",
+      "label": "Success message",
+      "default": "note received. 🖤 i’ll be in touch soon."
+    },
+    {
+      "type": "text",
+      "id": "error_message",
+      "label": "Error message",
+      "default": "something’s off — check the fields and try again."
+    },
+    {
+      "type": "color",
+      "id": "accent",
+      "label": "Accent pink",
+      "default": "#ff8ac7"
+    }
+  ],
+  "presets": [
+    {
+      "name": "bbb · Soft contact"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,26 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-page",
+      "disabled": true,
+      "settings": {
+        "padding_top": 28,
+        "padding_bottom": 28
+      }
+    },
+    "kindle_insert_vault": {
+      "type": "bbb-kindle-insert-vault",
+      "settings": {
+        "kicker": "printable kindle insert vault",
+        "title": "your printable insert vault",
+        "subtext": "every printable insert that matches your device size, all in one place. open a design, download your size, and come back whenever you want a new mood.",
+        "buy_vault_url": "shopify://products/printable-kindle-insert-vault",
+        "public_preview_mode": true
+      }
+    }
+  },
+  "order": [
+    "main",
+    "kindle_insert_vault"
+  ]
+}

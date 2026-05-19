@@ -1,0 +1,484 @@
+{% comment %}
+  SSS SOCIETY CIPHER
+  5 words per week
+  Rotates by week of month
+  Editorial dark luxury style
+{% endcomment %}
+
+<section class="sss-cipher" id="sss-cipher-{{ section.id }}"
+  style="
+    --bg: {{ section.settings.background }};
+    --card: {{ section.settings.card_bg }};
+    --accent: {{ section.settings.accent }};
+    --text: {{ section.settings.text_color }};
+  "
+>
+
+<div class="sss-cipher__wrap">
+
+  <div class="sss-cipher__header">
+    <p class="sss-cipher__kicker">{{ section.settings.kicker }}</p>
+    <h2 class="sss-cipher__title">{{ section.settings.title }}</h2>
+    <p class="sss-cipher__sub">{{ section.settings.subtext }}</p>
+  </div>
+
+  <div class="sss-cipher__panel">
+
+    <div class="sss-cipher__progress">
+      <span id="cipherProgress">1 of 5</span>
+    </div>
+
+    <p class="sss-cipher__scramble" id="cipherScramble"></p>
+
+    <input
+      type="text"
+      id="cipherInput"
+      class="sss-cipher__input"
+      placeholder="enter the word"
+      autocomplete="off"
+    >
+
+    <button id="cipherBtn" class="sss-cipher__btn">
+      unlock
+    </button>
+
+
+<button id="cipherReveal" class="sss-cipher__reveal">
+  show answer
+</button>
+
+    <div class="sss-cipher__result" id="cipherResult" hidden></div>
+
+  </div>
+
+</div>
+</section>
+
+<style>
+.sss-cipher{
+  background:var(--bg);
+  padding:60px 20px;
+  color:var(--text);
+  font-family:"Libre Baskerville", Georgia, serif;
+}
+
+.sss-cipher__wrap{
+  max-width:900px;
+  margin:0 auto;
+}
+
+.sss-cipher__header{
+  margin-bottom:30px;
+}
+
+.sss-cipher__kicker{
+  font-size:12px;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  opacity:.6;
+  margin-bottom:10px;
+}
+
+.sss-cipher__title{
+  font-size:26px;
+  font-weight:400;
+  margin:0 0 8px;
+}
+
+.sss-cipher__sub{
+  opacity:.75;
+  font-size:14px;
+}
+
+.sss-cipher__panel{
+  background:linear-gradient(to bottom, rgba(255,255,255,.03), rgba(0,0,0,.25));
+  border-radius:22px;
+  padding:40px;
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+  text-align:center;
+  transition:.3s ease;
+}
+
+.sss-cipher__progress{
+  font-size:12px;
+  letter-spacing:.1em;
+  opacity:.6;
+  margin-bottom:25px;
+}
+
+.sss-cipher__scramble{
+  font-size:28px;
+  letter-spacing:.35em;
+  margin-bottom:30px;
+}
+
+.sss-cipher__input{
+  width:100%;
+  max-width:300px;
+  padding:12px;
+  text-align:center;
+  font-size:16px;
+  background:transparent;
+  border:1px solid rgba(255,255,255,.25);
+  color:var(--text);
+  text-transform:uppercase;
+  margin-bottom:16px;
+}
+
+.sss-cipher__btn{
+  padding:10px 24px;
+  border-radius:999px;
+  border:1px solid var(--accent);
+  background:transparent;
+  color:var(--text);
+  cursor:pointer;
+  margin-bottom:20px;
+  transition:.3s ease;
+}
+
+.sss-cipher__btn:hover{
+  background:var(--accent);
+  color:#000;
+}
+
+.sss-cipher__result{
+  margin-top:20px;
+  padding:18px;
+  border-radius:16px;
+  border:1px solid var(--accent);
+  background:rgba(255,105,180,.08);
+}
+
+.sss-cipher__panel.shake{
+  animation:shake .4s ease;
+}
+
+@keyframes shake{
+  0%,100%{ transform:translateX(0); }
+  25%{ transform:translateX(-6px); }
+  50%{ transform:translateX(6px); }
+  75%{ transform:translateX(-4px); }
+}
+
+/* MOBILE */
+@media(max-width:640px){
+  .sss-cipher__panel{
+    padding:28px;
+  }
+  .sss-cipher__scramble{
+    font-size:22px;
+  }
+}
+.sss-cipher__reveal{
+  background:none;
+  border:none;
+  color:var(--accent);
+  font-size:12px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  cursor:pointer;
+  margin-bottom:20px;
+  opacity:.6;
+}
+
+.sss-cipher__reveal:hover{
+  opacity:1;
+}
+/* EMOJI RAIN */
+.sss-cipher__rain{
+  position:absolute;
+  inset:0;
+  overflow:hidden;
+  pointer-events:none;
+  z-index:0;
+}
+
+.sss-cipher__emoji{
+  position:absolute;
+  top:-40px;
+  font-size:20px;
+  animation:fall linear forwards;
+  opacity:.9;
+}
+
+@keyframes fall{
+  to{
+    transform:translateY(120vh);
+    opacity:0;
+  }
+}
+
+/* Make panel sit above rain */
+.sss-cipher__panel{
+  position:relative;
+  z-index:2;
+}
+
+.sss-cipher{
+  position:relative;
+  overflow:hidden;
+}
+/* BACKGROUND GLYPHS */
+.sss-cipher__glyphs{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:1;
+  overflow:hidden;
+}
+
+.sss-cipher__glyph{
+  position:absolute;
+  font-size:34px; /* bigger */
+  animation:floatGlyph linear infinite;
+  white-space:nowrap;
+  letter-spacing:.4em;
+  color:rgba(255,105,180,.18); /* pink tint */
+  text-shadow:0 0 12px rgba(255,105,180,.25); /* glow */
+}
+@keyframes floatGlyph{
+  0%{
+    transform:translateY(100vh);
+    opacity:0;
+  }
+  20%{ opacity:.4; }
+  80%{ opacity:.4; }
+  100%{
+    transform:translateY(-20vh);
+    opacity:0;
+  }
+}
+
+/* ensure panel stays above glyphs */
+.sss-cipher__panel{
+  position:relative;
+  z-index:2;
+}
+
+.sss-cipher{
+  position:relative;
+  overflow:hidden;
+}
+</style>
+
+<script>
+(function(){
+
+const root = document.getElementById("sss-cipher-{{ section.id }}");
+if(!root) return;
+
+const scrambleEl = root.querySelector("#cipherScramble");
+const inputEl    = root.querySelector("#cipherInput");
+const btnEl      = root.querySelector("#cipherBtn");
+const revealBtn = root.querySelector("#cipherReveal");
+const resultEl   = root.querySelector("#cipherResult");
+const progressEl = root.querySelector("#cipherProgress");
+const panel      = root.querySelector(".sss-cipher__panel");
+
+/* 🔥 FIXED WORD PARSING */
+const raw = `{{ section.settings.words | strip_newlines }}`;
+
+/* Split weeks */
+const weeks = raw.split("||").map(set =>
+  set.split(",")
+     .map(w => w.trim().toLowerCase())
+     .filter(Boolean)
+);
+
+/* If no valid words */
+if(!weeks.length || !weeks[0].length){
+  scrambleEl.textContent = "add words in settings";
+  return;
+}
+
+/* Determine week of month (1–5) */
+const today = new Date();
+const weekIndex = Math.floor((today.getDate() - 1) / 7);
+const activeSet = weeks[weekIndex % weeks.length];
+
+let currentIndex = 0;
+let awaitingNext = false;
+
+/* Scramble */
+function scramble(word){
+  return word
+    .split("")
+    .sort(() => Math.random() - 0.5)
+    .join("")
+    .toUpperCase();
+}
+
+/* Load word */
+function loadWord(){
+  const word = activeSet[currentIndex];
+  scrambleEl.textContent = scramble(word);
+  progressEl.textContent = (currentIndex + 1) + " of " + activeSet.length;
+  inputEl.value = "";
+  inputEl.focus();
+  btnEl.textContent = "unlock";
+  awaitingNext = false;
+  resultEl.hidden = true;
+}
+
+loadWord();
+launchGlyphBackground();
+/* Button logic */
+function handleClick(){
+
+  if(awaitingNext){
+    currentIndex++;
+
+    if(currentIndex < activeSet.length){
+      loadWord();
+    } else {
+      revealFinal();
+    }
+
+    return;
+  }
+
+  const guess = inputEl.value.trim().toLowerCase();
+  const correctWord = activeSet[currentIndex];
+
+  if(guess === correctWord){
+
+    resultEl.hidden = false;
+    resultEl.innerHTML = "<p>correct.</p>";
+
+    btnEl.textContent = "next";
+    awaitingNext = true;
+
+  } else {
+
+    resultEl.hidden = false;
+    resultEl.innerHTML = "<p>wrong.</p>";
+
+    panel.classList.add("shake");
+    setTimeout(()=>panel.classList.remove("shake"),400);
+  }
+}
+function revealAnswer(){
+
+  const correctWord = activeSet[currentIndex];
+
+  resultEl.hidden = false;
+  resultEl.innerHTML = `
+    <p>the word was:</p>
+    <p><strong>${correctWord.toUpperCase()}</strong></p>
+  `;
+
+  btnEl.textContent = "next";
+  awaitingNext = true;
+}
+
+function revealFinal(){
+
+  scrambleEl.textContent = "";
+  inputEl.style.display = "none";
+  progressEl.style.display = "none";
+
+  resultEl.hidden = false;
+  resultEl.innerHTML = `
+    <p><strong>unlocked.</strong></p>
+    <p>{{ section.settings.success_message }}</p>
+  `;
+
+  btnEl.style.display = "none";
+
+  launchEmojiRain();
+}
+revealBtn.addEventListener("click", revealAnswer);
+
+btnEl.addEventListener("click",handleClick);
+
+inputEl.addEventListener("keypress",e=>{
+  if(e.key==="Enter") handleClick();
+});
+function launchGlyphBackground(){
+
+  const glyphWrap = document.createElement("div");
+  glyphWrap.className = "sss-cipher__glyphs";
+  root.appendChild(glyphWrap);
+
+  const glyphLines = [
+    "𓂀 𓆣 𓋹 ☾ ✶ ✦ ∴",
+    "⟁ 𖤓 ✧ 𓂀 ☽ ✶",
+    "✦ ∴ 𓆣 ✧ ☾ 𓋹",
+    "𓂀 ✶ ☽ ✦ ⟁ 𖤓"
+  ];
+
+  for(let i=0;i<8;i++){
+
+    const line = document.createElement("div");
+    line.className = "sss-cipher__glyph";
+    line.textContent = glyphLines[Math.floor(Math.random()*glyphLines.length)];
+
+    line.style.left = Math.random()*100 + "%";
+    line.style.animationDuration = (20 + Math.random()*20) + "s";
+    line.style.animationDelay = (-Math.random()*20) + "s";
+    line.style.fontSize = (16 + Math.random()*16) + "px";
+
+    glyphWrap.appendChild(line);
+  }
+}
+
+})();
+
+function launchEmojiRain(){
+
+  const rain = document.createElement("div");
+  rain.className = "sss-cipher__rain";
+  root.appendChild(rain);
+
+  const emojis = ["💌","✨","🖤","🌙","📖"];
+
+  for(let i=0;i<40;i++){
+
+    const drop = document.createElement("div");
+    drop.className = "sss-cipher__emoji";
+    drop.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+
+    drop.style.left = Math.random()*100 + "%";
+    drop.style.animationDuration = (4 + Math.random()*3) + "s";
+    drop.style.fontSize = (16 + Math.random()*18) + "px";
+
+    rain.appendChild(drop);
+  }
+
+  // Remove after 8 seconds
+  setTimeout(()=>{
+    rain.remove();
+  },8000);
+}
+</script>
+
+{% schema %}
+{
+"name":"sss society cipher",
+"settings":[
+{ "type":"text","id":"kicker","label":"kicker","default":"society member exclusive" },
+{ "type":"text","id":"title","label":"title","default":"the society cipher" },
+{ "type":"textarea","id":"subtext","label":"subtext","default":"unscramble the words. prove you belong." },
+
+{
+  "type":"textarea",
+  "id":"words",
+  "label":"Weekly word sets (5 per week, use || to separate)",
+  "default":"slowburn,yearning,devotion,tension,finally||petals,bloom,linger,glance,softly||obsession,forbidden,ache,longing,almost"
+},
+
+{ "type":"textarea","id":"success_message","label":"success message",
+  "default":"slow burn always wins."
+},
+
+{ "type":"color","id":"background","label":"background","default":"#0b0b0b" },
+{ "type":"color","id":"card_bg","label":"card background","default":"#151515" },
+{ "type":"color","id":"accent","label":"accent","default":"#ff69b4" },
+{ "type":"color","id":"text_color","label":"text color","default":"#f6f6f6" }
+],
+"presets":[
+{ "name":"sss society cipher" }
+]
+}
+{% endschema %}

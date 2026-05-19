@@ -1,0 +1,521 @@
+{% comment %}
+SSS YOU MIGHT LIKE
+Shows a cleaner 3-up mix:
+- 1 related guide
+- 1 trope page
+- 1 shelf/genre page
+Excludes the current article/page from recommending itself
+{% endcomment %}
+
+{% assign current_category = blank %}
+{% assign current_category_handle = blank %}
+{% assign current_category_name = blank %}
+{% assign article_books = blank %}
+{% assign article_trope = blank %}
+{% assign current_article_id = blank %}
+{% assign current_article_handle = '' %}
+{% assign current_article_title = '' %}
+{% assign current_article_url = '' %}
+{% assign current_trope_handle = blank %}
+{% assign current_trope_name = blank %}
+{% assign current_shelf_handle = blank %}
+{% assign current_shelf_name = blank %}
+{% assign guide_blog = blog %}
+{% assign manual_blog_links = blank %}
+{% assign manual_page_links = blank %}
+{% if article %}
+  {% assign current_article_id = article.id %}
+  {% assign current_article_handle = article.handle | default: '' %}
+  {% assign current_article_title = article.title | default: '' | downcase %}
+  {% assign current_article_url = article.url | default: '' %}
+  {% assign current_category = article.metafields.custom.guide_category.value %}
+  {% assign current_category_label = current_category.name.value | default: current_category.name | default: current_category.title.value | default: current_category.title | default: current_category | default: '' %}
+  {% assign current_category_handle = current_category.system.handle | default: current_category_label | handleize %}
+  {% assign current_category_name = current_category_label | strip | downcase %}
+  {% assign article_books = article.metafields.custom.book.value %}
+  {% assign article_trope = article.metafields.custom.trope.value %}
+  {% assign manual_blog_links = article.metafields.custom.society_recommend_blog_links.value %}
+  {% assign manual_page_links = article.metafields.custom.society_recommend_pages.value %}
+  {% if manual_blog_links == blank and manual_page_links == blank %}
+    {% assign manual_blog_links = article.metafields.custom.specific_blog_links.value %}
+    {% assign manual_page_links = article.metafields.custom.specific_pages.value %}
+  {% endif %}
+  {% if current_trope == blank and article_trope != blank %}
+    {% assign current_trope = article_trope %}
+  {% endif %}
+{% endif %}
+{% if guide_blog == blank %}
+  {% assign guide_blog = blogs['curated-romance-guides'] %}
+{% endif %}
+
+{% assign trope_pages = pages | where: "template_suffix", "trope" %}
+{% assign shelf_pages = pages | where: "template_suffix", "shelf" %}
+
+{% assign article_trope_handles = '|' %}
+{% assign article_shelf_handles = '|' %}
+{% assign specific_page_used_handle = '' %}
+
+{% if current_trope != blank and current_trope.name == blank %}
+  {% assign current_trope_first = current_trope | first %}
+  {% if current_trope_first != blank %}
+    {% assign current_trope = current_trope_first %}
+  {% endif %}
+{% endif %}
+
+{% if current_trope != blank %}
+  {% assign current_trope_name = current_trope.name | default: current_trope | strip | downcase %}
+  {% assign current_trope_handle = current_trope.system.handle | default: current_trope_name | handleize %}
+  {% if current_trope_handle != blank %}
+    {% assign article_trope_handles = article_trope_handles | append: current_trope_handle | append: '|' %}
+  {% endif %}
+{% endif %}
+
+{% if current_shelf != blank %}
+  {% assign current_shelf_name = current_shelf.name | default: current_shelf | strip | downcase %}
+  {% assign current_shelf_handle = current_shelf.system.handle | default: current_shelf_name | handleize %}
+  {% if current_shelf_handle != blank %}
+    {% assign article_shelf_handles = article_shelf_handles | append: current_shelf_handle | append: '|' %}
+  {% endif %}
+{% endif %}
+
+{% if current_category_handle != blank %}
+  {% assign current_category_token = '|' | append: current_category_handle | append: '|' %}
+  {% unless article_shelf_handles contains current_category_token %}
+    {% assign article_shelf_handles = article_shelf_handles | append: current_category_handle | append: '|' %}
+  {% endunless %}
+  {% unless article_trope_handles contains current_category_token %}
+    {% assign article_trope_handles = article_trope_handles | append: current_category_handle | append: '|' %}
+  {% endunless %}
+{% endif %}
+
+{% if article_books %}
+  {% for book in article_books %}
+    {% if book.shelf.value and book.shelf.value.system and book.shelf.value.system.handle != blank %}
+      {% assign shelf_token = '|' | append: book.shelf.value.system.handle | append: '|' %}
+      {% unless article_shelf_handles contains shelf_token %}
+        {% assign article_shelf_handles = article_shelf_handles | append: book.shelf.value.system.handle | append: '|' %}
+      {% endunless %}
+    {% endif %}
+
+    {% for trope in book.tropes.value %}
+      {% if trope.system and trope.system.handle != blank %}
+        {% assign trope_token = '|' | append: trope.system.handle | append: '|' %}
+        {% unless article_trope_handles contains trope_token %}
+          {% assign article_trope_handles = article_trope_handles | append: trope.system.handle | append: '|' %}
+        {% endunless %}
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+{% elsif article_trope and article_trope.system and article_trope.system.handle != blank %}
+  {% assign article_trope_handles = '|' | append: article_trope.system.handle | append: '|' %}
+{% endif %}
+
+{% assign recommendation_context = current_article_title | append: ' ' | append: current_category_handle | append: ' ' | append: current_category_name | append: ' ' | append: current_trope_handle | append: ' ' | append: current_trope_name | append: ' ' | append: article_trope_handles | append: ' ' | append: article_shelf_handles | downcase %}
+{% capture specific_page_handles %}
+  {% render 'blog-specific-map', context: recommendation_context, mode: 'page_handles' %}
+{% endcapture %}
+{% assign specific_page_handles = specific_page_handles | strip %}
+{% capture specific_guide_handles %}
+  {% render 'blog-specific-map', context: recommendation_context, mode: 'guide_handles' %}
+{% endcapture %}
+{% assign specific_guide_handles = specific_guide_handles | strip %}
+{% assign force_ultimate_guides_only = false %}
+{% if current_article_handle == 'is-a-kindle-worth-it-or-overhyped-for-heavy-readers' %}
+  {% assign force_ultimate_guides_only = true %}
+{% endif %}
+
+<section class="sss-you-might-like js-you-might-like">
+
+<p class="sss-you-might-like__kicker">
+continue exploring
+</p>
+
+<h2 class="sss-you-might-like__title">
+the society also recommends
+</h2>
+
+<div class="sss-you-might-like__grid">
+{% assign manual_recommendations_count = 0 %}
+{% if manual_blog_links != blank or manual_page_links != blank %}
+  {% for linked_article in manual_blog_links %}
+    {% if manual_recommendations_count >= 3 %}
+      {% break %}
+    {% endif %}
+    {% if linked_article != blank %}
+      {% if current_article_id != blank and linked_article.id == current_article_id %}
+        {% continue %}
+      {% endif %}
+      {% if current_article_handle != '' and linked_article.handle == current_article_handle %}
+        {% continue %}
+      {% endif %}
+      {% if current_article_url != '' and linked_article.url == current_article_url %}
+        {% continue %}
+      {% endif %}
+      <a href="{{ linked_article.url }}" class="sss-you-might-like__item sss-you-might-like__guide">
+        <span class="sss-you-might-like__emoji">📖</span>
+        <span class="sss-you-might-like__name">{{ linked_article.title }}</span>
+      </a>
+      {% assign manual_recommendations_count = manual_recommendations_count | plus: 1 %}
+    {% endif %}
+  {% endfor %}
+
+  {% for linked_page in manual_page_links %}
+    {% if manual_recommendations_count >= 3 %}
+      {% break %}
+    {% endif %}
+    {% if linked_page != blank %}
+      {% assign linked_page_emoji = linked_page.metafields.custom.trope.value.emoji | default: linked_page.metafields.custom.shelf.value.emoji | default: linked_page.metafields.custom.genre.value.emoji | default: '📚' %}
+      <a href="{{ linked_page.url }}" class="sss-you-might-like__item">
+        <span class="sss-you-might-like__emoji">{{ linked_page_emoji }}</span>
+        <span class="sss-you-might-like__name">{{ linked_page.title }}</span>
+      </a>
+      {% assign manual_recommendations_count = manual_recommendations_count | plus: 1 %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% if manual_recommendations_count == 0 %}
+{% if force_ultimate_guides_only and guide_blog %}
+  {% assign forced_guide_handles = 'the-ultimate-romantasy-reading-guide|dark-romantasy-books|the-best-dark-romance-books-with-morally-gray-men-that-will-ruin-you' | split: '|' %}
+  {% for forced_handle in forced_guide_handles %}
+    {% for post in guide_blog.articles %}
+      {% if post.handle == forced_handle %}
+        <a href="{{ post.url }}" class="sss-you-might-like__item sss-you-might-like__guide">
+          <span class="sss-you-might-like__emoji">📖</span>
+          <span class="sss-you-might-like__name">{{ post.title }}</span>
+        </a>
+        {% break %}
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+{% else %}
+
+{% comment %}
+RELATED GUIDE (max 1)
+Priority:
+1. same guide category
+2. overlapping tags
+3. first different guide
+{% endcomment %}
+
+{% assign guide_shown = 0 %}
+{% assign guide_match_strong = '' %}
+{% assign guide_match_category = '' %}
+{% assign guide_match_overlap = '' %}
+{% assign guide_match_tag = '' %}
+
+{% if guide_blog %}
+  {% if article and specific_guide_handles != blank %}
+    {% assign preferred_guide_handles = specific_guide_handles | split: '|' %}
+    {% for preferred_handle in preferred_guide_handles %}
+      {% if guide_shown < 1 and preferred_handle != blank %}
+        {% for post in guide_blog.articles %}
+          {% if current_article_id != blank and post.id == current_article_id %}
+            {% continue %}
+          {% endif %}
+          {% if current_article_handle != '' and post.handle == current_article_handle %}
+            {% continue %}
+          {% endif %}
+          {% if current_article_url != '' and post.url == current_article_url %}
+            {% continue %}
+          {% endif %}
+          {% if post.handle == preferred_handle %}
+            <a href="{{ post.url }}" class="sss-you-might-like__item sss-you-might-like__guide">
+              <span class="sss-you-might-like__emoji">📖</span>
+              <span class="sss-you-might-like__name">{{ post.title }}</span>
+            </a>
+            {% assign guide_shown = 1 %}
+            {% break %}
+          {% elsif preferred_handle == 'dark-romantasy-books' %}
+            {% assign post_title_handle = post.title | append: ' ' | append: post.handle | downcase %}
+            {% if post_title_handle contains 'dark romantasy' or post_title_handle contains 'dark-romantasy' %}
+              <a href="{{ post.url }}" class="sss-you-might-like__item sss-you-might-like__guide">
+                <span class="sss-you-might-like__emoji">📖</span>
+                <span class="sss-you-might-like__name">{{ post.title }}</span>
+              </a>
+              {% assign guide_shown = 1 %}
+              {% break %}
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  {% if guide_shown < 1 %}
+  {% for post in guide_blog.articles %}
+    {% if current_article_id != blank and post.id == current_article_id %}
+      {% continue %}
+    {% endif %}
+    {% if current_article_handle != '' and post.handle == current_article_handle %}
+      {% continue %}
+    {% endif %}
+    {% if current_article_url != '' and post.url == current_article_url %}
+      {% continue %}
+    {% endif %}
+
+    {% assign post_category = post.metafields.custom.guide_category.value %}
+    {% assign post_category_label = post_category.name.value | default: post_category.name | default: post_category.title.value | default: post_category.title | default: post_category | default: '' %}
+    {% assign post_category_handle = post_category.system.handle | default: post_category_label | handleize %}
+    {% assign post_books = post.metafields.custom.book.value %}
+    {% assign post_trope = post.metafields.custom.trope.value %}
+    {% assign post_trope_handle = '' %}
+    {% assign post_trope_name = '' %}
+    {% assign post_trope_overlap = false %}
+    {% assign post_shelf_overlap = false %}
+    {% assign shared_tag = false %}
+    {% assign category_match = false %}
+
+    {% if post_trope != blank and post_trope.name == blank %}
+      {% assign post_trope_first = post_trope | first %}
+      {% if post_trope_first != blank %}
+        {% assign post_trope = post_trope_first %}
+      {% endif %}
+    {% endif %}
+
+    {% if post_trope != blank %}
+      {% assign post_trope_name = post_trope.name | default: post_trope | strip | downcase %}
+      {% assign post_trope_handle = post_trope.system.handle | default: post_trope_name | handleize %}
+      {% assign post_trope_token = '|' | append: post_trope_handle | append: '|' %}
+      {% if post_trope_handle != blank and article_trope_handles contains post_trope_token %}
+        {% assign post_trope_overlap = true %}
+      {% endif %}
+    {% endif %}
+
+    {% if current_category_handle != blank and post_category_handle == current_category_handle %}
+      {% assign category_match = true %}
+    {% endif %}
+
+    {% if post_books != blank %}
+      {% for linked_book in post_books %}
+        {% if linked_book.shelf.value and linked_book.shelf.value.system and linked_book.shelf.value.system.handle != blank %}
+          {% assign post_shelf_token = '|' | append: linked_book.shelf.value.system.handle | append: '|' %}
+          {% if article_shelf_handles contains post_shelf_token %}
+            {% assign post_shelf_overlap = true %}
+          {% endif %}
+        {% endif %}
+
+        {% for linked_trope in linked_book.tropes.value %}
+          {% if linked_trope.system and linked_trope.system.handle != blank %}
+            {% assign post_trope_token = '|' | append: linked_trope.system.handle | append: '|' %}
+            {% if article_trope_handles contains post_trope_token %}
+              {% assign post_trope_overlap = true %}
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+    {% endif %}
+
+    {% if article and article.tags.size > 0 %}
+      {% for tag in article.tags %}
+        {% if post.tags contains tag %}
+          {% assign shared_tag = true %}
+          {% break %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+
+    {% capture guide_card %}
+      <a href="{{ post.url }}" class="sss-you-might-like__item sss-you-might-like__guide">
+        <span class="sss-you-might-like__emoji">📖</span>
+        <span class="sss-you-might-like__name">{{ post.title }}</span>
+      </a>
+    {% endcapture %}
+
+    {% if category_match and post_trope_overlap and guide_match_strong == blank %}
+      {% assign guide_match_strong = guide_card %}
+    {% elsif category_match and post_shelf_overlap and guide_match_strong == blank %}
+      {% assign guide_match_strong = guide_card %}
+    {% elsif category_match and guide_match_category == blank %}
+      {% assign guide_match_category = guide_card %}
+    {% elsif post_trope_overlap and post_shelf_overlap and guide_match_overlap == blank %}
+      {% assign guide_match_overlap = guide_card %}
+    {% elsif post_trope_overlap and guide_match_overlap == blank %}
+      {% assign guide_match_overlap = guide_card %}
+    {% elsif post_shelf_overlap and guide_match_overlap == blank %}
+      {% assign guide_match_overlap = guide_card %}
+    {% elsif shared_tag and guide_match_tag == blank %}
+      {% assign guide_match_tag = guide_card %}
+    {% endif %}
+  {% endfor %}
+
+  {% if guide_match_strong != blank %}
+    {{ guide_match_strong }}
+    {% assign guide_shown = 1 %}
+  {% elsif guide_match_category != blank %}
+    {{ guide_match_category }}
+    {% assign guide_shown = 1 %}
+  {% elsif guide_match_overlap != blank %}
+    {{ guide_match_overlap }}
+    {% assign guide_shown = 1 %}
+  {% elsif guide_match_tag != blank %}
+    {{ guide_match_tag }}
+    {% assign guide_shown = 1 %}
+  {% endif %}
+  {% endif %}
+{% endif %}
+
+{% comment %}
+TROPE PAGE (max 1)
+On article pages: use linked book tropes first
+On trope pages: exclude current trope
+Fallback: first trope page
+{% endcomment %}
+
+{% assign trope_shown = 0 %}
+
+{% if article and specific_page_handles != blank %}
+  {% assign preferred_page_handles = specific_page_handles | split: '|' %}
+  {% for preferred_handle in preferred_page_handles %}
+    {% if trope_shown < 1 and preferred_handle != blank %}
+        {% assign preferred_page = pages[preferred_handle] %}
+      {% if preferred_page != blank %}
+        {% assign preferred_page_emoji = '↗' %}
+        {% assign preferred_page_trope = preferred_page.metafields.custom.trope.value %}
+        {% assign preferred_page_shelf = preferred_page.metafields.custom.shelf.value %}
+        {% if preferred_page_trope and preferred_page_trope.emoji != blank %}
+          {% assign preferred_page_emoji = preferred_page_trope.emoji %}
+        {% elsif preferred_page_shelf and preferred_page_shelf.emoji != blank %}
+          {% assign preferred_page_emoji = preferred_page_shelf.emoji %}
+        {% endif %}
+        <a href="{{ preferred_page.url }}" class="sss-you-might-like__item">
+          <span class="sss-you-might-like__emoji">{{ preferred_page_emoji }}</span>
+          <span class="sss-you-might-like__name">{{ preferred_page.title }}</span>
+        </a>
+        {% assign specific_page_used_handle = preferred_handle %}
+        {% assign trope_shown = 1 %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+{% elsif article and article_trope_handles != '|' %}
+  {% for p in trope_pages %}
+    {% if trope_shown < 1 %}
+      {% assign t = p.metafields.custom.trope.value %}
+      {% if t and t.system and t.system.handle != blank %}
+        {% assign trope_token = '|' | append: t.system.handle | append: '|' %}
+        {% if article_trope_handles contains trope_token %}
+          <a href="{{ p.url }}" class="sss-you-might-like__item">
+            <span class="sss-you-might-like__emoji">{{ t.emoji | default: '↗' }}</span>
+            <span class="sss-you-might-like__name">{{ t.name }}</span>
+          </a>
+          {% assign trope_shown = 1 %}
+        {% endif %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+{% elsif current_trope %}
+  {% for p in trope_pages %}
+    {% if trope_shown < 1 %}
+      {% assign t = p.metafields.custom.trope.value %}
+      {% if t and t.system and current_trope.system and t.system.handle != current_trope.system.handle %}
+        <a href="{{ p.url }}" class="sss-you-might-like__item">
+          <span class="sss-you-might-like__emoji">{{ t.emoji | default: '↗' }}</span>
+          <span class="sss-you-might-like__name">{{ t.name }}</span>
+        </a>
+        {% assign trope_shown = 1 %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% if trope_shown < 1 %}
+  {% for p in trope_pages %}
+    {% if trope_shown < 1 %}
+      {% assign t = p.metafields.custom.trope.value %}
+      {% if t %}
+        <a href="{{ p.url }}" class="sss-you-might-like__item">
+          <span class="sss-you-might-like__emoji">{{ t.emoji | default: '↗' }}</span>
+          <span class="sss-you-might-like__name">{{ t.name }}</span>
+        </a>
+        {% assign trope_shown = 1 %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% comment %}
+SHELF / GENRE PAGE (max 1)
+On article pages: use linked book shelf first
+On shelf pages: exclude current shelf
+Fallback: first shelf page
+{% endcomment %}
+
+{% assign shelf_shown = 0 %}
+
+{% if article and specific_page_handles != blank %}
+  {% assign preferred_page_handles = specific_page_handles | split: '|' %}
+  {% for preferred_handle in preferred_page_handles %}
+    {% if shelf_shown < 1 and preferred_handle != blank and preferred_handle != specific_page_used_handle %}
+      {% assign preferred_page = pages[preferred_handle] %}
+      {% if preferred_page != blank %}
+        {% assign preferred_page_emoji = '↗' %}
+        {% assign preferred_page_trope = preferred_page.metafields.custom.trope.value %}
+        {% assign preferred_page_shelf = preferred_page.metafields.custom.shelf.value %}
+        {% if preferred_page_trope and preferred_page_trope.emoji != blank %}
+          {% assign preferred_page_emoji = preferred_page_trope.emoji %}
+        {% elsif preferred_page_shelf and preferred_page_shelf.emoji != blank %}
+          {% assign preferred_page_emoji = preferred_page_shelf.emoji %}
+        {% endif %}
+        <a href="{{ preferred_page.url }}" class="sss-you-might-like__item">
+          <span class="sss-you-might-like__emoji">{{ preferred_page_emoji }}</span>
+          <span class="sss-you-might-like__name">{{ preferred_page.title }}</span>
+        </a>
+        {% assign shelf_shown = 1 %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+{% elsif article and article_shelf_handles != '|' %}
+  {% for p in shelf_pages %}
+    {% if shelf_shown < 1 %}
+      {% assign s = p.metafields.custom.shelf.value %}
+      {% if s and s.system and s.system.handle != blank %}
+        {% assign shelf_token = '|' | append: s.system.handle | append: '|' %}
+        {% if article_shelf_handles contains shelf_token %}
+          <a href="{{ p.url }}" class="sss-you-might-like__item">
+            <span class="sss-you-might-like__emoji">{{ s.emoji | default: '↗' }}</span>
+            <span class="sss-you-might-like__name">{{ s.name }}</span>
+          </a>
+          {% assign shelf_shown = 1 %}
+        {% endif %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+{% elsif current_shelf %}
+  {% for p in shelf_pages %}
+    {% if shelf_shown < 1 %}
+      {% assign s = p.metafields.custom.shelf.value %}
+      {% if s and s.system and current_shelf.system and s.system.handle != current_shelf.system.handle %}
+        <a href="{{ p.url }}" class="sss-you-might-like__item">
+          <span class="sss-you-might-like__emoji">{{ s.emoji | default: '↗' }}</span>
+          <span class="sss-you-might-like__name">{{ s.name }}</span>
+        </a>
+        {% assign shelf_shown = 1 %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% if shelf_shown < 1 %}
+  {% for p in shelf_pages %}
+    {% if shelf_shown < 1 %}
+      {% assign s = p.metafields.custom.shelf.value %}
+      {% if s %}
+        <a href="{{ p.url }}" class="sss-you-might-like__item">
+          <span class="sss-you-might-like__emoji">{{ s.emoji | default: '↗' }}</span>
+          <span class="sss-you-might-like__name">{{ s.name }}</span>
+        </a>
+        {% assign shelf_shown = 1 %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+{% endif %}
+{% endif %}
+
+</div>
+
+<a class="sss-you-might-like__all" href="https://bybookishbabe.com/blogs/curated-romance-guides">
+take me to all romance guides →
+</a>
+
+</section>

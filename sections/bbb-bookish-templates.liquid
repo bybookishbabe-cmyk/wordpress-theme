@@ -1,0 +1,558 @@
+{% comment %}
+  bbb-bookish-templates.liquid
+  - Library-card hero + benefits + "made for" chips
+  - Optional swipeable product shelf from a collection (Canva templates)
+{% endcomment %}
+
+<section class="bbb-bt" id="bbb-bt-{{ section.id }}">
+  <div class="bbb-bt__wrap">
+
+    <!-- Hero card -->
+    <div class="bbb-bt__hero">
+      <div class="bbb-paper">
+        <div class="bbb-paper__hole" aria-hidden="true"></div>
+
+        {% if section.settings.kicker != blank %}
+          <p class="bbb-paper__kicker">{{ section.settings.kicker }}</p>
+        {% endif %}
+
+        {% if section.settings.title != blank %}
+          <h2 class="bbb-paper__title">{{ section.settings.title }}</h2>
+        {% endif %}
+
+        {% if section.settings.subtitle != blank %}
+          <p class="bbb-paper__sub">{{ section.settings.subtitle }}</p>
+        {% endif %}
+
+        {% if section.settings.highlight != blank %}
+          <div class="bbb-paper__highlight">
+            <span class="bbb-paper__accent" aria-hidden="true"></span>
+            <p class="bbb-paper__highlightText">{{ section.settings.highlight }}</p>
+          </div>
+        {% endif %}
+
+        <!-- Made for chips -->
+        {% if section.settings.chip_1 != blank or section.settings.chip_2 != blank or section.settings.chip_3 != blank or section.settings.chip_4 != blank %}
+          <div class="bbb-chips" aria-label="made for">
+            {% if section.settings.chip_1 != blank %}<span class="bbb-chip">{{ section.settings.chip_1 }}</span>{% endif %}
+            {% if section.settings.chip_2 != blank %}<span class="bbb-chip">{{ section.settings.chip_2 }}</span>{% endif %}
+            {% if section.settings.chip_3 != blank %}<span class="bbb-chip">{{ section.settings.chip_3 }}</span>{% endif %}
+            {% if section.settings.chip_4 != blank %}<span class="bbb-chip">{{ section.settings.chip_4 }}</span>{% endif %}
+          </div>
+        {% endif %}
+
+        <!-- CTA row -->
+        <div class="bbb-ctaRow">
+          {% if section.settings.cta_label != blank and section.settings.cta_link != blank %}
+            <a class="bbb-btn" href="{{ section.settings.cta_link }}">{{ section.settings.cta_label }}</a>
+          {% endif %}
+          {% if section.settings.cta_note != blank %}
+            <span class="bbb-ctaNote">{{ section.settings.cta_note }}</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Two mini cards -->
+    <div class="bbb-bt__two">
+      <div class="bbb-mini">
+        <div class="bbb-mini__top">
+          <span class="bbb-pill">{{ section.settings.mini_1_pill }}</span>
+        </div>
+        <div class="bbb-mini__body">
+          <h3 class="bbb-mini__title">{{ section.settings.mini_1_title }}</h3>
+          <p class="bbb-mini__text">{{ section.settings.mini_1_text }}</p>
+        </div>
+      </div>
+
+      <div class="bbb-mini">
+        <div class="bbb-mini__top">
+          <span class="bbb-pill">{{ section.settings.mini_2_pill }}</span>
+        </div>
+        <div class="bbb-mini__body">
+          <h3 class="bbb-mini__title">{{ section.settings.mini_2_title }}</h3>
+          <p class="bbb-mini__text">{{ section.settings.mini_2_text }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Optional product shelf -->
+    {% assign c = collections[section.settings.collection] %}
+{% assign limit_num = section.settings.limit | plus: 0 %}
+{% if c %}
+  {% assign count_num = c.products_count | plus: 0 %}
+{% else %}
+  {% assign count_num = 0 %}
+{% endif %}
+    {% if section.settings.show_shelf and c and c.products_count > 0 %}
+      <div class="bbb-shelf">
+        <div class="bbb-shelf__head">
+          <div>
+            <h3 class="bbb-shelf__title">{{ section.settings.shelf_title }}</h3>
+            {% if section.settings.shelf_sub != blank %}
+              <p class="bbb-shelf__sub">{{ section.settings.shelf_sub }}</p>
+            {% endif %}
+          </div>
+
+          <div class="bbb-shelf__nav">
+            <button type="button" class="bbb-navBtn" data-prev aria-label="previous">‹</button>
+            <button type="button" class="bbb-navBtn" data-next aria-label="next">›</button>
+          </div>
+        </div>
+
+        <div class="bbb-track" data-track>
+          {% for p in c.products limit: section.settings.limit %}
+            <a class="bbb-prod" href="{{ p.url }}">
+              <div class="bbb-prod__img">
+                {% if p.featured_media %}
+                  {{ p.featured_media | image_url: width: 1200 | image_tag: loading: 'lazy', alt: p.title }}
+                {% endif %}
+              </div>
+              <div class="bbb-prod__meta">
+                <div class="bbb-prod__name">{{ p.title }}</div>
+                {% if section.settings.show_price %}
+                  <div class="bbb-prod__price">
+                    {% if p.price_varies %}
+                      {{ p.price_min | money }}+
+                    {% else %}
+                      {{ p.price | money }}
+                    {% endif %}
+                  </div>
+                {% endif %}
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+
+        {% if section.settings.view_all_label != blank and section.settings.collection != blank %}
+          <div class="bbb-shelf__foot">
+            <a class="bbb-btn bbb-btn--ghost" href="{{ c.url }}">{{ section.settings.view_all_label }}</a>
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+
+  </div>
+</section>
+
+<style>
+  #bbb-bt-{{ section.id }}{
+    --ink: rgb(var(--color-foreground));
+    --bg: rgb(var(--color-background));
+    --muted: rgba(var(--color-foreground), .78);
+    --border: rgba(var(--color-foreground), .22);
+
+    --paper: #F7F3EE;
+    --paperInk: #1E1B1C;
+
+    --accent: {{ section.settings.accent }};
+  }
+
+  .bbb-bt{
+    background: var(--bg);
+    padding: 28px 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .bbb-bt:before{
+    content:"";
+    position:absolute; inset:-40px;
+    pointer-events:none;
+    background:
+      radial-gradient(900px 520px at 50% 120px, rgba(var(--color-foreground), .10), transparent 70%),
+      repeating-linear-gradient(
+        to bottom,
+        rgba(var(--color-foreground), .05),
+        rgba(var(--color-foreground), .05) 1px,
+        transparent 1px,
+        transparent 28px
+      );
+    opacity:.65;
+  }
+  .bbb-bt__wrap{
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+    padding: 0 10px;
+  }
+
+  /* paper (library card) */
+  .bbb-paper{
+    background: var(--paper);
+    background-image: repeating-linear-gradient(
+      to bottom,
+      rgba(30,27,28,.12) 0,
+      rgba(30,27,28,.12) 1px,
+      transparent 1px,
+      transparent 28px
+    );
+    border: 2px solid rgba(30,27,28,.85);
+    border-radius: 18px;
+    box-shadow: 0 12px 28px rgba(0,0,0,.35);
+    color: var(--paperInk);
+    padding: 18px 16px 16px;
+    text-align: center;
+    position: relative;
+  }
+  .bbb-paper__hole{
+    position:absolute;
+    top:14px; left:14px;
+    width:12px; height:12px;
+    border-radius:999px;
+    background:#000;
+    box-shadow:
+      0 0 0 3px rgba(247,243,238,.95),
+      0 0 0 4px rgba(30,27,28,.9);
+  }
+  .bbb-paper__kicker{
+    margin:0 0 10px;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:lowercase;
+    color: rgba(30,27,28,.65);
+    font-family: var(--font-body-family);
+  }
+  .bbb-paper__title{
+    margin:0;
+    font-size:24px;
+    font-weight:800;
+    text-transform:lowercase;
+    line-height:1.2;
+    font-family: var(--font-heading-family);
+    color: var(--paperInk);
+  }
+  .bbb-paper__sub{
+    margin:10px auto 0;
+    max-width: 720px;
+    font-size:13.5px;
+    line-height:1.65;
+    color: rgba(30,27,28,.78);
+    text-transform:lowercase;
+    font-family: var(--font-body-family);
+  }
+
+  /* highlight bar (Substack-ish) */
+  .bbb-paper__highlight{
+    margin: 14px auto 0;
+    max-width: 760px;
+    display: grid;
+    grid-template-columns: 8px 1fr;
+    gap: 10px;
+    align-items: start;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: rgba(30,27,28,.04);
+    border: 1px solid rgba(30,27,28,.18);
+    text-align: left;
+  }
+  .bbb-paper__accent{
+    width: 8px;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--accent);
+  }
+  .bbb-paper__highlightText{
+    margin:0;
+    font-size: 13px;
+    line-height:1.65;
+    color: rgba(30,27,28,.82);
+    text-transform:lowercase;
+    font-family: var(--font-body-family);
+  }
+
+  /* chips */
+  .bbb-chips{
+    margin: 14px 0 0;
+    display:flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content:center;
+  }
+  .bbb-chip{
+    display:inline-flex;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #000;
+    color: var(--paper);
+    border: 1px solid #000;
+    font-size: 11px;
+    text-transform: lowercase;
+    font-family: var(--font-body-family);
+  }
+
+  /* CTA row */
+  .bbb-ctaRow{
+    margin-top: 14px;
+    display:flex;
+    gap: 12px;
+    align-items:center;
+    justify-content:center;
+    flex-wrap: wrap;
+  }
+  .bbb-btn{
+    height: 42px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding: 0 16px;
+    border-radius: 12px;
+    background: #000;
+    color: var(--paper);
+    border: 1px solid #000;
+    text-transform: lowercase;
+    text-decoration:none;
+    font-family: var(--font-body-family);
+    font-size: 13px;
+  }
+  .bbb-btn:hover{ background:#111; border-color:#111; }
+  .bbb-btn--ghost{
+    background: transparent;
+    color: var(--paperInk);
+    border-color: rgba(30,27,28,.35);
+  }
+  .bbb-btn--ghost:hover{
+    background: rgba(30,27,28,.06);
+  }
+  .bbb-ctaNote{
+    font-size: 12.5px;
+    color: rgba(30,27,28,.72);
+    text-transform: lowercase;
+    font-family: var(--font-body-family);
+  }
+
+  /* two mini cards */
+  .bbb-bt__two{
+    margin-top: 14px;
+    display:grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  @media(min-width: 860px){
+    .bbb-bt__two{ grid-template-columns: 1fr 1fr; }
+  }
+  .bbb-mini{
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    background: rgba(var(--color-foreground), .08);
+    overflow:hidden;
+  }
+  .bbb-mini__top{
+    padding: 10px 12px 8px;
+    border-bottom: 1px solid var(--border);
+    text-align:center;
+    background: rgba(var(--color-foreground), .04);
+  }
+  .bbb-pill{
+    display:inline-flex;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #000;
+    color: rgb(var(--color-background));
+    border: 1px solid #000;
+    font-size: 11px;
+    text-transform: lowercase;
+    font-family: var(--font-body-family);
+  }
+  .bbb-mini__body{
+    padding: 12px;
+    text-align:center;
+  }
+  .bbb-mini__title{
+    margin:0;
+    font-size: 15px;
+    font-weight: 800;
+    text-transform: lowercase;
+    font-family: var(--font-heading-family);
+    color: var(--ink);
+  }
+  .bbb-mini__text{
+    margin: 8px 0 0;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: rgba(var(--color-foreground), .78);
+    text-transform: lowercase;
+    font-family: var(--font-body-family);
+  }
+
+  /* shelf */
+  .bbb-shelf{
+    margin-top: 16px;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    background: rgba(var(--color-foreground), .08);
+    overflow:hidden;
+  }
+  .bbb-shelf__head{
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    display:flex;
+    align-items:flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    background: rgba(var(--color-foreground), .04);
+  }
+  .bbb-shelf__title{
+    margin:0;
+    font-size: 15px;
+    font-weight: 900;
+    text-transform: lowercase;
+    font-family: var(--font-heading-family);
+    color: var(--ink);
+  }
+  .bbb-shelf__sub{
+    margin: 6px 0 0;
+    font-size: 12.5px;
+    line-height:1.55;
+    color: rgba(var(--color-foreground), .78);
+    text-transform: lowercase;
+    font-family: var(--font-body-family);
+  }
+  .bbb-shelf__nav{
+    display:flex;
+    gap:8px;
+    flex-shrink:0;
+  }
+  .bbb-navBtn{
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: #000;
+    color: #fff;
+    border: 1px solid #000;
+    cursor:pointer;
+    font-size: 18px;
+    line-height:1;
+  }
+  .bbb-navBtn:hover{ background:#111; border-color:#111; }
+
+  .bbb-track{
+    display:flex;
+    gap: 12px;
+    overflow-x:auto;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    padding: 12px;
+  }
+  .bbb-track::-webkit-scrollbar{ height: 8px; }
+  .bbb-track::-webkit-scrollbar-thumb{
+    background: rgba(var(--color-foreground), .22);
+    border-radius: 999px;
+  }
+  .bbb-prod{
+    flex: 0 0 78%;
+    scroll-snap-align:start;
+    text-decoration:none;
+    color: inherit;
+    border-radius: 16px;
+    background: var(--paper);
+    border: 2px solid rgba(30,27,28,.85);
+    box-shadow: 0 10px 24px rgba(0,0,0,.25);
+    overflow:hidden;
+    display:block;
+  }
+  @media(min-width: 990px){
+    .bbb-prod{ flex: 0 0 36%; }
+  }
+  .bbb-prod__img{
+    padding: 12px 12px 0;
+  }
+  .bbb-prod__img img{
+    width:100%;
+    height:auto;
+    max-height: 260px;
+    object-fit: contain;
+    display:block;
+    border-radius: 12px;
+    border: 1px solid rgba(30,27,28,.22);
+    background: #fff;
+    padding: 8px;
+    box-sizing:border-box;
+  }
+  .bbb-prod__meta{
+    padding: 10px 12px 12px;
+    text-align:center;
+  }
+  .bbb-prod__name{
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: lowercase;
+    font-family: var(--font-heading-family);
+    color: var(--paperInk);
+  }
+  .bbb-prod__price{
+    margin-top: 6px;
+    font-size: 12.5px;
+    color: rgba(30,27,28,.74);
+    font-family: var(--font-body-family);
+    text-transform: lowercase;
+  }
+  .bbb-shelf__foot{
+    padding: 0 12px 12px;
+    display:flex;
+    justify-content:center;
+  }
+</style>
+
+<script>
+(function(){
+  var root = document.getElementById('bbb-bt-{{ section.id }}');
+  if (!root) return;
+
+  var track = root.querySelector('[data-track]');
+  if (!track) return;
+
+  var prev = root.querySelector('[data-prev]');
+  var next = root.querySelector('[data-next]');
+
+  function slideBy(dir){
+    track.scrollBy({ left: dir * (track.clientWidth * 0.9), behavior: 'smooth' });
+  }
+  if (prev) prev.addEventListener('click', function(){ slideBy(-1); });
+  if (next) next.addEventListener('click', function(){ slideBy(1); });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "bookish templates",
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "kicker", "default": "bookish templates" },
+    { "type": "text", "id": "title", "label": "headline", "default": "beautiful templates for readers who care about aesthetics" },
+    { "type": "textarea", "id": "subtitle", "label": "subtext", "default": "designed in canva for bookish creators, readers, and romantics who want their content to feel intentional — not templated." },
+
+    { "type": "textarea", "id": "highlight", "label": "highlight line", "default": "curated on purpose. more designs will be added over time — always with the same attention to detail." },
+    { "type": "text", "id": "accent", "label": "accent color (hex)", "default": "#b91c1c" },
+
+    { "type": "text", "id": "chip_1", "label": "chip 1", "default": "reading trackers" },
+    { "type": "text", "id": "chip_2", "label": "chip 2", "default": "bookish prompts" },
+    { "type": "text", "id": "chip_3", "label": "chip 3", "default": "aesthetic layouts" },
+    { "type": "text", "id": "chip_4", "label": "chip 4", "default": "content planning" },
+
+    { "type": "text", "id": "cta_label", "label": "button label", "default": "shop templates" },
+    { "type": "url", "id": "cta_link", "label": "button link" },
+    { "type": "text", "id": "cta_note", "label": "tiny note", "default": "instant access • canva-friendly • edit in minutes" },
+
+    { "type": "text", "id": "mini_1_pill", "label": "mini 1 pill", "default": "what you get" },
+    { "type": "text", "id": "mini_1_title", "label": "mini 1 title", "default": "easy edits in canva" },
+    { "type": "textarea", "id": "mini_1_text", "label": "mini 1 text", "default": "swap text, colors, and details in minutes — no design skills required." },
+
+    { "type": "text", "id": "mini_2_pill", "label": "mini 2 pill", "default": "made for" },
+    { "type": "text", "id": "mini_2_title", "label": "mini 2 title", "default": "bookish corners of the internet" },
+    { "type": "textarea", "id": "mini_2_text", "label": "mini 2 text", "default": "your reading life, but prettier — built for creators, readers, and romantics." },
+
+    { "type": "checkbox", "id": "show_shelf", "label": "show product shelf", "default": true },
+    { "type": "collection", "id": "collection", "label": "templates collection" },
+    { "type": "range", "id": "limit", "label": "products to show", "min": 3, "max": 12, "step": 1, "default": 6 },
+    { "type": "checkbox", "id": "show_price", "label": "show price", "default": true },
+    { "type": "text", "id": "shelf_title", "label": "shelf title", "default": "the current stack" },
+    { "type": "textarea", "id": "shelf_sub", "label": "shelf subtext", "default": "small right now on purpose. curated always." },
+    { "type": "text", "id": "view_all_label", "label": "view all label", "default": "view all templates" }
+  ],
+  "presets": [
+    {
+      "name": "bookish templates"
+    }
+  ]
+}
+{% endschema %}

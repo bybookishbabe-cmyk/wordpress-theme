@@ -1,0 +1,418 @@
+{% comment %}
+  auto reader mood pills
+  - source: SSS Drop metaobject
+  - active drop = most recent release_date <= today
+  - pills field handle = trial
+{% endcomment %}
+
+{%- assign now_ts = 'now' | date: '%s' | plus: 0 -%}
+{%- assign active_drop = nil -%}
+{%- assign best_ts = 0 -%}
+{%- assign mood_month = 'now' | date: '%B' -%}
+{%- capture shared_preview_drop_handle -%}{% render 'sss-preview-drop-handle' %}{%- endcapture -%}
+{%- assign effective_preview_drop_handle = section.settings.preview_drop_handle | default: shared_preview_drop_handle | strip -%}
+
+{%- comment %}
+  1️⃣ If preview handle selected → use that
+  2️⃣ Otherwise → fall back to date logic
+{%- endcomment %}
+
+{%- if effective_preview_drop_handle != blank -%}
+
+  {%- assign active_drop = shop.metaobjects.sss_drop[effective_preview_drop_handle] -%}
+
+{%- else -%}
+
+  {%- if shop.metaobjects.sss_drop != blank -%}
+    {%- for d in shop.metaobjects.sss_drop.values -%}
+      {%- if d.release_date != blank -%}
+        {%- assign d_ts = d.release_date | date: '%s' | plus: 0 -%}
+        {%- if d_ts <= now_ts and d_ts >= best_ts -%}
+          {%- assign best_ts = d_ts -%}
+          {%- assign active_drop = d -%}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endif -%}
+
+{%- endif -%}
+
+
+{%- assign pills = nil -%}
+{%- if active_drop != nil and active_drop.trial != blank -%}
+  {%- assign pills = active_drop.trial.value -%}
+{%- endif -%}
+
+{%- if active_drop != nil -%}
+
+  {%- if active_drop.journal_start_date != blank -%}
+    {%- assign mood_month = active_drop.journal_start_date | date: '%B' -%}
+  {%- elsif active_drop.release_date != blank -%}
+    {%- assign mood_month = active_drop.release_date | date: '%B' -%}
+  {%- endif -%}
+
+  {%- capture title -%}how are we entering {{ mood_month | downcase }}?{%- endcapture -%}
+  {%- assign sub      = 'pick a mood.' -%}
+  {%- assign pill_bg  = active_drop.mood_pill_bg -%}
+  {%- assign pill_ink = active_drop.mood_pill_ink -%}
+
+  <section class="sss-mood" id="sss-mood-{{ section.id }}">
+    <div class="sss-mood__wrap">
+
+      {% if title != blank %}
+        <h2 class="sss-mood__title">{{ title }}</h2>
+      {% endif %}
+
+      {% if sub != blank %}
+        <p class="sss-mood__sub">{{ sub }}</p>
+      {% endif %}
+
+<div class="sss-mood__pills" role="group" aria-label="choose your reader mood">
+
+  {% if pills != blank and pills.size > 0 %}
+
+    {% for p in pills %}
+      <button
+        class="sss-pill"
+        type="button"
+        data-line="{{ p.line | escape }}"
+        data-emoji="{{ p.emoji }}"
+        data-label="{{ p.label | escape }}"
+      >
+        <span class="sss-pill__emoji" aria-hidden="true">{{ p.emoji }}</span>
+        <span class="sss-pill__label">{{ p.label }}</span>
+      </button>
+    {% endfor %}
+
+  {% else %}
+
+    <p style="margin:0;opacity:.7;font-size:13px;text-transform:lowercase;">
+      add 4 mood pills to this month’s drop to turn this on ✍️
+    </p>
+
+  {% endif %}
+
+</div>
+
+
+<div class="sss-mood__reveal" aria-live="polite" aria-atomic="true" hidden>
+  <div class="sss-mood__revealInner">
+    <p data-reveal-line class="sss-mood__revealLine"></p>
+  </div>
+</div>
+
+
+    </div>
+
+    <div class="sss-emoji-layer" data-emoji-layer aria-hidden="true"></div>
+  </section>
+
+  <style>
+    #sss-mood-{{ section.id }}{
+      --pill-bg: {{ pill_bg }};
+      --pill-ink: {{ pill_ink }};
+    }
+
+    .sss-mood{
+      position:relative;
+      overflow:visible;
+      padding:26px 12px 40px;
+      text-align:center;
+    }
+
+    /* keep content above emoji layer */
+    .sss-mood__wrap{
+      max-width:1000px;
+      margin:0 auto;
+      position:relative;
+      z-index:2;
+      padding:0 6px;
+    }
+
+    .sss-mood__title{
+      font-size:20px;
+      font-weight:900;
+      text-transform:lowercase;
+      margin:0;
+    }
+
+    .sss-mood__sub{
+      font-size:13px;
+      opacity:.78;
+      margin:8px auto 0;
+      max-width:720px;
+      text-transform:lowercase;
+      line-height:1.55;
+    }
+
+    .sss-mood__pills{
+      margin-top:14px;
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+
+.sss-pill{
+  border:1.5px solid rgba(255,255,255,.28);
+  background:rgba(255,255,255,.06);
+  border-radius:999px;
+  padding:11px 14px;
+  display:inline-flex;
+  gap:8px;
+  align-items:center;
+  cursor:pointer;
+  font-size:13px;
+  text-transform:lowercase;
+  line-height:1;
+  color:#ffffff; /* FORCE WHITE TEXT */
+  transition:transform .12s ease, background .12s ease, border-color .12s ease, box-shadow .12s ease;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.32);
+}
+
+.sss-pill:hover{
+  transform:translateY(-1px);
+  border-color: var(--pill-bg);
+  box-shadow:
+    0 0 0 2px rgba(255,255,255,.15),
+    0 8px 20px rgba(255,77,141,.25);
+  background: rgba(255,255,255,.08); /* subtle lift, not filled */
+}
+    .sss-pill:active{ transform:translateY(0); }
+
+    .sss-pill.is-active{
+      background:var(--pill-bg);
+      color:var(--pill-ink);
+      border-color:var(--pill-bg);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.50), 0 10px 22px rgba(255,77,141,.20);
+    }
+
+    .sss-pill__label{ font-weight:800; }
+    .sss-pill__emoji{ font-size:14px; }
+
+    /* reveal */
+    .sss-mood__reveal{
+      margin-top:14px;
+      max-width:860px;
+      margin-left:auto;
+      margin-right:auto;
+
+      transform: translateY(10px);
+      opacity: 0.95;
+      transition: transform .26s ease, opacity .26s ease;
+    }
+    .sss-mood__reveal.is-in{
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .sss-mood__revealInner{
+      display:inline-flex;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(0,0,0,.22);
+      background:rgba(0,0,0,.04);
+      align-items:center;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+
+.sss-mood__revealLine{
+  margin:0;
+  font-size:13px;
+  line-height:1.4;
+  text-transform:lowercase;
+
+  color:#ffffff;                 /* force white text */
+
+  white-space: nowrap;           /* single line only */
+  overflow: hidden;              /* hide overflow */
+  text-overflow: ellipsis;       /* … if too long */
+  max-width: 100%;
+}
+.sss-mood__revealInner
+
+    /* emoji rain layer (behind content) */
+.sss-emoji-layer{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  z-index:999999;
+}
+
+.sss-emoji{
+  position:absolute;
+  top:-40px;
+  font-size:26px;
+  animation: sss-fall 4s linear forwards;
+  pointer-events:none;
+}
+@keyframes sss-fall{
+  0%   { transform: translateY(0); opacity:1; }
+  100% { transform: translateY(100vh); opacity:0; }
+}
+
+    /* mobile polish */
+    @media (max-width: 640px){
+      .sss-mood{ padding:22px 10px; }
+      .sss-mood__title{ font-size:18px; }
+      .sss-mood__sub{ font-size:12.5px; }
+
+      .sss-mood__pills{
+        display:grid;
+        grid-template-columns: 1fr 1fr;
+        gap:10px;
+        justify-items:stretch;
+        margin-top:12px;
+      }
+      .sss-pill{
+        width:100%;
+        justify-content:center;
+        padding:12px 12px;
+        font-size:12.8px;
+      }
+
+.sss-mood__revealInner{
+  overflow: hidden;              /* prevents line break during animation */
+  white-space: nowrap;
+}
+@media (max-width: 640px){
+  .sss-mood__revealLine{
+    font-size:12.5px;
+  }
+}
+
+    }
+  </style>
+<script>
+(function(){
+  var root = document.getElementById('sss-mood-{{ section.id }}');
+  if(!root) return;
+
+  var pills = [].slice.call(root.querySelectorAll('.sss-pill'));
+  var reveal = root.querySelector('.sss-mood__reveal');
+  var lineOut = root.querySelector('[data-reveal-line]');
+var layer = root.querySelector('.sss-emoji-layer');
+
+if (!layer) {
+  layer = document.createElement('div');
+  layer.className = 'sss-emoji-layer';
+  root.appendChild(layer);
+}
+
+  // performance-aware tuning (mobile friendly)
+  var isMobile = window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
+  var RUN_MS = 6500;
+  var MAX_EMOJIS = isMobile ? 90 : 140;
+  var BURST = isMobile ? 14 : 22;
+  var STREAM_EVERY = 140;
+  var STREAM_N = isMobile ? 4 : 6;
+
+  var intervalId = null;
+  var timeoutId = null;
+
+  function clearTimers(){
+    if (intervalId) clearInterval(intervalId);
+    if (timeoutId) clearTimeout(timeoutId);
+    intervalId = null;
+    timeoutId = null;
+  }
+
+function spawnEmoji(char){
+  var el = document.createElement('span');
+  el.textContent = char || '💗';
+
+  el.style.position = 'fixed';
+  el.style.top = '-40px';
+  el.style.left = Math.random() * 100 + 'vw';
+  el.style.fontSize = (22 + Math.random()*20) + 'px';
+  el.style.zIndex = '999999';
+  el.style.pointerEvents = 'none';
+  el.style.animation = 'sss-fall 4s linear forwards';
+
+  document.body.appendChild(el);
+
+  setTimeout(function(){
+    if (el.parentNode) el.parentNode.removeChild(el);
+  }, 4000);
+}
+
+  function startRain(char){
+    clearTimers();
+
+    var spawned = 0;
+    function burst(n){
+      for (var i=0; i<n; i++){
+        spawnEmoji(char);
+        spawned++;
+        if (spawned >= MAX_EMOJIS) return;
+      }
+    }
+
+    burst(BURST);
+
+    intervalId = window.setInterval(function(){
+      burst(STREAM_N);
+      if (spawned >= MAX_EMOJIS) clearInterval(intervalId);
+    }, STREAM_EVERY);
+
+    timeoutId = window.setTimeout(function(){
+      clearTimers();
+      // let remaining emojis finish naturally
+    }, RUN_MS);
+  }
+
+  function setActive(btn){
+    pills.forEach(function(p){ p.classList.remove('is-active'); });
+    btn.classList.add('is-active');
+  }
+
+  function showReveal(line){
+    if (lineOut) lineOut.textContent = line || '';
+    if (reveal){
+      reveal.hidden = false;
+      reveal.classList.remove('is-in');
+      void reveal.offsetWidth; // restart animation
+      reveal.classList.add('is-in');
+    }
+  }
+
+  // click behavior
+  pills.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var line  = btn.getAttribute('data-line') || '';
+      var emoji = btn.getAttribute('data-emoji') || '💗';
+
+      setActive(btn);
+      showReveal(line);
+      console.log("RAIN START", emoji);
+startRain(emoji);
+    });
+  });
+
+})();
+</script>
+
+
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "auto reader mood pills",
+  "settings": [
+    {
+      "type": "text",
+      "id": "preview_drop_handle",
+      "label": "Preview Drop (Handle for Testing)",
+      "info": "Enter the metaobject handle of a drop to preview. Leave blank for automatic live drop."
+    }
+  ],
+  "presets": [
+    { "name": "auto reader mood pills" }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,642 @@
+{% comment %}
+  sss-about-paid-interactive.liquid
+  Society explainer + free vs paid comparison.
+{% endcomment %}
+
+{%- assign newsletter_url = section.settings.newsletter_url | default: 'https://thesmutandsentimentsociety.substack.com/subscribe' -%}
+{%- assign join_url = section.settings.join_url | default: 'https://thesmutandsentimentsociety.substack.com/subscribe' -%}
+
+<section class="sss-ap" id="sss-ap-{{ section.id }}">
+  <div class="sss-ap__wrap">
+    <header class="sss-ap__hero">
+      <p class="sss-ap__kicker">the smut and sentiment society</p>
+      <h2 class="sss-ap__title">weekly letters for soft hearts with sinful taste</h2>
+      <p class="sss-ap__sub">
+        a cozy corner for the reader who is always mid-spiral, never sorry about it, and perpetually one recommendation away from a new obsession.
+      </p>
+    </header>
+
+    <div class="sss-ap__rule" aria-hidden="true"></div>
+
+    <div class="sss-ap__plans" aria-label="society membership options">
+      <article class="sss-ap__plan">
+        <p class="sss-ap__planName">free</p>
+        <p class="sss-ap__price"><span>$0</span> / month</p>
+        <p class="sss-ap__planText">
+          the weekly newsletter, every sunday. romance recs, trope talk, quotes, and reader chaos delivered to your inbox.
+        </p>
+        <a class="sss-ap__button sss-ap__button--ghost" href="{{ newsletter_url }}" target="_blank" rel="noopener">join free</a>
+      </article>
+
+      <article class="sss-ap__plan sss-ap__plan--paid">
+        <div class="sss-ap__popular">
+          <span>most</span>
+          <span>popular</span>
+        </div>
+        <p class="sss-ap__planName">society member</p>
+        <p class="sss-ap__price"><span>$8</span> / month</p>
+        <p class="sss-ap__planText">
+          everything in free, plus the members-only part of the letter: the unfiltered version, private archive, and the recs i almost do not share.
+        </p>
+        <a class="sss-ap__button sss-ap__button--pink" href="{{ join_url }}" target="_blank" rel="noopener">unlock the society</a>
+        <p class="sss-ap__annual"><strong>$80/year</strong> — save two months, cancel anytime</p>
+      </article>
+    </div>
+
+    <div class="sss-ap__tableWrap">
+      <p class="sss-ap__tableTitle">what you actually get</p>
+      <div class="sss-ap__table" role="table" aria-label="free versus society member benefits">
+        <div class="sss-ap__row sss-ap__row--head" role="row">
+          <div role="columnheader">what's inside</div>
+          <div role="columnheader">free</div>
+          <div role="columnheader">society</div>
+        </div>
+        <div class="sss-ap__row" role="row">
+          <div role="cell">weekly romance rec + why it will ruin you</div>
+          <div role="cell" aria-label="included">✓</div>
+          <div role="cell" aria-label="included">✓</div>
+        </div>
+        <div class="sss-ap__row" role="row">
+          <div role="cell">trope talk, quotes, and reader polls</div>
+          <div role="cell" aria-label="included">✓</div>
+          <div role="cell" aria-label="included">✓</div>
+        </div>
+        <div class="sss-ap__row" role="row">
+          <div role="cell">the weekly obsession breakdown</div>
+          <div role="cell" aria-label="included">✓</div>
+          <div role="cell" aria-label="included">✓</div>
+        </div>
+        <div class="sss-ap__row" role="row">
+          <div role="cell">the members-only section — every week</div>
+          <div role="cell" aria-label="not included">—</div>
+          <div role="cell" aria-label="included">✓</div>
+        </div>
+        <div class="sss-ap__row" role="row">
+          <div role="cell">the rec i almost do not share</div>
+          <div role="cell" aria-label="not included">—</div>
+          <div role="cell" aria-label="included">✓</div>
+        </div>
+        <div class="sss-ap__row" role="row">
+          <div role="cell">the unfiltered take — trope rants, endings, opinions</div>
+          <div role="cell" aria-label="not included">—</div>
+          <div role="cell" aria-label="included">✓</div>
+        </div>
+        <div class="sss-ap__row" role="row">
+          <div role="cell">the full society library and archive</div>
+          <div role="cell" aria-label="not included">—</div>
+          <div role="cell" aria-label="included">✓</div>
+        </div>
+        <div class="sss-ap__row" role="row">
+          <div role="cell">monthly themed collection drop</div>
+          <div role="cell" aria-label="not included">—</div>
+          <div role="cell" aria-label="included">✓</div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="sss-ap__sample">
+      <p>every free issue ends with this</p>
+      <blockquote>
+        "the rec i was hesitant to share, the ending that broke me, and the trope rant i've been sitting on all week."
+      </blockquote>
+    </aside>
+
+    <div class="sss-ap__faq">
+      <p class="sss-ap__faqTitle">faq</p>
+      <article class="sss-ap__faqItem">
+        <h3>what exactly is in the members-only section?</h3>
+        <p>the part of the letter that does not make it to everyone. the second rec i debated sharing, the opinion i was not sure was safe to have, the ending reaction, the "if you loved this book here's the one i have not told anyone about yet." it is the unfiltered version of the newsletter every week.</p>
+      </article>
+      <article class="sss-ap__faqItem">
+        <h3>can i cancel anytime?</h3>
+        <p>yes, always. no guilt, no hoops, no hard feelings — though i will note that the fictional men do miss you.</p>
+      </article>
+      <article class="sss-ap__faqItem">
+        <h3>is free still worth it?</h3>
+        <p>genuinely yes. the free newsletter is a full rec every sunday with trope talk, quotes, and polls. it is just that the paid side is where i stop editing myself.</p>
+      </article>
+      <article class="sss-ap__faqItem">
+        <h3>what's the annual option?</h3>
+        <p>$80/year — that is two months free compared to monthly. if you already know you are staying, it is the smarter option.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<style>
+  #sss-ap-{{ section.id }}{
+    --sss-pink:#ff8ac7;
+    --sss-pink-soft:rgba(255,138,199,.12);
+    --sss-pink-line:rgba(255,138,199,.36);
+    --sss-cream:#f4eee8;
+    --sss-text:#f6f2ee;
+    --sss-muted:rgba(246,242,238,.66);
+    --sss-faint:rgba(246,242,238,.42);
+    --sss-line:rgba(246,242,238,.13);
+    --sss-card:rgba(255,255,255,.027);
+    background:#050505;
+    color:var(--sss-text);
+    padding:clamp(68px, 9vw, 132px) 16px;
+    font-family:"Libre Baskerville", Georgia, serif;
+    position:relative;
+    overflow:hidden;
+  }
+
+  #sss-ap-{{ section.id }}:before{
+    content:"";
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    background:
+      radial-gradient(760px 460px at 76% 10%, rgba(255,138,199,.13), transparent 68%),
+      radial-gradient(620px 380px at 7% 20%, rgba(255,255,255,.055), transparent 70%),
+      linear-gradient(180deg, rgba(255,255,255,.03), transparent 38%),
+      repeating-linear-gradient(to bottom, rgba(255,255,255,.026), rgba(255,255,255,.026) 1px, transparent 1px, transparent 30px);
+    opacity:.95;
+  }
+
+  #sss-ap-{{ section.id }}:after{
+    content:"";
+    position:absolute;
+    inset:16px;
+    border:1px solid rgba(246,242,238,.045);
+    pointer-events:none;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__wrap{
+    max-width:1120px;
+    margin:0 auto;
+    position:relative;
+    z-index:1;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__hero{
+    max-width:880px;
+    margin:0;
+    text-align:left;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__kicker{
+    margin:0 0 14px;
+    font-size:11px;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--sss-faint);
+    font-weight:700;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__title{
+    margin:0;
+    font-family:inherit;
+    max-width:850px;
+    font-size:clamp(44px, 7.4vw, 92px);
+    line-height:.9;
+    letter-spacing:-.065em;
+    text-transform:lowercase;
+    font-weight:400;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__sub{
+    margin:22px 0 0;
+    max-width:680px;
+    color:var(--sss-muted);
+    font-size:clamp(15px, 1.8vw, 19px);
+    line-height:1.8;
+    font-weight:400;
+    text-transform:lowercase;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__rule{
+    height:1px;
+    background:linear-gradient(90deg, rgba(255,138,199,.62), rgba(246,242,238,.14), transparent 74%);
+    margin:46px 0 34px;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__plans{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__plan{
+    min-height:340px;
+    padding:30px;
+    border-radius:0;
+    border:1px solid var(--sss-line);
+    background:
+      linear-gradient(140deg, rgba(255,255,255,.038), rgba(255,255,255,.012) 54%),
+      rgba(0,0,0,.3);
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    box-shadow:0 24px 70px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.035);
+    position:relative;
+    overflow:hidden;
+    transition:transform .28s ease, border-color .28s ease, box-shadow .28s ease;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__plan:before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      linear-gradient(90deg, rgba(255,138,199,.12), transparent 1px) left top / 1px 100% no-repeat,
+      radial-gradient(440px 170px at 0% 0%, rgba(255,138,199,.075), transparent 70%);
+    pointer-events:none;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__plan:hover{
+    transform:translateY(-4px);
+    border-color:rgba(246,242,238,.24);
+    box-shadow:0 30px 78px rgba(0,0,0,.42), 0 0 54px rgba(255,138,199,.05);
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__plan--paid{
+    border-color:var(--sss-pink-line);
+    background:
+      radial-gradient(620px 250px at 0% 0%, rgba(255,138,199,.17), transparent 68%),
+      linear-gradient(140deg, rgba(255,255,255,.045), rgba(255,255,255,.014) 54%),
+      rgba(0,0,0,.28);
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__popular{
+    width:auto;
+    height:auto;
+    border-radius:0;
+    border:1px solid var(--sss-pink-line);
+    background:rgba(255,138,199,.08);
+    color:var(--sss-pink);
+    margin:0 0 16px;
+    padding:8px 12px 7px;
+    font-size:10px;
+    line-height:1;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    font-weight:700;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__popular span{
+    display:inline;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__planName{
+    margin:0 0 10px;
+    color:var(--sss-cream);
+    font-size:clamp(25px, 3.1vw, 38px);
+    line-height:1.1;
+    font-weight:400;
+    text-transform:lowercase;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__price{
+    margin:0 0 10px;
+    display:flex;
+    align-items:flex-end;
+    gap:8px;
+    color:var(--sss-faint);
+    font-size:15px;
+    line-height:1;
+    font-weight:700;
+    letter-spacing:.04em;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__price span{
+    color:var(--sss-text);
+    font-size:clamp(44px, 6vw, 70px);
+    letter-spacing:-.06em;
+    font-weight:400;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__planText{
+    margin:0;
+    color:var(--sss-muted);
+    font-size:15px;
+    line-height:1.78;
+    text-transform:lowercase;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__button{
+    width:100%;
+    min-height:52px;
+    margin-top:auto;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:0;
+    border:1px solid rgba(246,242,238,.34);
+    color:var(--sss-text);
+    text-decoration:none;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);
+    transition:transform .2s ease, background .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__button:after{
+    content:" →";
+    padding-left:6px;
+    transition:transform .2s ease;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__button:hover:after{
+    transform:translateX(4px);
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__button:hover{
+    transform:translateY(-2px);
+    border-color:rgba(255,138,199,.58);
+    box-shadow:0 0 34px rgba(255,138,199,.14), inset 0 0 0 1px rgba(255,255,255,.04);
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__button--ghost{
+    margin-top:auto;
+    background:rgba(0,0,0,.18);
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__button--ghost:hover{
+    background:rgba(255,255,255,.06);
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__button--pink{
+    background:var(--sss-pink);
+    border-color:var(--sss-pink);
+    color:#171015;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__button--pink:hover{
+    background:#ff9bd0;
+    border-color:#ff9bd0;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__annual{
+    width:100%;
+    margin:16px 0 0;
+    padding:14px 0 0;
+    border-top:1px solid rgba(255,138,199,.24);
+    color:var(--sss-faint);
+    font-size:13px;
+    line-height:1.35;
+    text-align:left;
+    text-transform:lowercase;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__annual strong{
+    color:var(--sss-text);
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__tableWrap{
+    margin-top:46px;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__tableTitle{
+    margin:0 0 14px;
+    text-align:left;
+    color:var(--sss-faint);
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__table{
+    display:grid;
+    border:1px solid var(--sss-line);
+    border-radius:0;
+    overflow:hidden;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.012)),
+      rgba(0,0,0,.22);
+    box-shadow:0 22px 58px rgba(0,0,0,.26);
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__row{
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) 98px 110px;
+    align-items:center;
+    min-height:56px;
+    border-bottom:1px solid rgba(246,242,238,.1);
+    color:rgba(246,242,238,.78);
+    font-size:14px;
+    line-height:1.45;
+    font-weight:400;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__row:last-child{
+    border-bottom:0;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__row--head{
+    min-height:44px;
+    background:rgba(255,138,199,.045);
+    color:var(--sss-faint);
+    font-size:10px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__row > div{
+    padding:0 18px;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__row > div:nth-child(2),
+  #sss-ap-{{ section.id }} .sss-ap__row > div:nth-child(3){
+    text-align:center;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__row:not(.sss-ap__row--head) > div:nth-child(2),
+  #sss-ap-{{ section.id }} .sss-ap__row:not(.sss-ap__row--head) > div:nth-child(3){
+    color:var(--sss-pink);
+    font-size:18px;
+    font-weight:700;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__row:not(.sss-ap__row--head) > div[aria-label="not included"]{
+    color:rgba(246,242,238,.34);
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__sample{
+    margin:44px 0;
+    padding:30px;
+    border:1px solid var(--sss-pink-line);
+    border-radius:0;
+    background:
+      linear-gradient(90deg, rgba(255,138,199,.12), transparent 1px) left top / 1px 100% no-repeat,
+      radial-gradient(620px 220px at 0% 0%, rgba(255,138,199,.13), transparent 70%),
+      rgba(0,0,0,.26);
+    color:var(--sss-text);
+    text-align:left;
+    box-shadow:0 20px 54px rgba(0,0,0,.26), 0 0 70px rgba(255,138,199,.06);
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__sample p{
+    margin:0 0 12px;
+    color:var(--sss-pink);
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__sample blockquote{
+    margin:0;
+    max-width:900px;
+    color:rgba(246,242,238,.84);
+    font-size:clamp(18px, 2vw, 25px);
+    line-height:1.55;
+    font-style:italic;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__faq{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:0;
+    border-top:1px solid var(--sss-line);
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__faqTitle{
+    margin:0;
+    padding:0 0 16px;
+    color:var(--sss-pink);
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__faqItem{
+    padding:24px 0;
+    border-bottom:1px solid var(--sss-line);
+    background:transparent;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__faqItem h3{
+    margin:0 0 8px;
+    color:var(--sss-text);
+    font-size:17px;
+    font-weight:400;
+    text-transform:lowercase;
+  }
+
+  #sss-ap-{{ section.id }} .sss-ap__faqItem p{
+    margin:0;
+    color:var(--sss-muted);
+    font-size:14px;
+    line-height:1.7;
+    font-style:italic;
+    text-transform:lowercase;
+  }
+
+  @media(max-width:760px){
+    #sss-ap-{{ section.id }}{
+      padding:50px 12px 62px;
+    }
+
+    #sss-ap-{{ section.id }}:after{
+      inset:8px;
+    }
+
+    #sss-ap-{{ section.id }} .sss-ap__title{
+      font-size:clamp(36px, 13vw, 54px);
+    }
+
+    #sss-ap-{{ section.id }} .sss-ap__sub{
+      font-size:15px;
+      line-height:1.7;
+    }
+
+    #sss-ap-{{ section.id }} .sss-ap__plans{
+      grid-template-columns:1fr;
+    }
+
+    #sss-ap-{{ section.id }} .sss-ap__plan{
+      min-height:auto;
+      padding:24px 18px 20px;
+    }
+
+    #sss-ap-{{ section.id }} .sss-ap__row{
+      grid-template-columns:minmax(0, 1fr) 54px 68px;
+      min-height:58px;
+      gap:8px;
+      font-size:12px;
+    }
+
+    #sss-ap-{{ section.id }} .sss-ap__row--head{
+      font-size:9px;
+    }
+
+    #sss-ap-{{ section.id }} .sss-ap__row > div{
+      padding:0 9px;
+    }
+
+    #sss-ap-{{ section.id }} .sss-ap__sample{
+      padding:22px 18px;
+    }
+
+    #sss-ap-{{ section.id }} .sss-ap__faq{
+      grid-template-columns:1fr;
+    }
+  }
+
+  @media(prefers-reduced-motion:no-preference){
+    #sss-ap-{{ section.id }} .sss-ap__hero,
+    #sss-ap-{{ section.id }} .sss-ap__rule,
+    #sss-ap-{{ section.id }} .sss-ap__plan,
+    #sss-ap-{{ section.id }} .sss-ap__tableWrap,
+    #sss-ap-{{ section.id }} .sss-ap__sample,
+    #sss-ap-{{ section.id }} .sss-ap__faqItem{
+      animation:sssApReveal .72s ease both;
+    }
+
+    #sss-ap-{{ section.id }} .sss-ap__rule{ animation-delay:.06s; }
+    #sss-ap-{{ section.id }} .sss-ap__plan:nth-child(1){ animation-delay:.12s; }
+    #sss-ap-{{ section.id }} .sss-ap__plan:nth-child(2){ animation-delay:.18s; }
+    #sss-ap-{{ section.id }} .sss-ap__tableWrap{ animation-delay:.22s; }
+    #sss-ap-{{ section.id }} .sss-ap__sample{ animation-delay:.28s; }
+    #sss-ap-{{ section.id }} .sss-ap__faqItem:nth-child(1){ animation-delay:.32s; }
+    #sss-ap-{{ section.id }} .sss-ap__faqItem:nth-child(2){ animation-delay:.36s; }
+    #sss-ap-{{ section.id }} .sss-ap__faqItem:nth-child(3){ animation-delay:.4s; }
+    #sss-ap-{{ section.id }} .sss-ap__faqItem:nth-child(4){ animation-delay:.44s; }
+
+    @keyframes sssApReveal{
+      from{
+        opacity:0;
+        transform:translateY(18px);
+      }
+      to{
+        opacity:1;
+        transform:translateY(0);
+      }
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "sss about + paid",
+  "settings": [
+    { "type": "url", "id": "newsletter_url", "label": "free newsletter url" },
+    { "type": "url", "id": "join_url", "label": "paid join url" },
+    { "type": "text", "id": "kicker", "label": "legacy kicker", "default": "the smut and sentiment society" },
+    { "type": "text", "id": "title", "label": "legacy title", "default": "weekly letters for soft hearts with sinful taste" },
+    { "type": "textarea", "id": "subtext", "label": "legacy subtext", "default": "a cozy corner for the reader who is always mid-spiral, never sorry about it, and perpetually one recommendation away from a new obsession." },
+    { "type": "text", "id": "free_small", "label": "legacy free small line", "default": "the weekly newsletter." },
+    { "type": "text", "id": "free_heading", "label": "legacy free heading", "default": "free" },
+    { "type": "textarea", "id": "free_intro", "label": "legacy free intro", "default": "the weekly newsletter, every sunday." },
+    { "type": "text", "id": "paid_small", "label": "legacy paid small line", "default": "$8/month or $80/year." },
+    { "type": "text", "id": "paid_heading", "label": "legacy paid heading", "default": "society member" },
+    { "type": "textarea", "id": "paid_intro", "label": "legacy paid intro", "default": "everything in free, plus the unfiltered members-only layer." },
+    { "type": "text", "id": "poll_question", "label": "legacy poll question", "default": "pick your poison:" },
+    { "type": "text", "id": "poll_opt_1", "label": "legacy poll option 1", "default": "enemies to lovers" },
+    { "type": "text", "id": "poll_opt_2", "label": "legacy poll option 2", "default": "fated mates" },
+    { "type": "text", "id": "poll_opt_3", "label": "legacy poll option 3", "default": "touch her and die" },
+    { "type": "text", "id": "peek_headline", "label": "legacy peek headline", "default": "the members-only layer" },
+    { "type": "textarea", "id": "peek_text", "label": "legacy peek text", "default": "the recs, rants, and archive pieces that do not fit inside the free letter." },
+    { "type": "text", "id": "peek_hint", "label": "legacy peek hint", "default": "members unlock the archive →" }
+  ],
+  "presets": [
+    { "name": "sss about + paid" }
+  ]
+}
+{% endschema %}

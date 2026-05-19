@@ -1,0 +1,157 @@
+{% comment %}
+  pinned-for-you.liquid
+  polaroid archive style
+{% endcomment %}
+
+<section class="pfy" id="pfy-{{ section.id }}">
+  <div class="pfy__wrap">
+
+    <header class="pfy__head">
+      <p class="pfy__kicker">the society archive</p>
+      <h2 class="pfy__title">pinned for you</h2>
+      <p class="pfy__sub">little things i saved for you.</p>
+    </header>
+
+    {%- assign pins = shop.metaobjects.pinterest_pin.values -%}
+
+    <div class="pfy__carousel">
+
+      {% for pin in pins %}
+        <div class="pfy__card">
+          
+          <div class="pfy__polaroid">
+
+            <a href="{{ pin.pinterest_url.value }}" target="_blank" rel="noopener" class="pfy__imgWrap">
+              <img src="{{ pin.image.value | image_url }}" alt="" loading="lazy">
+            </a>
+
+            <div class="pfy__captionLine"></div>
+
+            {% if pin.download_file.value != blank %}
+              <a href="{{ pin.download_file.value | file_url }}" class="pfy__download" download>
+                grab it
+              </a>
+            {% endif %}
+
+          </div>
+
+        </div>
+      {% endfor %}
+
+    </div>
+
+  </div>
+</section>
+
+<style>
+#pfy-{{ section.id }}{
+  background:#0b0b0b;
+  color:#f6f6f6;
+  padding:80px 16px;
+  font-family:"Libre Baskerville", Georgia, serif;
+}
+
+.pfy__wrap{
+  max-width:1100px;
+  margin:0 auto;
+}
+
+.pfy__kicker{
+  font-size:11px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:rgba(246,246,246,.6);
+}
+
+.pfy__title{
+  margin:10px 0 0;
+  font-size:28px;
+  font-weight:400;
+  text-transform:lowercase;
+}
+
+.pfy__sub{
+  margin-top:8px;
+  font-size:13px;
+  color:rgba(246,246,246,.6);
+}
+
+.pfy__carousel{
+  margin-top:40px;
+  display:flex;
+  gap:30px;
+  overflow:auto;
+  scroll-snap-type:x mandatory;
+  padding-bottom:20px;
+}
+
+.pfy__card{
+  flex:0 0 240px;
+  scroll-snap-align:start;
+}
+
+.pfy__polaroid{
+  background:#f6f6f6;
+  color:#000;
+  padding:14px 14px 20px;
+  border-radius:6px;
+  box-shadow:0 20px 40px rgba(0,0,0,.35);
+  transform:rotate(-1.5deg);
+  transition:transform .3s ease;
+  position:relative;
+}
+
+.pfy__card:nth-child(even) .pfy__polaroid{
+  transform:rotate(1.5deg);
+}
+
+.pfy__polaroid:hover{
+  transform:rotate(0deg) scale(1.03);
+}
+
+.pfy__imgWrap{
+  display:block;
+  border-radius:4px;
+  overflow:hidden;
+}
+
+.pfy__imgWrap img{
+  width:100%;
+  display:block;
+}
+
+.pfy__captionLine{
+  margin:16px auto 10px;
+  width:40%;
+  height:1px;
+  background:rgba(0,0,0,.3);
+}
+
+.pfy__download{
+  display:block;
+  text-align:center;
+  font-size:10px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  text-decoration:none;
+  color:#000;
+}
+
+@media(max-width:640px){
+  .pfy__card{
+    flex:0 0 70%;
+  }
+}
+</style>
+
+{% schema %}
+{
+  "name": "pinned for you",
+  "settings": [],
+  "presets": [
+    {
+      "name": "pinned for you"
+    }
+  ]
+}
+{% endschema %}

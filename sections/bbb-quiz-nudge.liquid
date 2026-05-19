@@ -1,0 +1,243 @@
+{% comment %}
+bybookishbabe · Quiz Nudge (Homepage Only)
+Soft CTA guiding readers to the Fictional Boyfriend Quiz
+Matches Society / Library aesthetic
+{% endcomment %}
+
+{%- if request.page_type == 'index' -%}
+
+{%- liquid
+  assign quiz_href = section.settings.quiz_url
+  if quiz_href == blank
+    assign quiz_href = '/pages/reader-quizes'
+  endif
+-%}
+
+<section id="bbb-quiz-nudge-{{ section.id }}" class="bbb-quiz-nudge">
+  <div class="bbb-quiz-nudge__wrap">
+
+    <div class="bbb-quiz-nudge__left">
+      <p class="bbb-quiz-nudge__kicker">{{ section.settings.kicker }}</p>
+
+      <h3 class="bbb-quiz-nudge__title">
+        <span class="bbb-quiz-nudge__script">{{ section.settings.script_word }}</span>
+        <span class="bbb-quiz-nudge__main">{{ section.settings.main_word }}</span>
+      </h3>
+
+      {% if section.settings.subtext != blank %}
+        <p class="bbb-quiz-nudge__sub">{{ section.settings.subtext }}</p>
+      {% endif %}
+
+    </div>
+
+<div class="bbb-quiz-nudge__right">
+
+  <a class="bbb-quiz-nudge__btn" href="{{ quiz_href }}">
+    {{ section.settings.button_label }}
+  </a>
+
+  {% if section.settings.tiny_note != blank %}
+    <p class="bbb-quiz-nudge__tiny">{{ section.settings.tiny_note }}</p>
+  {% endif %}
+
+</div>
+
+  </div>
+</section>
+
+<style>
+  .bbb-quiz-nudge{
+    padding:0 16px;
+    margin:24px auto 0;
+    font-family:"Libre Baskerville", Georgia, serif;
+  }
+
+  .bbb-quiz-nudge__wrap{
+    max-width:1100px;
+    margin:0 auto;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:16px;
+    background:rgba(255,255,255,.03);
+    box-shadow:0 18px 40px rgba(0,0,0,.35);
+    padding:18px 18px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:18px;
+    position:relative;
+    overflow:hidden;
+  }
+
+  .bbb-quiz-nudge__wrap::before{
+    content:"";
+    position:absolute;
+    inset:-40px;
+    background:
+      radial-gradient(760px 360px at 30% 0%, rgba(255,255,255,.08), transparent 65%),
+      repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,.03),
+        rgba(255,255,255,.03) 1px,
+        transparent 1px,
+        transparent 26px
+      );
+    opacity:.55;
+    pointer-events:none;
+  }
+
+  .bbb-quiz-nudge__wrap > *{ position:relative; z-index:1; }
+
+  .bbb-quiz-nudge__kicker{
+    font-size:10px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:rgba(246,246,246,.6);
+    margin:0;
+  }
+
+  .bbb-quiz-nudge__title{
+    margin:10px 0 0;
+    line-height:1;
+    display:flex;
+    align-items:baseline;
+    gap:.25em;
+    flex-wrap:wrap;
+  }
+
+  .bbb-quiz-nudge__script{
+    font-family:Georgia, "Times New Roman", serif;
+    font-style:italic;
+    font-size:26px;
+    opacity:.9;
+  }
+
+  .bbb-quiz-nudge__main{
+    font-size:20px;
+    font-weight:400;
+    text-transform:lowercase;
+  }
+
+  .bbb-quiz-nudge__sub{
+    margin:10px 0 0;
+    font-size:12px;
+    line-height:1.6;
+    color:rgba(246,246,246,.72);
+    max-width:64ch;
+  }
+
+  .bbb-quiz-nudge__pills{
+    margin-top:12px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+
+  .bbb-quiz-pill{
+    padding:8px 10px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(11,11,11,.28);
+    font-size:10px;
+    letter-spacing:.1em;
+    color:rgba(246,246,246,.85);
+    text-transform:lowercase;
+  }
+
+  .bbb-quiz-nudge__right{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:10px;
+    min-width:180px;
+  }
+
+  .bbb-quiz-nudge__btn{
+    border-radius:999px;
+    padding:11px 14px;
+    font-size:11px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    text-decoration:none;
+    background:{{ section.settings.accent }};
+    color:#0b0b0b;
+    border:1px solid {{ section.settings.accent }};
+    box-shadow:0 12px 26px rgba(0,0,0,.45);
+    transition:transform .16s ease, letter-spacing .16s ease;
+    white-space:nowrap;
+  }
+
+  .bbb-quiz-nudge__btn:hover{
+    transform:translateY(-2px);
+    letter-spacing:.19em;
+  }
+
+  .bbb-quiz-nudge__tiny{
+    font-size:11px;
+    color:rgba(246,246,246,.6);
+    margin:0;
+    text-align:right;
+  }
+
+  @media (max-width:740px){
+    .bbb-quiz-nudge__wrap{
+      flex-direction:column;
+      align-items:flex-start;
+    }
+    .bbb-quiz-nudge__right{
+      width:100%;
+      align-items:flex-start;
+    }
+    .bbb-quiz-nudge__btn{
+      width:100%;
+      text-align:center;
+    }
+    .bbb-quiz-nudge__tiny{
+      text-align:left;
+    }
+  }
+</style>
+
+{% endif %}
+
+{% schema %}
+{
+  "name": "bbb · Quiz nudge",
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "Kicker", "default": "reader quiz" },
+    { "type": "text", "id": "script_word", "label": "Script word", "default": "who's your" },
+    { "type": "text", "id": "main_word", "label": "Main word", "default": "fictional boyfriend?" },
+    {
+      "type": "textarea",
+      "id": "subtext",
+      "label": "Subtext",
+      "default": "answer five questions. meet your fictional boyfriend. get a book you’ll ruin your sleep over."
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label",
+      "default": "take the quiz →"
+    },
+    {
+      "type": "textarea",
+      "id": "tiny_note",
+      "label": "Tiny note",
+      "default": "quick. dramatic. painfully accurate."
+    },
+    {
+      "type": "url",
+      "id": "quiz_url",
+      "label": "Quiz page URL (optional)",
+    },
+    {
+      "type": "color",
+      "id": "accent",
+      "label": "Accent color",
+      "default": "#ff8ac7"
+    }
+  ],
+  "presets": [
+    { "name": "bbb · Quiz nudge" }
+  ]
+}
+{% endschema %}

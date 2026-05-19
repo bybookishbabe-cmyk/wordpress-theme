@@ -1,0 +1,130 @@
+{% assign cover = book.cover.value.url | default: book.cover.value %}
+{% assign series_handle = book.series.value.system.handle | default: '' %}
+{% assign series_title = book.series.value.title | default: '' %}
+{% assign series_number = book.series_number.value | default: '' %}
+{% assign show_why_note = show_why | default: false %}
+
+<div
+class="article-book-card"
+data-book-preview
+data-handle="{{ book.system.handle }}"
+data-title="{{ book.title.value }}"
+data-author="{{ book.author.value }}"
+data-cover="{{ book.cover.value.url }}"
+data-amazon="{{ book.amazon_link.value.url }}"
+data-bookshop="{{ book.bookshop_link.value.url }}"
+data-newsletter="{{ book.newsletter_url.value | escape }}"
+data-spice="{{ book.spice_level.value }}"
+data-ku="{{ book.on_kindle_unlimited.value }}"
+data-tropes="{% if book.tropes.value %}{% for trope in book.tropes.value %}{{ trope.name }}{% unless forloop.last %}, {% endunless %}{% endfor %}{% endif %}"
+data-tropes-display="{% if book.tropes.value %}{% for trope in book.tropes.value %}{% if trope.emoji != blank %}{{ trope.emoji }} {% endif %}{{ trope.name }}{% unless forloop.last %}, {% endunless %}{% endfor %}{% endif %}"
+data-mini="{{ book.mini_note.value | escape }}"
+data-why="{{ book.why_i_loved_it.value | escape }}"
+data-series="{{ series_handle }}"
+data-series-name="{{ series_title | escape }}"
+data-series-number="{{ series_number }}"
+>
+
+  <div class="article-book-card__header">
+    {% if book.shelf.value and book.shelf.value.name %}
+      <div class="article-book-card__genreRow">
+        <span class="article-book-card__genreLine" aria-hidden="true"></span>
+        <span class="article-book-card__genre">{{ book.shelf.value.name }}</span>
+      </div>
+    {% endif %}
+
+    <h3>{{ book.title.value }}</h3>
+
+    {% if book.author.value %}
+      <div class="article-book-card__author">
+        {{ book.author.value }}
+      </div>
+    {% endif %}
+
+    {% if series_title != blank or series_number != blank %}
+      <div class="article-book-card__series">
+        {% if series_number != blank %}#{{ series_number }} • {% endif %}{{ series_title }}{% if series_title != blank %} series{% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="article-book-card__image">
+    <button
+      type="button"
+      class="article-book-card__heart"
+      data-blog-heart
+      aria-label="save to your bookshelf"
+    >
+      <span class="article-book-card__heartIcon" aria-hidden="true">♡</span>
+      <span class="article-book-card__heartLabel">save</span>
+    </button>
+
+    {% if book.spice_level.value %}
+      <div class="article-book-card__spice">
+        {% for i in (1..book.spice_level.value) %}🌶{% endfor %}
+      </div>
+    {% endif %}
+
+    {% if cover %}
+      <img src="{{ cover }}" alt="{{ book.title.value }}" loading="lazy">
+    {% endif %}
+  </div>
+
+	<div class="article-book-card__content">
+
+    {% if book.mini_note.value %}
+      <p class="book-pitch">
+        {{ book.mini_note.value }}
+      </p>
+    {% endif %}
+
+    {% if show_why_note and book.why_i_loved_it.value %}
+      <p class="book-pitch book-pitch--why">
+        <span class="book-pitch__label">why i loved it</span>
+        {{ book.why_i_loved_it.value }}
+      </p>
+    {% endif %}
+
+{% if book.tropes.value %}
+<div class="article-book-card__tropes">
+{% for trope in book.tropes.value %}
+  {% assign trope_handle = trope.system.handle | default: trope.name | handleize %}
+  {% capture trope_colors %}{% render 'trope-pill-colors', trope_handle: trope_handle %}{% endcapture %}
+  {% assign trope_color_parts = trope_colors | strip | split: '|||' %}
+  {% assign trope_bg = trope_color_parts[0] | strip %}
+  {% assign trope_text = trope_color_parts[1] | strip %}
+
+<span class="article-book-card__trope" style="--trope-bg: {{ trope_bg }}; --trope-text: {{ trope_text }};">{{ trope.name }}</span>
+{% endfor %}
+
+</div>
+{% endif %}
+
+	    <div class="article-book-card__ratings">
+	      {% if book.on_kindle_unlimited.value == true %}
+	        <span class="article-book-card__ku article-book-card__ku--yes">✓ on kindle unlimited</span>
+	      {% elsif book.on_kindle_unlimited.value == false %}
+	        <span class="article-book-card__ku article-book-card__ku--no">✕ not on kindle unlimited</span>
+	      {% endif %}
+
+	    </div>
+<div class="article-book-card__buttons">
+
+{% if book.amazon_link.value.url %}
+<a class="article-book-card__button article-book-card__button--amazon" href="{{ book.amazon_link.value.url }}" target="_blank" rel="noopener">
+amazon
+</a>
+{% endif %}
+
+{% if book.bookshop_link.value.url %}
+<a class="article-book-card__button article-book-card__button--bookshop" href="{{ book.bookshop_link.value.url }}" target="_blank" rel="noopener">
+<span class="article-book-card__buttonText article-book-card__buttonText--full">support local bookshop</span>
+<span class="article-book-card__buttonText article-book-card__buttonText--short">bookshop</span>
+</a>
+{% endif %}
+
+</div>
+
+  </div>
+
+</div>

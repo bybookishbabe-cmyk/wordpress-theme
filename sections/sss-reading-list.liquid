@@ -1,0 +1,397 @@
+{% comment %}
+  sss conversion + reading list
+  single clean section
+{% endcomment %}
+
+<section class="sss-conversion" id="sss-conversion-{{ section.id }}">
+  <div class="sss-conversion__rain" aria-hidden="true"></div>
+
+  <div class="sss-conversion__wrap">
+
+    <h1 class="sss-conversion__headline">
+      love romance like this?
+    </h1>
+
+    <p class="sss-conversion__benefit">
+      one addictive romance recommendation
+      <span class="sss-highlight">every sunday</span>.
+      smut rating. trope breakdown. honest thoughts. a quote i underlined.
+    </p>
+
+    <p class="sss-conversion__social-proof">
+      join <span class="sss-count">{{ section.settings.subscriber_count }}</span>
+      other romance lovers like you.
+    </p>
+
+    <a
+      href="{{ section.settings.substack_url }}"
+      target="_blank"
+      rel="noopener"
+      class="sss-conversion__btn"
+    >
+      send me the sunday romance →
+    </a>
+
+  </div>
+</section>
+
+
+<section class="sss-reading-list" id="sss-reading-list-{{ section.id }}">
+  <div class="sss-reading-list__wrap">
+
+    <header class="sss-reading-list__head">
+      <p class="sss-reading-list__kicker">{{ section.settings.kicker }}</p>
+      <h2 class="sss-reading-list__title">{{ section.settings.title }}</h2>
+      {% if section.settings.subtext != blank %}
+        <p class="sss-reading-list__sub">{{ section.settings.subtext }}</p>
+      {% endif %}
+    </header>
+
+    <div class="sss-reading-list__list">
+
+      {% assign reading_list_count = 0 %}
+      {% for book in shop.metaobjects.sss_library.values %}
+        {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+        {% assign is_visible_value = is_visible | strip %}
+        {% unless is_visible_value == 'true' %}
+          {% continue %}
+        {% endunless %}
+        {% if reading_list_count >= section.settings.limit %}
+          {% break %}
+        {% endif %}
+        {% assign reading_list_count = reading_list_count | plus: 1 %}
+
+        {%- assign cover_url = '' -%}
+        {% if book.cover.value != blank %}
+          {% if book.cover.value.url != blank %}
+            {% assign cover_url = book.cover.value.url %}
+          {% else %}
+            {% assign cover_url = book.cover.value %}
+          {% endif %}
+        {% endif %}
+
+        {%- assign amazon_url = '' -%}
+        {% if book.amazon_link.value != blank %}
+          {% if book.amazon_link.value.url != blank %}
+            {% assign amazon_url = book.amazon_link.value.url %}
+          {% else %}
+            {% assign amazon_url = book.amazon_link.value %}
+          {% endif %}
+        {% endif %}
+
+        {%- assign newsletter_url = '' -%}
+        {% if book.newsletter_url.value != blank %}
+          {% if book.newsletter_url.value.url != blank %}
+            {% assign newsletter_url = book.newsletter_url.value.url %}
+          {% else %}
+            {% assign newsletter_url = book.newsletter_url.value %}
+          {% endif %}
+        {% endif %}
+
+        <article class="sss-reading-item">
+
+          <div class="sss-reading-item__cover">
+            {% if cover_url != blank %}
+              <img
+                src="{{ cover_url }}"
+                alt="{{ book.title.value | escape }}"
+                loading="lazy"
+              >
+            {% endif %}
+          </div>
+
+          <div class="sss-reading-item__content">
+            <h3 class="sss-reading-item__title">{{ book.title.value }}</h3>
+            <p class="sss-reading-item__author">by {{ book.author.value }}</p>
+
+            {% if book.tropes.value != blank %}
+              <div class="sss-reading-item__tags">
+                {% assign trope_list = book.tropes.value | split: ' · ' %}
+                {% for trope in trope_list %}
+                  <span class="sss-reading-tag">{{ trope }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            {% if book.mini_note.value != blank %}
+              <p class="sss-reading-item__note">
+                {{ book.mini_note.value }}
+              </p>
+            {% endif %}
+
+            <div class="sss-reading-item__actions">
+              {% if newsletter_url != blank %}
+                <a
+                  class="sss-reading-btn sss-reading-btn--primary"
+                  href="{{ newsletter_url }}"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  read the newsletter →
+                </a>
+              {% endif %}
+
+              {% if amazon_url != blank %}
+                <a
+                  class="sss-reading-btn sss-reading-btn--secondary"
+                  href="{{ amazon_url }}"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  check out the book
+                </a>
+              {% endif %}
+            </div>
+
+          </div>
+        </article>
+
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+
+<style>
+.sss-conversion{
+  position:relative;
+  overflow:hidden;
+  background:#0b0b0b;
+  color:#f6f6f6;
+  padding:80px 16px 60px;
+  text-align:center;
+  font-family:"Libre Baskerville", Georgia, serif;
+}
+
+.sss-conversion__wrap{
+  position:relative;
+  z-index:2;
+  max-width:760px;
+  margin:0 auto;
+}
+
+.sss-conversion__headline{
+  font-size:clamp(34px,5vw,58px);
+  font-weight:400;
+  letter-spacing:-.02em;
+  text-transform:lowercase;
+  margin:0;
+}
+
+.sss-conversion__benefit{
+  margin:22px auto 16px;
+  font-size:18px;
+  line-height:1.6;
+  max-width:60ch;
+}
+
+.sss-highlight{
+  color:#ff8ac7;
+  font-weight:700;
+  font-size:1.2em;
+}
+
+.sss-conversion__social-proof{
+  margin:0 0 34px;
+  font-size:14px;
+  color:rgba(246,246,246,.7);
+}
+
+.sss-count{
+  color:#ff8ac7;
+  font-weight:600;
+}
+
+.sss-conversion__btn{
+  display:inline-block;
+  padding:14px 28px;
+  border-radius:999px;
+  font-size:12px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  text-decoration:none;
+  background:#ff8ac7;
+  color:#111;
+}
+
+.sss-reading-list{
+  background:#0b0b0b;
+  color:#f6f6f6;
+  padding:64px 16px;
+  font-family:"Libre Baskerville", Georgia, serif;
+}
+
+.sss-reading-list__wrap{
+  max-width:920px;
+  margin:0 auto;
+}
+
+.sss-reading-list__list{
+  margin-top:40px;
+  display:flex;
+  flex-direction:column;
+  gap:30px;
+}
+
+.sss-reading-item{
+  display:grid;
+  grid-template-columns:96px 1fr;
+  gap:18px;
+}
+
+.sss-reading-item__cover img{
+  width:100%;
+  aspect-ratio:2/3;
+  object-fit:cover;
+  border-radius:10px;
+}
+
+.sss-reading-btn--primary{
+  font-size:12px;
+  text-transform:uppercase;
+  text-decoration:none;
+  color:#ff8ac7;
+  border-bottom:1px solid #ff8ac7;
+}
+
+.sss-reading-btn--secondary{
+  font-size:11px;
+  text-transform:uppercase;
+  text-decoration:none;
+  color:rgba(246,246,246,.55);
+}
+.sss-reading-item__actions{
+  display:flex;
+  flex-direction:column;   /* stack vertically */
+  gap:10px;                /* space between them */
+  align-items:flex-start;  /* keep left aligned */
+}
+</style>
+
+
+<script>
+(function(){
+
+  const section = document.getElementById('sss-conversion-{{ section.id }}');
+  if(!section) return;
+
+  const rain = section.querySelector('.sss-conversion__rain');
+  if(!rain) return;
+
+  rain.innerHTML = '';
+
+  const EMOJIS = ['💗','💖','💘','💞','💌','🖤'];
+
+  const SAYINGS = [
+    'addictive romance',
+    'trope breakdown',
+    'smut rating',
+    'honest thoughts',
+    'quote i underlined'
+  ];
+
+  const TOTAL = 55; // more density
+
+  for(let i=0;i<TOTAL;i++){
+
+    const el = document.createElement('span');
+    el.className = 'sss-heart';
+
+    // mix text + emoji
+    if(Math.random() < 0.65){
+      el.textContent = EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
+    } else {
+      el.textContent = SAYINGS[Math.floor(Math.random()*SAYINGS.length)];
+      el.style.fontSize = (11 + Math.random()*4) + 'px';
+      el.style.color = 'rgba(255,255,255,.45)';
+      el.style.letterSpacing = '.06em';
+    }
+
+    const left = Math.random() * 100;
+    const size = 16 + Math.random()*26;
+    const duration = 28 + Math.random()*30;   // slower fall
+    const delay = Math.random() * -duration;  // stagger start
+    const drift = (Math.random()*160 - 80);   // horizontal float
+    const rotate = (Math.random()*60 - 30);   // slight rotation
+
+    el.style.position = 'absolute';
+    el.style.left = left + '%';
+    el.style.top = '-60px';
+    el.style.opacity = (0.10 + Math.random()*0.18);
+    el.style.fontSize = size + 'px';
+    el.style.setProperty('--drift', drift + 'px');
+    el.style.setProperty('--rotate', rotate + 'deg');
+    el.style.animation = `sss-fall ${duration}s linear infinite`;
+    el.style.animationDelay = delay + 's';
+
+    rain.appendChild(el);
+  }
+
+  // inject enhanced keyframes
+  const style = document.createElement('style');
+  style.innerHTML = `
+    @keyframes sss-fall {
+      to {
+        transform:
+          translateY(120vh)
+          translateX(var(--drift, 0px))
+          rotate(var(--rotate, 0deg));
+      }
+    }
+  `;
+  document.head.appendChild(style);
+
+})();
+</script>
+
+
+{% schema %}
+{
+  "name": "sss reading list",
+  "settings": [
+    {
+      "type": "text",
+      "id": "subscriber_count",
+      "label": "Subscriber count",
+      "default": "556"
+    },
+    {
+      "type": "url",
+      "id": "substack_url",
+      "label": "Substack URL"
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Reading List Kicker",
+      "default": "reading list"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Reading List Title",
+      "default": "books i’ve been thinking about lately"
+    },
+    {
+      "type": "textarea",
+      "id": "subtext",
+      "label": "Reading List Subtext",
+      "default": "soft recs, sentimental favorites, and stories that stayed with me."
+    },
+    {
+      "type": "range",
+      "id": "limit",
+      "label": "Number of books",
+      "min": 3,
+      "max": 12,
+      "step": 1,
+      "default": 6
+    }
+  ],
+  "presets": [
+    {
+      "name": "sss reading list"
+    }
+  ]
+}
+{% endschema %}

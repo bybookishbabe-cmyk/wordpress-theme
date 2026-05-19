@@ -1,0 +1,155 @@
+<style>
+/* ---------- BASE ---------- */
+.bbb-lib{
+  --cream:#f7f3ee;
+  --ink:#1e1b1c;
+  background:#000;
+  color:var(--cream);
+  padding:72px 0;
+}
+
+.bbb-lib__wrap{
+  max-width:1100px;
+  margin:0 auto;
+  padding:0 20px;
+}
+
+/* ---------- META / TITLE / SUBTITLE (LEFT) ---------- */
+.bbb-lib__meta{
+  text-align:left;
+  font-size:12px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  opacity:.7;
+  margin-bottom:10px;
+}
+
+.bbb-lib__title{
+  text-align:left;
+  margin:0 0 12px;
+  font-weight:600;
+  letter-spacing:.02em;
+}
+
+.bbb-lib__subtitle{
+  text-align:left;
+  opacity:.85;
+  margin:0;
+  max-width:680px;
+}
+
+/* ---------- DIVIDER ---------- */
+.bbb-lib__divider{
+  height:1px;
+  background:rgba(255,255,255,.14);
+  margin:22px 0 10px;
+  max-width:680px;
+}
+
+/* ---------- PILL (USED ONLY FOR PROMPT) ---------- */
+.bbb-pill{
+  display:inline-block;
+  background:#000;
+  color:var(--cream);
+  padding:12px 18px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.15);
+  box-shadow:0 12px 30px rgba(0,0,0,.45);
+  line-height:1.1;
+}
+
+/* ---------- SECTION ---------- */
+.bbb-lib__section{
+  margin-top:40px;
+}
+
+.bbb-lib__section h2{
+  text-align:center;
+  margin:0 0 14px;
+}
+
+/* ---------- GRID: SIDE-BY-SIDE ON MOBILE ---------- */
+.bbb-lib__grid{
+  display:grid;
+  grid-template-columns:1fr 1fr; /* force side-by-side on mobile */
+  gap:16px;
+  margin-top:18px;
+}
+
+/* fallback for ultra-small screens */
+@media (max-width:360px){
+  .bbb-lib__grid{ grid-template-columns:1fr; }
+}
+
+@media (min-width:750px){
+  .bbb-lib__grid{ gap:22px; }
+}
+
+/* ---------- CARDS ---------- */
+.bbb-lib__card{
+  background:var(--cream);
+  color:var(--ink);
+  border-radius:16px;
+  padding:22px;
+  text-decoration:none;
+  box-shadow:0 22px 45px rgba(0,0,0,.45);
+  transition:transform .2s ease;
+  display:block;
+}
+
+.bbb-lib__card:hover{
+  transform:translateY(-4px);
+}
+
+/* kill purple/blue visited link styling */
+.bbb-lib__card,
+.bbb-lib__card:visited,
+.bbb-lib__card:hover,
+.bbb-lib__card:active{
+  color:var(--ink);
+  text-decoration:none;
+}
+
+.bbb-lib__card *{
+  color:inherit;
+  text-decoration:none;
+}
+
+/* ---------- BADGES (BLACK PILLS) ---------- */
+.bbb-lib__badge{
+  display:inline-block;
+  background:#000;
+  color:var(--cream);
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:11px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  margin-bottom:12px;
+  border:1px solid rgba(255,255,255,.15);
+}
+
+/* ---------- MEDIA: FIT TO IMAGE (NO CROP) ---------- */
+.bbb-lib__media{
+  border-radius:12px;
+  margin-bottom:14px;
+  background:transparent;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.bbb-lib__media img{
+  width:100%;
+  height:auto;
+  max-height:420px;   /* tune this if you want taller/shorter */
+  object-fit:contain; /* KEY: no crop */
+  display:block;
+}
+
+/* ---------- CARD TEXT ---------- */
+.bbb-lib__card h3{
+  margin:0 0 8px;
+  font-size:16px;
+  line-height:1.25;
+}

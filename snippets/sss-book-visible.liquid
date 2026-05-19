@@ -1,0 +1,27 @@
+{% liquid
+  assign is_visible = true
+  assign respect_hide_from_library = true
+
+  if allow_hidden_from_library == true
+    assign respect_hide_from_library = false
+  endif
+
+  if book == blank
+    assign is_visible = false
+  endif
+
+  if is_visible and respect_hide_from_library and book.hide_from_library.value == true
+    assign is_visible = false
+  endif
+
+  # Newsletter books can be entered early; they unlock at 10am Pacific on the newsletter date.
+  if is_visible and allow_hidden_from_library != true and book.featured_in_newsletter_date.value != blank
+    assign featured_ts = book.featured_in_newsletter_date.value | date: '%s' | plus: 36000
+    assign now_ts = 'now' | date: '%s' | plus: 0
+
+    if featured_ts > now_ts
+      assign is_visible = false
+    endif
+  endif
+%}
+{{ is_visible }}

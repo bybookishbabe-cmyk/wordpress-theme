@@ -1,0 +1,681 @@
+{% comment %}
+  Series Reading Orders
+  Pulls from:
+  - shop.metaobjects.sss_series
+  - shop.metaobjects.sss_library
+
+  Assumptions:
+  - series metaobjects may optionally expose `books_in_series`
+  - library books expose:
+    - title
+    - author
+    - cover
+    - shelf
+    - spice_level
+    - series
+    - series_number
+    - read_as_standalone
+{% endcomment %}
+
+{% assign series_list = shop.metaobjects.sss_series.values %}
+
+{% paginate shop.metaobjects.sss_library.values by 250 %}
+  {% assign all_books = shop.metaobjects.sss_library.values | sort: 'series_number' %}
+  {% assign featured_handle = section.settings.featured_series_handle | strip %}
+  {% assign genre_tokens = '|' %}
+  {% assign resolved_featured_handle = '' %}
+  {% assign has_series_cards = false %}
+
+  {% capture series_cards %}
+    {% for series in series_list %}
+      {% assign series_handle = series.system.handle | default: '' | strip %}
+      {% assign series_title = series.title | default: '' | strip %}
+      {% if series_handle == blank or series_title == blank %}
+        {% continue %}
+      {% endif %}
+
+      {% assign series_books_source = series.sss_books.value %}
+      {% assign using_direct_series_books = false %}
+      {% if series_books_source != blank %}
+        {% assign using_direct_series_books = true %}
+      {% endif %}
+      {% if series_books_source == blank %}
+        {% assign series_books_source = series.books_in_series.value %}
+      {% endif %}
+      {% if series_books_source == blank %}
+        {% assign series_books_source = all_books %}
+      {% endif %}
+
+      {% assign first_book = nil %}
+      {% assign fallback_book = nil %}
+      {% assign shelf_name = '' %}
+      {% assign book_count = 0 %}
+      {% assign preview_count = 0 %}
+      {% assign remaining_count = 0 %}
+      {% assign max_spice = 0 %}
+      {% assign standalone_title = '' %}
+
+      {% capture preview_rows %}
+        {% for book in series_books_source %}
+          {% capture is_visible %}{% render 'sss-book-visible', book: book, allow_hidden_from_library: true %}{% endcapture %}
+          {% assign is_visible_value = is_visible | strip %}
+          {% unless is_visible_value == 'true' %}
+            {% continue %}
+          {% endunless %}
+
+          {% assign matches_series = false %}
+          {% if using_direct_series_books %}
+            {% assign matches_series = true %}
+          {% endif %}
+          {% assign book_series_handle = book.series.value.system.handle | default: '' | strip %}
+          {% assign book_series_title = book.series.value.title | default: '' | strip %}
+          {% if matches_series == false %}
+            {% if book_series_handle == series_handle or book_series_title == series_title %}
+              {% assign matches_series = true %}
+            {% endif %}
+          {% endif %}
+
+          {% unless matches_series %}
+            {% continue %}
+          {% endunless %}
+
+          {% assign book_count = book_count | plus: 1 %}
+
+          {% if fallback_book == nil %}
+            {% assign fallback_book = book %}
+          {% endif %}
+
+          {% assign series_number_text = book.series_number.value | append: '' | strip %}
+          {% if first_book == nil and series_number_text == '1' %}
+            {% assign first_book = book %}
+          {% endif %}
+
+          {% if shelf_name == blank %}
+            {% assign shelf_name = book.shelf.value.name | strip %}
+          {% endif %}
+
+          {% assign spice_value = book.spice_level.value | default: 0 | plus: 0 %}
+          {% if spice_value > max_spice %}
+            {% assign max_spice = spice_value %}
+          {% endif %}
+
+          {% if standalone_title == blank and book.read_as_standalone.value == true %}
+            {% assign standalone_title = book.title.value | default: book.title | strip %}
+          {% endif %}
+
+          {% if preview_count < 3 %}
+            {% assign preview_count = preview_count | plus: 1 %}
+            <div class="bbb-seriesOrders__bookRow">
+              <span class="bbb-seriesOrders__bookNumber">{{ preview_count }}.</span>
+              <span class="bbb-seriesOrders__bookTitle">{{ book.title.value | default: book.title }}</span>
+              {% if spice_value > 0 %}
+                <span class="bbb-seriesOrders__bookSpice" aria-label="{{ spice_value }} spice">
+                  {% for i in (1..spice_value) %}🌶{% endfor %}
+                </span>
+              {% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      {% endcapture %}
+
+      {% if first_book == nil %}
+        {% assign first_book = fallback_book %}
+      {% endif %}
+
+      {% if first_book == nil %}
+        {% continue %}
+      {% endif %}
+
+      {% assign has_series_cards = true %}
+
+      {% if resolved_featured_handle == blank %}
+        {% if featured_handle == blank or featured_handle == series_handle %}
+          {% assign resolved_featured_handle = series_handle %}
+        {% endif %}
+      {% endif %}
+
+      {% assign genre_name = shelf_name | default: 'series' | strip %}
+      {% assign genre_handle = genre_name | handleize %}
+      {% assign genre_token = '|' | append: genre_handle | append: ':' | append: genre_name | append: '|' %}
+      {% unless genre_tokens contains genre_token %}
+        {% assign genre_tokens = genre_tokens | append: genre_handle | append: ':' | append: genre_name | append: '|' %}
+      {% endunless %}
+
+      {% assign cover_url = first_book.cover.value.url | default: first_book.cover.value %}
+      {% assign author_name = first_book.author.value | default: first_book.author | default: series.author.value | default: series.author | strip %}
+      {% assign footer_copy = 'must read in order →' %}
+      {% assign series_destination = section.settings.series_page_path | default: '/pages/series' | append: '?series=' | append: series_handle %}
+      {% assign linked_blog_url = '' %}
+      {% if series.linked_blog_post.value != blank %}
+        {% assign linked_blog_url = series.linked_blog_post.value.url | default: series.linked_blog_post.value.online_store_url | default: '' %}
+      {% endif %}
+      {% if linked_blog_url == blank %}
+        {% assign linked_blog_url = series.linked_blog_url.value | default: series.linked_blog_url | default: '' | strip %}
+      {% endif %}
+      {% if linked_blog_url == blank %}
+        {% assign linked_blog_url = series.reading_order_url.value | default: series.reading_order_url | default: '' | strip %}
+      {% endif %}
+      {% if linked_blog_url != blank %}
+        {% assign series_destination = linked_blog_url %}
+      {% endif %}
+      {% if standalone_title != blank %}
+        {% assign footer_copy = 'start with: ' | append: standalone_title | append: ' →' %}
+      {% endif %}
+      {% assign remaining_count = book_count | minus: preview_count %}
+
+      <article
+        class="bbb-seriesOrders__card"
+        data-series-card
+        data-series-genre="{{ genre_handle }}"
+        data-series-title="{{ series_title | escape }}"
+      >
+        <a class="bbb-seriesOrders__cardLink" href="{{ series_destination }}">
+          <div class="bbb-seriesOrders__cardTop">
+            <div class="bbb-seriesOrders__coverWrap">
+              {% if cover_url != blank %}
+                <img class="bbb-seriesOrders__cover" src="{{ cover_url }}" alt="{{ first_book.title.value | default: series_title | escape }}" loading="lazy">
+              {% endif %}
+            </div>
+            <div class="bbb-seriesOrders__meta">
+              <div>
+                <h3 class="bbb-seriesOrders__seriesName">{{ series_title }}</h3>
+                <p class="bbb-seriesOrders__seriesSub">{{ author_name }}{% if book_count > 0 %} · {{ book_count }} {% if book_count == 1 %}book{% else %}books{% endif %}{% endif %}</p>
+              </div>
+              <span class="bbb-seriesOrders__genrePill">{{ genre_name }}</span>
+            </div>
+          </div>
+
+          <div class="bbb-seriesOrders__cardBody">
+            {{ preview_rows }}
+            {% if remaining_count > 0 %}
+              <div class="bbb-seriesOrders__more">+ {{ remaining_count }} more</div>
+            {% endif %}
+          </div>
+
+          <div class="bbb-seriesOrders__footer">
+            <span>{{ footer_copy }}</span>
+          </div>
+        </a>
+      </article>
+    {% endfor %}
+  {% endcapture %}
+
+  {% assign genre_groups = genre_tokens | split: '|' %}
+
+  <section class="bbb-seriesOrders" id="SeriesReadingOrders-{{ section.id }}">
+    <div class="bbb-seriesOrders__wrap page-width">
+      <header class="bbb-seriesOrders__hero">
+        <p class="bbb-seriesOrders__kicker">{{ section.settings.kicker }}</p>
+        <h1 class="bbb-seriesOrders__title">{{ section.settings.heading }}</h1>
+        {% if section.settings.subtext != blank %}
+          <p class="bbb-seriesOrders__sub">{{ section.settings.subtext }}</p>
+        {% endif %}
+      </header>
+
+      {% if has_series_cards %}
+        <section class="bbb-seriesOrders__archive">
+          <div class="bbb-seriesOrders__filters" data-series-filters>
+            <button class="bbb-seriesOrders__filter is-active" type="button" data-filter="all">all series</button>
+            {% for genre_group in genre_groups %}
+              {% if genre_group == blank %}
+                {% continue %}
+              {% endif %}
+              {% assign genre_parts = genre_group | split: ':' %}
+              {% assign genre_handle = genre_parts[0] %}
+              {% assign genre_name = genre_parts[1] %}
+              {% if genre_handle == blank or genre_name == blank %}
+                {% continue %}
+              {% endif %}
+              <button class="bbb-seriesOrders__filter" type="button" data-filter="{{ genre_handle }}">{{ genre_name }}</button>
+            {% endfor %}
+          </div>
+
+          <div class="bbb-seriesOrders__grid" data-series-grid>
+            {{ series_cards }}
+          </div>
+        </section>
+
+        <p class="bbb-seriesOrders__note">{{ section.settings.archive_note }}</p>
+      {% else %}
+        <div class="bbb-seriesOrders__empty">{{ section.settings.empty_text }}</div>
+      {% endif %}
+    </div>
+  </section>
+{% endpaginate %}
+
+<style>
+  .bbb-seriesOrders{
+    background:#0b0b0b;
+    color:#f6f6f6;
+    padding:3.6rem 0 5.8rem;
+  }
+
+  .bbb-seriesOrders__hero{
+    max-width:76rem;
+    margin-bottom:2.8rem;
+  }
+
+  .bbb-seriesOrders__kicker,
+  .bbb-seriesOrders__sectionKicker{
+    margin:0 0 .8rem;
+    font-size:1.1rem;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.62);
+  }
+
+  .bbb-seriesOrders__title{
+    margin:0;
+    font-size:clamp(3.8rem, 7vw, 7.4rem);
+    line-height:.94;
+    text-transform:lowercase;
+  }
+
+  .bbb-seriesOrders__sub{
+    max-width:72rem;
+    margin:1.2rem 0 0;
+    font-size:1.6rem;
+    line-height:1.65;
+    color:rgba(255,255,255,.74);
+  }
+
+  .bbb-seriesOrders__sectionHead{
+    margin-bottom:1.4rem;
+  }
+
+  .bbb-seriesOrders__sectionTitle{
+    margin:0;
+    font-size:clamp(2.2rem, 4vw, 3.4rem);
+    line-height:1.05;
+    text-transform:lowercase;
+  }
+
+  .bbb-seriesOrders__feature{
+    margin-bottom:3rem;
+  }
+
+  .bbb-seriesOrders__featureCard{
+    display:grid;
+    grid-template-columns:minmax(20rem, 24rem) minmax(0, 1fr);
+    gap:2.2rem;
+    align-items:stretch;
+    padding:2rem;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:2rem;
+    background:rgba(255,255,255,.025);
+    color:inherit;
+    text-decoration:none;
+    transition:transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+  }
+
+  .bbb-seriesOrders__featureCard:hover,
+  .bbb-seriesOrders__featureCard:focus-visible,
+  .bbb-seriesOrders__cardLink:hover,
+  .bbb-seriesOrders__cardLink:focus-visible{
+    transform:translateY(-.3rem);
+    border-color:rgba(255,138,199,.7);
+    box-shadow:0 1.8rem 4rem rgba(0,0,0,.35);
+    outline:none;
+  }
+
+  .bbb-seriesOrders__featureMedia,
+  .bbb-seriesOrders__coverWrap{
+    overflow:hidden;
+    border-radius:1.6rem;
+    border:1px solid rgba(255,255,255,.1);
+    background:#141214;
+  }
+
+  .bbb-seriesOrders__featureCover,
+  .bbb-seriesOrders__cover{
+    width:100%;
+    height:100%;
+    display:block;
+    object-fit:cover;
+  }
+
+  .bbb-seriesOrders__featureCopy{
+    display:flex;
+    flex-direction:column;
+    gap:1rem;
+  }
+
+  .bbb-seriesOrders__featurePill,
+  .bbb-seriesOrders__genrePill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:3rem;
+    width:max-content;
+    padding:0 1.1rem;
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:999px;
+    background:rgba(255,255,255,.035);
+    font-size:1.05rem;
+    letter-spacing:.08em;
+    text-transform:lowercase;
+    color:rgba(255,255,255,.76);
+  }
+
+  .bbb-seriesOrders__featureTitle,
+  .bbb-seriesOrders__seriesName{
+    margin:0;
+    font-size:clamp(2.4rem, 3.2vw, 3.6rem);
+    line-height:1.04;
+    text-transform:lowercase;
+  }
+
+  .bbb-seriesOrders__featureMeta,
+  .bbb-seriesOrders__seriesSub{
+    margin:0;
+    font-size:1.28rem;
+    line-height:1.5;
+    color:rgba(255,255,255,.66);
+  }
+
+  .bbb-seriesOrders__featureList,
+  .bbb-seriesOrders__cardBody{
+    display:flex;
+    flex-direction:column;
+    gap:.8rem;
+    padding-top:1.2rem;
+    margin-top:.6rem;
+    border-top:1px solid rgba(255,255,255,.09);
+  }
+
+  .bbb-seriesOrders__bookRow{
+    display:grid;
+    grid-template-columns:2.1rem minmax(0,1fr) auto;
+    gap:.8rem;
+    align-items:baseline;
+  }
+
+  .bbb-seriesOrders__bookNumber,
+  .bbb-seriesOrders__more{
+    font-size:1.08rem;
+    color:rgba(255,255,255,.55);
+  }
+
+  .bbb-seriesOrders__bookTitle{
+    font-size:1.26rem;
+    line-height:1.5;
+    color:rgba(255,255,255,.88);
+  }
+
+  .bbb-seriesOrders__bookSpice{
+    font-size:1.05rem;
+    line-height:1;
+    white-space:nowrap;
+  }
+
+  .bbb-seriesOrders__featureFooter,
+  .bbb-seriesOrders__footer{
+    margin-top:auto;
+    padding-top:1.2rem;
+    border-top:1px solid rgba(255,255,255,.09);
+    font-size:1.12rem;
+    letter-spacing:.04em;
+    color:#ff9ccb;
+  }
+
+  .bbb-seriesOrders__filters{
+    display:flex;
+    flex-wrap:wrap;
+    gap:.8rem;
+    margin-bottom:2rem;
+  }
+
+  .bbb-seriesOrders__filter{
+    min-height:3.6rem;
+    padding:0 1.5rem;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.14);
+    background:transparent;
+    color:rgba(255,255,255,.72);
+    font:inherit;
+    font-size:1.15rem;
+    letter-spacing:.03em;
+    text-transform:lowercase;
+    cursor:pointer;
+    transition:background .18s ease, color .18s ease, border-color .18s ease;
+  }
+
+  .bbb-seriesOrders__filter.is-active,
+  .bbb-seriesOrders__filter:hover{
+    background:rgba(255,138,199,.14);
+    border-color:rgba(255,138,199,.5);
+    color:#ffd2e9;
+  }
+
+  .bbb-seriesOrders__grid{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:1.4rem;
+  }
+
+  .bbb-seriesOrders__card{
+    min-width:0;
+  }
+
+  .bbb-seriesOrders__card[hidden]{
+    display:none !important;
+  }
+
+  .bbb-seriesOrders__cardLink{
+    display:flex;
+    flex-direction:column;
+    gap:1.2rem;
+    height:100%;
+    padding:1.6rem;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:1.8rem;
+    background:rgba(255,255,255,.02);
+    color:inherit;
+    text-decoration:none;
+    transition:transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+  }
+
+  .bbb-seriesOrders__cardTop{
+    display:grid;
+    grid-template-columns:10rem minmax(0, 1fr);
+    gap:1.2rem;
+    align-items:start;
+  }
+
+  .bbb-seriesOrders__meta{
+    display:flex;
+    flex-direction:column;
+    gap:1rem;
+  }
+
+  .bbb-seriesOrders__seriesName{
+    font-size:2rem;
+  }
+
+  .bbb-seriesOrders__note{
+    margin:2rem 0 0;
+    font-size:1.18rem;
+    line-height:1.6;
+    color:rgba(255,255,255,.56);
+    text-align:center;
+  }
+
+  .bbb-seriesOrders__empty{
+    padding:2rem 0 0;
+    font-size:1.45rem;
+    color:rgba(255,255,255,.68);
+  }
+
+  @media screen and (max-width: 989px){
+    .bbb-seriesOrders__featureCard{
+      grid-template-columns:1fr;
+    }
+
+    .bbb-seriesOrders__featureMedia{
+      max-width:22rem;
+    }
+
+    .bbb-seriesOrders__grid{
+      grid-template-columns:1fr;
+    }
+  }
+
+  @media screen and (max-width: 749px){
+    .bbb-seriesOrders{
+      padding:2.8rem 0 4.6rem;
+    }
+
+    .bbb-seriesOrders__title{
+      font-size:4.3rem;
+    }
+
+    .bbb-seriesOrders__sub{
+      font-size:1.42rem;
+    }
+
+    .bbb-seriesOrders__featureCard,
+    .bbb-seriesOrders__cardLink{
+      padding:1.4rem;
+      border-radius:1.6rem;
+    }
+
+    .bbb-seriesOrders__cardTop{
+      grid-template-columns:8.8rem minmax(0, 1fr);
+      gap:1rem;
+    }
+
+    .bbb-seriesOrders__featureTitle,
+    .bbb-seriesOrders__seriesName{
+      font-size:2.1rem;
+    }
+
+    .bbb-seriesOrders__bookTitle{
+      font-size:1.18rem;
+    }
+
+    .bbb-seriesOrders__filters{
+      overflow-x:auto;
+      flex-wrap:nowrap;
+      padding-bottom:.4rem;
+      margin-right:-2rem;
+      padding-right:2rem;
+      scrollbar-width:thin;
+      scrollbar-color:rgba(255,156,203,.55) rgba(255,255,255,.05);
+    }
+
+    .bbb-seriesOrders__filter{
+      white-space:nowrap;
+      flex:0 0 auto;
+    }
+
+    .bbb-seriesOrders__filters::-webkit-scrollbar{
+      height:6px;
+    }
+
+    .bbb-seriesOrders__filters::-webkit-scrollbar-track{
+      background:rgba(255,255,255,.04);
+      border-radius:999px;
+    }
+
+    .bbb-seriesOrders__filters::-webkit-scrollbar-thumb{
+      background:linear-gradient(90deg, rgba(255,138,199,.72), rgba(255,205,229,.62));
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.08);
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function(){
+    var section = document.getElementById('SeriesReadingOrders-{{ section.id }}');
+    if (!section) return;
+
+    var buttons = Array.from(section.querySelectorAll('[data-filter]'));
+    var cards = Array.from(section.querySelectorAll('[data-series-card]'));
+
+    if (!buttons.length || !cards.length) return;
+
+    buttons.forEach(function(button){
+      button.addEventListener('click', function(){
+        var activeFilter = button.getAttribute('data-filter') || 'all';
+
+        buttons.forEach(function(btn){
+          btn.classList.toggle('is-active', btn === button);
+        });
+
+        cards.forEach(function(card){
+          var genre = card.getAttribute('data-series-genre') || '';
+          var shouldShow = activeFilter === 'all' || genre === activeFilter;
+          card.hidden = !shouldShow;
+        });
+      });
+    });
+  });
+</script>
+
+{% schema %}
+{
+  "name": "Series reading orders",
+  "settings": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Kicker",
+      "default": "reading guides"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "series reading orders"
+    },
+    {
+      "type": "textarea",
+      "id": "subtext",
+      "label": "Subtext",
+      "default": "every series i've read, in order — with spice levels and where to start if you don't want to commit to book one."
+    },
+    {
+      "type": "text",
+      "id": "trending_kicker",
+      "label": "Featured kicker",
+      "default": "trending now"
+    },
+    {
+      "type": "text",
+      "id": "trending_heading",
+      "label": "Featured heading",
+      "default": "start here first"
+    },
+    {
+      "type": "text",
+      "id": "featured_series_handle",
+      "label": "Featured series handle",
+      "info": "Optional. Leave blank to use the first available series in your current order."
+    },
+    {
+      "type": "text",
+      "id": "series_page_path",
+      "label": "Series page path",
+      "default": "/pages/series"
+    },
+    {
+      "type": "text",
+      "id": "archive_note",
+      "label": "Archive note",
+      "default": "each card opens the full series page · filtered by vibe · spice levels visible at a glance"
+    },
+    {
+      "type": "text",
+      "id": "empty_text",
+      "label": "Empty text",
+      "default": "No series are ready to show here yet."
+    }
+  ],
+  "presets": [
+    {
+      "name": "Series reading orders"
+    }
+  ]
+}
+{% endschema %}

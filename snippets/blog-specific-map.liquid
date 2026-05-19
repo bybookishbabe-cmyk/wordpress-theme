@@ -1,0 +1,209 @@
+{% assign context_downcase = context | default: '' | downcase %}
+{% assign cluster = '' %}
+{% assign prompt_text = prompt | default: 'looking for something specific?' %}
+{% assign forced_proximity_page_handle = 'forced-proximity-romance-books' %}
+{% assign forced_proximity_page_url = '/pages/' | append: forced_proximity_page_handle %}
+
+{% if context_downcase contains 'stalker' or context_downcase contains 'obsession' or context_downcase contains 'obsessive' %}
+  {% assign cluster = 'stalker' %}
+{% elsif context_downcase contains 'darkobsession' or context_downcase contains 'dark-obsession' or context_downcase contains 'dark obsession' %}
+  {% assign cluster = 'darkobsession' %}
+{% elsif context_downcase contains 'darkromantasy' or context_downcase contains 'dark-romantasy' or context_downcase contains 'dark romantasy' or context_downcase contains 'ever king' %}
+  {% assign cluster = 'darkromantasy' %}
+{% elsif context_downcase contains 'morallygrayfantasy' or context_downcase contains 'morally-gray-fantasy' or context_downcase contains 'morally gray fantasy' %}
+  {% assign cluster = 'morallygrayfantasy' %}
+{% elsif context_downcase contains 'sport' or context_downcase contains 'hockey' or context_downcase contains 'football' or context_downcase contains 'athlete' or context_downcase contains 'baseball' or context_downcase contains 'basketball' %}
+  {% assign cluster = 'sports' %}
+{% elsif context_downcase contains 'romantasy' or context_downcase contains 'fantasy' or context_downcase contains 'fae' or context_downcase contains 'fated' or context_downcase contains 'dragon' or context_downcase contains 'magic' %}
+  {% assign cluster = 'romantasy' %}
+{% elsif context_downcase contains 'slow-burn' or context_downcase contains 'slow burn' %}
+  {% assign cluster = 'slowburn' %}
+{% elsif context_downcase contains 'soft' or context_downcase contains 'small-town' or context_downcase contains 'small town' or context_downcase contains 'second-chance' or context_downcase contains 'second chance' or context_downcase contains 'friends-to-lovers' or context_downcase contains 'friends to lovers' %}
+  {% assign cluster = 'soft' %}
+{% elsif context_downcase contains 'morally-gray' or context_downcase contains 'morally gray' %}
+  {% assign cluster = 'morallygraymen' %}
+{% elsif context_downcase contains 'captor' or context_downcase contains 'captive' or context_downcase contains 'touch her and die' or context_downcase contains 'villain' or context_downcase contains 'dark' or context_downcase contains 'extra-dark' %}
+  {% assign cluster = 'dark' %}
+{% endif %}
+
+{% capture nav_dark %}
+<nav class="blog-specific-links" aria-label="specific dark romance guide links">
+  <span class="blog-specific-links__prompt">{{ prompt_text }}</span>
+  <span class="blog-specific-links__arrow" aria-hidden="true">&rarr;</span>
+  <a href="/pages/stalker-romance-books">stalker romance</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="/pages/captor-captive-romance-books">captor x captive</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="/blogs/curated-romance-guides/the-best-dark-romance-books-with-morally-gray-men-that-will-ruin-you">morally gray men</a>
+</nav>
+{% endcapture %}
+
+{% capture nav_morallygraymen %}
+<nav class="blog-specific-links" aria-label="specific morally gray men guide links">
+  <span class="blog-specific-links__prompt">{{ prompt_text }}</span>
+  <span class="blog-specific-links__arrow" aria-hidden="true">&rarr;</span>
+  <a href="/pages/dark-romance-books">dark romance books</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="/pages/villain-gets-the-girl-romance-books">villain gets the girl</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="/pages/touch-her-and-die-books">touch her and die</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="/pages/stalker-romance-books">stalker romance</a>
+</nav>
+{% endcapture %}
+
+{% capture nav_darkobsession %}
+<nav class="blog-specific-links" aria-label="specific dark obsession guide links">
+  <span class="blog-specific-links__prompt">{{ prompt_text }}</span>
+  <span class="blog-specific-links__arrow" aria-hidden="true">&rarr;</span>
+  <a href="/pages/dark-romance-books">dark romance books</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="/pages/touch-her-and-die-books">touch her and die</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="/blogs/curated-romance-guides/the-best-dark-romance-books-with-morally-gray-men-that-will-ruin-you">morally gray men</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="/pages/enemies-to-lovers">enemies to lovers</a>
+</nav>
+{% endcapture %}
+
+{% capture nav_stalker %}
+<nav class="blog-specific-links" aria-label="specific stalker romance guide links">
+  <span class="blog-specific-links__prompt">{{ prompt_text }}</span>
+  <span class="blog-specific-links__arrow" aria-hidden="true">&rarr;</span>
+  <a href="/pages/stalker-romance-books">stalker romance</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="/pages/dark-romance-books">dark romance</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="/pages/touch-her-and-die-books">touch her and die</a>
+</nav>
+{% endcapture %}
+
+{% capture nav_sports %}
+<nav class="blog-specific-links" aria-label="specific sports romance guide links">
+  <span class="blog-specific-links__prompt">{{ prompt_text }}</span>
+  <span class="blog-specific-links__arrow" aria-hidden="true">&rarr;</span>
+  <a href="/pages/slow-burn-books">slow burn romance books</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="/pages/fake-dating-romance-books">fake dating romance</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="{{ forced_proximity_page_url }}">forced proximity</a>
+</nav>
+{% endcapture %}
+
+{% capture nav_romantasy %}
+<nav class="blog-specific-links" aria-label="specific romantasy guide links">
+  <span class="blog-specific-links__prompt">{{ prompt_text }}</span>
+  <span class="blog-specific-links__arrow" aria-hidden="true">&rarr;</span>
+  <a href="/blogs/curated-romance-guides/the-ultimate-romantasy-reading-guide">romantasy books</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="/pages/fated-mates-romance-books">fated mates</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="/blogs/curated-romance-guides/spicy-romantasy-books-that-are-actually-worth-it">spicy romantasy</a>
+</nav>
+{% endcapture %}
+
+{% capture nav_darkromantasy %}
+<nav class="blog-specific-links" aria-label="specific dark romantasy guide links">
+  <span class="blog-specific-links__prompt">{{ prompt_text }}</span>
+  <span class="blog-specific-links__arrow" aria-hidden="true">&rarr;</span>
+  <a href="/pages/romantasy-books">romantasy books</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="/blogs/curated-romance-guides/dark-romantasy-books">dark romantasy</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="/pages/touch-her-and-die-books">touch her and die</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="/pages/villain-gets-the-girl-romance-books">villain gets the girl</a>
+</nav>
+{% endcapture %}
+
+{% capture nav_morallygrayfantasy %}
+<nav class="blog-specific-links" aria-label="specific morally gray fantasy guide links">
+  <span class="blog-specific-links__prompt">{{ prompt_text }}</span>
+  <span class="blog-specific-links__arrow" aria-hidden="true">&rarr;</span>
+  <a href="/blogs/curated-romance-guides/the-ultimate-romantasy-reading-guide">romantasy books</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="/blogs/curated-romance-guides/the-best-dark-romance-books-with-morally-gray-men-that-will-ruin-you">morally gray men</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="/pages/touch-her-and-die-books">touch her and die</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="/pages/villain-gets-the-girl-romance-books">villain gets the girl</a>
+</nav>
+{% endcapture %}
+
+{% capture nav_soft %}
+<nav class="blog-specific-links" aria-label="specific soft romance guide links">
+  <span class="blog-specific-links__prompt">{{ prompt_text }}</span>
+  <span class="blog-specific-links__arrow" aria-hidden="true">&rarr;</span>
+  <a href="/pages/slow-burn-books">slow burn</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="/pages/friends-to-lovers-romance-books">friends to lovers</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="/pages/small-town-romance-books">small town romance</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="/pages/second-chance-romance-books">second chance romance</a>
+</nav>
+{% endcapture %}
+
+{% capture nav_slowburn %}
+<nav class="blog-specific-links" aria-label="specific slow burn romance guide links">
+  <span class="blog-specific-links__prompt">{{ prompt_text }}</span>
+  <span class="blog-specific-links__arrow" aria-hidden="true">&rarr;</span>
+  <a href="/pages/enemies-to-lovers">enemies to lovers</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="{{ forced_proximity_page_url }}">forced proximity</a>
+  <span class="blog-specific-links__dot" aria-hidden="true">·</span>
+  <a href="/pages/he-falls-first-romance-books">he falls first</a>
+</nav>
+{% endcapture %}
+
+{% assign page_handles = '' %}
+{% assign guide_handles = '' %}
+{% assign nav_markup = '' %}
+
+{% case cluster %}
+  {% when 'morallygraymen' %}
+    {% assign nav_markup = nav_morallygraymen %}
+    {% assign page_handles = 'dark-romance-books|villain-gets-the-girl-romance-books|touch-her-and-die-books|stalker-romance-books|' %}
+  {% when 'darkobsession' %}
+    {% assign nav_markup = nav_darkobsession %}
+    {% assign page_handles = 'dark-romance-books|touch-her-and-die-books|enemies-to-lovers|' %}
+    {% assign guide_handles = 'the-best-dark-romance-books-with-morally-gray-men-that-will-ruin-you|' %}
+  {% when 'morallygrayfantasy' %}
+    {% assign nav_markup = nav_morallygrayfantasy %}
+    {% assign page_handles = 'romantasy-books|touch-her-and-die-books|villain-gets-the-girl-romance-books|' %}
+    {% assign guide_handles = 'the-best-dark-romance-books-with-morally-gray-men-that-will-ruin-you|' %}
+  {% when 'darkromantasy' %}
+    {% assign nav_markup = nav_darkromantasy %}
+    {% assign page_handles = 'villain-gets-the-girl-romance-books|' %}
+    {% assign guide_handles = 'the-ultimate-romantasy-reading-guide|dark-romantasy-books|' %}
+  {% when 'stalker' %}
+    {% assign nav_markup = nav_stalker %}
+    {% assign page_handles = 'stalker-romance-books|dark-romance-books|touch-her-and-die-books|' %}
+  {% when 'sports' %}
+    {% assign nav_markup = nav_sports %}
+    {% capture page_handles %}slow-burn-books|fake-dating-romance-books|{{ forced_proximity_page_handle }}|{% endcapture %}
+  {% when 'romantasy' %}
+    {% assign nav_markup = nav_romantasy %}
+    {% assign page_handles = 'romantasy-books|fated-mates-romance-books|' %}
+    {% assign guide_handles = 'spicy-romantasy-books-that-are-actually-worth-it|' %}
+  {% when 'soft' %}
+    {% assign nav_markup = nav_soft %}
+    {% assign page_handles = 'slow-burn-books|friends-to-lovers-romance-books|small-town-romance-books|second-chance-romance-books|' %}
+  {% when 'slowburn' %}
+    {% assign nav_markup = nav_slowburn %}
+    {% capture page_handles %}enemies-to-lovers|{{ forced_proximity_page_handle }}|he-falls-first-romance-books|{% endcapture %}
+  {% when 'dark' %}
+    {% assign nav_markup = nav_dark %}
+    {% assign page_handles = 'stalker-romance-books|captor-captive-romance-books|' %}
+    {% assign guide_handles = 'the-best-dark-romance-books-with-morally-gray-men-that-will-ruin-you|' %}
+{% endcase %}
+
+{% if mode == 'cluster' %}
+  {{ cluster }}
+{% elsif mode == 'page_handles' %}
+  {{ page_handles }}
+{% elsif mode == 'guide_handles' %}
+  {{ guide_handles }}
+{% else %}
+  {{ nav_markup }}
+{% endif %}

@@ -1,0 +1,360 @@
+{{ 'sss-library.css' | asset_url | stylesheet_tag }}
+
+{% paginate shop.metaobjects.sss_library.values by 250 %}
+  {% assign private_books = shop.metaobjects.sss_library.values | sort: "title" %}
+{% endpaginate %}
+
+{% assign group_by = section.settings.group_by | default: 'shelf' %}
+{% assign private_shelf_count = 0 %}
+{% assign private_shelf_names = '' %}
+{% assign private_trope_names = '' %}
+
+{% for book in private_books %}
+  {% capture is_visible %}{% render 'sss-book-visible', book: book, allow_hidden_from_library: true %}{% endcapture %}
+  {% assign is_visible_value = is_visible | strip %}
+  {% unless is_visible_value == 'true' %}
+    {% continue %}
+  {% endunless %}
+  {% capture is_private %}{% render 'sss-book-private', book: book %}{% endcapture %}
+  {% assign is_private_value = is_private | strip %}
+  {% if is_private_value == 'true' %}
+    {% assign private_shelf_count = private_shelf_count | plus: 1 %}
+
+    {% assign book_shelf_name = book.shelf.value.name | default: 'private shelf' | strip %}
+    {% assign book_shelf_key = book_shelf_name | handleize %}
+    {% assign book_shelf_token = '|' | append: book_shelf_key | append: '|' %}
+    {% unless private_shelf_names contains book_shelf_token %}
+      {% assign private_shelf_names = private_shelf_names | append: book_shelf_token %}
+    {% endunless %}
+
+    {% for trope in book.tropes.value %}
+      {% assign trope_name = trope.name | strip %}
+      {% if trope_name == blank %}
+        {% continue %}
+      {% endif %}
+      {% assign trope_key = trope_name | handleize %}
+      {% assign trope_token = '|' | append: trope_key | append: '|' %}
+      {% unless private_trope_names contains trope_token %}
+        {% assign private_trope_names = private_trope_names | append: trope_token %}
+      {% endunless %}
+    {% endfor %}
+  {% endif %}
+{% endfor %}
+
+{% if private_shelf_count > 0 %}
+  <section class="sss-privateShelfSection" id="sss-private-shelf-{{ section.id }}" data-sss-lib="society">
+    <div class="sss-privateShelfSection__wrap">
+      <div class="sss-lib__shelf sss-lib__shelf--private">
+        <div class="sss-lib__shelfHead">
+          <div id="private" class="sss-lib__privateKicker">
+            {{ section.settings.kicker }}
+          </div>
+
+          <div class="sss-lib__shelfTitle">
+            {{ section.settings.title }}
+          </div>
+
+          {% if section.settings.description != blank %}
+            <div class="sss-lib__shelfDesc">
+              {{ section.settings.description }}
+            </div>
+          {% endif %}
+
+          <div class="sss-lib__swipeCue">swipe me →</div>
+        </div>
+
+        {% if group_by == 'all' %}
+          <div class="sss-privateShelfSection__group">
+            <div class="sss-privateShelfSection__groupKicker">private shelf</div>
+            <h2 class="sss-privateShelfSection__groupTitle">all private picks</h2>
+            <div class="sss-lib__shelfRow">
+              {% for book in private_books %}
+                {% capture is_visible %}{% render 'sss-book-visible', book: book, allow_hidden_from_library: true %}{% endcapture %}
+                {% assign is_visible_value = is_visible | strip %}
+                {% unless is_visible_value == 'true' %}
+                  {% continue %}
+                {% endunless %}
+                {% capture is_private %}{% render 'sss-book-private', book: book %}{% endcapture %}
+                {% assign is_private_value = is_private | strip %}
+
+                {% if is_private_value == 'true' %}
+                  {% render 'sss-book-card', book: book, mini: true, allow_hidden_from_library: true %}
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+
+        {% if group_by == 'shelf' or group_by == 'both' %}
+          {% assign shelf_keys = private_shelf_names | split: '|' %}
+          {% for shelf_key in shelf_keys %}
+            {% assign shelf_key = shelf_key | strip %}
+            {% if shelf_key == blank %}
+              {% continue %}
+            {% endif %}
+            {% assign shelf_name = '' %}
+            {% assign shelf_rendered_book_keys = '' %}
+
+            {% capture shelf_group_books %}
+              {% for book in private_books %}
+                {% capture is_visible %}{% render 'sss-book-visible', book: book, allow_hidden_from_library: true %}{% endcapture %}
+                {% assign is_visible_value = is_visible | strip %}
+                {% unless is_visible_value == 'true' %}
+                  {% continue %}
+                {% endunless %}
+                {% capture is_private %}{% render 'sss-book-private', book: book %}{% endcapture %}
+                {% assign is_private_value = is_private | strip %}
+                {% assign book_shelf_name = book.shelf.value.name | default: 'private shelf' | strip %}
+                {% assign book_shelf_key = book_shelf_name | handleize %}
+                {% assign book_unique_key = book.system.handle | default: book.title.value | append: '-' | append: book.author.value | handleize %}
+                {% assign book_unique_token = '|' | append: book_unique_key | append: '|' %}
+
+                {% if is_private_value == 'true' and book_shelf_key == shelf_key %}
+                  {% assign shelf_name = book_shelf_name %}
+                  {% unless shelf_rendered_book_keys contains book_unique_token %}
+                    {% assign shelf_rendered_book_keys = shelf_rendered_book_keys | append: book_unique_token %}
+                    {% render 'sss-book-card', book: book, mini: true, allow_hidden_from_library: true %}
+                  {% endunless %}
+                {% endif %}
+              {% endfor %}
+            {% endcapture %}
+
+            {% assign shelf_group_books_stripped = shelf_group_books | strip %}
+            {% if shelf_group_books_stripped != blank %}
+              <div class="sss-privateShelfSection__group">
+                <div class="sss-privateShelfSection__groupKicker">shelf</div>
+                <h2 class="sss-privateShelfSection__groupTitle">{{ shelf_name }}</h2>
+                <div class="sss-lib__shelfRow">
+                  {{ shelf_group_books }}
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+
+        {% if group_by == 'trope' or group_by == 'both' %}
+          {% assign trope_keys = private_trope_names | split: '|' %}
+          {% for trope_key in trope_keys %}
+            {% assign trope_key = trope_key | strip %}
+            {% if trope_key == blank %}
+              {% continue %}
+            {% endif %}
+            {% assign trope_name = '' %}
+            {% assign trope_rendered_book_keys = '' %}
+
+            {% capture trope_group_books %}
+              {% for book in private_books %}
+                {% capture is_visible %}{% render 'sss-book-visible', book: book, allow_hidden_from_library: true %}{% endcapture %}
+                {% assign is_visible_value = is_visible | strip %}
+                {% unless is_visible_value == 'true' %}
+                  {% continue %}
+                {% endunless %}
+                {% capture is_private %}{% render 'sss-book-private', book: book %}{% endcapture %}
+                {% assign is_private_value = is_private | strip %}
+                {% assign book_matches_trope = false %}
+                {% assign book_unique_key = book.system.handle | default: book.title.value | append: '-' | append: book.author.value | handleize %}
+                {% assign book_unique_token = '|' | append: book_unique_key | append: '|' %}
+
+                {% for book_trope in book.tropes.value %}
+                  {% assign book_trope_name = book_trope.name | strip %}
+                  {% assign book_trope_key = book_trope_name | handleize %}
+                  {% if book_trope_key == trope_key %}
+                    {% assign book_matches_trope = true %}
+                    {% assign trope_name = book_trope_name %}
+                  {% endif %}
+                {% endfor %}
+
+                {% if is_private_value == 'true' and book_matches_trope %}
+                  {% unless trope_rendered_book_keys contains book_unique_token %}
+                    {% assign trope_rendered_book_keys = trope_rendered_book_keys | append: book_unique_token %}
+                    {% render 'sss-book-card', book: book, mini: true, allow_hidden_from_library: true %}
+                  {% endunless %}
+                {% endif %}
+              {% endfor %}
+            {% endcapture %}
+
+            {% assign trope_group_books_stripped = trope_group_books | strip %}
+            {% if trope_group_books_stripped != blank %}
+              <div class="sss-privateShelfSection__group">
+                <div class="sss-privateShelfSection__groupKicker">trope</div>
+                <h2 class="sss-privateShelfSection__groupTitle">{{ trope_name }}</h2>
+                <div class="sss-lib__shelfRow">
+                  {{ trope_group_books }}
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+
+        {% if section.settings.cta_label != blank %}
+          <a class="sss-privateShelfSection__cta" href="{{ section.settings.cta_url | default: '/pages/sss-library-page' }}">
+            {{ section.settings.cta_label }}
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+{% endif %}
+
+{% if private_shelf_count > 0 %}
+  {% render 'sss-library-modal', modal_type: 'society' %}
+{% endif %}
+
+<style>
+  #sss-private-shelf-{{ section.id }}{
+    background:#0b0b0b;
+    color:#f6f6f6;
+    padding:16px 12px 28px;
+    overflow:hidden;
+  }
+
+  #sss-private-shelf-{{ section.id }} .sss-privateShelfSection__wrap{
+    max-width:1200px;
+    margin:0 auto;
+  }
+
+  #sss-private-shelf-{{ section.id }} .sss-lib__shelf--private{
+    margin:0;
+  }
+
+  #sss-private-shelf-{{ section.id }} .sss-lib__shelfRow{
+    padding-bottom:16px;
+  }
+
+  #sss-private-shelf-{{ section.id }} .sss-privateShelfSection__group{
+    margin-top:26px;
+    padding-top:18px;
+    border-top:1px solid rgba(255,255,255,.08);
+  }
+
+  #sss-private-shelf-{{ section.id }} .sss-privateShelfSection__group:first-of-type{
+    margin-top:12px;
+  }
+
+  #sss-private-shelf-{{ section.id }} .sss-privateShelfSection__groupKicker{
+    margin:0 0 7px;
+    color:rgba(255,138,199,.8);
+    font-size:10px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+  }
+
+  #sss-private-shelf-{{ section.id }} .sss-privateShelfSection__groupTitle{
+    margin:0 0 2px;
+    color:#f6f6f6;
+    font-size:clamp(20px,2.4vw,31px);
+    line-height:1.05;
+    text-transform:lowercase;
+  }
+
+  #sss-private-shelf-{{ section.id }} .sss-privateShelfSection__cta{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    margin-top:12px;
+    min-height:42px;
+    padding:0 18px;
+    border:1px solid rgba(255,138,199,.36);
+    background:rgba(255,138,199,.12);
+    color:#ff8ac7;
+    text-decoration:none;
+    text-transform:lowercase;
+    letter-spacing:.12em;
+    font-size:12px;
+    transition:
+      transform .2s ease,
+      background .2s ease,
+      border-color .2s ease,
+      color .2s ease;
+  }
+
+  #sss-private-shelf-{{ section.id }} .sss-privateShelfSection__cta:hover,
+  #sss-private-shelf-{{ section.id }} .sss-privateShelfSection__cta:focus-visible{
+    transform:translateX(4px);
+    background:rgba(255,138,199,.2);
+    border-color:rgba(255,138,199,.58);
+    color:#fff;
+  }
+
+  @media screen and (max-width:749px){
+    #sss-private-shelf-{{ section.id }}{
+      padding:8px 10px 20px;
+    }
+
+    #sss-private-shelf-{{ section.id }} .sss-lib__shelf--private{
+      padding:22px 16px;
+      border-radius:20px;
+    }
+
+    #sss-private-shelf-{{ section.id }} .sss-privateShelfSection__cta{
+      width:100%;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "sss private shelf",
+  "settings": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "kicker",
+      "default": "between us"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "title",
+      "default": "the private shelf"
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "description",
+      "default": "member-only books, private notes, and the recs i keep tucked inside the society."
+    },
+    {
+      "type": "select",
+      "id": "group_by",
+      "label": "group books by",
+      "default": "shelf",
+      "options": [
+        {
+          "value": "both",
+          "label": "shelves and tropes"
+        },
+        {
+          "value": "shelf",
+          "label": "shelves only"
+        },
+        {
+          "value": "trope",
+          "label": "tropes only"
+        },
+        {
+          "value": "all",
+          "label": "no groups"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "button label",
+      "default": "open the full society library →"
+    },
+    {
+      "type": "url",
+      "id": "cta_url",
+      "label": "button link"
+    }
+  ],
+  "presets": [
+    {
+      "name": "sss private shelf"
+    }
+  ]
+}
+{% endschema %}

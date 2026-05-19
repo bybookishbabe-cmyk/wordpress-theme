@@ -1,0 +1,64 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "banner": {
+      "type": "main-collection-banner",
+      "settings": {
+        "show_collection_description": true,
+        "show_collection_image": false,
+        "color_scheme": "scheme-1"
+      }
+    },
+    "product-grid": {
+      "type": "main-collection-product-grid",
+      "settings": {
+        "show_seasonal_band": true,
+        "seasonal_collection": "spring-collection",
+        "seasonal_kicker": "seasonal drop",
+        "season_name": "spring",
+        "seasonal_subtitle": "fresh flowers, soft little details, and inserts that make your kindle feel like spring on your nightstand.",
+        "seasonal_button": "shop the spring shelf →",
+        "style_kicker": "shop by style",
+        "style_title": "find your aesthetic",
+        "style_subtitle": "fictional affairs, somewhere in between, and the collections that give each mood its own space.",
+        "style_collection_1": "fictional-affairs-collection",
+        "style_collection_2": "revival",
+        "style_collection_3": "july-haze-collection",
+        "style_collection_4": "the-season-of-subtle-obsessions",
+        "products_toggle_label": "show all products",
+        "seasonal_emoji_one": "🌸",
+        "seasonal_emoji_two": "🌷",
+        "seasonal_emoji_three": "🌼",
+        "seasonal_emoji_four": "🪻",
+        "seasonal_emoji_five": "🍃",
+        "products_per_page": 16,
+        "columns_desktop": 4,
+        "columns_mobile": "2",
+        "color_scheme": "scheme-1",
+        "image_ratio": "adapt",
+        "image_shape": "default",
+        "show_secondary_image": false,
+        "show_vendor": false,
+        "show_rating": false,
+        "quick_add": "none",
+        "enable_filtering": false,
+        "filter_type": "horizontal",
+        "enable_sorting": false,
+        "padding_top": 36,
+        "padding_bottom": 36
+      }
+    }
+  },
+  "order": [
+    "banner",
+    "product-grid"
+  ]
+}

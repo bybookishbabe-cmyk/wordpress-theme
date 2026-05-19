@@ -1,0 +1,47 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-page",
+      "disabled": true,
+      "settings": {
+        "padding_top": 28,
+        "padding_bottom": 28
+      }
+    },
+    "bbb_what_to_read_next": {
+      "type": "bbb-what-to-read-next",
+      "name": "what to read next",
+      "settings": {
+        "kicker": "reader rec engine",
+        "title": "what to read next",
+        "subtext": "pick a book from the library and I’ll pull three next-read options based on shelf chemistry, trope overlap, and spice mood.",
+        "panel_label": "start with a book you already loved",
+        "panel_copy": "This page uses the book you choose as the anchor, then looks for the closest shelf twin, a trope-driven follow-up, and one moodier wildcard with familiar spice.",
+        "select_label": "Choose a book from the society library",
+        "placeholder": "pick a book to start",
+        "source_label": "you picked",
+        "note_one_pill": "closest match",
+        "note_one_title": "same shelf + shared tropes",
+        "note_one_text": "The first rec stays in the same shelf when possible and tries to keep at least two familiar tropes in play.",
+        "note_two_pill": "trope-first",
+        "note_two_title": "two tropes still hitting",
+        "note_two_text": "The second rec loosens the shelf rules and follows the strongest two-trope overlap instead.",
+        "note_three_pill": "mood read",
+        "note_three_title": "one trope + same spice energy",
+        "note_three_text": "The last pick is the softer wildcard: at least one shared trope, but mainly chosen for matching the same spice mood.",
+        "results_kicker": "from me to you",
+        "results_title": "here’s where I’d send you next",
+        "results_subtext": "Start with the closest shelf twin, then move into the trope twin, then the spice-mood wildcard.",
+        "card_one_pill": "same shelf + 2 tropes",
+        "card_two_pill": "2 trope match",
+        "card_three_pill": "1 trope + spice mood",
+        "link_label": "open in the library →",
+        "accent_color": "#a4303b"
+      }
+    }
+  },
+  "order": [
+    "main",
+    "bbb_what_to_read_next"
+  ]
+}

@@ -1,0 +1,615 @@
+{{ 'customer.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+{%- liquid
+  assign bbb_account_is_society = false
+  if customer.tags contains 'society' or customer.tags contains 'Society' or customer.tags contains 'paid' or customer.tags contains 'Paid'
+    assign bbb_account_is_society = true
+  endif
+-%}
+
+<div
+  class="customer account bbb-account section-{{ section.id }}-padding"
+  data-bbb-account
+  data-customer-id="{{ customer.id }}"
+  data-customer-email="{{ customer.email | escape }}"
+>
+  <div class="bbb-account__hero">
+    <div class="bbb-account__heroCopy">
+      <p class="bbb-account__kicker">reader portal</p>
+      <h1 class="customer__title bbb-account__title">your account</h1>
+      <p class="bbb-account__sub">
+        saved books, Society access, and the less-romantic-but-still-useful order stuff.
+      </p>
+      <div class="bbb-account__actions">
+        <a href="/pages/my-bookshelf" class="bbb-account-bookshelf-link">
+          📚 go to my bookshelf
+        </a>
+        <a href="{{ routes.account_logout_url }}" class="bbb-account__logout">
+          {{ 'customer.log_out' | t }}
+        </a>
+      </div>
+    </div>
+
+    <div class="bbb-account__statusCard">
+      <p class="bbb-account__statusLabel">membership</p>
+      {% if bbb_account_is_society %}
+        <div class="bbb-account__statusTitle">Society member</div>
+        <p class="bbb-account__statusCopy">your private reader layer is unlocked.</p>
+        <a href="/pages/sss-library-page">open society library →</a>
+      {% else %}
+        <div class="bbb-account__statusTitle">Free reader</div>
+        <p class="bbb-account__statusCopy">your bookshelf syncs here. Society unlocks can layer on later.</p>
+        <a href="/pages/smut-sentiment-society">see society access →</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <section class="bbb-account__shelf">
+    <div class="bbb-account__sectionHead">
+      <div>
+        <p class="bbb-account__kicker">your shelf</p>
+        <h2>recent saves</h2>
+      </div>
+      <a href="/pages/my-bookshelf">open full bookshelf →</a>
+    </div>
+    <div class="bbb-account__shelfGrid" data-bbb-account-shelf-grid></div>
+    <div class="bbb-account__shelfEmpty" data-bbb-account-shelf-empty hidden>
+      save a few books and they’ll show up here.
+    </div>
+  </section>
+
+  <div class="bbb-account__utilityGrid">
+    <div class="bbb-account__panel bbb-account__panel--orders">
+      <h2>{{ 'customer.orders.title' | t }}</h2>
+
+      {% paginate customer.orders by 20 %}
+        {%- if customer.orders.size > 0 -%}
+          <table role="table" class="order-history">
+            <caption class="visually-hidden">
+              {{ 'customer.orders.title' | t }}
+            </caption>
+            <thead role="rowgroup">
+              <tr role="row">
+                <th id="ColumnOrder" scope="col" role="columnheader">{{ 'customer.orders.order_number' | t }}</th>
+                <th id="ColumnDate" scope="col" role="columnheader">{{ 'customer.orders.date' | t }}</th>
+                <th id="ColumnPayment" scope="col" role="columnheader">{{ 'customer.orders.payment_status' | t }}</th>
+                <th id="ColumnFulfillment" scope="col" role="columnheader">
+                  {{ 'customer.orders.fulfillment_status' | t }}
+                </th>
+                <th id="ColumnTotal" scope="col" role="columnheader">{{ 'customer.orders.total' | t }}</th>
+              </tr>
+            </thead>
+            <tbody role="rowgroup">
+              {%- for order in customer.orders -%}
+                <tr role="row">
+                  <td
+                    id="RowOrder"
+                    role="cell"
+                    headers="ColumnOrder"
+                    data-label="{{ 'customer.orders.order_number' | t }}"
+                  >
+                    <a
+                      href="{{ order.customer_url }}"
+                      aria-label="{{ 'customer.orders.order_number_link' | t: number: order.name }}"
+                    >
+                      {{ order.name }}
+                    </a>
+                  </td>
+                  <td headers="RowOrder ColumnDate" role="cell" data-label="{{ 'customer.orders.date' | t }}">
+                    {{ order.created_at | time_tag: format: 'date' }}
+                  </td>
+                  <td
+                    headers="RowOrder ColumnPayment"
+                    role="cell"
+                    data-label="{{ 'customer.orders.payment_status' | t }}"
+                  >
+                    {{ order.financial_status_label }}
+                  </td>
+                  <td
+                    headers="RowOrder ColumnFulfillment"
+                    role="cell"
+                    data-label="{{ 'customer.orders.fulfillment_status' | t }}"
+                  >
+                    {{ order.fulfillment_status_label }}
+                  </td>
+                  <td headers="RowOrder ColumnTotal" role="cell" data-label="{{ 'customer.orders.total' | t }}">
+                    {{ order.total_net_amount | money_with_currency }}
+                  </td>
+                </tr>
+              {%- endfor -%}
+            </tbody>
+          </table>
+        {%- else -%}
+          <p>{{ 'customer.orders.none' | t }}</p>
+        {%- endif -%}
+
+        {%- if paginate.pages > 1 -%}
+          {%- if paginate.parts.size > 0 -%}
+            <nav class="pagination" role="navigation" aria-label="{{ 'general.pagination.label' | t }}">
+              <ul role="list">
+                {%- if paginate.previous -%}
+                  <li>
+                    <a href="{{ paginate.previous.url }}" aria-label="{{ 'general.pagination.previous' | t }}">
+                      <span class="svg-wrapper">
+                        {{- 'icon-caret.svg' | inline_asset_content -}}
+                      </span>
+                    </a>
+                  </li>
+                {%- endif -%}
+
+                {%- for part in paginate.parts -%}
+                  <li>
+                    {%- if part.is_link -%}
+                      <a href="{{ part.url }}" aria-label="{{ 'general.pagination.page' | t: number: part.title }}">
+                        {{- part.title -}}
+                      </a>
+                    {%- else -%}
+                      {%- if part.title == paginate.current_page -%}
+                        <span aria-current="page" aria-label="{{ 'general.pagination.page' | t: number: part.title }}">
+                          {{- part.title -}}
+                        </span>
+                      {%- else -%}
+                        <span>{{ part.title }}</span>
+                      {%- endif -%}
+                    {%- endif -%}
+                  </li>
+                {%- endfor -%}
+
+                {%- if paginate.next -%}
+                  <li>
+                    <a href="{{ paginate.next.url }}" aria-label="{{ 'general.pagination.next' | t }}">
+                      <span class="svg-wrapper">
+                        {{- 'icon-caret.svg' | inline_asset_content -}}
+                      </span>
+                    </a>
+                  </li>
+                {%- endif -%}
+              </ul>
+            </nav>
+          {%- endif -%}
+        {%- endif -%}
+      {% endpaginate %}
+    </div>
+
+    <div class="bbb-account__panel bbb-account__panel--details">
+      <h2>{{ 'customer.account.details' | t }}</h2>
+
+      {{ customer.default_address | format_address }}
+
+      <a href="{{ routes.account_addresses_url }}">
+        {{ 'customer.account.view_addresses' | t }} ({{ customer.addresses_count }})
+      </a>
+    </div>
+  </div>
+</div>
+
+<style>
+  .bbb-account-bookshelf-link{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:44px;
+    padding:12px 18px;
+    border-radius:8px;
+    background:#ff8ac7;
+    color:#160912;
+    text-decoration:none;
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    font-weight:800;
+  }
+
+  .bbb-account-bookshelf-link:hover{
+    background:#ff9fd1;
+  }
+
+  .bbb-account{
+    width:100%;
+    max-width:none;
+    margin:0;
+    padding-left:20px;
+    padding-right:20px;
+    background:#050505;
+    color:#f7f3ee;
+  }
+
+  .bbb-account a{
+    color:inherit;
+  }
+
+  .bbb-account__hero,
+  .bbb-account__shelf,
+  .bbb-account__utilityGrid{
+    max-width:1120px;
+    margin-left:auto;
+    margin-right:auto;
+  }
+
+  .bbb-account__hero{
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) minmax(260px, 360px);
+    gap:24px;
+    align-items:stretch;
+    padding:42px 0 28px;
+    border-bottom:1px solid rgba(255,255,255,.16);
+  }
+
+  .bbb-account__kicker,
+  .bbb-account__statusLabel{
+    margin:0 0 10px;
+    color:#ff8ac7;
+    font-size:12px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    font-weight:800;
+  }
+
+  .bbb-account__title{
+    margin:0;
+    color:#fff;
+    font-family:'Cormorant Garamond', serif;
+    font-size:clamp(3.2rem, 7vw, 6rem);
+    line-height:.95;
+  }
+
+  .bbb-account__sub{
+    max-width:620px;
+    margin:16px 0 0;
+    color:rgba(247,243,238,.72);
+    font-size:1.5rem;
+    line-height:1.65;
+  }
+
+  .bbb-account__actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    align-items:center;
+    margin-top:22px;
+  }
+
+  .bbb-account__logout{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:44px;
+    padding:12px 16px;
+    border-radius:8px;
+    border:1px solid rgba(255,255,255,.18);
+    color:rgba(247,243,238,.72);
+    text-decoration:none;
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    font-weight:800;
+  }
+
+  .bbb-account__statusCard,
+  .bbb-account__shelf,
+  .bbb-account__panel{
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:8px;
+    background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.025));
+    box-shadow:0 18px 46px rgba(0,0,0,.22);
+  }
+
+  .bbb-account__statusCard{
+    padding:22px;
+  }
+
+  .bbb-account__statusTitle{
+    color:#fff;
+    font-size:2.1rem;
+    font-family:'Cormorant Garamond', serif;
+    line-height:1.05;
+  }
+
+  .bbb-account__statusCopy{
+    color:rgba(247,243,238,.7);
+    line-height:1.55;
+  }
+
+  .bbb-account__statusCard a,
+  .bbb-account__sectionHead a,
+  .bbb-account__panel a{
+    color:#ffb8dc;
+    text-decoration-thickness:1px;
+    text-underline-offset:4px;
+  }
+
+  .bbb-account__shelf{
+    margin-top:28px;
+    padding:24px;
+  }
+
+  .bbb-account__sectionHead{
+    display:flex;
+    justify-content:space-between;
+    gap:16px;
+    align-items:end;
+    margin-bottom:18px;
+  }
+
+  .bbb-account__sectionHead h2,
+  .bbb-account__panel h2{
+    margin:0;
+    color:#fff;
+    font-family:'Cormorant Garamond', serif;
+    font-size:clamp(2.4rem, 4vw, 3.4rem);
+  }
+
+  .bbb-account__shelfGrid{
+    display:grid;
+    grid-template-columns:repeat(5, minmax(0, 1fr));
+    gap:16px;
+  }
+
+  .bbb-account__book{
+    display:block;
+    min-width:0;
+    color:inherit;
+    text-decoration:none;
+  }
+
+  .bbb-account__bookCover{
+    width:100%;
+    aspect-ratio:2 / 3;
+    border-radius:8px;
+    object-fit:cover;
+    background:#1a1a1a;
+    border:1px solid rgba(255,255,255,.12);
+    box-shadow:0 14px 28px rgba(0,0,0,.28);
+  }
+
+  .bbb-account__bookTitle{
+    margin-top:9px;
+    color:#fff;
+    font-size:1.25rem;
+    line-height:1.25;
+    font-weight:800;
+  }
+
+  .bbb-account__bookAuthor{
+    margin-top:3px;
+    color:rgba(247,243,238,.55);
+    font-size:1.1rem;
+  }
+
+  .bbb-account__shelfEmpty{
+    color:rgba(247,243,238,.68);
+    padding:18px;
+    border:1px dashed rgba(255,255,255,.18);
+    border-radius:8px;
+  }
+
+  .bbb-account__utilityGrid{
+    display:grid;
+    grid-template-columns:minmax(0, 1.4fr) minmax(260px, .6fr);
+    gap:24px;
+    margin-top:28px;
+  }
+
+  .bbb-account__panel{
+    padding:24px;
+    overflow:hidden;
+  }
+
+  .bbb-account table{
+    color:#f7f3ee;
+  }
+
+  .bbb-account .order-history{
+    background:rgba(0,0,0,.18);
+    border-radius:8px;
+    overflow:hidden;
+  }
+
+  .bbb-account .order-history th,
+  .bbb-account .order-history td{
+    color:#f7f3ee;
+    border-color:rgba(255,255,255,.12);
+  }
+
+  .bbb-account .order-history th{
+    color:rgba(247,243,238,.58);
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+
+  .bbb-account__panel--details,
+  .bbb-account__panel--details p,
+  .bbb-account__panel--details address{
+    color:rgba(247,243,238,.72);
+  }
+
+  @media (max-width:900px){
+    .bbb-account__hero,
+    .bbb-account__utilityGrid{
+      grid-template-columns:1fr;
+    }
+
+    .bbb-account__shelfGrid{
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width:560px){
+    .bbb-account{
+      padding-left:16px;
+      padding-right:16px;
+    }
+
+    .bbb-account__sectionHead{
+      align-items:start;
+      flex-direction:column;
+    }
+
+    .bbb-account__shelfGrid{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:14px 12px;
+    }
+  }
+</style>
+
+<script>
+  (function(){
+    var root = document.querySelector('[data-bbb-account]');
+    if (!root) return;
+
+    var grid = root.querySelector('[data-bbb-account-shelf-grid]');
+    var empty = root.querySelector('[data-bbb-account-shelf-empty]');
+    var customerId = root.dataset.customerId || '';
+    var email = String(root.dataset.customerEmail || '').trim().toLowerCase();
+
+    function escapeHtml(value){
+      return String(value || '').replace(/[&<>"']/g, function(match){
+        return {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        }[match];
+      });
+    }
+
+    function getLocalShelf(){
+      try {
+        var shelf = JSON.parse(localStorage.getItem('sssMyShelf') || '[]') || [];
+        return Array.isArray(shelf) ? shelf : [];
+      } catch(err){
+        return [];
+      }
+    }
+
+    function normalizeBook(book){
+      if (!book) return null;
+      return {
+        handle: book.handle || book.book_handle || '',
+        title: book.title || book.book_title || '',
+        author: book.author || '',
+        cover: book.cover || ''
+      };
+    }
+
+    function mergeBooks(localBooks, remoteBooks){
+      var seen = {};
+      return localBooks.concat(remoteBooks).map(normalizeBook).filter(function(book){
+        if (!book || !book.title) return false;
+        var key = String(book.handle || book.title).toLowerCase();
+        if (seen[key]) return false;
+        seen[key] = true;
+        return true;
+      });
+    }
+
+    function renderShelf(books){
+      books = books.slice(0, 5);
+      if (!grid || !empty) return;
+      if (!books.length){
+        grid.innerHTML = '';
+        empty.hidden = false;
+        return;
+      }
+
+      empty.hidden = true;
+      grid.innerHTML = books.map(function(book){
+        var href = book.handle ? '/pages/library?book=' + encodeURIComponent(book.handle) : '/pages/library';
+        return [
+          '<a class="bbb-account__book" href="' + href + '">',
+            book.cover ? '<img class="bbb-account__bookCover" src="' + escapeHtml(book.cover) + '" alt="' + escapeHtml(book.title) + '" loading="lazy">' : '<div class="bbb-account__bookCover"></div>',
+            '<div class="bbb-account__bookTitle">' + escapeHtml(book.title) + '</div>',
+            book.author ? '<div class="bbb-account__bookAuthor">' + escapeHtml(book.author) + '</div>' : '',
+          '</a>'
+        ].join('');
+      }).join('');
+    }
+
+    async function fetchRemoteShelf(){
+      if (!window.supabase || !window.supabase.createClient || (!customerId && !email)) return [];
+      var client = window.supabase.createClient('https://efmrfxsmgbeikfgtrxjv.supabase.co', 'sb_publishable_iwjASe3QwixdDvHovaXZBQ_gbXU0Utk');
+      var query = client
+        .from('bookshelf_saved_books')
+        .select('book_handle,book_title,author,cover,saved_at')
+        .eq('is_active', true)
+        .order('saved_at', { ascending: false })
+        .limit(5);
+
+      if (customerId){
+        query = query.eq('shopify_customer_id', customerId);
+      } else {
+        query = query.eq('email_normalized', email);
+      }
+
+      var response = await query;
+      if (response.error) throw response.error;
+      return response.data || [];
+    }
+
+    async function init(){
+      var localShelf = getLocalShelf().slice().reverse();
+      renderShelf(localShelf);
+
+      try {
+        var remoteShelf = await fetchRemoteShelf();
+        renderShelf(mergeBooks(localShelf, remoteShelf));
+      } catch(err){
+        console.log('Account shelf preview failed', err);
+      }
+    }
+
+    if (document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "t:sections.main-account.name",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 36
+    }
+  ]
+}
+{% endschema %}

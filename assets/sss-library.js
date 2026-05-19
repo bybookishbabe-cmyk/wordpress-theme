@@ -7,12 +7,10 @@ Main interaction + trending system
 const SUPABASE_KEY = "sb_publishable_iwjASe3QwixdDvHovaXZBQ_gbXU0Utk";
 const SITE_EVENTS_TABLE = "site_events";
 
-const supabaseClient = window.supabase && window.supabase.createClient
-  ? window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-  )
-  : null;
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 
 function isAnalyticsExcluded(){
 
@@ -27,7 +25,7 @@ function isAnalyticsExcluded(){
       localStorage.removeItem("sssAnalyticsExcluded");
     }
 
-    if (window.bbbAdminPreview === true) return true;
+    if (window.Shopify && Shopify.designMode) return true;
 
     return localStorage.getItem("sssAnalyticsExcluded") === "true";
   } catch(err) {
@@ -79,7 +77,6 @@ async function trackSiteEvent(eventType, payload){
 
   if (!eventType) return;
   if (isAnalyticsExcluded()) return;
-  if (!supabaseClient) return;
 
   try {
     await supabaseClient
@@ -132,7 +129,6 @@ function trackDailyVisit(){
 async function trackBookSave(title, bookHandle){
 
   if (isAnalyticsExcluded()) return;
-  if (!supabaseClient) return;
 
   try {
 
@@ -1311,7 +1307,7 @@ function showSaveToast(){
 
   function openBookshelfDestination(){
     const shelf = document.getElementById("sssMyShelfSection");
-    const libraryShelfUrl = (window.bbbUrls && window.bbbUrls.societyLibrary ? window.bbbUrls.societyLibrary : "/society-library/") + "?shelf=open";
+    const libraryShelfUrl = "/pages/sss-library-page?shelf=open";
 
     if (shelf){
       shelf.hidden = false;
@@ -1332,7 +1328,7 @@ function showSaveToast(){
   toast.classList.add("is-visible");
 
   if(link){
-    link.setAttribute("href", (window.bbbUrls && window.bbbUrls.societyLibrary ? window.bbbUrls.societyLibrary : "/society-library/") + "?shelf=open");
+    link.setAttribute("href", "/pages/sss-library-page?shelf=open");
 
     link.onclick = function(e){
 
@@ -1500,9 +1496,7 @@ if(modalHeart){
 
       if (modalShareBtn){
         var shareBookKey = data.handle || data.title || '';
-        var shareBasePath = libraryType === 'society'
-          ? ((window.bbbUrls && window.bbbUrls.societyLibrary) || '/society-library/')
-          : ((window.bbbUrls && window.bbbUrls.library) || '/library/');
+        var shareBasePath = libraryType === 'society' ? '/pages/sss-library-page' : '/pages/library';
         var shareUrl = window.location.origin + shareBasePath + '?book=' + encodeURIComponent(shareBookKey);
         var shareTitle = data.title || document.title;
         var shareText = data.author
@@ -1590,7 +1584,7 @@ if (seriesEl){
   if (data.seriesName || data.seriesNumber){
 
 var slug = (data.series || '').toLowerCase().trim();
-    var url = slug ? ((window.bbbUrls && window.bbbUrls.seriesBase) || "/book-series/") + encodeURIComponent(slug) + "/" : "#";
+    var url = slug ? "/pages/series?series=" + slug : "#";
 
     var name = data.seriesName ? data.seriesName + " series →" : "";
 
@@ -1776,7 +1770,7 @@ if (yearningEl){
 const toastShelfLink = document.getElementById("sssToastShelfLink");
 
 if (toastShelfLink){
-  toastShelfLink.setAttribute("href", (window.bbbUrls && window.bbbUrls.societyLibrary ? window.bbbUrls.societyLibrary : "/society-library/") + "?shelf=open");
+  toastShelfLink.setAttribute("href", "/pages/sss-library-page?shelf=open");
 
   toastShelfLink.addEventListener("click", function(e){
 
@@ -1785,7 +1779,7 @@ if (toastShelfLink){
     const shelf = document.getElementById("sssMyShelfSection");
 
     if (!shelf){
-      window.location.href = (window.bbbUrls && window.bbbUrls.societyLibrary ? window.bbbUrls.societyLibrary : "/society-library/") + "?shelf=open";
+      window.location.href = "/pages/sss-library-page?shelf=open";
       return;
     }
 
@@ -1983,12 +1977,6 @@ async function loadTrending(){
     if(!row) return;
 
     const initialFallbackCards = Array.from(row.querySelectorAll('.sss-lib__book'));
-    if (!supabaseClient) {
-      initialFallbackCards.forEach(function(card){
-        card.style.display = '';
-      });
-      return;
-    }
 
     function trendingKey(value){
       return (value || "").trim().toLowerCase();
@@ -5808,7 +5796,7 @@ function initReadFinder(){
 }
 
 function groupSeriesShelves(){
-  var grids = document.querySelectorAll('.sss-lib__grid[data-series-grouping="true"], .sss-lib__shelfRow[data-series-grouping="true"]');
+  var grids = document.querySelectorAll('.sss-lib__grid, .sss-lib__shelfRow');
   if (!grids.length) return;
 
   grids.forEach(function(grid){

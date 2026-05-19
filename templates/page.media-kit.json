@@ -1,0 +1,336 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "main-page",
+      "disabled": true,
+      "settings": {
+        "padding_top": 28,
+        "padding_bottom": 28
+      }
+    },
+    "bbb_media_kit": {
+      "type": "bbb-media-kit",
+      "name": "media kit",
+      "blocks": {
+        "hero_stat_subscribers": {
+          "type": "hero_stat",
+          "settings": {
+            "value": "2,000",
+            "label": "subscribers"
+          }
+        },
+        "hero_stat_open_rate": {
+          "type": "hero_stat",
+          "settings": {
+            "value": "32-50%",
+            "label": "open rate"
+          }
+        },
+        "hero_stat_views": {
+          "type": "hero_stat",
+          "settings": {
+            "value": "1.2k",
+            "label": "avg views / post"
+          }
+        },
+        "hero_stat_weekly": {
+          "type": "hero_stat",
+          "settings": {
+            "value": "weekly",
+            "label": "every sunday"
+          }
+        },
+        "fact_platform": {
+          "type": "fact",
+          "settings": {
+            "label": "platform",
+            "value": "substack + blog"
+          }
+        },
+        "fact_niche": {
+          "type": "fact",
+          "settings": {
+            "label": "niche",
+            "value": "romance / booktok lifestyle"
+          }
+        },
+        "fact_cadence": {
+          "type": "fact",
+          "settings": {
+            "label": "cadence",
+            "value": "every sunday"
+          }
+        },
+        "fact_social": {
+          "type": "fact",
+          "settings": {
+            "label": "also on",
+            "value": "tiktok / instagram / pinterest"
+          }
+        },
+        "fact_terms": {
+          "type": "fact",
+          "settings": {
+            "label": "collab terms",
+            "value": "paid only"
+          }
+        },
+        "fact_contact": {
+          "type": "fact",
+          "settings": {
+            "label": "contact",
+            "value": "bybookishbabe@gmail.com"
+          }
+        },
+        "number_subscribers": {
+          "type": "number",
+          "settings": {
+            "value": "2k",
+            "label": "subscribers",
+            "text": "opted-in newsletter readers who actively chose to receive these recs."
+          }
+        },
+        "number_open_rate": {
+          "type": "number",
+          "settings": {
+            "value": "50%",
+            "label": "peak open rate",
+            "text": "top editions reach 50% open rate, with sponsor content placed inside that trust window."
+          }
+        },
+        "number_views": {
+          "type": "number",
+          "settings": {
+            "value": "1.2k",
+            "label": "avg views / post",
+            "text": "consistent per-post readership across recent editions and evergreen blog content."
+          }
+        },
+        "number_frequency": {
+          "type": "number",
+          "settings": {
+            "value": "52x",
+            "label": "per year",
+            "text": "52 sundays. 52 editions. a recurring slot inside a trusted weekly ritual."
+          }
+        },
+        "platform_newsletter": {
+          "type": "platform",
+          "settings": {
+            "title": "newsletter",
+            "handle": "the smut & sentiment society",
+            "text": "the core. readers receive one curated romance rec every sunday, with no feed algorithm between us.",
+            "badge": "primary"
+          }
+        },
+        "platform_blog": {
+          "type": "platform",
+          "settings": {
+            "title": "blog",
+            "handle": "bybookishbabe.com",
+            "text": "long-form reviews, trope guides, spice-level breakdowns, reading orders, and recommendation engines.",
+            "badge": "evergreen seo"
+          }
+        },
+        "platform_social": {
+          "type": "platform",
+          "settings": {
+            "title": "social",
+            "handle": "tiktok / instagram / pinterest",
+            "text": "supplementary reach across the booktok ecosystem, with roads leading back to the newsletter and blog.",
+            "badge": "supplementary"
+          }
+        },
+        "content_newsletter": {
+          "type": "content_card",
+          "settings": {
+            "icon": "01",
+            "title": "newsletter features",
+            "text": "dedicated sponsor spotlights inside a weekly edition, written in my editorial voice."
+          }
+        },
+        "content_reviews": {
+          "type": "content_card",
+          "settings": {
+            "icon": "02",
+            "title": "book reviews",
+            "text": "honest long-form reviews with spice ratings, trope breakdowns, and reader-first verdicts."
+          }
+        },
+        "content_lists": {
+          "type": "content_card",
+          "settings": {
+            "icon": "03",
+            "title": "curated reading lists",
+            "text": "trope-based, mood-based, and seasonal lists that catch readers mid-decision."
+          }
+        },
+        "content_spotlights": {
+          "type": "content_card",
+          "settings": {
+            "icon": "04",
+            "title": "brand spotlights",
+            "text": "dedicated posts or sections for brands that fit the society's taste and standards."
+          }
+        },
+        "content_codes": {
+          "type": "content_card",
+          "settings": {
+            "icon": "05",
+            "title": "affiliate + promo codes",
+            "text": "unique codes embedded naturally into content for measurable partnership performance."
+          }
+        },
+        "content_hauls": {
+          "type": "content_card",
+          "settings": {
+            "icon": "06",
+            "title": "unboxing + hauls",
+            "text": "book box openings and bookish haul content for drops, subscriptions, and new arrivals."
+          }
+        },
+        "package_newsletter": {
+          "type": "package",
+          "settings": {
+            "number": "01",
+            "type_label": "newsletter",
+            "title": "newsletter feature",
+            "text": "a dedicated mention or spotlight inside the weekly smut & sentiment society.",
+            "includes": "personal recommendation write-up\nyour link + optional promo code\npost-send performance stats"
+          }
+        },
+        "package_bundle": {
+          "type": "package",
+          "settings": {
+            "featured": true,
+            "number": "02",
+            "type_label": "newsletter + blog",
+            "title": "full partnership bundle",
+            "text": "newsletter feature driving readers to a dedicated long-form blog post for maximum reach and evergreen value.",
+            "includes": "newsletter spotlight\ndedicated blog post\nsocial amplification\nperformance report"
+          }
+        },
+        "package_blog": {
+          "type": "package",
+          "settings": {
+            "number": "03",
+            "type_label": "blog",
+            "title": "sponsored blog post",
+            "text": "a standalone review, guide, or feature permanently hosted on bybookishbabe.com.",
+            "includes": "long-form review or brand feature\nevergreen seo placement\nnewsletter archive backlink"
+          }
+        },
+        "audience_identity": {
+          "type": "audience",
+          "settings": {
+            "label": "who they are",
+            "title": "romance readers who live in their kindle and shop for the whole experience.",
+            "text": "they buy books, accessories, and anything that makes reading feel like a ritual.",
+            "tags": "romance readers, booktok community, active buyers, kindle devotees, box subscribers"
+          }
+        },
+        "audience_conversion": {
+          "type": "audience",
+          "settings": {
+            "label": "what converts",
+            "title": "genuine recs over ad copy. they can always tell the difference.",
+            "text": "what works: products woven into editorial content in a voice they trust.",
+            "tags": "editorial tone, trust-based recs, community-first, moody aesthetics"
+          }
+        },
+        "partner_boxes": {
+          "type": "partner",
+          "settings": {
+            "title": "book subscription boxes",
+            "text": "special editions, romance boxes, and indie alternatives. this audience subscribes."
+          }
+        },
+        "partner_apps": {
+          "type": "partner",
+          "settings": {
+            "title": "reading apps + e-readers",
+            "text": "tools that make reading easier, more social, or more beautiful."
+          }
+        },
+        "partner_publishers": {
+          "type": "partner",
+          "settings": {
+            "title": "publishers + imprints",
+            "text": "arc campaigns, launch features, and review partnerships for romance titles."
+          }
+        },
+        "partner_authors": {
+          "type": "partner",
+          "settings": {
+            "title": "independent authors",
+            "text": "paid spotlight placements targeting engaged romance readers who act on recommendations."
+          }
+        },
+        "partner_merch": {
+          "type": "partner",
+          "settings": {
+            "title": "bookish stationery + merch",
+            "text": "reading journals, bookmarks, annotation kits, literary prints, and desk goods."
+          }
+        },
+        "partner_lifestyle": {
+          "type": "partner",
+          "settings": {
+            "title": "cozy lifestyle brands",
+            "text": "candles, teas, and anything that belongs in a reading nook."
+          }
+        }
+      },
+      "block_order": [
+        "hero_stat_subscribers",
+        "hero_stat_open_rate",
+        "hero_stat_views",
+        "hero_stat_weekly",
+        "fact_platform",
+        "fact_niche",
+        "fact_cadence",
+        "fact_social",
+        "fact_terms",
+        "fact_contact",
+        "number_subscribers",
+        "number_open_rate",
+        "number_views",
+        "number_frequency",
+        "platform_newsletter",
+        "platform_blog",
+        "platform_social",
+        "content_newsletter",
+        "content_reviews",
+        "content_lists",
+        "content_spotlights",
+        "content_codes",
+        "content_hauls",
+        "package_newsletter",
+        "package_bundle",
+        "package_blog",
+        "audience_identity",
+        "audience_conversion",
+        "partner_boxes",
+        "partner_apps",
+        "partner_publishers",
+        "partner_authors",
+        "partner_merch",
+        "partner_lifestyle"
+      ],
+      "settings": {}
+    }
+  },
+  "order": [
+    "main",
+    "bbb_media_kit"
+  ]
+}

@@ -1,0 +1,120 @@
+<style>
+  .sss-archives{
+    --bg:#0b0b0b; --card:#151515; --line:#2a2a2a; --ink:#f6f6f6; --muted:#c8c8c8;
+    background:var(--bg);
+    color:var(--ink);
+    padding:18px 18px 10px;
+    font-family:"Libre Baskerville", Georgia, serif;
+  }
+  .sss-archives a{ text-decoration:none; color:inherit; }
+
+  .sss-kicker{
+    margin:6px 0 10px;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--muted);
+    text-align:center;
+  }
+
+  .sss-archives__wrap{
+    max-width:1600px;
+    margin:0 auto;
+    padding:0 12px;
+  }
+
+  .sss-archives__grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:18px;
+  }
+  @media (min-width:900px){
+    .sss-archives__grid{ grid-template-columns:1.2fr .8fr; }
+  }
+
+  .sss-archive-card{
+    background:rgba(21,21,21,.9);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:16px;
+    box-shadow:0 10px 28px rgba(0,0,0,.5);
+  }
+
+  .sss-archive-card h3{
+    margin:0 0 6px;
+    font-size:22px;
+    font-weight:400;
+    text-transform:lowercase;
+  }
+
+  .sss-archive-helper{
+    font-size:13px;
+    color:var(--muted);
+    line-height:1.55;
+    margin:0 0 12px;
+  }
+
+  .sss-archive-link{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.05);
+    font-size:13.5px;
+    color:var(--ink);
+    text-align:center;
+  }
+  .sss-archive-link:hover{
+    background:rgba(255,255,255,.10);
+    border-color:#5a5a5a;
+  }
+</style>
+
+<section class="sss-archives">
+  <div class="sss-archives__wrap">
+    <div class="sss-kicker">{{ section.settings.kicker }}</div>
+
+    <div class="sss-archives__grid">
+      {% for block in section.blocks %}
+        <div class="sss-archive-card" {{ block.shopify_attributes }}>
+          <h3>{{ block.settings.title }}</h3>
+          {% if block.settings.helper != blank %}
+            <p class="sss-archive-helper">{{ block.settings.helper }}</p>
+          {% endif %}
+          {% if block.settings.link_url != blank %}
+            <a class="sss-archive-link" href="{{ block.settings.link_url }}">
+              {{ block.settings.link_text }}
+            </a>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "sss archives",
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "section label", "default": "archives" }
+  ],
+  "blocks": [
+    {
+      "type": "card",
+      "name": "archive card",
+      "settings": [
+        { "type": "text", "id": "title", "label": "title", "default": "missed last month?" },
+        { "type": "text", "id": "helper", "label": "helper text", "default": "last month’s collection is right here." },
+        { "type": "url", "id": "link_url", "label": "link url" },
+        { "type": "text", "id": "link_text", "label": "link text", "default": "open the folder ↗" }
+      ]
+    }
+  ],
+  "max_blocks": 4,
+  "presets": [
+    { "name": "sss archives" }
+  ]
+}
+{% endschema %}

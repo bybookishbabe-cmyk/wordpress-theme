@@ -1,0 +1,59 @@
+{% form 'customer', id: 'BBBBookshelfSignupForm', class: 'bbb-shelf-signup__form' %}
+  <input type="hidden" name="contact[tags]" value="newsletter,bookshelf_signup">
+  <div
+    class="bbb-shelf-signup"
+    data-bbb-shelf-signup
+    data-success="{% if form.posted_successfully? %}true{% else %}false{% endif %}"
+  >
+    <div class="bbb-shelf-signup__overlay" data-bbb-shelf-close></div>
+    <div
+      class="bbb-shelf-signup__dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="bbbShelfSignupTitle"
+      aria-describedby="bbbShelfSignupCopy"
+    >
+      <button type="button" class="bbb-shelf-signup__close" data-bbb-shelf-close aria-label="close">×</button>
+
+      <p class="bbb-shelf-signup__eyebrow">your shelf is getting good...</p>
+      <h2 class="bbb-shelf-signup__title" id="bbbShelfSignupTitle">your shelf is getting good...</h2>
+      <p class="bbb-shelf-signup__copy" id="bbbShelfSignupCopy">
+        want me to send your next read each week + keep track of what you’ve saved?
+      </p>
+      <p class="bbb-shelf-signup__micro">your next read + your shelf + new recs</p>
+
+      <div class="bbb-shelf-signup__field">
+        <label class="bbb-shelf-signup__label" for="bbbShelfSignupEmail">email</label>
+        <input
+          id="bbbShelfSignupEmail"
+          type="email"
+          name="contact[email]"
+          class="bbb-shelf-signup__input"
+          value="{{ form.email }}"
+          autocorrect="off"
+          autocapitalize="off"
+          autocomplete="email"
+          placeholder="your email"
+          required
+        >
+      </div>
+
+      {% if form.errors %}
+        <p class="bbb-shelf-signup__error">
+          {{ form.errors.translated_fields.email | capitalize }} {{ form.errors.messages.email }}
+        </p>
+      {% endif %}
+
+      {% if form.posted_successfully? %}
+        <p class="bbb-shelf-signup__success" data-bbb-shelf-success>
+          you’re in. taking you to your shelf...
+        </p>
+      {% endif %}
+
+      <div class="bbb-shelf-signup__actions">
+        <button type="submit" class="bbb-shelf-signup__submit">yes, send it</button>
+        <button type="button" class="bbb-shelf-signup__dismiss" data-bbb-shelf-close>no thanks</button>
+      </div>
+    </div>
+  </div>
+{% endform %}

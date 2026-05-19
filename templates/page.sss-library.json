@@ -1,0 +1,222 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "main-page",
+      "disabled": true,
+      "settings": {
+        "padding_top": 28,
+        "padding_bottom": 28
+      }
+    },
+    "sss_folder_tabs_yhGMUV": {
+      "type": "sss-folder-tabs",
+      "blocks": {
+        "tab_3yUmhB": {
+          "type": "tab",
+          "name": "main page",
+          "settings": {
+            "label": "main page",
+            "sub": "start here",
+            "icon": "📁",
+            "url": "shopify://pages/society-library"
+          }
+        },
+        "tab_kniYXG": {
+          "type": "tab",
+          "name": "brary",
+          "settings": {
+            "label": "library",
+            "sub": "books to read",
+            "icon": "📚",
+            "url": "shopify://pages/sss-library-page"
+          }
+        },
+        "tab_madeForYou": {
+          "type": "tab",
+          "name": "made for you",
+          "settings": {
+            "label": "made for you",
+            "sub": "your reader profile + recs",
+            "icon": "✨",
+            "url": "shopify://pages/sss-made-for-you"
+          }
+        },
+        "tab_TaBNcc": {
+          "type": "tab",
+          "name": "printable inserts",
+          "settings": {
+            "label": "printable inserts",
+            "sub": "all printable drops + sizes",
+            "icon": "🖨️",
+            "url": "shopify://pages/sss-printable-kindle-inserts"
+          }
+        },
+        "tab_Gf9pxU": {
+          "type": "tab",
+          "name": "bookish templates",
+          "settings": {
+            "label": "bookish templates",
+            "sub": "canva templates + tutorials",
+            "icon": "⌨️",
+            "url": "shopify://pages/sss-canva-templates"
+          }
+        },
+        "tab_MiK4jp": {
+          "type": "tab",
+          "name": "free extras",
+          "settings": {
+            "label": "free extras",
+            "sub": "little gifts. no gatekeeping.",
+            "icon": "🎁",
+            "url": ""
+          }
+        },
+        "tab_NKwEwF": {
+          "type": "tab",
+          "name": "quote library",
+          "settings": {
+            "label": "quote library",
+            "sub": "lines that ruined me (in a good way)",
+            "icon": "\"",
+            "url": "shopify://pages/sss-quote-wall"
+          }
+        },
+        "tab_privateShelf": {
+          "type": "tab",
+          "name": "private shelf",
+          "settings": {
+            "label": "private shelf",
+            "sub": "between us",
+            "icon": "🔓",
+            "url": "shopify://pages/sss-private-shelf"
+          }
+        }
+      },
+      "block_order": [
+        "tab_3yUmhB",
+        "tab_kniYXG",
+        "tab_madeForYou",
+        "tab_TaBNcc",
+        "tab_Gf9pxU",
+        "tab_MiK4jp",
+        "tab_NKwEwF",
+        "tab_privateShelf"
+      ],
+      "name": "sss folder tabs",
+      "settings": {
+        "kicker": "library files",
+        "hint": "pick a folder. dive in.",
+        "preview_drop_handle": ""
+      }
+    },
+    "sss_read_tracker_calendar_w3KpLm": {
+      "type": "sss-read-tracker-calendar",
+      "name": "sss read tracker calendar",
+      "settings": {
+        "kicker": "stay up to date on your latest reads",
+        "title": "track your reads",
+        "subtext": "click a day, choose the book you read, and let the cover live there."
+      }
+    },
+    "sss_library_page_X3cttD": {
+      "type": "sss-library-page",
+      "blocks": {
+        "shelf_6YJeYY": {
+          "type": "shelf",
+          "settings": {
+            "title": "🖤 for the morally gray lovers",
+            "description": "(dark romance, obsessive, twisted, dangerous)",
+            "category_key": "morally gray lovers"
+          }
+        },
+        "shelf_NjebtA": {
+          "type": "shelf",
+          "settings": {
+            "title": "🗡 for the romantasy lovers",
+            "description": "(fantasy romance, fated mates, kingdoms, magic)",
+            "category_key": "romantasy girls"
+          }
+        },
+        "shelf_YfHUgY": {
+          "type": "shelf",
+          "settings": {
+            "title": "🌷 for the soft-hearted",
+            "description": "(sentimental, emotional, deep love, grab the tissues)",
+            "category_key": "soft-hearted"
+          }
+        },
+        "shelf_BNWdNf": {
+          "type": "shelf",
+          "settings": {
+            "title": "🏒 for the delusional about athletes",
+            "description": "(hockey, sports, tension, sweat)",
+            "category_key": "athletes"
+          }
+        },
+        "shelf_rFTcma": {
+          "type": "shelf",
+          "settings": {
+            "title": "🔥 five chili nights",
+            "description": "(for the ones who like it the opposite of sweet)",
+            "category_key": "five chili nights"
+          }
+        },
+        "shelf_NgWhjW": {
+          "type": "shelf",
+          "settings": {
+            "title": "💌 society classics",
+            "description": "(books i would sell my soul to read again for the first time)",
+            "category_key": "society classics"
+          }
+        },
+        "shelf_4KKqcE": {
+          "type": "shelf",
+          "settings": {
+            "title": "☠️ extra dark",
+            "description": "(borderline dangerous reads)",
+            "category_key": "extra dark"
+          }
+        },
+        "private_shelf_z9UzVV": {
+          "type": "private_shelf",
+          "settings": {
+            "title": "the private shelf",
+            "description": "not for general circulation.",
+            "category_key": "private shelf"
+          }
+        }
+      },
+      "block_order": [
+        "shelf_6YJeYY",
+        "shelf_NjebtA",
+        "shelf_YfHUgY",
+        "shelf_BNWdNf",
+        "shelf_rFTcma",
+        "shelf_NgWhjW",
+        "shelf_4KKqcE",
+        "private_shelf_z9UzVV"
+      ],
+      "name": "sss library page",
+      "settings": {
+        "kicker": "classified for members",
+        "title": "the society library",
+        "subtext": "the books that ruined us - and we’d let them do it again."
+      }
+    }
+  },
+  "order": [
+    "main",
+    "sss_folder_tabs_yhGMUV",
+    "sss_read_tracker_calendar_w3KpLm",
+    "sss_library_page_X3cttD"
+  ]
+}

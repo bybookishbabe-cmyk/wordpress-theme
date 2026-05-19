@@ -1,0 +1,31 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-page",
+      "disabled": true,
+      "settings": {
+        "padding_top": 28,
+        "padding_bottom": 28
+      }
+    },
+    "series_reading_orders": {
+      "type": "series-reading-orders-page",
+      "name": "Series reading orders",
+      "settings": {
+        "kicker": "reading guides",
+        "heading": "series reading orders",
+        "subtext": "every series i've read, in order — with spice levels and where to start if you don't want to commit to book one.",
+        "trending_kicker": "trending now",
+        "trending_heading": "start here first",
+        "featured_series_handle": "",
+        "series_page_path": "/pages/series",
+        "archive_note": "each card opens the full series page · filtered by vibe · spice levels visible at a glance",
+        "empty_text": "No series are ready to show here yet."
+      }
+    }
+  },
+  "order": [
+    "main",
+    "series_reading_orders"
+  ]
+}

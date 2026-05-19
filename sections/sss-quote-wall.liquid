@@ -1,0 +1,721 @@
+{% comment %}
+  sss-quote-wall.liquid
+  Quote wall — faded paper + typewriter + precise highlight (quote only).
+  Metaobject: sss_quote
+  Fields expected:
+    - quote (text or rich text)
+    - library_book (reference to sss_library)
+{% endcomment %}
+
+{{ 'sss-library.css' | asset_url | stylesheet_tag }}
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+{{ 'sss-library.js' | asset_url | script_tag }}
+
+<style>
+  .sss-qw{
+    background:#0b0b0b; color:#f6f6f6;
+    padding:18px 12px;
+    font-family:"Libre Baskerville", Georgia, serif;
+    position:relative; overflow:hidden;
+  }
+  .sss-qw:before{
+    content:""; position:absolute; inset:-40px; pointer-events:none;
+    background:
+      radial-gradient(900px 520px at 50% 90px, rgba(255,255,255,.08), transparent 70%),
+      repeating-linear-gradient(to bottom, rgba(255,255,255,.03), rgba(255,255,255,.03) 1px, transparent 1px, transparent 26px);
+    opacity:.55;
+  }
+  .sss-qw__wrap{ max-width:980px; margin:0 auto; padding:0 8px; position:relative; z-index:1; }
+  .sss-kicker{ margin:0; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:#c8c8c8; }
+  .sss-title{ margin:6px 0 0; font-size:18px; font-weight:400; text-transform:lowercase; }
+  .sss-sub{ margin:8px 0 0; font-size:12px; color:rgba(246,246,246,.72); line-height:1.55; }
+
+  .sss-qw__feature{
+    margin-top:18px;
+    padding:18px 18px 16px;
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:22px;
+    background:
+      radial-gradient(520px 180px at 0% 0%, rgba(255,255,255,.08), transparent 62%),
+      linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+    box-shadow:0 18px 38px rgba(0,0,0,.22);
+  }
+  .sss-qw__featureKicker{
+    margin:0 0 8px;
+    font-size:11px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:rgba(246,246,246,.62);
+  }
+  .sss-qw__featureTitle{
+    margin:0;
+    font-size:26px;
+    line-height:1.02;
+    text-transform:lowercase;
+  }
+  .sss-qw__featureBody{
+    margin:10px 0 0;
+    max-width:54ch;
+    font-size:13px;
+    line-height:1.75;
+    color:rgba(246,246,246,.74);
+  }
+
+  .sss-qw__tools{
+    margin-top:16px;
+    display:grid;
+    gap:10px;
+  }
+  .sss-qw__searchWrap{
+    position:relative;
+  }
+  .sss-qw__search{
+    width:100%;
+    appearance:none;
+    border:1px solid rgba(255,255,255,.12);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    color:#f6f6f6;
+    border-radius:18px;
+    padding:14px 16px;
+    font:inherit;
+    font-size:14px;
+    box-shadow:0 12px 28px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.08);
+  }
+  .sss-qw__search::placeholder{
+    color:rgba(246,246,246,.42);
+  }
+  .sss-qw__search:focus{
+    outline:none;
+    border-color:rgba(255,255,255,.26);
+    box-shadow:
+      0 16px 34px rgba(0,0,0,.24),
+      0 0 0 3px rgba(255,255,255,.05),
+      inset 0 1px 0 rgba(255,255,255,.10);
+  }
+  .sss-qw__metaRow{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .sss-qw__count,
+  .sss-qw__hint{
+    font-size:12px;
+    line-height:1.5;
+    color:rgba(246,246,246,.68);
+  }
+  .sss-qw__empty{
+    display:none;
+    padding:18px 16px;
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:18px;
+    background:rgba(255,255,255,.03);
+    color:rgba(246,246,246,.82);
+    font-size:13px;
+    line-height:1.6;
+  }
+  .sss-qw__empty.is-visible{
+    display:block;
+  }
+
+  .sss-qw__toast{
+    position:fixed;
+    right:18px;
+    bottom:22px;
+    z-index:40;
+    width:min(320px, calc(100vw - 28px));
+    padding:14px 14px 13px;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:18px;
+    background:
+      radial-gradient(180px 90px at 100% 0%, rgba(255,138,199,.16), transparent 70%),
+      linear-gradient(180deg, rgba(22,22,24,.96), rgba(14,14,15,.96));
+    box-shadow:0 18px 40px rgba(0,0,0,.36);
+    opacity:0;
+    pointer-events:none;
+    transform:translateY(18px) scale(.98);
+    transition:opacity .22s ease, transform .22s ease;
+  }
+  .sss-qw__toast.is-visible{
+    opacity:1;
+    pointer-events:auto;
+    transform:translateY(0) scale(1);
+  }
+  .sss-qw__toastTitle{
+    margin:0;
+    font-size:11px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:rgba(246,246,246,.62);
+  }
+  .sss-qw__toastBody{
+    margin:8px 0 0;
+    font-size:13px;
+    line-height:1.6;
+    color:#f6f6f6;
+  }
+  .sss-qw__toastLink{
+    display:inline-flex;
+    align-items:center;
+    margin-top:10px;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    text-decoration:none;
+    color:#ff9ccb;
+  }
+
+  .qw-list{ margin-top:14px; display:grid; gap:14px; }
+  .qw-item{ display:flex; }
+  .qw-item.is-right{ justify-content:flex-end; }
+  .qw-item.is-left{ justify-content:flex-start; }
+
+  .qw-card{
+    width:min(760px, 94%);
+    display:block;
+    border-radius:18px;
+    transition:transform .14s ease, filter .14s ease, box-shadow .18s ease;
+  }
+  .qw-card:hover{ transform:translateY(-2px); filter:brightness(1.02); }
+
+  .qw-cardSurface{
+    width:100%;
+    display:block;
+    border:0;
+    padding:0;
+    background:none;
+    color:inherit;
+    text-align:left;
+    cursor:pointer;
+    border-radius:18px;
+  }
+
+  .qw-paper{
+    background:#F6F1E9;
+    color:#171414;
+    border:2px solid rgba(23,20,20,.70);
+    border-radius:18px;
+    box-shadow:0 14px 30px rgba(0,0,0,.42);
+    padding:16px 16px 12px;
+    position:relative;
+    overflow:hidden;
+  }
+  .qw-paper:before{
+    content:"";
+    position:absolute; inset:-20px;
+    pointer-events:none;
+    background:
+      radial-gradient(420px 220px at 20% 10%, rgba(90,70,55,.14), transparent 60%),
+      radial-gradient(460px 240px at 75% 35%, rgba(90,70,55,.10), transparent 62%),
+      radial-gradient(380px 220px at 55% 110%, rgba(0,0,0,.08), transparent 65%),
+      repeating-linear-gradient(to bottom, rgba(0,0,0,.05), rgba(0,0,0,.05) 1px, transparent 1px, transparent 30px);
+    opacity:.55;
+  }
+  .qw-paper:after{
+    content:"";
+    position:absolute; inset:0;
+    pointer-events:none;
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,.25),
+      inset 0 0 40px rgba(0,0,0,.08);
+    opacity:.9;
+  }
+
+  .qw-quote{
+    margin:0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size:15px;
+    line-height:1.65;
+    letter-spacing:.01em;
+    position:relative;
+    z-index:2;
+    color:#151212;
+  }
+
+  .hl{
+    display:inline;
+    position:relative;
+    z-index:2;
+    padding:0 .14em;
+    border-radius:7px;
+    -webkit-box-decoration-break:clone;
+    box-decoration-break:clone;
+  }
+  .hl--yellow{
+    background:rgba(255, 138, 199, .38);
+    box-shadow:0 .08em 0 rgba(255, 138, 199, .16), 0 0 0 1px rgba(0,0,0,.05) inset;
+  }
+  .hl--blue{
+    background:rgba(140, 190, 255, .40);
+    box-shadow:0 .08em 0 rgba(140, 190, 255, .18), 0 0 0 1px rgba(0,0,0,.05) inset;
+  }
+  .hl--gray{
+    background:rgba(180, 180, 180, .30);
+    box-shadow:0 .08em 0 rgba(180, 180, 180, .14), 0 0 0 1px rgba(0,0,0,.08) inset;
+  }
+.hl--red{
+  background: rgba(185, 45, 45, .55);
+  box-shadow:
+    0 .08em 0 rgba(185, 45, 45, .28),
+    0 0 0 1px rgba(0,0,0,.08) inset;
+}
+.hl--default{
+  background: rgba(255, 214, 140, .55);
+  box-shadow:
+    0 .08em 0 rgba(255, 214, 140, .28),
+    0 0 0 1px rgba(0,0,0,.05) inset;
+}
+
+
+
+  .qw-meta{
+    margin-top:7px;
+    display:block;
+    position:relative;
+    z-index:2;
+  }
+  .qw-book{
+    font-family:"Libre Baskerville", Georgia, serif;
+    font-size:12px;
+    color:rgba(23,20,20,.72);
+    font-style:italic;
+    line-height:1.5;
+  }
+
+  .qw-actions{
+    margin-top:10px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    justify-content:flex-start;
+  }
+  .qw-action{
+    appearance:none;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.04);
+    color:#f6f6f6;
+    border-radius:999px;
+    padding:9px 12px;
+    font:inherit;
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+  }
+  .qw-action:hover{
+    transform:translateY(-1px);
+    border-color:rgba(255,255,255,.22);
+    background:rgba(255,255,255,.08);
+  }
+  .qw-action.is-active{
+    border-color:rgba(255,138,199,.34);
+    background:rgba(255,138,199,.14);
+    box-shadow:0 10px 24px rgba(0,0,0,.18);
+  }
+  .qw-action--note.is-done{
+    border-color:rgba(164,221,193,.36);
+    background:rgba(164,221,193,.12);
+  }
+
+  @media (max-width: 640px){
+    .sss-qw{ padding:16px 10px; }
+    .sss-qw__wrap{ padding:0 6px; }
+    .sss-qw__tools{ gap:8px; }
+    .sss-qw__search{ padding:13px 14px; border-radius:16px; }
+    .sss-qw__feature{ padding:16px 16px 14px; border-radius:18px; }
+    .sss-qw__featureTitle{ font-size:22px; line-height:1.04; }
+    .qw-list{ gap:12px; }
+    .qw-item{ justify-content:center !important; }
+    .qw-card{ width:100%; }
+    .qw-paper{ padding:14px 14px 12px; }
+    .qw-quote{ font-size:15px; line-height:1.75; }
+    .hl{ padding:0 .10em; border-radius:6px; }
+    .qw-meta{ margin-top:9px; }
+    .qw-book{ font-size:12px; line-height:1.45; }
+  }
+
+  .sss-qw a,
+  .sss-qw a:focus,
+  .sss-qw a:focus-visible,
+  .sss-qw a:active{
+    outline:none !important;
+    box-shadow:none !important;
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .qw-card{ transition:none !important; }
+    .qw-card:hover{ transform:none !important; }
+  }
+  /* === scroll reveal === */
+/* === ultra-slow, reading-pace reveal === */
+.qw-item{
+  opacity:0;
+  transform:translateY(18px);
+  transition:
+    opacity 2.2s ease-out,
+    transform 3.2s cubic-bezier(.18,.84,.34,1);
+  will-change:opacity, transform;
+}
+
+.qw-item.is-left{
+  transform:translateX(-36px) translateY(18px);
+}
+
+.qw-item.is-right{
+  transform:translateX(36px) translateY(18px);
+}
+
+.qw-item.is-in{
+  opacity:1;
+  transform:translateX(0) translateY(0);
+}
+
+/* long stagger for breathing room */
+.qw-item{
+  transition-delay: var(--d, 0ms);
+}
+
+/* reduce motion */
+@media (prefers-reduced-motion: reduce){
+  .qw-item{
+    opacity:1 !important;
+    transform:none !important;
+    transition:none !important;
+  }
+}
+
+</style>
+
+<section class="sss-qw" data-sss-quote-wall data-sss-lib="public">
+  <div class="sss-qw__wrap">
+    <p class="sss-kicker">{{ section.settings.kicker }}</p>
+    <h3 class="sss-title">{{ section.settings.title }}</h3>
+    {% if section.settings.subtext != blank %}
+      <p class="sss-sub">{{ section.settings.subtext }}</p>
+    {% endif %}
+
+    <div class="sss-qw__feature">
+      <p class="sss-qw__featureKicker">quote dossier</p>
+      <h4 class="sss-qw__featureTitle">save the lines you want to keep.</h4>
+      <p class="sss-qw__featureBody">tap a quote to open the book, save it into made for you, or send it straight to your notes. this should feel less like a list and more like a little archive of lines that ruined you properly.</p>
+    </div>
+
+    <div class="sss-qw__tools">
+      <div class="sss-qw__searchWrap">
+        <label class="visually-hidden" for="sssQuoteWallSearch-{{ section.id }}">search quote wall</label>
+        <input
+          type="search"
+          id="sssQuoteWallSearch-{{ section.id }}"
+          class="sss-qw__search"
+          placeholder="search by quote, book, author, trope, or shelf"
+          autocomplete="off"
+          data-qw-search>
+      </div>
+      <div class="sss-qw__metaRow">
+        <div class="sss-qw__count" data-qw-count>all quotes</div>
+        <div class="sss-qw__hint">search your favorite line, book, or trope.</div>
+      </div>
+    </div>
+
+    {% assign quotes = shop.metaobjects.sss_quote.values %}
+    {% assign count = 0 %}
+
+    <div class="qw-list" data-qw-list>
+      {% for q in quotes %}
+        {% assign quote_txt = q.quote.value %}
+        {% if quote_txt == blank %}{% continue %}{% endif %}
+
+        {% assign linked_book = q.library_book.value %}
+        {% if linked_book == blank %}{% continue %}{% endif %}
+        {% capture is_visible %}{% render 'sss-book-visible', book: linked_book %}{% endcapture %}
+        {% assign is_visible_value = is_visible | strip %}
+        {% unless is_visible_value == 'true' %}{% continue %}{% endunless %}
+        {% assign count = count | plus: 1 %}
+        {% assign align = 'is-left' %}
+        {% assign mod = count | modulo: 2 %}
+        {% if mod == 0 %}{% assign align = 'is-right' %}{% endif %}
+        {% assign href = '#' %}
+        {% assign book_txt = linked_book.title.value | strip %}
+        {% assign author_txt = linked_book.author.value | strip %}
+        {% assign shelf_name = linked_book.shelf.value.name | default: '' | strip %}
+        {% assign shelf_handle = linked_book.shelf.value.system.handle | default: '' | strip %}
+        {% assign genre_key = shelf_handle | default: shelf_name | downcase | strip | handleize %}
+
+        {% assign hl_class = 'hl--default' %}
+        {% if genre_key contains 'romantasy' or genre_key contains 'fantasy' %}
+          {% assign hl_class = 'hl--blue' %}
+        {% elsif genre_key contains 'dark' or genre_key contains 'morally-gray' or genre_key contains 'morally' or genre_key contains 'private' or genre_key contains 'five-chili' or genre_key contains 'extra-dark' %}
+          {% assign hl_class = 'hl--red' %}
+        {% elsif genre_key contains 'soft' or genre_key contains 'sentimental' or genre_key contains 'classics' or genre_key contains 'starter' %}
+          {% assign hl_class = 'hl--yellow' %}
+        {% else %}
+          {% assign hl_class = 'hl--gray' %}
+        {% endif %}
+
+        <div class="qw-item {{ align }}"
+          data-qw-item
+          data-qw-quote="{{ quote_txt | strip_html | strip | escape }}"
+          data-qw-title="{{ book_txt | escape }}"
+          data-qw-author="{{ author_txt | escape }}"
+          data-qw-shelf="{{ shelf_name | escape }}"
+          data-qw-tropes="{% for trope in linked_book.tropes.value %}{{ trope.name | escape }}{% unless forloop.last %}, {% endunless %}{% endfor %}"
+          data-qw-boyfriend="{{ linked_book.boyfriend_type.value | escape }}">
+          <div class="qw-card"
+            {% assign linked_cover = linked_book.cover.value.url | default: linked_book.cover.value %}
+            data-qw-handle="{{ linked_book.system.handle }}"
+            data-qw-title="{{ linked_book.title.value | escape }}"
+            data-qw-author="{{ linked_book.author.value | escape }}"
+            data-qw-shelf="{{ shelf_name | escape }}"
+            data-qw-tropes="{% for trope in linked_book.tropes.value %}{{ trope.name | escape }}{% unless forloop.last %}, {% endunless %}{% endfor %}"
+            data-qw-text="{{ quote_txt | strip_html | strip | escape }}">
+            <button type="button" class="qw-cardSurface"
+              data-qw-open
+              data-handle="{{ linked_book.system.handle }}"
+              data-title="{{ linked_book.title.value | escape }}"
+              data-author="{{ linked_book.author.value | escape }}"
+              data-cover="{{ linked_cover | escape }}"
+              data-amazon="{{ linked_book.amazon_link.value.url | default: linked_book.amazon_link.value | escape }}"
+              data-bookshop="{{ linked_book.bookshop_link.value.url | default: linked_book.bookshop_link.value | escape }}"
+              data-spice="{{ linked_book.spice_level.value }}"
+              data-tropes="{% for trope in linked_book.tropes.value %}{{ trope.name }}{% unless forloop.last %}, {% endunless %}{% endfor %}"
+              data-why="{{ linked_book.why_i_loved_it.value | escape }}"
+              data-newsletter="{{ linked_book.newsletter_url.value | escape }}"
+              data-mini="{{ linked_book.mini_note.value | escape }}"
+              data-tension="{{ linked_book.tension_score.value }}"
+              data-damage="{{ linked_book.emotional_damage_score.value }}"
+              data-yearning="{{ linked_book.yearning_level.value | escape }}"
+              data-boyfriend="{{ linked_book.boyfriend_type.value | escape }}"
+              data-reread="{{ linked_book.reread_badge.value }}"
+              data-darkness="{{ linked_book.darkness_level.value }}"
+              {% if linked_book.series.value %}
+                data-series="{{ linked_book.series.value.system.handle }}"
+                data-series-name="{{ linked_book.series.value.title | escape }}"
+              {% endif %}
+              data-series-number="{{ linked_book.series_number.value }}">
+              <div class="qw-paper">
+              <p class="qw-quote">
+                <span class="hl {{ hl_class }}">“{{ quote_txt | strip_html | escape }}”</span>
+              </p>
+
+              <div class="qw-meta">
+                <div class="qw-book">
+                  {% if book_txt != blank %}{{ book_txt | escape }}{% endif %}
+                  {% if author_txt != blank %} — {{ author_txt | escape }}{% endif %}
+                </div>
+              </div>
+              </div>
+            </button>
+            <div class="qw-actions">
+              <button type="button" class="qw-action" data-qw-save>save to made for you</button>
+              <button type="button" class="qw-action qw-action--note" data-qw-note>save to notes</button>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+
+      {% if count == 0 %}
+        <div style="color:rgba(246,246,246,.72); font-size:12px; padding:10px 0;">
+          no quotes yet. add some in <strong>Content → Metaobjects → sss_quote</strong>.
+        </div>
+      {% endif %}
+    </div>
+    <div class="sss-qw__empty" data-qw-empty>no matches yet. try a book title, author, shelf, or trope instead.</div>
+  </div>
+  <div class="sss-qw__toast" data-qw-toast>
+    <p class="sss-qw__toastTitle">saved to made for you</p>
+    <p class="sss-qw__toastBody">go add your personal layers and see it land inside your dashboard.</p>
+    <a class="sss-qw__toastLink" href="/pages/made-for-you">go to made for you →</a>
+  </div>
+</section>
+{% render 'sss-library-modal' %}
+<script>
+(function(){
+  function initQuoteWall(){
+    var roots = document.querySelectorAll('[data-sss-quote-wall]');
+    if (!roots.length) return;
+
+    roots.forEach(function(root){
+      if (root.__qwBound) return;
+      root.__qwBound = true;
+
+      var items = Array.prototype.slice.call(root.querySelectorAll('[data-qw-item]'));
+      var searchInput = root.querySelector('[data-qw-search]');
+      var countLabel = root.querySelector('[data-qw-count]');
+      var emptyState = root.querySelector('[data-qw-empty]');
+      var toast = root.querySelector('[data-qw-toast]');
+      var toastTimer = null;
+      if (!items.length) return;
+
+      // Add slight stagger (only within this section)
+      items.forEach(function(el, i){
+        el.style.setProperty('--d', (i % 8) * 45 + 'ms');
+      });
+
+      function updateCount(visibleCount, query){
+        if (!countLabel) return;
+        if (!query){
+          countLabel.textContent = visibleCount === 1 ? '1 quote' : visibleCount + ' quotes';
+          return;
+        }
+        countLabel.textContent = visibleCount === 1
+          ? '1 match for "' + query + '"'
+          : visibleCount + ' matches for "' + query + '"';
+      }
+
+      function applyFilter(){
+        var query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+        var normalizedQuery = query.replace(/[^\w\s]+/g, ' ').trim();
+        var terms = normalizedQuery ? normalizedQuery.split(/\s+/).filter(Boolean) : [];
+        var visibleCount = 0;
+
+        items.forEach(function(item){
+          var haystack = [
+            item.getAttribute('data-qw-quote') || '',
+            item.getAttribute('data-qw-title') || '',
+            item.getAttribute('data-qw-author') || '',
+            item.getAttribute('data-qw-shelf') || '',
+            item.getAttribute('data-qw-tropes') || '',
+            item.getAttribute('data-qw-boyfriend') || ''
+          ].join(' ').toLowerCase().replace(/[^\w\s]+/g, ' ');
+
+          var isMatch = !terms.length || terms.every(function(term){
+            return haystack.indexOf(term) !== -1;
+          });
+          item.hidden = !isMatch;
+          item.style.display = isMatch ? '' : 'none';
+          if (isMatch) visibleCount += 1;
+        });
+
+        if (emptyState){
+          emptyState.classList.toggle('is-visible', visibleCount === 0);
+        }
+
+        updateCount(visibleCount, query);
+      }
+
+      function getQuotePayload(card){
+        if (!card) return null;
+        return {
+          handle: card.getAttribute('data-qw-handle') || '',
+          title: card.getAttribute('data-qw-title') || '',
+          author: card.getAttribute('data-qw-author') || '',
+          shelf: card.getAttribute('data-qw-shelf') || '',
+          tropes: (card.getAttribute('data-qw-tropes') || '').split(',').map(function(item){
+            return item.trim();
+          }).filter(Boolean),
+          text: card.getAttribute('data-qw-text') || ''
+        };
+      }
+
+      function syncSaveButtons(){
+        items.forEach(function(item){
+          var card = item.querySelector('.qw-card');
+          var saveBtn = item.querySelector('[data-qw-save]');
+          if (!card || !saveBtn || !window.sssQuoteStorage) return;
+
+          var saved = window.sssQuoteStorage.isQuoteSaved(getQuotePayload(card));
+          saveBtn.classList.toggle('is-active', saved);
+          saveBtn.textContent = saved ? 'saved to made for you' : 'save to made for you';
+        });
+      }
+
+      function showSaveToast(){
+        if (!toast) return;
+        window.clearTimeout(toastTimer);
+        toast.classList.add('is-visible');
+        toastTimer = window.setTimeout(function(){
+          toast.classList.remove('is-visible');
+        }, 2600);
+      }
+
+      if (searchInput){
+        searchInput.addEventListener('input', applyFilter);
+        searchInput.addEventListener('search', applyFilter);
+        searchInput.addEventListener('keyup', applyFilter);
+        searchInput.addEventListener('change', applyFilter);
+      }
+      applyFilter();
+      syncSaveButtons();
+
+      root.addEventListener('click', function(event){
+        var saveBtn = event.target.closest('[data-qw-save]');
+        if (saveBtn){
+          event.preventDefault();
+          var saveCard = saveBtn.closest('.qw-card');
+          if (!saveCard || !window.sssQuoteStorage) return;
+
+          var wasSaved = window.sssQuoteStorage.toggleSavedQuote(getQuotePayload(saveCard));
+          syncSaveButtons();
+          if (wasSaved){
+            showSaveToast();
+          }
+          return;
+        }
+
+        var noteBtn = event.target.closest('[data-qw-note]');
+        if (noteBtn){
+          event.preventDefault();
+          var noteCard = noteBtn.closest('.qw-card');
+          if (!noteCard || !window.sssQuoteStorage) return;
+
+          var noteText = window.sssQuoteStorage.addQuoteNote(getQuotePayload(noteCard));
+          var done = function(){
+            noteBtn.classList.add('is-done');
+            noteBtn.textContent = 'saved to notes';
+            window.setTimeout(function(){
+              noteBtn.classList.remove('is-done');
+              noteBtn.textContent = 'save to notes';
+            }, 1800);
+          };
+
+          if (navigator.clipboard && navigator.clipboard.writeText){
+            navigator.clipboard.writeText(noteText).then(done).catch(done);
+          } else {
+            done();
+          }
+        }
+      });
+
+      // If no IntersectionObserver support, just show
+      if (!('IntersectionObserver' in window)){
+        items.forEach(function(el){ el.classList.add('is-in'); });
+        return;
+      }
+
+      var io = new IntersectionObserver(function(entries){
+        entries.forEach(function(entry){
+          if (entry.isIntersecting){
+            entry.target.classList.add('is-in');
+            io.unobserve(entry.target); // animate once
+          }
+        });
+      }, { root:null, threshold:0.12, rootMargin:'0px 0px -10% 0px' });
+
+      items.forEach(function(el){ io.observe(el); });
+    });
+  }
+
+  initQuoteWall();
+  document.addEventListener('shopify:section:load', initQuoteWall);
+})();
+</script>
+
+
+{% schema %}
+{
+  "name": "sss quote wall",
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "kicker", "default": "sss quote library" },
+    { "type": "text", "id": "title", "label": "title", "default": "faded pages & fatal lines." },
+    { "type": "textarea", "id": "subtext", "label": "subtext", "default": "tap a quote to see more about the book." },
+    { "type": "checkbox", "id": "new_tab", "label": "open links in new tab", "default": false }
+  ],
+  "presets": [
+    { "name": "sss quote wall" }
+  ]
+}
+{% endschema %}

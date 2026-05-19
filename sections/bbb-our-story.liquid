@@ -1,0 +1,967 @@
+{%- liquid
+  assign classic_book_one = nil
+  assign classic_book_two = nil
+  assign classic_book_three = nil
+  assign classic_book_four = nil
+  assign boyfriend_book = nil
+  assign classics_count = 0
+  assign quiz_href = section.settings.quiz_url | default: '/pages/reader-quizes'
+  assign society_href = section.settings.society_url | default: 'https://thesmutandsentimentsociety.substack.com/subscribe'
+  assign boyfriend_body_copy = section.settings.favorite_boyfriend_body
+  assign boyfriend_body_copy = boyfriend_body_copy | replace: 'if you want the full diagnosis, take the quiz.', ''
+  assign boyfriend_body_copy = boyfriend_body_copy | replace: 'if you want the full diagnosis, take the quiz', ''
+  assign boyfriend_body_copy = boyfriend_body_copy | strip
+
+  for book in shop.metaobjects.sss_library.values
+    capture is_visible
+      render 'sss-book-visible', book: book
+    endcapture
+    assign is_visible_value = is_visible | strip
+    unless is_visible_value == 'true'
+      continue
+    endunless
+
+    if book.top_shelf.value == true and classics_count < 4
+      assign classics_count = classics_count | plus: 1
+      if classics_count == 1
+        assign classic_book_one = book
+      elsif classics_count == 2
+        assign classic_book_two = book
+      elsif classics_count == 3
+        assign classic_book_three = book
+      elsif classics_count == 4
+        assign classic_book_four = book
+      endif
+    endif
+
+    if section.settings.favorite_boyfriend_book_handle != blank and book.system.handle == section.settings.favorite_boyfriend_book_handle
+      assign boyfriend_book = book
+    endif
+  endfor
+-%}
+
+<section class="bbb-about" id="bbb-about-{{ section.id }}">
+  <div class="bbb-about__backdrop" aria-hidden="true"></div>
+  <div class="bbb-about__wrap">
+
+    <div class="bbb-about__hero bbb-about__reveal bbb-about__reveal--hero">
+      <div class="bbb-about__heroMediaCol">
+        <div class="bbb-about__heroLabel">about bybookishbabe</div>
+        <div class="bbb-about__heroImageWrap">
+        <div class="bbb-about__heroFrame">
+          {% if section.settings.hero_image != blank %}
+            {{ section.settings.hero_image | image_url: width: 1800 | image_tag: class: 'bbb-about__heroImage', loading: 'lazy', alt: section.settings.hero_title }}
+          {% else %}
+            <div class="bbb-about__heroPlaceholder">add your image</div>
+          {% endif %}
+        </div>
+        </div>
+      </div>
+
+      <div class="bbb-about__heroCopy">
+        {% if section.settings.hero_kicker != blank %}
+          <p class="bbb-about__kicker">{{ section.settings.hero_kicker }}</p>
+        {% endif %}
+        {% if section.settings.hero_title != blank %}
+          <h2 class="bbb-about__title">{{ section.settings.hero_title }}</h2>
+        {% endif %}
+        {% if section.settings.hero_body != blank %}
+          <div class="bbb-about__body">{{ section.settings.hero_body | newline_to_br }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="bbb-about__shelf bbb-about__reveal bbb-about__reveal--shelf">
+      <div class="bbb-about__sectionHead">
+        {% if section.settings.shelf_kicker != blank %}
+          <p class="bbb-about__kicker">{{ section.settings.shelf_kicker }}</p>
+        {% endif %}
+        {% if section.settings.shelf_title != blank %}
+          <h3 class="bbb-about__sectionTitle">{{ section.settings.shelf_title }}</h3>
+        {% endif %}
+        {% if section.settings.shelf_subtitle != blank %}
+          <p class="bbb-about__sectionSub">{{ section.settings.shelf_subtitle }}</p>
+        {% endif %}
+      </div>
+
+      <div class="bbb-about__shelfRow">
+        {% if classic_book_one != nil %}
+          <a class="bbb-about__book" href="/pages/library?book={{ classic_book_one.system.handle | url_encode }}">
+            {% assign cover = classic_book_one.cover.value.url | default: classic_book_one.cover.value %}
+            {% if cover != blank %}
+              <img class="bbb-about__bookCover" src="{{ cover }}" alt="{{ classic_book_one.title.value | escape }}" loading="lazy">
+            {% endif %}
+            <div class="bbb-about__bookMeta">
+              <div class="bbb-about__bookTitle">{{ classic_book_one.title.value }}</div>
+              <div class="bbb-about__bookAuthor">{{ classic_book_one.author.value }}</div>
+            </div>
+          </a>
+        {% endif %}
+        {% if classic_book_two != nil %}
+          <a class="bbb-about__book" href="/pages/library?book={{ classic_book_two.system.handle | url_encode }}">
+            {% assign cover = classic_book_two.cover.value.url | default: classic_book_two.cover.value %}
+            {% if cover != blank %}
+              <img class="bbb-about__bookCover" src="{{ cover }}" alt="{{ classic_book_two.title.value | escape }}" loading="lazy">
+            {% endif %}
+            <div class="bbb-about__bookMeta">
+              <div class="bbb-about__bookTitle">{{ classic_book_two.title.value }}</div>
+              <div class="bbb-about__bookAuthor">{{ classic_book_two.author.value }}</div>
+            </div>
+          </a>
+        {% endif %}
+        {% if classic_book_three != nil %}
+          <a class="bbb-about__book" href="/pages/library?book={{ classic_book_three.system.handle | url_encode }}">
+            {% assign cover = classic_book_three.cover.value.url | default: classic_book_three.cover.value %}
+            {% if cover != blank %}
+              <img class="bbb-about__bookCover" src="{{ cover }}" alt="{{ classic_book_three.title.value | escape }}" loading="lazy">
+            {% endif %}
+            <div class="bbb-about__bookMeta">
+              <div class="bbb-about__bookTitle">{{ classic_book_three.title.value }}</div>
+              <div class="bbb-about__bookAuthor">{{ classic_book_three.author.value }}</div>
+            </div>
+          </a>
+        {% endif %}
+        {% if classic_book_four != nil %}
+          <a class="bbb-about__book" href="/pages/library?book={{ classic_book_four.system.handle | url_encode }}">
+            {% assign cover = classic_book_four.cover.value.url | default: classic_book_four.cover.value %}
+            {% if cover != blank %}
+              <img class="bbb-about__bookCover" src="{{ cover }}" alt="{{ classic_book_four.title.value | escape }}" loading="lazy">
+            {% endif %}
+            <div class="bbb-about__bookMeta">
+              <div class="bbb-about__bookTitle">{{ classic_book_four.title.value }}</div>
+              <div class="bbb-about__bookAuthor">{{ classic_book_four.author.value }}</div>
+            </div>
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="bbb-about__boyfriend bbb-about__reveal bbb-about__reveal--boyfriend">
+      <div class="bbb-about__boyfriendMediaCol">
+        <div class="bbb-about__boyfriendLabel">the end all, be all</div>
+        <div class="bbb-about__boyfriendMedia">
+        {% if section.settings.favorite_boyfriend_image != blank %}
+          <div class="bbb-about__boyfriendPhoto">
+            {{ section.settings.favorite_boyfriend_image | image_url: width: 1600 | image_tag: class: 'bbb-about__boyfriendImage', loading: 'lazy', alt: section.settings.favorite_boyfriend_title }}
+            {% if boyfriend_book != nil %}
+              <a class="bbb-about__boyfriendBook bbb-about__boyfriendBook--overlay" href="/pages/library?book={{ boyfriend_book.system.handle | url_encode }}">
+                {% assign boyfriend_cover = boyfriend_book.cover.value.url | default: boyfriend_book.cover.value %}
+                {% if boyfriend_cover != blank %}
+                  <img class="bbb-about__boyfriendBookCover" src="{{ boyfriend_cover }}" alt="{{ boyfriend_book.title.value | escape }}" loading="lazy">
+                {% endif %}
+                <div class="bbb-about__boyfriendBookMeta">
+                  <div class="bbb-about__boyfriendBookTitle">{{ boyfriend_book.title.value }}</div>
+                  <div class="bbb-about__boyfriendBookAuthor">{{ boyfriend_book.author.value }}</div>
+                </div>
+              </a>
+            {% endif %}
+          </div>
+        {% endif %}
+        </div>
+      </div>
+
+      <div class="bbb-about__boyfriendCopy">
+        {% if section.settings.favorite_boyfriend_kicker != blank %}
+          <p class="bbb-about__kicker">{{ section.settings.favorite_boyfriend_kicker }}</p>
+        {% endif %}
+        {% if section.settings.favorite_boyfriend_title != blank %}
+          <h3 class="bbb-about__sectionTitle">{{ section.settings.favorite_boyfriend_title }}</h3>
+        {% endif %}
+        {% if boyfriend_body_copy != blank %}
+          <div class="bbb-about__body">{{ boyfriend_body_copy | newline_to_br }}</div>
+        {% endif %}
+        {% if section.settings.quiz_label != blank %}
+          <p class="bbb-about__quizLine">
+            if you want the full diagnosis, take the
+            <a class="bbb-about__quizLink" href="{{ quiz_href }}">{{ section.settings.quiz_label }}</a>
+          </p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="bbb-about__closing bbb-about__reveal bbb-about__reveal--closing">
+      <div class="bbb-about__confetti" aria-hidden="true">
+        <span>✦</span>
+        <span>✿</span>
+        <span>✦</span>
+        <span>✿</span>
+        <span>✦</span>
+        <span>✿</span>
+      </div>
+      {% if section.settings.closing_kicker != blank %}
+        <p class="bbb-about__kicker">{{ section.settings.closing_kicker }}</p>
+      {% endif %}
+      {% if section.settings.closing_title != blank %}
+        <h3 class="bbb-about__closingTitle">{{ section.settings.closing_title }}</h3>
+      {% endif %}
+      {% if section.settings.closing_body != blank %}
+        <p class="bbb-about__sectionSub">{{ section.settings.closing_body }}</p>
+      {% endif %}
+      <div class="bbb-about__closingActions">
+        {% if section.settings.shelf_prompt_label != blank %}
+          <a
+            class="bbb-about__cta bbb-about__cta--ghost"
+            href="#"
+            data-bbb-shelf-open
+            onclick="event.preventDefault(); if (window.BBBShelfSignup && typeof window.BBBShelfSignup.open === 'function') { window.BBBShelfSignup.open(); }"
+          >
+            {{ section.settings.shelf_prompt_label }}
+          </a>
+        {% endif %}
+        {% if section.settings.society_label != blank %}
+          <a class="bbb-about__cta" href="{{ society_href }}" target="_blank" rel="noopener">{{ section.settings.society_label }}</a>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<style>
+  #bbb-about-{{ section.id }}{
+    --bbb-accent: {{ section.settings.accent }};
+    --bbb-accent-soft: color-mix(in srgb, {{ section.settings.accent }} 22%, transparent);
+  }
+
+  .bbb-about{
+    position:relative;
+    overflow:hidden;
+    background:#0b0b0b;
+    color:#f6f6f6;
+    padding:clamp(34px, 6vw, 88px) 16px 70px;
+  }
+
+  .bbb-about__backdrop{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    background:
+      radial-gradient(900px 420px at 30% 0, rgba(255,255,255,.06), transparent 72%),
+      radial-gradient(640px 360px at 75% 15%, rgba(255,138,199,.08), transparent 72%),
+      repeating-linear-gradient(to bottom, rgba(255,255,255,.03), rgba(255,255,255,.03) 1px, transparent 1px, transparent 26px);
+    opacity:.62;
+  }
+
+  .bbb-about__wrap{
+    max-width:1100px;
+    margin:0 auto;
+    position:relative;
+    z-index:1;
+    width:100%;
+  }
+
+  .bbb-about__reveal{
+    opacity:0;
+    transform:translate3d(0, 38px, 0);
+    transition:opacity .95s ease, transform .95s cubic-bezier(.2,.8,.2,1);
+    will-change:opacity, transform;
+  }
+
+  .bbb-about__reveal.is-visible{
+    opacity:1;
+    transform:none;
+  }
+
+  .bbb-about__reveal--hero{
+    transform:translate3d(-48px, 20px, 0);
+  }
+
+  .bbb-about__reveal--shelf{
+    transform:translate3d(0, 46px, 0) scale(.975);
+    transition-duration:1s;
+  }
+
+  .bbb-about__reveal--boyfriend{
+    transform:translate3d(48px, 20px, 0);
+  }
+
+  .bbb-about__reveal--closing{
+    transform:translate3d(0, 54px, 0) scale(.96);
+    transition-duration:1.05s;
+  }
+
+  .bbb-about__reveal--hero.is-visible{
+    animation:bbbAboutFloatIn 1.2s cubic-bezier(.18,.8,.22,1) both;
+  }
+
+  .bbb-about__reveal--shelf.is-visible{
+    animation:bbbAboutLiftIn 1.1s cubic-bezier(.2,.82,.2,1) both;
+  }
+
+  .bbb-about__reveal--boyfriend.is-visible{
+    animation:bbbAboutSlideAcross 1.15s cubic-bezier(.18,.8,.22,1) both;
+  }
+
+  .bbb-about__reveal--closing.is-visible{
+    animation:bbbAboutBloomIn 1.2s cubic-bezier(.16,.84,.2,1) both;
+  }
+
+  .bbb-about__hero,
+  .bbb-about__boyfriend{
+    display:grid;
+    grid-template-columns:minmax(0, .92fr) minmax(0, 1.08fr);
+    gap:clamp(20px, 3vw, 48px);
+    align-items:start;
+  }
+
+  .bbb-about__shelf,
+  .bbb-about__boyfriend,
+  .bbb-about__closing{
+    margin-top:clamp(46px, 7vw, 94px);
+  }
+
+  .bbb-about__heroImageWrap,
+  .bbb-about__boyfriendMedia,
+  .bbb-about__closing{
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:30px;
+    background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+    box-shadow:0 24px 80px rgba(0,0,0,.28);
+    overflow:hidden;
+  }
+
+  .bbb-about__heroImageWrap{
+    min-height:0;
+    position:relative;
+  }
+
+  .bbb-about__heroMediaCol,
+  .bbb-about__boyfriendMediaCol{
+    display:grid;
+    gap:14px;
+    align-self:start;
+    min-width:0;
+    width:100%;
+    box-sizing:border-box;
+  }
+
+  .bbb-about__heroFrame,
+  .bbb-about__boyfriendPhoto{
+    position:relative;
+    width:100%;
+    overflow:hidden;
+    border-radius:24px;
+    background:rgba(255,255,255,.04);
+  }
+
+  .bbb-about__heroFrame{
+    aspect-ratio: 7 / 8;
+  }
+
+  .bbb-about__heroLabel{
+    display:block;
+    margin:0 0 18px;
+    font-family:"Cormorant Garamond", "Times New Roman", serif;
+    font-style:italic;
+    font-size:clamp(2.2rem, 3.5vw, 3.8rem);
+    letter-spacing:-.03em;
+    line-height:.92;
+    color:#f2e5ec;
+    text-transform:lowercase;
+    text-shadow:0 10px 26px rgba(0,0,0,.28);
+    max-width:100%;
+    overflow-wrap:anywhere;
+  }
+
+  .bbb-about__boyfriendPhoto{
+    aspect-ratio: 7 / 8;
+  }
+
+  .bbb-about__heroImage,
+  .bbb-about__boyfriendImage{
+    width:100%;
+    height:100%;
+    display:block;
+    object-fit:cover;
+    object-position:center;
+  }
+
+  .bbb-about__heroPlaceholder{
+    height:100%;
+    min-height:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:rgba(246,246,246,.52);
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    font-size:11px;
+  }
+
+  .bbb-about__heroCopy{
+    padding:6px 0 0;
+  }
+
+  .bbb-about__kicker{
+    margin:0 0 14px;
+    font-size:11px;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:rgba(246,246,246,.62);
+  }
+
+  .bbb-about__title,
+  .bbb-about__sectionTitle,
+  .bbb-about__closingTitle{
+    margin:0;
+    font-family:"Libre Baskerville", Georgia, serif;
+    font-weight:500;
+    line-height:1.08;
+    letter-spacing:-.03em;
+    text-transform:lowercase;
+    color:#f6f6f6;
+  }
+
+  .bbb-about__title{
+    font-size:clamp(2.6rem, 5.4vw, 5.6rem);
+    max-width:10ch;
+  }
+
+  .bbb-about__sectionTitle{
+    font-size:clamp(2rem, 4vw, 3.4rem);
+    max-width:13ch;
+  }
+
+  .bbb-about__closingTitle{
+    font-size:clamp(2.2rem, 4.8vw, 4.2rem);
+    max-width:14ch;
+    margin-inline:auto;
+  }
+
+  .bbb-about__body,
+  .bbb-about__sectionSub{
+    margin:14px 0 0;
+    max-width:58ch;
+    font-size:15px;
+    line-height:1.9;
+    color:rgba(246,246,246,.78);
+    text-transform:lowercase;
+  }
+
+  .bbb-about__closing .bbb-about__sectionSub{
+    margin-inline:auto;
+    text-align:center;
+  }
+
+  .bbb-about__sectionHead{
+    margin-bottom:24px;
+  }
+
+  .bbb-about__shelfRow{
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+    gap:16px;
+  }
+
+  .bbb-about__book{
+    display:block;
+    color:inherit;
+    text-decoration:none;
+    padding:14px;
+    border-radius:22px;
+    border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+    transition:transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+  }
+
+  .bbb-about__book:hover,
+  .bbb-about__book:focus-visible{
+    transform:translateY(-4px);
+    border-color:rgba(255,138,199,.45);
+    box-shadow:0 20px 34px rgba(0,0,0,.22);
+  }
+
+  .bbb-about__bookCover{
+    width:100%;
+    aspect-ratio:2 / 3;
+    object-fit:cover;
+    border-radius:16px;
+    display:block;
+    background:rgba(255,255,255,.04);
+  }
+
+  .bbb-about__bookMeta{
+    margin-top:10px;
+  }
+
+  .bbb-about__bookTitle,
+  .bbb-about__boyfriendBookTitle{
+    font-size:15px;
+    line-height:1.32;
+    color:#f6f6f6;
+    text-transform:lowercase;
+  }
+
+  .bbb-about__bookAuthor,
+  .bbb-about__boyfriendBookAuthor{
+    margin-top:4px;
+    font-size:12px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:rgba(246,246,246,.56);
+  }
+
+  .bbb-about__boyfriendMedia{
+    padding:26px;
+    display:grid;
+    gap:18px;
+    position:relative;
+  }
+
+  .bbb-about__boyfriendCopy{
+    align-self:start;
+    padding-top:18px;
+  }
+
+  .bbb-about__boyfriendLabel{
+    margin:0 0 12px;
+    font-family:"Cormorant Garamond", "Times New Roman", serif;
+    font-style:italic;
+    font-size:clamp(2rem, 3.1vw, 3.4rem);
+    letter-spacing:-.03em;
+    line-height:.92;
+    color:#f2e5ec;
+    text-transform:lowercase;
+    text-shadow:0 10px 26px rgba(0,0,0,.28);
+    max-width:100%;
+    overflow-wrap:anywhere;
+  }
+
+  .bbb-about__boyfriendBook{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+    color:inherit;
+    text-decoration:none;
+    padding:12px;
+    border-radius:18px;
+    border:1px solid rgba(255,255,255,.1);
+    background:rgba(255,255,255,.03);
+  }
+
+  .bbb-about__boyfriendBook--overlay{
+    position:absolute;
+    top:14px;
+    right:18px;
+    z-index:2;
+    width:min(132px, calc(100% - 36px));
+    max-width:calc(100% - 36px);
+    padding:9px;
+    border-radius:14px;
+    background:rgba(10,10,10,.78);
+    backdrop-filter:blur(10px);
+    box-shadow:0 16px 34px rgba(0,0,0,.26);
+  }
+
+  .bbb-about__boyfriendBookCover{
+    width:100%;
+    aspect-ratio:2 / 3;
+    object-fit:cover;
+    border-radius:10px;
+    display:block;
+  }
+
+  .bbb-about__boyfriendBookMeta{
+    order:-1;
+  }
+
+  .bbb-about__boyfriendBook--overlay .bbb-about__boyfriendBookTitle{
+    font-size:13px;
+    line-height:1.2;
+  }
+
+  .bbb-about__boyfriendBook--overlay .bbb-about__boyfriendBookAuthor{
+    margin-top:3px;
+    font-size:10px;
+  }
+
+  .bbb-about__cta{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:16px 38px;
+    min-height:56px;
+    border-radius:0;
+    background:#ec80b8;
+    color:#111;
+    text-decoration:none;
+    font-family:"Cormorant Garamond", serif;
+    font-size:1.15rem;
+    line-height:1;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    font-weight:600;
+    border:1px solid #ec80b8;
+    box-shadow:0 10px 28px rgba(236,128,184,.38);
+    transition:all .22s ease;
+  }
+
+  .bbb-about__cta:hover,
+  .bbb-about__cta:focus-visible{
+    background:transparent;
+    color:#fff;
+    border-color:#fff;
+    box-shadow:none;
+    transform:none;
+  }
+
+  .bbb-about__cta--ghost{
+    background:transparent;
+    color:#f6f6f6;
+    border:1px solid #ffffff;
+    box-shadow:none;
+  }
+
+  .bbb-about__cta--ghost:hover,
+  .bbb-about__cta--ghost:focus-visible{
+    background:#fff;
+    color:#111;
+    border-color:#fff;
+    box-shadow:none;
+  }
+
+  .bbb-about__quizLine{
+    margin:22px 0 0;
+    max-width:32ch;
+    font-family:"Libre Baskerville", Georgia, serif;
+    font-size:clamp(1.05rem, 1.6vw, 1.35rem);
+    line-height:1.6;
+    color:rgba(246,246,246,.88);
+    text-transform:lowercase;
+  }
+
+  .bbb-about__quizLink{
+    color:#ff8ac7;
+    text-decoration:none;
+    border-bottom:1px solid rgba(255,138,199,.55);
+    font-style:italic;
+    transition:color .22s ease, border-color .22s ease, box-shadow .22s ease;
+  }
+
+  .bbb-about__quizLink:hover,
+  .bbb-about__quizLink:focus-visible{
+    color:#ffd2ea;
+    border-color:#ffd2ea;
+    box-shadow:0 6px 20px rgba(255,138,199,.16);
+  }
+
+  .bbb-about__closing{
+    position:relative;
+    text-align:center;
+    padding:42px 26px;
+  }
+
+  .bbb-about__confetti{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    overflow:hidden;
+  }
+
+  .bbb-about__confetti span{
+    position:absolute;
+    top:-12%;
+    color:#ff8ac7;
+    opacity:.65;
+    animation:bbbAboutConfetti 11s linear infinite;
+  }
+
+  .bbb-about__confetti span:nth-child(1){ left:10%; animation-delay:0s; }
+  .bbb-about__confetti span:nth-child(2){ left:26%; animation-delay:1.8s; color:#f4ddb3; }
+  .bbb-about__confetti span:nth-child(3){ left:44%; animation-delay:3.6s; }
+  .bbb-about__confetti span:nth-child(4){ left:63%; animation-delay:1s; color:#cfe7b2; }
+  .bbb-about__confetti span:nth-child(5){ left:80%; animation-delay:4.8s; }
+  .bbb-about__confetti span:nth-child(6){ left:92%; animation-delay:2.6s; color:#b7d1f8; }
+
+  .bbb-about__closingActions{
+    margin-top:24px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    justify-content:center;
+    align-items:center;
+  }
+
+  .bbb-about__closingActions .bbb-about__cta--ghost{
+    order:1;
+  }
+
+  .bbb-about__closingActions .bbb-about__cta:not(.bbb-about__cta--ghost){
+    order:2;
+  }
+
+  @keyframes bbbAboutConfetti{
+    0%{ transform:translate3d(0, 0, 0) rotate(0deg); opacity:0; }
+    12%{ opacity:.68; }
+    100%{ transform:translate3d(-12px, 120vh, 0) rotate(320deg); opacity:0; }
+  }
+
+  @keyframes bbbAboutFloatIn{
+    0%{ opacity:0; transform:translate3d(-48px, 20px, 0) scale(.985); filter:blur(8px); }
+    100%{ opacity:1; transform:translate3d(0, 0, 0) scale(1); filter:blur(0); }
+  }
+
+  @keyframes bbbAboutLiftIn{
+    0%{ opacity:0; transform:translate3d(0, 46px, 0) scale(.965); filter:blur(10px); }
+    100%{ opacity:1; transform:translate3d(0, 0, 0) scale(1); filter:blur(0); }
+  }
+
+  @keyframes bbbAboutSlideAcross{
+    0%{ opacity:0; transform:translate3d(48px, 20px, 0) scale(.985); filter:blur(8px); }
+    100%{ opacity:1; transform:translate3d(0, 0, 0) scale(1); filter:blur(0); }
+  }
+
+  @keyframes bbbAboutBloomIn{
+    0%{ opacity:0; transform:translate3d(0, 54px, 0) scale(.94); filter:blur(12px); }
+    72%{ opacity:1; }
+    100%{ opacity:1; transform:translate3d(0, 0, 0) scale(1); filter:blur(0); }
+  }
+
+  @media (max-width: 920px){
+    .bbb-about__hero,
+    .bbb-about__boyfriend{
+      grid-template-columns:1fr;
+    }
+
+    .bbb-about__heroImageWrap{
+      min-height:0;
+    }
+
+    .bbb-about__heroFrame{
+      aspect-ratio:7 / 8;
+    }
+
+    .bbb-about__heroCopy{
+      padding-top:0;
+    }
+
+    .bbb-about__heroLabel{
+      font-size:clamp(1.95rem, 5.8vw, 3rem);
+    }
+
+    .bbb-about__boyfriendLabel{
+      font-size:clamp(1.8rem, 5.2vw, 2.7rem);
+    }
+
+    .bbb-about__title,
+    .bbb-about__sectionTitle,
+    .bbb-about__closingTitle{
+      max-width:none;
+    }
+
+    .bbb-about__shelfRow{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 700px){
+    .bbb-about{
+      padding-inline:12px;
+    }
+
+    .bbb-about__hero,
+    .bbb-about__boyfriend{
+      gap:18px;
+    }
+
+    .bbb-about__heroMediaCol,
+    .bbb-about__boyfriendMediaCol,
+    .bbb-about__heroImageWrap,
+    .bbb-about__boyfriendMedia,
+    .bbb-about__heroCopy,
+    .bbb-about__boyfriendCopy{
+      width:100%;
+      min-width:0;
+    }
+
+    .bbb-about__heroImageWrap{
+      min-height:0;
+    }
+
+    .bbb-about__heroFrame,
+    .bbb-about__boyfriendPhoto{
+      border-radius:18px;
+    }
+
+    .bbb-about__heroFrame{
+      aspect-ratio: 7 / 8;
+    }
+
+    .bbb-about__boyfriendPhoto{
+      aspect-ratio: 7 / 8;
+    }
+
+    .bbb-about__heroLabel{
+      font-size:clamp(1.55rem, 7vw, 2.2rem);
+      max-width:100%;
+      text-align:left;
+      margin-bottom:14px;
+      line-height:.98;
+      word-break:break-word;
+    }
+
+    .bbb-about__boyfriendLabel{
+      font-size:clamp(1.45rem, 6.4vw, 2rem);
+      max-width:100%;
+      line-height:.98;
+      word-break:break-word;
+    }
+
+    .bbb-about__title{
+      font-size:clamp(2.2rem, 10vw, 3.6rem);
+    }
+
+    .bbb-about__sectionTitle,
+    .bbb-about__closingTitle{
+      font-size:clamp(1.9rem, 9vw, 3rem);
+    }
+
+    .bbb-about__body,
+    .bbb-about__sectionSub{
+      font-size:14px;
+      line-height:1.78;
+    }
+
+    .bbb-about__quizLine{
+      font-size:1rem;
+      line-height:1.7;
+    }
+
+    .bbb-about__shelfRow{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:12px;
+    }
+
+    .bbb-about__book{
+      padding:10px;
+      border-radius:18px;
+    }
+
+    .bbb-about__boyfriendMedia,
+    .bbb-about__closing{
+      padding:18px;
+      border-radius:24px;
+    }
+
+    .bbb-about__boyfriendBook{
+      gap:10px;
+    }
+
+    .bbb-about__boyfriendBook--overlay{
+      top:12px;
+      right:12px;
+      width:96px;
+      max-width:calc(100% - 24px);
+      padding:8px;
+    }
+
+    .bbb-about__boyfriendBookCover{
+      width:100%;
+    }
+
+    .bbb-about__boyfriendBook--overlay .bbb-about__boyfriendBookTitle{
+      font-size:11px;
+      line-height:1.15;
+    }
+
+    .bbb-about__boyfriendBook--overlay .bbb-about__boyfriendBookAuthor{
+      font-size:9px;
+      line-height:1.2;
+      letter-spacing:.04em;
+    }
+
+    .bbb-about__closingActions{
+      flex-direction:column;
+    }
+
+    .bbb-about__cta{
+      width:100%;
+    }
+  }
+</style>
+
+<script>
+  (function(){
+    var sectionId = 'bbb-about-{{ section.id }}';
+
+    function initAboutSection(container){
+      var root = container && container.id === sectionId
+        ? container
+        : document.getElementById(sectionId);
+      if (!root) return;
+
+      var items = root.querySelectorAll('.bbb-about__reveal');
+      if (!items.length) return;
+
+      if (window.Shopify && window.Shopify.designMode) {
+        items.forEach(function(item){
+          item.classList.add('is-visible');
+        });
+        return;
+      }
+
+      if (!('IntersectionObserver' in window)) {
+        items.forEach(function(item){
+          item.classList.add('is-visible');
+        });
+        return;
+      }
+
+      var observer = new IntersectionObserver(function(entries){
+        entries.forEach(function(entry){
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        });
+      }, { threshold: 0.18, rootMargin: '0px 0px -8% 0px' });
+
+      items.forEach(function(item){
+        observer.observe(item);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', function(){
+      initAboutSection();
+    });
+
+    document.addEventListener('shopify:section:load', function(event){
+      initAboutSection(event.target);
+    });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "our story",
+  "settings": [
+    { "type": "text", "id": "hero_kicker", "label": "hero kicker", "default": "why i started this" },
+    { "type": "text", "id": "hero_title", "label": "hero title", "default": "i wanted reading to feel as beautiful as it felt." },
+    { "type": "textarea", "id": "hero_body", "label": "hero body", "default": "bybookishbabe started because books were never just books for me. they were the hobby, the aesthetic, the mood, the little world i kept building around myself.\n\nso i made the kind of place i wanted to spend time in: dramatic, romantic, obsessive, and very much for the readers who are not normal about any of it." },
+    { "type": "image_picker", "id": "hero_image", "label": "hero image" },
+
+    { "type": "text", "id": "shelf_kicker", "label": "favorite shelf kicker", "default": "my shelf, lately" },
+    { "type": "text", "id": "shelf_title", "label": "favorite shelf title", "default": "the society's classics shelf" },
+    { "type": "textarea", "id": "shelf_subtitle", "label": "favorite shelf subtitle", "default": "what this built on - my roman empire if you will." },
+    { "type": "text", "id": "favorite_boyfriend_kicker", "label": "favorite book boyfriend kicker", "default": "favorite book boyfriend" },
+    { "type": "text", "id": "favorite_boyfriend_title", "label": "favorite book boyfriend title", "default": "the fictional man i would defend in a group chat" },
+    { "type": "textarea", "id": "favorite_boyfriend_body", "label": "favorite book boyfriend body", "default": "this is where you put the image, the book, and the little warning that maybe my taste in men is not the safest.\n\nif you want the full diagnosis, take the quiz." },
+    { "type": "image_picker", "id": "favorite_boyfriend_image", "label": "favorite book boyfriend image" },
+    { "type": "text", "id": "favorite_boyfriend_book_handle", "label": "favorite book boyfriend book handle", "default": "shatter-me" },
+    { "type": "text", "id": "quiz_label", "label": "quiz link label", "default": "quiz →" },
+    { "type": "url", "id": "quiz_url", "label": "quiz url" },
+
+    { "type": "text", "id": "closing_kicker", "label": "closing kicker", "default": "thank you for being here" },
+    { "type": "text", "id": "closing_title", "label": "closing title", "default": "if you made it this far, stay a while." },
+    { "type": "textarea", "id": "closing_body", "label": "closing body", "default": "keep wandering the site, build your shelf, or come join the smut and sentiment society if you want the deeper layer of all of this." },
+    { "type": "text", "id": "society_label", "label": "society button label", "default": "join the smut and sentiment society →" },
+    { "type": "url", "id": "society_url", "label": "society button url" },
+    { "type": "text", "id": "shelf_prompt_label", "label": "shelf popup button label", "default": "save books to your shelf →" },
+    { "type": "text", "id": "accent", "label": "accent color", "default": "#ff8ac7" }
+  ],
+  "presets": [
+    {
+      "name": "our story"
+    }
+  ]
+}
+{% endschema %}

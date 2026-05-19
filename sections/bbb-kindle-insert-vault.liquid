@@ -1,0 +1,755 @@
+{%- liquid
+  assign vault_login_url = routes.account_login_url | default: '/account/login'
+  assign vault_login_url = vault_login_url | append: '?return_url=%2Fpages%2Fmy-kindle-inserts'
+
+  assign customer_has_vault = false
+  assign customer_vault_tier = ''
+  assign customer_size = ''
+
+  if customer
+    assign has_insert_vault_value = customer.metafields.custom.has_kindle_insert_vault.value | default: customer.metafields.custom.has_kindle_insert_vault | append: '' | downcase
+    assign customer_vault_value = customer.metafields.custom.digital_vault_active.value | default: customer.metafields.custom.digital_vault_active | append: '' | downcase
+    assign customer_vault_tier = customer.metafields.custom.digital_vault_tier.value | default: customer.metafields.custom.digital_vault_tier | append: ''
+    assign customer_size = customer.metafields.custom.kindle_insert_size.value | default: customer.metafields.custom.kindle_insert_size | append: ''
+
+    if has_insert_vault_value == 'true'
+      assign customer_has_vault = true
+      assign customer_vault_tier = 'kindle-inserts'
+    elsif customer_vault_value == 'true'
+      assign customer_has_vault = true
+    endif
+  endif
+
+  assign buy_vault_url = section.settings.buy_vault_url | default: '/products/printable-kindle-insert-vault'
+  assign public_preview_mode = section.settings.public_preview_mode
+  assign show_public_preview = public_preview_mode
+
+  if customer == blank or customer_has_vault == false or customer_vault_tier != 'kindle-inserts'
+    assign show_public_preview = true
+  endif
+
+  if buy_vault_url contains 'shopify://products/'
+    assign buy_vault_url = buy_vault_url | replace: 'shopify://products/', '/products/'
+  elsif buy_vault_url contains 'shopify://pages/'
+    assign buy_vault_url = buy_vault_url | replace: 'shopify://pages/', '/pages/'
+  endif
+-%}
+
+{%- paginate collections.all.products by 1000 -%}
+  {%- assign vault_total = 0 -%}
+  {%- assign vault_matches = 0 -%}
+
+  {%- capture vault_cards -%}
+    {%- for product in collections.all.products -%}
+      {%- assign in_vault_value = product.metafields.custom.in_vault.value | default: product.metafields.custom.in_vault | append: '' | downcase -%}
+      {%- unless in_vault_value == 'true' -%}
+        {%- continue -%}
+      {%- endunless -%}
+
+      {%- assign product_vault_type = product.metafields.custom.vault_type.value | default: product.metafields.custom.vault_type | append: '' -%}
+      {%- if product_vault_type != blank and product_vault_type != 'kindle-inserts' -%}
+        {%- continue -%}
+      {%- endif -%}
+
+      {%- assign vault_total = vault_total | plus: 1 -%}
+
+      {%- assign matched_variant = blank -%}
+      {%- if show_public_preview -%}
+        {%- for variant in product.variants -%}
+          {%- assign variant_download_url = '' -%}
+          {%- if variant.metafields.custom.download_file.value != blank -%}
+            {%- if variant.metafields.custom.download_file.value.url != blank -%}
+              {%- assign variant_download_url = variant.metafields.custom.download_file.value.url -%}
+            {%- else -%}
+              {%- assign variant_download_url = variant.metafields.custom.download_file.value | file_url -%}
+            {%- endif -%}
+          {%- endif -%}
+          {%- if variant_download_url != blank -%}
+            {%- assign matched_variant = variant -%}
+            {%- break -%}
+          {%- endif -%}
+        {%- endfor -%}
+      {%- elsif customer_size != blank -%}
+        {%- for variant in product.variants -%}
+          {%- if variant.title == customer_size -%}
+            {%- assign matched_variant = variant -%}
+            {%- break -%}
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endif -%}
+
+      {%- if matched_variant == blank -%}
+        {%- continue -%}
+      {%- endif -%}
+
+      {%- assign vault_matches = vault_matches | plus: 1 -%}
+
+      {%- assign preview_image = product.featured_image | default: product.featured_media.preview_image | default: matched_variant.featured_image | default: matched_variant.image -%}
+      {%- assign preview_image_zoom = '' -%}
+      {%- if preview_image != blank -%}
+        {%- assign preview_image_zoom = preview_image | image_url: width: 1600 -%}
+      {%- endif -%}
+      {%- assign download_url = '' -%}
+
+      {%- if matched_variant.metafields.custom.download_file.value != blank -%}
+        {%- if matched_variant.metafields.custom.download_file.value.url != blank -%}
+          {%- assign download_url = matched_variant.metafields.custom.download_file.value.url -%}
+        {%- else -%}
+          {%- assign download_url = matched_variant.metafields.custom.download_file.value | file_url -%}
+        {%- endif -%}
+      {%- endif -%}
+
+      {%- if download_url contains 'dropbox.com' -%}
+        {%- assign download_url = download_url | replace: 'www.dropbox.com', 'dl.dropboxusercontent.com' | replace: 'dropbox.com', 'dl.dropboxusercontent.com' | replace: '?dl=0', '?raw=1' | replace: '&dl=0', '&raw=1' -%}
+      {%- endif -%}
+
+      {%- if download_url == blank -%}
+        {%- assign vault_matches = vault_matches | minus: 1 -%}
+        {%- continue -%}
+      {%- endif -%}
+
+      <article class="bbb-kiv__card">
+        <div class="bbb-kiv__media">
+          {% if preview_image != blank %}
+            <button
+              class="bbb-kiv__imageZoom"
+              type="button"
+              data-kiv-preview-open
+              data-kiv-preview-src="{{ preview_image_zoom | escape }}"
+              data-kiv-preview-thumb="{{ preview_image | image_url: width: 720 | escape }}"
+              data-kiv-preview-alt="{{ product.title | escape }}"
+              aria-label="open larger preview of {{ product.title | escape }}"
+            >
+              {{
+                preview_image
+                | image_url: width: 720
+                | image_tag:
+                  class: 'bbb-kiv__image',
+                  loading: 'lazy',
+                  alt: product.title
+              }}
+            </button>
+          {% else %}
+            <div class="bbb-kiv__image bbb-kiv__image--placeholder" aria-hidden="true">✦</div>
+          {% endif %}
+        </div>
+
+        <div class="bbb-kiv__body">
+          <p class="bbb-kiv__eyebrow">{% if show_public_preview %}preview inside{% else %}vault access{% endif %}</p>
+          <h2 class="bbb-kiv__productTitle">{{ product.title }}</h2>
+
+          <div class="bbb-kiv__actions">
+            {% if show_public_preview %}
+              <a class="bbb-kiv__button" href="{{ buy_vault_url }}">unlock to download</a>
+            {% else %}
+              <a class="bbb-kiv__button" href="{{ download_url }}" target="_blank" rel="noopener">download</a>
+            {% endif %}
+          </div>
+        </div>
+      </article>
+    {%- endfor -%}
+  {%- endcapture -%}
+
+<section class="bbb-kiv" id="bbb-kiv-{{ section.id }}">
+  <div class="bbb-kiv__wrap">
+    <div class="bbb-kiv__hero">
+      <p class="bbb-kiv__kicker">{{ section.settings.kicker }}</p>
+      <h1 class="bbb-kiv__title">{{ section.settings.title }}</h1>
+      <p class="bbb-kiv__sub">{{ section.settings.subtext }}</p>
+    </div>
+
+    {% if show_public_preview %}
+      <div class="bbb-kiv__status">
+        <div>
+          <p class="bbb-kiv__statusKicker">preview the vault</p>
+          <h2 class="bbb-kiv__statusTitle">printable kindle insert vault</h2>
+        </div>
+        <div class="bbb-kiv__statusMeta">
+          <span class="bbb-kiv__statusText">{{ vault_matches }} insert{% if vault_matches != 1 %}s{% endif %} inside</span>
+        </div>
+      </div>
+
+      <div class="bbb-kiv__previewNote">
+        <p>browse the vault first, then choose your kindle size at checkout to unlock the downloads.</p>
+        <a class="bbb-kiv__button" href="{{ buy_vault_url }}">choose size + unlock for $27</a>
+      </div>
+
+      {% if vault_matches > 0 %}
+        <div class="bbb-kiv__previewFrame">
+          <div class="bbb-kiv__grid bbb-kiv__grid--preview">
+            {{ vault_cards }}
+          </div>
+          <div class="bbb-kiv__previewLock" aria-hidden="true">
+            <div class="bbb-kiv__previewLockInner">
+              <p class="bbb-kiv__previewLockKicker">locked until you unlock</p>
+              <p class="bbb-kiv__previewLockText">choose your size once, then the full downloadable vault opens inside your account.</p>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <div class="bbb-kiv__empty">
+          <p class="bbb-kiv__gateKicker">nothing to preview yet</p>
+          <h2>the vault preview is empty right now.</h2>
+          <p>as soon as vault products have at least one downloadable size attached, they’ll show up here automatically.</p>
+        </div>
+      {% endif %}
+    {% elsif customer_size == blank %}
+      <div class="bbb-kiv__gate">
+        <p class="bbb-kiv__gateKicker">size needed</p>
+        <h2>we need your kindle size before we open your downloads.</h2>
+        <p>your vault access is active, but your account doesn’t have a kindle size saved yet. once that size is on your account, this page will filter everything automatically.</p>
+        <div class="bbb-kiv__gateActions">
+          <a class="bbb-kiv__button" href="/account">update account</a>
+          <a class="bbb-kiv__button bbb-kiv__button--ghost" href="/pages/contact">contact support</a>
+        </div>
+      </div>
+    {% else %}
+      <div class="bbb-kiv__status">
+        <div>
+          <p class="bbb-kiv__statusKicker">your vault is open</p>
+          <h2 class="bbb-kiv__statusTitle">kindle insert vault</h2>
+        </div>
+        <div class="bbb-kiv__statusMeta">
+          <span class="bbb-kiv__statusText">{{ vault_matches }} ready now</span>
+        </div>
+      </div>
+
+      {% if vault_matches > 0 %}
+        <div class="bbb-kiv__grid">
+          {{ vault_cards }}
+        </div>
+      {% else %}
+        <div class="bbb-kiv__empty">
+          <p class="bbb-kiv__gateKicker">nothing matched yet</p>
+          <h2>there aren’t any vault inserts attached to your size yet.</h2>
+          <p>the vault is reading your account as <strong>{{ customer_size }}</strong>, but none of the current vault products matched that exact size label. this is usually just a naming mismatch, and we can tighten it fast.</p>
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+  <div class="bbb-kiv__lightbox" data-kiv-preview hidden>
+    <button class="bbb-kiv__lightboxBackdrop" type="button" data-kiv-preview-close aria-label="close image preview"></button>
+    <div class="bbb-kiv__lightboxDialog" role="dialog" aria-modal="true" aria-label="vault image preview">
+      <button class="bbb-kiv__lightboxClose" type="button" data-kiv-preview-close aria-label="close image preview">close</button>
+      <img class="bbb-kiv__lightboxImage" data-kiv-preview-image src="" alt="">
+    </div>
+  </div>
+</section>
+{%- endpaginate -%}
+
+{% schema %}
+{
+  "name": "bbb kindle insert vault",
+  "settings": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "kicker",
+      "default": "printable kindle insert vault"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "title",
+      "default": "your printable insert vault"
+    },
+    {
+      "type": "textarea",
+      "id": "subtext",
+      "label": "subtext",
+      "default": "one place for every printable kindle insert that matches your device size. buy once. come back whenever you want a new mood."
+    },
+    {
+      "type": "url",
+      "id": "buy_vault_url",
+      "label": "buy vault url"
+    },
+    {
+      "type": "checkbox",
+      "id": "public_preview_mode",
+      "label": "public preview mode",
+      "default": true
+    }
+  ],
+  "presets": [
+    {
+      "name": "bbb kindle insert vault"
+    }
+  ]
+}
+{% endschema %}
+
+<style>
+  .bbb-kiv{
+    background:#050505;
+    color:#f7f3ee;
+    padding:64px 18px 86px;
+  }
+
+  .bbb-kiv__wrap{
+    max-width:1180px;
+    margin:0 auto;
+  }
+
+  .bbb-kiv__hero{
+    max-width:760px;
+    margin-bottom:28px;
+  }
+
+  .bbb-kiv__kicker,
+  .bbb-kiv__gateKicker,
+  .bbb-kiv__statusKicker,
+  .bbb-kiv__eyebrow{
+    margin:0 0 10px;
+    color:#ff8ac7;
+    font-size:12px;
+    line-height:1.2;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    font-weight:800;
+  }
+
+  .bbb-kiv__title,
+  .bbb-kiv__gate h2,
+  .bbb-kiv__empty h2{
+    margin:0;
+    color:#fff;
+    font-family:'Cormorant Garamond', serif;
+    font-weight:500;
+    font-size:clamp(3rem, 7vw, 5.7rem);
+    line-height:.95;
+    text-transform:lowercase;
+  }
+
+  .bbb-kiv__sub,
+  .bbb-kiv__gate p,
+  .bbb-kiv__empty p{
+    margin:16px 0 0;
+    max-width:760px;
+    color:rgba(247,243,238,.74);
+    font-size:1.45rem;
+    line-height:1.65;
+  }
+
+  .bbb-kiv__status{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:16px;
+    margin:0 0 24px;
+    padding:18px 0 22px;
+    border-bottom:1px solid rgba(255,255,255,.16);
+  }
+
+  .bbb-kiv__statusTitle{
+    margin:0;
+    color:#fff;
+    font-family:'Cormorant Garamond', serif;
+    font-weight:500;
+    font-size:clamp(2.2rem, 4vw, 3.8rem);
+    line-height:.98;
+    text-transform:lowercase;
+  }
+
+  .bbb-kiv__previewNote{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    margin:0 0 24px;
+    padding:18px 20px;
+    background:rgba(255,255,255,.03);
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:20px;
+  }
+
+  .bbb-kiv__previewNote p{
+    margin:0;
+    max-width:720px;
+    color:rgba(247,243,238,.78);
+    font-size:1.35rem;
+    line-height:1.55;
+  }
+
+  .bbb-kiv__previewFrame{
+    position:relative;
+  }
+
+  .bbb-kiv__grid--preview{
+    max-height:880px;
+    overflow:hidden;
+    mask-image:linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 68%, rgba(0,0,0,.82) 80%, rgba(0,0,0,.14) 94%, rgba(0,0,0,0) 100%);
+    -webkit-mask-image:linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 68%, rgba(0,0,0,.82) 80%, rgba(0,0,0,.14) 94%, rgba(0,0,0,0) 100%);
+  }
+
+  .bbb-kiv__previewLock{
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:0;
+    padding:120px 18px 18px;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    background:linear-gradient(to bottom, rgba(5,5,5,0) 0%, rgba(5,5,5,.72) 35%, rgba(5,5,5,.96) 100%);
+    pointer-events:none;
+  }
+
+  .bbb-kiv__previewLockInner{
+    width:min(100%, 520px);
+    padding:18px 20px;
+    border-radius:20px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(18,18,20,.82);
+    box-shadow:0 18px 40px rgba(0,0,0,.28);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    text-align:center;
+  }
+
+  .bbb-kiv__previewLockKicker{
+    margin:0 0 8px;
+    color:#ff8ac7;
+    font-size:11px;
+    line-height:1.2;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    font-weight:800;
+  }
+
+  .bbb-kiv__previewLockText{
+    margin:0;
+    color:rgba(247,243,238,.8);
+    font-size:1.25rem;
+    line-height:1.55;
+  }
+
+  .bbb-kiv__statusMeta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+  }
+
+  .bbb-kiv__statusChip,
+  .bbb-kiv__sizeChip{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:9px 14px;
+    border-radius:999px;
+    border:1px solid rgba(255,138,199,.48);
+    background:rgba(255,138,199,.14);
+    color:#fff;
+    font-size:12px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    font-weight:700;
+  }
+
+  .bbb-kiv__statusText,
+  .bbb-kiv__metaText{
+    color:rgba(247,243,238,.64);
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+
+  .bbb-kiv__grid{
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+    gap:18px;
+  }
+
+  .bbb-kiv__card,
+  .bbb-kiv__gate,
+  .bbb-kiv__empty{
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:8px;
+    background:linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.02));
+    box-shadow:0 18px 44px rgba(0,0,0,.26);
+  }
+
+  .bbb-kiv__card{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:12px;
+    padding:16px;
+  }
+
+  .bbb-kiv__imageZoom{
+    display:block;
+    width:100%;
+    padding:0;
+    border:0;
+    background:transparent;
+    cursor:zoom-in;
+  }
+
+  .bbb-kiv__media{
+    min-width:0;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+  }
+
+  .bbb-kiv__image{
+    display:block;
+    width:100%;
+    max-width:100%;
+    height:auto;
+    aspect-ratio:auto;
+    object-fit:contain;
+    border-radius:8px;
+    background:#121212;
+  }
+
+  .bbb-kiv__image--placeholder{
+    display:grid;
+    place-items:center;
+    color:#ff8ac7;
+    font-size:32px;
+    border:1px dashed rgba(255,255,255,.16);
+  }
+
+  .bbb-kiv__body{
+    min-width:0;
+    display:grid;
+    align-content:start;
+    gap:10px;
+  }
+
+  .bbb-kiv__productTitle{
+    margin:0;
+    color:#fff;
+    font-size:1.95rem;
+    line-height:1.12;
+    text-transform:lowercase;
+  }
+
+  .bbb-kiv__actions,
+  .bbb-kiv__gateActions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+
+  .bbb-kiv__button{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:100%;
+    min-height:42px;
+    padding:11px 16px;
+    border-radius:8px;
+    background:#ff8ac7;
+    color:#160912;
+    text-decoration:none;
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    font-weight:800;
+    transition:transform .22s ease, background .22s ease, border-color .22s ease;
+  }
+
+  .bbb-kiv__button:hover{
+    transform:translateY(-2px);
+    background:#ff9fd1;
+  }
+
+  .bbb-kiv__button--ghost{
+    background:transparent;
+    color:#ffb8dc;
+    border:1px solid rgba(255,138,199,.42);
+  }
+
+  .bbb-kiv__lightbox{
+    position:fixed;
+    inset:0;
+    z-index:40;
+    display:grid;
+    place-items:center;
+    padding:20px;
+  }
+
+  .bbb-kiv__lightbox[hidden]{
+    display:none;
+  }
+
+  .bbb-kiv__lightboxBackdrop{
+    position:absolute;
+    inset:0;
+    border:0;
+    background:rgba(5,5,5,.88);
+  }
+
+  .bbb-kiv__lightboxDialog{
+    position:relative;
+    z-index:1;
+    width:min(100%, 520px);
+    display:grid;
+    gap:12px;
+    justify-items:center;
+  }
+
+  .bbb-kiv__lightboxClose{
+    justify-self:end;
+    min-height:36px;
+    padding:8px 12px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.16);
+    background:rgba(255,255,255,.08);
+    color:#fff;
+    font-size:10px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    font-weight:800;
+    cursor:pointer;
+  }
+
+  .bbb-kiv__lightboxImage{
+    display:block;
+    width:100%;
+    max-width:100%;
+    max-height:78vh;
+    object-fit:contain;
+    border-radius:8px;
+    background:#121212;
+    box-shadow:0 22px 60px rgba(0,0,0,.42);
+  }
+
+  .bbb-kiv__gate,
+  .bbb-kiv__empty{
+    padding:28px;
+  }
+
+  @media screen and (max-width: 1200px){
+    .bbb-kiv__grid{
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media screen and (max-width: 989px){
+    .bbb-kiv__grid{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media screen and (max-width: 749px){
+    .bbb-kiv{
+      padding:46px 14px 64px;
+    }
+
+    .bbb-kiv__title,
+    .bbb-kiv__gate h2,
+    .bbb-kiv__empty h2{
+      font-size:3.7rem;
+    }
+
+    .bbb-kiv__sub,
+    .bbb-kiv__gate p,
+    .bbb-kiv__empty p{
+      font-size:1.22rem;
+    }
+
+    .bbb-kiv__grid{
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:10px;
+    }
+
+    .bbb-kiv__card{
+      gap:8px;
+      padding:10px;
+    }
+
+    .bbb-kiv__image{
+      width:100%;
+      height:auto;
+      border-radius:6px;
+    }
+
+    .bbb-kiv__eyebrow{
+      margin:0 0 4px;
+      font-size:9px;
+      letter-spacing:.12em;
+    }
+
+    .bbb-kiv__productTitle{
+      font-size:1.3rem;
+      line-height:1.16;
+    }
+
+    .bbb-kiv__actions,
+    .bbb-kiv__gateActions{
+      gap:8px;
+    }
+
+    .bbb-kiv__button{
+      min-height:36px;
+      padding:9px 10px;
+      font-size:10px;
+      letter-spacing:.08em;
+    }
+
+    .bbb-kiv__lightbox{
+      padding:14px;
+    }
+
+    .bbb-kiv__lightboxDialog{
+      width:min(100%, 420px);
+    }
+  }
+</style>
+
+<script>
+  (function(){
+    var section = document.getElementById('bbb-kiv-{{ section.id }}');
+    if (!section) return;
+
+    var lightbox = section.querySelector('[data-kiv-preview]');
+    var image = section.querySelector('[data-kiv-preview-image]');
+    if (!lightbox || !image) return;
+
+    function closePreview(){
+      lightbox.hidden = true;
+      image.setAttribute('src', '');
+      image.setAttribute('alt', '');
+      document.body.style.removeProperty('overflow');
+    }
+
+    section.querySelectorAll('[data-kiv-preview-open]').forEach(function(trigger){
+      trigger.addEventListener('click', function(){
+        var src = trigger.getAttribute('data-kiv-preview-src') || '';
+        var thumb = trigger.getAttribute('data-kiv-preview-thumb') || src;
+        var alt = trigger.getAttribute('data-kiv-preview-alt') || '';
+        if (!thumb && !src) return;
+        image.setAttribute('src', thumb || src);
+        image.setAttribute('alt', alt);
+        lightbox.hidden = false;
+        document.body.style.overflow = 'hidden';
+
+        if (src && src !== thumb) {
+          var fullImage = new Image();
+          fullImage.onload = function(){
+            if (lightbox.hidden === false) {
+              image.setAttribute('src', src);
+            }
+          };
+          fullImage.src = src;
+        }
+      });
+    });
+
+    lightbox.querySelectorAll('[data-kiv-preview-close]').forEach(function(control){
+      control.addEventListener('click', closePreview);
+    });
+
+    document.addEventListener('keydown', function(event){
+      if (event.key === 'Escape' && lightbox.hidden === false) {
+        closePreview();
+      }
+    });
+  })();
+</script>

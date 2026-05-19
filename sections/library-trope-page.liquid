@@ -1,0 +1,212 @@
+{% assign trope = page.metafields.custom.trope.value %}
+{% paginate shop.metaobjects.sss_library.values by 250 %}
+  {% assign all_books = shop.metaobjects.sss_library.values %}
+
+{{ 'sss-you-might-like.css' | asset_url | stylesheet_tag }}
+<section class="sss-lib" data-sss-lib="public">
+
+<div class="sss-lib__wrap">
+
+<!-- TROPE HEADER -->
+
+<div class="sss-tropeTop">
+
+<div class="sss-tropeTop__left">
+
+<div class="sss-trope__header">
+
+<div class="sss-trope__eyebrow">
+the trope archive
+</div>
+
+<h1 class="sss-trope__title">
+{{ trope.name }} books {% if trope.emoji %}{{ trope.emoji }}{% endif %}
+</h1>
+
+{% if trope.description %}
+<p class="sss-trope__desc">
+{{ trope.description }}
+</p>
+{% endif %}
+
+</div>
+
+</div>
+
+
+<div class="sss-tropeTop__right">
+
+<div class="sss-tropeInvite">
+
+<div class="sss-tropeInvite__kicker">
+the private layer
+</div>
+
+<div class="sss-tropeInvite__title">
+one romance recommendation.
+every sunday.
+</div>
+
+<div class="sss-tropeInvite__sub">
+morally gray men delivered straight to you
+</div>
+
+<a 
+href="https://thesmutandsentimentsociety.substack.com/subscribe"
+class="sss-tropeInvite__btn"
+target="_blank"
+rel="noopener"
+>
+join the society →
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="sss-trope__divider"></div>
+
+
+
+<!-- COUNT -->
+
+{% assign book_count = 0 %}
+{% for book in all_books %}
+  {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+  {% assign is_visible_value = is_visible | strip %}
+  {% unless is_visible_value == 'true' %}
+    {% continue %}
+  {% endunless %}
+  {% for t in book.tropes.value %}
+   {% if t.system.handle == trope.system.handle %}
+      {% assign book_count = book_count | plus: 1 %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+
+<div class="sss-trope__count">
+{{ book_count }} books shelved under this trope
+</div>
+
+<div class="sss-lib__seriesDisclaimer">
+  <span class="sss-lib__seriesBadge sss-lib__seriesBadge--demo">1</span>
+  <span class="sss-lib__seriesText">
+    the pink # badge means the book is part of a connected series.
+  </span>
+  <span class="sss-lib__seriesBadge sss-lib__seriesBadge--demo sss-lib__seriesBadge--standalone">1</span>
+  <span class="sss-lib__seriesText">
+    the white # badge means the book is part of a series but can be read as a standalone.
+  </span>
+</div>
+
+<!-- GRID -->
+
+<div class="sss-lib__grid sss-lib__grid--browsePage">
+
+{% for book in all_books %}
+{% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+{% assign is_visible_value = is_visible | strip %}
+{% unless is_visible_value == 'true' %}
+  {% continue %}
+{% endunless %}
+
+{% assign has_trope = false %}
+
+{% for t in book.tropes.value %}
+  {% if t.system.handle == trope.system.handle %}
+    {% assign has_trope = true %}
+  {% endif %}
+{% endfor %}
+
+{% if has_trope %}
+  {% render 'sss-book-card', book: book %}
+{% endif %}
+
+{% endfor %}
+
+</div>
+
+
+<!-- CTA -->
+
+<div class="sss-trope__actions">
+
+<a 
+href="/pages/library" 
+class="sss-trope__actionLink"
+target="_blank"
+rel="noopener"
+>
+see the full romance library →
+</a>
+
+<a 
+href="/pages/reader-quizes" 
+class="sss-trope__actionLink"
+target="_blank"
+rel="noopener"
+>
+find your fictional boyfriend →
+</a>
+
+</div>
+
+<div class="sss-you-might-like--mobile">
+{% render 'sss-you-might-like', current_trope: trope %}
+</div>
+
+<div class="sss-you-might-like--desktop">
+{% render 'sss-you-might-like', current_trope: trope %}
+</div>
+
+<!-- MODAL (must sit OUTSIDE wrap like library page) -->
+
+{% render 'sss-library-modal' %}
+<div id="sssTropePopup" class="sss-tropePopup" hidden>
+
+<div class="sss-tropePopup__title">
+i want books by trope
+</div>
+
+<div class="sss-tropePopup__list" id="sssTropePopupList"></div>
+
+<button class="sss-tropePopup__close" id="sssTropePopupClose">
+×
+</button>
+
+</div>
+</section>
+{% endpaginate %}
+<div id="sssFloatingShare">
+
+<button id="sssShareLibrary" class="sss-lib__floatingShareBtn">
+📲
+</button>
+
+</div>
+
+{{ 'sss-library.css' | asset_url | stylesheet_tag }}
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="{{ 'sss-library.js' | asset_url }}" defer></script>
+
+
+<div id="sssSaveToast" class="sss-saveToast">
+
+<span>
+added to your society shelf 🖤
+</span>
+
+<a 
+  href="#"
+  id="sssToastShelfLink"
+  target="_blank"
+  rel="noopener"
+  class="sss-saveToast__link"
+>
+view your shelf →
+</a>
+
+</div>

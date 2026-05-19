@@ -1,0 +1,11 @@
+{
+  "sections": {
+    "customer_bookshelf_page": {
+      "type": "customer-bookshelf-page",
+      "settings": {}
+    }
+  },
+  "order": [
+    "customer_bookshelf_page"
+  ]
+}

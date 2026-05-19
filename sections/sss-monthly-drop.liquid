@@ -1,0 +1,699 @@
+{% comment %}
+  sss-monthly-drop.liquid
+  Left: swipeable 3-design insert carousel (each design has printable + physical)
+  Right: art print purchase card
+{% endcomment %}
+
+<style>
+  .sss-md{
+    background:#0b0b0b;
+    color:#f6f6f6;
+    padding:18px 12px;
+    font-family:"Libre Baskerville", Georgia, serif;
+    position:relative;
+    overflow:hidden;
+  }
+  .sss-md:before{
+    content:"";
+    position:absolute; inset:-40px;
+    pointer-events:none;
+    background:
+      radial-gradient(900px 520px at 50% 120px, rgba(255,255,255,.08), transparent 70%),
+      repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,.03),
+        rgba(255,255,255,.03) 1px,
+        transparent 1px,
+        transparent 26px
+      );
+    opacity:.55;
+  }
+  .sss-md__wrap{
+    max-width:1300px;
+    margin:0 auto;
+    position:relative;
+    z-index:1;
+    padding:0 8px;
+  }
+
+  /* top quote (substack-ish) */
+  .sss-md__quote{
+    max-width:1100px;
+    margin:0 auto 14px;
+    padding:6px 12px 6px 16px;
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+  }
+  .sss-md__quoteBar{
+    width:3px; border-radius:2px;
+    background:#b91c1c;
+    flex-shrink:0;
+    margin-top:4px;
+  }
+  .sss-md__quoteText{
+    margin:0;
+    font-size:15px;
+    line-height:1.6;
+    color:#f6f6f6;
+    font-style:italic;
+  }
+  @media(max-width:600px){
+    .sss-md__quoteText{ font-size:14px; }
+  }
+
+  /* layout */
+  .sss-md__grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:14px;
+    align-items:start;
+  }
+  @media(min-width:990px){
+    .sss-md__grid{
+      grid-template-columns: 1.12fr .88fr; /* left bigger */
+      gap:16px;
+    }
+  }
+
+  /* shared dark card wrapper */
+  .sss-card{
+    background:rgba(21,21,21,.92);
+    border:1px solid #2a2a2a;
+    border-radius:18px;
+    box-shadow:0 12px 28px rgba(0,0,0,.45);
+    overflow:hidden;
+    color:#f6f6f6;
+  }
+  .sss-card__head{
+    padding:10px 12px 8px;
+    border-bottom:1px solid #2a2a2a;
+    background:rgba(255,255,255,.03);
+  }
+  .sss-card__kicker{
+    margin:0 0 6px;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:#c8c8c8;
+  }
+  .sss-card__title{
+    margin:0;
+    font-size:17px;
+    font-weight:400;
+    text-transform:lowercase;
+  }
+  .sss-card__sub{
+    margin:6px 0 0;
+    font-size:12px;
+    line-height:1.55;
+    color:#c8c8c8;
+  }
+
+  /* ===== swipe shelf ===== */
+  .sss-shelf{
+    position:relative;
+  }
+  .sss-shelf__track{
+    display:flex;
+    gap:12px;
+    overflow-x:auto;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    padding:12px;
+  }
+  .sss-shelf__track::-webkit-scrollbar{ height:8px; }
+  .sss-shelf__track::-webkit-scrollbar-thumb{
+    background:rgba(255,255,255,.14);
+    border-radius:999px;
+  }
+
+  .sss-shelf__slide{
+    scroll-snap-align:start;
+    flex:0 0 86%;
+  }
+  @media(min-width:990px){
+    .sss-shelf__slide{ flex:0 0 92%; }
+  }
+
+  .sss-shelf__nav{
+    position:absolute;
+    top:10px;
+    right:10px;
+    display:flex;
+    gap:8px;
+    z-index:2;
+  }
+  .sss-shelf__nav button{
+    width:36px; height:36px;
+    border-radius:12px;
+    border:1px solid #2a2a2a;
+    background:rgba(255,255,255,.08);
+    color:#f6f6f6;
+    cursor:pointer;
+  }
+  .sss-shelf__nav button:hover{ border-color:#5a5a5a; }
+
+  /* ===== each insert design card (paper vibe INSIDE) ===== */
+  .inscard{
+    background:#F7F3EE;
+    background-image:repeating-linear-gradient(
+      to bottom,
+      rgba(30,27,28,.12) 0,
+      rgba(30,27,28,.12) 1px,
+      transparent 1px,
+      transparent 28px
+    );
+    border:2px solid rgba(30,27,28,.85);
+    border-radius:16px;
+    box-shadow:0 10px 24px rgba(0,0,0,.25);
+    overflow:hidden;
+    color:#1E1B1C;
+    position:relative;
+  }
+  .inscard:before{
+    content:"";
+    position:absolute;
+    top:12px; left:12px;
+    width:12px; height:12px;
+    border-radius:999px;
+    background:#000;
+    box-shadow:
+      0 0 0 3px rgba(247,243,238,.95),
+      0 0 0 4px rgba(30,27,28,.9);
+    z-index:2;
+  }
+  .inscard__head{
+    padding:12px 12px 10px;
+    border-bottom:1px solid rgba(30,27,28,.25);
+    background:rgba(30,27,28,.04);
+  }
+  .inscard__name{
+    margin:0;
+    font-size:16px;
+    font-weight:600;
+    text-transform:lowercase;
+  }
+  .inscard__hint{
+    margin:6px 0 0;
+    font-size:12px;
+    color:rgba(30,27,28,.72);
+    line-height:1.5;
+  }
+
+  .inscard__grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    padding:10px;
+  }
+
+  .panel{
+    border:1px solid rgba(30,27,28,.28);
+    border-radius:14px;
+    background:rgba(255,255,255,.65);
+    overflow:hidden;
+  }
+  .panel__top{
+    padding:8px 10px;
+    border-bottom:1px solid rgba(30,27,28,.18);
+    background:rgba(30,27,28,.03);
+    display:flex;
+    justify-content:center;
+  }
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-size:11px;
+    padding:5px 10px;
+    border-radius:999px;
+    background:#000;
+    color:#F7F3EE;
+    border:1px solid #000;
+    text-transform:lowercase;
+  }
+
+  .panel__media{ padding:8px; }
+  .panel__media img{
+    width:100%;
+    height:auto;
+    max-height:200px;
+    object-fit:contain;
+    display:block;
+    background:rgba(0,0,0,.04);
+    border:1px solid rgba(30,27,28,.25);
+    border-radius:12px;
+    padding:8px;
+    box-sizing:border-box;
+  }
+
+  .panel__note{
+    margin:6px 0 0;
+    font-size:11px;
+    color:rgba(30,27,28,.7);
+    text-align:center;
+    font-style:italic;
+    padding:0 10px;
+  }
+
+  .btnwrap{ padding:10px; }
+  .btngrid{ display:grid; gap:8px; }
+
+  .btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:100%;
+    height:40px;
+    padding:0 12px;
+    border-radius:12px;
+    border:1px solid rgba(30,27,28,.4);
+    background:rgba(247,243,238,.95);
+    color:#1E1B1C;
+    cursor:pointer;
+    text-align:center;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    box-sizing:border-box;
+    font:inherit;
+    font-size:12.5px;
+    line-height:1;
+    appearance:none;
+    -webkit-appearance:none;
+    margin:0;
+    text-decoration:none;
+  }
+  .btn:hover{
+    background:#fff;
+    border-color:rgba(30,27,28,.6);
+  }
+  .btn[disabled]{
+    opacity:.55;
+    cursor:not-allowed;
+  }
+
+  /* right art print card buttons */
+  .ap__body{ padding:12px; }
+  .ap__img{
+    width:100%;
+    height:auto;
+    max-height:520px;
+    object-fit:contain;
+    display:block;
+    border-radius:14px;
+    border:1px solid #2a2a2a;
+    background:#0f0f0f;
+    padding:8px;
+    box-sizing:border-box;
+  }
+  .ap__caption{
+    margin:10px 0 0;
+    font-size:12.5px;
+    line-height:1.55;
+    color:rgba(246,246,246,.78);
+  }
+  .ap__btn{
+    margin-top:12px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:42px;
+    border-radius:12px;
+    border:1px solid #2a2a2a;
+    background:rgba(255,255,255,.08);
+    color:#f6f6f6;
+    text-decoration:none;
+    font-size:13px;
+    cursor:pointer;
+    padding:0 12px;
+  }
+  .ap__btn:hover{ border-color:#5a5a5a; background:rgba(255,255,255,.10); }
+
+  /* mobile order (optional): art print above inserts */
+  @media(max-width:989px){
+    .sss-md__grid > .sss-card--artprint{ order:-1; }
+  }
+
+  /* toast (uses your existing sssAdd/sssToast if present; fallback below) */
+  .sss-toast{
+    position:fixed;
+    left:50%;
+    top:50%;
+    transform:translate(-50%, -50%) scale(.96);
+    background:rgba(0,0,0,.88);
+    border:1px solid rgba(255,255,255,.22);
+    color:#fff;
+    padding:14px 18px;
+    border-radius:18px;
+    font-size:14px;
+    line-height:1.35;
+    z-index:9999;
+    opacity:0;
+    pointer-events:none;
+    box-shadow:0 18px 40px rgba(0,0,0,.6);
+    transition:opacity .18s ease, transform .18s ease;
+    text-align:center;
+  }
+  .sss-toast span{
+    display:block;
+    margin-top:4px;
+    font-size:12px;
+    opacity:.75;
+  }
+  .sss-toast.show{
+    opacity:1;
+    transform:translate(-50%, -50%) scale(1);
+  }
+  /* center + darken insert design name */
+.inscard__name{
+  color:#000 !important;
+  text-align:center;
+}
+/* slider arrows: black button, white arrow */
+.sss-shelf__nav button{
+  background:#000 !important;
+  border:1px solid #000 !important;
+  color:#fff !important;
+}
+
+.sss-shelf__nav button:hover{
+  background:#111 !important;
+  border-color:#111 !important;
+}
+
+/* optional: slightly bolder arrow */
+.sss-shelf__nav button{
+  font-size:18px;
+  line-height:1;
+}
+/* ensure slider arrows sit ABOVE all cards/content */
+.sss-shelf{
+  position:relative;
+}
+
+.sss-shelf__nav{
+  position:absolute;
+  top:8px;
+  right:8px;
+  z-index:50 !important;
+  pointer-events:auto;
+}
+
+/* keep arrows visually on top */
+.sss-shelf__nav button{
+  background:#000 !important;
+  border:1px solid #000 !important;
+  color:#fff !important;
+  position:relative;
+  z-index:51 !important;
+}
+
+</style>
+
+<section class="sss-md">
+  <div class="sss-md__wrap">
+
+    {% if section.settings.quote_text != blank %}
+      <div class="sss-md__quote">
+        <span class="sss-md__quoteBar"></span>
+        <blockquote class="sss-md__quoteText">{{ section.settings.quote_text }}</blockquote>
+      </div>
+    {% endif %}
+
+    <div class="sss-md__grid">
+
+      <!-- LEFT: Monthly Inserts (swipe) -->
+      <article class="sss-card">
+        <div class="sss-card__head">
+          <p class="sss-card__kicker">{{ section.settings.kicker }}</p>
+          <h3 class="sss-card__title">{{ section.settings.title }}</h3>
+          {% if section.settings.subtext != blank %}
+            <p class="sss-card__sub">{{ section.settings.subtext }}</p>
+          {% endif %}
+        </div>
+
+        <div class="sss-shelf">
+          <div class="sss-shelf__nav" aria-hidden="false">
+            <button type="button" class="sss-prev" aria-label="previous">‹</button>
+            <button type="button" class="sss-next" aria-label="next">›</button>
+          </div>
+
+          <div class="sss-shelf__track" data-track>
+            {% for block in section.blocks %}
+              {% if block.type == 'insert' %}
+                {% assign dl12 = block.settings.dl_12th %}
+                {% assign dl11 = block.settings.dl_11th %}
+                {% assign dl6  = block.settings.dl_6in %}
+                {% assign dl10 = block.settings.dl_10th %}
+
+                {% assign v12 = block.settings.v_12th %}
+                {% assign v11 = block.settings.v_11th %}
+                {% assign v6  = block.settings.v_6in %}
+                {% assign v10 = block.settings.v_10th %}
+
+                {% assign show12 = false %}
+                {% assign show11 = false %}
+                {% assign show6  = false %}
+                {% assign show10 = false %}
+
+                {% if v12 != blank and v12 != '0' %}{% assign show12 = true %}{% endif %}
+                {% if v11 != blank and v11 != '0' %}{% assign show11 = true %}{% endif %}
+                {% if v6  != blank and v6  != '0' %}{% assign show6  = true %}{% endif %}
+                {% if v10 != blank and v10 != '0' %}{% assign show10 = true %}{% endif %}
+
+                <div class="sss-shelf__slide" {{ block.shopify_attributes }}>
+                  <div class="inscard">
+                    <div class="inscard__head">
+                      <h4 class="inscard__name">{{ block.settings.name }}</h4>
+                      {% if block.settings.hint != blank %}
+                        <p class="inscard__hint">{{ block.settings.hint }}</p>
+                      {% endif %}
+                    </div>
+
+                    <div class="inscard__grid">
+
+                      <!-- printable -->
+                      <div class="panel">
+                        <div class="panel__top">
+                          <span class="pill">{{ block.settings.printable_pill }}</span>
+                        </div>
+
+                        <div class="panel__media">
+                          {% if block.settings.printable_image != blank %}
+                            {{ block.settings.printable_image | image_url: width: 1200 | image_tag: loading: 'lazy', alt: 'Printable preview' }}
+                          {% endif %}
+                        </div>
+
+                        {% if block.settings.printable_note != blank %}
+                          <p class="panel__note">{{ block.settings.printable_note }}</p>
+                        {% endif %}
+
+                        <div class="btnwrap">
+                          <div class="btngrid">
+                            {% if dl12 != blank %}<a class="btn" href="{{ dl12 }}">12th gen</a>{% endif %}
+                            {% if dl11 != blank %}<a class="btn" href="{{ dl11 }}">11th gen</a>{% endif %}
+                            {% if dl6  != blank %}<a class="btn" href="{{ dl6 }}">6 inch</a>{% endif %}
+                            {% if dl10 != blank %}<a class="btn" href="{{ dl10 }}">10th gen</a>{% endif %}
+
+                            {% unless dl12 != blank or dl11 != blank or dl6 != blank or dl10 != blank %}
+                              <a class="btn" href="#" onclick="return false;" aria-disabled="true">add download links</a>
+                            {% endunless %}
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- physical -->
+                      <div class="panel">
+                        <div class="panel__top">
+                          <span class="pill">{{ block.settings.physical_pill }}</span>
+                        </div>
+
+                        <div class="panel__media">
+                          {% if block.settings.physical_image != blank %}
+                            {{ block.settings.physical_image | image_url: width: 1200 | image_tag: loading: 'lazy', alt: 'Physical preview' }}
+                          {% endif %}
+                        </div>
+
+                        {% if block.settings.physical_note != blank %}
+                          <p class="panel__note">{{ block.settings.physical_note }}</p>
+                        {% endif %}
+
+                        <div class="btnwrap">
+                          <div class="btngrid">
+                            {% if show12 %}<button class="btn" type="button" onclick="sssAddSafe({{ v12 | escape }}, '{{ block.settings.product_name }} · 12th gen')">12th gen · $9</button>{% endif %}
+                            {% if show11 %}<button class="btn" type="button" onclick="sssAddSafe({{ v11 | escape }}, '{{ block.settings.product_name }} · 11th gen')">11th gen · $9</button>{% endif %}
+                            {% if show6 %}<button class="btn" type="button" onclick="sssAddSafe({{ v6  | escape }}, '{{ block.settings.product_name }} · 6 inch')">6 inch · $9</button>{% endif %}
+                            {% if show10 %}<button class="btn" type="button" onclick="sssAddSafe({{ v10 | escape }}, '{{ block.settings.product_name }} · 10th gen')">10th gen · $9</button>{% endif %}
+
+                            {% unless show12 or show11 or show6 or show10 %}
+                              <button class="btn" type="button" disabled>add variant ids</button>
+                            {% endunless %}
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </article>
+
+      <!-- RIGHT: Art Print (purchase) -->
+      <aside class="sss-card sss-card--artprint">
+        <div class="sss-card__head">
+          <p class="sss-card__kicker">{{ section.settings.ap_kicker }}</p>
+          <h3 class="sss-card__title">{{ section.settings.ap_title }}</h3>
+          {% if section.settings.ap_subtext != blank %}
+            <p class="sss-card__sub">{{ section.settings.ap_subtext }}</p>
+          {% endif %}
+        </div>
+
+        <div class="ap__body">
+          {% if section.settings.ap_image != blank %}
+            {{ section.settings.ap_image | image_url: width: 1600 | image_tag: class: 'ap__img', loading: 'lazy', alt: 'Art print' }}
+          {% endif %}
+
+          {% if section.settings.ap_caption != blank %}
+            <p class="ap__caption">{{ section.settings.ap_caption }}</p>
+          {% endif %}
+
+          {% if section.settings.ap_variant != blank and section.settings.ap_variant != '0' %}
+            <button class="ap__btn" type="button"
+              onclick="sssAddSafe({{ section.settings.ap_variant | escape }}, '{{ section.settings.ap_product_name }}')">
+              {{ section.settings.ap_btn }}
+            </button>
+          {% elsif section.settings.ap_url != blank %}
+            <a class="ap__btn" href="{{ section.settings.ap_url }}">{{ section.settings.ap_btn }}</a>
+          {% endif %}
+        </div>
+      </aside>
+
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+  // slider buttons
+  var root = document.currentScript && document.currentScript.parentElement;
+  // find nearest .sss-md (works even if multiple instances)
+  var sectionEl = document.querySelector('.sss-md');
+  if (!sectionEl) return;
+
+  var track = sectionEl.querySelector('[data-track]');
+  if (!track) return;
+
+  var prev = sectionEl.querySelector('.sss-prev');
+  var next = sectionEl.querySelector('.sss-next');
+
+  function slideBy(dir){
+    var w = track.clientWidth;
+    track.scrollBy({ left: dir * (w * 0.9), behavior: 'smooth' });
+  }
+
+  if (prev) prev.addEventListener('click', function(){ slideBy(-1); });
+  if (next) next.addEventListener('click', function(){ slideBy(1); });
+
+  // Ensure toast exists if your other section isn't on the page
+  if (!document.getElementById('sssToast')){
+    var t = document.createElement('div');
+    t.id = 'sssToast';
+    t.className = 'sss-toast';
+    document.body.appendChild(t);
+  }
+})();
+
+function sssToastSafe(msg, sub){
+  if (typeof sssToast === 'function'){ sssToast(msg, sub); return; }
+  var el = document.getElementById('sssToast');
+  if (!el) return;
+  el.innerHTML = sub ? (msg + '<br><span>' + sub + '</span>') : msg;
+  el.classList.add('show');
+  setTimeout(function(){ el.classList.remove('show'); }, 2400);
+}
+
+function sssAddSafe(variantId, label){
+  if (typeof sssAdd === 'function'){ sssAdd(variantId, label); return; }
+  fetch('/cart/add.js', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ id: Number(variantId), quantity: 1 })
+  })
+  .then(function(res){
+    if (res.ok){
+      sssToastSafe('added to cart 🤍', label);
+      return;
+    }
+    return res.json().then(function(data){
+      var msg = "couldn't add";
+      if (data && (data.description || data.message)) msg = data.description || data.message;
+      sssToastSafe('not added 🖤', msg);
+    }).catch(function(){
+      sssToastSafe('not added 🖤', "couldn't add");
+    });
+  })
+  .catch(function(){
+    sssToastSafe('not added 🖤', 'network error');
+  });
+}
+</script>
+
+{% schema %}
+{
+  "name": "sss monthly drop",
+  "settings": [
+    { "type": "textarea", "id": "quote_text", "label": "highlight quote", "default": "this is where the story resumes — sharper, braver, rewritten." },
+
+    { "type": "text", "id": "kicker", "label": "left kicker", "default": "monthly collection" },
+    { "type": "text", "id": "title", "label": "left title", "default": "revival — january drop" },
+    { "type": "textarea", "id": "subtext", "label": "left subtext", "default": "three designs. choose printable or physical for your kindle size." },
+
+    { "type": "text", "id": "ap_kicker", "label": "art print kicker", "default": "art print" },
+    { "type": "text", "id": "ap_title", "label": "art print title", "default": "collectible print" },
+    { "type": "textarea", "id": "ap_subtext", "label": "art print subtext", "default": "made for your shelf, your wall, and your reader heart." },
+    { "type": "image_picker", "id": "ap_image", "label": "art print image" },
+    { "type": "textarea", "id": "ap_caption", "label": "art print caption", "default": "a little love letter to strong women (and the pages that raised us)." },
+    { "type": "text", "id": "ap_product_name", "label": "art print name (toast)", "default": "january art print" },
+    { "type": "text", "id": "ap_variant", "label": "art print variant id (optional)", "default": "0" },
+    { "type": "url", "id": "ap_url", "label": "art print link (if no variant id)" },
+    { "type": "text", "id": "ap_btn", "label": "art print button text", "default": "add art print · $12" }
+  ],
+  "blocks": [
+    {
+      "type": "insert",
+      "name": "insert design",
+      "settings": [
+        { "type": "text", "id": "name", "label": "design name", "default": "design one" },
+        { "type": "textarea", "id": "hint", "label": "1-line vibe", "default": "for readers who like their heroines sharp and their endings earned." },
+
+        { "type": "text", "id": "product_name", "label": "product name (toast)", "default": "january insert — design one" },
+
+        { "type": "text", "id": "printable_pill", "label": "printable pill", "default": "🖨️ printable" },
+        { "type": "image_picker", "id": "printable_image", "label": "printable image" },
+        { "type": "text", "id": "printable_note", "label": "printable note", "default": "download your size." },
+        { "type": "url", "id": "dl_12th", "label": "download — 12th gen" },
+        { "type": "url", "id": "dl_11th", "label": "download — 11th gen" },
+        { "type": "url", "id": "dl_6in", "label": "download — 6 inch" },
+        { "type": "url", "id": "dl_10th", "label": "download — 10th gen" },
+
+        { "type": "text", "id": "physical_pill", "label": "physical pill", "default": "📬 physical" },
+        { "type": "image_picker", "id": "physical_image", "label": "physical image" },
+        { "type": "text", "id": "physical_note", "label": "physical note", "default": "add your size to cart." },
+        { "type": "text", "id": "v_12th", "label": "variant id — 12th gen", "default": "0" },
+        { "type": "text", "id": "v_11th", "label": "variant id — 11th gen", "default": "0" },
+        { "type": "text", "id": "v_6in", "label": "variant id — 6 inch", "default": "0" },
+        { "type": "text", "id": "v_10th", "label": "variant id — 10th gen", "default": "0" }
+      ]
+    }
+  ],
+  "max_blocks": 3,
+  "presets": [
+    { "name": "sss monthly drop" }
+  ]
+}
+{% endschema %}

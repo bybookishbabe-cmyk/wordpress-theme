@@ -1,0 +1,113 @@
+{
+  "sections": {
+    "blocks": {
+      "type": "_blocks",
+      "settings": {}
+    },
+    "main": {
+      "type": "main-product",
+      "blocks": {
+        "vendor": {
+          "type": "text",
+          "settings": {
+            "text": "{{ product.vendor }}",
+            "text_style": "uppercase"
+          }
+        },
+        "title": {
+          "type": "title",
+          "settings": {}
+        },
+        "price": {
+          "type": "price",
+          "settings": {}
+        },
+        "vault_intro": {
+          "type": "custom_liquid",
+          "settings": {
+            "custom_liquid": "<div style=\"margin:16px 0 0;padding:18px 18px 16px;border:1px solid rgba(255,183,220,0.24);border-radius:18px;background:rgba(239,137,191,0.08);\"><p style=\"margin:0 0 10px;color:#ef89bf;font-size:11px;line-height:1.2;letter-spacing:.18em;text-transform:uppercase;font-weight:800;\">how it works</p><div style=\"display:grid;gap:10px;\"><p style=\"margin:0;color:rgba(255,255,255,0.88);font-size:15px;line-height:1.55;\">1. choose your Kindle size once.</p><p style=\"margin:0;color:rgba(255,255,255,0.88);font-size:15px;line-height:1.55;\">2. unlock every current printable insert for that size.</p><p style=\"margin:0;color:rgba(255,255,255,0.88);font-size:15px;line-height:1.55;\">3. after checkout, open <a href=\"/pages/my-vault\" style=\"color:#ffd0e7;text-decoration:underline;text-underline-offset:0.16rem;\">My Vault</a> to access everything you just unlocked.</p></div></div>"
+          }
+        },
+        "variant_picker": {
+          "type": "variant_picker",
+          "settings": {
+            "picker_type": "button",
+            "swatch_shape": "circle"
+          }
+        },
+        "buy_buttons": {
+          "type": "buy_buttons",
+          "settings": {
+            "show_dynamic_checkout": true,
+            "show_gift_card_recipient": false
+          }
+        },
+        "vault_after_purchase": {
+          "type": "custom_liquid",
+          "settings": {
+            "custom_liquid": "<div style=\"margin:16px 0 0;padding:18px;border:1px solid rgba(255,255,255,0.12);border-radius:18px;background:rgba(255,255,255,0.03);\"><p style=\"margin:0 0 8px;color:#ef89bf;font-size:11px;line-height:1.2;letter-spacing:.18em;text-transform:uppercase;font-weight:800;\">after purchase</p><p style=\"margin:0;color:rgba(255,255,255,0.8);font-size:15px;line-height:1.6;\">we save your vault access to the email you use at checkout and match it to the Kindle size you choose here. once the order goes through, open <a href=\"/pages/my-vault\" style=\"color:#ffd0e7;text-decoration:underline;text-underline-offset:0.16rem;\">My Vault</a> and your inserts will be waiting for you.</p></div>"
+          }
+        },
+        "description": {
+          "type": "description",
+          "settings": {}
+        },
+        "share": {
+          "type": "share",
+          "settings": {
+            "share_label": "Share"
+          }
+        }
+      },
+      "block_order": [
+        "vendor",
+        "title",
+        "price",
+        "vault_intro",
+        "variant_picker",
+        "buy_buttons",
+        "vault_after_purchase",
+        "description",
+        "share"
+      ],
+      "settings": {
+        "enable_sticky_info": true,
+        "color_scheme": "scheme-1",
+        "media_size": "small",
+        "constrain_to_viewport": true,
+        "media_fit": "contain",
+        "gallery_layout": "thumbnail_slider",
+        "mobile_thumbnails": "hide",
+        "media_position": "left",
+        "image_zoom": "lightbox",
+        "hide_variants": true,
+        "enable_video_looping": false,
+        "padding_top": 36,
+        "padding_bottom": 12
+      }
+    },
+    "related-products": {
+      "type": "related-products",
+      "settings": {
+        "heading": "you may also love",
+        "heading_size": "h2",
+        "products_to_show": 4,
+        "columns_desktop": 4,
+        "columns_mobile": "2",
+        "color_scheme": "scheme-1",
+        "image_ratio": "square",
+        "image_shape": "default",
+        "show_secondary_image": true,
+        "show_vendor": false,
+        "show_rating": false,
+        "padding_top": 36,
+        "padding_bottom": 28
+      }
+    }
+  },
+  "order": [
+    "blocks",
+    "main",
+    "related-products"
+  ]
+}

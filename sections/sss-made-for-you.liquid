@@ -1,0 +1,496 @@
+{% comment %}
+===============================================================
+SMUT & SENTIMENT SOCIETY — MADE FOR YOU
+===============================================================
+{% endcomment %}
+
+<section class="sss-lib sss-lib--mfy-page" id="sss-lib-{{ section.id }}" data-sss-lib="society">
+  <div class="sss-lib__wrap">
+    <header class="sss-lib__head">
+      <p class="sss-lib__kicker">{{ section.settings.kicker }}</p>
+      <h1 class="sss-lib__title">{{ section.settings.title }}</h1>
+      {% if section.settings.subtext != blank %}
+        <p class="sss-lib__sub">{{ section.settings.subtext }}</p>
+      {% endif %}
+    </header>
+
+    {% paginate shop.metaobjects.sss_library.values by 250 %}
+      {% assign all_books = shop.metaobjects.sss_library.values | sort: "title" %}
+    {% endpaginate %}
+
+    <section class="sss-lib__madeForYou" id="sssMadeForYou">
+      <div class="sss-mfy">
+        <div class="sss-mfy__quiz" id="sssMadeForYouQuiz">
+          <div class="sss-mfy__eyebrow">a little reader profiling. a little emotional damage. a much smarter next-read list.</div>
+          <div class="sss-mfy__prepNote">
+            <strong>before you start:</strong>
+            results get much better once you have gone through the <a class="sss-mfy__prepLink" href="/pages/sss-library-page">library</a> and favorited, saved, or read a few books.
+          </div>
+          <div class="sss-mfy__progress">
+            <div class="sss-mfy__progressMeta">
+              <span id="sssMfyStepCount">question 1 of 6</span>
+              <button type="button" class="sss-mfy__resetLink" id="sssMadeForYouReset">start over</button>
+            </div>
+            <div class="sss-mfy__progressTrack">
+              <span class="sss-mfy__progressFill" id="sssMfyProgressFill"></span>
+            </div>
+          </div>
+
+          <div class="sss-mfy__track" id="sssMfyTrack">
+            <div class="sss-mfy__slide" data-mfy-question="name" data-mfy-step="0">
+              <div class="sss-mfy__label">name on library card</div>
+              <div class="sss-mfy__nameField">
+                <input type="text" id="sssMfyNameInput" class="sss-mfy__nameInput" placeholder="enter your name" maxlength="40" autocomplete="off">
+                <button type="button" class="sss-lib__finderBtn" id="sssMfyNameContinue">continue</button>
+              </div>
+            </div>
+
+            <div class="sss-mfy__slide" data-mfy-question="craving" data-mfy-step="1">
+              <div class="sss-mfy__label">your next read needs to be...</div>
+              <div class="sss-mfy__options">
+                <button type="button" data-mfy-answer="craving" data-value="slow_ache">slow burn</button>
+                <button type="button" data-mfy-answer="craving" data-value="messy_obsession">obsession / stalker</button>
+                <button type="button" data-mfy-answer="craving" data-value="comfort_devotion">friends to lovers</button>
+                <button type="button" data-mfy-answer="craving" data-value="chaos_chemistry">enemies to lovers</button>
+                <button type="button" data-mfy-answer="craving" data-value="dark_dangerous">touch her and die</button>
+              </div>
+            </div>
+
+            <div class="sss-mfy__slide" data-mfy-question="payoff" data-mfy-step="2">
+              <div class="sss-mfy__label">also in the mood for...</div>
+              <div class="sss-mfy__options">
+                <button type="button" data-mfy-answer="payoff" data-value="long_tension">yearning / long tension</button>
+                <button type="button" data-mfy-answer="payoff" data-value="emotional_devastation">angst / emotional devastation</button>
+                <button type="button" data-mfy-answer="payoff" data-value="soft_after_storm">healing / softness after</button>
+                <button type="button" data-mfy-answer="payoff" data-value="plot_addiction">plot-heavy / addictive</button>
+                <button type="button" data-mfy-answer="payoff" data-value="illegal_chemistry">forbidden / sharp chemistry</button>
+              </div>
+            </div>
+
+            <div class="sss-mfy__slide" data-mfy-question="boyfriend_hook" data-mfy-step="3">
+              <div class="sss-mfy__label">what gets you first?</div>
+              <div class="sss-mfy__options">
+                <button type="button" data-mfy-answer="boyfriend_hook" data-value="brain_and_banter">sharp mouth / smarter than me</button>
+                <button type="button" data-mfy-answer="boyfriend_hook" data-value="cold_and_unreadable">cold stare / unreadable energy</button>
+                <button type="button" data-mfy-answer="boyfriend_hook" data-value="dangerous_and_powerful">dangerous / powerful / should be avoided</button>
+                <button type="button" data-mfy-answer="boyfriend_hook" data-value="protective_and_all_in">protective / all in / a little possessive</button>
+                <button type="button" data-mfy-answer="boyfriend_hook" data-value="charming_and_soft">charming / warm / easy to love</button>
+              </div>
+            </div>
+
+            <div class="sss-mfy__slide" data-mfy-question="boyfriend_dynamic" data-mfy-step="4">
+              <div class="sss-mfy__label">what dynamic always gets you?</div>
+              <div class="sss-mfy__options">
+                <button type="button" data-mfy-answer="boyfriend_dynamic" data-value="rivals_with_tension">rivals with too much tension</button>
+                <button type="button" data-mfy-answer="boyfriend_dynamic" data-value="grump_softening">grump who only softens for her</button>
+                <button type="button" data-mfy-answer="boyfriend_dynamic" data-value="mean_and_magnetic">mean / rude / still magnetic</button>
+                <button type="button" data-mfy-answer="boyfriend_dynamic" data-value="touch_her_and_die">touch her and die</button>
+                <button type="button" data-mfy-answer="boyfriend_dynamic" data-value="falls_first_hard">falls first and hard</button>
+                <button type="button" data-mfy-answer="boyfriend_dynamic" data-value="villainous_obsession">villainous obsession</button>
+              </div>
+            </div>
+
+            <div class="sss-mfy__slide" data-mfy-question="theme" data-mfy-step="5">
+              <div class="sss-mfy__label">pick your theme.</div>
+              <div class="sss-mfy__options">
+                <button type="button" class="sss-mfy__themeOption" data-mfy-answer="theme" data-value="dark_hearts">
+                  <span class="sss-mfy__themeName">annotated in black tabs</span>
+                  <span class="sss-mfy__themeMeta">🖤 🗡️ 🕯️ 🥀</span>
+                </button>
+                <button type="button" class="sss-mfy__themeOption" data-mfy-answer="theme" data-value="obsession_red">
+                  <span class="sss-mfy__themeName">dog-eared after midnight</span>
+                  <span class="sss-mfy__themeMeta">❤️ 🍒 🔥 💋</span>
+                </button>
+                <button type="button" class="sss-mfy__themeOption" data-mfy-answer="theme" data-value="rose_ribbon">
+                  <span class="sss-mfy__themeName">pressed petals in chapter ten</span>
+                  <span class="sss-mfy__themeMeta">🎀 🌸 ☁️ 🕯️</span>
+                </button>
+                <button type="button" class="sss-mfy__themeOption" data-mfy-answer="theme" data-value="stormy_blue">
+                  <span class="sss-mfy__themeName">margin notes in the rain</span>
+                  <span class="sss-mfy__themeMeta">🌙 🌊 🩵 ☔</span>
+                </button>
+                <button type="button" class="sss-mfy__themeOption" data-mfy-answer="theme" data-value="pearl_white">
+                  <span class="sss-mfy__themeName">cream dust jacket energy</span>
+                  <span class="sss-mfy__themeMeta">🤍 🦢 ☕ 📖</span>
+                </button>
+                <button type="button" class="sss-mfy__themeOption" data-mfy-answer="theme" data-value="royal_violet">
+                  <span class="sss-mfy__themeName">underlined in velvet ink</span>
+                  <span class="sss-mfy__themeMeta">💜 🔮 🦋 📚</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="sss-mfy__actions">
+            <button type="button" class="sss-lib__finderBtn sss-lib__finderBtn--ghost" id="sssMadeForYouBack">back</button>
+            <div class="sss-mfy__continueNote">tap an answer to keep going</div>
+          </div>
+        </div>
+
+        <div class="sss-mfy__results" id="sssMadeForYouResults" hidden>
+          <div class="sss-mfy__resultsHead">
+            <div class="sss-mfy__resultsIdentity">
+              <div class="sss-mfy__eyebrow" id="sssMfyDashboardKicker">curated for you</div>
+              <div class="sss-mfy__resultsTitle" id="sssMfyDashboardTitle">made for you</div>
+            </div>
+            <button type="button" class="sss-mfy__resetLink" id="sssMadeForYouResetResults">reset</button>
+          </div>
+
+          <div class="sss-mfy__resultsRail">
+          <div class="sss-mfy__panel is-active" data-mfy-panel="0">
+          <div class="sss-mfy__hero sss-mfy__module sss-mfy__module--core">
+            <div class="sss-mfy__emojiRain" id="sssMfyHeroRain" aria-hidden="true"></div>
+            <div class="sss-mfy__moduleEmoji" id="sssMfyCoreEmojiBadge">🖤</div>
+            <div class="sss-mfy__cardKicker" id="sssMfyHeroKicker">🖤 your reader core</div>
+            <div class="sss-mfy__heroTitle" id="sssMfyCoreTitle">waiting on your answers</div>
+            <div class="sss-mfy__heroEmotion" id="sssMfyCoreEmotion">falling emotion: loading</div>
+            <div class="sss-mfy__heroBody" id="sssMfyCoreBody">pick a few answers and i’ll tell you what kind of romance damage you’re actually here for.</div>
+            <div class="sss-mfy__heroTokens" id="sssMfyThemeTokens"></div>
+          </div>
+          </div>
+
+          <div class="sss-mfy__panel" data-mfy-panel="1">
+          <div class="sss-mfy__spotlight sss-mfy__module sss-mfy__module--boyfriend">
+            <div class="sss-mfy__emojiRain" id="sssMfyBoyfriendRain" aria-hidden="true"></div>
+            <div class="sss-mfy__moduleEmoji" id="sssMfyBoyfriendEmojiBadge">✨</div>
+            <div class="sss-mfy__spotlightCopy">
+              <div class="sss-mfy__cardKicker" id="sssMfyBoyfriendKicker">✨ your fictional boyfriend</div>
+              <div class="sss-mfy__cardTitle" id="sssMfyTypeTitle">currently unreadable</div>
+              <div class="sss-mfy__cardBody" id="sssMfyTypeBody">this is where i’ll lovingly explain what your taste in fictional men says about you.</div>
+            </div>
+            <div class="sss-mfy__spotlightBook" id="sssMfyMatchBook"></div>
+          </div>
+          </div>
+
+          <div class="sss-mfy__panel" data-mfy-panel="2">
+          <div class="sss-mfy__recBlock sss-mfy__module sss-mfy__module--reads">
+            <div class="sss-mfy__emojiRain" id="sssMfyReadsRain" aria-hidden="true"></div>
+            <div class="sss-mfy__moduleEmoji" id="sssMfyReadsEmojiBadge">💌</div>
+            <div class="sss-mfy__cardKicker" id="sssMfyReadsKicker">💌 your next read</div>
+            <div class="sss-mfy__recTitle" id="sssMfyRecTitle">your next read will land here</div>
+            <div class="sss-lib__shelfRow" id="sssMadeForYouRow"></div>
+          </div>
+          </div>
+
+          <div class="sss-mfy__resultsActions">
+            <div class="sss-mfy__resultsMeta" id="sssMfyResultsMeta">step 1 of 4</div>
+            <button type="button" class="sss-lib__finderBtn" id="sssMfyNextResult">next</button>
+          </div>
+          </div>
+
+          <div class="sss-mfy__customize" id="sssMfyCustomize" hidden>
+            <div class="sss-mfy__customizeHead">
+              <div class="sss-mfy__eyebrow">make it more you</div>
+              <div class="sss-mfy__customizeTitle">add a few personal layers</div>
+            </div>
+
+            <div class="sss-mfy__addonRow" id="sssMfyAddonRow">
+              <button type="button" class="sss-mfy__addonCard" data-mfy-addon="hard_nos">
+                <span class="sss-mfy__addonEmoji">🚫</span>
+                <span class="sss-mfy__addonText">
+                  <strong>set your hard no's</strong>
+                  <small id="sssMfyHardNoSummary">shape your recs</small>
+                </span>
+              </button>
+              <button type="button" class="sss-mfy__addonCard" data-mfy-addon="spice_dial">
+                <span class="sss-mfy__addonEmoji">🌶️</span>
+                <span class="sss-mfy__addonText">
+                  <strong>spice dial</strong>
+                  <small id="sssMfyManDialSummary">be honest</small>
+                </span>
+              </button>
+              <button type="button" class="sss-mfy__addonCard" data-mfy-addon="favorite_book">
+                <span class="sss-mfy__addonEmoji">📖</span>
+                <span class="sss-mfy__addonText">
+                  <strong>favorite book</strong>
+                  <small id="sssMfyFavoriteSummary">the one that changed you</small>
+                </span>
+              </button>
+            </div>
+
+            <div class="sss-mfy__addonModules">
+              <section class="sss-mfy__addonModule sss-mfy__addonModule--hardnos" data-mfy-module="hard_nos" hidden>
+                <div class="sss-mfy__addonHeader">
+                  <div>
+                    <div class="sss-mfy__cardKicker">🚫 hard no's</div>
+                    <h3>the things you never want me to sneak into your recs</h3>
+                  </div>
+                  <button type="button" class="sss-mfy__collapse" data-mfy-close="hard_nos">close</button>
+                </div>
+                <div class="sss-mfy__chipSet sss-mfy__chipSet--hardnos" id="sssMfyHardNos">
+                  <button type="button" data-mfy-hard-no="love triangle">love triangle</button>
+                  <button type="button" data-mfy-hard-no="accidental pregnancy">accidental pregnancy</button>
+                  <button type="button" data-mfy-hard-no="cheating">cheating</button>
+                  <button type="button" data-mfy-hard-no="bully romance">bully romance</button>
+                  <button type="button" data-mfy-hard-no="second chance">second chance</button>
+                  <button type="button" data-mfy-hard-no="secret baby">secret baby</button>
+                  <button type="button" data-mfy-hard-no="why choose">why choose</button>
+                  <button type="button" data-mfy-hard-no="friends with benefits">friends with benefits</button>
+                </div>
+                <div class="sss-mfy__addonActions">
+                  <button type="button" class="sss-lib__finderBtn" id="sssMfySaveHardNos">save choices</button>
+                </div>
+              </section>
+
+              <section class="sss-mfy__addonModule sss-mfy__addonModule--dial" data-mfy-module="spice_dial" hidden>
+                <div class="sss-mfy__addonHeader">
+                  <div>
+                    <div class="sss-mfy__cardKicker">🌶️ spice dial</div>
+                    <h3>tell me how spicy you want the lower recs to run</h3>
+                  </div>
+                  <button type="button" class="sss-mfy__collapse" data-mfy-close="spice_dial">close</button>
+                </div>
+                <div class="sss-mfy__dialWrap" id="sssMfyManDial">
+                  <div class="sss-mfy__dialOrb" id="sssMfyManDialOrb">
+                    <div class="sss-mfy__dialCenter">
+                      <span class="sss-mfy__dialMini">current spice lane</span>
+                      <strong id="sssMfyManDialValue">🌶️ • soft open door</strong>
+                    </div>
+                  </div>
+                  <div class="sss-mfy__dialLabels">
+                    <span>🌶️ • soft open door</span>
+                    <span>🌶️🌶️ • some heat</span>
+                    <span>🌶️🌶️🌶️ • balanced</span>
+                    <span>🌶️🌶️🌶️🌶️ • high spice</span>
+                    <span>🌶️🌶️🌶️🌶️🌶️ • wreck me</span>
+                  </div>
+                  <input type="range" min="0" max="4" step="1" value="0" id="sssMfyManDialInput" class="sss-mfy__dialInput">
+                  <div class="sss-mfy__dialChoices" id="sssMfyManDialChoices">
+                    <button type="button" class="sss-mfy__dialChoice" data-mfy-dial-choice="soft_open_door">🌶️ soft open door</button>
+                    <button type="button" class="sss-mfy__dialChoice" data-mfy-dial-choice="some_heat">🌶️🌶️ some heat</button>
+                    <button type="button" class="sss-mfy__dialChoice" data-mfy-dial-choice="balanced">🌶️🌶️🌶️ balanced</button>
+                    <button type="button" class="sss-mfy__dialChoice" data-mfy-dial-choice="high_spice">🌶️🌶️🌶️🌶️ high spice</button>
+                    <button type="button" class="sss-mfy__dialChoice" data-mfy-dial-choice="wreck_me">🌶️🌶️🌶️🌶️🌶️ wreck me</button>
+                  </div>
+                </div>
+                <p class="sss-mfy__moduleNote" id="sssMfyManDialNote">this will only tune the reads suggested below your dashboard.</p>
+                <div class="sss-mfy__addonActions">
+                  <button type="button" class="sss-lib__finderBtn" id="sssMfySaveManDial">save dial</button>
+                </div>
+              </section>
+
+              <section class="sss-mfy__addonModule sss-mfy__addonModule--favorite" data-mfy-module="favorite_book" hidden>
+                <div class="sss-mfy__addonHeader">
+                  <div>
+                    <div class="sss-mfy__cardKicker">📖 favorite book</div>
+                    <h3>the one that permanently altered your standards</h3>
+                  </div>
+                  <button type="button" class="sss-mfy__collapse" data-mfy-close="favorite_book">close</button>
+                </div>
+                <div class="sss-mfy__favoriteGrid">
+                  <div class="sss-mfy__favoritePicker">
+                    <label class="visually-hidden" for="sssMfyFavoriteBookSearch">favorite book</label>
+                    <input type="search" id="sssMfyFavoriteBookSearch" class="sss-mfy__select sss-mfy__searchInput" placeholder="search for your favorite book" autocomplete="off">
+                    <div class="sss-mfy__searchResults" id="sssMfyFavoriteBookResults" role="listbox" aria-label="favorite book matches"></div>
+                    <div class="sss-mfy__favoriteEcho" id="sssMfyFavoriteBookEcho">pick the book that changed everything and i’ll weave that into your recs.</div>
+                  </div>
+                  <div class="sss-mfy__favoritePreview" id="sssMfyFavoriteBookPreview"></div>
+                </div>
+                <div class="sss-mfy__addonActions">
+                  <button type="button" class="sss-lib__finderBtn" id="sssMfySaveFavoriteBook">save favorite book</button>
+                </div>
+              </section>
+
+            </div>
+          </div>
+
+          <section class="sss-mfy__quoteSpotlight" id="sssMfyQuoteSpotlight" hidden>
+            <div class="sss-mfy__quoteSpotlightHead">
+              <div>
+                <div class="sss-mfy__eyebrow" id="sssMfyQuoteEyebrow">quote spotlight</div>
+                <div class="sss-mfy__quoteSpotlightTitle">a line for your current reading era</div>
+              </div>
+            </div>
+            <div class="sss-mfy__quoteStage">
+              <div class="sss-mfy__emojiRain" id="sssMfyQuoteRain" aria-hidden="true"></div>
+              <blockquote class="sss-mfy__quoteCard" id="sssMfyQuoteCard">
+                <span class="sss-mfy__quoteBar"></span>
+                <p id="sssMfyQuoteText">a line that fits your taste will land here.</p>
+                <footer id="sssMfyQuoteSource"></footer>
+              </blockquote>
+            </div>
+          </section>
+
+          <section class="sss-mfy__savedQuotes" id="sssMfySavedQuotes" hidden>
+            <div class="sss-mfy__quoteSpotlightHead">
+              <div>
+                <div class="sss-mfy__eyebrow">saved from the quote wall</div>
+                <div class="sss-mfy__quoteSpotlightTitle">the lines you wanted to keep</div>
+              </div>
+              <div class="sss-mfy__readShelfMeta" id="sssMfySavedQuotesMeta">save quotes in the wall and they’ll land here.</div>
+            </div>
+            <div class="sss-mfy__savedQuoteGrid" id="sssMfySavedQuotesRow"></div>
+          </section>
+
+          <section class="sss-mfy__readShelf" id="sssMfyReadShelf" hidden>
+            <div class="sss-mfy__readShelfHead">
+              <div>
+                <div class="sss-mfy__eyebrow" id="sssMfyReadShelfEyebrow">books you've read in the library</div>
+                <div class="sss-mfy__quoteSpotlightTitle">the books you already finished are shaping what comes next</div>
+              </div>
+              <div class="sss-mfy__readShelfMeta" id="sssMfyReadShelfMeta">mark books as read anywhere on the site and they’ll show up here.</div>
+            </div>
+
+            <div class="sss-mfy__readShelfGrid">
+              <div class="sss-mfy__readShelfColumn">
+                <div class="sss-mfy__cardKicker">your read shelf</div>
+                <div class="sss-lib__shelfRow" id="sssMfyReadShelfRow"></div>
+              </div>
+
+              <div class="sss-mfy__readShelfColumn sss-mfy__readShelfColumn--insights">
+                <div class="sss-mfy__cardKicker">the tropes you keep returning to</div>
+                <div class="sss-mfy__heroTokens sss-mfy__heroTokens--left" id="sssMfyReadTropes"></div>
+                <p class="sss-mfy__moduleNote" id="sssMfyReadShelfInsight">once you’ve marked a few finished books, i’ll pull the patterns and aim your next recs harder.</p>
+              </div>
+            </div>
+
+            <div class="sss-mfy__insight sss-mfy__module sss-mfy__module--shelf">
+              <div class="sss-mfy__emojiRain" id="sssMfyShelfRain" aria-hidden="true"></div>
+              <div class="sss-mfy__moduleEmoji" id="sssMfyShelfEmojiBadge">📚</div>
+              <div class="sss-mfy__cardKicker" id="sssMfyShelfKicker">📚 what your bookshelf says about you...</div>
+              <div class="sss-mfy__cardTitle" id="sssMfyShelfTitle">not enough evidence yet</div>
+              <div class="sss-mfy__cardBody" id="sssMfyShelfBody">save a few books or tag them as tbr / reading and this gets smarter.</div>
+            </div>
+
+            <div class="sss-mfy__readShelfNext">
+              <p class="sss-mfy__moduleNote">** updates as you mark books read, rate them, and save your personal layers.</p>
+              <div class="sss-mfy__cardKicker">what you should read next</div>
+              <div class="sss-mfy__recTitle" id="sssMfyReadNextTitle">your next reads will land here once your read shelf has a pattern.</div>
+              <div class="sss-lib__shelfRow" id="sssMfyReadNextRow"></div>
+              <div class="sss-mfy__swipeCue">swipe to see more →</div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div class="sss-mfy__sourceGrid" hidden aria-hidden="true">
+        {% for book in all_books %}
+          {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+          {% assign is_visible_value = is_visible | strip %}
+          {% unless is_visible_value == 'true' %}
+            {% continue %}
+          {% endunless %}
+
+          {% assign mfy_book_month = '' %}
+          {% if book.featured_in_newsletter_date.value != blank %}
+            {% assign mfy_book_month = book.featured_in_newsletter_date.value | date: "%Y-%m" %}
+          {% endif %}
+          {% assign current_month = 'now' | date: "%Y-%m" %}
+          {% if mfy_book_month == current_month %}
+            {% continue %}
+          {% endif %}
+
+          {% render 'sss-book-card', book: book %}
+        {% endfor %}
+      </div>
+
+      <script type="application/json" id="sssMadeForYouData">
+        [
+          {% assign mfy_first = true %}
+          {% assign current_month = 'now' | date: "%Y-%m" %}
+          {% for book in all_books %}
+            {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+            {% assign is_visible_value = is_visible | strip %}
+            {% unless is_visible_value == 'true' %}
+              {% continue %}
+            {% endunless %}
+            {% assign mfy_book_month = '' %}
+            {% if book.featured_in_newsletter_date.value != blank %}
+              {% assign mfy_book_month = book.featured_in_newsletter_date.value | date: "%Y-%m" %}
+            {% endif %}
+            {% if mfy_book_month == current_month %}
+              {% continue %}
+            {% endif %}
+            {% unless mfy_first %},{% endunless %}
+            {% assign mfy_first = false %}
+            {
+              "handle": {{ book.system.handle | json }},
+              "title": {{ book.title.value | json }},
+              "author": {{ book.author.value | json }},
+              "shelf": {{ book.shelf.value.name | strip | json }},
+              "boyfriend_name": {{ book.boyfriend_name.value | json }},
+              "boyfriend_type": {{ book.boyfriend_type.value | json }},
+              "spice": {{ book.spice_level.value | default: 0 | json }},
+              "tension": {{ book.tension_score.value | default: 0 | json }},
+              "damage": {{ book.emotional_damage_score.value | default: 0 | json }},
+              "darkness": {{ book.darkness_level.value | default: 0 | json }},
+              "yearning": {{ book.yearning_level.value | default: 0 | json }},
+              "ku": {% if book.on_kindle_unlimited.value == true %}true{% else %}false{% endif %},
+              "tropes": [
+                {% for trope in book.tropes.value %}
+                  {{ trope.name | strip | json }}{% unless forloop.last %},{% endunless %}
+                {% endfor %}
+              ]
+            }
+          {% endfor %}
+        ]
+      </script>
+      <script type="application/json" id="sssMadeForYouQuotes">
+        [
+          {% assign mfy_quote_first = true %}
+          {% assign quote_items = shop.metaobjects.sss_quote.values %}
+          {% for q in quote_items %}
+            {% assign quote_txt = q.quote.value %}
+            {% if quote_txt == blank %}{% continue %}{% endif %}
+            {% assign linked_book = q.library_book.value %}
+            {% if linked_book == blank %}{% continue %}{% endif %}
+            {% capture is_visible %}{% render 'sss-book-visible', book: linked_book %}{% endcapture %}
+            {% assign is_visible_value = is_visible | strip %}
+            {% unless is_visible_value == 'true' %}{% continue %}{% endunless %}
+            {% assign shelf_name = linked_book.shelf.value.name | default: '' | strip %}
+            {% assign shelf_handle = linked_book.shelf.value.system.handle | default: '' | strip %}
+            {% assign genre_key = shelf_handle | default: shelf_name | downcase | strip | handleize %}
+            {% assign quote_theme = 'gray' %}
+            {% if genre_key contains 'romantasy' or genre_key contains 'fantasy' %}
+              {% assign quote_theme = 'blue' %}
+            {% elsif genre_key contains 'dark' or genre_key contains 'morally-gray' or genre_key contains 'morally' or genre_key contains 'private' or genre_key contains 'five-chili' or genre_key contains 'extra-dark' %}
+              {% assign quote_theme = 'red' %}
+            {% elsif genre_key contains 'soft' or genre_key contains 'sentimental' or genre_key contains 'classics' or genre_key contains 'starter' %}
+              {% assign quote_theme = 'yellow' %}
+            {% endif %}
+            {% unless mfy_quote_first %},{% endunless %}
+            {% assign mfy_quote_first = false %}
+            {
+              "handle": {{ linked_book.system.handle | json }},
+              "title": {{ linked_book.title.value | json }},
+              "author": {{ linked_book.author.value | json }},
+              "quote": {{ quote_txt | strip_html | strip | json }},
+              "theme": {{ quote_theme | json }}
+            }
+          {% endfor %}
+        ]
+      </script>
+    </section>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "sss made for you",
+  "settings": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Kicker",
+      "default": "classified for members"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "made for you"
+    },
+    {
+      "type": "textarea",
+      "id": "subtext",
+      "label": "Subtext",
+      "default": "a little reader profiling. a little emotional damage. a much smarter next-read list."
+    }
+  ],
+  "presets": [
+    {
+      "name": "sss made for you"
+    }
+  ]
+}
+{% endschema %}

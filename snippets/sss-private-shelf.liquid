@@ -1,0 +1,143 @@
+{% comment %}
+PRIVATE SHELF — SOCIETY ONLY
+Uses section blocks for shelf configuration
+Books pulled from metaobject: sss_library
+{% endcomment %}
+
+{% assign shelf_books = books | default: shop.metaobjects.sss_library.values %}
+
+{% for block in section.blocks %}
+{% if block.type == 'private_shelf' %}
+{% assign private_shelf_count = 0 %}
+
+{% for book in shelf_books %}
+  {% capture is_visible %}{% render 'sss-book-visible', book: book, allow_hidden_from_library: true %}{% endcapture %}
+  {% assign is_visible_value = is_visible | strip %}
+  {% unless is_visible_value == 'true' %}
+    {% continue %}
+  {% endunless %}
+  {% capture is_private %}{% render 'sss-book-private', book: book %}{% endcapture %}
+  {% assign is_private_value = is_private | strip %}
+  {% if is_private_value == 'true' %}
+    {% assign private_shelf_count = private_shelf_count | plus: 1 %}
+  {% endif %}
+{% endfor %}
+
+{% if private_shelf_count > 0 %}
+
+<div class="sss-lib__shelf sss-lib__shelf--private">
+
+<div class="sss-lib__shelfHead">
+
+<div id="private" class="sss-lib__privateKicker">
+between us
+</div>
+
+<div class="sss-lib__shelfTitle">
+{{ block.settings.title }}
+</div>
+
+{% if block.settings.description != blank %}
+<div class="sss-lib__shelfDesc">
+{{ block.settings.description }}
+</div>
+{% endif %}
+
+<div class="sss-lib__swipeCue">swipe me →</div>
+
+<a class="sss-lib__privateFullLink" href="/pages/sss-private-shelf">
+see full private shelf →
+</a>
+
+</div>
+
+
+<div class="sss-lib__shelfRow">
+
+{% for book in shelf_books %}
+{% capture is_visible %}{% render 'sss-book-visible', book: book, allow_hidden_from_library: true %}{% endcapture %}
+{% assign is_visible_value = is_visible | strip %}
+{% unless is_visible_value == 'true' %}
+  {% continue %}
+{% endunless %}
+{% capture is_private %}{% render 'sss-book-private', book: book %}{% endcapture %}
+{% assign is_private_value = is_private | strip %}
+
+{% if is_private_value == 'true' %}
+
+{% render 'sss-book-card', book: book, mini: true, allow_hidden_from_library: true %}
+
+{% endif %}
+
+{% endfor %}
+
+</div>
+
+<!-- BOYFRIEND OF THE MONTH -->
+
+<div class="sss-bom">
+
+<div class="sss-bom__head">
+
+<div class="sss-bom__kicker">
+members only
+</div>
+
+<div class="sss-bom__title">
+boyfriend of the month
+</div>
+
+<div class="sss-bom__sub">
+submit your obsession. democracy decides.
+</div>
+
+</div>
+
+
+<div class="sss-bom__inputWrap">
+
+<input type="text" id="bomName" placeholder="enter fictional man…">
+
+<button type="button" id="bomSubmit">
+submit
+</button>
+
+</div>
+
+
+<div class="sss-bom__results" id="bomResults"></div>
+
+<script type="application/json" id="sssBomBookMap">
+[
+{% assign bom_first = true %}
+{% for book in shelf_books %}
+  {% capture is_visible %}{% render 'sss-book-visible', book: book, allow_hidden_from_library: true %}{% endcapture %}
+  {% assign is_visible_value = is_visible | strip %}
+  {% unless is_visible_value == 'true' %}
+    {% continue %}
+  {% endunless %}
+  {% if book.boyfriend_name.value != blank %}
+    {% unless bom_first %},{% endunless %}
+    {% assign bom_first = false %}
+    {
+      "boyfriend_name": {{ book.boyfriend_name.value | json }},
+      "boyfriend_type": {{ book.boyfriend_type.value | json }},
+      "title": {{ book.title.value | json }},
+      "tropes": [
+        {% for trope in book.tropes.value %}
+          {{ trope.name | json }}{% unless forloop.last %},{% endunless %}
+        {% endfor %}
+      ]
+    }
+  {% endif %}
+{% endfor %}
+]
+</script>
+
+</div>
+
+</div>
+
+{% endif %}
+{% endif %}
+{% endfor %}

@@ -19,7 +19,7 @@
     : null;
 
   function inDesignMode(){
-    return window.bbbAdminPreview === true;
+    return !!(window.Shopify && window.Shopify.designMode);
   }
 
   function getShelfItems(){
@@ -250,10 +250,10 @@
 
   function getShelfRedirectUrl(sourcePage){
     var path = String(sourcePage || window.location.pathname || "").toLowerCase();
-    if (path.indexOf("/society-library") === 0) {
-      return ((window.bbbUrls && window.bbbUrls.societyLibrary) || "/society-library/") + "?shelf=open";
+    if (path.indexOf("/pages/sss-library-page") === 0) {
+      return "/pages/sss-library-page?shelf=open";
     }
-    return ((window.bbbUrls && window.bbbUrls.library) || "/library/") + "?shelf=open";
+    return "/pages/library?shelf=open";
   }
 
   function queuePendingSubmission(email){
@@ -382,7 +382,7 @@
     options = options || {};
     var account = getReaderAccount();
     if (account && account.loggedIn && options.manual === true){
-      window.location.href = account.bookshelfUrl || ((window.bbbUrls && window.bbbUrls.myBookshelf) || "/my-bookshelf/");
+      window.location.href = account.bookshelfUrl || "/pages/my-bookshelf";
       return;
     }
     var state = getState();

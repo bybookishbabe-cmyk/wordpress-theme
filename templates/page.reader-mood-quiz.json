@@ -1,0 +1,21 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-page",
+      "disabled": true,
+      "settings": {
+        "padding_top": 28,
+        "padding_bottom": 28
+      }
+    },
+    "reader_mood_quiz": {
+      "type": "reader-mood-quiz",
+      "name": "Reader mood quiz",
+      "settings": {}
+    }
+  },
+  "order": [
+    "main",
+    "reader_mood_quiz"
+  ]
+}

@@ -1,0 +1,14 @@
+{%- liquid
+  assign banner_id = banner_id | default: 'printable-kindle-promo'
+  assign vault_collection = collections['printable-kindle-inserts']
+  assign vault_count = vault_collection.products_count | default: 0 | plus: 0
+  assign vault_url = '/pages/shop'
+-%}
+
+<div class="printable-kindle-promo" id="{{ banner_id }}">
+  <div class="printable-kindle-promo__inner">
+    <a class="printable-kindle-promo__title" href="{{ vault_url }}">
+      get the printable insert vault <span aria-hidden="true">✦</span> yours forever <span aria-hidden="true">✦</span> {% if vault_count > 0 %}over {{ vault_count }} inserts{% else %}full sets waiting inside{% endif %}
+    </a>
+  </div>
+</div>

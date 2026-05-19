@@ -1,0 +1,102 @@
+{% assign article_series = series | default: article.metafields.custom.sss_series.value | default: article.metafields.custom.series.value %}
+
+{% if article_series != blank %}
+  {% assign series_title = article_series.title | default: article_series.name | strip %}
+  {% assign series_author = article_series.author.value | default: article_series.author | strip %}
+  {% assign series_handle = article_series.system.handle | default: '' | strip %}
+  {% assign linked_blog_url = '' %}
+  {% if article_series.linked_blog_post.value != blank %}
+    {% assign linked_blog_url = article_series.linked_blog_post.value.url | default: article_series.linked_blog_post.value.online_store_url | default: '' %}
+  {% endif %}
+  {% if linked_blog_url == blank %}
+    {% assign linked_blog_url = article_series.linked_blog_url.value | default: article_series.linked_blog_url | default: '' | strip %}
+  {% endif %}
+
+  {% assign series_books = article_series.sss_books.value %}
+  {% if series_books == blank %}
+    {% assign series_books = article_series.books_in_series.value %}
+  {% endif %}
+
+  {% if series_books == blank and series_handle != blank %}
+    {% capture matched_series_books %}
+      {% for book in shop.metaobjects.sss_library.values %}
+        {% assign book_series_handle = book.series.value.system.handle | default: '' | strip %}
+        {% assign book_series_title = book.series.value.title | default: '' | strip %}
+        {% if book_series_handle == series_handle or book_series_title == series_title %}
+          <div class="guide-bookcard__item guide-bookcard__item--series js-scroll-reveal">
+            {% render 'blog-book-card', book: book %}
+          </div>
+        {% endif %}
+      {% endfor %}
+    {% endcapture %}
+  {% endif %}
+
+  {% assign series_count = 0 %}
+  {% if series_books != blank %}
+    {% assign series_count = series_books.size %}
+  {% endif %}
+
+  <div class="guide-bookcard guide-bookcard--series" data-guide-bookcard data-guide-title="{{ series_title | escape }}">
+    <div class="guide-bookcard__head guide-bookcard__head--series">
+      <div class="guide-bookcard__header">
+        {% if series_title != blank %}
+          <span class="guide-bookcard__eyebrow">series reading order</span>
+          <h3 class="guide-bookcard__seriesTitle">{{ series_title }}</h3>
+        {% endif %}
+        {% if series_author != blank or series_count > 0 %}
+          <p class="guide-bookcard__seriesMeta">
+            {% if series_author != blank %}{{ series_author }}{% endif %}{% if series_author != blank and series_count > 0 %} · {% endif %}{% if series_count > 0 %}{{ series_count }} {% if series_count == 1 %}book{% else %}books{% endif %}{% endif %}
+          </p>
+        {% endif %}
+      </div>
+      {% if linked_blog_url != blank %}
+        <a class="guide-bookcard__seriesLink" href="{{ linked_blog_url }}">open reading guide →</a>
+      {% elsif series_handle != blank %}
+        <a class="guide-bookcard__seriesLink" href="/pages/series?series={{ series_handle }}">open series page →</a>
+      {% endif %}
+    </div>
+
+    {% if series_books != blank %}
+      {% assign rendered_series_handles = '|' %}
+      {% capture ordered_series_books %}
+        {% for order_number in (1..40) %}
+          {% for book in series_books %}
+            {% assign series_number_text = book.series_number.value | default: book.series_number | append: '' | strip %}
+            {% assign book_handle = book.system.handle | default: '' | strip %}
+            {% assign handle_token = '|' | append: book_handle | append: '|' %}
+            {% assign order_number_text = order_number | append: '' %}
+            {% if series_number_text == order_number_text %}
+              {% unless rendered_series_handles contains handle_token %}
+              {% assign rendered_series_handles = rendered_series_handles | append: book_handle | append: '|' %}
+              <div class="guide-bookcard__item guide-bookcard__item--series js-scroll-reveal">
+                {% render 'blog-book-card', book: book %}
+              </div>
+              {% endunless %}
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+
+        {% for book in series_books %}
+          {% assign book_handle = book.system.handle | default: '' | strip %}
+          {% assign handle_token = '|' | append: book_handle | append: '|' %}
+          {% unless rendered_series_handles contains handle_token %}
+            {% assign rendered_series_handles = rendered_series_handles | append: book_handle | append: '|' %}
+            <div class="guide-bookcard__item guide-bookcard__item--series js-scroll-reveal">
+              {% render 'blog-book-card', book: book %}
+            </div>
+          {% endunless %}
+        {% endfor %}
+      {% endcapture %}
+
+      <div class="guide-bookcard__list guide-bookcard__list--series">
+        {{ ordered_series_books }}
+      </div>
+    {% elsif matched_series_books != blank %}
+      <div class="guide-bookcard__list guide-bookcard__list--series">
+        {{ matched_series_books }}
+      </div>
+    {% else %}
+      <p class="guide-bookcard__empty">reading order coming soon.</p>
+    {% endif %}
+  </div>
+{% endif %}

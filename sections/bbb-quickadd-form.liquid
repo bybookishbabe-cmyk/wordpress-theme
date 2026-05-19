@@ -1,0 +1,25 @@
+{% if product.available %}
+
+  {% if product.has_only_default_variant %}
+    <form method="post" action="/cart/add" class="favorite-card-form">
+      <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+      <button type="submit" class="favorite-card-button">quick add</button>
+    </form>
+  {% else %}
+    <form method="post" action="/cart/add" class="favorite-card-form">
+      <select name="id" class="favorite-card-select">
+        {% for variant in product.variants %}
+          {% if variant.available %}
+            <option value="{{ variant.id }}">{{ variant.title }}</option>
+          {% else %}
+            <option value="{{ variant.id }}" disabled>{{ variant.title }} — sold out</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+      <button type="submit" class="favorite-card-button">add to cart</button>
+    </form>
+  {% endif %}
+
+{% else %}
+  <div class="favorite-card-soldout">sold out</div>
+{% endif %}

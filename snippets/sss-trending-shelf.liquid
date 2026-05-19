@@ -1,0 +1,160 @@
+<div id="sssTrendingShelf" class="sss-lib__shelf">
+
+  <div class="sss-lib__shelfHead">
+    <div class="sss-lib__shelfTitle">
+      🔥 trending in the society
+    </div>
+
+    <div class="sss-lib__shelfDesc">
+      the books the society is obsessing over right now
+    </div>
+
+    <p class="sss-lib__shelfMeta">
+      weekly saves first; all-time fills in while the week warms up
+    </p>
+  </div>
+
+  <div class="sss-lib__shelfRow" id="sssTrendingRow">
+    {% assign trending_source_books = books %}
+    {% assign trending_include_private = include_private_books | default: false %}
+    {% if trending_source_books == blank %}
+      {% paginate shop.metaobjects.sss_library.values by 250 %}
+        {% assign trending_source_books = shop.metaobjects.sss_library.values | sort: 'title' %}
+      {% endpaginate %}
+    {% endif %}
+    {% assign trending_fallback_rendered = 0 %}
+    {% for book in trending_source_books %}
+      {% if trending_fallback_rendered >= 5 %}
+        {% break %}
+      {% endif %}
+      {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+      {% assign is_visible_value = is_visible | strip %}
+      {% unless is_visible_value == 'true' %}
+        {% continue %}
+      {% endunless %}
+      {% unless trending_include_private %}
+        {% capture is_private %}{% render 'sss-book-private', book: book %}{% endcapture %}
+        {% assign is_private_value = is_private | strip %}
+        {% if is_private_value == 'true' %}
+          {% continue %}
+        {% endif %}
+      {% endunless %}
+      {% assign trending_fallback_rendered = trending_fallback_rendered | plus: 1 %}
+      {% render 'sss-book-card', book: book, mini: true %}
+    {% endfor %}
+  </div>
+
+  <div id="sssTrendingSourcePool" hidden>
+    {% for book in trending_source_books %}
+      {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+      {% assign is_visible_value = is_visible | strip %}
+      {% unless is_visible_value == 'true' %}
+        {% continue %}
+      {% endunless %}
+      {% unless trending_include_private %}
+        {% capture is_private %}{% render 'sss-book-private', book: book %}{% endcapture %}
+        {% assign is_private_value = is_private | strip %}
+        {% if is_private_value == 'true' %}
+          {% continue %}
+        {% endif %}
+      {% endunless %}
+      {% render 'sss-book-card', book: book, mini: true %}
+    {% endfor %}
+  </div>
+
+</div>
+
+<style>
+
+/* ======================
+   TRENDING SHELF
+====================== */
+
+#sssTrendingShelf{
+  margin:50px auto 40px;
+  padding:28px 26px;
+  border-radius:20px;
+
+  background:
+    radial-gradient(900px 400px at 50% -120px, rgba(255,255,255,.08), transparent 70%),
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+
+  border:1px solid rgba(255,255,255,.12);
+
+  max-width:1100px;
+  text-align:center;
+
+  position:relative;
+  overflow:hidden;
+}
+
+#sssTrendingShelf:before{
+  content:"";
+  position:absolute;
+  inset:0;
+
+  background:
+    radial-gradient(500px 200px at 50% -40px, rgba(255,255,255,.08), transparent 70%);
+
+  opacity:.6;
+  pointer-events:none;
+}
+
+#sssTrendingShelf .sss-lib__shelfHead{
+  text-align:center;
+  margin-bottom:18px;
+}
+
+#sssTrendingShelf .sss-lib__shelfTitle{
+  font-size:24px;
+}
+
+#sssTrendingShelf .sss-lib__shelfDesc{
+  margin-top:6px;
+}
+
+#sssTrendingRow{
+  display:flex;
+  gap:16px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:8px;
+}
+
+#sssTrendingRow .sss-lib__book{
+  flex:0 0 150px;
+  width:150px;
+  scroll-snap-align:start;
+}
+
+#sssTrendingRow::-webkit-scrollbar{
+  height:8px;
+}
+
+#sssTrendingRow::-webkit-scrollbar-thumb{
+  background:rgba(255,255,255,.12);
+  border-radius:999px;
+}
+
+/* ======================
+   TRENDING BADGE (UNDER BOOK)
+====================== */
+
+.sss-lib__trendingBadge{
+  display:block;
+
+  margin-top:6px;
+
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+
+  color:#e85a9b;
+
+  position:static;   /* prevents overlay positioning */
+  text-align:center;
+}
+
+</style>

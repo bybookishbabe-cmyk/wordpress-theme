@@ -1,0 +1,21 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-page",
+      "disabled": true,
+      "settings": {
+        "padding_top": 28,
+        "padding_bottom": 28
+      }
+    },
+    "books_like": {
+      "type": "books-like-page",
+      "name": "Books like page",
+      "settings": {}
+    }
+  },
+  "order": [
+    "main",
+    "books_like"
+  ]
+}

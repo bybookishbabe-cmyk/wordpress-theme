@@ -1,0 +1,81 @@
+<section class="sss-page-intro" id="sss-page-intro-{{ section.id }}">
+  <div class="sss-page-intro__wrap">
+    {% if section.settings.kicker != blank %}
+      <p class="sss-page-intro__kicker">{{ section.settings.kicker }}</p>
+    {% endif %}
+    <h1 class="sss-page-intro__title">{{ section.settings.title }}</h1>
+    {% if section.settings.subtext != blank %}
+      <p class="sss-page-intro__sub">{{ section.settings.subtext }}</p>
+    {% endif %}
+  </div>
+</section>
+
+<style>
+  #sss-page-intro-{{ section.id }}{
+    background:#0b0b0b;
+    color:#f6f6f6;
+    padding:28px 12px 12px;
+    font-family:"Libre Baskerville", Georgia, serif;
+    position:relative;
+  }
+  #sss-page-intro-{{ section.id }} .sss-page-intro__wrap{
+    max-width:980px;
+    margin:0 auto;
+    padding:0 8px;
+  }
+  #sss-page-intro-{{ section.id }} .sss-page-intro__kicker{
+    margin:0 0 10px;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:#d5cfd4;
+  }
+  #sss-page-intro-{{ section.id }} .sss-page-intro__title{
+    margin:0;
+    max-width:760px;
+    font-size:clamp(34px, 5vw, 58px);
+    line-height:1;
+    font-weight:500;
+    text-transform:lowercase;
+    color:#f6f6f6;
+    text-align:left;
+  }
+  #sss-page-intro-{{ section.id }} .sss-page-intro__sub{
+    margin:14px 0 0;
+    max-width:760px;
+    font-size:15px;
+    line-height:1.75;
+    color:rgba(246,246,246,.82);
+    text-align:left;
+  }
+
+  @media (max-width: 640px){
+    #sss-page-intro-{{ section.id }}{
+      padding:24px 10px 10px;
+    }
+    #sss-page-intro-{{ section.id }} .sss-page-intro__wrap{
+      padding:0 6px;
+    }
+    #sss-page-intro-{{ section.id }} .sss-page-intro__title{
+      font-size:34px;
+    }
+    #sss-page-intro-{{ section.id }} .sss-page-intro__sub{
+      font-size:14px;
+      line-height:1.7;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "sss page intro",
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "kicker", "default": "the society" },
+    { "type": "text", "id": "title", "label": "title", "default": "the smut & sentiment society" },
+    { "type": "textarea", "id": "subtext", "label": "subtext", "default": "you’ve found the place where smut meets sentiment, with romance book recommendations, quotes, and weekly obsessions you won’t want to miss." }
+  ],
+  "presets": [
+    { "name": "sss page intro" }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,103 @@
+{%- liquid
+  assign featured = featured | default: false
+  assign preview_image = product.featured_image | default: product.featured_media.preview_image | default: product.images.first
+
+  assign dl12_url = ''
+  assign dl11_url = ''
+  assign dl6_url = ''
+  assign dl10_url = ''
+  assign label12 = '12th generation'
+  assign label11 = '11th generation'
+  assign label6 = '6 inch'
+  assign label10 = '10th generation'
+
+  assign product_download = ''
+  if product.metafields.custom.download_file.value != blank
+    if product.metafields.custom.download_file.value.url != blank
+      assign product_download = product.metafields.custom.download_file.value.url
+    else
+      assign product_download = product.metafields.custom.download_file.value | file_url
+    endif
+  endif
+
+  for variant in product.variants
+    assign variant_title = variant.title | downcase
+    assign variant_download = ''
+
+    if variant.metafields.custom.download_file.value != blank
+      if variant.metafields.custom.download_file.value.url != blank
+        assign variant_download = variant.metafields.custom.download_file.value.url
+      else
+        assign variant_download = variant.metafields.custom.download_file.value | file_url
+      endif
+    elsif product_download != blank
+      assign variant_download = product_download
+    endif
+
+    if variant_download contains 'dropbox.com'
+      assign variant_download = variant_download | replace: 'www.dropbox.com', 'dl.dropboxusercontent.com' | replace: 'dropbox.com', 'dl.dropboxusercontent.com' | replace: '?dl=0', '?raw=1' | replace: '&dl=0', '&raw=1'
+    endif
+
+    if variant_title contains '12th' and dl12_url == ''
+      assign dl12_url = variant_download
+      assign label12 = variant.title
+    elsif variant_title contains '11th' and dl11_url == ''
+      assign dl11_url = variant_download
+      assign label11 = variant.title
+    elsif variant_title contains '10th' and dl10_url == ''
+      assign dl10_url = variant_download
+      assign label10 = variant.title
+    elsif variant_title contains '6' and dl6_url == ''
+      assign dl6_url = variant_download
+      assign label6 = variant.title
+    endif
+  endfor
+
+  if dl12_url == '' and product_download != blank
+    assign dl12_url = product_download
+  endif
+  if dl11_url == '' and product_download != blank
+    assign dl11_url = product_download
+  endif
+  if dl10_url == '' and product_download != blank
+    assign dl10_url = product_download
+  endif
+  if dl6_url == '' and product_download != blank
+    assign dl6_url = product_download
+  endif
+-%}
+
+<article
+  class="sss-libgrid__card"
+  data-printable-card
+  data-download-12th="{{ dl12_url | escape }}"
+  data-download-11th="{{ dl11_url | escape }}"
+  data-download-6in="{{ dl6_url | escape }}"
+  data-download-10th="{{ dl10_url | escape }}"
+  data-size-label-12th="{{ label12 | escape }}"
+  data-size-label-11th="{{ label11 | escape }}"
+  data-size-label-6in="{{ label6 | escape }}"
+  data-size-label-10th="{{ label10 | escape }}"
+  hidden
+>
+  <div class="sss-libgrid__cardImageWrap">
+    {% if preview_image != blank %}
+      {{
+        preview_image
+        | image_url: width: 720
+        | image_tag:
+          class: 'sss-libgrid__cardImage',
+          loading: 'lazy',
+          alt: product.title
+      }}
+    {% else %}
+      <div class="sss-libgrid__cardImage" aria-hidden="true"></div>
+    {% endif %}
+  </div>
+
+  <div class="sss-libgrid__cardBody">
+    <p class="sss-libgrid__cardEyebrow">{% if featured %}bonus printable{% else %}printable insert{% endif %}</p>
+    <h4 class="sss-libgrid__cardTitle">{{ product.title }}</h4>
+    <a class="sss-libgrid__button" data-download-button href="#" target="_blank" rel="noopener" hidden>download</a>
+  </div>
+</article>

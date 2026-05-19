@@ -1,0 +1,200 @@
+{% assign books = shop.metaobjects.sss_library.values | sort: "title" %}
+{% assign visible_books = '' %}
+{% assign visible_count = 0 %}
+
+{% for book in books %}
+  {% capture is_visible %}{% render 'sss-book-visible', book: book, allow_hidden_from_library: true %}{% endcapture %}
+  {% assign is_visible_value = is_visible | strip %}
+  {% unless is_visible_value == 'true' %}
+    {% continue %}
+  {% endunless %}
+
+  {% assign tracker_cover = '' %}
+  {% if book.cover.value != blank %}
+    {% if book.cover.value.url != blank %}
+      {% assign tracker_cover = book.cover.value.url %}
+    {% elsif book.cover.value contains 'http://' or book.cover.value contains 'https://' or book.cover.value contains '//' %}
+      {% assign tracker_cover = book.cover.value %}
+    {% else %}
+      {% assign tracker_cover = book.cover.value | image_url: width: 320 %}
+    {% endif %}
+  {% endif %}
+
+  {% capture card %}
+    <div class="sss-calPreview__cell">
+      <span class="sss-calPreview__num">{{ visible_count | plus: 1 }}</span>
+      <span class="sss-calPreview__slot">
+        {% if tracker_cover != blank %}
+          <img
+            class="sss-calPreview__cover"
+            src="{{ tracker_cover }}"
+            alt="{{ book.title.value | escape }} cover"
+            loading="lazy">
+        {% else %}
+          <span class="sss-calPreview__missing">missing cover</span>
+        {% endif %}
+        <span class="sss-calPreview__title">{{ book.title.value }}</span>
+      </span>
+    </div>
+  {% endcapture %}
+  {% assign visible_books = visible_books | append: card %}
+  {% assign visible_count = visible_count | plus: 1 %}
+{% endfor %}
+
+<section class="sss-calPreview">
+  <div class="sss-calPreview__wrap page-width">
+    <p class="sss-calPreview__kicker">{{ section.settings.kicker }}</p>
+    <h2 class="sss-calPreview__heading">{{ section.settings.heading }}</h2>
+    <p class="sss-calPreview__sub">{{ visible_count }} visible books laid out in a read-tracker style mockup.</p>
+
+    <div class="sss-calPreview__weekdays">
+      <span>sun</span><span>mon</span><span>tue</span><span>wed</span><span>thu</span><span>fri</span><span>sat</span>
+    </div>
+
+    {% if visible_books != blank %}
+      <div class="sss-calPreview__grid">
+        {{ visible_books }}
+      </div>
+    {% else %}
+      <div class="sss-calPreview__empty">No visible library books were found for the preview grid.</div>
+    {% endif %}
+  </div>
+</section>
+
+<style>
+  .sss-calPreview{
+    background:#070709;
+    color:#f4efe9;
+    padding:18px 20px 72px;
+  }
+
+  .sss-calPreview__wrap{
+    max-width:1160px;
+  }
+
+  .sss-calPreview__kicker{
+    margin:0 0 10px;
+    font-size:12px;
+    letter-spacing:.28em;
+    text-transform:uppercase;
+    color:rgba(244,239,233,.62);
+  }
+
+  .sss-calPreview__heading{
+    margin:0;
+    font-size:clamp(2.2rem,4vw,3.8rem);
+    line-height:1.05;
+    font-weight:500;
+  }
+
+  .sss-calPreview__sub{
+    margin:12px 0 20px;
+    font-size:15px;
+    line-height:1.7;
+    color:rgba(244,239,233,.72);
+  }
+
+  .sss-calPreview__weekdays{
+    display:grid;
+    grid-template-columns:repeat(7, 1fr);
+    gap:10px;
+    margin-bottom:8px;
+  }
+
+  .sss-calPreview__weekdays span{
+    font-size:10px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:rgba(244,239,233,.44);
+    text-align:center;
+  }
+
+  .sss-calPreview__grid{
+    display:grid;
+    grid-template-columns:repeat(7, 1fr);
+    gap:10px;
+  }
+
+  .sss-calPreview__cell{
+    position:relative;
+    min-height:132px;
+    padding:10px;
+    border-radius:18px;
+    border:1px solid rgba(255,255,255,.08);
+    background:linear-gradient(180deg, rgba(255,62,165,.08), rgba(255,255,255,.02));
+  }
+
+  .sss-calPreview__num{
+    font-size:12px;
+    color:rgba(244,239,233,.74);
+  }
+
+  .sss-calPreview__slot{
+    margin-top:8px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    align-items:flex-start;
+  }
+
+  .sss-calPreview__cover{
+    width:48px;
+    height:68px;
+    object-fit:cover;
+    border-radius:10px;
+    display:block;
+  }
+
+  .sss-calPreview__title{
+    font-size:11px;
+    line-height:1.35;
+    color:#fff;
+    text-transform:lowercase;
+  }
+
+  .sss-calPreview__missing{
+    font-size:11px;
+    color:#ff9dcf;
+    text-transform:lowercase;
+  }
+
+  .sss-calPreview__empty{
+    padding:18px 20px;
+    border-radius:18px;
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.08);
+    color:rgba(244,239,233,.72);
+  }
+
+  @media (max-width: 989px){
+    .sss-calPreview__grid,
+    .sss-calPreview__weekdays{
+      grid-template-columns:repeat(3, 1fr);
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "sss cover preview",
+  "settings": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "kicker",
+      "default": "calendar mockup"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "heading",
+      "default": "read tracker cover preview"
+    }
+  ],
+  "presets": [
+    {
+      "name": "sss cover preview"
+    }
+  ]
+}
+{% endschema %}

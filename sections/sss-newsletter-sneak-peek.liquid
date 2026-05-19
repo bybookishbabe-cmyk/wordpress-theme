@@ -1,0 +1,399 @@
+{% comment %}
+  sss-newsletter-sneak-peek.liquid
+  Sneak peek — mini “newspaper clippings” preview under the quote wall.
+  Metaobject: newsletter_issue
+  Fields expected:
+    - title (text)
+    - subtitle (text)
+    - publish_date (date)
+    - tropes (text)
+    - excerpt (text)
+    - url (link object or string) -> where card clicks to
+    - label (text)
+    - issue_no (number)
+    - preview (image)
+{% endcomment %}
+
+<style>
+  .sss-sneak{
+    background:#0b0b0b; color:#f6f6f6;
+    padding:18px 12px;
+    font-family:"Libre Baskerville", Georgia, serif;
+    position:relative; overflow:hidden;
+  }
+  .sss-sneak:before{
+    content:""; position:absolute; inset:-40px; pointer-events:none;
+    background:
+      radial-gradient(900px 520px at 50% 90px, rgba(255,255,255,.08), transparent 70%),
+      repeating-linear-gradient(to bottom, rgba(255,255,255,.03), rgba(255,255,255,.03) 1px, transparent 1px, transparent 26px);
+    opacity:.55;
+  }
+
+  .sss-sneak__wrap{ max-width:980px; margin:0 auto; padding:0 8px; position:relative; z-index:1; }
+  .sss-sneak__kicker{ margin:0; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:#c8c8c8; }
+  .sss-sneak__title{ margin:6px 0 0; font-size:18px; font-weight:400; text-transform:lowercase; }
+  .sss-sneak__sub{ margin:8px 0 0; font-size:12px; color:rgba(246,246,246,.72); line-height:1.55; }
+
+  /* horizontal row */
+  .sss-sneak__row{
+    margin-top:14px;
+    display:flex;
+    gap:14px;
+    overflow-x:auto;
+    padding-bottom:10px;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* cards */
+  .sss-sneak__card{
+    flex:0 0 auto;
+    width: min(320px, 82vw);
+    scroll-snap-align:start;
+    text-decoration:none;
+    color:inherit;
+    display:block;
+    border-radius:16px;
+    background:#111;
+    border:1px solid rgba(255,255,255,.12);
+    overflow:hidden;
+    transition:border-color .2s ease, box-shadow .2s ease;
+  }
+  .sss-sneak__card:hover{
+    border-color:#ff8ac7;
+    box-shadow:0 16px 40px rgba(0,0,0,.6);
+  }
+
+  .sss-sneak__paper{
+    background:#111;
+    color:#f6f6f6;
+    padding:0;
+    position:relative;
+    overflow:hidden;
+  }
+
+  /* top meta */
+  .sss-sneak__meta{
+    position:relative; z-index:2;
+    display:flex; justify-content:space-between; gap:10px; align-items:flex-end;
+    font-size:10px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:rgba(246,246,246,.58);
+  }
+  .sss-sneak__label{
+    margin-top:10px;
+    position:relative; z-index:2;
+    font-size:10px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:#ff8ac7;
+  }
+  .sss-sneak__rule{
+    height:1px;
+    background:rgba(255,255,255,.10);
+    margin:12px 0;
+    position:relative; z-index:2;
+  }
+
+  .sss-sneak__headline{
+    position:relative; z-index:2;
+    margin:0;
+    font-size:18px;
+    line-height:1.2;
+    font-weight:600;
+    color:#f6f6f6;
+  }
+  .sss-sneak__dek{
+    position:relative; z-index:2;
+    margin:8px 0 0;
+    font-size:13px;
+    line-height:1.6;
+    color:rgba(246,246,246,.74);
+  }
+
+  .sss-sneak__imgwrap{
+    width:100%;
+    aspect-ratio: 4 / 5;
+    background:#0f0f0f;
+    overflow:hidden;
+  }
+  .sss-sneak__img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+
+  .sss-sneak__body{
+    padding:14px;
+  }
+
+  .sss-sneak__head{
+    padding:14px 14px 0;
+  }
+
+  .sss-sneak__tropes-label{
+    font-size:10px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:rgba(246,246,246,.58);
+    margin-bottom:8px;
+  }
+  .sss-sneak__tropes-text{
+    font-size:13px;
+    line-height:1.6;
+    color:#f6f6f6;
+    font-style:italic;
+  }
+
+  .sss-sneak__excerpt{
+    position:relative; z-index:2;
+    margin:12px 0 0;
+    font-size:13px;
+    line-height:1.6;
+    color:rgba(246,246,246,.78);
+    display:-webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow:hidden;
+  }
+
+  .sss-sneak__cta{
+    position:relative; z-index:2;
+    margin-top:12px;
+    display:flex;
+    justify-content:flex-start;
+    gap:8px;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:#ff8ac7;
+  }
+
+  /* scroll reveal (match quote wall pacing) */
+  .sss-sneak__card{
+    opacity:0;
+    transform:translateX(24px);
+    transition:
+      opacity 1.05s ease-out,
+      transform 1.15s cubic-bezier(.18,.84,.34,1);
+    will-change:opacity, transform;
+    transition-delay: var(--d, 0ms);
+  }
+  .sss-sneak__card.is-in{
+    opacity:1;
+    transform:translateX(0);
+  }
+
+  .sss-sneak__card.is-wiggle{
+    animation:sssSneakWiggle 3.4s ease-in-out 1.1s infinite;
+    transform-origin:50% 85%;
+  }
+
+  @keyframes sssSneakWiggle{
+    0%, 86%, 100%{ transform:translateX(0) rotate(0deg); }
+    89%{ transform:translateX(0) rotate(-1.15deg); }
+    92%{ transform:translateX(0) rotate(1.1deg); }
+    95%{ transform:translateX(0) rotate(-.65deg); }
+    98%{ transform:translateX(0) rotate(.4deg); }
+  }
+
+  @media (max-width: 640px){
+    .sss-sneak{ padding:16px 10px; }
+    .sss-sneak__wrap{ padding:0 6px; }
+    .sss-sneak__card{ width:min(280px, 80vw); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .sss-sneak__card{ opacity:1 !important; transform:none !important; transition:none !important; }
+    .sss-sneak__card.is-wiggle{ animation:none !important; }
+  }
+
+  .sss-sneak a,
+  .sss-sneak a:focus,
+  .sss-sneak a:focus-visible,
+  .sss-sneak a:active{
+    outline:none !important;
+    box-shadow:none !important;
+    -webkit-tap-highlight-color:transparent;
+  }
+</style>
+
+<section class="sss-sneak" data-sss-sneak>
+  <div class="sss-sneak__wrap">
+    <p class="sss-sneak__kicker">{{ section.settings.kicker }}</p>
+    <h3 class="sss-sneak__title">{{ section.settings.title }}</h3>
+    {% if section.settings.subtext != blank %}
+      <p class="sss-sneak__sub">{{ section.settings.subtext }}</p>
+    {% endif %}
+
+    {% assign issues = shop.metaobjects.newsletter_issue.values %}
+    {% assign now_ts = 'now' | date: '%s' | plus: 0 %}
+    {% if issues != blank and issues.size > 0 %}
+      {% assign ranked_issues = '' %}
+      {% for ed in issues %}
+        {% if ed.publish_date.value != blank %}
+          {% assign ts = ed.publish_date.value | date: "%s" | plus: 0 %}
+          {% assign live_ts = ts | plus: 36000 %}
+          {% if live_ts <= now_ts %}
+            {% capture ranked_issues %}{{ ranked_issues }}{{ ts }}::{{ ed.system.handle }}||{% endcapture %}
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+      {% assign ranked_issue_items = ranked_issues | split: '||' | sort | reverse %}
+
+      <div class="sss-sneak__row" role="list">
+        {% assign shown_count = 0 %}
+        {% for ranked in ranked_issue_items %}
+          {% if ranked == blank %}{% continue %}{% endif %}
+          {% if shown_count >= section.settings.limit %}{% break %}{% endif %}
+
+          {% assign ranked_parts = ranked | split: '::' %}
+          {% assign ranked_handle = ranked_parts[1] | strip %}
+          {% assign ed = nil %}
+          {% for issue in issues %}
+            {% if issue.system.handle == ranked_handle %}
+              {% assign ed = issue %}
+              {% break %}
+            {% endif %}
+          {% endfor %}
+          {% if ed == nil %}{% continue %}{% endif %}
+
+          {% assign href = '' %}
+          {% if ed.url.value != blank %}
+            {% if ed.url.value.url != blank %}
+              {% assign href = ed.url.value.url %}
+            {% else %}
+              {% assign href = ed.url.value %}
+            {% endif %}
+          {% endif %}
+          {% if href == blank %}{% assign href = '#' %}{% endif %}
+
+          <a class="sss-sneak__card" href="{{ href }}" role="listitem"
+             {% if href != '#' %}target="_blank" rel="noopener"{% endif %}>
+            <div class="sss-sneak__paper">
+              <div class="sss-sneak__head">
+                <div class="sss-sneak__meta">
+                  <span>
+                    {% if ed.publish_date.value != blank %}
+                      {{ ed.publish_date.value | date: "%b %e, %Y" }}
+                    {% endif %}
+                  </span>
+                  <span>
+                    {% if ed.issue_no.value != blank %}
+                      issue {{ ed.issue_no.value }}
+                    {% endif %}
+                  </span>
+                </div>
+
+                {% if ed.label.value != blank %}
+                  <div class="sss-sneak__label">{{ ed.label.value }}</div>
+                {% endif %}
+
+                <div class="sss-sneak__rule"></div>
+
+                <h4 class="sss-sneak__headline">{{ ed.title.value }}</h4>
+
+                {% if ed.subtitle.value != blank %}
+                  <p class="sss-sneak__dek">{{ ed.subtitle.value }}</p>
+                {% endif %}
+              </div>
+
+              {% if ed.preview.value != blank %}
+                <div class="sss-sneak__imgwrap" aria-hidden="true">
+                  <img class="sss-sneak__img"
+                       src="{{ ed.preview.value | image_url: width: 720 }}"
+                       alt=""
+                       loading="lazy">
+                </div>
+              {% endif %}
+
+              <div class="sss-sneak__body">
+              {% if ed.tropes.value != blank %}
+                <div class="sss-sneak__tropes">
+                  <div class="sss-sneak__tropes-label">tropes</div>
+                  <div class="sss-sneak__tropes-text">{{ ed.tropes.value }}</div>
+                </div>
+              {% endif %}
+
+              {% if ed.excerpt.value != blank %}
+                <p class="sss-sneak__excerpt">{{ ed.excerpt.value }}</p>
+              {% endif %}
+
+              <div class="sss-sneak__cta">
+                <span>{{ section.settings.cta_text }}</span>
+                <span aria-hidden="true">→</span>
+              </div>
+              </div>
+
+            </div>
+          </a>
+          {% assign shown_count = shown_count | plus: 1 %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="color:rgba(246,246,246,.72); font-size:12px; padding:10px 0;">
+        no issues yet. add some in <strong>Content → Metaobjects → newsletter_issue</strong>.
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<script>
+(function(){
+  function initSneak(){
+    var roots = document.querySelectorAll('[data-sss-sneak]');
+    if (!roots.length) return;
+
+    roots.forEach(function(root){
+      if (root.__sneakBound) return;
+      root.__sneakBound = true;
+
+      var cards = root.querySelectorAll('.sss-sneak__card');
+      if (!cards.length) return;
+
+      cards.forEach(function(el, i){
+        el.style.setProperty('--d', (i % 8) * 45 + 'ms');
+        if (i === 0) el.classList.add('is-wiggle');
+      });
+
+      if (!('IntersectionObserver' in window)){
+        cards.forEach(function(el){ el.classList.add('is-in'); });
+        return;
+      }
+
+      var io = new IntersectionObserver(function(entries){
+        entries.forEach(function(entry){
+          if (entry.isIntersecting){
+            entry.target.classList.add('is-in');
+            io.unobserve(entry.target);
+          }
+        });
+      }, { threshold:0.12, rootMargin:'0px 0px -10% 0px' });
+
+      cards.forEach(function(el){ io.observe(el); });
+    });
+  }
+
+  initSneak();
+  document.addEventListener('shopify:section:load', initSneak);
+})();
+</script>
+
+{% schema %}
+{
+  "name": "sss newsletter sneak peek",
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "kicker", "default": "society library" },
+    { "type": "text", "id": "title", "label": "title", "default": "a sneak peek of the latest issues." },
+    { "type": "textarea", "id": "subtext", "label": "subtext", "default": "just enough to ruin your focus. tap to read the full edition." },
+    { "type": "range", "id": "limit", "label": "how many to show", "min": 2, "max": 6, "step": 1, "default": 3 },
+    { "type": "text", "id": "cta_text", "label": "cta text", "default": "read edition" },
+    { "type": "checkbox", "id": "new_tab", "label": "open links in new tab", "default": false }
+  ],
+  "presets": [
+    { "name": "sss newsletter sneak peek" }
+  ]
+}
+{% endschema %}

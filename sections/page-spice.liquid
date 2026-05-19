@@ -1,0 +1,280 @@
+{% paginate shop.metaobjects.sss_library.values by 250 %}
+  {% assign all_books = shop.metaobjects.sss_library.values %}
+
+{{ 'sss-library.css' | asset_url | stylesheet_tag }}
+<section class="sss-lib" data-sss-lib="public">
+
+<div class="sss-lib__wrap">
+
+<div class="sss-tropeTop">
+
+<div class="sss-tropeTop__left">
+
+<div class="sss-trope__header">
+
+<div class="sss-trope__eyebrow">
+the spice archive
+</div>
+
+<h1 class="sss-trope__title">
+pick your spice level 🌶
+</h1>
+
+<p class="sss-trope__desc">
+choose how much heat you want tonight and let the library narrow itself for you.
+</p>
+
+</div>
+
+</div>
+
+<div class="sss-tropeTop__right">
+
+<div class="sss-tropeInvite">
+
+<div class="sss-tropeInvite__kicker">
+the private layer
+</div>
+
+<div class="sss-tropeInvite__title">
+one romance recommendation.
+every sunday.
+</div>
+
+<div class="sss-tropeInvite__sub">
+morally gray men delivered straight to you
+</div>
+
+<a 
+href="https://thesmutandsentimentsociety.substack.com/subscribe"
+class="sss-tropeInvite__btn"
+target="_blank"
+rel="noopener"
+>
+join the society →
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="sss-trope__divider"></div>
+
+<div class="sss-spiceNav" id="sssSpiceNav">
+  <button type="button" class="sss-spiceNav__pill is-active" data-spice-filter="1">
+    🌶 1
+    <span>soft open door</span>
+  </button>
+  <button type="button" class="sss-spiceNav__pill" data-spice-filter="2">
+    🌶🌶 2
+    <span>some heat</span>
+  </button>
+  <button type="button" class="sss-spiceNav__pill" data-spice-filter="3">
+    🌶🌶🌶 3
+    <span>balanced</span>
+  </button>
+  <button type="button" class="sss-spiceNav__pill" data-spice-filter="4">
+    🌶🌶🌶🌶 4
+    <span>high spice</span>
+  </button>
+  <button type="button" class="sss-spiceNav__pill" data-spice-filter="5">
+    🌶🌶🌶🌶🌶 5
+    <span>wreck me</span>
+  </button>
+</div>
+
+<div class="sss-trope__count" id="sssSpiceCount">
+  choosing your spice...
+</div>
+
+<div class="sss-lib__seriesDisclaimer">
+  <span class="sss-lib__seriesBadge sss-lib__seriesBadge--demo">1</span>
+  <span class="sss-lib__seriesText">
+    the pink # badge means the book is part of a connected series.
+  </span>
+  <span class="sss-lib__seriesBadge sss-lib__seriesBadge--demo sss-lib__seriesBadge--standalone">1</span>
+  <span class="sss-lib__seriesText">
+    the white # badge means the book is part of a series but can be read as a standalone.
+  </span>
+</div>
+
+<div class="sss-lib__grid sss-lib__grid--browsePage sss-lib__grid--spicePage" id="sssSpiceGrid">
+
+{% for book in all_books %}
+  {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+  {% assign is_visible_value = is_visible | strip %}
+  {% unless is_visible_value == 'true' %}
+    {% continue %}
+  {% endunless %}
+
+  {% assign spice_level = book.spice_level.value | default: 0 | plus: 0 %}
+  {% if spice_level > 0 %}
+    {% render 'sss-book-card', book: book %}
+  {% endif %}
+{% endfor %}
+
+</div>
+
+<div class="sss-trope__actions">
+
+<a 
+href="/pages/library" 
+class="sss-trope__actionLink"
+target="_blank"
+rel="noopener"
+>
+see the full romance library →
+</a>
+
+<a 
+href="/pages/reader-quizes" 
+class="sss-trope__actionLink"
+target="_blank"
+rel="noopener"
+>
+find your fictional boyfriend →
+</a>
+
+</div>
+
+{% render 'sss-library-modal' %}
+
+</section>
+{% endpaginate %}
+
+<div id="sssFloatingShare">
+  <button id="sssShareLibrary" class="sss-lib__floatingShareBtn">
+    📲
+  </button>
+</div>
+
+<style>
+.sss-spiceNav{
+  margin-top:28px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+}
+
+.sss-spiceNav__pill{
+  appearance:none;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.04);
+  color:#f6f6f6;
+  border-radius:18px;
+  padding:12px 16px;
+  min-width:144px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:4px;
+  font-family:inherit;
+  font-size:13px;
+  cursor:pointer;
+  transition:background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+}
+
+.sss-spiceNav__pill span{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:rgba(246,246,246,.62);
+}
+
+.sss-spiceNav__pill:hover,
+.sss-spiceNav__pill:focus-visible{
+  background:rgba(232,90,155,.12);
+  border-color:rgba(232,90,155,.45);
+  color:#fff;
+  transform:translateY(-1px);
+}
+
+.sss-spiceNav__pill:hover span,
+.sss-spiceNav__pill:focus-visible span,
+.sss-spiceNav__pill.is-active span{
+  color:rgba(255,255,255,.88);
+}
+
+.sss-spiceNav__pill.is-active{
+  background:#e85a9b;
+  border-color:#e85a9b;
+  color:#fff;
+}
+
+.sss-lib__grid--spicePage .sss-spiceCard[hidden]{
+  display:none !important;
+}
+
+.sss-lib__grid--spicePage .sss-lib__cover{
+  object-fit:cover;
+}
+
+@media (max-width: 768px){
+  .sss-spiceNav{
+    margin-top:22px;
+    gap:10px;
+  }
+
+  .sss-spiceNav__pill{
+    min-width:calc(50% - 5px);
+    padding:12px 14px;
+  }
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="{{ 'sss-library.js' | asset_url }}" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  var nav = document.getElementById('sssSpiceNav');
+  var countEl = document.getElementById('sssSpiceCount');
+  var cards = Array.from(document.querySelectorAll('#sssSpiceGrid .sss-lib__book'));
+  if (!nav || !countEl || !cards.length) return;
+
+  var labelMap = {
+    '1': 'soft open door',
+    '2': 'some heat',
+    '3': 'balanced',
+    '4': 'high spice',
+    '5': 'wreck me'
+  };
+
+  function applySpice(level, updateUrl){
+    cards.forEach(function(card){
+      card.hidden = String(card.getAttribute('data-spice')) !== String(level);
+    });
+
+    var visibleCount = cards.filter(function(card){
+      return !card.hidden;
+    }).length;
+
+    countEl.textContent = visibleCount + ' books shelved at ' + level + '-chili ' + (labelMap[String(level)] || 'spice');
+
+    nav.querySelectorAll('[data-spice-filter]').forEach(function(btn){
+      btn.classList.toggle('is-active', btn.getAttribute('data-spice-filter') === String(level));
+    });
+
+    if (updateUrl && window.history && window.history.replaceState){
+      var url = new URL(window.location.href);
+      url.searchParams.set('spice', level);
+      window.history.replaceState({}, '', url.toString());
+    }
+  }
+
+  nav.addEventListener('click', function(event){
+    var btn = event.target.closest('[data-spice-filter]');
+    if (!btn) return;
+    applySpice(btn.getAttribute('data-spice-filter'), true);
+  });
+
+  var url = new URL(window.location.href);
+  var initial = url.searchParams.get('spice');
+  if (!initial || ['1','2','3','4','5'].indexOf(initial) === -1){
+    initial = '3';
+  }
+
+  applySpice(initial, false);
+});
+</script>

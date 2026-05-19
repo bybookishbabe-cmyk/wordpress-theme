@@ -1,0 +1,34 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-page",
+      "disabled": true,
+      "settings": {
+        "padding_top": 28,
+        "padding_bottom": 28
+      }
+    },
+    "book_reviews": {
+      "type": "book-reviews-page",
+      "name": "Book reviews page",
+      "settings": {
+        "blog": "curated-romance-guides",
+        "articles_per_page": 20,
+        "kicker": "bybookishbabe book reviews",
+        "heading": "book reviews",
+        "subtext": "every book on this page has been read, rated, and actually recommended by bybookishbabe.\n\nspice levels, darkness ratings, tropes, and the honest take - no filler, no algorithm, no books i haven't personally finished.\n\nif it's here, it earned its place.",
+        "trending_kicker": "latest book review",
+        "trending_heading": "trending now",
+        "trending_label": "trending now",
+        "archive_kicker": "read, rated, recommended",
+        "archive_heading": "all book reviews",
+        "empty_text": "No reviewed guides are showing yet. Set book_review to true on the blog posts you want here.",
+        "single_empty_text": "Only one reviewed guide is live right now. Set book_review to true on another blog post and it will appear here."
+      }
+    }
+  },
+  "order": [
+    "main",
+    "book_reviews"
+  ]
+}

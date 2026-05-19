@@ -1,0 +1,146 @@
+{% assign books = shop.metaobjects.sss_library.values %}
+{% assign eligible_count = 0 %}
+{% assign article_offset = 0 %}
+
+{% for book in books %}
+  {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+  {% assign is_visible_value = is_visible | strip %}
+  {% if is_visible_value == 'true' %}
+    {% assign eligible_count = eligible_count | plus: 1 %}
+  {% endif %}
+{% endfor %}
+
+{% if article and eligible_count > 0 %}
+  {% assign article_offset = article.id | modulo: eligible_count %}
+{% endif %}
+
+<div class="sss-blog-library">
+
+  <div class="sss-blog-library__header">
+
+    <h3>peek inside the society library</h3>
+
+    <a href="/pages/library" class="sss-blog-library__cta">
+      take me to the library →
+    </a>
+
+  </div>
+
+
+  <div class="sss-blog-library__row">
+
+    {% assign shown = 0 %}
+    {% assign eligible_index = 0 %}
+
+    {% for book in books %}
+      {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+      {% assign is_visible_value = is_visible | strip %}
+      {% if is_visible_value == 'true' %}
+        {% if eligible_index >= article_offset and shown < 5 %}
+
+          {% assign cover = book.cover.value.url %}
+          {% assign title = book.title.value %}
+          {% assign author = book.author.value %}
+          {% assign amazon = book.amazon_link.value.url %}
+          {% assign bookshop = book.bookshop_link.value.url %}
+
+         <div
+class="sss-blog-library__card"
+data-book-preview
+data-title="{{ title | escape }}"
+data-author="{{ author | escape }}"
+data-cover="{{ cover }}"
+data-amazon="{{ amazon }}"
+data-bookshop="{{ bookshop }}"
+data-spice="{{ book.spice_level.value }}"
+data-tropes="{% for trope in book.tropes.value %}{{ trope.name }}{% unless forloop.last %}, {% endunless %}{% endfor %}"
+>
+
+            {% if cover %}
+              <img
+                src="{{ cover }}"
+                alt="{{ title | escape }}"
+                loading="lazy"
+              >
+            {% endif %}
+
+            <div class="sss-blog-library__title">
+              {{ title }}
+            </div>
+
+            {% if author %}
+              <div class="sss-blog-library__author">
+                {{ author }}
+              </div>
+            {% endif %}
+
+          </div>
+
+          {% assign shown = shown | plus: 1 %}
+
+        {% endif %}
+
+        {% assign eligible_index = eligible_index | plus: 1 %}
+
+      {% endif %}
+
+    {% endfor %}
+
+    {% if shown < 5 and article_offset > 0 %}
+      {% assign eligible_index = 0 %}
+
+      {% for book in books %}
+        {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+        {% assign is_visible_value = is_visible | strip %}
+        {% if is_visible_value == 'true' %}
+          {% if eligible_index < article_offset and shown < 5 %}
+
+            {% assign cover = book.cover.value.url %}
+            {% assign title = book.title.value %}
+            {% assign author = book.author.value %}
+            {% assign amazon = book.amazon_link.value.url %}
+            {% assign bookshop = book.bookshop_link.value.url %}
+
+           <div
+class="sss-blog-library__card"
+data-book-preview
+data-title="{{ title | escape }}"
+data-author="{{ author | escape }}"
+data-cover="{{ cover }}"
+data-amazon="{{ amazon }}"
+data-bookshop="{{ bookshop }}"
+data-spice="{{ book.spice_level.value }}"
+data-tropes="{% for trope in book.tropes.value %}{{ trope.name }}{% unless forloop.last %}, {% endunless %}{% endfor %}"
+>
+
+              {% if cover %}
+                <img
+                  src="{{ cover }}"
+                  alt="{{ title | escape }}"
+                  loading="lazy"
+                >
+              {% endif %}
+
+              <div class="sss-blog-library__title">
+                {{ title }}
+              </div>
+
+              {% if author %}
+                <div class="sss-blog-library__author">
+                  {{ author }}
+                </div>
+              {% endif %}
+
+            </div>
+
+            {% assign shown = shown | plus: 1 %}
+          {% endif %}
+
+          {% assign eligible_index = eligible_index | plus: 1 %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+
+  </div>
+
+</div>

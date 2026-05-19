@@ -1,0 +1,26 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-page",
+      "disabled": true,
+      "settings": {
+        "padding_top": 28,
+        "padding_bottom": 28
+      }
+    },
+    "weekly_obsession_main": {
+      "type": "weekly-obsession-dossier",
+      "settings": {
+        "kicker": "weekly obsession",
+        "fallback_title": "this week’s obsession",
+        "empty_title": "next obsession is loading",
+        "empty_subtext": "once the next newsletter issue is live and its monday handoff passes, this dossier will fill itself in.",
+        "related_limit": 3
+      }
+    }
+  },
+  "order": [
+    "main",
+    "weekly_obsession_main"
+  ]
+}

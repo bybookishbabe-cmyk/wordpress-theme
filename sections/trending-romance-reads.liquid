@@ -1,0 +1,421 @@
+{% comment %}
+Trending Romance Reads
+Pulls the same "currently reading" books used in the library monthly shelf
+{% endcomment %}
+{{ 'sss-library.css' | asset_url | stylesheet_tag }}
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+{{ 'sss-library.js' | asset_url | script_tag }}
+<section class="bbb-trending">
+  <div class="bbb-trending__inner">
+
+    <div class="bbb-trending__head">
+      <p class="bbb-trending__kicker">
+        {{ section.settings.kicker }}
+      </p>
+
+      <h2 class="bbb-trending__title">
+        {{ section.settings.title }}
+      </h2>
+
+      <p class="bbb-trending__sub">
+        {{ section.settings.subtext }}
+      </p>
+    </div>
+
+{% paginate shop.metaobjects.sss_library.values by 250 %}
+
+{% assign all_books = shop.metaobjects.sss_library.values %}
+{% assign current_month = 'now' | date: "%Y-%m" %}
+{% assign current_month_number = 'now' | date: "%m" | plus: 0 %}
+{% assign current_month_padded = 'now' | date: "%m" %}
+{% assign current_year = 'now' | date: "%Y" %}
+{% assign today_date = 'now' | date: "%Y-%m-%d" %}
+
+{% if current_month_number == 2 %}
+  {% assign total_days = 28 %}
+{% elsif current_month_number == 4 or current_month_number == 6 or current_month_number == 9 or current_month_number == 11 %}
+  {% assign total_days = 30 %}
+{% else %}
+  {% assign total_days = 31 %}
+{% endif %}
+
+{% assign total_sundays = 0 %}
+{% for d in (1..total_days) %}
+  {% capture temp_day %}{{ current_year }}-{{ current_month_padded }}-{{ d | prepend: "0" | slice: -2, 2 }}{% endcapture %}
+  {% assign temp_weekday = temp_day | date: "%w" | plus: 0 %}
+  {% if temp_weekday == 0 %}
+    {% assign total_sundays = total_sundays | plus: 1 %}
+  {% endif %}
+{% endfor %}
+
+<div class="bbb-trending__row" data-sss-lib="public">
+
+      {% assign issue_types_string = "smutty|sentimental|trope report|chapter's end" %}
+      {% if total_sundays >= 5 %}
+        {% assign issue_types_string = "smutty|sentimental|trope report|extra extra|chapter's end" %}
+      {% endif %}
+      {% assign issue_types = issue_types_string | split: "|" %}
+
+      {% for issue in issue_types %}
+
+        {% assign matched_book = nil %}
+
+        {% for book in all_books %}
+          {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+          {% assign is_visible_value = is_visible | strip %}
+          {% unless is_visible_value == 'true' %}
+            {% continue %}
+          {% endunless %}
+          {% capture is_private %}{% render 'sss-book-private', book: book %}{% endcapture %}
+          {% assign is_private_value = is_private | strip %}
+          {% if is_private_value == 'true' %}
+            {% continue %}
+          {% endif %}
+
+          {% if book.featured_in_newsletter_date.value != blank %}
+            {% assign featured_date = book.featured_in_newsletter_date.value | date: "%Y-%m-%d" %}
+            {% if featured_date > today_date %}
+              {% continue %}
+            {% endif %}
+
+            {% assign book_month = book.featured_in_newsletter_date.value | date: "%Y-%m" %}
+
+            {% if book_month == current_month %}
+
+              {% assign issue_day = book.featured_in_newsletter_date.value | date: "%d" | plus: 0 %}
+              {% assign sunday_index = 0 %}
+              {% for d in (1..issue_day) %}
+                {% capture temp_day %}{{ current_year }}-{{ current_month_padded }}-{{ d | prepend: "0" | slice: -2, 2 }}{% endcapture %}
+                {% assign temp_weekday = temp_day | date: "%w" | plus: 0 %}
+                {% if temp_weekday == 0 %}
+                  {% assign sunday_index = sunday_index | plus: 1 %}
+                {% endif %}
+              {% endfor %}
+
+              {% case sunday_index %}
+                {% when 1 %}{% assign book_issue = "smutty" %}
+                {% when 2 %}{% assign book_issue = "sentimental" %}
+                {% when 3 %}{% assign book_issue = "trope report" %}
+                {% when 4 %}
+                  {% if total_sundays >= 5 %}
+                    {% assign book_issue = "extra extra" %}
+                  {% else %}
+                    {% assign book_issue = "chapter's end" %}
+                  {% endif %}
+                {% when 5 %}{% assign book_issue = "chapter's end" %}
+              {% endcase %}
+
+              {% if book_issue == issue %}
+                {% assign matched_book = book %}
+              {% endif %}
+
+            {% endif %}
+          {% endif %}
+
+        {% endfor %}
+
+        {% if matched_book %}
+
+          {% assign book = matched_book %}
+
+          {% assign cover_url = '' %}
+          {% if book.cover.value != blank %}
+            {% if book.cover.value.url != blank %}
+              {% assign cover_url = book.cover.value.url %}
+            {% else %}
+              {% assign cover_url = book.cover.value %}
+            {% endif %}
+          {% endif %}
+
+   <div class="bbb-trending__book">
+  {% render 'sss-book-card', book: matched_book, mini: true %}
+</div>
+
+        {% else %}
+
+          {% assign target_sunday_index = forloop.index %}
+          {% assign found_issue_date = '' %}
+          {% assign running_sunday_index = 0 %}
+          {% for d in (1..total_days) %}
+            {% capture temp_day %}{{ current_year }}-{{ current_month_padded }}-{{ d | prepend: "0" | slice: -2, 2 }}{% endcapture %}
+            {% assign temp_weekday = temp_day | date: "%w" | plus: 0 %}
+            {% if temp_weekday == 0 %}
+              {% assign running_sunday_index = running_sunday_index | plus: 1 %}
+              {% if running_sunday_index == target_sunday_index %}
+                {% assign found_issue_date = temp_day | date: "%B %d" | replace: " 0", " " %}
+                {% break %}
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+
+          <div class="bbb-trending__placeholder">
+
+            <div class="bbb-trending__placeholderIssue">
+              {{ issue }}
+            </div>
+
+            <div class="bbb-trending__placeholderText">
+              {% if found_issue_date != blank %}
+                revealing {{ found_issue_date }}
+              {% else %}
+                revealing soon
+              {% endif %}
+            </div>
+
+          </div>
+
+        {% endif %}
+
+      {% endfor %}
+
+    </div>
+
+    <div class="bbb-trending__cta">
+      <a href="https://thesmutandsentimentsociety.substack.com/subscribe" target="_blank" rel="noopener" class="bbb-trending__ctaSecondary">
+        don't miss a sunday →
+      </a>
+      <a href="{{ section.settings.cta_link | default: '/pages/library' }}">
+        {{ section.settings.cta_label }}
+      </a>
+    </div>
+
+  </div>
+  {% endpaginate %}
+</section>
+
+<style>
+    .bbb-trending{
+background:#0b0b0b;
+padding:60px 20px;
+color:#f6f6f6;
+}
+
+.bbb-trending__inner{
+max-width:1100px;
+margin:auto;
+}
+
+.bbb-trending__head{
+margin-bottom:32px;
+}
+
+.bbb-trending__kicker{
+font-size:11px;
+letter-spacing:.16em;
+text-transform:uppercase;
+opacity:.6;
+}
+
+.bbb-trending__title{
+font-size:32px;
+margin-top:6px;
+}
+
+.bbb-trending__sub{
+font-size:14px;
+opacity:.65;
+margin-top:8px;
+}
+
+.bbb-trending__row{
+display:flex;
+gap:18px;
+overflow-x:auto;
+padding-bottom:8px;
+}
+
+.bbb-trending__book{
+flex:0 0 150px;
+text-decoration:none;
+color:inherit;
+}
+
+.bbb-trending__coverWrap{
+border-radius:12px;
+overflow:hidden;
+border:1px solid rgba(255,255,255,.15);
+background:#111;
+}
+
+.bbb-trending__cover{
+width:100%;
+aspect-ratio:2/3;
+object-fit:cover;
+}
+
+.bbb-trending__meta{
+margin-top:8px;
+}
+
+.bbb-trending__name{
+font-size:13px;
+}
+
+.bbb-trending__author{
+font-size:11px;
+opacity:.6;
+}
+
+.bbb-trending__spice{
+position:absolute;
+top:8px;
+right:8px;
+font-size:12px;
+background:rgba(0,0,0,.7);
+padding:4px 8px;
+border-radius:999px;
+}
+
+.bbb-trending__cta{
+margin-top:28px;
+font-size:13px;
+display:flex;
+flex-direction:column;
+align-items:flex-start;
+gap:10px;
+}
+
+.bbb-trending__ctaSecondary{
+color:rgba(246,246,246,.78);
+text-decoration:none;
+}
+
+.bbb-trending__cta a{
+color:#ff8ac7;
+text-decoration:none;
+}
+.bbb-trending__ctaSecondary:hover{
+color:#fff;
+}
+.bbb-trending__placeholder{
+flex:0 0 150px;
+height:230px;
+
+border-radius:12px;
+border:1px solid rgba(255,255,255,.12);
+
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+text-align:center;
+
+font-size:12px;
+color:rgba(255,255,255,.6);
+
+background:linear-gradient(
+110deg,
+rgba(255,255,255,.04) 8%,
+rgba(255,255,255,.14) 18%,
+rgba(255,255,255,.04) 33%
+);
+
+background-size:200% 100%;
+animation:bbbRevealShimmer 3s linear infinite;
+}
+
+@keyframes bbbRevealShimmer{
+to{
+background-position:-200% 0;
+}
+}
+
+.bbb-trending__placeholderIssue{
+font-size:10px;
+letter-spacing:.18em;
+text-transform:uppercase;
+margin-bottom:6px;
+opacity:.6;
+}
+.bbb-trending__coverWrap{
+  position:relative;
+}
+/* trending book entrance animation */
+
+.bbb-trending__book{
+opacity:0;
+transform:translateY(30px);
+transition:all .6s ease;
+}
+
+.bbb-trending__book.is-visible{
+opacity:1;
+transform:translateY(0);
+}
+</style>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function(){
+
+const books = document.querySelectorAll(".bbb-trending__book");
+
+const observer = new IntersectionObserver((entries)=>{
+
+entries.forEach((entry)=>{
+
+if(entry.isIntersecting){
+
+const index = [...books].indexOf(entry.target);
+
+setTimeout(()=>{
+entry.target.classList.add("is-visible");
+}, index * 120); // cascade delay
+
+}
+
+});
+
+}, { threshold: 0.25 });
+
+books.forEach((book)=>{
+observer.observe(book);
+});
+
+});
+
+</script>
+
+{% schema %}
+{
+  "name": "Trending Romance Reads",
+  "tag": "section",
+  "class": "section-trending-romance",
+  "settings": [
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Kicker",
+      "default": "the society is reading"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Heading",
+      "default": "trending romance reads"
+    },
+    {
+      "type": "textarea",
+      "id": "subtext",
+      "label": "Subtext",
+      "default": "the books currently circulating through the smut & sentiment society."
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "CTA Label",
+      "default": "explore the full library →"
+    },
+{
+  "type": "url",
+  "id": "cta_link",
+  "label": "CTA Link"
+}
+  ],
+  "presets": [
+    {
+      "name": "Trending Romance Reads"
+    }
+  ]
+}
+{% endschema %}

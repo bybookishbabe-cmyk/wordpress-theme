@@ -1,0 +1,546 @@
+{% comment %}
+  sss-freebies-accordion.liquid
+  Society-only Freebies page section with collapsible categories.
+
+  How to use with Dropbox:
+  - Keep your files in Dropbox, set each block's "Download link" to the direct/share link you want to open.
+  - (Optional, recommended) Move files to Shopify Admin > Content > Files so downloads are fast + stable,
+    then paste the Shopify Files URL into "Download link".
+
+  Notes:
+  - Shopify sections don't have a true "file picker" for PDFs/ZIPs—only images.
+  - So the easiest workflow is: upload file to Shopify Files OR keep Dropbox, then paste the link into the URL field.
+{% endcomment %}
+
+<style>
+  .sss-freebies{
+    background:#0b0b0b;
+    color:#f6f6f6;
+    padding:34px 14px;
+    font-family:"Libre Baskerville", Georgia, serif;
+    position:relative;
+    overflow:hidden;
+  }
+  .sss-freebies:before{
+    content:"";
+    position:absolute; inset:-40px; pointer-events:none;
+    background:
+      radial-gradient(900px 520px at 50% 90px, rgba(255,255,255,.08), transparent 70%),
+      repeating-linear-gradient(to bottom, rgba(255,255,255,.03), rgba(255,255,255,.03) 1px, transparent 1px, transparent 26px);
+    opacity:.55;
+  }
+  .sss-freebies__wrap{
+    max-width:1100px;
+    margin:0 auto;
+    position:relative;
+    z-index:1;
+    padding:0 8px;
+  }
+
+  .sss-freebies__head{ margin-bottom:18px; }
+  .sss-freebies__title{
+    margin:0;
+    font-size:28px;
+    font-weight:400;
+    text-transform:lowercase;
+  }
+  .sss-freebies__sub{
+    margin:10px 0 0;
+    font-size:13px;
+    color:rgba(246,246,246,.78);
+    line-height:1.6;
+    max-width:72ch;
+  }
+  .sss-freebies__tiny{
+    margin:8px 0 0;
+    font-size:12px;
+    color:rgba(246,246,246,.62);
+  }
+
+  /* accordion */
+  .sss-freebies__acc{
+    display:grid;
+    gap:12px;
+    margin-top:18px;
+  }
+
+  details.sss-freebies__cat{
+    background:rgba(246,246,246,.04);
+    border:1px solid rgba(246,246,246,.10);
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:0 14px 30px rgba(0,0,0,.38);
+  }
+
+  summary.sss-freebies__sum{
+    list-style:none;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    padding:14px 14px;
+    user-select:none;
+  }
+  summary.sss-freebies__sum::-webkit-details-marker{ display:none; }
+
+  .sss-freebies__sumLeft{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+  }
+  .sss-freebies__emoji{
+    width:30px;
+    height:30px;
+    border-radius:12px;
+    display:grid;
+    place-items:center;
+    background:rgba(246,246,246,.08);
+    border:1px solid rgba(246,246,246,.12);
+    flex:0 0 auto;
+    font-size:16px;
+    line-height:1;
+  }
+  .sss-freebies__sumText{
+    min-width:0;
+    display:grid;
+    gap:2px;
+  }
+  .sss-freebies__sumTitle{
+    font-size:13px;
+    letter-spacing:.01em;
+    text-transform:lowercase;
+    margin:0;
+  }
+  .sss-freebies__sumHint{
+    font-size:12px;
+    color:rgba(246,246,246,.65);
+    margin:0;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .sss-freebies__chev{
+    flex:0 0 auto;
+    width:34px;
+    height:34px;
+    border-radius:999px;
+    display:grid;
+    place-items:center;
+    border:1px solid rgba(246,246,246,.16);
+    background:rgba(0,0,0,.22);
+    color:#f6f6f6;
+    transition:transform .18s ease;
+  }
+  details[open] .sss-freebies__chev{ transform:rotate(180deg); }
+
+  .sss-freebies__body{
+    padding:0 14px 14px;
+  }
+
+  /* cards */
+  .sss-freebies__grid{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0,1fr));
+    gap:12px;
+    margin-top:10px;
+  }
+
+  .sss-freebies__card{
+    background:#F6F1E9;
+    color:#171414;
+    border:1px solid rgba(0,0,0,.18);
+    border-radius:14px;
+    overflow:hidden;
+    position:relative;
+    box-shadow:0 14px 26px rgba(0,0,0,.30);
+    display:flex;
+    flex-direction:column;
+    min-height:140px;
+  }
+
+  .sss-freebies__cardTop{
+    display:flex;
+    gap:10px;
+    padding:12px;
+    align-items:flex-start;
+  }
+
+/* thumbnail container */
+.sss-freebies__thumb{
+  width:56px;
+  height:56px;
+  border-radius:12px;
+  background:rgba(0,0,0,.06);
+  border:1px solid rgba(0,0,0,.12);
+  overflow:hidden;
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* image fits entirely, never crops */
+.sss-freebies__thumb img{
+  max-width:100%;
+  max-height:100%;
+  width:auto;
+  height:auto;
+  object-fit:contain;
+  display:block;
+}
+.sss-freebies__thumb{
+  background:#f7f6f2;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.6),
+    0 4px 10px rgba(0,0,0,.18);
+}
+
+  
+
+  .sss-freebies__cardText{
+    min-width:0;
+    display:grid;
+    gap:6px;
+    flex:1;
+  }
+
+  .sss-freebies__name{
+    margin:0;
+    font-size:13px;
+    letter-spacing:.01em;
+    text-transform:lowercase;
+  }
+  .sss-freebies__desc{
+    margin:0;
+    font-size:12px;
+    color:rgba(23,20,20,.72);
+    line-height:1.45;
+  }
+  .sss-freebies__metaRow{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-top:auto;
+  }
+
+  .sss-freebies__tag{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-size:10px;
+    padding:6px 10px;
+    border-radius:999px;
+    background:rgba(23,20,20,.92);
+    color:#F6F1E9;
+    border:1px solid rgba(23,20,20,.92);
+    text-transform:lowercase;
+    white-space:nowrap;
+  }
+
+  .sss-freebies__btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    text-decoration:none;
+    font-size:10px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    padding:9px 12px;
+    border-radius:999px;
+    background:#0b0b0b;
+    color:#f6f6f6;
+    border:1px solid rgba(0,0,0,.85);
+    white-space:nowrap;
+    transition:transform .14s ease, filter .14s ease;
+  }
+  .sss-freebies__btn--icon{
+  width:34px;
+  height:34px;
+  padding:0;
+  font-size:16px;
+  letter-spacing:0;
+  display:grid;
+  place-items:center;
+  border-radius:999px;
+}
+.sss-freebies__btn--icon:hover{
+  transform:translateY(-1px) scale(1.05);
+}
+
+  .sss-freebies__empty{
+    padding:10px 0 4px;
+    color:rgba(246,246,246,.70);
+    font-size:12px;
+  }
+
+  /* responsive */
+  @media(max-width:900px){
+    .sss-freebies__grid{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+  }
+  @media(max-width:560px){
+    .sss-freebies{ padding:28px 12px; }
+    .sss-freebies__title{ font-size:24px; }
+    .sss-freebies__grid{ grid-template-columns:1fr; }
+  }
+</style>
+
+<section class="sss-freebies" data-sss-freebies>
+  <div class="sss-freebies__wrap">
+    <div class="sss-freebies__head">
+      <h2 class="sss-freebies__title">{{ section.settings.title }}</h2>
+      <p class="sss-freebies__sub">{{ section.settings.subtext }}</p>
+      {% if section.settings.tiny_line != blank %}
+        <p class="sss-freebies__tiny">{{ section.settings.tiny_line }}</p>
+      {% endif %}
+    </div>
+
+    {%- assign cat_keys = "printable_distractions,phone_aesthetics,reader_essentials,cozy_creative,seasonal_limited" | split: "," -%}
+
+    {%- assign cat_titles = "" | split: "|" -%}
+    {%- assign cat_titles = cat_titles
+      | push: section.settings.cat1_title
+      | push: section.settings.cat2_title
+      | push: section.settings.cat3_title
+      | push: section.settings.cat4_title
+      | push: section.settings.cat5_title
+    -%}
+
+    {%- assign cat_emojis = "" | split: "|" -%}
+    {%- assign cat_emojis = cat_emojis
+      | push: section.settings.cat1_emoji
+      | push: section.settings.cat2_emoji
+      | push: section.settings.cat3_emoji
+      | push: section.settings.cat4_emoji
+      | push: section.settings.cat5_emoji
+    -%}
+
+    {%- assign cat_hints = "" | split: "|" -%}
+    {%- assign cat_hints = cat_hints
+      | push: section.settings.cat1_hint
+      | push: section.settings.cat2_hint
+      | push: section.settings.cat3_hint
+      | push: section.settings.cat4_hint
+      | push: section.settings.cat5_hint
+    -%}
+
+    <div class="sss-freebies__acc">
+      {%- for k in cat_keys -%}
+        {%- assign i0 = forloop.index0 -%}
+        {%- assign cat_title = cat_titles[i0] | default: "" -%}
+        {%- assign cat_emoji = cat_emojis[i0] | default: "" -%}
+        {%- assign cat_hint  = cat_hints[i0]  | default: "" -%}
+
+        {%- comment -%} Count items in this category {%- endcomment -%}
+        {%- assign cat_count = 0 -%}
+        {%- for block in section.blocks -%}
+          {%- if block.type == 'freebie' -%}
+            {%- if block.settings.category == k and block.settings.title != blank and block.settings.file_url != blank -%}
+              {%- assign cat_count = cat_count | plus: 1 -%}
+            {%- endif -%}
+          {%- endif -%}
+        {%- endfor -%}
+
+        {%- if cat_count > 0 -%}
+          <details class="sss-freebies__cat" {% if section.settings.open_first and forloop.first %}open{% endif %}>
+            <summary class="sss-freebies__sum">
+              <span class="sss-freebies__sumLeft">
+                <span class="sss-freebies__emoji" aria-hidden="true">{{ cat_emoji }}</span>
+                <span class="sss-freebies__sumText">
+                  <span class="sss-freebies__sumTitle">{{ cat_title }}</span>
+                  {% if cat_hint != blank %}
+                    <span class="sss-freebies__sumHint">{{ cat_hint }}</span>
+                  {% endif %}
+                </span>
+              </span>
+              <span class="sss-freebies__chev" aria-hidden="true">⌄</span>
+            </summary>
+
+            <div class="sss-freebies__body">
+              <div class="sss-freebies__grid">
+                {%- for block in section.blocks -%}
+                  {%- if block.type == 'freebie' and block.settings.category == k -%}
+                    {%- assign item_title = block.settings.title | strip -%}
+                    {%- assign item_url = block.settings.file_url -%}
+                    {%- if item_title == blank or item_url == blank -%}{%- continue -%}{%- endif -%}
+
+                    <div class="sss-freebies__card" {{ block.shopify_attributes }}>
+                      <div class="sss-freebies__cardTop">
+                        <div class="sss-freebies__thumb" aria-hidden="true">
+                          {% if block.settings.image_url != blank %}
+  <img
+    src="{{ block.settings.image_url }}"
+    alt=""
+    loading="lazy"
+    referrerpolicy="no-referrer">
+{% else %}
+  {{ block.settings.emoji | default: cat_emoji }}
+{% endif %}
+
+                        </div>
+
+                        <div class="sss-freebies__cardText">
+                          <p class="sss-freebies__name">{{ item_title }}</p>
+
+                          {% if block.settings.desc != blank %}
+                            <p class="sss-freebies__desc">{{ block.settings.desc }}</p>
+                          {% endif %}
+
+                          <div class="sss-freebies__metaRow">
+                            {% if block.settings.format != blank %}
+                              <span class="sss-freebies__tag">{{ block.settings.format }}</span>
+                            {% else %}
+                              <span class="sss-freebies__tag">download</span>
+                            {% endif %}
+
+                            <a class="sss-freebies__btn sss-freebies__btn--icon"
+   href="{{ item_url }}"
+   aria-label="download"
+   {% if section.settings.new_tab %}target="_blank" rel="noopener"{% endif %}>
+  ⬇
+</a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  {%- endif -%}
+                {%- endfor -%}
+              </div>
+            </div>
+          </details>
+        {%- endif -%}
+      {%- endfor -%}
+
+      {%- comment -%} If no items at all {%- endcomment -%}
+      {%- assign total_count = 0 -%}
+      {%- for block in section.blocks -%}
+        {%- if block.type == 'freebie' and block.settings.title != blank and block.settings.file_url != blank -%}
+          {%- assign total_count = total_count | plus: 1 -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {%- if total_count == 0 -%}
+        <div class="sss-freebies__empty">no freebies yet. add blocks in this section to start stocking the drawer.</div>
+      {%- endif -%}
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+  function init(){
+    document.querySelectorAll('[data-sss-freebies]').forEach(function(root){
+      if (root.__bound) return;
+      root.__bound = true;
+
+      if (!root.closest('body')) return;
+
+      var singleOpen = root.getAttribute('data-single-open') === 'true';
+      // We'll set this via a data attribute below.
+      // (We do it this way to avoid mixing Liquid inside JS strings.)
+
+      if (!singleOpen) return;
+
+      var all = root.querySelectorAll('details.sss-freebies__cat');
+      all.forEach(function(d){
+        d.addEventListener('toggle', function(){
+          if (!d.open) return;
+          all.forEach(function(other){
+            if (other !== d) other.removeAttribute('open');
+          });
+        });
+      });
+    });
+  }
+
+  init();
+  document.addEventListener('shopify:section:load', init);
+})();
+</script>
+
+{%- comment -%}
+  Attach single-open preference as data attribute (no JS/Liquid mixing issues)
+{%- endcomment -%}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('[data-sss-freebies]').forEach(function(root){
+    root.setAttribute('data-single-open', {{ section.settings.single_open | json }});
+  });
+});
+</script>
+
+{% schema %}
+{
+  "name": "sss freebies (accordion)",
+  "settings": [
+    { "type": "text", "id": "title", "label": "title", "default": "freebies" },
+    { "type": "textarea", "id": "subtext", "label": "subtext", "default": "little gifts for readers — no gatekeeping." },
+    { "type": "text", "id": "tiny_line", "label": "tiny line", "default": "new freebies are added occasionally." },
+
+    { "type": "checkbox", "id": "new_tab", "label": "open downloads in new tab", "default": true },
+    { "type": "checkbox", "id": "open_first", "label": "open first category by default", "default": true },
+    { "type": "checkbox", "id": "single_open", "label": "only allow one category open at a time", "default": false },
+
+    { "type": "header", "content": "category labels" },
+
+    { "type": "text", "id": "cat1_title", "label": "1) title", "default": "printable distractions" },
+    { "type": "text", "id": "cat1_emoji", "label": "1) emoji", "default": "🖨️" },
+    { "type": "text", "id": "cat1_hint", "label": "1) hint", "default": "for when you want to unplug, but not really." },
+
+    { "type": "text", "id": "cat2_title", "label": "2) title", "default": "phone & screen aesthetics" },
+    { "type": "text", "id": "cat2_emoji", "label": "2) emoji", "default": "📱" },
+    { "type": "text", "id": "cat2_hint", "label": "2) hint", "default": "pretty things, but make them bookish." },
+
+    { "type": "text", "id": "cat3_title", "label": "3) title", "default": "reader life essentials" },
+    { "type": "text", "id": "cat3_emoji", "label": "3) emoji", "default": "🖤" },
+    { "type": "text", "id": "cat3_hint", "label": "3) hint", "default": "the things you actually use." },
+
+    { "type": "text", "id": "cat4_title", "label": "4) title", "default": "cozy + creative" },
+    { "type": "text", "id": "cat4_emoji", "label": "4) emoji", "default": "✍️" },
+    { "type": "text", "id": "cat4_hint", "label": "4) hint", "default": "for feelings after the last page." },
+
+    { "type": "text", "id": "cat5_title", "label": "5) title", "default": "seasonal / limited" },
+    { "type": "text", "id": "cat5_emoji", "label": "5) emoji", "default": "✨" },
+    { "type": "text", "id": "cat5_hint", "label": "5) hint", "default": "rotating treats + special drops." }
+  ],
+  "blocks": [
+    {
+      "type": "freebie",
+      "name": "freebie",
+      "settings": [
+        {
+          "type": "select",
+          "id": "category",
+          "label": "category",
+          "default": "printable_distractions",
+          "options": [
+            { "value": "printable_distractions", "label": "printable distractions" },
+            { "value": "phone_aesthetics", "label": "phone & screen aesthetics" },
+            { "value": "reader_essentials", "label": "reader life essentials" },
+            { "value": "cozy_creative", "label": "cozy + creative" },
+            { "value": "seasonal_limited", "label": "seasonal / limited" }
+          ]
+        },
+        { "type": "text", "id": "title", "label": "title", "default": "dark romance word search" },
+        { "type": "textarea", "id": "desc", "label": "one-line description", "default": "morally gray men + questionable decisions." },
+        { "type": "text", "id": "format", "label": "format tag (e.g., printable pdf, iphone background)", "default": "printable pdf" },
+
+        { "type": "url", "id": "file_url", "label": "download link (dropbox or shopify files)" },
+
+        {
+  "type": "url",
+  "id": "image_url",
+  "label": "thumbnail image link (optional)"
+},
+        { "type": "text", "id": "emoji", "label": "optional emoji (used when no image)", "default": "🖤" }
+      ]
+    }
+  ],
+  "max_blocks": 60,
+  "presets": [
+    { "name": "sss freebies (accordion)" }
+  ]
+}
+{% endschema %}

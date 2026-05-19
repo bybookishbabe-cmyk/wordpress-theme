@@ -1,0 +1,70 @@
+{% assign trope_bg = '#f3bfd5' %}
+{% assign trope_text = '#4b112d' %}
+
+{% case trope_handle %}
+  {% when 'enemies-to-lovers' %}
+    {% assign trope_bg = '#f2a7ad' %}
+    {% assign trope_text = '#6e1422' %}
+  {% when 'friends-to-lovers' %}
+    {% assign trope_bg = '#bfe3cb' %}
+    {% assign trope_text = '#144a31' %}
+  {% when 'slow-burn' %}
+    {% assign trope_bg = '#f2c179' %}
+    {% assign trope_text = '#6a3700' %}
+  {% when 'billionaire-romance', 'billionaire' %}
+    {% assign trope_bg = '#bfdca0' %}
+    {% assign trope_text = '#365316' %}
+  {% when 'second-chance' %}
+    {% assign trope_bg = '#cfbef5' %}
+    {% assign trope_text = '#4b2280' %}
+  {% when 'forced-proximity' %}
+    {% assign trope_bg = '#a9cdf6' %}
+    {% assign trope_text = '#163f72' %}
+  {% when 'grumpy-sunshine' %}
+    {% assign trope_bg = '#f2d35f' %}
+    {% assign trope_text = '#5f4700' %}
+  {% when 'workplace-romance' %}
+    {% assign trope_bg = '#bfd0ef' %}
+    {% assign trope_text = '#274469' %}
+  {% when 'fake-dating' %}
+    {% assign trope_bg = '#efb6d3' %}
+    {% assign trope_text = '#6e2147' %}
+  {% when 'marriage-of-convenience' %}
+    {% assign trope_bg = '#dbc2a7' %}
+    {% assign trope_text = '#6c4221' %}
+  {% when 'sports-romance' %}
+    {% assign trope_bg = '#9fd8e5' %}
+    {% assign trope_text = '#0f5064' %}
+  {% when 'small-town' %}
+    {% assign trope_bg = '#c7d89b' %}
+    {% assign trope_text = '#405719' %}
+  {% when 'brothers-best-friend' %}
+    {% assign trope_bg = '#ebb99c' %}
+    {% assign trope_text = '#71351a' %}
+  {% when 'dark-romance', 'stalker-romance', 'stalker' %}
+    {% assign trope_bg = '#b8a0d8' %}
+    {% assign trope_text = '#2f1646' %}
+  {% when 'morally-gray-hero', 'morally-gray-men', 'morally-gray' %}
+    {% assign trope_bg = '#b9c1cb' %}
+    {% assign trope_text = '#26303b' %}
+  {% when 'touch-her-and-die' %}
+    {% assign trope_bg = '#e596a8' %}
+    {% assign trope_text = '#641223' %}
+  {% when 'one-bed' %}
+    {% assign trope_bg = '#d8b9ea' %}
+    {% assign trope_text = '#55276f' %}
+  {% when 'fated-mates' %}
+    {% assign trope_bg = '#e7acd1' %}
+    {% assign trope_text = '#74204f' %}
+  {% when 'age-gap' %}
+    {% assign trope_bg = '#c4d4ec' %}
+    {% assign trope_text = '#31486e' %}
+  {% when 'single-dad' %}
+    {% assign trope_bg = '#b7dbc9' %}
+    {% assign trope_text = '#1f543b' %}
+  {% when 'reverse-harem' %}
+    {% assign trope_bg = '#d7a8d7' %}
+    {% assign trope_text = '#651c58' %}
+{% endcase %}
+
+{{ trope_bg }}|||{{ trope_text }}

@@ -1,0 +1,321 @@
+<div class="new-month-wrapper" id="bbb-new-month-{{ section.id }}">
+  <div class="new-month-card">
+
+    {% assign drop_collection = section.settings.monthly_collection %}
+
+    {% assign current_month = 'now' | date: "%B %Y" | upcase %}
+    {% assign month_number = 'now' | date: "%m.%Y" %}
+
+    <div class="new-month-catalog">
+      <span class="new-month-catalog-code">
+        {{ month_number }} — VOL. {{ drop_collection.products_count }}
+      </span>
+      <span class="new-month-date-stamp">
+        {{ current_month }}
+      </span>
+    </div>
+
+    <div class="new-month-left">
+
+      <span class="new-month-edition-label">
+        {{ current_month | downcase }} edition
+      </span>
+
+      <h2 class="new-month-title">
+        new this month
+      </h2>
+
+      {% if drop_collection.description != blank %}
+        <p class="new-month-subtitle">
+          {{ drop_collection.description }}
+        </p>
+      {% endif %}
+
+      <div class="new-month-details">
+        <p class="new-detail-line">
+          collection: {{ drop_collection.title }}
+        </p>
+
+        {% if drop_collection.metafields.custom.vibe != blank %}
+          <p class="new-detail-line">
+            vibe: {{ drop_collection.metafields.custom.vibe }}
+          </p>
+        {% endif %}
+      </div>
+
+      {% if drop_collection.url != blank %}
+        <a href="{{ drop_collection.url }}" class="new-month-button">
+          shop the collection
+          <span class="new-month-button-chevron">↗</span>
+        </a>
+      {% endif %}
+
+    </div>
+
+    <div class="new-month-right">
+
+      {% if drop_collection != blank and drop_collection.products.size > 0 %}
+
+        <div class="new-month-grid">
+
+          {% for product in drop_collection.products limit: 4 %}
+
+            <div class="new-month-product">
+              <div class="new-month-card-inner">
+
+                {% if product.featured_image %}
+                  <a href="{{ product.url }}" class="new-month-image-link">
+                    <img 
+                      src="{{ product.featured_image | img_url: '600x' }}" 
+                      alt="{{ product.title }}"
+                      class="new-month-img"
+                    />
+                  </a>
+                {% endif %}
+
+                <div class="new-month-content">
+
+                  <div class="new-month-label">
+                    monthly drop
+                  </div>
+
+                  <a href="{{ product.url }}" class="new-month-title-link">
+                    <div class="new-month-title">
+                      {{ product.title }}
+                    </div>
+                  </a>
+
+                  <div class="new-month-meta">
+                    {% if product.metafields.custom.reader_line != blank %}
+                      {{ product.metafields.custom.reader_line }}
+                    {% else %}
+                      for the reader who knows exactly what they like.
+                    {% endif %}
+                  </div>
+
+                  {% if product.available %}
+
+                    {% if product.has_only_default_variant %}
+
+                      <form method="post" action="/cart/add" class="new-month-form">
+                        <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+                        <button type="submit" class="new-month-button">
+                          add to cart
+                        </button>
+                      </form>
+
+                    {% else %}
+
+                      <form method="post" action="/cart/add" class="new-month-form">
+                        <select name="id" class="new-month-select">
+                          {% for variant in product.variants %}
+                            {% if variant.available %}
+                              <option value="{{ variant.id }}">{{ variant.title }}</option>
+                            {% else %}
+                              <option value="{{ variant.id }}" disabled>
+                                {{ variant.title }} — sold out
+                              </option>
+                            {% endif %}
+                          {% endfor %}
+                        </select>
+
+                        <button type="submit" class="new-month-button">
+                          add to cart
+                        </button>
+                      </form>
+
+                    {% endif %}
+
+                  {% else %}
+                    <div class="new-month-soldout">
+                      sold out
+                    </div>
+                  {% endif %}
+
+                </div>
+              </div>
+            </div>
+
+          {% endfor %}
+        </div>
+
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+<style>
+/* =========================================
+   NEW THIS MONTH — CLEAN VERSION
+   ========================================= */
+
+#bbb-new-month-{{ section.id }} .new-month-card{
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 60px;
+  padding: 24px 60px;  /* tighter top + bottom */
+  align-items: start;
+}
+
+/* ---------- LEFT SIDE ---------- */
+
+#bbb-new-month-{{ section.id }} .new-month-left{
+  max-width: 520px;
+}
+
+#bbb-new-month-{{ section.id }} .new-month-title{
+  font-size: 56px;
+  font-weight: 400;
+  line-height: 1.1;
+  margin-bottom: 10px;
+  letter-spacing: -0.02em;
+}
+
+#bbb-new-month-{{ section.id }} .new-month-subtitle{
+  font-size: 18px;
+  line-height: 1.6;
+  opacity: 0.75;
+  margin-bottom: 18px;
+}
+
+#bbb-new-month-{{ section.id }} .new-month-details{
+  margin-bottom: 24px;
+}
+
+#bbb-new-month-{{ section.id }} .new-month-button{
+  padding: 12px 24px;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  background: transparent;
+  cursor: pointer;
+  transition: .3s ease;
+}
+
+#bbb-new-month-{{ section.id }} .new-month-button:hover{
+  background: black;
+  color: white;
+}
+
+/* ---------- PRODUCT GRID ---------- */
+
+#bbb-new-month-{{ section.id }} .new-month-grid{
+  display: flex;
+  gap: 24px;
+}
+
+#bbb-new-month-{{ section.id }} .new-month-product{
+  flex: 0 0 220px;   /* smaller cards */
+}
+
+
+/* ---------- PRODUCT CARD ---------- */
+
+#bbb-new-month-{{ section.id }} .new-month-product{
+  background: #f3f3f3;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+#bbb-new-month-{{ section.id }} .new-month-img{
+  width: 100%;
+  display: block;
+  margin-bottom: 14px;
+}
+
+#bbb-new-month-{{ section.id }} .new-month-label{
+  font-size: 11px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  opacity: .6;
+  margin-bottom: 6px;
+}
+
+#bbb-new-month-{{ section.id }} .new-month-title-link .new-month-title{
+  font-size: 18px;
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+
+#bbb-new-month-{{ section.id }} .new-month-meta{
+  font-size: 14px;
+  opacity: .65;
+  margin-bottom: 14px;
+}
+
+#bbb-new-month-{{ section.id }} .new-month-select{
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+
+#bbb-new-month-{{ section.id }} .new-month-button{
+  width: 100%;
+  padding: 12px;
+  background: black;
+  color: white;
+  border: none;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+/* =========================================
+   MOBILE
+   ========================================= */
+
+@media (max-width: 820px){
+
+  #bbb-new-month-{{ section.id }} .new-month-card{
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    padding: 20px 20px;
+  }
+
+  #bbb-new-month-{{ section.id }} .new-month-title{
+    font-size: 40px;
+  }
+
+  #bbb-new-month-{{ section.id }} .new-month-grid{
+    display: flex;
+    overflow-x: auto;
+    gap: 14px;                /* nearly touching */
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-right: 20px;
+  }
+
+  #bbb-new-month-{{ section.id }} .new-month-product{
+    flex: 0 0 70%;            /* smaller swipe cards */
+    scroll-snap-align: start;
+  }
+
+}
+
+#bbb-new-month-{{ section.id }} .new-month-catalog-code,
+#bbb-new-month-{{ section.id }} .new-month-date-stamp{
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  line-height: 1;
+}
+</style>
+
+{% schema %}
+{
+  "name": "bbb — new this month",
+  "settings": [
+    {
+      "type": "collection",
+      "id": "monthly_collection",
+      "label": "Monthly Drop Collection"
+    }
+  ],
+  "presets": [
+    { "name": "bbb — new this month" }
+  ]
+}
+{% endschema %}

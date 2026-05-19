@@ -1,0 +1,56 @@
+{%- liquid
+  assign issue_url = ''
+  if issue.url.value != blank
+    if issue.url.value.url != blank
+      assign issue_url = issue.url.value.url
+    else
+      assign issue_url = issue.url.value
+    endif
+  endif
+
+  assign issue_title = issue.title.value | default: 'a book you shamelessly disappear into'
+  assign issue_subtitle = issue.subtitle.value | default: issue.excerpt.value
+  assign issue_tropes = issue.tropes.value
+  assign issue_label = issue.label.value | default: 'the smut & sentiment society'
+  assign issue_date = ''
+  if issue.publish_date.value != blank
+    assign issue_date = issue.publish_date.value | date: '%b %-d' | upcase
+  endif
+
+  assign preview_url = ''
+  if issue.preview.value != blank
+    if issue.preview.value.url != blank
+      assign preview_url = issue.preview.value.url
+    elsif issue.preview.value.preview_image != blank
+      assign preview_url = issue.preview.value.preview_image | image_url: width: 160
+    else
+      assign preview_url = issue.preview.value | image_url: width: 160
+    endif
+  endif
+-%}
+
+{%- if issue_url != blank -%}
+  <aside class="blog-newsletter-preview" aria-label="newsletter preview">
+    <a class="blog-newsletter-preview__card" href="{{ issue_url }}" target="_blank" rel="noopener">
+      {%- if preview_url != blank -%}
+        <span class="blog-newsletter-preview__thumb">
+          <img src="{{ preview_url }}" alt="{{ issue_title | escape }}" loading="lazy">
+        </span>
+      {%- endif -%}
+
+      <span class="blog-newsletter-preview__copy">
+        <span class="blog-newsletter-preview__title">{{ issue_title }}</span>
+        <span class="blog-newsletter-preview__meta">
+          {{ issue_label }}
+          {%- if issue_date != blank -%}
+            <span aria-hidden="true"> · </span>{{ issue_date }}
+          {%- endif -%}
+        </span>
+        {%- if issue_subtitle != blank -%}
+          <span class="blog-newsletter-preview__excerpt">{{ issue_subtitle }}</span>
+        {%- endif -%}
+        <span class="blog-newsletter-preview__cta">read full story →</span>
+      </span>
+    </a>
+  </aside>
+{%- endif -%}

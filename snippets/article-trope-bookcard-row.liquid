@@ -1,0 +1,126 @@
+{% assign article_trope = trope %}
+{% assign article_trope_handle = '' %}
+{% assign article_trope_name = '' %}
+
+{% if article_trope != blank and article_trope.name == blank %}
+  {% assign article_trope_first = article_trope | first %}
+  {% if article_trope_first != blank %}
+    {% assign article_trope = article_trope_first %}
+  {% endif %}
+{% endif %}
+
+{% if article_trope and article_trope.system and article_trope.system.handle != blank %}
+  {% assign article_trope_handle = article_trope.system.handle %}
+{% endif %}
+
+{% if article_trope != blank %}
+  {% assign article_trope_name = article_trope.name | default: article_trope | strip | downcase %}
+  {% if article_trope_handle == blank %}
+    {% assign article_trope_handle = article_trope_name | handleize %}
+  {% endif %}
+{% endif %}
+
+{% if article_trope_handle != blank %}
+  {% paginate shop.metaobjects.sss_library.values by 250 %}
+    {% assign trope_match_count = 0 %}
+    {% for book in shop.metaobjects.sss_library.values %}
+      {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+      {% assign is_visible_value = is_visible | strip %}
+      {% unless is_visible_value == 'true' %}
+        {% continue %}
+      {% endunless %}
+      {% assign series_number_text = book.series_number.value | append: '' | strip %}
+      {% if book.series.value != blank and book.read_as_standalone.value != true and series_number_text != blank and series_number_text != '1' %}
+        {% continue %}
+      {% endif %}
+      {% assign trope_match = false %}
+      {% for linked_trope in book.tropes.value %}
+        {% assign linked_trope_handle = linked_trope.system.handle | default: linked_trope.name | handleize %}
+        {% assign linked_trope_name = linked_trope.name | strip | downcase %}
+        {% if linked_trope_handle == article_trope_handle or linked_trope_name == article_trope_name %}
+          {% assign trope_match = true %}
+          {% break %}
+        {% endif %}
+      {% endfor %}
+
+      {% if trope_match %}
+        {% assign trope_match_count = trope_match_count | plus: 1 %}
+      {% endif %}
+    {% endfor %}
+
+    {% if trope_match_count > 0 %}
+      {% assign midpoint_index = trope_match_count | divided_by: 2 %}
+      <div class="guide-bookcard" data-guide-bookcard data-guide-title="{{ article.title | escape }}">
+        <div class="guide-bookcard__head">
+          <div class="guide-bookcard__header">
+            books mentioned in this guide
+          </div>
+          <button type="button" class="sss-lib__exportBtn guide-bookcard__export" data-guide-export>
+            save this list
+          </button>
+        </div>
+        <div class="guide-bookcard__affiliate-note">
+          some links may be affiliate links, so thank you for supporting the recs. <3
+        </div>
+        <div class="guide-bookcard__list">
+          {% assign rendered_match_count = 0 %}
+          {% for book in shop.metaobjects.sss_library.values %}
+            {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+            {% assign is_visible_value = is_visible | strip %}
+            {% unless is_visible_value == 'true' %}
+              {% continue %}
+            {% endunless %}
+            {% assign series_number_text = book.series_number.value | append: '' | strip %}
+            {% if book.series.value != blank and book.read_as_standalone.value != true and series_number_text != blank and series_number_text != '1' %}
+              {% continue %}
+            {% endif %}
+            {% assign trope_match = false %}
+            {% for linked_trope in book.tropes.value %}
+              {% assign linked_trope_handle = linked_trope.system.handle | default: linked_trope.name | handleize %}
+              {% assign linked_trope_name = linked_trope.name | strip | downcase %}
+              {% if linked_trope_handle == article_trope_handle or linked_trope_name == article_trope_name %}
+                {% assign trope_match = true %}
+                {% break %}
+              {% endif %}
+            {% endfor %}
+
+            {% if trope_match %}
+              {% assign rendered_match_count = rendered_match_count | plus: 1 %}
+              {% assign series_handle = book.series.value.system.handle | default: '' %}
+              {% assign series_title = book.series.value.title | default: '' %}
+              {% assign series_number = book.series_number.value | default: '' %}
+              <div
+              class="guide-bookcard__item js-scroll-reveal"
+                data-book-preview
+                data-handle="{{ book.system.handle }}"
+                data-title="{{ book.title.value | escape }}"
+                data-author="{{ book.author.value | escape }}"
+                data-cover="{{ book.cover.value.url | default: book.cover.value }}"
+                data-amazon="{{ book.amazon_link.value.url }}"
+                data-bookshop="{{ book.bookshop_link.value.url }}"
+                data-newsletter="{{ book.newsletter_url.value | escape }}"
+                data-spice="{{ book.spice_level.value }}"
+                data-tropes="{% for linked_trope in book.tropes.value %}{{ linked_trope.name }}{% unless forloop.last %}, {% endunless %}{% endfor %}"
+                data-tropes-display="{% for linked_trope in book.tropes.value %}{% if linked_trope.emoji != blank %}{{ linked_trope.emoji }} {% endif %}{{ linked_trope.name }}{% unless forloop.last %}, {% endunless %}{% endfor %}"
+                data-mini="{{ book.mini_note.value | escape }}"
+                data-why="{{ book.why_i_loved_it.value | escape }}"
+                data-ku="{{ book.on_kindle_unlimited.value }}"
+                data-series="{{ series_handle }}"
+                data-series-name="{{ series_title | escape }}"
+                data-series-number="{{ series_number }}"
+                >
+                  {% render 'blog-book-card', book: book %}
+              </div>
+
+              {% if weekly_obsession_banner != blank and midpoint_index > 0 and rendered_match_count == midpoint_index %}
+                <div class="guide-bookcard__obsession">
+                  {{ weekly_obsession_banner }}
+                </div>
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  {% endpaginate %}
+{% endif %}

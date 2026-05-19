@@ -1,0 +1,161 @@
+{% assign content = article.content %}
+
+{% assign article_books = article.metafields.custom.book.value %}
+{% assign article_trope = article.metafields.custom.trope.value %}
+{% assign article_trope_handle = '' %}
+{% assign article_trope_name = '' %}
+
+{% if article_trope != blank and article_trope.name == blank %}
+  {% assign article_trope_first = article_trope | first %}
+  {% if article_trope_first != blank %}
+    {% assign article_trope = article_trope_first %}
+  {% endif %}
+{% endif %}
+
+{% if article_trope and article_trope.system and article_trope.system.handle != blank %}
+  {% assign article_trope_handle = article_trope.system.handle %}
+{% endif %}
+{% if article_trope != blank %}
+  {% assign article_trope_name = article_trope.name | default: article_trope | strip | downcase %}
+  {% if article_trope_handle == blank %}
+    {% assign article_trope_handle = article_trope_name | handleize %}
+  {% endif %}
+{% endif %}
+
+{% if article_books != blank %}
+
+  {% for book in article_books %}
+    {% assign index = forloop.index %}
+    {% assign token = '[book:' | append: index | append: ']' %}
+    {% assign replacement = '[[BOOK' | append: index | append: ']]' %}
+    {% assign content = content | replace: token, replacement %}
+  {% endfor %}
+
+{% elsif article_trope_handle != blank %}
+
+  {% assign trope_book_index = 0 %}
+
+  {% for book in shop.metaobjects.sss_library.values %}
+    {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+    {% assign is_visible_value = is_visible | strip %}
+    {% unless is_visible_value == 'true' %}
+      {% continue %}
+    {% endunless %}
+    {% assign trope_match = false %}
+
+    {% for linked_trope in book.tropes.value %}
+      {% assign linked_trope_handle = linked_trope.system.handle | default: linked_trope.name | handleize %}
+      {% assign linked_trope_name = linked_trope.name | strip | downcase %}
+      {% if linked_trope_handle == article_trope_handle or linked_trope_name == article_trope_name %}
+        {% assign trope_match = true %}
+        {% break %}
+      {% endif %}
+    {% endfor %}
+
+    {% if trope_match %}
+      {% assign trope_book_index = trope_book_index | plus: 1 %}
+      {% assign token = '[book:' | append: trope_book_index | append: ']' %}
+      {% assign replacement = '[[BOOK' | append: trope_book_index | append: ']]' %}
+      {% assign content = content | replace: token, replacement %}
+    {% endif %}
+  {% endfor %}
+
+{% endif %}
+
+{% assign content = content | replace: '[bookcard]', '[[BOOKCARD]]' %}
+{% assign content = content | replace: '[library]', '[[LIBRARY]]' %}
+{% assign content = content | replace: '[signoff]', '[[SIGNOFF]]' %}
+
+{% assign sections = content | split: '[[BOOKCARD]]' %}
+
+{% for section in sections %}
+
+  {% assign rendered = section %}
+
+  {% if article_books != blank %}
+
+    {% for book in article_books %}
+
+      {% assign index = forloop.index %}
+
+      {% capture card %}
+        {% render 'sss-book-card', book: book %}
+      {% endcapture %}
+
+      {% assign token = '[[BOOK' | append: index | append: ']]' %}
+      {% assign rendered = rendered | replace: token, card %}
+
+    {% endfor %}
+
+  {% elsif article_trope_handle != blank %}
+
+    {% assign trope_book_index = 0 %}
+
+    {% for book in shop.metaobjects.sss_library.values %}
+      {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+      {% assign is_visible_value = is_visible | strip %}
+      {% unless is_visible_value == 'true' %}
+        {% continue %}
+      {% endunless %}
+      {% assign trope_match = false %}
+
+      {% for linked_trope in book.tropes.value %}
+        {% assign linked_trope_handle = linked_trope.system.handle | default: linked_trope.name | handleize %}
+        {% assign linked_trope_name = linked_trope.name | strip | downcase %}
+        {% if linked_trope_handle == article_trope_handle or linked_trope_name == article_trope_name %}
+          {% assign trope_match = true %}
+          {% break %}
+        {% endif %}
+      {% endfor %}
+
+      {% if trope_match %}
+        {% assign trope_book_index = trope_book_index | plus: 1 %}
+
+        {% capture card %}
+          {% render 'sss-book-card', book: book %}
+        {% endcapture %}
+
+        {% assign token = '[[BOOK' | append: trope_book_index | append: ']]' %}
+        {% assign rendered = rendered | replace: token, card %}
+      {% endif %}
+    {% endfor %}
+
+  {% endif %}
+
+  {{ rendered }}
+
+  {% unless forloop.last %}
+
+    <div class="article-book-list">
+
+      {% if article_books != blank %}
+        {% for book in article_books %}
+          {% render 'sss-book-card', book: book %}
+        {% endfor %}
+      {% elsif article_trope_handle != blank %}
+        {% for book in shop.metaobjects.sss_library.values %}
+          {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+          {% assign is_visible_value = is_visible | strip %}
+          {% unless is_visible_value == 'true' %}
+            {% continue %}
+          {% endunless %}
+          {% assign trope_match = false %}
+          {% for linked_trope in book.tropes.value %}
+            {% assign linked_trope_handle = linked_trope.system.handle | default: linked_trope.name | handleize %}
+            {% assign linked_trope_name = linked_trope.name | strip | downcase %}
+            {% if linked_trope_handle == article_trope_handle or linked_trope_name == article_trope_name %}
+              {% assign trope_match = true %}
+              {% break %}
+            {% endif %}
+          {% endfor %}
+          {% if trope_match %}
+            {% render 'sss-book-card', book: book %}
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+
+    </div>
+
+  {% endunless %}
+
+{% endfor %}

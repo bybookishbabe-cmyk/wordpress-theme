@@ -1,0 +1,25 @@
+{%- liquid
+  assign anchor = anchor | default: 'spice'
+  assign label = label | default: 'spice level'
+  assign title = title | default: 'spice section'
+  assign copy = copy | default: ''
+  assign heat = heat | default: ''
+-%}
+
+<section class="blog-pillar-spice" id="{{ anchor }}">
+  <div class="blog-pillar-spice__line" aria-hidden="true"></div>
+  <div class="blog-pillar-spice__head">
+    <div>
+      <p class="blog-pillar-spice__label">{{ label }}</p>
+      <h2 class="blog-pillar-spice__title">{{ title }}</h2>
+    </div>
+
+    {%- if heat != blank -%}
+      <div class="blog-pillar-spice__heat" aria-label="{{ heat }} spice">{{ heat }}</div>
+    {%- endif -%}
+  </div>
+
+  {%- if copy != blank -%}
+    <p class="blog-pillar-spice__copy">{{ copy }}</p>
+  {%- endif -%}
+</section>

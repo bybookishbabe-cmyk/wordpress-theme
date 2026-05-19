@@ -1,0 +1,33 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-page",
+      "disabled": true,
+      "settings": {
+        "padding_top": 28,
+        "padding_bottom": 28
+      }
+    },
+    "bbb_shop_hub_A9mQ7n": {
+      "type": "bbb-shop-hub",
+      "settings": {
+        "kicker": "digital shop",
+        "title": "curate your bybookishbabe vault",
+        "subtitle": "buy the bundles, save money, keep forever, keep coming back to new designs.",
+        "primary_cta_label": "unlock for $27",
+        "secondary_cta_label": "preview what’s inside",
+        "my_vault_url": "shopify://pages/my-vault",
+        "insert_vault_url": "shopify://pages/my-kindle-inserts",
+        "insert_buy_url": "shopify://products/printable-kindle-insert-vault",
+        "printable_inserts_collection": "printable-kindle-inserts",
+        "templates_collection": "bookish-templates",
+        "inserts_limit": 4,
+        "templates_limit": 4
+      }
+    }
+  },
+  "order": [
+    "main",
+    "bbb_shop_hub_A9mQ7n"
+  ]
+}

@@ -1,0 +1,1334 @@
+{% liquid
+  assign source_book = page.metafields.custom.source_book.value
+  if source_book == blank and section.settings.source_book_handle != blank
+    assign source_book = shop.metaobjects.sss_library[section.settings.source_book_handle]
+  endif
+%}
+
+{% if source_book == blank %}
+  <section class="bbb-like">
+    <div class="bbb-like__wrap">
+      <p class="bbb-like__kicker">setup needed</p>
+      <h1 class="bbb-like__title">choose a source book</h1>
+      <p class="bbb-like__sub">Add a page metafield named <code>custom.source_book</code> and select a book from <code>sss_library</code>. The page will build the recommendations automatically.</p>
+    </div>
+  </section>
+{% else %}
+  {%- assign source_cover = '' -%}
+  {% if source_book.cover.value != blank %}
+    {% if source_book.cover.value.url != blank %}
+      {% assign source_cover = source_book.cover.value.url %}
+    {% else %}
+      {% assign source_cover = source_book.cover.value %}
+    {% endif %}
+  {% endif %}
+
+  {%- assign source_amazon = '' -%}
+  {% if source_book.amazon_link.value != blank %}
+    {% if source_book.amazon_link.value.url != blank %}
+      {% assign source_amazon = source_book.amazon_link.value.url %}
+    {% else %}
+      {% assign source_amazon = source_book.amazon_link.value %}
+    {% endif %}
+  {% endif %}
+
+  {%- assign source_bookshop = '' -%}
+  {% if source_book.bookshop_link.value != blank %}
+    {% if source_book.bookshop_link.value.url != blank %}
+      {% assign source_bookshop = source_book.bookshop_link.value.url %}
+    {% else %}
+      {% assign source_bookshop = source_book.bookshop_link.value %}
+    {% endif %}
+  {% endif %}
+
+  <section class="bbb-like" id="books-like-{{ section.id }}" data-books-like data-sss-lib="public">
+    <div class="bbb-like__wrap">
+      <header class="bbb-like__hero">
+        <button class="bbb-like__share" type="button" data-books-like-share aria-label="share this reading guide">
+          <span aria-hidden="true">📲</span>
+          <span data-books-like-share-label>share</span>
+        </button>
+        <p class="bbb-like__kicker">curated based on what you like</p>
+        <h1 class="bbb-like__title">books with the same energy as {{ source_book.title.value }}</h1>
+        <p class="bbb-like__sub">
+          you finished it. you stared at the ceiling. you need something that hits the exact same nerve —
+          the same obsession, tension, and impossible-to-put-down feeling.
+        </p>
+
+        <div class="bbb-like__chips" aria-label="matched energy">
+          {% if source_book.shelf.value.name != blank %}
+            <span>{{ source_book.shelf.value.name }}</span>
+          {% endif %}
+          {% for trope in source_book.tropes.value limit: 5 %}
+            <span{% if forloop.index > 2 %} class="is-locked-chip"{% endif %}>{% if trope.emoji != blank %}{{ trope.emoji }} {% endif %}{{ trope.name }}</span>
+          {% endfor %}
+          {% if source_book.boyfriend_type.value != blank %}
+            <span class="is-locked-chip">{{ source_book.boyfriend_type.value }}</span>
+          {% endif %}
+        </div>
+      </header>
+
+      <div class="bbb-like__rule"></div>
+
+      <article
+        class="bbb-like__source sss-lib__book"
+        role="button"
+        tabindex="0"
+        data-handle="{{ source_book.system.handle }}"
+        data-title="{{ source_book.title.value | escape }}"
+        data-author="{{ source_book.author.value | escape }}"
+        data-cover="{{ source_cover | escape }}"
+        data-amazon="{{ source_amazon | escape }}"
+        data-bookshop="{{ source_bookshop | escape }}"
+        data-shelf="{{ source_book.shelf.value.name | escape }}"
+        data-private-shelf="false"
+        data-spice="{{ source_book.spice_level.value }}"
+        data-tropes="{% for trope in source_book.tropes.value %}{{ trope.name }}{% unless forloop.last %}, {% endunless %}{% endfor %}"
+        data-tropes-display="{% for trope in source_book.tropes.value %}{% if trope.emoji != blank %}{{ trope.emoji }} {% endif %}{{ trope.name }}{% unless forloop.last %}, {% endunless %}{% endfor %}"
+        data-why="{{ source_book.why_i_loved_it.value | escape }}"
+        data-newsletter="{{ source_book.newsletter_url.value | escape }}"
+        data-mini="{{ source_book.mini_note.value | escape }}"
+        data-series="{{ source_book.series.value.system.handle }}"
+        data-series-name="{{ source_book.series.value.title | escape }}"
+        data-series-number="{{ source_book.series_number.value }}"
+        data-tension="{{ source_book.tension_score.value }}"
+        data-damage="{{ source_book.emotional_damage_score.value }}"
+        data-yearning="{{ source_book.yearning_level.value | escape }}"
+        data-boyfriend="{{ source_book.boyfriend_type.value | escape }}"
+        data-reread="{{ source_book.reread_badge.value }}"
+        data-ku="{{ source_book.on_kindle_unlimited.value }}"
+      >
+        <div class="bbb-like__sourceCover sss-lib__coverWrap">
+          <span class="sss-lib__heart bbb-like__heart" data-heart role="button" aria-label="save to your bookshelf">
+            <span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♡</span>
+            <span class="sss-lib__heartLabel" data-heart-label>save</span>
+          </span>
+          {% if source_book.spice_level.value != blank %}
+            <div class="sss-lib__floatSpice bbb-like__floatSpice" aria-label="{{ source_book.spice_level.value }} spice">
+              {% for i in (1..source_book.spice_level.value) %}🌶{% endfor %}
+            </div>
+          {% endif %}
+          {% if source_cover != blank %}
+            <img class="sss-lib__cover" src="{{ source_cover | escape }}" alt="{{ source_book.title.value | escape }}" loading="lazy">
+          {% else %}
+            <span aria-hidden="true">▮</span>
+          {% endif %}
+        </div>
+        <div>
+          <p class="bbb-like__sourceKicker">you read</p>
+          <h2>{{ source_book.title.value }}</h2>
+          <p>{{ source_book.author.value }}</p>
+          {% if source_book.spice_level.value != blank %}
+            <div class="bbb-like__spice" aria-label="{{ source_book.spice_level.value }} spice level">
+              {% for i in (1..source_book.spice_level.value) %}<span></span>{% endfor %}
+            </div>
+          {% endif %}
+          {% if source_book.darkness_level.value != blank %}
+            <div class="bbb-like__darkness" aria-label="{{ source_book.darkness_level.value }} darkness level">
+              <span>darkness</span>
+              <i aria-hidden="true">{% for i in (1..source_book.darkness_level.value) %}💀{% endfor %}</i>
+              <em>{{ source_book.darkness_level.value }}/5</em>
+            </div>
+          {% endif %}
+        </div>
+      </article>
+
+      <section class="bbb-like__matches">
+        <p class="bbb-like__sectionTitle" data-match-heading>finding books that hit the same nerve...</p>
+        <div class="bbb-like__list" data-like-list></div>
+
+        <div class="bbb-like__unlock" data-like-lock>
+          <div>
+            <span>society shelf</span>
+            <p>+5 more matching picks are waiting in the private library.</p>
+          </div>
+          <a href="{{ section.settings.unlock_url | default: '/pages/smut-sentiment-society' }}">unlock the picks →</a>
+        </div>
+      </section>
+
+      <div class="bbb-like__rule"></div>
+
+      <a class="bbb-like__quizNudge" href="/pages/fictional-boyfriend-quiz">
+        <span class="bbb-like__quizCover" aria-hidden="true">
+          {% if source_cover != blank %}
+            <img src="{{ source_cover | escape }}" alt="" loading="lazy">
+          {% else %}
+            <span>♡</span>
+          {% endif %}
+        </span>
+        <span class="bbb-like__quizCopy">
+          <strong>find your fictional match</strong>
+        </span>
+        <span aria-hidden="true">›</span>
+      </a>
+
+      <section class="bbb-like__newsletter">
+        <h2>one perfect romance, every sunday</h2>
+        <p>the smut &amp; sentiment society letter. morally gray men, sinful recs, soft feelings. free to join.</p>
+        <form action="/contact#contact_form" method="post" accept-charset="UTF-8" data-books-like-lead-form>
+          <input type="hidden" name="form_type" value="customer">
+          <input type="hidden" name="utf8" value="✓">
+          <input type="hidden" name="contact[tags]" value="newsletter, books like page">
+          <input type="hidden" name="books_like_source_handle" value="{{ source_book.system.handle | escape }}">
+          <input type="hidden" name="books_like_source_title" value="{{ source_book.title.value | escape }}">
+          <input type="email" name="contact[email]" placeholder="your email" required>
+          <button type="submit">join</button>
+        </form>
+        <small>unsubscribe any time. we will never spam you.</small>
+      </section>
+
+      <section class="bbb-like__more" data-like-more hidden>
+        <p class="bbb-like__sectionTitle">more books like...</p>
+        <div class="bbb-like__moreGrid" data-like-more-grid></div>
+      </section>
+    </div>
+  </section>
+
+  <script type="application/json" id="books-like-source-{{ section.id }}">
+    {
+      "handle": {{ source_book.system.handle | json }},
+      "title": {{ source_book.title.value | json }},
+      "author": {{ source_book.author.value | json }},
+      "cover": {{ source_cover | json }},
+      "amazon": {{ source_amazon | json }},
+      "bookshop": {{ source_bookshop | json }},
+      "shelf": {{ source_book.shelf.value.name | json }},
+      "spice": {{ source_book.spice_level.value | default: 0 | json }},
+      "darkness": {{ source_book.darkness_level.value | default: 0 | json }},
+      "tension": {{ source_book.tension_score.value | default: 0 | json }},
+      "damage": {{ source_book.emotional_damage_score.value | default: 0 | json }},
+      "yearning": {{ source_book.yearning_level.value | json }},
+      "boyfriend": {{ source_book.boyfriend_type.value | json }},
+      "ku": {{ source_book.on_kindle_unlimited.value | json }},
+      "tropes": [
+        {% for trope in source_book.tropes.value %}
+          {"name": {{ trope.name | json }}, "emoji": {{ trope.emoji | json }}, "handle": {{ trope.system.handle | json }}}{% unless forloop.last %},{% endunless %}
+        {% endfor %}
+      ]
+    }
+  </script>
+
+  <script type="application/json" id="books-like-library-{{ section.id }}">
+    [
+      {% paginate shop.metaobjects.sss_library.values by 250 %}
+        {% assign emitted_book = false %}
+        {% for book in shop.metaobjects.sss_library.values %}
+          {% capture is_visible %}{% render 'sss-book-visible', book: book %}{% endcapture %}
+          {% assign is_visible_value = is_visible | strip %}
+          {% unless is_visible_value == 'true' %}
+            {% continue %}
+          {% endunless %}
+          {% capture is_private %}{% render 'sss-book-private', book: book %}{% endcapture %}
+          {% assign is_private_value = is_private | strip %}
+          {% if is_private_value == 'true' %}
+            {% continue %}
+          {% endif %}
+          {% assign series_number_text = book.series_number.value | append: '' | strip %}
+          {% if book.series.value != blank and book.read_as_standalone.value != true and series_number_text != blank and series_number_text != '1' %}
+            {% continue %}
+          {% endif %}
+
+          {%- assign cover_url = '' -%}
+          {% if book.cover.value != blank %}
+            {% if book.cover.value.url != blank %}
+              {% assign cover_url = book.cover.value.url %}
+            {% else %}
+              {% assign cover_url = book.cover.value %}
+            {% endif %}
+          {% endif %}
+
+          {%- assign amazon_url = '' -%}
+          {% if book.amazon_link.value != blank %}
+            {% if book.amazon_link.value.url != blank %}
+              {% assign amazon_url = book.amazon_link.value.url %}
+            {% else %}
+              {% assign amazon_url = book.amazon_link.value %}
+            {% endif %}
+          {% endif %}
+
+          {%- assign bookshop_url = '' -%}
+          {% if book.bookshop_link.value != blank %}
+            {% if book.bookshop_link.value.url != blank %}
+              {% assign bookshop_url = book.bookshop_link.value.url %}
+            {% else %}
+              {% assign bookshop_url = book.bookshop_link.value %}
+            {% endif %}
+          {% endif %}
+
+          {% if emitted_book %},{% endif %}
+          {
+            "handle": {{ book.system.handle | json }},
+            "title": {{ book.title.value | json }},
+            "author": {{ book.author.value | json }},
+            "cover": {{ cover_url | json }},
+            "amazon": {{ amazon_url | json }},
+            "bookshop": {{ bookshop_url | json }},
+            "newsletter": {{ book.newsletter_url.value | json }},
+            "shelf": {{ book.shelf.value.name | json }},
+            "privateShelf": {{ is_private_value | json }},
+            "spice": {{ book.spice_level.value | default: 0 | json }},
+            "darkness": {{ book.darkness_level.value | default: 0 | json }},
+            "tension": {{ book.tension_score.value | default: 0 | json }},
+            "damage": {{ book.emotional_damage_score.value | default: 0 | json }},
+            "yearning": {{ book.yearning_level.value | json }},
+            "boyfriend": {{ book.boyfriend_type.value | json }},
+            "reread": {{ book.reread_badge.value | json }},
+            "ku": {{ book.on_kindle_unlimited.value | json }},
+            "series": {{ book.series.value.system.handle | json }},
+            "seriesName": {{ book.series.value.title | json }},
+            "seriesNumber": {{ book.series_number.value | json }},
+            "standalone": {% if book.read_as_standalone.value == true %}true{% else %}false{% endif %},
+            "mini": {{ book.mini_note.value | json }},
+            "why": {{ book.why_i_loved_it.value | json }},
+            "tropes": [
+              {% for trope in book.tropes.value %}
+                {"name": {{ trope.name | json }}, "emoji": {{ trope.emoji | json }}, "handle": {{ trope.system.handle | json }}}{% unless forloop.last %},{% endunless %}
+              {% endfor %}
+            ]
+          }
+          {% assign emitted_book = true %}
+        {% endfor %}
+      {% endpaginate %}
+    ]
+  </script>
+
+  <style>
+    #books-like-{{ section.id }}.bbb-like{
+      position:relative;
+      isolation:isolate;
+      overflow:hidden;
+      background:#0b0b0b;
+      color:#f4f4f4;
+      padding:78px 18px 72px;
+      font-family:"Libre Baskerville", Georgia, serif;
+    }
+
+    #books-like-{{ section.id }}.bbb-like::before{
+      content:"";
+      position:absolute;
+      inset:-40px;
+      z-index:-1;
+      pointer-events:none;
+      background:
+        radial-gradient(780px 420px at 50% 90px, rgba(255,138,199,.12), transparent 68%),
+        repeating-linear-gradient(to bottom, rgba(255,255,255,.025), rgba(255,255,255,.025) 1px, transparent 1px, transparent 26px);
+      opacity:.82;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__wrap{
+      max-width:1060px;
+      margin:0 auto;
+      position:relative;
+      z-index:1;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__hero{
+      position:relative;
+      padding-right:76px;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__share{
+      position:absolute;
+      top:0;
+      right:0;
+      width:56px;
+      height:56px;
+      border-radius:999px;
+      border:1px solid #e85a9b;
+      background:#e85a9b;
+      color:#fff;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:0;
+      box-shadow:0 18px 40px rgba(0,0,0,.45);
+      cursor:pointer;
+      transition:transform .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__share:hover{
+      transform:scale(1.08);
+      box-shadow:0 22px 50px rgba(0,0,0,.5);
+      background:#ff8ac7;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__share span:first-child{
+      font-size:20px;
+      line-height:1;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__share span:last-child{
+      position:absolute;
+      width:1px;
+      height:1px;
+      overflow:hidden;
+      clip:rect(0 0 0 0);
+      white-space:nowrap;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__kicker,
+    #books-like-{{ section.id }} .bbb-like__sectionTitle,
+    #books-like-{{ section.id }} .bbb-like__sourceKicker{
+      margin:0;
+      color:rgba(255,184,224,.88);
+      font-size:11px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      font-weight:800;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__title{
+      max-width:960px;
+      margin:16px 0 0;
+      font-size:clamp(32px, 5vw, 54px);
+      line-height:1.06;
+      letter-spacing:0;
+      text-transform:lowercase;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__sub{
+      max-width:900px;
+      margin:22px 0 0;
+      color:rgba(246,246,246,.76);
+      font-size:16px;
+      line-height:1.7;
+      font-weight:700;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-top:30px;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__chips span,
+    #books-like-{{ section.id }} .bbb-like__tag{
+      display:inline-flex;
+      align-items:center;
+      min-height:30px;
+      padding:0 14px;
+      border-radius:999px;
+      border:1px solid #ff8ac7;
+      background:rgba(255,138,199,.12);
+      color:#ffd2ea;
+      font-size:12px;
+      line-height:1;
+      text-transform:lowercase;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__chips .is-locked-chip{
+      display:none;
+    }
+
+    #books-like-{{ section.id }}.is-unlocked .bbb-like__chips .is-locked-chip{
+      display:inline-flex;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__rule{
+      height:1px;
+      background:linear-gradient(90deg, rgba(255,255,255,.78), rgba(255,138,199,.34), rgba(255,255,255,.08));
+      margin:38px 0;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__source{
+      display:flex;
+      gap:24px;
+      align-items:center;
+      padding:22px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.055);
+      box-shadow:0 18px 44px rgba(0,0,0,.24);
+      cursor:pointer;
+      transition:transform .2s ease, border-color .2s ease, background .2s ease;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__source:hover{
+      transform:translateY(-2px);
+      border-color:rgba(255,138,199,.44);
+      background:rgba(255,138,199,.08);
+    }
+
+    #books-like-{{ section.id }} .bbb-like__sourceCover{
+      flex:0 0 94px;
+      width:94px;
+      aspect-ratio:2/3;
+      display:grid;
+      place-items:center;
+      border-radius:8px;
+      overflow:hidden;
+      border:1px solid rgba(255,138,199,.64);
+      background:rgba(255,231,242,.94);
+      color:#e87aac;
+      position:relative;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__sourceCover img,
+    #books-like-{{ section.id }} .bbb-like__cover img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__source h2{
+      margin:8px 0 0;
+      font-size:22px;
+      line-height:1.1;
+      text-transform:lowercase;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__source p:not(.bbb-like__sourceKicker){
+      margin:6px 0 0;
+      color:rgba(246,246,246,.72);
+    }
+
+    #books-like-{{ section.id }} .bbb-like__spice{
+      display:flex;
+      gap:6px;
+      margin-top:12px;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__spice span{
+      width:14px;
+      height:14px;
+      border-radius:999px;
+      background:#e85a9b;
+      box-shadow:0 0 14px rgba(232,90,155,.22);
+    }
+
+    #books-like-{{ section.id }} .bbb-like__darkness{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      margin-top:12px;
+      color:rgba(246,246,246,.68);
+      font-size:11px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__darkness span{
+      flex:0 0 auto;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__darkness i{
+      font-style:normal;
+      color:rgba(246,246,246,.86);
+      font-size:13px;
+      letter-spacing:0;
+      line-height:1;
+      text-transform:none;
+      text-shadow:
+        0 1px 0 rgba(255,255,255,.82),
+        1px 0 0 rgba(255,255,255,.82),
+        0 -1px 0 rgba(255,255,255,.82),
+        -1px 0 0 rgba(255,255,255,.82);
+    }
+
+    #books-like-{{ section.id }} .bbb-like__darkness em{
+      font-style:normal;
+      color:#ffb8e0;
+      font-size:11px;
+      letter-spacing:.04em;
+      text-transform:none;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__list{
+      display:grid;
+      gap:14px;
+      margin-top:20px;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__rec{
+      display:grid;
+      grid-template-columns:34px 112px minmax(0, 1fr);
+      gap:22px;
+      padding:20px;
+      width:100%;
+      text-align:left;
+      color:inherit;
+      font:inherit;
+      cursor:pointer;
+      border:1px solid rgba(255,255,255,.18);
+      border-radius:8px;
+      background:linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.045));
+      box-shadow:0 14px 34px rgba(0,0,0,.22);
+      transition:transform .2s ease, border-color .2s ease, background .2s ease;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__rec:hover{
+      transform:translateY(-2px);
+      border-color:rgba(255,138,199,.44);
+      background:linear-gradient(180deg, rgba(255,138,199,.105), rgba(255,255,255,.045));
+    }
+
+    #books-like-{{ section.id }} .bbb-like__rec:focus-visible{
+      outline:2px solid #ff8ac7;
+      outline-offset:3px;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__rec.is-locked{
+      display:none;
+    }
+
+    #books-like-{{ section.id }}.is-unlocked .bbb-like__rec.is-locked{
+      display:grid;
+    }
+
+    #books-like-{{ section.id }}.is-unlocked .bbb-like__unlock{
+      display:none;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__rank{
+      color:rgba(255,184,224,.78);
+      font-size:13px;
+      letter-spacing:.12em;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__cover{
+      position:relative;
+      width:108px;
+      aspect-ratio:2/3;
+      border-radius:8px;
+      overflow:hidden;
+      background:#f4eef7;
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow:0 12px 24px rgba(0,0,0,.24);
+    }
+
+    #books-like-{{ section.id }} .bbb-like__heart{
+      bottom:8px;
+      left:8px;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__floatSpice{
+      top:8px;
+      right:8px;
+      font-size:11px;
+      padding:4px 7px;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__rec h3{
+      margin:0;
+      font-size:20px;
+      line-height:1.15;
+      text-transform:lowercase;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__author{
+      margin:5px 0 0;
+      color:rgba(246,246,246,.72);
+    }
+
+    #books-like-{{ section.id }} .bbb-like__tags{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:14px;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__tag{
+      min-height:24px;
+      padding:0 12px;
+      border-color:rgba(255,138,199,.28);
+      background:rgba(0,0,0,.2);
+      color:rgba(255,210,234,.9);
+      font-size:11px;
+      letter-spacing:.02em;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__tag.is-tag-locked{
+      display:none;
+    }
+
+    #books-like-{{ section.id }}.is-unlocked .bbb-like__tag.is-tag-locked{
+      display:inline-flex;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__whyKicker{
+      margin:16px 0 0;
+      color:rgba(246,246,246,.58);
+      font-size:11px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      font-weight:800;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__why{
+      margin:7px 0 0;
+      color:rgba(246,246,246,.78);
+      line-height:1.65;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:18px;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__actions a,
+    #books-like-{{ section.id }} .bbb-like__newsletter button,
+    #books-like-{{ section.id }} .bbb-like__unlock a{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:48px;
+      padding:0 24px;
+      border-radius:8px;
+      border:1px solid rgba(255,138,199,.38);
+      color:#f6f6f6;
+      text-decoration:none;
+      font-weight:800;
+      text-transform:lowercase;
+      background:rgba(255,138,199,.06);
+      transition:transform .2s ease, border-color .2s ease, background .2s ease, color .2s ease;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__actions a:hover,
+    #books-like-{{ section.id }} .bbb-like__newsletter button:hover,
+    #books-like-{{ section.id }} .bbb-like__unlock a:hover{
+      background:#ff8ac7;
+      border-color:#ff8ac7;
+      color:#0b0b0b;
+      transform:translateY(-1px);
+    }
+
+    #books-like-{{ section.id }} .bbb-like__unlock{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:24px;
+      margin:28px 0 34px;
+      padding:18px 20px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.035);
+    }
+
+    #books-like-{{ section.id }} .bbb-like__unlock span{
+      display:block;
+      margin-bottom:6px;
+      color:rgba(255,184,224,.84);
+      font-size:10px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      font-weight:800;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__unlock p{
+      margin:0;
+      color:rgba(246,246,246,.72);
+      font-size:13px;
+      line-height:1.5;
+      font-weight:400;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__quizNudge{
+      display:grid;
+      grid-template-columns:74px minmax(0, 1fr) auto;
+      align-items:center;
+      gap:20px;
+      width:min(100%, 640px);
+      margin:0 auto;
+      padding:14px 16px;
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:8px;
+      background:linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.03));
+      color:#f6f6f6;
+      text-decoration:none;
+      box-shadow:0 16px 34px rgba(0,0,0,.28);
+      transform:translateY(0);
+      animation:bbbLikeQuizFloat 4.6s ease-in-out infinite;
+      transition:color .2s ease, border-color .2s ease, background .2s ease, transform .2s ease;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__quizNudge:hover{
+      color:#ffb8e0;
+      border-color:rgba(255,138,199,.32);
+      background:linear-gradient(180deg, rgba(255,138,199,.095), rgba(255,255,255,.035));
+      transform:translateY(-2px);
+      animation-play-state:paused;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__quizCover{
+      position:relative;
+      width:74px;
+      aspect-ratio:2/3;
+      display:grid;
+      place-items:center;
+      overflow:hidden;
+      border-radius:8px;
+      border:1px solid rgba(255,138,199,.34);
+      background:#ffe7f2;
+      box-shadow:0 10px 24px rgba(0,0,0,.28);
+    }
+
+    #books-like-{{ section.id }} .bbb-like__quizCover::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(135deg, rgba(255,255,255,.22), transparent 42%, rgba(232,90,155,.2));
+      pointer-events:none;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__quizCover img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      filter:saturate(.92) brightness(.92);
+      transform:scale(1.02);
+      transition:transform .2s ease, filter .2s ease;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__quizNudge:hover .bbb-like__quizCover img{
+      transform:scale(1.08);
+      filter:saturate(1) brightness(1);
+    }
+
+    #books-like-{{ section.id }} .bbb-like__quizCover > span{
+      color:#e85a9b;
+      font-size:28px;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__quizNudge strong{
+      display:block;
+      margin-bottom:0;
+      color:#ff8ac7;
+      font-size:18px;
+      letter-spacing:0;
+      line-height:1.2;
+      text-transform:lowercase;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__quizCopy{
+      display:flex;
+      align-items:center;
+      color:rgba(246,246,246,.74);
+      font-size:13px;
+      line-height:1.35;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__quizNudge span[aria-hidden]{
+      color:#ff8ac7;
+      font-size:24px;
+      transition:transform .2s ease;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__quizNudge:hover span[aria-hidden]{
+      transform:translateX(4px);
+    }
+
+    @keyframes bbbLikeQuizFloat{
+      0%, 100%{ transform:translateY(0); }
+      50%{ transform:translateY(-4px); }
+    }
+
+    #books-like-{{ section.id }} .bbb-like__newsletter{
+      margin-top:38px;
+      padding:28px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.06);
+    }
+
+    #books-like-{{ section.id }} .bbb-like__newsletter h2{
+      margin:0;
+      font-size:24px;
+      text-transform:lowercase;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__newsletter p,
+    #books-like-{{ section.id }} .bbb-like__newsletter small{
+      color:rgba(246,246,246,.72);
+    }
+
+    #books-like-{{ section.id }} .bbb-like__newsletter form{
+      display:grid;
+      grid-template-columns:minmax(0, 1fr) auto;
+      gap:12px;
+      margin-top:18px;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__newsletter input{
+      min-height:52px;
+      padding:0 18px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,.22);
+      background:rgba(0,0,0,.22);
+      color:#f6f6f6;
+      font:inherit;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__more{
+      margin-top:36px;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__moreGrid{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:12px;
+      margin-top:14px;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__moreCard{
+      display:block;
+      padding:18px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.055);
+      color:#f6f6f6;
+      text-decoration:none;
+      transition:transform .2s ease, border-color .2s ease, background .2s ease;
+    }
+
+    #books-like-{{ section.id }} .bbb-like__moreCard:hover{
+      transform:translateY(-1px);
+      border-color:rgba(255,138,199,.42);
+      background:rgba(255,138,199,.08);
+    }
+
+    #books-like-{{ section.id }} .bbb-like__moreCard span{
+      display:block;
+      color:rgba(246,246,246,.58);
+      font-size:12px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      margin-bottom:8px;
+    }
+
+    @media(max-width:720px){
+      #books-like-{{ section.id }}.bbb-like{
+        padding:48px 14px 54px;
+      }
+
+      #books-like-{{ section.id }} .bbb-like__hero{
+        padding-right:58px;
+      }
+
+      #books-like-{{ section.id }} .bbb-like__share{
+        width:48px;
+        height:48px;
+      }
+
+      #books-like-{{ section.id }} .bbb-like__share span:first-child{
+        font-size:18px;
+      }
+
+      #books-like-{{ section.id }} .bbb-like__rec{
+        grid-template-columns:22px 104px minmax(0, 1fr);
+        gap:13px;
+        padding:14px;
+        align-items:start;
+      }
+
+      #books-like-{{ section.id }} .bbb-like__cover{
+        width:104px;
+      }
+
+      #books-like-{{ section.id }} .bbb-like__sourceCover{
+        flex-basis:86px;
+        width:86px;
+      }
+
+      #books-like-{{ section.id }} .bbb-like__rank{
+        font-size:12px;
+      }
+
+      #books-like-{{ section.id }} .bbb-like__rec h3{
+        font-size:18px;
+      }
+
+      #books-like-{{ section.id }} .bbb-like__author,
+      #books-like-{{ section.id }} .bbb-like__why{
+        font-size:13px;
+      }
+
+      #books-like-{{ section.id }} .bbb-like__actions a{
+        min-height:40px;
+        padding:0 14px;
+        font-size:12px;
+      }
+
+      #books-like-{{ section.id }} .bbb-like__newsletter form,
+      #books-like-{{ section.id }} .bbb-like__moreGrid{
+        grid-template-columns:1fr;
+      }
+
+      #books-like-{{ section.id }} .bbb-like__source{
+        padding:18px;
+      }
+
+      #books-like-{{ section.id }} .bbb-like__unlock{
+        align-items:flex-start;
+        flex-direction:column;
+        gap:14px;
+      }
+
+      #books-like-{{ section.id }} .bbb-like__unlock a{
+        min-height:40px;
+        width:100%;
+      }
+
+      #books-like-{{ section.id }} .bbb-like__quizNudge{
+        grid-template-columns:60px minmax(0, 1fr) auto;
+        gap:12px;
+        padding:12px;
+      }
+
+      #books-like-{{ section.id }} .bbb-like__quizCover{
+        width:60px;
+      }
+
+      #books-like-{{ section.id }} .bbb-like__quizNudge strong{
+        font-size:16px;
+      }
+    }
+  </style>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function(){
+      var root = document.getElementById("books-like-{{ section.id }}");
+      if(!root) return;
+
+      var source = JSON.parse(document.getElementById("books-like-source-{{ section.id }}").textContent || "{}");
+      var books = JSON.parse(document.getElementById("books-like-library-{{ section.id }}").textContent || "[]");
+      var list = root.querySelector("[data-like-list]");
+      var lock = root.querySelector("[data-like-lock]");
+      var heading = root.querySelector("[data-match-heading]");
+      var shareBtn = root.querySelector("[data-books-like-share]");
+      var shareLabel = root.querySelector("[data-books-like-share-label]");
+      var leadForm = root.querySelector("[data-books-like-lead-form]");
+
+      function normalize(value){
+        return String(value || "").toLowerCase().trim();
+      }
+
+      function diffScore(a, b, weight){
+        a = parseInt(a, 10) || 0;
+        b = parseInt(b, 10) || 0;
+        if(!a || !b) return 0;
+        return Math.max(0, weight - Math.abs(a - b) * 3);
+      }
+
+      function isWithinSpiceLane(book){
+        var sourceSpice = parseInt(source.spice, 10) || 0;
+        var bookSpice = parseInt(book && book.spice, 10) || 0;
+        if(!sourceSpice || !bookSpice) return true;
+        return Math.abs(sourceSpice - bookSpice) <= 1;
+      }
+
+      function tropeKeys(book){
+        return (book.tropes || []).map(function(trope){
+          return normalize(trope.handle || trope.name);
+        }).filter(Boolean);
+      }
+
+      function sharedTropes(book){
+        var sourceKeys = tropeKeys(source);
+        return (book.tropes || []).filter(function(trope){
+          return sourceKeys.indexOf(normalize(trope.handle || trope.name)) !== -1;
+        });
+      }
+
+      function scoreBook(book, index){
+        var score = 0;
+        var shared = sharedTropes(book).length;
+        if(normalize(book.shelf) && normalize(book.shelf) === normalize(source.shelf)) score += 36;
+        if(normalize(book.boyfriend) && normalize(book.boyfriend) === normalize(source.boyfriend)) score += 24;
+        score += shared * 14;
+        score += diffScore(book.spice, source.spice, 18);
+        score += diffScore(book.darkness, source.darkness, 12);
+        score += diffScore(book.tension, source.tension, 12);
+        score += diffScore(book.damage, source.damage, 12);
+        if(normalize(book.yearning) && normalize(book.yearning) === normalize(source.yearning)) score += 8;
+        if(book.ku && source.ku) score += 3;
+        return score + Math.max(0, 2 - index / 1000);
+      }
+
+      function escapeHtml(value){
+        return String(value || "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+
+      function dataAttr(name, value){
+        return ' data-' + name + '="' + escapeHtml(value) + '"';
+      }
+
+      function getBooksLikeSupabaseClient(){
+        if(window.bbbBooksLikeSupabaseClient) return window.bbbBooksLikeSupabaseClient;
+        if(!window.supabase || !window.supabase.createClient) return null;
+        window.bbbBooksLikeSupabaseClient = window.supabase.createClient(
+          "https://efmrfxsmgbeikfgtrxjv.supabase.co",
+          "sb_publishable_iwjASe3QwixdDvHovaXZBQ_gbXU0Utk"
+        );
+        return window.bbbBooksLikeSupabaseClient;
+      }
+
+      function getLeadSessionId(){
+        try {
+          return localStorage.getItem("sssAnalyticsSessionId") || "";
+        } catch(err) {
+          return "";
+        }
+      }
+
+      async function captureNewsletterLead(form){
+        var emailInput = form.querySelector('input[name="contact[email]"]');
+        var email = emailInput ? emailInput.value.trim() : "";
+        if(!email) return;
+
+        var client = getBooksLikeSupabaseClient();
+        if(!client) return;
+
+        var normalized = email.toLowerCase();
+        await client
+          .from("newsletter_leads")
+          .upsert([
+            {
+              email: email,
+              email_normalized: normalized,
+              source: "books_like_page",
+              page_path: window.location.pathname,
+              page_title: document.title,
+              source_book_handle: source.handle || "",
+              source_book_title: source.title || "",
+              session_id: getLeadSessionId(),
+              substack_sync_status: "pending",
+              metadata: {
+                capture_location: "books_like_newsletter",
+                referrer: document.referrer || "",
+                url: window.location.href
+              }
+            }
+          ], {
+            onConflict: "email_normalized,source"
+          });
+      }
+
+      function hasSocietyAccess(){
+        try {
+          if(localStorage.getItem("bbbSocietyUnlocked") === "true") return true;
+          if(localStorage.getItem("sssSocietyUnlocked") === "true") return true;
+          if(localStorage.getItem("societyUnlocked") === "true") return true;
+          for(var i = 0; i < localStorage.length; i++){
+            var key = localStorage.key(i);
+            if(key && key.indexOf("sss-access-") === 0 && localStorage.getItem(key) === "true") return true;
+          }
+        } catch(err){}
+        return false;
+      }
+
+      if(shareBtn){
+        shareBtn.addEventListener("click", function(){
+          var originalLabel = shareLabel ? shareLabel.textContent : "share";
+          var shareUrl = window.location.href.split("#")[0];
+          var shareTitle = document.title || ("books like " + (source.title || ""));
+          var shareText = source.title
+            ? "books with the same energy as " + source.title
+            : "a romance reading guide you need";
+
+          if(navigator.share){
+            navigator.share({
+              title: shareTitle,
+              text: shareText,
+              url: shareUrl
+            }).catch(function(){});
+            return;
+          }
+
+          if(navigator.clipboard && navigator.clipboard.writeText){
+            navigator.clipboard.writeText(shareUrl).then(function(){
+              if(shareLabel) shareLabel.textContent = "copied";
+              shareBtn.setAttribute("aria-label", "link copied");
+              window.setTimeout(function(){
+                if(shareLabel) shareLabel.textContent = originalLabel;
+                shareBtn.setAttribute("aria-label", "share this reading guide");
+              }, 1600);
+            }).catch(function(){});
+          }
+        });
+      }
+
+      if(leadForm){
+        leadForm.addEventListener("submit", function(event){
+          if(leadForm.dataset.nativeSubmit === "true") return;
+          event.preventDefault();
+
+          var submitBtn = leadForm.querySelector('button[type="submit"]');
+          var originalText = submitBtn ? submitBtn.textContent : "";
+          if(submitBtn){
+            submitBtn.disabled = true;
+            submitBtn.textContent = "joining...";
+          }
+
+          captureNewsletterLead(leadForm).catch(function(err){
+            console.log("Newsletter lead capture failed", err);
+          }).finally(function(){
+            leadForm.dataset.nativeSubmit = "true";
+            if(submitBtn){
+              submitBtn.disabled = false;
+              submitBtn.textContent = originalText || "join";
+            }
+            leadForm.submit();
+          });
+        });
+      }
+
+      function recWhy(book){
+        if(book.mini) return book.mini;
+        if(book.why) return book.why;
+        var shared = sharedTropes(book).map(function(trope){ return trope.name; }).slice(0, 2).join(" and ");
+        if(shared) return "same " + shared + " nerve, with enough familiar damage to feel dangerous.";
+        if(normalize(book.shelf) === normalize(source.shelf)) return "same shelf, same emotional weather, different spiral.";
+        return "a nearby obsession with enough overlap to keep the mood going.";
+      }
+
+      function tagHtml(book){
+        var tags = sharedTropes(book).slice(0, 3);
+        if(tags.length < 3 && book.shelf) tags.unshift({ name: book.shelf });
+        return tags.slice(0, 3).map(function(tag, index){
+          return '<span class="bbb-like__tag' + (index >= 2 ? " is-tag-locked" : "") + '">' + escapeHtml(tag.name || tag) + '</span>';
+        }).join("");
+      }
+
+      function spiceHtml(book){
+        var spice = parseInt(book.spice, 10) || 0;
+        if(!spice) return "";
+        return '<div class="sss-lib__floatSpice bbb-like__floatSpice" aria-label="' + spice + ' spice">' + "🌶".repeat(spice) + '</div>';
+      }
+
+      function darknessHtml(book){
+        var darkness = parseInt(book.darkness, 10) || 0;
+        if(!darkness) return "";
+        return [
+          '<div class="bbb-like__darkness" aria-label="' + darkness + ' darkness level">',
+            '<span>darkness</span>',
+            '<i aria-hidden="true">' + "💀".repeat(darkness) + '</i>',
+            '<em>' + darkness + '/5</em>',
+          '</div>'
+        ].join("");
+      }
+
+      function cardHtml(book, index){
+        var locked = index >= 2;
+        var rank = String(index + 1).padStart(2, "0");
+        var tropesText = (book.tropes || []).map(function(trope){ return trope.name; }).filter(Boolean).join(", ");
+        var tropesDisplay = (book.tropes || []).map(function(trope){
+          return (trope.emoji ? trope.emoji + " " : "") + trope.name;
+        }).filter(Boolean).join(", ");
+        var attrs = [
+          dataAttr("handle", book.handle),
+          dataAttr("title", book.title),
+          dataAttr("author", book.author),
+          dataAttr("cover", book.cover),
+          dataAttr("amazon", book.amazon),
+          dataAttr("bookshop", book.bookshop),
+          dataAttr("newsletter", book.newsletter),
+          dataAttr("shelf", book.shelf),
+          dataAttr("private-shelf", book.privateShelf || "false"),
+          dataAttr("spice", book.spice),
+          dataAttr("tropes", tropesText),
+          dataAttr("tropes-display", tropesDisplay),
+          dataAttr("why", book.why),
+          dataAttr("mini", book.mini),
+          dataAttr("tension", book.tension),
+          dataAttr("damage", book.damage),
+          dataAttr("yearning", book.yearning),
+          dataAttr("boyfriend", book.boyfriend),
+          dataAttr("reread", book.reread),
+          dataAttr("ku", book.ku),
+          dataAttr("series", book.series),
+          dataAttr("series-name", book.seriesName),
+          dataAttr("series-number", book.seriesNumber),
+          dataAttr("standalone", book.standalone ? "true" : "false")
+        ].join("");
+        var amazon = book.amazon ? '<a href="' + escapeHtml(book.amazon) + '" target="_blank" rel="noopener sponsored" onclick="event.stopPropagation()">get on amazon</a>' : "";
+        var ku = book.ku ? '<a href="' + escapeHtml(book.amazon || book.bookshop || "#") + '" target="_blank" rel="noopener sponsored" onclick="event.stopPropagation()">on kindle unlimited</a>' : "";
+        var shop = !ku && book.bookshop ? '<a href="' + escapeHtml(book.bookshop) + '" target="_blank" rel="noopener sponsored" onclick="event.stopPropagation()">support local bookshop</a>' : "";
+        return [
+          '<article class="bbb-like__rec sss-lib__book' + (locked ? " is-locked" : "") + '" role="button" tabindex="0"' + attrs + '>',
+            '<div class="bbb-like__rank">' + rank + '</div>',
+            '<div class="bbb-like__cover sss-lib__coverWrap">',
+              '<span class="sss-lib__heart bbb-like__heart" data-heart role="button" aria-label="save to your bookshelf" onclick="event.stopPropagation()">',
+                '<span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♡</span>',
+                '<span class="sss-lib__heartLabel" data-heart-label>save</span>',
+              '</span>',
+              spiceHtml(book),
+              (book.cover ? '<img class="sss-lib__cover" src="' + escapeHtml(book.cover) + '" alt="' + escapeHtml(book.title) + '" loading="lazy">' : ""),
+            '</div>',
+            '<div>',
+              '<h3>' + escapeHtml(book.title) + '</h3>',
+              '<p class="bbb-like__author">' + escapeHtml(book.author) + '</p>',
+              '<div class="bbb-like__tags">' + tagHtml(book) + '</div>',
+              darknessHtml(book),
+              '<p class="bbb-like__whyKicker">why you’ll love it</p>',
+              '<p class="bbb-like__why">' + escapeHtml(recWhy(book)) + '</p>',
+              '<div class="bbb-like__actions">' + amazon + ku + shop + '</div>',
+            '</div>',
+          '</article>'
+        ].join("");
+      }
+
+      var ranked = books.filter(function(book){
+        return book &&
+          book.title &&
+          normalize(book.handle) !== normalize(source.handle) &&
+          normalize(book.title) !== normalize(source.title) &&
+          isWithinSpiceLane(book);
+      }).map(function(book, index){
+        return { book: book, score: scoreBook(book, index), index: index };
+      }).sort(function(a, b){
+        if(b.score !== a.score) return b.score - a.score;
+        return a.index - b.index;
+      }).slice(0, 7).map(function(item){ return item.book; });
+
+      if(heading) heading.textContent = ranked.length + " books that hit the same nerve";
+      if(list) list.innerHTML = ranked.map(cardHtml).join("");
+
+      root.addEventListener("keydown", function(event){
+        var card = event.target.closest(".bbb-like__rec[data-title], .bbb-like__source[data-title]");
+        if(!card) return;
+        if(event.target.closest("[data-heart]")) return;
+        if(event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        card.click();
+      });
+
+      if(hasSocietyAccess()){
+        root.classList.add("is-unlocked");
+        if(lock) lock.hidden = true;
+      }
+
+    });
+  </script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Books like page",
+  "settings": [
+    {
+      "type": "text",
+      "id": "source_book_handle",
+      "label": "Fallback source book handle",
+      "info": "Optional. Prefer the page metafield custom.source_book, but this helps test the template before the metafield exists."
+    },
+    {
+      "type": "url",
+      "id": "unlock_url",
+      "label": "Unlock CTA URL"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Books like page"
+    }
+  ]
+}
+{% endschema %}
