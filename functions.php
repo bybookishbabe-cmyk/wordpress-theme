@@ -55,6 +55,9 @@ add_action(
 		wp_enqueue_style('bbb-font-kaushan', 'https://fonts.googleapis.com/css2?family=Kaushan+Script&display=swap', array(), null);
 		wp_enqueue_style('bbb-font-cormorant-allura', 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Allura&display=swap', array(), null);
 		wp_enqueue_style('bbb-font-dancing', 'https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600&display=swap', array(), null);
+		if (is_front_page()) {
+			wp_enqueue_style('bbb-font-connect-cards', 'https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant:wght@500;600&display=swap', array(), null);
+		}
 
 		bbb_enqueue_css('bbb-base', 'assets/base.css', array('bbb-font-kaushan', 'bbb-font-cormorant-allura', 'bbb-font-dancing'));
 		if (bbb_asset_exists('assets/bbb-design-tokens.css')) {
@@ -78,6 +81,9 @@ add_action(
 		bbb_enqueue_css('bbb-favorite-card-atc', 'assets/bbb-favorite-card-atc.css', array('bbb-component-cart-items'));
 		bbb_enqueue_css('bbb-holiday-overlay', 'assets/bbb-holiday-overlay.css', array('bbb-favorite-card-atc'));
 		bbb_enqueue_css('bbb-society-gate', 'assets/bbb-society-gate.css', array('bbb-holiday-overlay'));
+		if (is_front_page()) {
+			bbb_enqueue_css('bbb-home-static', 'assets/home-static.css', array('bbb-society-gate'));
+		}
 
 		if ('drawer' === get_option('bbb_cart_type', 'notification')) {
 			bbb_enqueue_css('bbb-component-cart-drawer', 'assets/component-cart-drawer.css', array('bbb-holiday-overlay'));
@@ -111,6 +117,9 @@ add_action(
 		bbb_enqueue_js('bbb-thread-carousel', 'assets/bbb-thread-carousel.js', array('bbb-global'));
 		bbb_enqueue_js('bbb-rose-petals', 'assets/bbb-rose-petals.js', array('bbb-global'));
 		bbb_enqueue_js('bbb-holiday-overlay', 'assets/bbb-holiday-overlay.js', array('bbb-rose-petals'));
+		if (is_front_page()) {
+			bbb_enqueue_js('bbb-home-static', 'assets/home-static.js', array('bbb-global'));
+		}
 
 		if ((bool) get_option('bbb_localization_enabled', false)) {
 			bbb_enqueue_js('bbb-localization-form', 'assets/localization-form.js', array('bbb-global'));
