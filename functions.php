@@ -149,6 +149,12 @@ add_action(
 		bbb_enqueue_css('bbb-sss-folder-tabs', 'assets/css/sss-folder-tabs.css', array('bbb-sss-library'));
 		bbb_enqueue_css('bbb-sss-memberdash', 'assets/css/sss-memberdash.css', array('bbb-sss-folder-tabs'));
 		bbb_enqueue_css('bbb-page-spice', 'assets/css/page-spice.css', array('bbb-sss-library'));
+		$bbb_request_path    = isset($_SERVER['REQUEST_URI']) ? trailingslashit((string) parse_url((string) wp_unslash($_SERVER['REQUEST_URI']), PHP_URL_PATH)) : '';
+		$bbb_is_series_route = is_page(array('series', 'series-reading-orders')) || in_array($bbb_request_path, array('/series/', '/series-reading-orders/'), true);
+		if ($bbb_is_series_route) {
+			bbb_enqueue_css('bbb-series-library', 'assets/sss-library.css', array('bbb-page-spice'));
+			bbb_enqueue_css('bbb-sss-series', 'assets/sss-series.css', array('bbb-series-library'));
+		}
 		bbb_enqueue_css('bbb-blog-system', 'assets/blog-system.css', array('bbb-sss-library'));
 		bbb_enqueue_css('bbb-blog-signoff', 'assets/blog-signoff.css', array('bbb-blog-system'));
 		bbb_enqueue_css('bbb-component-cart-items', 'assets/component-cart-items.css', array('bbb-blog-signoff'), 'print');
@@ -189,6 +195,10 @@ add_action(
 		bbb_enqueue_js('bbb-cart-notification', 'assets/cart-notification.js', array('bbb-pubsub'));
 		bbb_enqueue_js('bbb-bookshelf-signup', 'assets/bookshelf-signup.js', array('bbb-supabase'));
 		bbb_enqueue_js('bbb-sss-library', 'assets/js/sss-library.js', array('bbb-supabase'), false);
+		if ($bbb_is_series_route) {
+			bbb_enqueue_js('bbb-series-library', 'assets/sss-library.js', array('bbb-supabase'), false);
+			bbb_enqueue_js('bbb-sss-series', 'assets/sss-series.js', array('bbb-series-library'));
+		}
 		bbb_enqueue_js('bbb-sss-memberdash', 'assets/js/sss-memberdash.js', array('bbb-global'));
 		bbb_enqueue_js('bbb-sss-library-member', 'assets/js/sss-library-member.js', array('bbb-sss-library'));
 		bbb_enqueue_js('bbb-page-spice', 'assets/js/page-spice.js', array('bbb-sss-library'));
