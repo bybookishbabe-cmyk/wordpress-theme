@@ -98,28 +98,30 @@ function bbb_get_header_menu_items(): array {
 	$menu_id   = $locations['main-menu'] ?? 0;
 	$items     = $menu_id ? wp_get_nav_menu_items($menu_id) : array();
 
-	if (!$items) {
-		return array();
-	}
+	if ( $items ) {
+		$lookup = array();
+		$tree   = array();
 
-	$lookup = array();
-	$tree   = array();
-
-	foreach ($items as $item) {
-		$item->children = array();
-		$lookup[$item->ID] = $item;
-	}
-
-	foreach ($items as $item) {
-		$parent_id = (int) $item->menu_item_parent;
-		if ($parent_id && isset($lookup[$parent_id])) {
-			$lookup[$parent_id]->children[] = $item;
-			continue;
+		foreach ($items as $item) {
+			$item->children = array();
+			$lookup[$item->ID] = $item;
 		}
-		$tree[] = $item;
+
+		foreach ($items as $item) {
+			$parent_id = (int) $item->menu_item_parent;
+			if ($parent_id && isset($lookup[$parent_id])) {
+				$lookup[$parent_id]->children[] = $item;
+				continue;
+			}
+			$tree[] = $item;
+		}
+
+		return $tree;
 	}
 
-	return $tree;
+	// No WP menu assigned yet — use the hardcoded Shopify-faithful fallback.
+	// Configure a real menu at Appearance → Menus → Main Navigation to override.
+	return function_exists( 'bbb_get_fallback_menu_tree' ) ? bbb_get_fallback_menu_tree() : array();
 }
 
 function bbb_menu_item_handle(WP_Post $item): string {

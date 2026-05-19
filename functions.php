@@ -7,6 +7,8 @@
 
 declare(strict_types=1);
 
+require_once get_theme_file_path('inc/linking.php');
+require_once get_theme_file_path('inc/main-menu.php');
 require_once get_theme_file_path('inc/header-functions.php');
 require_once get_theme_file_path('inc/bbb-helpers.php');
 require_once get_theme_file_path('inc/footer.php');
