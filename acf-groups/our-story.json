@@ -1,0 +1,20 @@
+{
+  "key": "group_bbb_our_story",
+  "title": "Our Story",
+  "fields": [
+    {"key": "field_bbb_our_story_hero_kicker", "label": "Hero Kicker", "name": "hero_kicker", "type": "text"},
+    {"key": "field_bbb_our_story_hero_title", "label": "Hero Title", "name": "hero_title", "type": "text"},
+    {"key": "field_bbb_our_story_hero_image", "label": "Hero Image", "name": "hero_image", "type": "image", "return_format": "array"},
+    {"key": "field_bbb_our_story_fav_kicker", "label": "Favorite Boyfriend Kicker", "name": "favorite_boyfriend_kicker", "type": "text"},
+    {"key": "field_bbb_our_story_fav_title", "label": "Favorite Boyfriend Title", "name": "favorite_boyfriend_title", "type": "text"},
+    {"key": "field_bbb_our_story_fav_image", "label": "Favorite Boyfriend Image", "name": "favorite_boyfriend_image", "type": "image", "return_format": "array"},
+    {"key": "field_bbb_our_story_fav_book", "label": "Favorite Boyfriend Book", "name": "favorite_boyfriend_book", "type": "post_object", "post_type": ["sss_book"]},
+    {"key": "field_bbb_our_story_closing_kicker", "label": "Closing Kicker", "name": "closing_kicker", "type": "text"},
+    {"key": "field_bbb_our_story_closing_title", "label": "Closing Title", "name": "closing_title", "type": "text"},
+    {"key": "field_bbb_our_story_society_label", "label": "Society Label", "name": "society_label", "type": "text"},
+    {"key": "field_bbb_our_story_society_url", "label": "Society URL", "name": "society_url", "type": "url"},
+    {"key": "field_bbb_our_story_accent", "label": "Accent", "name": "accent", "type": "color_picker"}
+  ],
+  "location": [[{"param": "page_template", "operator": "==", "value": "page-our-story.php"}]],
+  "active": true
+}

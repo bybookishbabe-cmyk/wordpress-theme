@@ -8,17 +8,38 @@
 declare(strict_types=1);
 
 require_once get_theme_file_path('inc/header-functions.php');
+require_once get_theme_file_path('inc/bbb-helpers.php');
 require_once get_theme_file_path('inc/customizer/hero-smut-sentiment.php');
 require_once get_theme_file_path('inc/weekly-obsession-query.php');
 require_once get_theme_file_path('inc/cpt-newsletter-issue.php');
 require_once get_theme_file_path('inc/cpt-sss-book.php');
+require_once get_theme_file_path('inc/cpt/sss-series.php');
+require_once get_theme_file_path('inc/cpt/sss-quote.php');
 require_once get_theme_file_path('inc/taxonomy-sss-trope.php');
 require_once get_theme_file_path('inc/taxonomy-sss-shelf.php');
+require_once get_theme_file_path('inc/taxonomies-extra.php');
+require_once get_theme_file_path('inc/redirects.php');
+require_once get_theme_file_path('inc/api/books-endpoint.php');
+require_once get_theme_file_path('inc/api/shelf-endpoint.php');
 require_once get_theme_file_path('inc/enqueue-weekly-obsession.php');
 
 function bbb_reader_is_society(): bool {
-	return bbb_user_is_society(get_current_user_id());
+	return bbb_user_is_society(get_current_user_id()) || bbb_is_sss_member();
 }
+
+add_filter(
+	'acf/settings/load_json',
+	static function (array $paths): array {
+		$paths[] = get_theme_file_path('acf-groups');
+
+		return $paths;
+	}
+);
+
+add_filter(
+	'acf/settings/save_json',
+	static fn(): string => get_theme_file_path('acf-groups')
+);
 
 add_action(
 	'after_setup_theme',
@@ -66,6 +87,7 @@ add_action(
 	'wp_enqueue_scripts',
 	static function (): void {
 		wp_enqueue_style('bbb-font-kaushan', 'https://fonts.googleapis.com/css2?family=Kaushan+Script&display=swap', array(), null);
+		wp_enqueue_style('bbb-fonts', 'https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,600;0,700;1,400;1,600&family=Kaushan+Script&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap', array(), null);
 		wp_enqueue_style('bbb-font-cormorant-allura', 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Allura&display=swap', array(), null);
 		wp_enqueue_style('bbb-font-dancing', 'https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600&display=swap', array(), null);
 		if (is_front_page()) {
@@ -88,6 +110,9 @@ add_action(
 		bbb_enqueue_css('bbb-custom-overrides', 'assets/site-custom-overrides.css', array('bbb-header-inline'));
 		bbb_enqueue_css('bbb-bookshelf-signup', 'assets/bookshelf-signup.css', array('bbb-custom-overrides'));
 		bbb_enqueue_css('bbb-sss-library', 'assets/sss-library.css', array('bbb-bookshelf-signup'));
+		bbb_enqueue_css('bbb-sss-folder-tabs', 'assets/css/sss-folder-tabs.css', array('bbb-sss-library'));
+		bbb_enqueue_css('bbb-sss-memberdash', 'assets/css/sss-memberdash.css', array('bbb-sss-folder-tabs'));
+		bbb_enqueue_css('bbb-page-spice', 'assets/css/page-spice.css', array('bbb-sss-library'));
 		bbb_enqueue_css('bbb-blog-system', 'assets/blog-system.css', array('bbb-sss-library'));
 		bbb_enqueue_css('bbb-blog-signoff', 'assets/blog-signoff.css', array('bbb-blog-system'));
 		bbb_enqueue_css('bbb-component-cart-items', 'assets/component-cart-items.css', array('bbb-blog-signoff'), 'print');
@@ -126,6 +151,9 @@ add_action(
 		bbb_enqueue_js('bbb-cart-notification', 'assets/cart-notification.js', array('bbb-pubsub'));
 		bbb_enqueue_js('bbb-bookshelf-signup', 'assets/bookshelf-signup.js', array('bbb-supabase'));
 		bbb_enqueue_js('bbb-sss-library', 'assets/sss-library.js', array('bbb-supabase'), false);
+		bbb_enqueue_js('bbb-sss-memberdash', 'assets/js/sss-memberdash.js', array('bbb-global'));
+		bbb_enqueue_js('bbb-sss-library-member', 'assets/js/sss-library-member.js', array('bbb-sss-library'));
+		bbb_enqueue_js('bbb-page-spice', 'assets/js/page-spice.js', array('bbb-sss-library'));
 		bbb_enqueue_js('bbb-blog-system', 'assets/blog-system.js', array('bbb-sss-library'));
 		bbb_enqueue_js('bbb-favorite-card-atc', 'assets/bbb-favorite-card-atc.js', array('bbb-globals'));
 		bbb_enqueue_js('bbb-thread-carousel', 'assets/bbb-thread-carousel.js', array('bbb-global'));
@@ -202,6 +230,23 @@ add_action(
 				),
 			)
 		);
+
+		if (wp_script_is('bbb-sss-library', 'enqueued')) {
+			wp_localize_script(
+				'bbb-sss-library',
+				'BBBLibraryData',
+				array(
+					'books'       => bbb_get_all_books_json(),
+					'supabaseUrl' => defined('SUPABASE_URL') ? SUPABASE_URL : 'https://efmrfxsmgbeikfgtrxjv.supabase.co',
+					'supabaseKey' => defined('SUPABASE_ANON_KEY') ? SUPABASE_ANON_KEY : '',
+					'currentUser' => is_user_logged_in() ? wp_get_current_user()->user_email : null,
+					'isMember'    => bbb_is_sss_member(),
+					'ajaxUrl'     => admin_url('admin-ajax.php'),
+					'nonce'       => wp_create_nonce('bbb_shelf'),
+					'homeUrl'     => home_url('/'),
+				)
+			);
+		}
 	}
 );
 
@@ -214,6 +259,7 @@ function bbb_society_gate_check(): void {
 		'sss-printable-kindle-inserts',
 		'sss-canva-templates',
 		'sss-quote-wall',
+		'sss-freebies',
 	);
 
 	if (!is_page($gated_slugs) || bbb_reader_is_society()) {

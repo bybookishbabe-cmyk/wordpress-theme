@@ -1,0 +1,47 @@
+.sss-folder-tabs {
+	background: #0b0b0b;
+	color: #f6f6f6;
+	overflow-x: auto;
+	padding: 14px 18px;
+}
+
+.sss-folder-tabs__track,
+.sss-tabs__track {
+	display: flex;
+	gap: 10px;
+	min-width: max-content;
+}
+
+.sss-folder-tabs__tab,
+.sss-tabs__tab {
+	align-items: center;
+	border: 1px solid rgba(246, 246, 246, 0.18);
+	border-radius: 8px;
+	color: inherit;
+	display: grid;
+	gap: 2px;
+	grid-template-columns: auto 1fr;
+	min-width: 156px;
+	padding: 10px 12px;
+	text-decoration: none;
+}
+
+.sss-folder-tabs__icon,
+.sss-tabs__icon {
+	font-size: 20px;
+	grid-row: span 2;
+}
+
+.sss-folder-tabs__label,
+.sss-tabs__label {
+	font-size: 13px;
+	font-weight: 700;
+	text-transform: lowercase;
+}
+
+.sss-folder-tabs__sub,
+.sss-tabs__sub {
+	color: rgba(246, 246, 246, 0.68);
+	font-size: 11px;
+	text-transform: lowercase;
+}

@@ -1,0 +1,11 @@
+{
+  "key": "group_bbb_sss_series",
+  "title": "SSS Series",
+  "fields": [
+    {"key": "field_bbb_series_handle", "label": "Handle", "name": "handle", "type": "text"},
+    {"key": "field_bbb_series_books", "label": "Books", "name": "books", "type": "relationship", "post_type": ["sss_book"]},
+    {"key": "field_bbb_series_featured", "label": "Featured", "name": "featured", "type": "true_false"}
+  ],
+  "location": [[{"param": "post_type", "operator": "==", "value": "sss_series"}]],
+  "active": true
+}

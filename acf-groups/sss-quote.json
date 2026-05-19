@@ -1,0 +1,11 @@
+{
+  "key": "group_bbb_sss_quote",
+  "title": "SSS Quote",
+  "fields": [
+    {"key": "field_bbb_quote_text", "label": "Quote Text", "name": "quote_text", "type": "textarea"},
+    {"key": "field_bbb_quote_book", "label": "Book", "name": "book", "type": "post_object", "post_type": ["sss_book"]},
+    {"key": "field_bbb_quote_author", "label": "Author", "name": "author", "type": "text"}
+  ],
+  "location": [[{"param": "post_type", "operator": "==", "value": "sss_quote"}]],
+  "active": true
+}

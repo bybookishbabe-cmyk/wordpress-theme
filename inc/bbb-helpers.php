@@ -1,0 +1,176 @@
+<?php
+/**
+ * Shared helpers for the Shopify to WordPress conversion.
+ *
+ * @package ByBookishBabeShopifyPort
+ */
+
+declare(strict_types=1);
+
+function bbb_get_field(string $key, $post_id = null, $default = null) {
+	if (function_exists('get_field')) {
+		$value = get_field($key, $post_id);
+		if (null !== $value && '' !== $value && false !== $value) {
+			return $value;
+		}
+	}
+
+	$raw = get_post_meta(null === $post_id ? get_the_ID() : (int) $post_id, $key, true);
+	if ('' !== $raw) {
+		return $raw;
+	}
+
+	$legacy = get_post_meta(null === $post_id ? get_the_ID() : (int) $post_id, '_' . $key, true);
+	return '' !== $legacy ? $legacy : $default;
+}
+
+function bbb_is_sss_member(): bool {
+	if (!is_user_logged_in()) {
+		return false;
+	}
+
+	$user = wp_get_current_user();
+
+	return in_array('sss_member', (array) $user->roles, true)
+		|| in_array('society_member', (array) $user->roles, true)
+		|| (function_exists('wc_memberships_is_user_active_member')
+			&& wc_memberships_is_user_active_member(get_current_user_id(), 'smut-sentiment-society'));
+}
+
+function bbb_resolve_page_url(string $slug): string {
+	$page = get_page_by_path($slug);
+
+	return $page ? get_permalink($page) : home_url('/' . trim($slug, '/') . '/');
+}
+
+function bbb_require_sss_member(): void {
+	if (bbb_is_sss_member()) {
+		return;
+	}
+
+	wp_safe_redirect(bbb_resolve_page_url('join'));
+	exit;
+}
+
+function bbb_get_book_cover_url(int $post_id): string {
+	$field = bbb_get_field('cover', $post_id, '');
+	if (is_array($field)) {
+		return (string) ($field['url'] ?? '');
+	}
+
+	if ($field) {
+		return (string) $field;
+	}
+
+	return get_the_post_thumbnail_url($post_id, 'large') ?: '';
+}
+
+function bbb_get_book_author(int $post_id): string {
+	return (string) bbb_get_field('author', $post_id, '');
+}
+
+function bbb_book_is_hidden(int $post_id): bool {
+	return (bool) bbb_get_field('hide_from_library', $post_id, false);
+}
+
+function bbb_book_is_private(int $post_id): bool {
+	return (bool) bbb_get_field('is_private', $post_id, false);
+}
+
+function bbb_get_all_books_json(bool $include_private = true): array {
+	$books = get_posts(
+		array(
+			'post_type'        => 'sss_book',
+			'numberposts'      => -1,
+			'orderby'          => 'title',
+			'order'            => 'ASC',
+			'suppress_filters' => false,
+		)
+	);
+
+	$out = array();
+	foreach ($books as $book) {
+		if (bbb_book_is_hidden($book->ID)) {
+			continue;
+		}
+
+		$is_private = bbb_book_is_private($book->ID);
+		if (!$include_private && $is_private) {
+			continue;
+		}
+
+		$shelf_terms = get_the_terms($book->ID, 'sss_shelf');
+		$trope_terms = get_the_terms($book->ID, 'sss_trope');
+
+		$out[] = array(
+			'id'           => $book->ID,
+			'title'        => $book->post_title,
+			'slug'         => $book->post_name,
+			'author'       => bbb_get_book_author($book->ID),
+			'cover_url'    => bbb_get_book_cover_url($book->ID),
+			'shelf'        => $shelf_terms && !is_wp_error($shelf_terms) ? $shelf_terms[0]->slug : '',
+			'shelf_name'   => $shelf_terms && !is_wp_error($shelf_terms) ? $shelf_terms[0]->name : '',
+			'tropes'       => $trope_terms && !is_wp_error($trope_terms) ? wp_list_pluck($trope_terms, 'name') : array(),
+			'spice_level'  => (int) bbb_get_field('spice_level', $book->ID, bbb_get_field('book_spice_level', $book->ID, 0)),
+			'is_private'   => $is_private,
+			'starter_pack' => (bool) bbb_get_field('starter_pack', $book->ID, false),
+			'on_ku'        => (bool) bbb_get_field('on_kindle_unlimited', $book->ID, false),
+			'why'          => (string) bbb_get_field('why_i_loved_it', $book->ID, ''),
+			'mini'         => (string) bbb_get_field('mini_note', $book->ID, ''),
+		);
+	}
+
+	return $out;
+}
+
+function bbb_get_public_books_query(array $args = array()): WP_Query {
+	$defaults = array(
+		'post_type'      => 'sss_book',
+		'posts_per_page' => -1,
+		'orderby'        => 'title',
+		'order'          => 'ASC',
+		'meta_query'     => array(
+			'relation' => 'AND',
+			array(
+				'relation' => 'OR',
+				array(
+					'key'     => 'hide_from_library',
+					'compare' => 'NOT EXISTS',
+				),
+				array(
+					'key'     => 'hide_from_library',
+					'value'   => '1',
+					'compare' => '!=',
+				),
+			),
+			array(
+				'relation' => 'OR',
+				array(
+					'key'     => 'is_private',
+					'compare' => 'NOT EXISTS',
+				),
+				array(
+					'key'     => 'is_private',
+					'value'   => '1',
+					'compare' => '!=',
+				),
+			),
+		),
+	);
+
+	return new WP_Query(array_replace_recursive($defaults, $args));
+}
+
+function bbb_render_section(string $name, array $args = array()): void {
+	$file = get_theme_file_path('inc/sections/' . $name . '.php');
+	if (file_exists($file)) {
+		require $file;
+	}
+}
+
+function bbb_render_component(string $name, array $args = array()): void {
+	$file = get_theme_file_path('inc/components/' . $name . '.php');
+	if (file_exists($file)) {
+		require $file;
+	}
+}
