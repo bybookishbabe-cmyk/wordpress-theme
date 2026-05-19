@@ -32,6 +32,7 @@ declare(strict_types=1);
 						<span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♡</span>
 						<span class="sss-lib__heartLabel" data-heart-label>save</span>
 					</span>
+					<div class="sss-lib__floatSpice sss-lib__mspice" data-mspice hidden></div>
 					<img class="sss-lib__mcover" alt="" loading="lazy" data-mcover>
 				</div>
 			</div>

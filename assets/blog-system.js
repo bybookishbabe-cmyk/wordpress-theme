@@ -366,6 +366,7 @@ const damageEl = preview.querySelector("[data-mdamage]");
 const yearningEl = preview.querySelector("[data-myearning]");
 const boyfriendEl = preview.querySelector("[data-mboyfriend]");
 const rereadEl = preview.querySelector("[data-mreread]");
+const spiceEl = preview.querySelector("[data-mspice]");
 const modalHeart = preview.querySelector("[data-modal-heart]");
 
 if (titleEl) titleEl.textContent = title || "";
@@ -385,6 +386,11 @@ if (damageEl) damageEl.textContent = "";
 if (yearningEl) yearningEl.textContent = "";
 if (boyfriendEl) boyfriendEl.textContent = "";
 if (rereadEl) rereadEl.textContent = spice ? "🌶 " + spice + "/5 spice" : "";
+if (spiceEl) {
+  const spiceCount = parseInt(spice, 10) || 0;
+  spiceEl.textContent = spiceCount > 0 ? Array(spiceCount + 1).join("🌶") : "";
+  spiceEl.hidden = spiceCount <= 0;
+}
 
 if (seriesEl) {
   if (seriesName) {

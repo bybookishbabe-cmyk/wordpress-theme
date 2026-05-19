@@ -1410,6 +1410,7 @@ function init(){
     var darknessEl = document.querySelector('[data-mdarkness]');
     var boyfriendEl = document.querySelector('[data-mboyfriend]');
     var rereadEl = document.querySelector('[data-mreread]');
+    var spiceEl = modal ? modal.querySelector('[data-mspice]') : null;
     var modalShareBtn = modal ? modal.querySelector('[data-modal-share-btn]') : null;
     var modalShareLabel = modal ? modal.querySelector('[data-modal-share-label]') : null;
     var modalShareIcon = modal ? modal.querySelector('.sss-lib__mshareIcon') : null;
@@ -1564,6 +1565,11 @@ if(modalHeart){
         coverEl.alt = data.title || '';
       }
 
+      if (spiceEl){
+        var spiceCount = parseInt(data.spice, 10) || 0;
+        spiceEl.textContent = spiceCount > 0 ? Array(spiceCount + 1).join('🌶') : '';
+        spiceEl.hidden = spiceCount <= 0;
+      }
 
       if (kuEl){
         var kuState = String(data.ku || '').toLowerCase().trim() === 'true';

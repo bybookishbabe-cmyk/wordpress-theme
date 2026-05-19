@@ -39,6 +39,7 @@ $GLOBALS['bbb_sss_library_modal_rendered'] = true;
 						<span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♡</span>
 						<span class="sss-lib__heartLabel" data-heart-label>save</span>
 					</span>
+					<div class="sss-lib__floatSpice sss-lib__mspice" data-mspice hidden></div>
 
 					<img class="sss-lib__mcover" alt="" loading="lazy" data-mcover>
 				</div>
