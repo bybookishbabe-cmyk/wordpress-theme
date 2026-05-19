@@ -729,8 +729,38 @@ html, body {
   overflow-x: hidden;
 }
 
+html,
+body,
+body.gradient {
+  width: 100%;
+}
+
+body.gradient {
+  margin: 0;
+  max-width: none;
+  background: #000;
+}
+
+body.gradient > .section-header,
+body.gradient > #MainContent,
+body.gradient > #bbb-contact-footer,
+body.gradient > .footer {
+  width: 100vw;
+  max-width: none;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+}
+
+.section-header,
+.header-wrapper,
+#MainContent {
+  max-width: none;
+}
+
 #MainContent {
   overflow-x: hidden;
+  width: 100%;
+  background: #000;
 }
 
 body {
