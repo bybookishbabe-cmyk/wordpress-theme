@@ -7,15 +7,10 @@
 
 declare(strict_types=1);
 
+require_once get_theme_file_path('inc/header-functions.php');
+
 function bbb_reader_is_society(): bool {
-	if (!is_user_logged_in()) {
-		return false;
-	}
-
-	$user = wp_get_current_user();
-
-	return in_array('society', (array) $user->roles, true)
-		|| '1' === get_user_meta((int) $user->ID, 'bbb_society_member', true);
+	return bbb_user_is_society(get_current_user_id());
 }
 
 add_action(
@@ -66,14 +61,21 @@ add_action(
 			wp_add_inline_style('bbb-base', (string) file_get_contents(get_theme_file_path('assets/bbb-design-tokens.css')));
 		}
 
-		bbb_enqueue_css('bbb-custom-overrides', 'assets/site-custom-overrides.css', array('bbb-base'));
+		bbb_enqueue_css('bbb-component-list-menu', 'assets/component-list-menu.css', array('bbb-base'));
+		bbb_enqueue_css('bbb-component-search', 'assets/component-search.css', array('bbb-component-list-menu'));
+		bbb_enqueue_css('bbb-component-menu-drawer', 'assets/component-menu-drawer.css', array('bbb-component-search'));
+		bbb_enqueue_css('bbb-component-cart-notification', 'assets/component-cart-notification.css', array('bbb-component-menu-drawer'));
+		bbb_enqueue_css('bbb-component-price-header', 'assets/component-price.css', array('bbb-component-cart-notification'));
+		bbb_enqueue_css('bbb-component-predictive-search', 'assets/component-predictive-search.css', array('bbb-component-price-header'));
+		bbb_enqueue_css('bbb-component-list-social', 'assets/component-list-social.css', array('bbb-component-predictive-search'));
+		bbb_enqueue_css('bbb-header-inline', 'assets/header-inline.css', array('bbb-component-list-social'));
+		bbb_enqueue_css('bbb-custom-overrides', 'assets/site-custom-overrides.css', array('bbb-header-inline'));
 		bbb_enqueue_css('bbb-bookshelf-signup', 'assets/bookshelf-signup.css', array('bbb-custom-overrides'));
 		bbb_enqueue_css('bbb-sss-library', 'assets/sss-library.css', array('bbb-bookshelf-signup'));
 		bbb_enqueue_css('bbb-blog-system', 'assets/blog-system.css', array('bbb-sss-library'));
 		bbb_enqueue_css('bbb-blog-signoff', 'assets/blog-signoff.css', array('bbb-blog-system'));
 		bbb_enqueue_css('bbb-component-cart-items', 'assets/component-cart-items.css', array('bbb-blog-signoff'), 'print');
-		bbb_enqueue_css('bbb-component-predictive-search', 'assets/component-predictive-search.css', array('bbb-component-cart-items'));
-		bbb_enqueue_css('bbb-favorite-card-atc', 'assets/bbb-favorite-card-atc.css', array('bbb-component-predictive-search'));
+		bbb_enqueue_css('bbb-favorite-card-atc', 'assets/bbb-favorite-card-atc.css', array('bbb-component-cart-items'));
 		bbb_enqueue_css('bbb-holiday-overlay', 'assets/bbb-holiday-overlay.css', array('bbb-favorite-card-atc'));
 		bbb_enqueue_css('bbb-society-gate', 'assets/bbb-society-gate.css', array('bbb-holiday-overlay'));
 
@@ -100,6 +102,8 @@ add_action(
 		}
 
 		bbb_enqueue_js('bbb-animations', 'assets/animations.js', array('bbb-global'));
+		bbb_enqueue_js('bbb-sticky-header', 'assets/sticky-header.js', array('bbb-global'));
+		bbb_enqueue_js('bbb-cart-notification', 'assets/cart-notification.js', array('bbb-pubsub'));
 		bbb_enqueue_js('bbb-bookshelf-signup', 'assets/bookshelf-signup.js', array('bbb-supabase'));
 		bbb_enqueue_js('bbb-sss-library', 'assets/sss-library.js', array('bbb-supabase'), false);
 		bbb_enqueue_js('bbb-blog-system', 'assets/blog-system.js', array('bbb-sss-library'));
@@ -138,7 +142,7 @@ add_action(
 					'cart_change_url'       => admin_url('admin-ajax.php?action=bbb_cart_change'),
 					'cart_update_url'       => admin_url('admin-ajax.php?action=bbb_cart_update'),
 					'cart_url'              => $cart_url,
-					'predictive_search_url' => home_url('/?s='),
+					'predictive_search_url' => home_url('/wp-json/bbb/v1/search'),
 				),
 				'cartStrings'               => array(
 					'error'         => __('An error occurred while updating your cart.', 'bybookishbabe-shopify-port'),
