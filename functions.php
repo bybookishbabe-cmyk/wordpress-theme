@@ -1,14 +1,22 @@
 <?php
 /**
- * Minimal WordPress bootstrap for the Shopify-faithful port.
- *
- * The prior WordPress rebuild lives in /firstpass. The Shopify theme copy now
- * lives at the repository root and should be converted section/snippet-first.
+ * WordPress bootstrap for the Shopify-faithful port.
  *
  * @package ByBookishBabeShopifyPort
  */
 
 declare(strict_types=1);
+
+function bbb_reader_is_society(): bool {
+	if (!is_user_logged_in()) {
+		return false;
+	}
+
+	$user = wp_get_current_user();
+
+	return in_array('society', (array) $user->roles, true)
+		|| '1' === get_user_meta((int) $user->ID, 'bbb_society_member', true);
+}
 
 add_action(
 	'after_setup_theme',
@@ -16,6 +24,7 @@ add_action(
 		add_theme_support('title-tag');
 		add_theme_support('post-thumbnails');
 		add_theme_support('custom-logo');
+		add_theme_support('site-icon');
 
 		register_nav_menus(
 			array(
@@ -25,93 +34,182 @@ add_action(
 	}
 );
 
+function bbb_asset_exists(string $relative_path): bool {
+	return file_exists(get_theme_file_path($relative_path));
+}
+
+function bbb_enqueue_css(string $handle, string $relative_path, array $deps = array(), ?string $media = null): void {
+	if (!bbb_asset_exists($relative_path)) {
+		return;
+	}
+
+	wp_enqueue_style($handle, get_theme_file_uri($relative_path), $deps, wp_get_theme()->get('Version'), $media ?: 'all');
+}
+
+function bbb_enqueue_js(string $handle, string $relative_path, array $deps = array(), bool $in_footer = true): void {
+	if (!bbb_asset_exists($relative_path)) {
+		return;
+	}
+
+	wp_enqueue_script($handle, get_theme_file_uri($relative_path), $deps, wp_get_theme()->get('Version'), $in_footer);
+}
+
 add_action(
 	'wp_enqueue_scripts',
 	static function (): void {
-		$version = wp_get_theme()->get('Version');
+		wp_enqueue_style('bbb-font-kaushan', 'https://fonts.googleapis.com/css2?family=Kaushan+Script&display=swap', array(), null);
+		wp_enqueue_style('bbb-font-cormorant-allura', 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Allura&display=swap', array(), null);
+		wp_enqueue_style('bbb-font-dancing', 'https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600&display=swap', array(), null);
 
-		wp_enqueue_style(
-			'bbb-shopify-fonts',
-			'https://fonts.googleapis.com/css2?family=Allura&family=Assistant:wght@400;500;600;700&family=Cormorant:wght@500;600&family=Cormorant+Garamond:wght@400;500;600;700&family=Great+Vibes&family=Kaushan+Script&family=Libre+Baskerville:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&display=swap',
-			array(),
-			null
-		);
-
-		$styles = array(
-			'base',
-			'component-list-menu',
-			'component-menu-drawer',
-			'component-mega-menu',
-			'component-search',
-			'component-list-social',
-			'section-blog-post',
-			'blog-system',
-			'blog-signoff',
-			'sss-library',
-			'bookshelf-signup',
-			'site-custom-overrides',
-		);
-
-		$deps = array('bbb-shopify-fonts');
-		foreach ($styles as $style) {
-			$path = get_theme_file_path('assets/' . $style . '.css');
-			if (!file_exists($path)) {
-				continue;
-			}
-
-			$handle = 'bbb-' . $style;
-			wp_enqueue_style(
-				$handle,
-				get_theme_file_uri('assets/' . $style . '.css'),
-				$deps,
-				$version
-			);
-			$deps = array($handle);
+		bbb_enqueue_css('bbb-base', 'assets/base.css', array('bbb-font-kaushan', 'bbb-font-cormorant-allura', 'bbb-font-dancing'));
+		if (bbb_asset_exists('assets/bbb-design-tokens.css')) {
+			wp_add_inline_style('bbb-base', (string) file_get_contents(get_theme_file_path('assets/bbb-design-tokens.css')));
 		}
 
-		wp_enqueue_script(
-			'bbb-supabase',
-			'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
-			array(),
-			null,
-			true
-		);
+		bbb_enqueue_css('bbb-custom-overrides', 'assets/site-custom-overrides.css', array('bbb-base'));
+		bbb_enqueue_css('bbb-bookshelf-signup', 'assets/bookshelf-signup.css', array('bbb-custom-overrides'));
+		bbb_enqueue_css('bbb-sss-library', 'assets/sss-library.css', array('bbb-bookshelf-signup'));
+		bbb_enqueue_css('bbb-blog-system', 'assets/blog-system.css', array('bbb-sss-library'));
+		bbb_enqueue_css('bbb-blog-signoff', 'assets/blog-signoff.css', array('bbb-blog-system'));
+		bbb_enqueue_css('bbb-component-cart-items', 'assets/component-cart-items.css', array('bbb-blog-signoff'), 'print');
+		bbb_enqueue_css('bbb-component-predictive-search', 'assets/component-predictive-search.css', array('bbb-component-cart-items'));
+		bbb_enqueue_css('bbb-favorite-card-atc', 'assets/bbb-favorite-card-atc.css', array('bbb-component-predictive-search'));
+		bbb_enqueue_css('bbb-holiday-overlay', 'assets/bbb-holiday-overlay.css', array('bbb-favorite-card-atc'));
+		bbb_enqueue_css('bbb-society-gate', 'assets/bbb-society-gate.css', array('bbb-holiday-overlay'));
 
-		$scripts = array(
-			'constants',
-			'global',
-			'details-disclosure',
-			'details-modal',
-			'search-form',
-			'predictive-search',
-			'animations',
-			'sss-library',
-			'blog-system',
-			'bookshelf-signup',
-		);
-
-		$script_deps = array('bbb-supabase');
-		foreach ($scripts as $script) {
-			$path = get_theme_file_path('assets/' . $script . '.js');
-			if (!file_exists($path)) {
-				continue;
-			}
-
-			$handle = 'bbb-' . $script;
-			wp_enqueue_script(
-				$handle,
-				get_theme_file_uri('assets/' . $script . '.js'),
-				$script_deps,
-				$version,
-				true
-			);
-			$script_deps = array($handle);
+		if ('drawer' === get_option('bbb_cart_type', 'notification')) {
+			bbb_enqueue_css('bbb-component-cart-drawer', 'assets/component-cart-drawer.css', array('bbb-holiday-overlay'));
+			bbb_enqueue_css('bbb-component-cart', 'assets/component-cart.css', array('bbb-component-cart-drawer'));
+			bbb_enqueue_css('bbb-component-totals', 'assets/component-totals.css', array('bbb-component-cart'));
+			bbb_enqueue_css('bbb-component-price', 'assets/component-price.css', array('bbb-component-totals'));
+			bbb_enqueue_css('bbb-component-discounts', 'assets/component-discounts.css', array('bbb-component-price'));
 		}
 
-		wp_add_inline_script(
-			'bbb-sss-library',
-			'window.BBBReaderAccount = window.BBBReaderAccount || {"loggedIn":false,"customerId":null,"email":"","firstName":"","isSociety":false,"bookshelfUrl":"' . esc_js(home_url('/my-bookshelf/')) . '","accountUrl":"' . esc_js(home_url('/my-account/')) . '","loginUrl":"' . esc_js(wp_login_url()) . '"}; window.bbbUrls = window.bbbUrls || {"library":"' . esc_js(home_url('/library/')) . '","societyLibrary":"' . esc_js(home_url('/society-library/')) . '","myBookshelf":"' . esc_js(home_url('/my-bookshelf/')) . '","seriesBase":"' . esc_js(home_url('/book-series/')) . '"};',
-			'before'
+		wp_enqueue_script('bbb-supabase', 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2', array(), null, false);
+		bbb_enqueue_js('bbb-globals', 'assets/bbb-globals.js', array(), false);
+		bbb_enqueue_js('bbb-post-login-redirect', 'assets/bbb-post-login-redirect.js', array('bbb-globals'), false);
+		bbb_enqueue_js('bbb-constants', 'assets/constants.js', array('bbb-post-login-redirect'));
+		bbb_enqueue_js('bbb-pubsub', 'assets/pubsub.js', array('bbb-constants'));
+		bbb_enqueue_js('bbb-global', 'assets/global.js', array('bbb-pubsub'));
+		bbb_enqueue_js('bbb-details-disclosure', 'assets/details-disclosure.js', array('bbb-global'));
+		bbb_enqueue_js('bbb-details-modal', 'assets/details-modal.js', array('bbb-global'));
+		bbb_enqueue_js('bbb-search-form', 'assets/search-form.js', array('bbb-global'));
+
+		if ((bool) get_option('bbb_predictive_search_enabled', true)) {
+			bbb_enqueue_js('bbb-predictive-search', 'assets/predictive-search.js', array('bbb-global'));
+		}
+
+		bbb_enqueue_js('bbb-animations', 'assets/animations.js', array('bbb-global'));
+		bbb_enqueue_js('bbb-bookshelf-signup', 'assets/bookshelf-signup.js', array('bbb-supabase'));
+		bbb_enqueue_js('bbb-sss-library', 'assets/sss-library.js', array('bbb-supabase'), false);
+		bbb_enqueue_js('bbb-blog-system', 'assets/blog-system.js', array('bbb-sss-library'));
+		bbb_enqueue_js('bbb-favorite-card-atc', 'assets/bbb-favorite-card-atc.js', array('bbb-globals'));
+		bbb_enqueue_js('bbb-thread-carousel', 'assets/bbb-thread-carousel.js', array('bbb-global'));
+		bbb_enqueue_js('bbb-rose-petals', 'assets/bbb-rose-petals.js', array('bbb-global'));
+		bbb_enqueue_js('bbb-holiday-overlay', 'assets/bbb-holiday-overlay.js', array('bbb-rose-petals'));
+
+		if ((bool) get_option('bbb_localization_enabled', false)) {
+			bbb_enqueue_js('bbb-localization-form', 'assets/localization-form.js', array('bbb-global'));
+		}
+
+		$user         = wp_get_current_user();
+		$is_logged_in = is_user_logged_in();
+		$bookshelf   = home_url('/my-bookshelf/');
+		$account_url = function_exists('wc_get_page_permalink') ? wc_get_page_permalink('myaccount') : home_url('/my-account/');
+		$cart_url    = function_exists('wc_get_cart_url') ? wc_get_cart_url() : home_url('/cart/');
+
+		wp_localize_script(
+			'bbb-globals',
+			'BBBSiteData',
+			array(
+				'shopUrl'                   => home_url(),
+				'BBBReaderAccount'          => array(
+					'loggedIn'     => $is_logged_in,
+					'customerId'   => $is_logged_in ? (int) $user->ID : null,
+					'email'        => $is_logged_in ? (string) $user->user_email : '',
+					'firstName'    => $is_logged_in ? (string) $user->first_name : '',
+					'isSociety'    => bbb_reader_is_society(),
+					'bookshelfUrl' => $bookshelf,
+					'accountUrl'   => $account_url,
+					'loginUrl'     => wp_login_url($bookshelf),
+				),
+				'routes'                    => array(
+					'cart_add_url'          => admin_url('admin-ajax.php'),
+					'cart_change_url'       => admin_url('admin-ajax.php?action=bbb_cart_change'),
+					'cart_update_url'       => admin_url('admin-ajax.php?action=bbb_cart_update'),
+					'cart_url'              => $cart_url,
+					'predictive_search_url' => home_url('/?s='),
+				),
+				'cartStrings'               => array(
+					'error'         => __('An error occurred while updating your cart.', 'bybookishbabe-shopify-port'),
+					'quantityError' => __('You can only add [quantity] of this item to your cart.', 'bybookishbabe-shopify-port'),
+				),
+				'variantStrings'            => array(
+					'addToCart'               => __('Add to cart', 'bybookishbabe-shopify-port'),
+					'soldOut'                 => __('Sold out', 'bybookishbabe-shopify-port'),
+					'unavailable'             => __('Unavailable', 'bybookishbabe-shopify-port'),
+					'unavailable_with_option' => __('[value] is unavailable', 'bybookishbabe-shopify-port'),
+				),
+				'quickOrderListStrings'     => array(
+					'itemsAdded'   => __('[quantity] items were added to your cart.', 'bybookishbabe-shopify-port'),
+					'itemAdded'    => __('[quantity] item was added to your cart.', 'bybookishbabe-shopify-port'),
+					'itemsRemoved' => __('[quantity] items were removed from your cart.', 'bybookishbabe-shopify-port'),
+					'itemRemoved'  => __('[quantity] item was removed from your cart.', 'bybookishbabe-shopify-port'),
+					'viewCart'     => __('View cart', 'bybookishbabe-shopify-port'),
+					'each'         => __('[money] each', 'bybookishbabe-shopify-port'),
+					'min_error'    => __('Minimum quantity is [min].', 'bybookishbabe-shopify-port'),
+					'max_error'    => __('Maximum quantity is [max].', 'bybookishbabe-shopify-port'),
+					'step_error'   => __('Quantity must be a multiple of [step].', 'bybookishbabe-shopify-port'),
+				),
+				'accessibilityStrings'      => array(
+					'imageAvailable'             => __('Image [index] is now displayed.', 'bybookishbabe-shopify-port'),
+					'shareSuccess'               => __('Link copied to clipboard.', 'bybookishbabe-shopify-port'),
+					'pauseSlideshow'             => __('Pause slideshow.', 'bybookishbabe-shopify-port'),
+					'playSlideshow'              => __('Play slideshow.', 'bybookishbabe-shopify-port'),
+					'recipientFormExpanded'      => __('Gift card form expanded.', 'bybookishbabe-shopify-port'),
+					'recipientFormCollapsed'     => __('Gift card form collapsed.', 'bybookishbabe-shopify-port'),
+					'countrySelectorSearchCount' => __('[count] countries found.', 'bybookishbabe-shopify-port'),
+				),
+				'bbbData'                   => array(
+					'nonce' => wp_create_nonce('bbb_ajax'),
+				),
+			)
 		);
+	}
+);
+
+function bbb_society_gate_check(): void {
+	$gated_slugs = array(
+		'society-library',
+		'sss-library-page',
+		'sss-private-shelf',
+		'sss-made-for-you',
+		'sss-printable-kindle-inserts',
+		'sss-canva-templates',
+		'sss-quote-wall',
+	);
+
+	if (!is_page($gated_slugs) || bbb_reader_is_society()) {
+		return;
+	}
+
+	add_action('wp_footer', 'bbb_render_society_gate');
+	add_action(
+		'wp_body_open',
+		static function (): void {
+			echo '<script>document.body.classList.add("sss-member-gated");</script>';
+		}
+	);
+}
+add_action('template_redirect', 'bbb_society_gate_check');
+
+function bbb_render_society_gate(): void {
+	get_template_part('template-parts/society-gate');
+}
+
+add_action(
+	'wp_footer',
+	static function (): void {
+		echo '<div id="bbb-holiday-overlay" aria-hidden="true"></div>';
 	}
 );

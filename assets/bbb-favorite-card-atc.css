@@ -1,0 +1,36 @@
+.bb-toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  background: #ffffff;
+  color: #111111;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1.3rem;
+  padding: 18px 26px;
+  border: 1px solid #000;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 999999;
+  text-align: center;
+  min-width: 260px;
+  max-width: 80%;
+  pointer-events: none;
+}
+
+.bb-toast::before {
+  content: "✓";
+  display: block;
+  font-size: 2.2rem;
+  margin-bottom: 6px;
+  line-height: 1;
+  color: #111111;
+  font-weight: 400;
+}
+
+.bb-toast.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}

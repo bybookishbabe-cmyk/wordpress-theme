@@ -307,118 +307,6 @@ function fetchConfig(type = 'json') {
   };
 }
 
-/*
- * Shopify Common JS
- *
- */
-if (typeof window.Shopify == 'undefined') {
-  window.Shopify = {};
-}
-
-Shopify.bind = function (fn, scope) {
-  return function () {
-    return fn.apply(scope, arguments);
-  };
-};
-
-Shopify.setSelectorByValue = function (selector, value) {
-  for (var i = 0, count = selector.options.length; i < count; i++) {
-    var option = selector.options[i];
-    if (value == option.value || value == option.innerHTML) {
-      selector.selectedIndex = i;
-      return i;
-    }
-  }
-};
-
-Shopify.addListener = function (target, eventName, callback) {
-  target.addEventListener
-    ? target.addEventListener(eventName, callback, false)
-    : target.attachEvent('on' + eventName, callback);
-};
-
-Shopify.postLink = function (path, options) {
-  options = options || {};
-  var method = options['method'] || 'post';
-  var params = options['parameters'] || {};
-
-  var form = document.createElement('form');
-  form.setAttribute('method', method);
-  form.setAttribute('action', path);
-
-  for (var key in params) {
-    var hiddenField = document.createElement('input');
-    hiddenField.setAttribute('type', 'hidden');
-    hiddenField.setAttribute('name', key);
-    hiddenField.setAttribute('value', params[key]);
-    form.appendChild(hiddenField);
-  }
-  document.body.appendChild(form);
-  form.submit();
-  document.body.removeChild(form);
-};
-
-Shopify.CountryProvinceSelector = function (country_domid, province_domid, options) {
-  this.countryEl = document.getElementById(country_domid);
-  this.provinceEl = document.getElementById(province_domid);
-  this.provinceContainer = document.getElementById(options['hideElement'] || province_domid);
-
-  Shopify.addListener(this.countryEl, 'change', Shopify.bind(this.countryHandler, this));
-
-  this.initCountry();
-  this.initProvince();
-};
-
-Shopify.CountryProvinceSelector.prototype = {
-  initCountry: function () {
-    var value = this.countryEl.getAttribute('data-default');
-    Shopify.setSelectorByValue(this.countryEl, value);
-    this.countryHandler();
-  },
-
-  initProvince: function () {
-    var value = this.provinceEl.getAttribute('data-default');
-    if (value && this.provinceEl.options.length > 0) {
-      Shopify.setSelectorByValue(this.provinceEl, value);
-    }
-  },
-
-  countryHandler: function (e) {
-    var opt = this.countryEl.options[this.countryEl.selectedIndex];
-    var raw = opt.getAttribute('data-provinces');
-    var provinces = JSON.parse(raw);
-
-    this.clearOptions(this.provinceEl);
-    if (provinces && provinces.length == 0) {
-      this.provinceContainer.style.display = 'none';
-    } else {
-      for (var i = 0; i < provinces.length; i++) {
-        var opt = document.createElement('option');
-        opt.value = provinces[i][0];
-        opt.innerHTML = provinces[i][1];
-        this.provinceEl.appendChild(opt);
-      }
-
-      this.provinceContainer.style.display = '';
-    }
-  },
-
-  clearOptions: function (selector) {
-    while (selector.firstChild) {
-      selector.removeChild(selector.firstChild);
-    }
-  },
-
-  setOptions: function (selector, values) {
-    for (var i = 0, count = values.length; i < values.length; i++) {
-      var opt = document.createElement('option');
-      opt.value = values[i];
-      opt.innerHTML = values[i];
-      selector.appendChild(opt);
-    }
-  },
-};
-
 class MenuDrawer extends HTMLElement {
   constructor() {
     super();
@@ -620,7 +508,7 @@ class ModalDialog extends HTMLElement {
   connectedCallback() {
     if (this.moved) return;
     this.moved = true;
-    this.dataset.section = this.closest('.shopify-section').id.replace('shopify-section-', '');
+    this.dataset.section = this.closest('[data-section]')?.dataset.section || '';
     document.body.appendChild(this);
   }
 
@@ -643,38 +531,6 @@ class ModalDialog extends HTMLElement {
   }
 }
 customElements.define('modal-dialog', ModalDialog);
-
-class BulkModal extends HTMLElement {
-  constructor() {
-    super();
-  }
-
-  connectedCallback() {
-    const handleIntersection = (entries, observer) => {
-      if (!entries[0].isIntersecting) return;
-      observer.unobserve(this);
-      if (this.innerHTML.trim() === '') {
-        const productUrl = this.dataset.url.split('?')[0];
-        fetch(`${productUrl}?section_id=bulk-quick-order-list`)
-          .then((response) => response.text())
-          .then((responseText) => {
-            const html = new DOMParser().parseFromString(responseText, 'text/html');
-            const sourceQty = html.querySelector('.quick-order-list-container').parentNode;
-            this.innerHTML = sourceQty.innerHTML;
-          })
-          .catch((e) => {
-            console.error(e);
-          });
-      }
-    };
-
-    new IntersectionObserver(handleIntersection.bind(this)).observe(
-      document.querySelector(`#QuickBulk-${this.dataset.productId}-${this.dataset.sectionId}`)
-    );
-  }
-}
-
-customElements.define('bulk-modal', BulkModal);
 
 class ModalOpener extends HTMLElement {
   constructor() {
@@ -1125,73 +981,11 @@ class VariantSelects extends HTMLElement {
 
 customElements.define('variant-selects', VariantSelects);
 
-class ProductRecommendations extends HTMLElement {
-  observer = undefined;
-
-  constructor() {
-    super();
-  }
-
-  connectedCallback() {
-    this.initializeRecommendations(this.dataset.productId);
-  }
-
-  initializeRecommendations(productId) {
-    this.observer?.unobserve(this);
-    this.observer = new IntersectionObserver(
-      (entries, observer) => {
-        if (!entries[0].isIntersecting) return;
-        observer.unobserve(this);
-        this.loadRecommendations(productId);
-      },
-      { rootMargin: '0px 0px 400px 0px' }
-    );
-    this.observer.observe(this);
-  }
-
-  loadRecommendations(productId) {
-    fetch(`${this.dataset.url}&product_id=${productId}&section_id=${this.dataset.sectionId}`)
-      .then((response) => response.text())
-      .then((text) => {
-        const html = document.createElement('div');
-        html.innerHTML = text;
-        const recommendations = html.querySelector('product-recommendations');
-
-        if (recommendations?.innerHTML.trim().length) {
-          this.innerHTML = recommendations.innerHTML;
-        }
-
-        if (!this.querySelector('slideshow-component') && this.classList.contains('complementary-products')) {
-          this.remove();
-        }
-
-        if (html.querySelector('.grid__item')) {
-          this.classList.add('product-recommendations--loaded');
-        }
-      })
-      .catch((e) => {
-        console.error(e);
-      });
-  }
-}
-
-customElements.define('product-recommendations', ProductRecommendations);
-
 class AccountIcon extends HTMLElement {
   constructor() {
     super();
 
     this.icon = this.querySelector('.icon');
-  }
-
-  connectedCallback() {
-    document.addEventListener('storefront:signincompleted', this.handleStorefrontSignInCompleted.bind(this));
-  }
-
-  handleStorefrontSignInCompleted(event) {
-    if (event?.detail?.avatar) {
-      this.icon?.replaceWith(event.detail.avatar.cloneNode());
-    }
   }
 }
 

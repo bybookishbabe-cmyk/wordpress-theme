@@ -1,0 +1,99 @@
+body.sss-member-gated {
+  overflow: hidden;
+}
+
+.sss-membergate {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.92);
+  backdrop-filter: blur(10px);
+}
+
+.sss-membergate__card {
+  width: min(560px, 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 28px;
+  padding: 28px;
+  background: linear-gradient(180deg, rgba(18, 18, 18, 0.98), rgba(8, 8, 8, 0.98));
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+  color: #f6f6f6;
+}
+
+.sss-membergate__eyebrow {
+  margin: 0 0 10px;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(246, 246, 246, 0.58);
+}
+
+.sss-membergate__title {
+  margin: 0;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(34px, 5vw, 54px);
+  line-height: 0.95;
+  text-transform: lowercase;
+}
+
+.sss-membergate__copy {
+  margin: 14px 0 0;
+  color: rgba(246, 246, 246, 0.76);
+  line-height: 1.7;
+  font-size: 15px;
+}
+
+.sss-membergate__note {
+  margin: 18px 0 0;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(246, 246, 246, 0.84);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.sss-membergate__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.sss-membergate__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: #f6f6f6;
+  text-decoration: none;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.sss-membergate__btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.sss-membergate__btn--primary {
+  background: rgba(255, 138, 199, 0.18);
+  border-color: rgba(255, 138, 199, 0.34);
+}
+
+.sss-membergate__btn--primary:hover {
+  background: rgba(255, 138, 199, 0.26);
+  border-color: rgba(255, 138, 199, 0.46);
+}
