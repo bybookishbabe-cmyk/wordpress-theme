@@ -8,7 +8,7 @@
 declare(strict_types=1);
 
 function bbb_book_taxonomy_kind_for_taxonomy(string $taxonomy): string {
-	return str_contains($taxonomy, 'shelf') ? 'shelf' : 'trope';
+	return false !== strpos($taxonomy, 'shelf') ? 'shelf' : 'trope';
 }
 
 function bbb_book_taxonomies_for_kind(string $kind): array {
@@ -22,12 +22,12 @@ function bbb_book_taxonomy_slug_candidates(string $slug): array {
 	$candidates = array($slug);
 
 	foreach (array('-books', '-book', '-romance-books', '-romance-book') as $suffix) {
-		if (str_ends_with($slug, $suffix)) {
+		if (substr($slug, -strlen($suffix)) === $suffix) {
 			$candidates[] = substr($slug, 0, -strlen($suffix));
 		}
 	}
 
-	if (!str_ends_with($slug, '-books')) {
+	if (substr($slug, -6) !== '-books') {
 		$candidates[] = $slug . '-books';
 	}
 
@@ -123,7 +123,7 @@ function bbb_book_taxonomy_term_colors(WP_Term $term): array {
 
 function bbb_book_taxonomy_term_url(WP_Term $term): string {
 	$slug = $term->slug;
-	if (!str_ends_with($slug, '-books')) {
+	if (substr($slug, -6) !== '-books') {
 		$slug .= '-books';
 	}
 
