@@ -133,7 +133,7 @@ function bbb_handle_shopify_json_import(string $nonce_action, string $import_cal
 
 	bbb_redirect_shopify_import_result(
 		array(
-			'type'     => 'success',
+			'type'     => $count > 0 ? 'success' : 'warning',
 			'summary'  => sprintf(__('Imported %1$d %2$s.', 'bybookishbabe-shopify-port'), $count, $label),
 			'messages' => $messages,
 		)

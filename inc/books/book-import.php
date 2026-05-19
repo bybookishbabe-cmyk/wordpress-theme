@@ -30,8 +30,30 @@ function bbb_import_books_edges_from_export(array $data): array {
 		return $data['data']['metaobjects']['edges'];
 	}
 
+	if (isset($data['data']['metaobjects']['nodes']) && is_array($data['data']['metaobjects']['nodes'])) {
+		return array_map(
+			static fn(array $node): array => array('node' => $node),
+			$data['data']['metaobjects']['nodes']
+		);
+	}
+
 	if (isset($data['edges']) && is_array($data['edges'])) {
 		return $data['edges'];
+	}
+
+	if (isset($data['nodes']) && is_array($data['nodes'])) {
+		return array_map(
+			static fn(array $node): array => array('node' => $node),
+			$data['nodes']
+		);
+	}
+
+	if (isset($data['metaobjects']) && is_array($data['metaobjects'])) {
+		return bbb_import_books_edges_from_export($data['metaobjects']);
+	}
+
+	if (isset($data['handle'], $data['fields'])) {
+		return array(array('node' => $data));
 	}
 
 	$edges = array();
@@ -249,6 +271,10 @@ function bbb_import_books_from_data(array $data, ?callable $logger = null): arra
 		$log('Imported: ' . $handle);
 	}
 
+	if ($count === 0) {
+		$log('No book records were found in this JSON. Check that the export contains metaobjects.edges or metaobjects.nodes.');
+	}
+
 	return array(
 		'count'    => $count,
 		'messages' => $messages,
@@ -362,6 +388,10 @@ function bbb_import_newsletter_issues_from_data(array $data, ?callable $logger =
 
 		$count++;
 		$log('Imported newsletter issue: ' . $handle);
+	}
+
+	if ($count === 0) {
+		$log('No newsletter issue records were found in this JSON. Check that the export contains newsletter_issue metaobjects with edges or nodes.');
 	}
 
 	return array(
