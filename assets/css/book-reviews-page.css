@@ -1,0 +1,306 @@
+.bbb-review-index{
+  padding:3.6rem 0 5.6rem;
+  background:#0b0b0b;
+  color:#f6f6f6;
+}
+
+.bbb-review-index__hero{
+  margin-bottom:3.6rem;
+}
+
+.bbb-review-index__kicker,
+.bbb-review-index__sectionKicker{
+  margin:0 0 .8rem;
+  font-size:1.1rem;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.62);
+}
+
+.bbb-review-index__title{
+  margin:0;
+  font-size:clamp(3.8rem, 7vw, 7.6rem);
+  line-height:.95;
+  text-transform:lowercase;
+}
+
+.bbb-review-index__sub{
+  max-width:70rem;
+  margin:1.4rem 0 0;
+  font-size:1.55rem;
+  line-height:1.65;
+  color:rgba(255,255,255,.72);
+}
+
+.bbb-review-index__sectionHead{
+  margin-bottom:1.6rem;
+}
+
+.bbb-review-index__sectionHead--archive{
+  margin-top:4.2rem;
+}
+
+.bbb-review-index__sectionTitle{
+  margin:0;
+  font-size:clamp(2.2rem, 3vw, 3.2rem);
+  line-height:1.1;
+  text-transform:lowercase;
+}
+
+.bbb-review-index__grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(24rem, 1fr));
+  gap:1.8rem;
+}
+
+.bbb-review-index__item{
+  min-width:0;
+}
+
+.bbb-review-index__item .bbb-review-card{
+  height:100%;
+}
+
+.bbb-review-card{
+  display:flex;
+  flex-direction:column;
+  min-height:100%;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:2rem;
+  background:rgba(255,255,255,.025);
+  color:inherit;
+  text-decoration:none;
+  transition:transform .25s ease, border-color .25s ease, box-shadow .25s ease, background .25s ease;
+}
+
+.bbb-review-card:hover,
+.bbb-review-card:focus-visible{
+  transform:translateY(-.4rem);
+  border-color:rgba(255,138,199,.72);
+  background:rgba(255,138,199,.055);
+  box-shadow:0 1.8rem 4rem rgba(0,0,0,.32);
+  outline:none;
+}
+
+.bbb-review-card--trending{
+  display:grid;
+  grid-template-columns:minmax(26rem, .38fr) minmax(0, .62fr);
+  align-items:stretch;
+  width:100%;
+}
+
+.bbb-review-card__media{
+  position:relative;
+  background:#151313;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.bbb-review-card:not(.bbb-review-card--trending) .bbb-review-card__media{
+  min-height:0;
+  max-height:24rem;
+}
+
+.bbb-review-card--trending .bbb-review-card__media{
+  max-height:38rem;
+}
+
+.bbb-review-card--trending .bbb-review-card__media img,
+.bbb-review-card--trending .bbb-review-card__blogImage{
+  height:100%;
+}
+
+.bbb-review-card__media img,
+.bbb-review-card__blogImage{
+  width:100%;
+  height:auto;
+  max-height:inherit;
+  display:block;
+  object-fit:contain;
+  transition:transform .35s ease;
+}
+
+.bbb-review-card:hover .bbb-review-card__media img,
+.bbb-review-card:focus-visible .bbb-review-card__media img{
+  transform:scale(1.02);
+}
+
+.bbb-review-card__placeholder{
+  width:100%;
+  min-height:18rem;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg, #1b1719, #3a202e);
+}
+
+.bbb-review-card__placeholder span{
+  font-family:"Cormorant Garamond", Georgia, serif;
+  font-size:6rem;
+  line-height:1;
+  color:#ffb0d8;
+}
+
+.bbb-review-card__body{
+  display:flex;
+  flex-direction:column;
+  gap:.8rem;
+  padding:1.8rem 2rem;
+}
+
+.bbb-review-card--trending .bbb-review-card__body{
+  padding:2.8rem 3rem;
+}
+
+.bbb-review-card__meta{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:.8rem;
+  font-size:1.1rem;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.58);
+}
+
+.bbb-review-card__badge{
+  display:inline-flex;
+  align-items:center;
+  min-height:2.2rem;
+  padding:.25rem .8rem;
+  border:1px solid rgba(255,138,199,.44);
+  border-radius:999px;
+  color:#ffb0d8;
+}
+
+.bbb-review-card__title{
+  margin:0;
+  font-size:clamp(1.8rem, 2vw, 2.6rem);
+  line-height:1.12;
+  color:#f6f6f6;
+}
+
+.bbb-review-card--trending .bbb-review-card__title{
+  font-size:clamp(2.8rem, 4vw, 4.8rem);
+}
+
+.bbb-review-card__book,
+.bbb-review-card__reviewMeta,
+.bbb-review-card__excerpt{
+  margin:0;
+  font-size:1.35rem;
+  line-height:1.5;
+  color:rgba(255,255,255,.72);
+}
+
+.bbb-review-card__book{
+  display:flex;
+  flex-direction:column;
+  gap:.2rem;
+  color:rgba(255,255,255,.8);
+}
+
+.bbb-review-card__book span:first-child{
+  color:#fff;
+  font-weight:600;
+}
+
+.bbb-review-card__reviewMeta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.7rem;
+  color:#ffb0d8;
+}
+
+.bbb-review-card__reviewMeta span:not(:last-child)::after{
+  content:"/";
+  margin-left:.7rem;
+  color:rgba(255,255,255,.32);
+}
+
+.bbb-review-index__empty{
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:.8rem;
+  padding:2.4rem;
+  background:rgba(255,255,255,.025);
+  color:rgba(255,255,255,.72);
+  font-size:1.45rem;
+  line-height:1.55;
+}
+
+.bbb-review-index__pager{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:1rem;
+  margin-top:2.8rem;
+}
+
+.bbb-review-index__pagerButton{
+  appearance:none;
+  border:1px solid rgba(255,138,199,.44);
+  border-radius:999px;
+  background:rgba(255,138,199,.08);
+  color:#f6f6f6;
+  cursor:pointer;
+  font:inherit;
+  font-size:1.2rem;
+  letter-spacing:.12em;
+  min-height:3.8rem;
+  padding:.8rem 1.5rem;
+  text-transform:uppercase;
+  transition:background .2s ease, border-color .2s ease, color .2s ease;
+}
+
+.bbb-review-index__pagerButton:hover,
+.bbb-review-index__pagerButton:focus-visible{
+  background:rgba(255,138,199,.16);
+  border-color:rgba(255,138,199,.72);
+  outline:none;
+}
+
+.bbb-review-index__pagerButton:disabled{
+  cursor:not-allowed;
+  opacity:.42;
+}
+
+.bbb-review-index__pagerStatus{
+  min-width:8rem;
+  text-align:center;
+  font-size:1.2rem;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.62);
+}
+
+@media screen and (max-width: 749px){
+  .bbb-review-index{
+    padding-top:2.2rem;
+  }
+
+  .bbb-review-card:not(.bbb-review-card--trending) .bbb-review-card__media,
+  .bbb-review-card--trending .bbb-review-card__media{
+    max-height:32rem;
+  }
+
+  .bbb-review-card--trending{
+    display:flex;
+  }
+
+  .bbb-review-card--trending .bbb-review-card__media img,
+  .bbb-review-card--trending .bbb-review-card__blogImage{
+    height:auto;
+  }
+
+  .bbb-review-card__body,
+  .bbb-review-card--trending .bbb-review-card__body{
+    padding:1.5rem;
+  }
+
+  .bbb-review-card__excerpt{
+    display:none;
+  }
+}
