@@ -9,6 +9,15 @@ declare(strict_types=1);
 
 $GLOBALS['bbb_forced_blog_category'] = 'curated-romance-guides';
 
+global $wp_query;
+if ($wp_query instanceof WP_Query) {
+	$wp_query->is_404     = false;
+	$wp_query->is_archive = true;
+	$wp_query->is_home    = false;
+	$wp_query->is_page    = false;
+}
+status_header(200);
+
 if (function_exists('bbb_enqueue_css')) {
 	bbb_enqueue_css('component-card', 'assets/css/component-card.css', array('bbb-bookshelf-signup'));
 	bbb_enqueue_css('component-article-card', 'assets/css/component-article-card.css', array('component-card'));
