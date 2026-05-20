@@ -53,6 +53,15 @@ function sss_pillar_nav_shortcode($atts): string {
 			$label = get_the_title($trope);
 		}
 	}
+	if ('romance' === $label && function_exists('sss_article_match_text')) {
+		$context = sss_article_match_text((string) get_the_title($post_id) . ' ' . (string) get_post_field('post_name', $post_id));
+		foreach (array('dark romance', 'sports romance', 'mafia romance', 'hockey romance', 'romantasy', 'paranormal romance', 'contemporary romance', 'historical romance', 'dystopian romance') as $candidate) {
+			if (str_contains(' ' . $context . ' ', ' ' . $candidate . ' ')) {
+				$label = $candidate;
+				break;
+			}
+		}
+	}
 	$label = trim(strtolower(wp_strip_all_tags((string) $label))) ?: 'romance';
 	$total = array_sum($counts);
 

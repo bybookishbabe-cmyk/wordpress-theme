@@ -553,20 +553,11 @@ function sss_article_books_for_inferred_context(int $post_id): array {
 	$taxonomies = array_values(array_filter(array('category', 'post_tag', 'bbb_trope', 'bbb_shelf'), 'taxonomy_exists'));
 	$term_names = $taxonomies ? wp_get_post_terms($post_id, $taxonomies, array('fields' => 'names')) : array();
 	$term_names = (!is_wp_error($term_names) && is_array($term_names)) ? $term_names : array();
-	$haystack = sss_article_match_text(
-		implode(
-			' ',
-			array_filter(
-				array(
-					(string) get_the_title($post_id),
-					(string) get_post_field('post_name', $post_id),
-					(string) get_post_field('post_content', $post_id),
-					implode(' ', $term_names),
-				)
-			)
-		)
+	$primary_haystack = sss_article_match_text(
+		implode(' ', array_filter(array((string) get_the_title($post_id), (string) get_post_field('post_name', $post_id), implode(' ', $term_names))))
 	);
-	if ('' === $haystack) {
+	$fallback_haystack = sss_article_match_text((string) get_post_field('post_content', $post_id));
+	if ('' === $primary_haystack && '' === $fallback_haystack) {
 		return array();
 	}
 
@@ -581,6 +572,7 @@ function sss_article_books_for_inferred_context(int $post_id): array {
 		}
 
 		$score = 0;
+		$matched_primary = false;
 		$terms = array();
 		if (!empty($data['shelf']['name'])) {
 			$terms[] = (string) $data['shelf']['name'];
@@ -598,14 +590,28 @@ function sss_article_books_for_inferred_context(int $post_id): array {
 			if ('' === $needle || in_array($needle, $generic_terms, true)) {
 				continue;
 			}
-			if (str_contains(' ' . $haystack . ' ', ' ' . $needle . ' ')) {
-				$score += str_contains($needle, ' ') ? 3 : 1;
+			if ('' !== $primary_haystack && str_contains(' ' . $primary_haystack . ' ', ' ' . $needle . ' ')) {
+				$score += str_contains($needle, ' ') ? 6 : 2;
+				$matched_primary = true;
+			} elseif ('' !== $fallback_haystack && str_contains(' ' . $fallback_haystack . ' ', ' ' . $needle . ' ')) {
+				$score += str_contains($needle, ' ') ? 2 : 1;
 			}
 		}
 
 		if ($score > 0) {
-			$matches[$book->ID] = array('book' => $book, 'score' => $score);
+			$matches[$book->ID] = array('book' => $book, 'score' => $score, 'primary' => $matched_primary);
 		}
+	}
+
+	$has_primary_matches = false;
+	foreach ($matches as $match) {
+		if (!empty($match['primary'])) {
+			$has_primary_matches = true;
+			break;
+		}
+	}
+	if ($has_primary_matches) {
+		$matches = array_filter($matches, static fn(array $match): bool => !empty($match['primary']));
 	}
 
 	uasort(
