@@ -15,7 +15,7 @@ function bbb_page_route_registry(): array {
 		'books-like'                     => 'page-books-like.php',
 		'books-like-directory'           => 'page-books-like-directory.php',
 		'bookshelf-weekly-preview'       => '',
-		'account'                        => '',
+		'account'                        => 'page-account.php',
 		'about-the-society'              => 'page-about-the-society.php',
 		'cart'                           => '',
 		'contact'                        => 'page-contact.php',

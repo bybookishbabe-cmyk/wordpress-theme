@@ -42,7 +42,7 @@ get_header();
 				<div class="bbb-account-shelf__actions">
 					<a class="bbb-account-shelf__button" href="<?php echo esc_url(home_url($is_society ? '/sss-library-page/' : '/library/')); ?>">browse the library</a>
 					<?php if (is_user_logged_in()) : ?>
-						<a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="<?php echo esc_url(function_exists('wc_get_page_permalink') ? wc_get_page_permalink('myaccount') : admin_url('profile.php')); ?>">account</a>
+						<a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="<?php echo esc_url(function_exists('bbb_wc_account_url') ? bbb_wc_account_url() : home_url('/account/')); ?>">account</a>
 					<?php else : ?>
 						<a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="<?php echo esc_url(wp_login_url(home_url('/my-bookshelf/'))); ?>">log in to sync</a>
 					<?php endif; ?>
