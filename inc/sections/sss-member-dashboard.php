@@ -25,7 +25,7 @@ if (!function_exists('bbb_sss_drop_value')) {
 		$field = $fields[$key];
 		$value = $field['jsonValue'] ?? $field['value'] ?? $default;
 		if (is_array($value)) {
-			return $default;
+			$value = $field['value'] ?? $default;
 		}
 
 		return trim((string) $value);

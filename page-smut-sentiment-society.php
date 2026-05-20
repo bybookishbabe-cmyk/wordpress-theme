@@ -24,6 +24,38 @@ if ('this month inside the society' === $monthly_hub['kicker']) {
 	$monthly_hub['kicker'] = 'monthly theme';
 }
 $monthly_theme_url = bbb_page_url('monthly-theme');
+$drop_export_path = get_theme_file_path('firstpass/migration/exports/metaobjects/sss_drop.json');
+if (file_exists($drop_export_path)) {
+	$drop_export = json_decode((string) file_get_contents($drop_export_path), true);
+	if (is_array($drop_export) && !empty($drop_export['entries']) && is_array($drop_export['entries'])) {
+		$active_drop = array();
+		$active_time = 0;
+		foreach ($drop_export['entries'] as $entry) {
+			if (!is_array($entry) || empty($entry['fields']) || !is_array($entry['fields'])) {
+				continue;
+			}
+
+			$fields = array();
+			foreach ($entry['fields'] as $field) {
+				if (is_array($field) && !empty($field['key'])) {
+					$fields[(string) $field['key']] = $field;
+				}
+			}
+
+			$date = (string) ($fields['release_date']['value'] ?? '');
+			$time = '' !== $date ? strtotime($date . ' 00:00:00') : false;
+			if ($time && $time <= (int) current_time('timestamp') && $time >= $active_time) {
+				$active_drop = $fields;
+				$active_time = $time;
+			}
+		}
+
+		if ($active_drop) {
+			$monthly_hub['title'] = strtolower((string) ($active_drop['name']['value'] ?? $monthly_hub['title']));
+			$monthly_hub['text'] = strtolower((string) ($active_drop['quote_text']['value'] ?? $monthly_hub['text']));
+		}
+	}
+}
 
 $sections = array(
 	array(
