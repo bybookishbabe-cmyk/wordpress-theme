@@ -28,21 +28,41 @@ $shop_url = function_exists('bbb_page_url') ? bbb_page_url('shop') : home_url('/
 $purchase_rows = array();
 
 if ($is_logged_in && $user instanceof WP_User && function_exists('wc_get_orders')) {
-	$orders = wc_get_orders(
+	$order_args = array(
+		'limit'   => 4,
+		'orderby' => 'date',
+		'order'   => 'DESC',
+		'status'  => array('wc-completed', 'wc-processing', 'wc-on-hold'),
+	);
+	$orders_by_id = wc_get_orders(
 		array(
 			'customer_id' => (int) $user->ID,
-			'limit'       => 4,
-			'orderby'     => 'date',
-			'order'       => 'DESC',
-			'status'      => array('wc-completed', 'wc-processing', 'wc-on-hold'),
 		)
+		+ $order_args
+	);
+	$orders_by_email = wc_get_orders(
+		array(
+			'billing_email' => (string) $user->user_email,
+		)
+		+ $order_args
+	);
+	$orders = array();
+
+	foreach (array_merge((array) $orders_by_id, (array) $orders_by_email) as $order) {
+		if ($order instanceof WC_Order) {
+			$orders[$order->get_id()] = $order;
+		}
+	}
+	usort(
+		$orders,
+		static function (WC_Order $a, WC_Order $b): int {
+			$a_time = $a->get_date_created() ? $a->get_date_created()->getTimestamp() : 0;
+			$b_time = $b->get_date_created() ? $b->get_date_created()->getTimestamp() : 0;
+			return $b_time <=> $a_time;
+		}
 	);
 
 	foreach ($orders as $order) {
-		if (!$order instanceof WC_Order) {
-			continue;
-		}
-
 		$items = array();
 		foreach ($order->get_items() as $item) {
 			$items[] = $item->get_name();
@@ -55,6 +75,8 @@ if ($is_logged_in && $user instanceof WP_User && function_exists('wc_get_orders'
 			'total'  => wp_strip_all_tags($order->get_formatted_order_total()),
 		);
 	}
+
+	$purchase_rows = array_slice($purchase_rows, 0, 4);
 }
 
 get_header();
