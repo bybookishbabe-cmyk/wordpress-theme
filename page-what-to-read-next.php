@@ -7,8 +7,11 @@
 
 declare(strict_types=1);
 
-wp_enqueue_style('bbb-what-to-read-next', get_theme_file_uri('assets/css/bbb-what-to-read-next.css'), array('bbb-sss-library'), wp_get_theme()->get('Version'));
-wp_enqueue_script('bbb-what-to-read-next', get_theme_file_uri('assets/js/bbb-what-to-read-next.js'), array('bbb-sss-library'), wp_get_theme()->get('Version'), true);
+$next_css_path = get_theme_file_path('assets/css/bbb-what-to-read-next.css');
+$next_js_path  = get_theme_file_path('assets/js/bbb-what-to-read-next.js');
+
+wp_enqueue_style('bbb-what-to-read-next', get_theme_file_uri('assets/css/bbb-what-to-read-next.css'), array('bbb-sss-library'), file_exists($next_css_path) ? (string) filemtime($next_css_path) : wp_get_theme()->get('Version'));
+wp_enqueue_script('bbb-what-to-read-next', get_theme_file_uri('assets/js/bbb-what-to-read-next.js'), array('bbb-sss-library'), file_exists($next_js_path) ? (string) filemtime($next_js_path) : wp_get_theme()->get('Version'), true);
 get_header();
 
 $books = array();
