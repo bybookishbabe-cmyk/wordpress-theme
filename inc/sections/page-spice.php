@@ -72,8 +72,8 @@ foreach ($books as $book) {
 			?>
 		</div>
 		<div class="sss-lib__spiceActions">
-			<a href="<?php echo esc_url(bbb_resolve_page_url('library')); ?>">← back to full library</a>
-			<a href="https://thesmutandsentimentsociety.substack.com/subscribe">join the society →</a>
+			<a class="sss-lib__spiceAction sss-lib__spiceAction--ghost" href="<?php echo esc_url(bbb_resolve_page_url('library')); ?>">← back to full library</a>
+			<a class="sss-lib__spiceAction" href="https://thesmutandsentimentsociety.substack.com/subscribe">join the society →</a>
 		</div>
 	</div>
 	<?php bbb_render_component('library-modal'); ?>
