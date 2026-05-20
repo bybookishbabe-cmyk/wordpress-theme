@@ -281,7 +281,7 @@
 }
 
 .bbb-account-shelf__readCover img,
-.bbb-account-shelf__readCover > span:first-child {
+.bbb-account-shelf__readCoverPlaceholder {
   width: 100%;
   aspect-ratio: 2 / 3;
   border: 1px solid rgba(255,255,255,.18);
@@ -291,7 +291,7 @@
   box-shadow: 0 20px 34px rgba(0,0,0,.38);
 }
 
-.bbb-account-shelf__readCover > span:first-child {
+.bbb-account-shelf__readCoverPlaceholder {
   display: grid;
   place-items: center;
   color: #ffb8dc;
@@ -299,7 +299,7 @@
   font-size: 3rem;
 }
 
-.bbb-account-shelf__readCover span:last-child {
+.bbb-account-shelf__readCoverTitle {
   position: absolute;
   right: -20px;
   bottom: -22px;
@@ -313,8 +313,8 @@
   transition: opacity .22s ease, transform .22s ease;
 }
 
-.bbb-account-shelf__readCover:hover span:last-child,
-.bbb-account-shelf__readCover:focus-visible span:last-child {
+.bbb-account-shelf__readCover:hover .bbb-account-shelf__readCoverTitle,
+.bbb-account-shelf__readCover:focus-visible .bbb-account-shelf__readCoverTitle {
   opacity: 1;
   transform: translateY(0);
 }

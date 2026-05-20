@@ -195,12 +195,12 @@
   function renderReadCover(book, index) {
     var cover = book.cover
       ? '<img src="' + esc(book.cover) + '" alt="' + esc(book.title) + '" loading="lazy">'
-      : '<span aria-hidden="true">' + esc((book.title || 'read').charAt(0)) + '</span>';
+      : '<span class="bbb-account-shelf__readCoverPlaceholder" aria-hidden="true">' + esc((book.title || 'read').charAt(0)) + '</span>';
     var offset = Math.max(-3, Math.min(3, index - 2));
 
     return '<button type="button" class="bbb-account-shelf__readCover" style="--i:' + offset + ';" ' + attrs(book) + '>' +
       cover +
-      '<span>' + esc(book.title) + '</span>' +
+      '<span class="bbb-account-shelf__readCoverTitle">' + esc(book.title) + '</span>' +
     '</button>';
   }
 
