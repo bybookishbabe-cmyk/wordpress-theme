@@ -7,6 +7,7 @@
     "shopify:content": "node scripts/shopify-content-export.mjs",
     "shopify:export": "node scripts/shopify-export.mjs",
     "shopify:inspect": "node scripts/shopify-export.mjs --definitions-only",
+    "shopify:products": "node scripts/shopify-products-export.mjs",
     "shopify:library:wxr": "node scripts/shopify-library-to-wxr.mjs",
     "shopify:newsletter:wxr": "node scripts/shopify-library-to-wxr.mjs --only-newsletters",
     "shopify:wxr": "node scripts/shopify-to-wxr.mjs",

@@ -80,3 +80,23 @@ migration/exports/wordpress-library-import-drafts.xml
 ```
 
 Import that XML after the updated theme is installed. It creates draft Books and Quotes from Shopify metaobjects, preserving cover URLs, affiliate links, scores, genres, tropes, and series data.
+
+## Step 7: Export Shopify products for WooCommerce
+
+```bash
+npm run shopify:products
+```
+
+This creates:
+
+```text
+migration/exports/products/shopify-products-full.json
+migration/exports/products/society-products.json
+migration/exports/products/society-products.csv
+migration/exports/products/society-products-free-for-members.json
+migration/exports/products/society-products-free-for-members.csv
+```
+
+Import `society-products.csv` in WordPress under Users > Society Products to create WooCommerce draft products. If you only want the products referenced by `sss_drop` first, import `society-products-free-for-members.csv`.
+
+Shopify product exports usually do not include the actual files managed by a digital downloads app. Before publishing imported products, fill the `download_url` column with the final PDF/ZIP/Canva delivery URL for each product that should be downloadable. Rows with `society_free` set to `yes` are free in cart for paid Society members.
