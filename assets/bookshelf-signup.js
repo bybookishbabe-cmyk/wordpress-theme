@@ -108,12 +108,13 @@
         {
           email: state.email || accountEmail || emailNormalized,
           email_normalized: emailNormalized,
+          wordpress_user_id: getReaderCustomerId() || null,
           shopify_customer_id: getReaderCustomerId() || null,
           customer_email: accountEmail || state.email || emailNormalized,
           account_status: account && account.loggedIn ? "logged_in" : "email_only",
           access_tier: account && account.isSociety ? "society" : "free",
           session_id: getSessionId(),
-          source: account && account.loggedIn ? "shopify_account" : "bookshelf_popup",
+          source: account && account.loggedIn ? "wordpress_account" : "bookshelf_popup",
           last_synced_at: new Date().toISOString(),
           metadata: {
             shelf_count: getShelfItems().length,
@@ -172,6 +173,7 @@
         await supabaseClient.from(SAVED_BOOKS_TABLE).upsert([
           {
           email_normalized: emailNormalized,
+          wordpress_user_id: getReaderCustomerId() || null,
           shopify_customer_id: getReaderCustomerId() || null,
           customer_email: getReaderEmail() || emailNormalized,
           book_key: key,
@@ -184,7 +186,7 @@
           spice_level: Number(book.spice || 0) || null,
           darkness_level: Number(book.darkness || 0) || null,
           tropes: splitTropes(book.tropesDisplay || book.tropes),
-          source: getReaderCustomerId() ? "shopify_account" : "site",
+          source: getReaderCustomerId() ? "wordpress_account" : "site",
           is_active: true,
           removed_at: null
         }
@@ -232,13 +234,14 @@
           var book = shelfMap[key] || {};
           return {
           email_normalized: emailNormalized,
+          wordpress_user_id: getReaderCustomerId() || null,
           shopify_customer_id: getReaderCustomerId() || null,
           customer_email: getReaderEmail() || emailNormalized,
           book_key: key,
           book_handle: book.handle || null,
           book_title: book.title || key,
           status: statuses[key],
-          source: getReaderCustomerId() ? "shopify_account" : "site",
+          source: getReaderCustomerId() ? "wordpress_account" : "site",
           metadata: {}
         };
         })
@@ -250,10 +253,10 @@
 
   function getShelfRedirectUrl(sourcePage){
     var path = String(sourcePage || window.location.pathname || "").toLowerCase();
-    if (path.indexOf("/pages/sss-library-page") === 0) {
-      return "/pages/sss-library-page?shelf=open";
+    if (path.indexOf("/sss-library-page") === 0) {
+      return "/sss-library-page/?shelf=open";
     }
-    return "/pages/library?shelf=open";
+    return "/library/?shelf=open";
   }
 
   function queuePendingSubmission(email){
@@ -317,6 +320,7 @@
           {
             email: pending.email,
             email_normalized: pending.email_normalized,
+            wordpress_user_id: getReaderCustomerId() || null,
             shopify_customer_id: getReaderCustomerId() || null,
             customer_email: getReaderEmail() || pending.email,
             account_status: account && account.loggedIn ? "logged_in" : "email_only",
@@ -339,6 +343,7 @@
             pending.shelf.map(function(book){
               return {
                 email_normalized: pending.email_normalized,
+                wordpress_user_id: getReaderCustomerId() || null,
                 shopify_customer_id: getReaderCustomerId() || null,
                 customer_email: getReaderEmail() || pending.email_normalized,
                 book_key: getBookKey(book),
@@ -382,7 +387,7 @@
     options = options || {};
     var account = getReaderAccount();
     if (account && account.loggedIn && options.manual === true){
-      window.location.href = account.bookshelfUrl || "/pages/my-bookshelf";
+      window.location.href = account.bookshelfUrl || "/my-bookshelf/";
       return;
     }
     var state = getState();

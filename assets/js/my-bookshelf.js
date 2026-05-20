@@ -186,6 +186,30 @@
     return window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   }
 
+  function getAccountApi() {
+    var api = window.BBBReaderAccountApi || {};
+    return api.shelfEndpoint && api.nonce ? api : null;
+  }
+
+  function accountApiRequest(url, method, body) {
+    return window.fetch(url, {
+      method: method || 'GET',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-WP-Nonce': (window.BBBReaderAccountApi && window.BBBReaderAccountApi.nonce) || ''
+      },
+      body: body ? JSON.stringify(body) : undefined
+    }).then(function (response) {
+      return response.json().then(function (payload) {
+        if (!response.ok) {
+          throw payload || new Error('Reader account request failed');
+        }
+        return payload;
+      });
+    });
+  }
+
   function remoteBook(row) {
     return {
       handle: row.book_handle || '',
@@ -210,6 +234,12 @@
     var count = root.querySelector('[data-account-shelf-count]');
     var copyBtn = root.querySelector('[data-account-copy]');
     var emailBtn = root.querySelector('[data-account-email]');
+    var tier = root.querySelector('[data-account-shelf-tier]');
+    var memberBadge = root.querySelector('[data-account-shelf-badge]');
+    var memberBadgeLabel = root.querySelector('[data-account-shelf-badge-label]');
+    var perkTitle = root.querySelector('[data-account-shelf-perk-title]');
+    var perkCopy = root.querySelector('[data-account-shelf-perk-copy]');
+    var perkLink = root.querySelector('[data-account-shelf-perk-link]');
     var isLoggedIn = root.dataset.loggedIn === 'true';
     var customerId = root.dataset.customerId || '';
     var email = normalizeKey(root.dataset.customerEmail);
@@ -221,6 +251,23 @@
       var strong = status.querySelector('strong');
       if (strong) strong.textContent = title;
       if (statusCopy) statusCopy.textContent = copy;
+    }
+
+    function renderTier(accessTier) {
+      var isSociety = accessTier === 'society' || root.dataset.isSociety === 'true';
+      if (memberBadge) memberBadge.classList.toggle('bbb-account-shelf__memberBadge--secret', isSociety);
+      if (memberBadgeLabel) memberBadgeLabel.textContent = isSociety ? 'secret society member' : 'free reader';
+      if (tier) tier.textContent = isSociety ? 'society shelf' : 'free shelf';
+      if (perkTitle) perkTitle.textContent = isSociety ? 'your private reader layer is ready.' : 'save books now. unlock smarter recs later.';
+      if (perkCopy) {
+        perkCopy.textContent = isSociety
+          ? 'Society features can build from here: private notes, richer unlocks, mood shelves, and custom recommendations based on what you save.'
+          : 'Free readers can keep a saved bookshelf. Society readers can become the private layer: richer notes, extra shelves, and future custom recommendation unlocks.';
+      }
+      if (perkLink) {
+        perkLink.href = isSociety ? '/sss-library-page/' : '/smut-sentiment-society/';
+        perkLink.textContent = isSociety ? 'open the society library ->' : 'enter the society ->';
+      }
     }
 
     function render(books) {
@@ -287,13 +334,31 @@
 
     if (!isLoggedIn) return;
 
+    var api = getAccountApi();
+    var localShelf = mergeBooks(getShelf(), [], lookup);
+    if (api) {
+      accountApiRequest(api.shelfEndpoint, 'POST', { items: localShelf }).then(function (payload) {
+        renderTier(payload.accessTier || 'free');
+        var remote = (payload.books || []).map(remoteBook);
+        var merged = mergeBooks(localShelf, remote, lookup);
+        render(merged);
+        setStatus(
+          merged.length ? 'your bookshelf is synced.' : 'your account shelf is ready.',
+          merged.length ? merged.length + (merged.length === 1 ? ' saved book is connected to this account.' : ' saved books are connected to this account.') : 'save a book and it will follow this login.'
+        );
+      }).catch(function (error) {
+        setStatus('local shelf loaded.', 'account sync will retry next time you open this page.');
+        console.log('WordPress account bookshelf sync failed', error);
+      });
+      return;
+    }
+
     var client = makeSupabase();
     if (!client || (!customerId && !email)) {
       setStatus('local shelf loaded.', 'account sync is waiting on the bookshelf connection.');
       return;
     }
 
-    var localShelf = mergeBooks(getShelf(), [], lookup);
     var payload = localShelf.map(function (book) {
       return {
         email_normalized: email || null,

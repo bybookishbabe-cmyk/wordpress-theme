@@ -14,6 +14,7 @@ require_once get_theme_file_path('inc/header-functions.php');
 require_once get_theme_file_path('inc/bbb-helpers.php');
 require_once get_theme_file_path('inc/footer.php');
 require_once get_theme_file_path('inc/customizer/hero-smut-sentiment.php');
+require_once get_theme_file_path('inc/customizer/society-landing.php');
 require_once get_theme_file_path('inc/weekly-obsession-query.php');
 require_once get_theme_file_path('inc/newsletter-issue-cpt.php');
 require_once get_theme_file_path('inc/acf-society-hero-options.php');
@@ -37,6 +38,7 @@ require_once get_theme_file_path('inc/taxonomy-sss-trope.php');
 require_once get_theme_file_path('inc/taxonomy-sss-shelf.php');
 require_once get_theme_file_path('inc/taxonomies-extra.php');
 require_once get_theme_file_path('inc/redirects.php');
+require_once get_theme_file_path('inc/reader-account.php');
 require_once get_theme_file_path('inc/api/books-endpoint.php');
 require_once get_theme_file_path('inc/api/shelf-endpoint.php');
 require_once get_theme_file_path('inc/enqueue-weekly-obsession.php');
@@ -306,6 +308,11 @@ add_action(
 				),
 				'bbbData'                   => array(
 					'nonce' => wp_create_nonce('bbb_ajax'),
+				),
+				'readerAccount'             => array(
+					'endpoint'      => rest_url('bbb/v1/reader-account'),
+					'shelfEndpoint' => rest_url('bbb/v1/reader-account/shelf'),
+					'nonce'         => wp_create_nonce('wp_rest'),
 				),
 			)
 		);

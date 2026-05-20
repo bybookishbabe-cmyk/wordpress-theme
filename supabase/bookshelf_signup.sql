@@ -15,6 +15,7 @@ create index if not exists bookshelf_subscribers_email_normalized_idx
   on public.bookshelf_subscribers (email_normalized);
 
 alter table public.bookshelf_subscribers
+  add column if not exists wordpress_user_id text,
   add column if not exists shopify_customer_id text,
   add column if not exists customer_email text,
   add column if not exists account_status text not null default 'email_only'
@@ -32,6 +33,9 @@ alter table public.bookshelf_subscribers
 
 create index if not exists bookshelf_subscribers_shopify_customer_idx
   on public.bookshelf_subscribers (shopify_customer_id);
+
+create index if not exists bookshelf_subscribers_wordpress_user_idx
+  on public.bookshelf_subscribers (wordpress_user_id);
 
 alter table public.bookshelf_subscribers enable row level security;
 
@@ -68,6 +72,7 @@ create table if not exists public.bookshelf_saved_books (
 );
 
 alter table public.bookshelf_saved_books
+  add column if not exists wordpress_user_id text,
   add column if not exists shopify_customer_id text,
   add column if not exists customer_email text,
   add column if not exists saved_at timestamptz not null default now(),
@@ -89,6 +94,9 @@ create index if not exists bookshelf_saved_books_email_active_idx
 
 create index if not exists bookshelf_saved_books_customer_active_idx
   on public.bookshelf_saved_books (shopify_customer_id, is_active, saved_at desc);
+
+create index if not exists bookshelf_saved_books_wordpress_active_idx
+  on public.bookshelf_saved_books (wordpress_user_id, is_active, saved_at desc);
 
 alter table public.bookshelf_saved_books enable row level security;
 
@@ -132,6 +140,7 @@ create index if not exists bookshelf_book_statuses_email_status_idx
 alter table public.bookshelf_book_statuses enable row level security;
 
 alter table public.bookshelf_book_statuses
+  add column if not exists wordpress_user_id text,
   add column if not exists shopify_customer_id text,
   add column if not exists customer_email text;
 

@@ -9,4 +9,5 @@
   window.quickOrderListStrings = window.BBBSiteData.quickOrderListStrings || {};
   window.accessibilityStrings = window.BBBSiteData.accessibilityStrings || {};
   window.bbbData = window.BBBSiteData.bbbData || {};
+  window.BBBReaderAccountApi = window.BBBSiteData.readerAccount || {};
 })();
