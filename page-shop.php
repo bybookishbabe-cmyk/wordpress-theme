@@ -11,12 +11,8 @@ wp_enqueue_style('bbb-shop-page', get_template_directory_uri() . '/assets/css/sh
 
 get_header();
 
-$request_host     = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
-$is_local_preview = str_ends_with($request_host, '.local')
-	|| str_starts_with($request_host, '127.0.0.1')
-	|| str_starts_with($request_host, 'localhost');
 $is_admin_preview = current_user_can('edit_posts');
-$post_status      = ($is_admin_preview || $is_local_preview) ? array('publish', 'draft', 'private') : array('publish');
+$post_status      = array('publish');
 $downloads_query  = new WP_Query(
 	array(
 		'post_type'      => post_type_exists('download') ? 'download' : 'product',
@@ -158,12 +154,6 @@ $sections = array(
 			<p>Import the digital products, then publish the downloads you want shown here.</p>
 		</section>
 	<?php else : ?>
-		<?php if ($is_local_preview && !$is_admin_preview) : ?>
-			<section class="bbb-shop__notice">
-				<p>local setup preview</p>
-				<span>Showing draft downloads so you can review the shop before publishing products.</span>
-			</section>
-		<?php endif; ?>
 		<div id="shop-all"></div>
 		<?php foreach ($sections as $kind => $section) : ?>
 			<?php if (empty($groups[$kind])) : ?>
@@ -212,9 +202,7 @@ $sections = array(
 									<span><?php echo esc_html($file_count ? $file_count . ' file' . (1 === $file_count ? '' : 's') : 'file pending'); ?></span>
 								</div>
 								<div class="bbb-shop-card__actions">
-									<?php if ('publish' !== get_post_status($download) && !$is_admin_preview) : ?>
-										<a class="bbb-shop-card__button bbb-shop-card__button--ghost" href="<?php echo esc_url(get_permalink($download)); ?>">preview item</a>
-									<?php elseif ($missing_files) : ?>
+									<?php if ($missing_files && $is_admin_preview) : ?>
 										<a class="bbb-shop-card__button bbb-shop-card__button--ghost" href="<?php echo esc_url(get_edit_post_link($post_id)); ?>">finish setup</a>
 									<?php elseif (function_exists('edd_get_purchase_link')) : ?>
 										<?php

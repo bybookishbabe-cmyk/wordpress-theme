@@ -105,6 +105,30 @@ function bbb_society_product_importer_image_url(array $product): string {
 	return '';
 }
 
+function bbb_society_product_importer_media_urls(array $product): array {
+	$urls = array();
+	$raw  = $product['media_urls'] ?? $product['mediaUrls'] ?? array();
+
+	if (is_string($raw) && '' !== trim($raw)) {
+		$decoded = json_decode($raw, true);
+		$raw     = is_array($decoded) ? $decoded : preg_split('/[|,]/', $raw);
+	}
+
+	foreach ((array) $raw as $url) {
+		$url = esc_url_raw((string) $url);
+		if ('' !== $url) {
+			$urls[] = $url;
+		}
+	}
+
+	$image_url = bbb_society_product_importer_image_url($product);
+	if ('' !== $image_url && !in_array($image_url, $urls, true)) {
+		array_unshift($urls, $image_url);
+	}
+
+	return array_values(array_unique($urls));
+}
+
 function bbb_society_product_importer_download_url(array $product): string {
 	foreach (array('download_url', 'downloadUrl', 'file_url', 'fileUrl', 'digital_file', 'digitalFile') as $key) {
 		if (!empty($product[$key]) && is_scalar($product[$key])) {
@@ -300,6 +324,7 @@ function bbb_society_product_importer_normalize_row(array $row, bool $default_fr
 		'description'  => (string) ($row['body_html'] ?? $row['descriptionHtml'] ?? $row['description'] ?? ''),
 		'price'        => bbb_society_product_importer_price($row),
 		'image_url'    => bbb_society_product_importer_image_url($row),
+		'media_urls'   => bbb_society_product_importer_media_urls($row),
 		'download_url' => bbb_society_product_importer_download_url($row),
 		'download_files' => $download_files,
 		'society_free' => $is_digital && (isset($row['society_free']) ? bbb_society_product_importer_truthy($row['society_free']) : $default_free),
@@ -440,6 +465,10 @@ function bbb_society_product_importer_upsert_product(array $product) {
 
 	if ('' !== $image_url) {
 		update_post_meta($post_id, '_bbb_source_image_url', $image_url);
+	}
+
+	if (!empty($product['media_urls'])) {
+		update_post_meta($post_id, '_bbb_product_media_urls', array_values(array_filter((array) $product['media_urls'])));
 	}
 
 	if (!empty($product['categories'])) {

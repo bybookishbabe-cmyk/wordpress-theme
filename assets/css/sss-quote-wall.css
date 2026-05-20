@@ -92,11 +92,12 @@
   position: relative;
   width: min(760px, 94%);
   margin: 0;
-  padding: 18px 18px 14px;
+  padding: 22px 22px 16px;
   border: 2px solid rgba(23, 20, 20, .7);
-  border-radius: 18px;
+  border-radius: 4px;
   color: #171414;
   background:
+    linear-gradient(90deg, rgba(255, 255, 255, .38), transparent 12%, transparent 88%, rgba(80, 55, 40, .08)),
     radial-gradient(420px 220px at 20% 10%, rgba(90, 70, 55, .14), transparent 60%),
     radial-gradient(460px 240px at 75% 35%, rgba(90, 70, 55, .1), transparent 62%),
     repeating-linear-gradient(to bottom, rgba(0, 0, 0, .045), rgba(0, 0, 0, .045) 1px, transparent 1px, transparent 30px),
@@ -132,6 +133,7 @@
 
 .bbb-quote-card--rose {
   background:
+    linear-gradient(90deg, rgba(255, 255, 255, .38), transparent 12%, transparent 88%, rgba(80, 55, 40, .08)),
     radial-gradient(420px 220px at 20% 10%, rgba(90, 70, 55, .12), transparent 60%),
     repeating-linear-gradient(to bottom, rgba(0, 0, 0, .04), rgba(0, 0, 0, .04) 1px, transparent 1px, transparent 30px),
     #ffe4f1;
@@ -139,6 +141,7 @@
 
 .bbb-quote-card--gold {
   background:
+    linear-gradient(90deg, rgba(255, 255, 255, .38), transparent 12%, transparent 88%, rgba(80, 55, 40, .08)),
     radial-gradient(420px 220px at 20% 10%, rgba(90, 70, 55, .12), transparent 60%),
     repeating-linear-gradient(to bottom, rgba(0, 0, 0, .04), rgba(0, 0, 0, .04) 1px, transparent 1px, transparent 30px),
     #fff0bd;
@@ -146,6 +149,7 @@
 
 .bbb-quote-card--gray {
   background:
+    linear-gradient(90deg, rgba(255, 255, 255, .38), transparent 12%, transparent 88%, rgba(80, 55, 40, .08)),
     radial-gradient(420px 220px at 20% 10%, rgba(90, 70, 55, .12), transparent 60%),
     repeating-linear-gradient(to bottom, rgba(0, 0, 0, .04), rgba(0, 0, 0, .04) 1px, transparent 1px, transparent 30px),
     #e8e2dc;
@@ -164,11 +168,21 @@
 
 .bbb-quote-card blockquote {
   margin: 0;
-  padding-right: 18px;
+  padding: 6px 20px 6px 2px;
   color: #151212;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 15px;
-  line-height: 1.65;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: clamp(17px, 2vw, 24px);
+  font-style: italic;
+  line-height: 1.72;
+}
+
+.bbb-quote-card blockquote span {
+  padding: 0 .08em .03em;
+  background:
+    linear-gradient(to top, rgba(255, 241, 112, .64) 0 48%, transparent 48%),
+    linear-gradient(to right, rgba(255, 241, 112, .24), rgba(255, 138, 199, .22));
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 .bbb-quote-card footer {
@@ -181,10 +195,29 @@
   line-height: 1.4;
 }
 
-.bbb-quote-card footer a {
+.bbb-quote-card footer a,
+.bbb-quote-card__book {
+  width: fit-content;
+  margin: 0;
+  padding: 0;
+  border: 0;
   color: #171414;
+  background: transparent;
+  font: inherit;
   font-weight: 700;
   text-decoration: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.bbb-quote-card footer a:hover,
+.bbb-quote-card footer a:focus-visible,
+.bbb-quote-card__book:hover,
+.bbb-quote-card__book:focus-visible {
+  color: #7d3156;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
 
 .bbb-quote-card footer span {

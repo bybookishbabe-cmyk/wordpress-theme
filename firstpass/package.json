@@ -9,6 +9,8 @@
     "shopify:inspect": "node scripts/shopify-export.mjs --definitions-only",
     "shopify:products": "node scripts/shopify-products-export.mjs",
     "shopify:products:localize-downloads": "node scripts/localize-shopify-downloads.mjs",
+    "shopify:products:localize-media": "node scripts/localize-shopify-product-media.mjs",
+    "shopify:products:sync-media-db": "node scripts/sync-localized-product-media-to-db.mjs",
     "shopify:library:wxr": "node scripts/shopify-library-to-wxr.mjs",
     "shopify:newsletter:wxr": "node scripts/shopify-library-to-wxr.mjs --only-newsletters",
     "shopify:wxr": "node scripts/shopify-to-wxr.mjs",

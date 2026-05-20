@@ -84,17 +84,60 @@ if (!function_exists('bbb_quote_wall_book')) {
 if (!function_exists('bbb_quote_wall_book_meta')) {
 	function bbb_quote_wall_book_meta(?WP_Post $book): array {
 		if (!$book instanceof WP_Post) {
-			return array('title' => '', 'author' => '', 'handle' => '', 'shelf' => '', 'url' => home_url('/library/'));
+			return array('title' => '', 'author' => '', 'handle' => '', 'shelf' => '', 'url' => home_url('/library/'), 'modal' => array());
 		}
 
 		if (function_exists('sss_book_data')) {
-			$data = sss_book_data($book);
+			$data          = sss_book_data($book);
+			$trope_names   = array_column((array) ($data['tropes'] ?? array()), 'name');
+			$trope_display = array_map(
+				static fn(array $trope): string => trim(((string) ($trope['emoji'] ?? '') ? (string) $trope['emoji'] . ' ' : '') . (string) ($trope['name'] ?? '')),
+				(array) ($data['tropes'] ?? array())
+			);
+			$trope_urls    = array_map(
+				static function (array $trope): string {
+					$handle = sanitize_title((string) (($trope['handle'] ?? '') ?: ($trope['name'] ?? '')));
+
+					return home_url('/' . $handle . '-books/');
+				},
+				(array) ($data['tropes'] ?? array())
+			);
+
 			return array(
 				'title'  => (string) ($data['title'] ?? get_the_title($book)),
 				'author' => (string) ($data['author'] ?? ''),
 				'handle' => (string) ($data['handle'] ?? $book->post_name),
 				'shelf'  => (string) ($data['shelf'] ?? ''),
 				'url'    => home_url('/library/?book=' . rawurlencode((string) ($data['handle'] ?? $book->post_name))),
+				'modal'  => array(
+					'handle'         => (string) ($data['handle'] ?? $book->post_name),
+					'title'          => (string) ($data['title'] ?? get_the_title($book)),
+					'author'         => (string) ($data['author'] ?? ''),
+					'cover'          => (string) ($data['cover'] ?? ''),
+					'amazon'         => (string) ($data['amazon'] ?? ''),
+					'bookshop'       => (string) ($data['bookshop'] ?? ''),
+					'shelf'          => (string) ($data['shelf'] ?? ''),
+					'private-shelf'  => !empty($data['is_private']) ? 'true' : 'false',
+					'spice'          => (string) ($data['spice'] ?? ''),
+					'tropes'         => implode(', ', $trope_names),
+					'tropes-display' => implode(', ', $trope_display),
+					'trope-urls'     => implode(', ', $trope_urls),
+					'why'            => (string) ($data['why'] ?? ''),
+					'newsletter'     => (string) ($data['newsletter'] ?? ''),
+					'mini'           => (string) ($data['mini'] ?? ''),
+					'series'         => (string) ($data['series_handle'] ?? ''),
+					'series-name'    => (string) ($data['series_name'] ?? ''),
+					'series-number'  => (string) ($data['series_number'] ?? ''),
+					'tension'        => (string) ($data['tension'] ?? ''),
+					'damage'         => (string) ($data['damage'] ?? ''),
+					'yearning'       => (string) ($data['yearning'] ?? ''),
+					'boyfriend'      => (string) ($data['boyfriend'] ?? ''),
+					'boyfriend-name' => (string) ($data['boyfriend_name'] ?? ''),
+					'reread'         => !empty($data['reread']) ? 'true' : 'false',
+					'standalone'     => !empty($data['standalone']) ? 'true' : 'false',
+					'ku'             => !empty($data['ku']) ? 'true' : 'false',
+					'darkness'       => (string) ($data['darkness'] ?? ''),
+				),
 			);
 		}
 
@@ -104,6 +147,7 @@ if (!function_exists('bbb_quote_wall_book_meta')) {
 			'handle' => $book->post_name,
 			'shelf'  => '',
 			'url'    => home_url('/library/?book=' . rawurlencode($book->post_name)),
+			'modal'  => array(),
 		);
 	}
 }
@@ -148,7 +192,7 @@ $join_url = get_option('bbb_society_gate_member_url', 'https://thesmutandsentime
 get_header();
 ?>
 
-<main class="bbb-quote-wall<?php echo $is_society ? ' is-unlocked' : ' is-preview'; ?>">
+<main class="bbb-quote-wall<?php echo $is_society ? ' is-unlocked' : ' is-preview'; ?>" data-sss-lib="<?php echo esc_attr($is_society ? 'society' : 'public'); ?>">
 	<section class="bbb-quote-wall__hero">
 		<div class="bbb-quote-wall__heroInner">
 			<p class="bbb-quote-wall__kicker">quote library</p>
@@ -199,10 +243,20 @@ get_header();
 			?>
 			<article class="bbb-quote-card bbb-quote-card--<?php echo esc_attr($theme); ?> <?php echo 0 === ((int) $index % 2) ? 'is-left' : 'is-right'; ?>" data-qw-item style="--d: <?php echo esc_attr((string) (((int) $index % 8) * 45)); ?>ms;">
 				<div class="bbb-quote-card__pin" aria-hidden="true"></div>
-				<blockquote><?php echo esc_html($text); ?></blockquote>
+				<blockquote><span><?php echo esc_html('"' . $text . '"'); ?></span></blockquote>
 				<footer>
 					<?php if ('' !== $book_meta['title']) : ?>
-						<a href="<?php echo esc_url((string) $book_meta['url']); ?>"><?php echo esc_html((string) $book_meta['title']); ?></a>
+						<?php if (!empty($book_meta['modal'])) : ?>
+							<button
+								type="button"
+								class="bbb-quote-card__book"
+								<?php foreach ((array) $book_meta['modal'] as $attr => $value) : ?>
+									data-<?php echo esc_attr((string) $attr); ?>="<?php echo esc_attr((string) $value); ?>"
+								<?php endforeach; ?>
+							><?php echo esc_html((string) $book_meta['title']); ?></button>
+						<?php else : ?>
+							<a href="<?php echo esc_url((string) $book_meta['url']); ?>"><?php echo esc_html((string) $book_meta['title']); ?></a>
+						<?php endif; ?>
 						<?php if ('' !== $book_meta['author']) : ?>
 							<span>by <?php echo esc_html((string) $book_meta['author']); ?></span>
 						<?php endif; ?>
@@ -221,6 +275,8 @@ get_header();
 			<a href="<?php echo esc_url($join_url); ?>">join the society</a>
 		</section>
 	<?php endif; ?>
+
+	<?php get_template_part('template-parts/library/library-modal'); ?>
 </main>
 
 <script>

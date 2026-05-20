@@ -2292,6 +2292,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
   init();
   initMadeForYou();
+  initArchiveFilters();
   syncBookStatusUI();
   loadTrending();
   openSharedBookFromUrl(0);
@@ -2315,6 +2316,7 @@ document.addEventListener("DOMContentLoaded", function(){
 document.addEventListener('shopify:section:load', function(){
   init();
   initMadeForYou();
+  initArchiveFilters();
   syncBookStatusUI();
   loadTrending();
   openSharedBookFromUrl(0);
@@ -2330,6 +2332,7 @@ document.addEventListener('sss:bookshelf-updated', function(){
 
 var rankInputs = document.querySelectorAll('[data-rank]');
 var archiveTropeSelect = document.getElementById('sssArchiveTropeFilter');
+var searchInput = document.getElementById('sssSearchInput');
 
 function bindArchiveSliderTouchLock(){
   if (!rankInputs.length) return;
@@ -2362,6 +2365,8 @@ function bindArchiveSliderTouchLock(){
   }
 
   rankInputs.forEach(function(input){
+    if (input.__sssTouchLockBound) return;
+    input.__sssTouchLockBound = true;
     input.addEventListener('pointerdown', lockPageScroll);
     input.addEventListener('pointerup', unlockPageScroll);
     input.addEventListener('pointercancel', unlockPageScroll);
@@ -2535,21 +2540,29 @@ if (searchQuery){
 
 }
 
-rankInputs.forEach(function(input){
-  input.addEventListener('input', function(){
-    hasInteracted = true;
-    updateRanking();
+function bindArchiveRankInputs(){
+  rankInputs.forEach(function(input){
+    if (input.__sssRankBound) return;
+    input.__sssRankBound = true;
+    input.addEventListener('input', function(){
+      hasInteracted = true;
+      updateRanking();
+    });
   });
-});
+}
+
+bindArchiveRankInputs();
 /* ======================
    YEARNING TOGGLE
 ====================== */
 
 var yearningButtons = document.querySelectorAll('.sss-lib__yearningToggle [data-yearning]');
 
-yearningButtons.forEach(function(btn){
-
-  btn.addEventListener('click', function(){
+function bindArchiveYearningButtons(){
+  yearningButtons.forEach(function(btn){
+    if (btn.__sssYearningBound) return;
+    btn.__sssYearningBound = true;
+    btn.addEventListener('click', function(){
 
     // remove active from all
     yearningButtons.forEach(function(b){
@@ -2564,13 +2577,18 @@ yearningButtons.forEach(function(btn){
     updateRanking(); // trigger filter
   });
 
-});
+  });
+}
+
+bindArchiveYearningButtons();
 
 var kuButtons = document.querySelectorAll('[data-ku-filter]');
 
-kuButtons.forEach(function(btn){
-
-  btn.addEventListener('click', function(){
+function bindArchiveKuButtons(){
+  kuButtons.forEach(function(btn){
+    if (btn.__sssKuBound) return;
+    btn.__sssKuBound = true;
+    btn.addEventListener('click', function(){
 
     kuButtons.forEach(function(b){
       b.classList.remove('active');
@@ -2582,7 +2600,10 @@ kuButtons.forEach(function(btn){
     updateRanking();
   });
 
-});
+  });
+}
+
+bindArchiveKuButtons();
 /* ======================
    FLOATING SHARE BUTTON
 ====================== */
@@ -2823,20 +2844,39 @@ if(popupTimer){
    SEARCH FILTER
 ====================== */
 
-var searchInput = document.getElementById('sssSearchInput');
+function bindArchiveSearchFilters(){
+  if (searchInput && !searchInput.__sssArchiveSearchBound){
+    searchInput.__sssArchiveSearchBound = true;
+    searchInput.addEventListener('input', function(){
+      hasInteracted = true;
+      updateRanking();
+    });
+  }
 
-if (searchInput){
-  searchInput.addEventListener('input', function(){
-    hasInteracted = true;
-    updateRanking();
-  });
+  if (archiveTropeSelect && !archiveTropeSelect.__sssArchiveTropeBound){
+    archiveTropeSelect.__sssArchiveTropeBound = true;
+    archiveTropeSelect.addEventListener('change', function(){
+      hasInteracted = true;
+      updateRanking();
+    });
+  }
 }
 
-if (archiveTropeSelect){
-  archiveTropeSelect.addEventListener('change', function(){
-    hasInteracted = true;
-    updateRanking();
-  });
+bindArchiveSearchFilters();
+
+function initArchiveFilters(){
+  rankInputs = document.querySelectorAll('[data-rank]');
+  archiveTropeSelect = document.getElementById('sssArchiveTropeFilter');
+  searchInput = document.getElementById('sssSearchInput');
+  yearningButtons = document.querySelectorAll('.sss-lib__yearningToggle [data-yearning]');
+  kuButtons = document.querySelectorAll('[data-ku-filter]');
+
+  bindArchiveSliderTouchLock();
+  bindArchiveRankInputs();
+  bindArchiveYearningButtons();
+  bindArchiveKuButtons();
+  bindArchiveSearchFilters();
+  updateRanking();
 }
 
 /* ======================

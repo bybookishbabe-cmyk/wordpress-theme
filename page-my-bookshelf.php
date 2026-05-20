@@ -16,6 +16,67 @@ $is_society = function_exists('bbb_reader_is_society') ? bbb_reader_is_society()
 $account    = wp_get_current_user();
 $books      = function_exists('bbb_reader_quiz_books') ? bbb_reader_quiz_books() : array();
 
+if (!function_exists('bbb_my_bookshelf_quote_text')) {
+	function bbb_my_bookshelf_quote_text(WP_Post $quote): string {
+		$text = trim((string) get_post_meta($quote->ID, '_quote_text', true));
+		$text = '' !== $text ? $text : trim((string) get_post_meta($quote->ID, 'quote_text', true));
+		$text = '' !== $text ? $text : trim((string) get_post_meta($quote->ID, 'quote', true));
+		$text = '' !== $text ? $text : trim((string) get_post_meta($quote->ID, '_bbb_quote', true));
+		$text = '' !== $text ? $text : trim(wp_strip_all_tags($quote->post_content));
+
+		return wp_strip_all_tags($text);
+	}
+}
+
+if (!function_exists('bbb_my_bookshelf_quote_entries')) {
+	function bbb_my_bookshelf_quote_entries(int $limit = 16): array {
+		$entries          = array();
+		$quote_post_types = function_exists('bbb_quote_post_types') ? bbb_quote_post_types() : array();
+		$quotes           = $quote_post_types
+			? get_posts(
+				array(
+					'post_type'      => $quote_post_types,
+					'post_status'    => 'publish',
+					'posts_per_page' => $limit,
+					'orderby'        => 'date',
+					'order'          => 'DESC',
+				)
+			)
+			: array();
+
+		foreach ($quotes as $quote) {
+			if (!$quote instanceof WP_Post) {
+				continue;
+			}
+
+			$text = bbb_my_bookshelf_quote_text($quote);
+			if ('' === $text) {
+				continue;
+			}
+
+			$book_title  = (string) get_post_meta($quote->ID, '_quote_book_title', true);
+			$book_title  = '' !== $book_title ? $book_title : (string) get_post_meta($quote->ID, 'book_title', true);
+			$book_handle = (string) get_post_meta($quote->ID, '_quote_book_handle', true);
+			$book_handle = '' !== $book_handle ? $book_handle : (string) get_post_meta($quote->ID, 'book_handle', true);
+			$book_handle = '' !== $book_handle ? $book_handle : (string) get_post_meta($quote->ID, '_bbb_book_handle', true);
+
+			$entries[] = array(
+				'text'        => $text,
+				'book_title'  => $book_title,
+				'book_handle' => $book_handle,
+			);
+		}
+
+		if (!$entries && function_exists('bbb_quote_export_entries')) {
+			$entries = bbb_quote_export_entries($limit);
+		}
+
+		return array_slice($entries, 0, $limit);
+	}
+}
+
+$quotes = bbb_my_bookshelf_quote_entries();
+
 get_header();
 ?>
 
@@ -63,6 +124,23 @@ get_header();
 				</div>
 			</div>
 
+			<div class="bbb-account-shelf__feature" data-account-read-feature hidden>
+				<div class="bbb-account-shelf__readShelf">
+					<div class="bbb-account-shelf__featureHead">
+						<p class="bbb-account-shelf__featureKicker">marked as read</p>
+						<h2>your finished shelf</h2>
+						<p data-account-read-copy>covers you have marked as read will stack here, face-out like a private trophy shelf.</p>
+					</div>
+					<div class="bbb-account-shelf__rail" aria-hidden="true"></div>
+					<div class="bbb-account-shelf__coverStage" data-account-read-covers></div>
+				</div>
+				<a class="bbb-account-shelf__quoteCard" href="<?php echo esc_url(home_url('/sss-quote-wall/')); ?>" data-account-quote-card>
+					<p class="bbb-account-shelf__featureKicker">pulled from the quote wall</p>
+					<blockquote data-account-quote-text>mark a few books as read and a related quote can find you here.</blockquote>
+					<span data-account-quote-source>visit the quote wall →</span>
+				</a>
+			</div>
+
 			<div class="bbb-account-shelf__grid" data-account-shelf-grid></div>
 
 			<div class="bbb-account-shelf__empty" data-account-shelf-empty hidden>
@@ -73,6 +151,7 @@ get_header();
 			</div>
 
 			<script type="application/json" data-account-library-books><?php echo wp_json_encode($books, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?></script>
+			<script type="application/json" data-account-library-quotes><?php echo wp_json_encode($quotes, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?></script>
 		</div>
 	</section>
 </main>

@@ -51,6 +51,28 @@
     }
   }
 
+  function parseQuoteData() {
+    var source = document.querySelector('[data-account-library-quotes]');
+    if (!source) return [];
+    try {
+      return JSON.parse(source.textContent || '[]') || [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function getBookStatuses() {
+    try {
+      return JSON.parse(window.localStorage.getItem('sssBookStatuses') || '{}') || {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function getBookStatusKey(book) {
+    return normalizeKey(book && (book.handle || book.bookHandle || book.book_handle || book.title || book.bookTitle || book.book_title));
+  }
+
   function buildLookup(books) {
     var lookup = {};
     books.forEach(function (book) {
@@ -170,6 +192,18 @@
     '</button>';
   }
 
+  function renderReadCover(book, index) {
+    var cover = book.cover
+      ? '<img src="' + esc(book.cover) + '" alt="' + esc(book.title) + '" loading="lazy">'
+      : '<span aria-hidden="true">' + esc((book.title || 'read').charAt(0)) + '</span>';
+    var offset = Math.max(-3, Math.min(3, index - 2));
+
+    return '<button type="button" class="bbb-account-shelf__readCover" style="--i:' + offset + ';" ' + attrs(book) + '>' +
+      cover +
+      '<span>' + esc(book.title) + '</span>' +
+    '</button>';
+  }
+
   function listText(books) {
     if (!books.length) return '';
     return 'my society reading list\n\n' + books.map(function (book, index) {
@@ -234,16 +268,20 @@
     var count = root.querySelector('[data-account-shelf-count]');
     var copyBtn = root.querySelector('[data-account-copy]');
     var emailBtn = root.querySelector('[data-account-email]');
-    var tier = root.querySelector('[data-account-shelf-tier]');
+    var readFeature = root.querySelector('[data-account-read-feature]');
+    var readCovers = root.querySelector('[data-account-read-covers]');
+    var readCopy = root.querySelector('[data-account-read-copy]');
+    var quoteCard = root.querySelector('[data-account-quote-card]');
+    var quoteText = root.querySelector('[data-account-quote-text]');
+    var quoteSource = root.querySelector('[data-account-quote-source]');
     var memberBadge = root.querySelector('[data-account-shelf-badge]');
     var memberBadgeLabel = root.querySelector('[data-account-shelf-badge-label]');
-    var perkTitle = root.querySelector('[data-account-shelf-perk-title]');
-    var perkCopy = root.querySelector('[data-account-shelf-perk-copy]');
-    var perkLink = root.querySelector('[data-account-shelf-perk-link]');
     var isLoggedIn = root.dataset.loggedIn === 'true';
     var customerId = root.dataset.customerId || '';
     var email = normalizeKey(root.dataset.customerEmail);
-    var lookup = buildLookup(parseBookData());
+    var libraryBooks = parseBookData();
+    var lookup = buildLookup(libraryBooks);
+    var quotes = parseQuoteData();
     var current = [];
 
     function setStatus(title, copy) {
@@ -257,21 +295,75 @@
       var isSociety = accessTier === 'society' || root.dataset.isSociety === 'true';
       if (memberBadge) memberBadge.classList.toggle('bbb-account-shelf__memberBadge--secret', isSociety);
       if (memberBadgeLabel) memberBadgeLabel.textContent = isSociety ? 'secret society member' : 'free reader';
-      if (tier) tier.textContent = isSociety ? 'society shelf' : 'free shelf';
-      if (perkTitle) perkTitle.textContent = isSociety ? 'your private reader layer is ready.' : 'save books now. unlock smarter recs later.';
-      if (perkCopy) {
-        perkCopy.textContent = isSociety
-          ? 'Society features can build from here: private notes, richer unlocks, mood shelves, and custom recommendations based on what you save.'
-          : 'Free readers can keep a saved bookshelf. Society readers can become the private layer: richer notes, extra shelves, and future custom recommendation unlocks.';
+    }
+
+    function relatedQuote(readBooks) {
+      var readKeys = {};
+      readBooks.forEach(function (book) {
+        var handle = normalizeKey(book.handle);
+        var title = normalizeKey(book.title);
+        if (handle) readKeys[handle] = true;
+        if (title) readKeys[title] = true;
+      });
+
+      return quotes.find(function (quote) {
+        return readKeys[normalizeKey(quote.book_handle)] || readKeys[normalizeKey(quote.book_title)];
+      }) || quotes[0] || null;
+    }
+
+    function readBooksFromStatuses(books) {
+      var statuses = getBookStatuses();
+      var keyedBooks = {};
+
+      libraryBooks.concat(books).map(function (book) {
+        return normalizeBook(book, lookup);
+      }).filter(Boolean).forEach(function (book) {
+        var key = getBookStatusKey(book);
+        if (key && !keyedBooks[key]) keyedBooks[key] = book;
+      });
+
+      return Object.keys(statuses).filter(function (key) {
+        return statuses[key] === 'read';
+      }).map(function (key) {
+        return keyedBooks[key] || lookup[key] || null;
+      }).filter(function (book) {
+        return book && book.title;
+      }).slice(0, 7);
+    }
+
+    function renderReadFeature(books) {
+      if (!readFeature || !readCovers) return;
+
+      var readBooks = readBooksFromStatuses(books);
+      var quote = relatedQuote(readBooks);
+      var displayBooks = readBooks.length ? readBooks : books.slice(0, 5);
+
+      readFeature.hidden = false;
+      readFeature.classList.toggle('is-empty', !readBooks.length);
+      readCovers.innerHTML = displayBooks.length
+        ? displayBooks.map(renderReadCover).join('')
+        : '<div class="bbb-account-shelf__readPlaceholder"><span></span><span></span><span></span></div>';
+
+      if (readCopy) {
+        readCopy.textContent = readBooks.length
+          ? readBooks.length + (readBooks.length === 1 ? ' finished book is' : ' finished books are') + ' sitting face-out on your shelf.'
+          : 'tag a saved book as read from its book details and this becomes your finished shelf.';
       }
-      if (perkLink) {
-        perkLink.href = isSociety ? '/sss-library-page/' : '/smut-sentiment-society/';
-        perkLink.textContent = isSociety ? 'open the society library ->' : 'enter the society ->';
+
+      if (quoteText && quote) {
+        quoteText.textContent = '"' + String(quote.text || '').replace(/^"+|"+$/g, '') + '"';
+      }
+
+      if (quoteSource) {
+        quoteSource.textContent = quote && (quote.book_title || quote.book_handle)
+          ? 'from ' + (quote.book_title || quote.book_handle) + ' → quote wall'
+          : 'visit the quote wall →';
       }
     }
 
     function render(books) {
       current = books;
+      renderReadFeature(books);
       if (!grid || !empty) return;
       if (!books.length) {
         grid.innerHTML = '';
@@ -328,6 +420,14 @@
       var output = listText(current);
       if (!output) return;
       window.location.href = 'mailto:?subject=' + encodeURIComponent('My Society Reading List') + '&body=' + encodeURIComponent(output);
+    });
+
+    document.addEventListener('bbb:book-status-changed', function () {
+      render(current);
+    });
+
+    document.addEventListener('bbb:book-statuses-updated', function () {
+      render(current);
     });
 
     renderLocal();
