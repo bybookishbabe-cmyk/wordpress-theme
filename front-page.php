@@ -20,6 +20,7 @@ get_header();
 	get_template_part('template-parts/sections/section-society-hero');
 	get_template_part('template-parts/home/quiz-nudge');
 	get_template_part('template-parts/home/threads');
+	bbb_render_section('homepage-book-boyfriends');
 	get_template_part('template-parts/home/connect-cards');
 	?>
 </div>
