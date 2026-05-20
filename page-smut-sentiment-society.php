@@ -64,6 +64,7 @@ $sections = array(
 			array('title' => 'about', 'copy' => 'what the society is, who it is for, and how the newsletter fits in.', 'url' => bbb_page_url('about-the-society'), 'badge' => 'start', 'emoji' => '💌'),
 			array('title' => 'recent', 'copy' => 'the latest newsletter issues and current dispatches.', 'url' => bbb_page_url('society-newsletter-recent'), 'badge' => 'latest', 'emoji' => '🗞️'),
 			array('title' => 'full archive', 'copy' => 'the complete newsletter shelf, wired to the imported issues.', 'url' => bbb_page_url('society-newsletter-archive'), 'badge' => 'archive', 'emoji' => '🗂️'),
+			array('title' => 'society submissions', 'copy' => 'send in your hot takes, quotes, recs, and reader-core thoughts for the newsletter.', 'url' => bbb_page_url('society-submissions'), 'badge' => 'submit', 'emoji' => '✍️'),
 		),
 	),
 	array(
