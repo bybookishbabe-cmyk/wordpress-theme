@@ -7,6 +7,156 @@
 
 declare(strict_types=1);
 
+if (!function_exists('bbb_society_landing_field_map')) {
+	function bbb_society_landing_field_map(array $entry): array {
+		$fields = array();
+		foreach ((array) ($entry['fields'] ?? array()) as $field) {
+			if (is_array($field) && !empty($field['key'])) {
+				$fields[(string) $field['key']] = $field;
+			}
+		}
+
+		return $fields;
+	}
+}
+
+if (!function_exists('bbb_society_landing_field_value')) {
+	function bbb_society_landing_field_value(array $fields, string $key, string $default = ''): string {
+		if (empty($fields[$key]) || !is_array($fields[$key])) {
+			return $default;
+		}
+
+		$field = $fields[$key];
+		$value = $field['jsonValue'] ?? $field['value'] ?? $default;
+		if (is_array($value)) {
+			$value = $field['value'] ?? $default;
+		}
+
+		return trim((string) $value);
+	}
+}
+
+if (!function_exists('bbb_society_landing_active_drop')) {
+	function bbb_society_landing_active_drop(): array {
+		if (function_exists('bbb_sss_drop_importer_active_entry')) {
+			$imported = bbb_sss_drop_importer_active_entry();
+			if ($imported) {
+				return $imported;
+			}
+		}
+
+		$path = get_theme_file_path('firstpass/migration/exports/metaobjects/sss_drop.json');
+		if (!file_exists($path)) {
+			return array();
+		}
+
+		$data = json_decode((string) file_get_contents($path), true);
+		if (!is_array($data) || empty($data['entries']) || !is_array($data['entries'])) {
+			return array();
+		}
+
+		$today = (int) current_time('timestamp');
+		$best = array();
+		$best_time = 0;
+		$fallback = array();
+		$fallback_time = 0;
+
+		foreach ($data['entries'] as $entry) {
+			if (!is_array($entry)) {
+				continue;
+			}
+
+			$fields = bbb_society_landing_field_map($entry);
+			$date = bbb_society_landing_field_value($fields, 'release_date');
+			$time = '' !== $date ? strtotime($date . ' 00:00:00') : false;
+			if (!$time) {
+				continue;
+			}
+
+			$end = bbb_society_landing_field_value($fields, 'end_date');
+			$end_time = '' !== $end ? strtotime($end . ' 23:59:59') : false;
+			if ($time <= $today && (!$end_time || $end_time >= $today) && $time >= $best_time) {
+				$best = $entry;
+				$best_time = $time;
+			}
+
+			if ($time <= $today && $time >= $fallback_time) {
+				$fallback = $entry;
+				$fallback_time = $time;
+			}
+		}
+
+		return $best ?: $fallback;
+	}
+}
+
+if (!function_exists('bbb_society_landing_ref_nodes')) {
+	function bbb_society_landing_ref_nodes(array $fields, array $keys): array {
+		$nodes = array();
+		foreach ($keys as $key) {
+			if (!empty($fields[$key]['reference']) && is_array($fields[$key]['reference'])) {
+				$nodes[] = $fields[$key]['reference'];
+			}
+
+			foreach ((array) ($fields[$key]['references']['nodes'] ?? array()) as $node) {
+				if (is_array($node)) {
+					$nodes[] = $node;
+				}
+			}
+		}
+
+		return $nodes;
+	}
+}
+
+if (!function_exists('bbb_society_landing_product_export_images')) {
+	function bbb_society_landing_product_export_images(): array {
+		static $images = null;
+		if (null !== $images) {
+			return $images;
+		}
+
+		$images = array();
+		$path = get_theme_file_path('firstpass/migration/exports/products/society-products.json');
+		if (!file_exists($path)) {
+			return $images;
+		}
+
+		$products = json_decode((string) file_get_contents($path), true);
+		if (!is_array($products)) {
+			return $images;
+		}
+
+		foreach ($products as $product) {
+			if (!is_array($product) || empty($product['handle']) || empty($product['image_url'])) {
+				continue;
+			}
+
+			$images[sanitize_title((string) $product['handle'])] = (string) $product['image_url'];
+		}
+
+		return $images;
+	}
+}
+
+if (!function_exists('bbb_society_landing_product_url')) {
+	function bbb_society_landing_product_url(string $handle): string {
+		$handle = sanitize_title($handle);
+		if ('' === $handle) {
+			return bbb_page_url('shop');
+		}
+
+		if (post_type_exists('product')) {
+			$product = get_page_by_path($handle, OBJECT, 'product');
+			if ($product instanceof WP_Post) {
+				return get_permalink($product);
+			}
+		}
+
+		return home_url('/product/' . $handle . '/');
+	}
+}
+
 $reader_state = 'visitor';
 if (function_exists('bbb_reader_is_society') && bbb_reader_is_society()) {
 	$reader_state = 'paid member';
@@ -15,45 +165,72 @@ if (function_exists('bbb_reader_is_society') && bbb_reader_is_society()) {
 }
 
 $monthly_theme = strtolower((string) date_i18n('F')) . ' theme';
-$monthly_hub   = array(
+$monthly_hub = array(
 	'kicker' => strtolower((string) get_theme_mod('bbb_society_month_kicker', 'monthly theme')),
 	'title'  => strtolower((string) get_theme_mod('bbb_society_month_title', 'burn for me')),
 	'text'   => strtolower((string) get_theme_mod('bbb_society_month_text', 'dark romance month with mafia, obsession, enemies to lovers, and the member tools that keep the whole reading life in one place.')),
+	'image'  => '',
 );
 if ('this month inside the society' === $monthly_hub['kicker']) {
 	$monthly_hub['kicker'] = 'monthly theme';
 }
 $monthly_theme_url = bbb_page_url('monthly-theme');
-$drop_export_path = get_theme_file_path('firstpass/migration/exports/metaobjects/sss_drop.json');
-if (file_exists($drop_export_path)) {
-	$drop_export = json_decode((string) file_get_contents($drop_export_path), true);
-	if (is_array($drop_export) && !empty($drop_export['entries']) && is_array($drop_export['entries'])) {
-		$active_drop = array();
-		$active_time = 0;
-		foreach ($drop_export['entries'] as $entry) {
-			if (!is_array($entry) || empty($entry['fields']) || !is_array($entry['fields'])) {
-				continue;
-			}
+$active_drop = bbb_society_landing_active_drop();
+$active_fields = $active_drop ? bbb_society_landing_field_map($active_drop) : array();
+$drop_products = array();
+$fallback_images = array();
 
-			$fields = array();
-			foreach ($entry['fields'] as $field) {
-				if (is_array($field) && !empty($field['key'])) {
-					$fields[(string) $field['key']] = $field;
-				}
-			}
+if ($active_fields) {
+	$monthly_hub['kicker'] = 'monthly theme';
+	$monthly_hub['title'] = strtolower(bbb_society_landing_field_value($active_fields, 'name', $monthly_hub['title']));
+	$monthly_hub['text'] = strtolower(bbb_society_landing_field_value($active_fields, 'quote_text', $monthly_hub['text']));
+	$monthly_hub['image'] = (string) ($active_fields['calendar_image']['reference']['image']['url'] ?? $active_fields['gram_image']['reference']['image']['url'] ?? '');
 
-			$date = (string) ($fields['release_date']['value'] ?? '');
-			$time = '' !== $date ? strtotime($date . ' 00:00:00') : false;
-			if ($time && $time <= (int) current_time('timestamp') && $time >= $active_time) {
-				$active_drop = $fields;
-				$active_time = $time;
+	$fallback_nodes = bbb_society_landing_ref_nodes($active_fields, array('wallpaper_images', 'mood_images', 'era_images'));
+	foreach ($fallback_nodes as $node) {
+		$image = (string) ($node['image']['url'] ?? $node['url'] ?? '');
+		if ('' !== $image) {
+			$fallback_images[] = $image;
+		}
+	}
+
+	$product_images = bbb_society_landing_product_export_images();
+	$product_nodes = bbb_society_landing_ref_nodes(
+		$active_fields,
+		array(
+			'bonus_printable_product',
+			'bonus_physical_product',
+			'monthly_collection_printable_products',
+			'monthly_collection_physical_products',
+		)
+	);
+	$seen_products = array();
+	foreach ($product_nodes as $index => $product) {
+		$handle = sanitize_title((string) ($product['handle'] ?? ''));
+		$title = strtolower((string) ($product['title'] ?? $handle));
+		if ('' === $handle || isset($seen_products[$handle])) {
+			continue;
+		}
+
+		$seen_products[$handle] = true;
+		$image = $product_images[$handle] ?? '';
+		if ('' === $image && post_type_exists('product')) {
+			$wp_product = get_page_by_path($handle, OBJECT, 'product');
+			if ($wp_product instanceof WP_Post) {
+				$image = (string) (get_the_post_thumbnail_url($wp_product, 'medium') ?: get_post_meta($wp_product->ID, '_bbb_source_image_url', true));
 			}
 		}
 
-		if ($active_drop) {
-			$monthly_hub['title'] = strtolower((string) ($active_drop['name']['value'] ?? $monthly_hub['title']));
-			$monthly_hub['text'] = strtolower((string) ($active_drop['quote_text']['value'] ?? $monthly_hub['text']));
+		if ('' === $image && !empty($fallback_images)) {
+			$image = $fallback_images[$index % count($fallback_images)];
 		}
+
+		$drop_products[] = array(
+			'title'  => $title,
+			'handle' => $handle,
+			'image'  => $image,
+			'url'    => bbb_society_landing_product_url($handle),
+		);
 	}
 }
 
@@ -111,10 +288,33 @@ get_header();
 
 		<aside class="bbb-society-theme bbb-society-theme--main" aria-label="<?php echo esc_attr($monthly_theme); ?>">
 			<a class="bbb-society-theme__featureLink" href="<?php echo esc_url($monthly_theme_url); ?>">
-				<p class="bbb-society-theme__eyebrow"><?php echo esc_html($monthly_hub['kicker']); ?></p>
-				<h2><?php echo esc_html($monthly_hub['title']); ?></h2>
-				<p><?php echo esc_html($monthly_hub['text']); ?></p>
-				<span class="bbb-society-theme__cta">open monthly theme</span>
+				<span class="bbb-society-theme__content">
+					<p class="bbb-society-theme__eyebrow"><?php echo esc_html($monthly_hub['kicker']); ?></p>
+					<h2><?php echo esc_html($monthly_hub['title']); ?></h2>
+					<p><?php echo esc_html($monthly_hub['text']); ?></p>
+					<span class="bbb-society-theme__cta">open monthly theme</span>
+				</span>
+				<?php if ($monthly_hub['image'] || $drop_products) : ?>
+					<span class="bbb-society-theme__preview" aria-label="monthly theme preview">
+						<?php if ($monthly_hub['image']) : ?>
+							<span class="bbb-society-theme__dropImage">
+								<img src="<?php echo esc_url($monthly_hub['image']); ?>" alt="<?php echo esc_attr($monthly_hub['title']); ?>" loading="lazy">
+							</span>
+						<?php endif; ?>
+						<?php if ($drop_products) : ?>
+							<span class="bbb-society-theme__products">
+								<?php foreach (array_slice($drop_products, 0, 4) as $product) : ?>
+									<span class="bbb-society-theme__product">
+										<?php if ($product['image']) : ?>
+											<img src="<?php echo esc_url($product['image']); ?>" alt="<?php echo esc_attr($product['title']); ?>" loading="lazy">
+										<?php endif; ?>
+										<span><?php echo esc_html($product['title']); ?></span>
+									</span>
+								<?php endforeach; ?>
+							</span>
+						<?php endif; ?>
+					</span>
+				<?php endif; ?>
 			</a>
 		</aside>
 

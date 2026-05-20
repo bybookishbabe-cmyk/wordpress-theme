@@ -91,12 +91,14 @@ This creates:
 
 ```text
 migration/exports/products/shopify-products-full.json
+migration/exports/products/digital-products.json
+migration/exports/products/digital-products.csv
 migration/exports/products/society-products.json
 migration/exports/products/society-products.csv
 migration/exports/products/society-products-free-for-members.json
 migration/exports/products/society-products-free-for-members.csv
 ```
 
-Import `society-products.csv` in WordPress under Users > Society Products to create WooCommerce draft products. If you only want the products referenced by `sss_drop` first, import `society-products-free-for-members.csv`.
+Import `digital-products.csv` in WordPress under Users > Society Products to create WooCommerce draft products. The legacy `society-products.csv` file is kept as an alias for the same digital-only import, so older notes still work. If you only want the products referenced by `sss_drop` first, import `society-products-free-for-members.csv`.
 
-Shopify product exports usually do not include the actual files managed by a digital downloads app. Before publishing imported products, fill the `download_url` column with the final PDF/ZIP/Canva delivery URL for each product that should be downloadable. Rows with `society_free` set to `yes` are free in cart for paid Society members.
+Shopify product exports usually do not include the actual files managed by a digital downloads app. Before publishing imported products, fill the `download_url` column with the final PDF/ZIP/Canva delivery URL for each product that should be downloadable. Rows with `download_missing` set to `yes` are safe to import as drafts, but they should not be published until the URL is filled. Rows with `society_free` set to `yes` are free in cart for paid Society members.

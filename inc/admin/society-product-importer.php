@@ -15,6 +15,24 @@ function bbb_society_product_importer_truthy($value): bool {
 	return in_array(strtolower(trim((string) $value)), array('1', 'true', 'yes', 'y', 'on', 'free'), true);
 }
 
+function bbb_society_product_importer_split_terms($value): array {
+	if (is_array($value)) {
+		$items = $value;
+	} else {
+		$items = preg_split('/[|,]/', (string) $value) ?: array();
+	}
+
+	$terms = array();
+	foreach ($items as $item) {
+		$term = trim((string) $item);
+		if ('' !== $term) {
+			$terms[] = $term;
+		}
+	}
+
+	return array_values(array_unique($terms));
+}
+
 function bbb_society_product_importer_array_is_list(array $value): bool {
 	if (function_exists('array_is_list')) {
 		return array_is_list($value);
@@ -106,6 +124,27 @@ function bbb_society_product_importer_download_url(array $product): string {
 	return '';
 }
 
+function bbb_society_product_importer_is_digital(array $product): bool {
+	if (isset($product['is_digital'])) {
+		return bbb_society_product_importer_truthy($product['is_digital']);
+	}
+
+	if ('' !== bbb_society_product_importer_download_url($product)) {
+		return true;
+	}
+
+	$type     = strtolower((string) ($product['product_type'] ?? $product['productType'] ?? ''));
+	$title    = strtolower((string) ($product['title'] ?? $product['name'] ?? ''));
+	$handle   = strtolower((string) ($product['handle'] ?? $product['slug'] ?? ''));
+	$keywords = $type . ' ' . $title . ' ' . $handle . ' ' . strtolower(implode(' ', bbb_society_product_importer_split_terms($product['tags'] ?? '')));
+
+	if (str_contains($type, 'physical') || str_contains($type, 'bookmark')) {
+		return false;
+	}
+
+	return (bool) preg_match('/printable|digital|template|vault|tracker|download|canva/', $keywords);
+}
+
 function bbb_society_product_importer_price(array $product): string {
 	foreach (array('price', 'regular_price', 'regularPrice') as $key) {
 		if (isset($product[$key])) {
@@ -188,6 +227,7 @@ function bbb_society_product_importer_rows_from_csv(string $csv) {
 function bbb_society_product_importer_normalize_row(array $row, bool $default_free): array {
 	$handle = sanitize_title((string) ($row['handle'] ?? $row['slug'] ?? ''));
 	$title  = trim((string) ($row['title'] ?? $row['name'] ?? $handle));
+	$is_digital = bbb_society_product_importer_is_digital($row);
 
 	return array(
 		'id'           => (string) ($row['id'] ?? $row['admin_graphql_api_id'] ?? ''),
@@ -197,8 +237,16 @@ function bbb_society_product_importer_normalize_row(array $row, bool $default_fr
 		'price'        => bbb_society_product_importer_price($row),
 		'image_url'    => bbb_society_product_importer_image_url($row),
 		'download_url' => bbb_society_product_importer_download_url($row),
-		'society_free' => isset($row['society_free']) ? bbb_society_product_importer_truthy($row['society_free']) : $default_free,
+		'society_free' => $is_digital && (isset($row['society_free']) ? bbb_society_product_importer_truthy($row['society_free']) : $default_free),
 		'status'       => in_array((string) ($row['status'] ?? ''), array('publish', 'draft', 'private'), true) ? (string) $row['status'] : 'draft',
+		'is_digital'   => $is_digital,
+		'product_type' => (string) ($row['product_type'] ?? $row['productType'] ?? ''),
+		'categories'   => bbb_society_product_importer_split_terms($row['categories'] ?? $row['collections'] ?? ''),
+		'tags'         => bbb_society_product_importer_split_terms($row['tags'] ?? ''),
+		'vendor'       => (string) ($row['vendor'] ?? ''),
+		'shopify_url'  => esc_url_raw((string) ($row['shopify_url'] ?? $row['onlineStoreUrl'] ?? '')),
+		'source_status' => (string) ($row['source_status'] ?? ''),
+		'source_variant_id' => (string) ($row['source_variant_id'] ?? ''),
 	);
 }
 
@@ -234,18 +282,26 @@ function bbb_society_product_importer_upsert_product(array $product) {
 	$download_url = esc_url_raw((string) ($product['download_url'] ?? ''));
 	$image_url    = esc_url_raw((string) ($product['image_url'] ?? ''));
 	$is_free      = !empty($product['society_free']);
+	$is_digital   = !empty($product['is_digital']);
 
 	wp_set_object_terms($post_id, 'simple', 'product_type', false);
 	update_post_meta($post_id, '_bbb_import_source', 'society_product_importer');
 	update_post_meta($post_id, '_bbb_shopify_product_gid', (string) ($product['id'] ?? ''));
 	update_post_meta($post_id, '_bbb_shopify_product_handle', $handle);
+	update_post_meta($post_id, '_bbb_shopify_product_type', (string) ($product['product_type'] ?? ''));
+	update_post_meta($post_id, '_bbb_shopify_vendor', (string) ($product['vendor'] ?? ''));
+	update_post_meta($post_id, '_bbb_shopify_url', esc_url_raw((string) ($product['shopify_url'] ?? '')));
+	update_post_meta($post_id, '_bbb_shopify_source_status', (string) ($product['source_status'] ?? ''));
+	update_post_meta($post_id, '_bbb_shopify_variant_gid', (string) ($product['source_variant_id'] ?? ''));
+	update_post_meta($post_id, '_bbb_is_digital_product', $is_digital ? 'yes' : 'no');
 	update_post_meta($post_id, '_bbb_society_free_download', $is_free ? 'yes' : 'no');
-	update_post_meta($post_id, '_virtual', 'yes');
+	update_post_meta($post_id, '_virtual', $is_digital ? 'yes' : 'no');
 	update_post_meta($post_id, '_downloadable', '' !== $download_url ? 'yes' : 'no');
 	update_post_meta($post_id, '_stock_status', 'instock');
 	update_post_meta($post_id, '_sold_individually', 'yes');
 	update_post_meta($post_id, '_regular_price', $price);
 	update_post_meta($post_id, '_price', $price);
+	update_post_meta($post_id, '_purchase_note', '' !== $download_url ? 'Your download will be available after checkout.' : '');
 
 	if ('' !== $download_url) {
 		$file_key = md5($download_url);
@@ -261,16 +317,32 @@ function bbb_society_product_importer_upsert_product(array $product) {
 		);
 		update_post_meta($post_id, '_download_limit', '');
 		update_post_meta($post_id, '_download_expiry', '');
+		delete_post_meta($post_id, '_bbb_missing_download_url');
+	} elseif ($is_digital) {
+		delete_post_meta($post_id, '_downloadable_files');
+		update_post_meta($post_id, '_bbb_missing_download_url', 'yes');
+	} else {
+		delete_post_meta($post_id, '_downloadable_files');
+		delete_post_meta($post_id, '_bbb_missing_download_url');
 	}
 
 	if ('' !== $image_url) {
 		update_post_meta($post_id, '_bbb_source_image_url', $image_url);
 	}
 
+	if (!empty($product['categories'])) {
+		wp_set_object_terms($post_id, (array) $product['categories'], 'product_cat', false);
+	}
+
+	if (!empty($product['tags'])) {
+		wp_set_object_terms($post_id, (array) $product['tags'], 'product_tag', false);
+	}
+
 	return array(
 		'post_id'      => $post_id,
 		'handle'       => $handle,
 		'downloadable' => '' !== $download_url,
+		'missing_download' => $is_digital && '' === $download_url,
 		'society_free' => $is_free,
 	);
 }
@@ -329,6 +401,7 @@ function bbb_society_product_importer_handle_request() {
 
 function bbb_society_product_importer_admin_page(): void {
 	$result   = bbb_society_product_importer_handle_request();
+	$missing_downloads = is_array($result) ? count(array_filter($result, static fn($item): bool => !empty($item['missing_download']))) : 0;
 	$products = post_type_exists('product') ? get_posts(
 		array(
 			'post_type'      => 'product',
@@ -343,7 +416,7 @@ function bbb_society_product_importer_admin_page(): void {
 	?>
 	<div class="wrap bbb-society-products-admin">
 		<h1>Society Products</h1>
-		<p class="description">Import Shopify digital products into WooCommerce, attach download URLs, and mark which products paid Society members receive for free.</p>
+		<p class="description">Import Shopify digital products into WooCommerce as clean draft products, preserve source metadata, attach download URLs, and mark which products paid Society members receive for free.</p>
 
 		<?php if (!post_type_exists('product')) : ?>
 			<div class="notice notice-warning"><p>WooCommerce is not active yet. Activate WooCommerce before importing products.</p></div>
@@ -352,7 +425,7 @@ function bbb_society_product_importer_admin_page(): void {
 		<?php if (is_wp_error($result)) : ?>
 			<div class="notice notice-error"><p><?php echo esc_html($result->get_error_message()); ?></p></div>
 		<?php elseif (is_array($result)) : ?>
-			<div class="notice notice-success"><p><?php echo esc_html('Imported or updated ' . count($result) . ' products.'); ?></p></div>
+			<div class="notice notice-success"><p><?php echo esc_html('Imported or updated ' . count($result) . ' products.'); ?> <?php echo $missing_downloads ? esc_html($missing_downloads . ' still need download URLs before publishing.') : ''; ?></p></div>
 		<?php endif; ?>
 
 		<form class="bbb-society-products-admin__import" method="post" enctype="multipart/form-data">
@@ -366,7 +439,7 @@ function bbb_society_product_importer_admin_page(): void {
 			<p><label for="bbb_society_products_file">Upload file</label></p>
 			<input type="file" id="bbb_society_products_file" name="bbb_society_products_file" accept=".json,.csv,application/json,text/csv">
 			<p><label for="bbb_society_products_text">Or paste JSON/CSV</label></p>
-			<textarea id="bbb_society_products_text" name="bbb_society_products_text" rows="10" class="large-text code" placeholder="handle,title,price,download_url,image_url,society_free,status"></textarea>
+			<textarea id="bbb_society_products_text" name="bbb_society_products_text" rows="10" class="large-text code" placeholder="handle,title,price,download_url,image_url,society_free,status,id,product_type,categories,tags,vendor,shopify_url"></textarea>
 			<p>
 				<label><input type="checkbox" name="bbb_society_products_default_free" value="1" checked> default imported products to free for paid Society members</label>
 			</p>
@@ -374,8 +447,8 @@ function bbb_society_product_importer_admin_page(): void {
 		</form>
 
 		<h2>CSV template</h2>
-		<pre class="bbb-society-products-admin__template">handle,title,price,download_url,image_url,society_free,status
-gothic-lace-calendar,gothic lace calendar,7.00,https://example.com/calendar.pdf,https://example.com/preview.jpg,yes,draft</pre>
+		<pre class="bbb-society-products-admin__template">handle,title,price,download_url,image_url,society_free,status,id,product_type,categories,tags,vendor,shopify_url
+gothic-lace-calendar,gothic lace calendar,7.00,https://example.com/calendar.pdf,https://example.com/preview.jpg,yes,draft,gid://shopify/Product/123,Printable,Digital Products|Printable,kindle|dark romance,Bookish Babe,https://bybookishbabe.com/products/gothic-lace-calendar</pre>
 
 		<h2>Imported products</h2>
 		<table class="widefat striped">
@@ -386,11 +459,12 @@ gothic-lace-calendar,gothic lace calendar,7.00,https://example.com/calendar.pdf,
 					<th>Price</th>
 					<th>Download</th>
 					<th>Paid members</th>
+					<th>Type</th>
 				</tr>
 			</thead>
 			<tbody>
 				<?php if (!$products) : ?>
-					<tr><td colspan="5">No Society products imported yet.</td></tr>
+					<tr><td colspan="6">No Society products imported yet.</td></tr>
 				<?php endif; ?>
 				<?php foreach ($products as $product_post) : ?>
 					<?php $files = get_post_meta($product_post->ID, '_downloadable_files', true); ?>
@@ -398,8 +472,9 @@ gothic-lace-calendar,gothic lace calendar,7.00,https://example.com/calendar.pdf,
 						<td><a href="<?php echo esc_url(get_edit_post_link($product_post->ID)); ?>"><?php echo esc_html(get_the_title($product_post)); ?></a></td>
 						<td><code><?php echo esc_html((string) get_post_meta($product_post->ID, '_bbb_shopify_product_handle', true)); ?></code></td>
 						<td><?php echo esc_html((string) get_post_meta($product_post->ID, '_regular_price', true)); ?></td>
-						<td><?php echo esc_html(!empty($files) ? 'attached' : 'missing'); ?></td>
+						<td><?php echo esc_html(!empty($files) ? 'attached' : ('yes' === get_post_meta($product_post->ID, '_bbb_missing_download_url', true) ? 'missing' : 'none')); ?></td>
 						<td><?php echo esc_html('yes' === get_post_meta($product_post->ID, '_bbb_society_free_download', true) ? 'free' : 'paid'); ?></td>
+						<td><?php echo esc_html((string) get_post_meta($product_post->ID, '_bbb_shopify_product_type', true)); ?></td>
 					</tr>
 				<?php endforeach; ?>
 			</tbody>

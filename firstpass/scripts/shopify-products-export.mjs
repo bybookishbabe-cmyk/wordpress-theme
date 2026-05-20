@@ -19,19 +19,30 @@ await mkdir(productsDir, { recursive: true });
 const dropProductHandles = await loadDropProductHandles();
 const products = await fetchProducts();
 const normalized = products.map((product) => normalizeProduct(product, dropProductHandles));
+const digitalProducts = normalized.filter((product) => product.is_digital);
+const freeForMembers = digitalProducts.filter((product) => product.society_free);
 
 const jsonPath = resolve(productsDir, 'society-products.json');
 const csvPath = resolve(productsDir, 'society-products.csv');
+const digitalJsonPath = resolve(productsDir, 'digital-products.json');
+const digitalCsvPath = resolve(productsDir, 'digital-products.csv');
+const freeJsonPath = resolve(productsDir, 'society-products-free-for-members.json');
+const freeCsvPath = resolve(productsDir, 'society-products-free-for-members.csv');
 const fullJsonPath = resolve(productsDir, 'shopify-products-full.json');
 
 await writeJson(fullJsonPath, { count: products.length, products });
-await writeJson(jsonPath, normalized);
-await writeFile(csvPath, toCsv(normalized));
+await writeJson(jsonPath, digitalProducts);
+await writeFile(csvPath, toCsv(digitalProducts));
+await writeJson(digitalJsonPath, digitalProducts);
+await writeFile(digitalCsvPath, toCsv(digitalProducts));
+await writeJson(freeJsonPath, freeForMembers);
+await writeFile(freeCsvPath, toCsv(freeForMembers));
 
 console.log(`Exported ${products.length} Shopify products to ${relative(fullJsonPath)}`);
-console.log(`Wrote WordPress-ready JSON to ${relative(jsonPath)}`);
-console.log(`Wrote WordPress-ready CSV to ${relative(csvPath)}`);
-console.log(`${normalized.filter((product) => product.society_free).length} products matched the sss_drop product references.`);
+console.log(`Wrote ${digitalProducts.length} WordPress-ready digital products to ${relative(digitalJsonPath)} and ${relative(digitalCsvPath)}`);
+console.log(`Updated legacy import aliases at ${relative(jsonPath)} and ${relative(csvPath)}`);
+console.log(`${freeForMembers.length} digital products matched the sss_drop product references.`);
+console.log(`${digitalProducts.filter((product) => product.download_missing).length} digital products still need download_url filled before publishing.`);
 
 async function fetchProducts() {
   const query = `#graphql
@@ -48,8 +59,15 @@ async function fetchProducts() {
           status
           vendor
           productType
+          tags
           descriptionHtml
           onlineStoreUrl
+          collections(first: 10) {
+            nodes {
+              handle
+              title
+            }
+          }
           featuredImage {
             id
             url
@@ -64,6 +82,9 @@ async function fetchProducts() {
               sku
               price
               compareAtPrice
+              inventoryItem {
+                requiresShipping
+              }
             }
           }
           media(first: 5) {
@@ -144,6 +165,10 @@ function normalizeProduct(product, dropProductHandles) {
   const variant = product.variants?.nodes?.[0] || {};
   const imageUrl = product.featuredImage?.url || firstMediaImageUrl(product.media?.nodes || '');
   const downloadUrl = firstDownloadUrl(product.metafields?.nodes || []);
+  const productType = product.productType || '';
+  const tags = product.tags || [];
+  const collections = product.collections?.nodes || [];
+  const isDigital = isDigitalProduct(product, variant, downloadUrl);
 
   return {
     handle: product.handle || '',
@@ -151,14 +176,64 @@ function normalizeProduct(product, dropProductHandles) {
     price: variant.price || '',
     download_url: downloadUrl,
     image_url: imageUrl || '',
-    society_free: dropProductHandles.has(product.handle || ''),
+    society_free: isDigital && dropProductHandles.has(product.handle || ''),
     status: 'draft',
     id: product.id || '',
     description: product.descriptionHtml || '',
-    product_type: product.productType || '',
+    product_type: productType,
     vendor: product.vendor || '',
     shopify_url: product.onlineStoreUrl || '',
+    tags: tags.join('|'),
+    categories: productCategories(productType, collections).join('|'),
+    source_status: product.status || '',
+    source_variant_id: variant.id || '',
+    source_variant_title: variant.title || '',
+    is_digital: isDigital,
+    download_missing: isDigital && !downloadUrl,
   };
+}
+
+function isDigitalProduct(product, variant, downloadUrl) {
+  if (downloadUrl) return true;
+
+  const productType = String(product.productType || '').toLowerCase();
+  const handle = String(product.handle || '').toLowerCase();
+  const title = String(product.title || '').toLowerCase();
+  const description = stripHtml(product.descriptionHtml || '').toLowerCase();
+  const tags = (product.tags || []).map((tag) => String(tag).toLowerCase());
+  const haystack = [productType, handle, title, ...tags].join(' ');
+
+  if (productType.includes('physical') || productType.includes('bookmark')) {
+    return false;
+  }
+
+  if (description.includes('physical item') || description.includes('not a digital download')) {
+    return false;
+  }
+
+  if (variant?.inventoryItem?.requiresShipping === true && !/printable|digital|template|vault|tracker|download/.test(haystack)) {
+    return false;
+  }
+
+  return /printable|digital|template|vault|tracker|download|canva/.test(haystack);
+}
+
+function productCategories(productType, collections) {
+  const categories = new Set(['Digital Products']);
+  const type = String(productType || '').trim();
+
+  if (type) categories.add(type);
+
+  for (const collection of collections) {
+    const title = String(collection?.title || '').trim();
+    if (title) categories.add(title);
+  }
+
+  return [...categories];
+}
+
+function stripHtml(value) {
+  return String(value).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 function firstMediaImageUrl(nodes) {
@@ -276,7 +351,25 @@ async function writeJson(path, value) {
 }
 
 function toCsv(rows) {
-  const headers = ['handle', 'title', 'price', 'download_url', 'image_url', 'society_free', 'status', 'id'];
+  const headers = [
+    'handle',
+    'title',
+    'price',
+    'download_url',
+    'image_url',
+    'society_free',
+    'status',
+    'id',
+    'product_type',
+    'categories',
+    'tags',
+    'vendor',
+    'shopify_url',
+    'source_status',
+    'source_variant_id',
+    'source_variant_title',
+    'download_missing',
+  ];
   return `${headers.join(',')}\n${rows.map((row) => headers.map((header) => csvCell(row[header])).join(',')).join('\n')}\n`;
 }
 
