@@ -71,7 +71,9 @@ foreach ($products as $product) {
 	}
 
 	if ($attachment_ids) {
+		update_post_meta($post_id, '_thumbnail_id', (int) $attachment_ids[0]);
 		update_post_meta($post_id, '_bbb_product_media_attachment_ids', array_values(array_unique($attachment_ids)));
+		$thumbs++;
 		$galleries++;
 	}
 }

@@ -530,6 +530,7 @@ function bbb_society_product_importer_upsert_product(array $product) {
 		update_post_meta($post_id, '_bbb_source_image_url', $image_url);
 		$thumbnail_id = bbb_society_product_importer_attachment_from_url($image_url, $post_id);
 		if ($thumbnail_id > 0) {
+			update_post_meta($post_id, '_thumbnail_id', $thumbnail_id);
 			set_post_thumbnail($post_id, $thumbnail_id);
 		}
 	}
@@ -547,6 +548,7 @@ function bbb_society_product_importer_upsert_product(array $product) {
 			)
 		);
 		if ($attachment_ids) {
+			update_post_meta($post_id, '_thumbnail_id', (int) $attachment_ids[0]);
 			update_post_meta($post_id, '_bbb_product_media_attachment_ids', $attachment_ids);
 		}
 	}
