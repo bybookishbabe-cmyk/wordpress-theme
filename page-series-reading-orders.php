@@ -180,8 +180,130 @@ if (!function_exists('bbb_series_lead_book')) {
 	}
 }
 
+if (!function_exists('bbb_series_guide_posts')) {
+	function bbb_series_guide_posts(): array {
+		$queries = array(
+			array(
+				'post_type'      => 'post',
+				'post_status'    => 'publish',
+				'posts_per_page' => 250,
+				'category_name'  => 'curated-romance-guides',
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+			),
+			array(
+				'post_type'      => 'post',
+				'post_status'    => 'publish',
+				'posts_per_page' => 250,
+				'meta_key'       => '_shopify_blog_handle',
+				'meta_value'     => 'curated-romance-guides',
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+			),
+		);
+		$posts   = array();
+
+		foreach ($queries as $query_args) {
+			foreach (get_posts($query_args) as $post) {
+				if ($post instanceof WP_Post) {
+					$posts[$post->ID] = $post;
+				}
+			}
+		}
+
+		return array_values($posts);
+	}
+}
+
+if (!function_exists('bbb_series_matches_guide_value')) {
+	function bbb_series_matches_guide_value($value, $series): bool {
+		$series_slug  = sanitize_title(bbb_series_entity_slug($series));
+		$series_title = strtolower(trim(bbb_series_entity_title($series)));
+
+		if ($value instanceof WP_Post) {
+			return ($series instanceof WP_Post && (int) $value->ID === (int) $series->ID)
+				|| sanitize_title($value->post_name) === $series_slug
+				|| strtolower(trim(get_the_title($value))) === $series_title;
+		}
+
+		if ($value instanceof WP_Term) {
+			return ($series instanceof WP_Term && (int) $value->term_id === (int) $series->term_id)
+				|| sanitize_title($value->slug) === $series_slug
+				|| strtolower(trim($value->name)) === $series_title;
+		}
+
+		if (is_array($value)) {
+			foreach (array('ID', 'id') as $id_key) {
+				if (isset($value[$id_key])) {
+					$post = get_post((int) $value[$id_key]);
+					if ($post instanceof WP_Post && bbb_series_matches_guide_value($post, $series)) {
+						return true;
+					}
+				}
+			}
+
+			foreach (array('slug', 'post_name', 'handle') as $slug_key) {
+				if (!empty($value[$slug_key]) && sanitize_title((string) $value[$slug_key]) === $series_slug) {
+					return true;
+				}
+			}
+
+			foreach (array('name', 'title', 'post_title') as $title_key) {
+				if (!empty($value[$title_key]) && strtolower(trim((string) $value[$title_key])) === $series_title) {
+					return true;
+				}
+			}
+
+			foreach ($value as $item) {
+				if (bbb_series_matches_guide_value($item, $series)) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		$raw = trim((string) $value);
+		if ('' === $raw) {
+			return false;
+		}
+
+		if (is_numeric($raw)) {
+			$post = get_post((int) $raw);
+			if ($post instanceof WP_Post && bbb_series_matches_guide_value($post, $series)) {
+				return true;
+			}
+		}
+
+		return sanitize_title($raw) === $series_slug || strtolower($raw) === $series_title;
+	}
+}
+
+if (!function_exists('bbb_series_guide_post_for_series')) {
+	function bbb_series_guide_post_for_series($series, array $guide_posts): ?WP_Post {
+		$field_keys = array('sss_series', '_sss_series', 'series', '_series');
+
+		foreach ($guide_posts as $post) {
+			foreach ($field_keys as $field_key) {
+				$value = function_exists('sss_article_field') ? sss_article_field($field_key, $post->ID, null) : null;
+				if (bbb_series_matches_guide_value($value, $series)) {
+					return $post;
+				}
+
+				$raw = get_post_meta($post->ID, $field_key, true);
+				if (bbb_series_matches_guide_value($raw, $series)) {
+					return $post;
+				}
+			}
+		}
+
+		return null;
+	}
+}
+
 $series_list  = bbb_series_terms();
 $books        = bbb_series_visible_books();
+$guide_posts  = bbb_series_guide_posts();
 $series_cards = array();
 $shelf_groups = array();
 
@@ -220,18 +342,14 @@ foreach ($series_list as $series) {
 
 	$shelf_groups[$shelf_slug] = $shelf_name;
 
-	$destination = bbb_series_url_value(bbb_series_entity_meta($series, 'linked_blog_url', ''));
-	if ('' === trim($destination)) {
-		$destination = bbb_series_url_value(bbb_series_entity_meta($series, 'reading_order_url', ''));
-	}
-	if ('' === trim($destination)) {
-		$destination = '/series/?series=' . $series_slug;
-	}
+	$guide_post   = bbb_series_guide_post_for_series($series, $guide_posts);
+	$destination  = $guide_post instanceof WP_Post ? get_permalink($guide_post) : '';
 
 	$series_cards[] = array(
 		'series'           => $series,
 		'title'            => $series_title,
 		'destination'      => $destination,
+		'has_guide'        => '' !== $destination,
 		'first_data'       => $first_data,
 		'book_count'       => $book_count,
 		'preview_books'    => $preview_books,
@@ -265,8 +383,12 @@ get_header();
 
 				<div class="bbb-seriesOrders__grid" data-series-grid>
 					<?php foreach ($series_cards as $card) : ?>
-						<article class="bbb-seriesOrders__card" data-series-card data-series-genre="<?php echo esc_attr($card['shelf_slug']); ?>" data-series-title="<?php echo esc_attr($card['title']); ?>">
-							<a class="bbb-seriesOrders__cardLink" href="<?php echo esc_url($card['destination']); ?>">
+						<?php
+						$has_guide = !empty($card['has_guide']);
+						$link_tag  = $has_guide ? 'a' : 'div';
+						?>
+						<article class="bbb-seriesOrders__card<?php echo $has_guide ? '' : ' bbb-seriesOrders__card--locked'; ?>" data-series-card data-series-genre="<?php echo esc_attr($card['shelf_slug']); ?>" data-series-title="<?php echo esc_attr($card['title']); ?>">
+							<<?php echo esc_html($link_tag); ?> class="bbb-seriesOrders__cardLink<?php echo $has_guide ? '' : ' bbb-seriesOrders__cardLink--locked'; ?>"<?php echo $has_guide ? ' href="' . esc_url($card['destination']) . '"' : ' aria-disabled="true"'; ?>>
 								<div class="bbb-seriesOrders__cardTop">
 									<div class="bbb-seriesOrders__coverWrap">
 										<?php if ('' !== $card['first_data']['cover']) : ?>
@@ -301,15 +423,23 @@ get_header();
 								</div>
 
 								<div class="bbb-seriesOrders__footer">
-									<span><?php echo esc_html('' !== $card['standalone_title'] ? 'start with: ' . $card['standalone_title'] . ' →' : 'must read in order →'); ?></span>
+									<span>
+										<?php
+										echo esc_html(
+											$has_guide
+												? ('' !== $card['standalone_title'] ? 'start with: ' . $card['standalone_title'] . ' →' : 'must read in order →')
+												: 'waiting on series guide'
+										);
+										?>
+									</span>
 								</div>
-							</a>
+							</<?php echo esc_html($link_tag); ?>>
 						</article>
 					<?php endforeach; ?>
 				</div>
 			</section>
 
-			<p class="bbb-seriesOrders__note">each card opens the full series page · filtered by vibe · spice levels visible at a glance</p>
+			<p class="bbb-seriesOrders__note">cards open only when a matching guide post has SSS Series filled in · filtered by vibe · spice levels visible at a glance</p>
 		<?php else : ?>
 			<div class="bbb-seriesOrders__empty">No series are ready to show here yet.</div>
 		<?php endif; ?>

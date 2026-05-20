@@ -929,6 +929,22 @@ text-decoration:none;
 transition:transform .22s ease, border-color .22s ease, box-shadow .22s ease;
 }
 
+.bbb-seriesOrders__cardLink--locked{
+cursor:default;
+opacity:.72;
+}
+
+.bbb-seriesOrders__cardLink--locked:hover,
+.bbb-seriesOrders__cardLink--locked:focus-visible{
+transform:none;
+border-color:rgba(255,255,255,.12);
+box-shadow:none;
+}
+
+.bbb-seriesOrders__cardLink--locked .bbb-seriesOrders__footer{
+color:rgba(255,255,255,.52);
+}
+
 .bbb-seriesOrders__cardTop{
 display:grid;
 grid-template-columns:10rem minmax(0, 1fr);
