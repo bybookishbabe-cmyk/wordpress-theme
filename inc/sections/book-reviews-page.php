@@ -134,7 +134,31 @@ if (!function_exists('bbb_review_index_has_review_flag')) {
 			null
 		);
 
-		return null !== $value && '' !== $value && bbb_review_index_bool($value);
+		if (null !== $value && '' !== $value && bbb_review_index_bool($value)) {
+			return true;
+		}
+
+		$review_terms = get_the_terms($post_id, 'book_review_category');
+		if ($review_terms && !is_wp_error($review_terms)) {
+			return true;
+		}
+
+		$meta = get_post_meta($post_id);
+		foreach ($meta as $key => $values) {
+			$normalized_key = strtolower(trim((string) $key, '_'));
+			if (!in_array($normalized_key, array('book_review', 'custom_book_review', 'custom.book_review'), true)) {
+				continue;
+			}
+
+			foreach ((array) $values as $meta_value) {
+				if (bbb_review_index_bool(maybe_unserialize($meta_value))) {
+					return true;
+				}
+			}
+		}
+
+		$slug_and_title = strtolower((string) get_post_field('post_name', $post_id) . ' ' . get_the_title($post_id));
+		return str_contains($slug_and_title, 'review');
 	}
 }
 
