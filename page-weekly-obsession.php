@@ -219,7 +219,13 @@ if (!function_exists('bbb_weekly_related_books')) {
 	}
 }
 
-wp_enqueue_style('sss-weekly-obsession', get_theme_file_uri('assets/css/weekly-obsession.css'), array('bbb-sss-library'), wp_get_theme()->get('Version'));
+$weekly_obsession_css_path = get_theme_file_path('assets/css/weekly-obsession.css');
+wp_enqueue_style(
+	'sss-weekly-obsession',
+	get_theme_file_uri('assets/css/weekly-obsession.css'),
+	array('bbb-sss-library'),
+	file_exists($weekly_obsession_css_path) ? (string) filemtime($weekly_obsession_css_path) : wp_get_theme()->get('Version')
+);
 
 $current_issue = function_exists('sss_get_current_newsletter_issue') ? sss_get_current_newsletter_issue() : null;
 $featured_book = $current_issue && function_exists('sss_get_obsession_book') ? sss_get_obsession_book($current_issue) : null;
