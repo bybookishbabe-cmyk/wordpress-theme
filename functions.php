@@ -25,6 +25,7 @@ require_once get_theme_file_path('inc/books/book-taxonomy-pages.php');
 require_once get_theme_file_path('inc/books/books-like-helpers.php');
 require_once get_theme_file_path('inc/books/book-import.php');
 require_once get_theme_file_path('inc/books/book-admin-importer.php');
+require_once get_theme_file_path('inc/reader-quiz-helpers.php');
 require_once get_theme_file_path('inc/cpt-sss-book.php');
 require_once get_theme_file_path('inc/sss-book-helpers.php');
 require_once get_theme_file_path('inc/cpt/sss-series.php');
