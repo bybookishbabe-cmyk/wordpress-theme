@@ -97,7 +97,7 @@ summary.list-menu__item {
   }
 }
 
-.header__vault-link,
+.header__account-indicator,
 .header__sss-link {
   align-items: center;
   color: rgb(var(--color-foreground));
@@ -108,7 +108,7 @@ summary.list-menu__item {
   text-decoration: none;
 }
 
-.header__vault-link,
+.header__account-indicator,
 .bbb-bookshelf-header {
   background: #fff;
   border: 1px solid rgba(255, 255, 255, 0.55);
@@ -121,7 +121,7 @@ summary.list-menu__item {
   width: 4.4rem;
 }
 
-.header__vault-link:hover,
+.header__account-indicator:hover,
 .bbb-bookshelf-header:hover {
   background: #111;
   border-color: rgba(255, 255, 255, 0.75);
@@ -129,18 +129,27 @@ summary.list-menu__item {
   transform: translateY(-0.1rem);
 }
 
-.header__vault-badge {
+.header__account-dot {
   align-items: center;
-  border: 0.1rem solid currentColor;
   border-radius: 999px;
+  box-shadow: 0 0 0 0.1rem rgba(17, 17, 17, 0.16), 0 0.6rem 1.6rem rgba(0, 0, 0, 0.16);
   display: inline-flex;
-  font-family: var(--font-heading-family);
-  font-size: 1.4rem;
   height: 3rem;
   justify-content: center;
-  letter-spacing: 0.08em;
   line-height: 1;
   width: 3rem;
+}
+
+.header__account-indicator--visitor .header__account-dot {
+  background: #fff;
+}
+
+.header__account-indicator--free .header__account-dot {
+  background: #22c55e;
+}
+
+.header__account-indicator--paid .header__account-dot {
+  background: #ff8ac7;
 }
 
 .bbb-bookshelf-header__emoji {

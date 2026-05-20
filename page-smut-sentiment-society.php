@@ -100,19 +100,6 @@ get_header();
 			</div>
 		</div>
 
-		<aside class="bbb-society-theme" aria-label="<?php echo esc_attr($monthly_theme); ?>">
-			<div>
-				<p class="bbb-society-theme__eyebrow"><?php echo esc_html($monthly_theme); ?>. live now</p>
-				<h2>burn for me</h2>
-				<p>dark romance month with mafia, obsession, enemies to lovers, and a little emotional damage.</p>
-				<div class="bbb-society-theme__links" aria-label="theme links">
-					<a href="<?php echo esc_url(bbb_page_url('reading-list')); ?>">reading list</a>
-					<a href="<?php echo esc_url(bbb_page_url('weekly-obsession')); ?>">newsletter issue</a>
-					<a href="<?php echo esc_url(bbb_page_url('society-paid-member')); ?>">printable pack</a>
-				</div>
-			</div>
-		</aside>
-
 		<div class="bbb-society-sections">
 			<?php foreach ($sections as $section) : ?>
 				<section class="bbb-society-section" aria-labelledby="<?php echo esc_attr(sanitize_title($section['label'])); ?>">
@@ -131,6 +118,19 @@ get_header();
 				</section>
 			<?php endforeach; ?>
 		</div>
+
+		<aside class="bbb-society-theme" aria-label="<?php echo esc_attr($monthly_theme); ?>">
+			<div>
+				<p class="bbb-society-theme__eyebrow"><?php echo esc_html($monthly_theme); ?>. live now</p>
+				<h2>burn for me</h2>
+				<p>dark romance month with mafia, obsession, enemies to lovers, and a little emotional damage.</p>
+				<div class="bbb-society-theme__links" aria-label="theme links">
+					<a href="<?php echo esc_url(bbb_page_url('reading-list')); ?>">reading list</a>
+					<a href="<?php echo esc_url(bbb_page_url('society-newsletter-recent')); ?>">newsletter issue</a>
+					<a href="<?php echo esc_url(bbb_page_url('society-paid-member')); ?>">printable pack</a>
+				</div>
+			</div>
+		</aside>
 	</div>
 </section>
 

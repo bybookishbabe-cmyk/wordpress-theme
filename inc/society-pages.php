@@ -10,8 +10,13 @@ declare(strict_types=1);
 function bbb_society_newsletter_issue_url(WP_Post $issue): string {
 	$url = (string) get_post_meta($issue->ID, '_bbb_newsletter_url', true);
 	if ('' === $url) {
+		$url = (string) get_post_meta($issue->ID, 'issue_url', true);
+	}
+	if ('' === $url) {
 		$url = (string) get_post_meta($issue->ID, '_issue_url', true);
 	}
+
+	$url = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value($url) : trim($url);
 
 	return '' !== $url ? $url : 'https://thesmutandsentimentsociety.substack.com/';
 }
@@ -36,7 +41,7 @@ function bbb_society_newsletter_issue_summary(WP_Post $issue): string {
 		$summary = (string) get_post_meta($issue->ID, '_issue_subtitle', true);
 	}
 
-	return '' !== $summary ? $summary : 'a society dispatch from the smut and sentiment shelf.';
+	return '' !== $summary ? wp_strip_all_tags($summary) : 'a society dispatch from the smut and sentiment shelf.';
 }
 
 function bbb_society_get_newsletter_issues(int $limit = 3): array {

@@ -12,6 +12,21 @@ $logo       = sprintf(
 	(int) bbb_logo_height(),
 	esc_attr(get_bloginfo('name'))
 );
+
+$account_status      = 'visitor';
+$account_status_text = __('visitor account', 'bybookishbabe-shopify-port');
+$account_url         = wp_login_url();
+
+if (is_user_logged_in()) {
+	$account_url = function_exists('bbb_wc_account_url') ? bbb_wc_account_url() : home_url('/account/');
+	if (function_exists('bbb_reader_is_society') && bbb_reader_is_society()) {
+		$account_status      = 'paid';
+		$account_status_text = __('paid society member', 'bybookishbabe-shopify-port');
+	} else {
+		$account_status      = 'free';
+		$account_status_text = __('free reader account', 'bybookishbabe-shopify-port');
+	}
+}
 ?>
 <div class="shopify-section section-header" data-section="header">
 	<sticky-header data-sticky-type="on-scroll-up" class="header-wrapper color-scheme-1 gradient header-wrapper--border-bottom">
@@ -31,8 +46,13 @@ $logo       = sprintf(
 				<div class="desktop-localization-wrapper"></div>
 				<?php get_template_part('template-parts/header/header-search', null, array('input_id' => 'Search-In-Modal')); ?>
 
-				<a href="<?php echo esc_url(home_url('/my-vault/')); ?>" class="header__vault-link link focus-inset" aria-label="<?php esc_attr_e('open my vault', 'bybookishbabe-shopify-port'); ?>">
-					<span class="header__vault-badge" aria-hidden="true">V</span>
+				<a
+					href="<?php echo esc_url($account_url); ?>"
+					class="header__account-indicator header__account-indicator--<?php echo esc_attr($account_status); ?> link focus-inset"
+					aria-label="<?php echo esc_attr($account_status_text); ?>"
+					title="<?php echo esc_attr($account_status_text); ?>"
+				>
+					<span class="header__account-dot" aria-hidden="true"></span>
 				</a>
 
 				<?php get_template_part('template-parts/header/reader-bookshelf-access'); ?>
