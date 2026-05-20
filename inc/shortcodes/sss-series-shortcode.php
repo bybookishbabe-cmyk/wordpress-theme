@@ -75,7 +75,7 @@ function sss_series_shortcode($atts): string {
   </div>
   <div class="guide-bookcard__list guide-bookcard__list--series">
     <?php foreach ($books as $book) : ?>
-    <div class="guide-bookcard__item guide-bookcard__item--series js-scroll-reveal">
+    <div class="guide-bookcard__item guide-bookcard__item--series">
       <?php echo sss_render_article_book_card($book->ID); ?>
     </div>
     <?php endforeach; ?>

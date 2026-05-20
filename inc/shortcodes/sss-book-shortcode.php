@@ -709,8 +709,7 @@ function sss_bookcard_shortcode($atts): string {
       <?php if ($obsession && $i === $midpoint) : ?>
       <div class="guide-bookcard__obsession"><?php echo $obsession; ?></div>
       <?php endif; ?>
-      <?php $data = sss_article_book_data($book->ID); ?>
-      <div class="guide-bookcard__item js-scroll-reveal" data-book-preview <?php echo sss_article_data_attrs($data); ?>>
+      <div class="guide-bookcard__item">
         <?php echo sss_render_article_book_card($book->ID); ?>
       </div>
     <?php endforeach; ?>
@@ -752,7 +751,7 @@ function sss_pillar_bookcard_shortcode($atts): string {
         <?php echo do_shortcode('[sss_spice level="' . (int) $level . '"]'); ?>
         <div class="guide-bookcard__list pillar-bookcard__list">
           <?php foreach ($level_books as $book) : ?>
-          <div class="guide-bookcard__item guide-bookcard__item--pillar js-scroll-reveal">
+          <div class="guide-bookcard__item guide-bookcard__item--pillar">
             <?php echo sss_render_article_book_card($book->ID, true); ?>
           </div>
           <?php endforeach; ?>

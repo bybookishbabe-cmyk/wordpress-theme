@@ -1396,6 +1396,16 @@ gap:24px;
 
 }
 
+.guide-bookcard__item,
+.guide-bookcard__item.js-scroll-reveal{
+opacity:1;
+transform:none;
+}
+
+.guide-bookcard__item .article-book-card{
+margin:0;
+}
+
 @media screen and (max-width: 749px){
 
 .guide-bookcard__head{
