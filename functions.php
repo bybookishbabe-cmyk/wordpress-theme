@@ -52,6 +52,7 @@ require_once get_theme_file_path('inc/shortcodes/sss-series-shortcode.php');
 require_once get_theme_file_path('inc/shortcodes/sss-pillar-shortcode.php');
 require_once get_theme_file_path('inc/shortcodes/sss-newsletter-shortcode.php');
 require_once get_theme_file_path('inc/admin/society-members.php');
+require_once get_theme_file_path('inc/admin/society-drop-importer.php');
 
 function bbb_reader_is_society(): bool {
 	return bbb_user_is_society(get_current_user_id()) || bbb_is_sss_member();

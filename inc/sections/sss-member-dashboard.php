@@ -138,7 +138,7 @@ if (!function_exists('bbb_sss_drop_product_url')) {
 			}
 		}
 
-		return home_url('/products/' . $handle . '/');
+		return home_url('/product/' . $handle . '/');
 	}
 }
 
@@ -173,6 +173,13 @@ if (!function_exists('bbb_sss_render_drop_products')) {
 
 if (!function_exists('bbb_sss_active_drop')) {
 	function bbb_sss_active_drop(): array {
+		if (function_exists('bbb_sss_drop_importer_active_entry')) {
+			$imported = bbb_sss_drop_importer_active_entry();
+			if ($imported) {
+				return $imported;
+			}
+		}
+
 		$path = get_theme_file_path('firstpass/migration/exports/metaobjects/sss_drop.json');
 		if (!file_exists($path)) {
 			return array();
