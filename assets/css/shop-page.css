@@ -1,0 +1,253 @@
+.bbb-shop {
+  --shop-ink: #27151d;
+  --shop-muted: #72545f;
+  --shop-line: rgba(39, 21, 29, 0.14);
+  --shop-pink: #f3b7ca;
+  --shop-rose: #fff4f7;
+  --shop-cream: #fffaf6;
+  background: var(--shop-cream);
+  color: var(--shop-ink);
+}
+
+.bbb-shop__hero {
+  padding: clamp(56px, 7vw, 92px) 20px 32px;
+  border-bottom: 1px solid var(--shop-line);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.76), rgba(255, 244, 247, 0.9)),
+    url("../bybookishbabe_4c4e36b4-20d6-4135-8721-c1d4c22273fb.png") center/cover;
+}
+
+.bbb-shop__heroInner,
+.bbb-shop__section,
+.bbb-shop__empty {
+  width: min(1180px, calc(100vw - 32px));
+  margin: 0 auto;
+}
+
+.bbb-shop__heroInner {
+  display: grid;
+  gap: 18px;
+}
+
+.bbb-shop__kicker {
+  margin: 0;
+  font: 700 12px/1.2 Assistant, system-ui, sans-serif;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: #9d4568;
+}
+
+.bbb-shop h1,
+.bbb-shop h2,
+.bbb-shop h3 {
+  margin: 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  letter-spacing: 0;
+}
+
+.bbb-shop h1 {
+  max-width: 760px;
+  font-size: clamp(44px, 7vw, 86px);
+  line-height: 0.94;
+}
+
+.bbb-shop__intro {
+  max-width: 670px;
+  margin: 0;
+  color: var(--shop-muted);
+  font: 500 18px/1.65 Assistant, system-ui, sans-serif;
+}
+
+.bbb-shop__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.bbb-shop__filters a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 10px 14px;
+  border: 1px solid var(--shop-line);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--shop-ink);
+  font: 700 13px/1 Assistant, system-ui, sans-serif;
+  text-decoration: none;
+}
+
+.bbb-shop__filters span {
+  color: #9d4568;
+}
+
+.bbb-shop__section {
+  padding: 44px 0 64px;
+}
+
+.bbb-shop__sectionHead {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+
+.bbb-shop__sectionHead h2 {
+  font-size: clamp(32px, 4vw, 48px);
+  line-height: 1;
+}
+
+.bbb-shop__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 18px;
+}
+
+.bbb-shop-card {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+  border: 1px solid var(--shop-line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.bbb-shop-card__media {
+  display: grid;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: var(--shop-rose);
+  color: #9d4568;
+  font: 700 64px/1 "Cormorant Garamond", Georgia, serif;
+  place-items: center;
+  text-decoration: none;
+}
+
+.bbb-shop-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 180ms ease;
+}
+
+.bbb-shop-card:hover .bbb-shop-card__media img {
+  transform: scale(1.035);
+}
+
+.bbb-shop-card__body {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.bbb-shop-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 24px;
+}
+
+.bbb-shop-card__badges span {
+  padding: 5px 7px;
+  border: 1px solid rgba(157, 69, 104, 0.2);
+  border-radius: 4px;
+  color: #9d4568;
+  background: #fff4f7;
+  font: 800 10px/1 Assistant, system-ui, sans-serif;
+  text-transform: uppercase;
+}
+
+.bbb-shop-card h3 {
+  font-size: 25px;
+  line-height: 1;
+}
+
+.bbb-shop-card h3 a {
+  color: var(--shop-ink);
+  text-decoration: none;
+}
+
+.bbb-shop-card p {
+  margin: 0;
+  color: var(--shop-muted);
+  font: 500 14px/1.55 Assistant, system-ui, sans-serif;
+}
+
+.bbb-shop-card__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--shop-muted);
+  font: 700 13px/1.2 Assistant, system-ui, sans-serif;
+}
+
+.bbb-shop-card__meta strong {
+  color: var(--shop-ink);
+}
+
+.bbb-shop-card__actions {
+  align-self: end;
+}
+
+.bbb-shop-card__button,
+.bbb-shop-card__actions .edd-submit,
+.bbb-shop-card__actions .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 42px;
+  padding: 11px 14px;
+  border: 1px solid #27151d;
+  border-radius: 4px;
+  background: #27151d;
+  color: #fff;
+  font: 800 13px/1 Assistant, system-ui, sans-serif;
+  text-decoration: none;
+  text-transform: lowercase;
+}
+
+.bbb-shop-card__button--ghost {
+  background: #fff;
+  color: #27151d;
+}
+
+.bbb-shop__empty {
+  padding: 56px 0 72px;
+}
+
+.bbb-shop__empty h2 {
+  font-size: clamp(30px, 4vw, 44px);
+}
+
+.bbb-shop__empty p {
+  max-width: 560px;
+  color: var(--shop-muted);
+  font: 500 16px/1.6 Assistant, system-ui, sans-serif;
+}
+
+.bbb-shop__jumpSections {
+  height: 1px;
+}
+
+@media (max-width: 680px) {
+  .bbb-shop__hero {
+    padding-top: 42px;
+  }
+
+  .bbb-shop__filters {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .bbb-shop__filters a {
+    justify-content: space-between;
+  }
+
+  .bbb-shop__grid {
+    grid-template-columns: 1fr;
+  }
+}

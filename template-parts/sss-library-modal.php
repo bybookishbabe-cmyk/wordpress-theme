@@ -1,4 +1,5 @@
 <?php
+/**
  * Blog library modal bridge.
  *
  * @package ByBookishBabeShopifyPort
