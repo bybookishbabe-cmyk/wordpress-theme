@@ -96,7 +96,5 @@ function sss_token_engine(string $content, int $post_id): string {
 	) ?? $content;
 	$content = preg_replace('/index="" /', 'index="1" ', $content) ?? $content;
 
-	$button = '<div class="article-inline-book-export"><button type="button" class="sss-lib__exportBtn guide-bookcard__export" data-guide-export-inline data-guide-title="' . esc_attr(get_the_title($post_id)) . '">save this list</button><div class="guide-bookcard__affiliate-note">some links may be affiliate links, so thank you for supporting the recs. &lt;3</div></div>';
-
-	return preg_replace('/(\[sss_book\s+index="1"\s+post_id="' . preg_quote((string) $post_id, '/') . '"\])/', $button . '$1', $content, 1) ?? $content;
+	return $content;
 }
