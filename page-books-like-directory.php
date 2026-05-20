@@ -7,7 +7,8 @@
 
 declare(strict_types=1);
 
-wp_enqueue_style('bbb-books-like', get_theme_file_uri('assets/css/books-like.css'), array('bbb-sss-library'), wp_get_theme()->get('Version'));
+$books_like_css_path = get_theme_file_path('assets/css/books-like.css');
+wp_enqueue_style('bbb-books-like', get_theme_file_uri('assets/css/books-like.css'), array('bbb-sss-library'), file_exists($books_like_css_path) ? (string) filemtime($books_like_css_path) : wp_get_theme()->get('Version'));
 get_header();
 
 $groups = function_exists('bbb_books_like_grouped_guides') ? bbb_books_like_grouped_guides() : array();
