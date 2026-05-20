@@ -222,12 +222,6 @@ get_header();
 		<h1 class="sss-title">faded pages & fatal lines.</h1>
 		<p class="sss-sub">tap a line to open the book. search by quote, book, author, trope, or shelf.</p>
 
-		<div class="sss-qw__feature">
-			<p class="sss-qw__featureKicker">quote dossier</p>
-			<h2 class="sss-qw__featureTitle">save the lines you want to keep.</h2>
-			<p class="sss-qw__featureBody">this should feel less like a list and more like a little archive of lines that ruined you properly.</p>
-		</div>
-
 		<div class="sss-qw__tools">
 			<label class="screen-reader-text" for="bbbQuoteWallSearch">search quote wall</label>
 			<input
