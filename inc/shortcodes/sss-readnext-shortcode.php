@@ -213,6 +213,67 @@ function sss_bigspecific_shortcode(): string {
 add_shortcode('sss_bigspecific', 'sss_bigspecific_shortcode');
 add_shortcode('bigspecific', 'sss_bigspecific_shortcode');
 
+function sss_what_to_read_next_shortcode($atts): string {
+	$atts = shortcode_atts(array('post_id' => get_the_ID()), $atts, 'sss_what_to_read_next');
+	$post_id = (int) $atts['post_id'];
+	$books = sss_article_post_books($post_id);
+	$first = $books[0] ?? null;
+	$second = $books[1] ?? null;
+	if (!$first instanceof WP_Post) {
+		return sss_bigspecific_shortcode();
+	}
+
+	$context = sss_readnext_context($post_id);
+	$cluster = sss_detect_cluster($context);
+	if (!$second instanceof WP_Post) {
+		$second = sss_find_readnext_book($first, $cluster);
+	}
+
+	$first_data = sss_article_book_data($first->ID);
+	$second_data = $second instanceof WP_Post ? sss_article_book_data($second->ID) : null;
+	$url = function_exists('bbb_resolve_page_url') ? bbb_resolve_page_url('what-to-read-next') : home_url('/what-to-read-next/');
+	$url = add_query_arg('book', (string) $first_data['handle'], $url);
+	$guide = sss_article_post(sss_article_field('guide_category', $post_id, null));
+	$trope = sss_article_post(sss_article_field('trope', $post_id, null));
+	$label = $guide instanceof WP_Post ? strtolower(get_the_title($guide)) : '';
+	if (!$label && $trope instanceof WP_Post) {
+		$label = strtolower(get_the_title($trope));
+	}
+	$label = $label ?: 'romance';
+	$copy = 'find your next read after ' . strtolower((string) $first_data['title']) . ' →';
+	if ($label && 'romance' !== $label) {
+		$copy = 'find your next ' . $label . ' read after ' . strtolower((string) $first_data['title']) . ' →';
+	}
+
+	ob_start();
+	?>
+<a class="blog-next-read blog-next-read--article" href="<?php echo esc_url($url); ?>" aria-label="<?php echo esc_attr('find your next read after ' . $first_data['title']); ?>">
+  <span class="blog-next-read__stage" aria-hidden="true">
+    <?php if (!empty($first_data['cover'])) : ?>
+      <span class="blog-next-read__book">
+        <span class="blog-next-read__bookCover">
+          <img src="<?php echo esc_url($first_data['cover']); ?>" alt="<?php echo esc_attr($first_data['title']); ?>" loading="lazy">
+        </span>
+        <span class="blog-next-read__bookLabel">start here</span>
+      </span>
+    <?php endif; ?>
+    <?php if ($second_data && !empty($second_data['cover'])) : ?>
+      <span class="blog-next-read__arrow">→</span>
+      <span class="blog-next-read__book">
+        <span class="blog-next-read__bookCover">
+          <img src="<?php echo esc_url($second_data['cover']); ?>" alt="<?php echo esc_attr($second_data['title']); ?>" loading="lazy">
+        </span>
+        <span class="blog-next-read__bookLabel">try next</span>
+      </span>
+    <?php endif; ?>
+  </span>
+  <span class="blog-next-read__copy"><?php echo esc_html($copy); ?></span>
+</a>
+	<?php
+	return ob_get_clean();
+}
+add_shortcode('sss_what_to_read_next', 'sss_what_to_read_next_shortcode');
+
 function sss_faq_shortcode($atts, ?string $content = null): string {
 	if (null === $content || trim($content) === '') {
 		return '';
