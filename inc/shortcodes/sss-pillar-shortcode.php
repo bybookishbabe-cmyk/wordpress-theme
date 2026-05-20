@@ -20,7 +20,7 @@ function sss_spice_shortcode($atts): string {
 	$data = $map[$level];
 
 	return sprintf(
-		'<div class="pillar-bookcard__spiceSection" id="spice-%1$d"><div class="pillar-bookcard__spiceLabel">spice %1$d</div><h3 class="pillar-bookcard__spiceTitle">%2$s</h3><p class="pillar-bookcard__spiceCopy">%3$s</p><div class="pillar-bookcard__heat" aria-hidden="true">%4$s</div></div>',
+		'<section class="blog-pillar-spice" id="spice-%1$d"><div class="blog-pillar-spice__line" aria-hidden="true"></div><div class="blog-pillar-spice__head"><div><p class="blog-pillar-spice__label">spice %1$d</p><h2 class="blog-pillar-spice__title">%2$s</h2></div><div class="blog-pillar-spice__heat" aria-label="%4$s spice">%4$s</div></div><p class="blog-pillar-spice__copy">%3$s</p></section>',
 		$level,
 		esc_html($data[0]),
 		esc_html($data[1]),
@@ -31,24 +31,49 @@ add_shortcode('sss_spice', 'sss_spice_shortcode');
 
 function sss_pillar_nav_shortcode($atts): string {
 	$atts = shortcode_atts(array('post_id' => get_the_ID()), $atts, 'sss_pillar_nav');
-	$books = sss_article_books_for_post((int) $atts['post_id']);
+	$post_id = (int) $atts['post_id'];
+	$books = sss_article_books_for_post($post_id);
 	if (!$books) {
 		return '';
 	}
 
-	$levels = array();
+	$counts = array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0);
 	foreach ($books as $book) {
 		$level = max(1, min(5, (int) sss_article_field('spice_level', $book->ID, 0)));
-		$levels[$level] = true;
+		$counts[$level]++;
 	}
-	ksort($levels);
+
+	$label = 'romance';
+	if (function_exists('get_field')) {
+		$guide_cat = sss_article_post(get_field('guide_category', $post_id));
+		$trope     = sss_article_post(get_field('trope', $post_id));
+		if ($guide_cat instanceof WP_Post) {
+			$label = get_the_title($guide_cat);
+		} elseif ($trope instanceof WP_Post) {
+			$label = get_the_title($trope);
+		}
+	}
+	$label = trim(strtolower(wp_strip_all_tags((string) $label))) ?: 'romance';
+	$total = array_sum($counts);
 
 	ob_start();
 	?>
-<nav class="pillar-bookcard__nav" aria-label="spice level navigation">
-  <?php foreach (array_keys($levels) as $level) : ?>
-  <a href="#spice-<?php echo esc_attr((string) $level); ?>">spice <?php echo esc_html((string) $level); ?></a>
+<nav class="blog-pillar-nav" aria-label="pillar guide spice navigation">
+  <div class="blog-pillar-nav__eyebrow"><?php echo esc_html($label); ?> pillar guide</div>
+  <div class="blog-pillar-nav__header">
+    <h2 class="blog-pillar-nav__title">choose your <?php echo esc_html($label); ?> spice level</h2>
+    <?php if ($total > 0) : ?>
+      <p class="blog-pillar-nav__count"><?php echo esc_html((string) $total); ?> books, sorted by heat instead of chaos.</p>
+    <?php endif; ?>
+  </div>
+  <div class="blog-pillar-nav__links">
+  <?php foreach ($counts as $level => $count) : ?>
+    <a class="blog-pillar-nav__link<?php echo $count > 0 ? '' : ' is-disabled'; ?>"<?php echo $count > 0 ? ' href="#spice-' . esc_attr((string) $level) . '"' : ' aria-disabled="true" tabindex="-1"'; ?>>
+      spice <?php echo esc_html((string) $level); ?>
+      <span><?php echo esc_html((string) $count); ?> rec<?php echo 1 === $count ? '' : 's'; ?></span>
+    </a>
   <?php endforeach; ?>
+  </div>
 </nav>
 	<?php
 	return ob_get_clean();

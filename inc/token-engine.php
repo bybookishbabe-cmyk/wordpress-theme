@@ -64,6 +64,7 @@ function sss_token_engine(string $content, int $post_id): string {
 
 	$content = preg_replace('/<p\b[^>]*>\s*(\[faq\])/i', '$1', $content) ?? $content;
 	$content = preg_replace('/(\[\/faq\])\s*<\/p>/i', '$1', $content) ?? $content;
+	$content = preg_replace('/(?<!\[)\/(faq|q|a)\]/i', '[/$1]', $content) ?? $content;
 
 	$content = preg_replace_callback(
 		'/\[newsletter:([a-z0-9_-]+)\]/i',
