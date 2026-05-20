@@ -136,12 +136,58 @@ function bbb_society_product_importer_download_url(array $product): string {
 	return '';
 }
 
+function bbb_society_product_importer_download_files(array $product): array {
+	$files = array();
+	$raw   = $product['download_files'] ?? $product['downloadFiles'] ?? array();
+
+	if (is_string($raw) && '' !== trim($raw)) {
+		$decoded = json_decode($raw, true);
+		$raw     = is_array($decoded) ? $decoded : preg_split('/[|,]/', $raw);
+	}
+
+	foreach ((array) $raw as $index => $file) {
+		if (is_array($file)) {
+			$url  = esc_url_raw((string) ($file['url'] ?? $file['file'] ?? ''));
+			$name = trim((string) ($file['name'] ?? ''));
+		} else {
+			$url  = esc_url_raw((string) $file);
+			$name = '';
+		}
+
+		if ('' === $url) {
+			continue;
+		}
+
+		$files[] = array(
+			'name' => '' !== $name ? $name : 'Download ' . ((int) $index + 1),
+			'url'  => $url,
+		);
+	}
+
+	$single = bbb_society_product_importer_download_url($product);
+	if ('' !== $single && !in_array($single, array_column($files, 'url'), true)) {
+		array_unshift(
+			$files,
+			array(
+				'name' => trim((string) ($product['title'] ?? 'Download')),
+				'url'  => $single,
+			)
+		);
+	}
+
+	return $files;
+}
+
 function bbb_society_product_importer_is_digital(array $product): bool {
 	if (isset($product['is_digital'])) {
 		return bbb_society_product_importer_truthy($product['is_digital']);
 	}
 
 	if ('' !== bbb_society_product_importer_download_url($product)) {
+		return true;
+	}
+
+	if (bbb_society_product_importer_download_files($product)) {
 		return true;
 	}
 
@@ -240,6 +286,7 @@ function bbb_society_product_importer_normalize_row(array $row, bool $default_fr
 	$handle = sanitize_title((string) ($row['handle'] ?? $row['slug'] ?? ''));
 	$title  = trim((string) ($row['title'] ?? $row['name'] ?? $handle));
 	$is_digital = bbb_society_product_importer_is_digital($row);
+	$download_files = bbb_society_product_importer_download_files($row);
 
 	return array(
 		'id'           => (string) ($row['id'] ?? $row['admin_graphql_api_id'] ?? ''),
@@ -249,6 +296,7 @@ function bbb_society_product_importer_normalize_row(array $row, bool $default_fr
 		'price'        => bbb_society_product_importer_price($row),
 		'image_url'    => bbb_society_product_importer_image_url($row),
 		'download_url' => bbb_society_product_importer_download_url($row),
+		'download_files' => $download_files,
 		'society_free' => $is_digital && (isset($row['society_free']) ? bbb_society_product_importer_truthy($row['society_free']) : $default_free),
 		'status'       => in_array((string) ($row['status'] ?? ''), array('publish', 'draft', 'private'), true) ? (string) $row['status'] : 'draft',
 		'is_digital'   => $is_digital,
@@ -294,6 +342,10 @@ function bbb_society_product_importer_upsert_product(array $product) {
 	$post_id      = (int) $result;
 	$price        = (string) ($product['price'] ?? '');
 	$download_url = esc_url_raw((string) ($product['download_url'] ?? ''));
+	$download_files = array_values(array_filter((array) ($product['download_files'] ?? array()), static fn($file): bool => is_array($file) && !empty($file['url'])));
+	if ('' === $download_url && $download_files) {
+		$download_url = esc_url_raw((string) ($download_files[0]['url'] ?? ''));
+	}
 	$image_url    = esc_url_raw((string) ($product['image_url'] ?? ''));
 	$is_free      = !empty($product['society_free']);
 	$is_digital   = !empty($product['is_digital']);
@@ -315,16 +367,17 @@ function bbb_society_product_importer_upsert_product(array $product) {
 		update_post_meta($post_id, 'edd_price', $price);
 		update_post_meta($post_id, '_edd_product_type', 'default');
 
-		if ('' !== $download_url) {
+		if ($download_files) {
 			update_post_meta(
 				$post_id,
 				'edd_download_files',
-				array(
-					array(
-						'name'      => $title,
-						'file'      => $download_url,
+				array_map(
+					static fn(array $file): array => array(
+						'name'      => (string) ($file['name'] ?? $title),
+						'file'      => esc_url_raw((string) ($file['url'] ?? '')),
 						'condition' => '0',
 					),
+					$download_files
 				)
 			);
 		}
@@ -340,17 +393,31 @@ function bbb_society_product_importer_upsert_product(array $product) {
 	}
 
 	if ('' !== $download_url) {
-		$file_key = md5($download_url);
 		if ('woocommerce' === $platform) {
+			$woo_files = array();
+			foreach ($download_files as $file) {
+				$url = esc_url_raw((string) ($file['url'] ?? ''));
+				if ('' === $url) {
+					continue;
+				}
+
+				$woo_files[md5($url)] = array(
+					'name' => (string) ($file['name'] ?? $title),
+					'file' => $url,
+				);
+			}
+
+			if (!$woo_files && '' !== $download_url) {
+				$woo_files[md5($download_url)] = array(
+					'name' => $title,
+					'file' => $download_url,
+				);
+			}
+
 			update_post_meta(
 				$post_id,
 				'_downloadable_files',
-				array(
-					$file_key => array(
-						'name' => $title,
-						'file' => $download_url,
-					),
-				)
+				$woo_files
 			);
 			update_post_meta($post_id, '_download_limit', '');
 			update_post_meta($post_id, '_download_expiry', '');

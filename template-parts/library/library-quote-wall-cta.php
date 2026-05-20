@@ -8,14 +8,21 @@
 declare(strict_types=1);
 
 $is_society = !empty($args['is_society']);
-$join_url   = get_option('bbb_society_gate_member_url', 'https://thesmutandsentimentsociety.substack.com/subscribe');
 $quote_url  = home_url('/sss-quote-wall/');
 
-$quotes = post_type_exists('sss_quote')
+$quote_post_types = array_values(
+	array_filter(
+		array('sss_quote', 'bbb_quote'),
+		static function (string $post_type): bool {
+			return post_type_exists($post_type);
+		}
+	)
+);
+$quotes = $quote_post_types
 	? get_posts(
 		array(
-			'post_type'      => 'sss_quote',
-			'post_status'    => 'publish',
+			'post_type'      => $quote_post_types,
+			'post_status'    => array('publish', 'draft'),
 			'posts_per_page' => 3,
 			'orderby'        => 'date',
 			'order'          => 'DESC',
@@ -35,6 +42,9 @@ $quotes = post_type_exists('sss_quote')
 		</a>
 	</div>
 	<div class="sss-lib__quoteCtaStack" aria-hidden="true">
+		<?php if (!$quotes) : ?>
+			<blockquote>Saved lines, soft damage, and the quotes worth returning to will live here.</blockquote>
+		<?php endif; ?>
 		<?php foreach ($quotes as $quote) : ?>
 			<?php
 			if (!$quote instanceof WP_Post) {
@@ -46,6 +56,9 @@ $quotes = post_type_exists('sss_quote')
 			}
 			if ('' === $text) {
 				$text = trim((string) get_post_meta($quote->ID, 'quote', true));
+			}
+			if ('' === $text) {
+				$text = trim((string) get_post_meta($quote->ID, '_bbb_quote', true));
 			}
 			if ('' === $text) {
 				$text = trim(wp_strip_all_tags($quote->post_content));

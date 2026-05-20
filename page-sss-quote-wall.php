@@ -19,6 +19,9 @@ if (!function_exists('bbb_quote_wall_text')) {
 			$text = trim((string) get_post_meta($quote->ID, 'quote', true));
 		}
 		if ('' === $text) {
+			$text = trim((string) get_post_meta($quote->ID, '_bbb_quote', true));
+		}
+		if ('' === $text) {
 			$text = trim(wp_strip_all_tags($quote->post_content));
 		}
 
@@ -60,6 +63,7 @@ if (!function_exists('bbb_quote_wall_book')) {
 
 		$handle = (string) get_post_meta($quote->ID, '_quote_book_handle', true);
 		$handle = '' !== $handle ? $handle : (string) get_post_meta($quote->ID, 'book_handle', true);
+		$handle = '' !== $handle ? $handle : (string) get_post_meta($quote->ID, '_bbb_book_handle', true);
 		if ('' !== $handle) {
 			foreach (array('bbb_book', 'sss_book') as $post_type) {
 				$book_post = get_page_by_path($handle, OBJECT, $post_type);
@@ -117,13 +121,21 @@ if (!function_exists('bbb_quote_wall_theme')) {
 	}
 }
 
+$quote_post_types = array_values(
+	array_filter(
+		array('sss_quote', 'bbb_quote'),
+		static function (string $post_type): bool {
+			return post_type_exists($post_type);
+		}
+	)
+);
 $is_society = function_exists('bbb_reader_is_society') ? bbb_reader_is_society() : false;
 $quote_limit = $is_society ? -1 : 6;
-$quotes = post_type_exists('sss_quote')
+$quotes = $quote_post_types
 	? get_posts(
 		array(
-			'post_type'      => 'sss_quote',
-			'post_status'    => 'publish',
+			'post_type'      => $quote_post_types,
+			'post_status'    => array('publish', 'draft'),
 			'posts_per_page' => $quote_limit,
 			'orderby'        => 'date',
 			'order'          => 'DESC',
@@ -139,7 +151,7 @@ get_header();
 <main class="bbb-quote-wall<?php echo $is_society ? ' is-unlocked' : ' is-preview'; ?>">
 	<section class="bbb-quote-wall__hero">
 		<div class="bbb-quote-wall__heroInner">
-			<p class="bbb-quote-wall__kicker">sss quote library</p>
+			<p class="bbb-quote-wall__kicker">quote library</p>
 			<h1>lines that ruined me in a good way.</h1>
 			<p>Soft damage, sharp longing, and the book lines worth pinning somewhere dramatic.</p>
 			<div class="bbb-quote-wall__actions">

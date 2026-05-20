@@ -18,7 +18,8 @@ await mkdir(productsDir, { recursive: true });
 
 const dropProductHandles = await loadDropProductHandles();
 const products = await fetchProducts();
-const normalized = products.map((product) => normalizeProduct(product, dropProductHandles));
+const files = await fetchFiles();
+const normalized = products.map((product) => normalizeProduct(product, dropProductHandles, files));
 const digitalProducts = normalized.filter((product) => product.is_digital);
 const freeForMembers = digitalProducts.filter((product) => product.society_free);
 
@@ -39,6 +40,7 @@ await writeJson(freeJsonPath, freeForMembers);
 await writeFile(freeCsvPath, toCsv(freeForMembers));
 
 console.log(`Exported ${products.length} Shopify products to ${relative(fullJsonPath)}`);
+console.log(`Scanned ${files.length} Shopify files for downloadable assets.`);
 console.log(`Wrote ${digitalProducts.length} WordPress-ready digital products to ${relative(digitalJsonPath)} and ${relative(digitalCsvPath)}`);
 console.log(`Updated legacy import aliases at ${relative(jsonPath)} and ${relative(csvPath)}`);
 console.log(`${freeForMembers.length} digital products matched the sss_drop product references.`);
@@ -161,10 +163,48 @@ async function fetchProducts() {
   return products;
 }
 
-function normalizeProduct(product, dropProductHandles) {
+async function fetchFiles() {
+  const query = `#graphql
+    query Files($cursor: String) {
+      files(first: 100, after: $cursor, sortKey: CREATED_AT, reverse: true) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        nodes {
+          id
+          alt
+          createdAt
+          fileStatus
+          __typename
+          ... on GenericFile {
+            url
+            mimeType
+            originalFileSize
+          }
+        }
+      }
+    }
+  `;
+
+  const files = [];
+  let cursor = null;
+
+  do {
+    const data = await shopifyGraphql(query, { cursor });
+    const connection = data.files;
+    files.push(...connection.nodes.filter((file) => file.__typename === 'GenericFile' && file.url));
+    cursor = connection.pageInfo.hasNextPage ? connection.pageInfo.endCursor : null;
+  } while (cursor);
+
+  return files;
+}
+
+function normalizeProduct(product, dropProductHandles, files) {
   const variant = product.variants?.nodes?.[0] || {};
   const imageUrl = product.featuredImage?.url || firstMediaImageUrl(product.media?.nodes || '');
-  const downloadUrl = firstDownloadUrl(product.metafields?.nodes || []);
+  const downloadFiles = findDownloadFiles(product, files);
+  const downloadUrl = firstDownloadUrl(product.metafields?.nodes || []) || downloadFiles[0]?.url || '';
   const productType = product.productType || '';
   const tags = product.tags || [];
   const collections = product.collections?.nodes || [];
@@ -175,6 +215,7 @@ function normalizeProduct(product, dropProductHandles) {
     title: product.title || product.handle || '',
     price: variant.price || '',
     download_url: downloadUrl,
+    download_files: JSON.stringify(downloadFiles),
     image_url: imageUrl || '',
     society_free: isDigital && dropProductHandles.has(product.handle || ''),
     status: 'draft',
@@ -253,16 +294,81 @@ function firstDownloadUrl(metafields) {
       ...(field.references?.nodes || []).map((node) => node?.url),
     ].filter(Boolean);
 
-    if ((haystack.includes('download') || haystack.includes('file')) && candidates.length) {
+    if ((haystack.includes('download') || haystack.includes('file') || haystack.includes('canva')) && candidates.length) {
       return candidates[0];
     }
 
-    if ((haystack.includes('download') || haystack.includes('file')) && /^https?:\/\//.test(field.value || '')) {
+    if ((haystack.includes('download') || haystack.includes('file') || haystack.includes('canva')) && /^https?:\/\//.test(field.value || '')) {
       return field.value;
     }
   }
 
   return '';
+}
+
+function findDownloadFiles(product, files) {
+  const target = productMatchKey(product);
+  if (!target) return [];
+
+  const matches = files
+    .filter((file) => file.mimeType === 'application/pdf' || /\.pdf(\?|$)/i.test(file.url))
+    .map((file) => ({ file, key: fileMatchKey(file.url) }))
+    .filter(({ key }) => key && (key.includes(target) || target.includes(key)))
+    .map(({ file }) => ({
+      name: downloadFileName(file.url),
+      url: file.url,
+    }));
+
+  return uniqueDownloadFiles(matches).sort((a, b) => downloadFileSort(a.name) - downloadFileSort(b.name));
+}
+
+function productMatchKey(product) {
+  const raw = String(product.title || product.handle || '')
+    .replace(/printable kindle insert/ig, '')
+    .replace(/editable canva template/ig, '')
+    .replace(/kindle insert/ig, '')
+    .replace(/book tracker bookmark/ig, '')
+    .replace(/—|-/g, ' ');
+
+  return compactKey(raw);
+}
+
+function fileMatchKey(url) {
+  const filename = decodeURIComponent(String(url).split('/').pop()?.split('?')[0] || '')
+    .replace(/\.[a-z0-9]+$/i, '')
+    .replace(/^(6Inch|10thGen|11thGen|12thGen)_/i, '')
+    .replace(/^Printable_/i, '');
+
+  return compactKey(filename);
+}
+
+function compactKey(value) {
+  return String(value)
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '')
+    .trim();
+}
+
+function downloadFileName(url) {
+  return decodeURIComponent(String(url).split('/').pop()?.split('?')[0] || 'download');
+}
+
+function uniqueDownloadFiles(files) {
+  const seen = new Set();
+  return files.filter((file) => {
+    if (seen.has(file.url)) return false;
+    seen.add(file.url);
+    return true;
+  });
+}
+
+function downloadFileSort(name) {
+  if (/6Inch/i.test(name)) return 1;
+  if (/10thGen/i.test(name)) return 2;
+  if (/11thGen/i.test(name)) return 3;
+  if (/12thGen/i.test(name)) return 4;
+  return 10;
 }
 
 async function loadDropProductHandles() {
@@ -356,6 +462,7 @@ function toCsv(rows) {
     'title',
     'price',
     'download_url',
+    'download_files',
     'image_url',
     'society_free',
     'status',
