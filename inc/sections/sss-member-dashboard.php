@@ -18,8 +18,8 @@ declare(strict_types=1);
 					<a href="<?php echo esc_url(bbb_resolve_page_url('sss-library-page')); ?>" class="sss-memberdash__btn sss-memberdash__btn--ghost">favorite books in the library</a>
 				</div>
 				<div class="sss-memberdash__stepLine">
-					<p>step 2. open made for you...</p>
-					<a href="<?php echo esc_url(bbb_resolve_page_url('sss-made-for-you')); ?>" class="sss-memberdash__btn">open made for you</a>
+					<p>step 2. open member dashboard...</p>
+					<a href="<?php echo esc_url(bbb_resolve_page_url('member-dashboard')); ?>" class="sss-memberdash__btn">open member dashboard</a>
 				</div>
 			</article>
 			<article class="sss-memberdash__card">

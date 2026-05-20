@@ -4,7 +4,7 @@ declare(strict_types=1);
 $tabs = $args['tabs'] ?? array(
 	array('label' => 'main page', 'icon' => '📁', 'slug' => 'society-library', 'sub' => 'dashboard'),
 	array('label' => 'library', 'icon' => '📚', 'slug' => 'sss-library-page', 'sub' => 'books'),
-	array('label' => 'made for you', 'icon' => '✨', 'slug' => 'sss-made-for-you', 'sub' => 'recs'),
+	array('label' => 'member dashboard', 'icon' => '✨', 'slug' => 'member-dashboard', 'sub' => 'recs'),
 	array('label' => 'printable inserts', 'icon' => '🖨️', 'slug' => 'sss-printable-kindle-inserts', 'sub' => 'drops'),
 	array('label' => 'bookish templates', 'icon' => '⌨️', 'slug' => 'sss-canva-templates', 'sub' => 'canva'),
 	array('label' => 'free extras', 'icon' => '🎁', 'slug' => 'sss-freebies', 'sub' => 'downloads'),

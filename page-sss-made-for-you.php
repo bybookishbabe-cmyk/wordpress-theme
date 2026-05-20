@@ -129,8 +129,6 @@ if (!function_exists('bbb_made_for_you_quotes')) {
 	}
 }
 
-bbb_require_sss_member();
-
 $mfy_books  = bbb_made_for_you_books();
 $mfy_quotes = bbb_made_for_you_quotes($mfy_books);
 
@@ -141,9 +139,17 @@ bbb_render_component('sss-folder-tabs');
 		<div class="sss-lib__wrap">
 			<header class="sss-lib__head">
 				<p class="sss-lib__kicker">private reader file</p>
-				<h1 class="sss-lib__title">your dashboard</h1>
+				<h1 class="sss-lib__title">member dashboard</h1>
 				<p class="sss-lib__sub">your taste, your spice, your finished shelf, and the books most likely to hit next.</p>
 			</header>
+			<div class="sss-mfy__dashboardIntro" aria-label="member dashboard shortcuts">
+				<a class="sss-lib__finderBtn" href="<?php echo esc_url(bbb_page_url('sss-library-page')); ?>">open the library</a>
+				<a class="sss-lib__finderBtn sss-lib__finderBtn--ghost" href="<?php echo esc_url(bbb_page_url('my-bookshelf')); ?>">open my bookshelf</a>
+				<a class="sss-lib__finderBtn sss-lib__finderBtn--ghost" href="<?php echo esc_url(bbb_page_url('sss-quote-wall')); ?>">open quote library</a>
+			</div>
+			<?php if (!$mfy_books) : ?>
+				<div class="sss-mfy__empty sss-mfy__empty--page">member dashboard is connected, but there are not any visible library books available for recommendations yet.</div>
+			<?php endif; ?>
 
 			<section class="sss-lib__madeForYou" id="sssMadeForYou">
 				<div class="sss-mfy">
@@ -240,7 +246,7 @@ bbb_render_component('sss-folder-tabs');
 						<div class="sss-mfy__resultsHead">
 							<div class="sss-mfy__resultsIdentity">
 								<div class="sss-mfy__eyebrow" id="sssMfyDashboardKicker">curated for you</div>
-								<div class="sss-mfy__resultsTitle" id="sssMfyDashboardTitle">made for you</div>
+								<div class="sss-mfy__resultsTitle" id="sssMfyDashboardTitle">member dashboard</div>
 							</div>
 							<button type="button" class="sss-mfy__resetLink" id="sssMadeForYouResetResults">reset</button>
 						</div>
@@ -335,7 +341,7 @@ bbb_render_component('sss-folder-tabs');
 											<button type="button" class="sss-mfy__dialChoice" data-mfy-dial-choice="wreck_me">wreck me</button>
 										</div>
 									</div>
-									<p class="sss-mfy__moduleNote" id="sssMfyManDialNote">this will only tune the reads suggested below your dashboard.</p>
+									<p class="sss-mfy__moduleNote" id="sssMfyManDialNote">this will only tune the reads suggested below your member dashboard.</p>
 									<div class="sss-mfy__addonActions"><button type="button" class="sss-lib__finderBtn" id="sssMfySaveManDial">save dial</button></div>
 								</section>
 
