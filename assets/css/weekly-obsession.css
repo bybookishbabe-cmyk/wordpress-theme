@@ -787,9 +787,27 @@ a.bbb-home-obsession__trope:focus-visible {
   margin-right: auto;
 }
 
-.sss-wo__relatedItem .sss-lib__book,
+.sss-wo__relatedItem {
+  display: flex;
+  justify-content: center;
+}
+
+.sss-wo__relatedItem .sss-lib__book {
+  width: min(100%, 168px);
+  flex: 0 0 auto;
+}
+
 .sss-wo__relatedItem .sss-lib__coverWrap {
   width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 3;
+}
+
+.sss-wo__relatedItem .sss-lib__cover {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  object-fit: contain;
 }
 
 .sss-wo__empty {
@@ -905,6 +923,10 @@ a.bbb-home-obsession__trope:focus-visible {
   .sss-wo__relatedItem {
     flex: 0 0 168px;
     scroll-snap-align: start;
+  }
+
+  .sss-wo__relatedItem .sss-lib__book {
+    width: 150px;
   }
 }
 
