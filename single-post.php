@@ -76,6 +76,12 @@ while (have_posts()) :
 	?>
   </div>
 
+  <?php
+	if (function_exists('bbb_render_society_recommendations')) {
+		echo bbb_render_society_recommendations($post_id); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	}
+	?>
+
 </article>
 
 	<?php
