@@ -128,14 +128,9 @@ if (!function_exists('bbb_review_index_article_books')) {
 
 if (!function_exists('bbb_review_index_has_review_flag')) {
 	function bbb_review_index_has_review_flag(int $post_id): bool {
-		$review_terms = get_the_terms($post_id, 'book_review_category');
-		if ($review_terms && !is_wp_error($review_terms)) {
-			return true;
-		}
-
 		$value = bbb_review_index_field(
 			$post_id,
-			array('book_review', 'review', 'is_book_review', 'is_review', '_bbb_book_review', '_bbb_review'),
+			array('book_review', '_book_review', '_bbb_book_review', 'review', '_review', '_bbb_review'),
 			null
 		);
 
@@ -249,11 +244,7 @@ $page_id           = get_the_ID();
 $blog_handle       = sanitize_title((string) bbb_get_field('blog', $page_id, 'curated-romance-guides'));
 $page_size         = max(1, (int) bbb_get_field('articles_per_page', $page_id, 20));
 $posts             = bbb_review_index_posts($blog_handle ?: 'curated-romance-guides');
-$explicit_reviews  = array_values(array_filter($posts, static fn(WP_Post $post): bool => bbb_review_index_has_review_flag($post->ID)));
-$review_posts      = $explicit_reviews ?: array_values(array_filter($posts, static fn(WP_Post $post): bool => (bool) bbb_review_index_article_books($post->ID)));
-if (!$review_posts) {
-	$review_posts = $posts;
-}
+$review_posts      = array_values(array_filter($posts, static fn(WP_Post $post): bool => bbb_review_index_has_review_flag($post->ID)));
 $trending_post     = $review_posts[0] ?? null;
 $archive_posts     = $trending_post ? array_values(array_filter($review_posts, static fn(WP_Post $post): bool => (int) $post->ID !== (int) $trending_post->ID)) : array();
 $review_section_id = 'BookReviews-' . (int) $page_id;
