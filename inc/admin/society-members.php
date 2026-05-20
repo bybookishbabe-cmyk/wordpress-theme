@@ -23,6 +23,11 @@ function bbb_society_admin_fetch_supabase_members(): array {
 	if ('' === $config['url'] || '' === $config['key']) {
 		return array(
 			'rows'  => array(),
+			'counts' => array(
+				'total' => 0,
+				'paid'  => 0,
+				'free'  => 0,
+			),
 			'error' => 'Supabase service role key is not configured, so this table is showing WordPress accounts only.',
 		);
 	}
@@ -65,7 +70,66 @@ function bbb_society_admin_fetch_supabase_members(): array {
 		);
 	}
 
-	return array('rows' => $rows, 'error' => '');
+	return array(
+		'rows'   => $rows,
+		'counts' => bbb_society_admin_fetch_supabase_counts($config),
+		'error'  => '',
+	);
+}
+
+function bbb_society_admin_fetch_supabase_count(array $config, array $filters = array()): int {
+	$query = http_build_query(
+		array_merge(
+			array(
+				'select' => 'id',
+				'limit'  => 1,
+			),
+			$filters
+		),
+		'',
+		'&',
+		PHP_QUERY_RFC3986
+	);
+
+	$response = wp_remote_get(
+		$config['url'] . '/rest/v1/bookshelf_subscribers?' . $query,
+		array(
+			'timeout' => 15,
+			'headers' => array(
+				'apikey'        => $config['key'],
+				'Authorization' => 'Bearer ' . $config['key'],
+				'Accept'        => 'application/json',
+				'Prefer'        => 'count=exact',
+			),
+		)
+	);
+
+	if (is_wp_error($response)) {
+		return 0;
+	}
+
+	$content_range = (string) wp_remote_retrieve_header($response, 'content-range');
+	if (preg_match('#/([0-9]+)$#', $content_range, $matches)) {
+		return (int) $matches[1];
+	}
+
+	return 0;
+}
+
+function bbb_society_admin_fetch_supabase_counts(array $config): array {
+	$total = bbb_society_admin_fetch_supabase_count($config);
+	$paid  = bbb_society_admin_fetch_supabase_count(
+		$config,
+		array(
+			'or' => '(access_tier.eq.society,society_key_used_at.not.is.null)',
+		)
+	);
+
+	return array(
+		'total' => $total,
+		'paid'  => $paid,
+		'free'  => max($total - $paid, 0),
+	);
 }
 
 function bbb_society_admin_wp_user_is_paid(WP_User $user): bool {
@@ -143,8 +207,9 @@ function bbb_society_admin_member_rows(): array {
 	}
 
 	return array(
-		'rows'  => array_values($rows),
-		'error' => (string) ($supabase['error'] ?? ''),
+		'rows'   => array_values($rows),
+		'counts' => is_array($supabase['counts'] ?? null) ? $supabase['counts'] : array(),
+		'error'  => (string) ($supabase['error'] ?? ''),
 	);
 }
 
@@ -192,24 +257,21 @@ function bbb_society_admin_page(): void {
 
 	$data = bbb_society_admin_member_rows();
 	$rows = bbb_society_admin_filter_rows($data['rows']);
-	$paid_count = count(
-		array_filter(
-			$data['rows'],
-			static fn(array $row): bool => 'society' === $row['supabase_tier'] || 'paid access' === $row['wp_access']
-		)
-	);
-	$free_count = max(count($data['rows']) - $paid_count, 0);
+	$counts = is_array($data['counts'] ?? null) ? $data['counts'] : array();
+	$total_count = (int) ($counts['total'] ?? count($data['rows']));
+	$paid_count = (int) ($counts['paid'] ?? 0);
+	$free_count = (int) ($counts['free'] ?? max($total_count - $paid_count, 0));
 	?>
 	<div class="wrap bbb-society-admin">
-		<h1><?php esc_html_e('Society Members', 'bybookishbabe-shopify-port'); ?></h1>
-		<p class="description">Supabase paid logic: <code>society_key_used_at</code> means paid Society access; otherwise the subscriber is free.</p>
+		<h1><?php esc_html_e('Newsletter Subscribers', 'bybookishbabe-shopify-port'); ?></h1>
+		<p class="description">Summary counts are exact from Supabase. Paid logic: <code>access_tier = society</code> or <code>society_key_used_at</code>; otherwise the subscriber is free.</p>
 
 		<?php if (!empty($data['error'])) : ?>
 			<div class="notice notice-warning"><p><?php echo esc_html($data['error']); ?></p></div>
 		<?php endif; ?>
 
 		<div class="bbb-society-admin-summary">
-			<div><strong><?php echo esc_html((string) count($data['rows'])); ?></strong><span>total</span></div>
+			<div><strong><?php echo esc_html((string) $total_count); ?></strong><span>total</span></div>
 			<div><strong><?php echo esc_html((string) $paid_count); ?></strong><span>paid/society</span></div>
 			<div><strong><?php echo esc_html((string) $free_count); ?></strong><span>free/no paid access</span></div>
 		</div>
