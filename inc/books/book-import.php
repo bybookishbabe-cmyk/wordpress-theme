@@ -122,6 +122,44 @@ function bbb_import_field_reference_handle(array $fields, string $key): string {
 	return is_string($value) && strpos($value, 'gid://') !== 0 ? sanitize_title($value) : '';
 }
 
+function bbb_import_newsletter_issue_url(array $fields): string {
+	foreach (array('url', 'issue_url', 'newsletter_url') as $key) {
+		$value = bbb_import_metaobject_field_value($fields, $key);
+		if ('' !== $value) {
+			return function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value($value) : $value;
+		}
+	}
+
+	return '';
+}
+
+function bbb_import_newsletter_book_handle(array $fields): string {
+	foreach (
+		array(
+			'book',
+			'library_book',
+			'featured_book',
+			'featured_library_book',
+			'obsession_book',
+			'weekly_obsession_book',
+		) as $key
+	) {
+		$handle = bbb_import_field_reference_handle($fields, $key);
+		if ('' !== $handle) {
+			return $handle;
+		}
+	}
+
+	foreach (array('book_handle', 'library_book_handle', 'featured_book_handle') as $key) {
+		$value = sanitize_title(bbb_import_metaobject_field_value($fields, $key));
+		if ('' !== $value) {
+			return $value;
+		}
+	}
+
+	return '';
+}
+
 function bbb_import_assign_book_shelf(int $post_id, array $fields): bool {
 	$shelf_name   = bbb_import_field_reference_text($fields, 'shelf', array('name', 'title'));
 	$shelf_handle = bbb_import_field_reference_handle($fields, 'shelf');
@@ -429,10 +467,13 @@ function bbb_import_newsletter_issues_from_data(array $data, ?callable $logger =
 			update_post_meta((int) $post_id, '_issue_publish_date', $publish_date);
 		}
 
+		$issue_url = bbb_import_newsletter_issue_url($fields);
+		if ('' !== $issue_url) {
+			update_post_meta((int) $post_id, '_bbb_newsletter_url', $issue_url);
+		}
+
 		foreach (
 			array(
-				'url'         => '_bbb_newsletter_url',
-				'issue_url'   => '_bbb_newsletter_url',
 				'excerpt'     => '_issue_excerpt',
 				'subtitle'    => '_issue_subtitle',
 				'issue_no'    => '_issue_no',
@@ -447,10 +488,7 @@ function bbb_import_newsletter_issues_from_data(array $data, ?callable $logger =
 			}
 		}
 
-		$book_handle = bbb_import_field_reference_handle($fields, 'book');
-		if ('' === $book_handle) {
-			$book_handle = bbb_import_field_reference_handle($fields, 'library_book');
-		}
+		$book_handle = bbb_import_newsletter_book_handle($fields);
 
 		if ('' !== $book_handle) {
 			update_post_meta((int) $post_id, '_issue_book_handle', $book_handle);
@@ -464,6 +502,14 @@ function bbb_import_newsletter_issues_from_data(array $data, ?callable $logger =
 						update_post_meta((int) $book->ID, '_bbb_newsletter_date', $publish_date);
 					} else {
 						update_post_meta((int) $book->ID, 'featured_in_newsletter_date', $publish_date);
+					}
+				}
+
+				if ('' !== $issue_url) {
+					if ('bbb_book' === $book->post_type) {
+						update_post_meta((int) $book->ID, '_bbb_newsletter_url', $issue_url);
+					} else {
+						update_post_meta((int) $book->ID, 'newsletter_url', $issue_url);
 					}
 				}
 			}
@@ -579,10 +625,13 @@ if (defined('WP_CLI') && WP_CLI) {
 					update_post_meta((int) $post_id, '_issue_publish_date', $publish_date);
 				}
 
+				$issue_url = bbb_import_newsletter_issue_url($fields);
+				if ('' !== $issue_url) {
+					update_post_meta((int) $post_id, '_bbb_newsletter_url', $issue_url);
+				}
+
 				foreach (
 					array(
-						'url'        => '_bbb_newsletter_url',
-						'issue_url'  => '_bbb_newsletter_url',
 						'excerpt'    => '_issue_excerpt',
 						'subtitle'   => '_issue_subtitle',
 						'issue_no'   => '_issue_no',
@@ -597,10 +646,7 @@ if (defined('WP_CLI') && WP_CLI) {
 					}
 				}
 
-				$book_handle = bbb_import_field_reference_handle($fields, 'book');
-				if ('' === $book_handle) {
-					$book_handle = bbb_import_field_reference_handle($fields, 'library_book');
-				}
+				$book_handle = bbb_import_newsletter_book_handle($fields);
 
 				if ('' !== $book_handle) {
 					update_post_meta((int) $post_id, '_issue_book_handle', $book_handle);
@@ -614,6 +660,14 @@ if (defined('WP_CLI') && WP_CLI) {
 								update_post_meta((int) $book->ID, '_bbb_newsletter_date', $publish_date);
 							} else {
 								update_post_meta((int) $book->ID, 'featured_in_newsletter_date', $publish_date);
+							}
+						}
+
+						if ('' !== $issue_url) {
+							if ('bbb_book' === $book->post_type) {
+								update_post_meta((int) $book->ID, '_bbb_newsletter_url', $issue_url);
+							} else {
+								update_post_meta((int) $book->ID, 'newsletter_url', $issue_url);
 							}
 						}
 					}

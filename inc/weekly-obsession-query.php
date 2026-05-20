@@ -100,6 +100,7 @@ function sss_get_obsession_book(WP_Post $issue): ?WP_Post {
 	}
 
 	$issue_url = (string) get_post_meta($issue->ID, '_bbb_newsletter_url', true);
+	$issue_url = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value($issue_url) : trim($issue_url);
 	if ('' !== $issue_url) {
 		$books = get_posts(
 			array(

@@ -90,6 +90,17 @@ function bbb_render_shopify_import_page(): void {
 				<?php if (!empty($status['shelf_names'])) : ?>
 					<p><?php echo esc_html__('Shelves found: ', 'bybookishbabe-shopify-port') . esc_html(implode(', ', $status['shelf_names'])); ?></p>
 				<?php endif; ?>
+				<p>
+					<?php
+					echo esc_html(
+						sprintf(
+							__('Newsletter issues: %1$d total. Latest imported: %2$s.', 'bybookishbabe-shopify-port'),
+							$status['newsletter_issue_count'],
+							$status['latest_newsletter_issue']
+						)
+					);
+					?>
+				</p>
 			</div>
 
 			<div class="card" style="max-width:none;">
@@ -166,6 +177,21 @@ function bbb_get_shopify_import_status(): array {
 		}
 	}
 
+	$newsletter_issues = post_type_exists('newsletter_issue')
+		? get_posts(
+			array(
+				'post_type'      => 'newsletter_issue',
+				'post_status'    => 'publish',
+				'posts_per_page' => 1,
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+			)
+		)
+		: array();
+	$latest_newsletter_issue = !empty($newsletter_issues[0]) && $newsletter_issues[0] instanceof WP_Post
+		? get_the_title($newsletter_issues[0]) . ' (' . get_post_meta($newsletter_issues[0]->ID, '_issue_publish_date', true) . ')'
+		: __('none', 'bybookishbabe-shopify-port');
+
 	return array(
 		'book_count'         => count($book_ids),
 		'books_with_shelves' => $books_with_shelves,
@@ -174,6 +200,8 @@ function bbb_get_shopify_import_status(): array {
 		'top_shelf_count'    => $top_shelf_count,
 		'shelf_count'        => count($shelf_names),
 		'shelf_names'        => array_slice($shelf_names, 0, 12),
+		'newsletter_issue_count' => post_type_exists('newsletter_issue') ? (int) wp_count_posts('newsletter_issue')->publish : 0,
+		'latest_newsletter_issue' => $latest_newsletter_issue,
 	);
 }
 

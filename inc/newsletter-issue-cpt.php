@@ -31,7 +31,13 @@ add_action(
 			'_issue_subtitle'        => 'string',
 			'_issue_book_id'         => 'integer',
 			'_issue_library_book_id' => 'integer',
+			'_issue_book_handle'     => 'string',
 			'_issue_title_override'  => 'string',
+			'_issue_excerpt'         => 'string',
+			'_issue_label'           => 'string',
+			'_issue_no'              => 'string',
+			'_issue_tropes'          => 'string',
+			'_bbb_newsletter_url'    => 'string',
 		);
 
 		foreach ($meta_fields as $meta_key => $type) {
