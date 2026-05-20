@@ -177,9 +177,6 @@ $cover_url      = 'bbb_book' === $featured_book->post_type ? (string) get_post_m
 			<div class="bbb-home-obsession__copy">
 				<p class="bbb-home-obsession__kicker"><?php echo esc_html($kicker); ?></p>
 				<h2 class="bbb-home-obsession__title"><?php echo esc_html($issue_title); ?></h2>
-				<?php if ($issue_subtitle) : ?>
-					<p class="bbb-home-obsession__sub"><?php echo esc_html($issue_subtitle); ?></p>
-				<?php endif; ?>
 			</div><!-- /.bbb-home-obsession__copy -->
 
 		</div><!-- /.bbb-home-obsession__row -->
