@@ -206,6 +206,7 @@
     var status = root.querySelector('[data-account-shelf-status]');
     var statusCopy = root.querySelector('[data-account-shelf-status-copy]');
     var toolbar = root.querySelector('[data-account-shelf-toolbar]');
+    var tools = root.querySelector('[data-account-shelf-tools]');
     var count = root.querySelector('[data-account-shelf-count]');
     var copyBtn = root.querySelector('[data-account-copy]');
     var emailBtn = root.querySelector('[data-account-email]');
@@ -229,10 +230,12 @@
         grid.innerHTML = '';
         empty.hidden = false;
         if (toolbar) toolbar.hidden = true;
+        if (tools) tools.hidden = true;
         return;
       }
       empty.hidden = true;
       if (toolbar) toolbar.hidden = false;
+      if (tools) tools.hidden = false;
       if (count) count.textContent = books.length + (books.length === 1 ? ' book saved' : ' books saved');
       grid.innerHTML = books.map(renderBook).join('');
       if (window.sssSyncBookStatusUI) window.sssSyncBookStatusUI();

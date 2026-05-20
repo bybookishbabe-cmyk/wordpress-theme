@@ -48,10 +48,16 @@ get_header();
 			</div>
 
 			<div class="bbb-account-shelf__status<?php echo is_user_logged_in() ? '' : ' bbb-account-shelf__status--login'; ?>" data-account-shelf-status>
-				<span class="bbb-account-shelf__statusIcon" aria-hidden="true">📚</span>
-				<div>
-					<strong><?php echo esc_html(is_user_logged_in() ? 'syncing your shelf...' : 'log in to keep your shelf across devices.'); ?></strong>
-					<span data-account-shelf-status-copy><?php echo esc_html(is_user_logged_in() ? 'local saves show first, account saves follow when they load.' : 'you can still save books on this device, but an account makes the shelf yours everywhere.'); ?></span>
+				<div class="bbb-account-shelf__statusMain">
+					<span class="bbb-account-shelf__statusIcon" aria-hidden="true">📚</span>
+					<div>
+						<strong><?php echo esc_html(is_user_logged_in() ? 'syncing your shelf...' : 'log in to keep your shelf across devices.'); ?></strong>
+						<span data-account-shelf-status-copy><?php echo esc_html(is_user_logged_in() ? 'local saves show first, account saves follow when they load.' : 'you can still save books on this device, but an account makes the shelf yours everywhere.'); ?></span>
+					</div>
+				</div>
+				<div class="bbb-account-shelf__tools" data-account-shelf-tools hidden>
+					<button type="button" data-account-copy>copy list</button>
+					<button type="button" data-account-email>email list</button>
 				</div>
 			</div>
 
@@ -59,10 +65,6 @@ get_header();
 				<div>
 					<p class="bbb-account-shelf__toolbarKicker">saved stack</p>
 					<h2 data-account-shelf-count>0 books saved</h2>
-				</div>
-				<div class="bbb-account-shelf__tools">
-					<button type="button" data-account-copy>copy list</button>
-					<button type="button" data-account-email>email list</button>
 				</div>
 			</div>
 
