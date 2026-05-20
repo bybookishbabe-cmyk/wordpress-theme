@@ -71,7 +71,7 @@ get_header();
 				</div>
 				<h1 class="bbb-account-shelf__title">reader account</h1>
 				<p class="bbb-account-shelf__sub">
-					<?php echo esc_html($is_logged_in ? 'Everything tied to your reader life lives here: purchases, tier access, dashboard shortcuts, and your bookshelf.' : 'Log in or create an account to keep purchases, tier access, and your bookshelf in one place.'); ?>
+					<?php echo esc_html($is_logged_in ? 'everything tied to your reader life lives here: purchases, tier access, dashboard shortcuts, and your bookshelf.' : 'log in or create an account to keep purchases, tier access, and your bookshelf in one place.'); ?>
 				</p>
 
 				<div class="bbb-account-shelf__actions">
@@ -110,7 +110,7 @@ get_header();
 					<?php else : ?>
 						<div class="bbb-account-shelf__quiet">
 							<strong>no purchases yet</strong>
-							<span>Your shop orders and digital drops will show here once they are tied to this account.</span>
+							<span>your shop orders and digital drops will show here once they are tied to this account.</span>
 							<a href="<?php echo esc_url($shop_url); ?>">browse the shop</a>
 						</div>
 					<?php endif; ?>
@@ -120,7 +120,7 @@ get_header();
 					<div class="bbb-account-shelf__dropCta">
 						<p class="bbb-account-shelf__perkKicker">monthly drop</p>
 						<h2>your member drop is ready.</h2>
-						<p>Open this month's society theme, files, prompts, and member-only extras.</p>
+						<p>open this month's society theme, files, prompts, and member-only extras.</p>
 						<a class="bbb-account-shelf__button" href="<?php echo esc_url($monthly_drop_url); ?>">open monthly drop</a>
 					</div>
 				<?php endif; ?>
@@ -129,13 +129,13 @@ get_header();
 					<a class="bbb-account-shelf__preview" href="<?php echo esc_url($dashboard_url); ?>">
 						<p class="bbb-account-shelf__perkKicker">dashboard preview</p>
 						<h2>member dashboard</h2>
-						<p><?php echo esc_html('society' === $tier ? 'Made-for-you reader logic, mood-based recommendations, and smarter next-read picks.' : 'Your dashboard preview is here. Upgrade to unlock the richer recommendation layer.'); ?></p>
+						<p><?php echo esc_html('society' === $tier ? 'made-for-you reader logic, mood-based recommendations, and smarter next-read picks.' : 'your dashboard preview is here. upgrade to unlock the richer recommendation layer.'); ?></p>
 						<span><?php echo esc_html('society' === $tier ? 'open dashboard ->' : 'preview dashboard ->'); ?></span>
 					</a>
 					<a class="bbb-account-shelf__preview" href="<?php echo esc_url($bookshelf_url); ?>">
 						<p class="bbb-account-shelf__perkKicker">bookshelf preview</p>
 						<h2><?php echo esc_html(count($books) . (1 === count($books) ? ' saved book' : ' saved books')); ?></h2>
-						<p>Your saved books, current obsessions, and personal romance archive.</p>
+						<p>your saved books, current obsessions, and personal romance archive.</p>
 						<?php if ($books) : ?>
 							<div class="bbb-account-shelf__miniShelf" aria-hidden="true">
 								<?php foreach (array_slice($books, 0, 4) as $book) : ?>
@@ -153,7 +153,7 @@ get_header();
 				<div class="bbb-account-shelf__empty">
 					<div class="bbb-account-shelf__emptyIcon" aria-hidden="true">*</div>
 					<h2>your reader account is waiting.</h2>
-					<p>Create a WordPress account with the same email you use for Society access, then purchases, tier access, and your shelf can follow you.</p>
+					<p>create a wordpress account with the same email you use for society access, then purchases, tier access, and your shelf can follow you.</p>
 					<a href="<?php echo esc_url(wp_login_url($account_url)); ?>">log in</a>
 				</div>
 			<?php endif; ?>

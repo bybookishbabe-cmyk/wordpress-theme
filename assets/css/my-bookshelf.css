@@ -2,6 +2,7 @@
   background: #050505;
   color: #f7f3ee;
   padding: 72px 20px 88px;
+  text-transform: lowercase;
 }
 
 .bbb-account-shelf__wrap {
@@ -23,7 +24,7 @@
   font-size: 12px;
   font-weight: 700;
   letter-spacing: .16em;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-account-shelf__title {
@@ -58,7 +59,7 @@
   font-weight: 800;
   letter-spacing: .14em;
   line-height: 1;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-account-shelf__memberBadge--secret {
@@ -94,7 +95,7 @@
   font-weight: 800;
   letter-spacing: .12em;
   text-decoration: none;
-  text-transform: uppercase;
+  text-transform: lowercase;
   cursor: pointer;
   transition: transform .22s ease, background .22s ease, border-color .22s ease;
 }
@@ -366,7 +367,7 @@
   font-size: 12px;
   font-weight: 800;
   letter-spacing: .1em;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-account-shelf__dropCta {
