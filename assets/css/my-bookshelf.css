@@ -1,0 +1,287 @@
+.bbb-account-shelf {
+  background: #050505;
+  color: #f7f3ee;
+  padding: 72px 20px 88px;
+}
+
+.bbb-account-shelf__wrap {
+  max-width: 1060px;
+  margin: 0 auto;
+}
+
+.bbb-account-shelf__hero {
+  margin-bottom: 28px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid rgba(255,255,255,.18);
+}
+
+.bbb-account-shelf__kicker,
+.bbb-account-shelf__perkKicker,
+.bbb-account-shelf__toolbarKicker {
+  margin: 0 0 10px;
+  color: #ff8ac7;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.bbb-account-shelf__title {
+  margin: 0;
+  color: #fff;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(3rem, 7vw, 6rem);
+  line-height: .95;
+  text-transform: lowercase;
+}
+
+.bbb-account-shelf__sub {
+  max-width: 620px;
+  margin: 16px 0 0;
+  color: rgba(247,243,238,.72);
+  font-size: 1.5rem;
+  line-height: 1.65;
+}
+
+.bbb-account-shelf__memberBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  margin: 0 0 16px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 8px;
+  background: rgba(255,255,255,.055);
+  color: rgba(247,243,238,.86);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.bbb-account-shelf__memberBadge--secret {
+  border-color: rgba(255,138,199,.7);
+  background: linear-gradient(135deg, rgba(255,138,199,.18), rgba(255,255,255,.045));
+  color: #ffb8dc;
+  box-shadow: 0 0 28px rgba(255,138,199,.12);
+}
+
+.bbb-account-shelf__actions,
+.bbb-account-shelf__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.bbb-account-shelf__button,
+.bbb-account-shelf__empty a,
+.bbb-account-shelf__perk a,
+.bbb-account-shelf__tools button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 8px;
+  background: #ff8ac7;
+  color: #160912;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-decoration: none;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform .22s ease, background .22s ease, border-color .22s ease;
+}
+
+.bbb-account-shelf__button:hover,
+.bbb-account-shelf__empty a:hover,
+.bbb-account-shelf__perk a:hover,
+.bbb-account-shelf__tools button:hover {
+  transform: translateY(-2px);
+  background: #ff9fd1;
+}
+
+.bbb-account-shelf__button--ghost,
+.bbb-account-shelf__tools button {
+  border: 1px solid rgba(255,138,199,.42);
+  background: transparent;
+  color: #ffb8dc;
+}
+
+.bbb-account-shelf__status,
+.bbb-account-shelf__perk,
+.bbb-account-shelf__empty,
+.bbb-account-shelf__toolbar {
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.025));
+  box-shadow: 0 18px 46px rgba(0,0,0,.22);
+}
+
+.bbb-account-shelf__status {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+  padding: 16px 18px;
+  color: rgba(247,243,238,.72);
+}
+
+.bbb-account-shelf__status strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #fff;
+}
+
+.bbb-account-shelf__statusIcon {
+  font-size: 26px;
+}
+
+.bbb-account-shelf__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+  padding: 18px;
+}
+
+.bbb-account-shelf__toolbar h2 {
+  margin: 0;
+  color: #fff;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(2rem, 3vw, 2.8rem);
+  font-weight: 400;
+  text-transform: lowercase;
+}
+
+.bbb-account-shelf__tools {
+  margin-top: 0;
+}
+
+.bbb-account-shelf__grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.bbb-account-shelf__book {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.bbb-account-shelf .sss-lib__coverWrap {
+  position: relative;
+}
+
+.bbb-account-shelf .sss-lib__heart {
+  z-index: 3;
+}
+
+.bbb-account-shelf__cover {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 8px;
+  background: #191919;
+  object-fit: cover;
+  box-shadow: 0 16px 32px rgba(0,0,0,.28);
+}
+
+.bbb-account-shelf__bookTitle {
+  margin-top: 10px;
+  color: #fff;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.bbb-account-shelf__bookAuthor {
+  margin-top: 3px;
+  color: rgba(247,243,238,.58);
+  font-size: 1.15rem;
+}
+
+.bbb-account-shelf__empty {
+  padding: 38px 24px;
+  text-align: center;
+}
+
+.bbb-account-shelf__emptyIcon {
+  font-size: 38px;
+}
+
+.bbb-account-shelf__empty h2 {
+  margin: 12px 0 8px;
+  color: #fff;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(2.2rem, 5vw, 3.5rem);
+  font-weight: 400;
+  text-transform: lowercase;
+}
+
+.bbb-account-shelf__empty p {
+  max-width: 420px;
+  margin: 0 auto 18px;
+  color: rgba(247,243,238,.68);
+}
+
+.bbb-account-shelf__perk {
+  margin-top: 34px;
+  padding: 24px;
+}
+
+.bbb-account-shelf__perk h2 {
+  margin: 0;
+  color: #fff;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(2.3rem, 4vw, 3.3rem);
+  font-weight: 400;
+  text-transform: lowercase;
+}
+
+.bbb-account-shelf__perk p:not(.bbb-account-shelf__perkKicker) {
+  max-width: 680px;
+  color: rgba(247,243,238,.7);
+  line-height: 1.65;
+}
+
+@media (max-width: 900px) {
+  .bbb-account-shelf__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .bbb-account-shelf {
+    padding: 54px 16px 72px;
+  }
+
+  .bbb-account-shelf__toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .bbb-account-shelf__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 12px;
+  }
+
+  .bbb-account-shelf__sub {
+    font-size: 1.18rem;
+  }
+}

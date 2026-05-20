@@ -27,7 +27,7 @@ function bbb_page_route_registry(): array {
 		'kindle-inserts'                 => '',
 		'library'                        => 'page-library.php',
 		'media-kit'                      => '',
-		'my-bookshelf'                   => '',
+		'my-bookshelf'                   => 'page-my-bookshelf.php',
 		'my-vault'                       => '',
 		'our-story'                      => 'page-our-story.php',
 		'privacy-policy'                 => '',
