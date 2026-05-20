@@ -16,7 +16,7 @@ if (function_exists('bbb_reader_is_society') && bbb_reader_is_society()) {
 
 $monthly_theme = strtolower((string) date_i18n('F')) . ' theme';
 $monthly_hub   = array(
-	'kicker' => strtolower((string) get_theme_mod('bbb_society_month_kicker', 'this month inside the society')),
+	'kicker' => strtolower((string) get_theme_mod('bbb_society_month_kicker', 'monthly theme')),
 	'title'  => strtolower((string) get_theme_mod('bbb_society_month_title', 'burn for me')),
 	'text'   => strtolower((string) get_theme_mod('bbb_society_month_text', 'dark romance month with mafia, obsession, enemies to lovers, and the member tools that keep the whole reading life in one place.')),
 );
@@ -26,6 +26,16 @@ if ('this month inside the society' === $monthly_hub['kicker']) {
 $monthly_theme_url = bbb_page_url('monthly-theme');
 
 $monthly_hub_links = array();
+$monthly_link_emojis = array(
+	'monthly theme'    => '🕯️',
+	'start here'       => '🕯️',
+	'track your reads' => '📅',
+	'member dashboard' => '✨',
+	'your dashboard'   => '✨',
+	'my bookshelf'     => '📚',
+	'printables'       => '🖨️',
+	'quote library'    => '💬',
+);
 for ($i = 1; $i <= 6; $i++) {
 	$label = strtolower((string) get_theme_mod("bbb_society_month_link_{$i}_label", ''));
 	$url   = (string) get_theme_mod("bbb_society_month_link_{$i}_url", '');
@@ -39,6 +49,7 @@ for ($i = 1; $i <= 6; $i++) {
 	$monthly_hub_links[] = array(
 		'label' => $label,
 		'url'   => bbb_resolve_shopify_url($url),
+		'emoji' => $monthly_link_emojis[$label] ?? '♡',
 	);
 }
 
@@ -46,32 +57,32 @@ $sections = array(
 	array(
 		'label' => 'the newsletter',
 		'items' => array(
-			array('title' => 'about', 'copy' => 'what the society is, who it is for, and how the newsletter fits in.', 'url' => bbb_page_url('about-the-society'), 'badge' => 'start'),
-			array('title' => 'recent', 'copy' => 'the latest newsletter issues and current dispatches.', 'url' => bbb_page_url('society-newsletter-recent'), 'badge' => 'latest'),
-			array('title' => 'full archive', 'copy' => 'the complete newsletter shelf, wired to the imported issues.', 'url' => bbb_page_url('society-newsletter-archive'), 'badge' => 'archive'),
+			array('title' => 'about', 'copy' => 'what the society is, who it is for, and how the newsletter fits in.', 'url' => bbb_page_url('about-the-society'), 'badge' => 'start', 'emoji' => '💌'),
+			array('title' => 'recent', 'copy' => 'the latest newsletter issues and current dispatches.', 'url' => bbb_page_url('society-newsletter-recent'), 'badge' => 'latest', 'emoji' => '🗞️'),
+			array('title' => 'full archive', 'copy' => 'the complete newsletter shelf, wired to the imported issues.', 'url' => bbb_page_url('society-newsletter-archive'), 'badge' => 'archive', 'emoji' => '🗂️'),
 		),
 	),
 	array(
 		'label' => 'society exclusives',
 		'items' => array(
-			array('title' => 'reading guides', 'copy' => 'deep-dive trope guides and member-only rec lists.', 'url' => bbb_page_url('society-library'), 'badge' => 'society'),
-			array('title' => 'exclusive rec lists', 'copy' => 'book lists that do not live on the public blog.', 'url' => bbb_page_url('society-library'), 'badge' => 'society'),
-			array('title' => 'early access', 'copy' => 'posts and picks before they go public.', 'url' => bbb_page_url('society-newsletter-recent'), 'badge' => 'preview'),
+			array('title' => 'reading guides', 'copy' => 'deep-dive trope guides and member-only rec lists.', 'url' => bbb_page_url('society-library'), 'badge' => 'society', 'emoji' => '📖'),
+			array('title' => 'exclusive rec lists', 'copy' => 'book lists that do not live on the public blog.', 'url' => bbb_page_url('society-library'), 'badge' => 'society', 'emoji' => '🌹'),
+			array('title' => 'early access', 'copy' => 'posts and picks before they go public.', 'url' => bbb_page_url('society-newsletter-recent'), 'badge' => 'preview', 'emoji' => '🔐'),
 		),
 	),
 	array(
 		'label' => 'member tools',
 		'items' => array(
-			array('title' => 'book tracking calendar', 'copy' => 'the shopify read tracker: click a day, choose the book you read, and let the cover live there.', 'url' => bbb_page_url('sss-library'), 'badge' => 'society'),
-			array('title' => 'my bookshelf', 'copy' => 'your saved books, current obsessions, and personal romance archive.', 'url' => bbb_page_url('my-bookshelf'), 'badge' => 'free'),
-			array('title' => 'member dashboard', 'copy' => 'made-for-you reader logic, mood-based recommendations, and smarter next-read picks.', 'url' => bbb_page_url('member-dashboard'), 'badge' => 'society'),
+			array('title' => 'book tracking calendar', 'copy' => 'the shopify read tracker: click a day, choose the book you read, and let the cover live there.', 'url' => bbb_page_url('sss-library'), 'badge' => 'society', 'emoji' => '📅'),
+			array('title' => 'my bookshelf', 'copy' => 'your saved books, current obsessions, and personal romance archive.', 'url' => bbb_page_url('my-bookshelf'), 'badge' => 'free', 'emoji' => '📚'),
+			array('title' => 'member dashboard', 'copy' => 'made-for-you reader logic, mood-based recommendations, and smarter next-read picks.', 'url' => bbb_page_url('member-dashboard'), 'badge' => 'society', 'emoji' => '✨'),
 		),
 	),
 	array(
 		'label' => 'shop perks',
 		'items' => array(
-			array('title' => 'monthly freebie', 'copy' => 'a rotating digital good for paid members.', 'url' => bbb_page_url('shop'), 'badge' => 'society'),
-			array('title' => 'shop discount', 'copy' => 'member savings on templates, printables, and extras.', 'url' => bbb_page_url('shop'), 'badge' => 'society'),
+			array('title' => 'monthly freebie', 'copy' => 'a rotating digital good for paid members.', 'url' => bbb_page_url('shop'), 'badge' => 'society', 'emoji' => '🎁'),
+			array('title' => 'shop discount', 'copy' => 'member savings on templates, printables, and extras.', 'url' => bbb_page_url('shop'), 'badge' => 'society', 'emoji' => '🏷️'),
 		),
 	),
 );
@@ -103,7 +114,10 @@ get_header();
 			<?php if ($monthly_hub_links) : ?>
 				<div class="bbb-society-main-hub" aria-label="monthly society hub links">
 					<?php foreach ($monthly_hub_links as $link) : ?>
-						<a href="<?php echo esc_url($link['url']); ?>"><?php echo esc_html($link['label']); ?></a>
+						<a href="<?php echo esc_url($link['url']); ?>">
+							<span class="bbb-society-main-hub__emoji" aria-hidden="true"><?php echo esc_html($link['emoji']); ?></span>
+							<span><?php echo esc_html($link['label']); ?></span>
+						</a>
 					<?php endforeach; ?>
 				</div>
 			<?php endif; ?>
@@ -117,6 +131,7 @@ get_header();
 						<?php foreach ($section['items'] as $item) : ?>
 							<a class="bbb-society-link-card" href="<?php echo esc_url($item['url']); ?>">
 								<span class="bbb-society-link-card__top">
+									<span class="bbb-society-link-card__emoji" aria-hidden="true"><?php echo esc_html($item['emoji'] ?? '♡'); ?></span>
 									<span class="bbb-society-link-card__title"><?php echo esc_html($item['title']); ?></span>
 									<span class="bbb-society-link-card__badge"><?php echo esc_html($item['badge']); ?></span>
 								</span>

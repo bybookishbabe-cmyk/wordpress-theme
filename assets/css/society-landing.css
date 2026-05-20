@@ -165,25 +165,39 @@
 .bbb-society-main-hub {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 18px;
+  gap: 8px;
+  margin-top: 14px;
 }
 
 .bbb-society-main-hub a {
   display: flex;
-  min-height: 72px;
-  align-items: flex-end;
-  padding: 14px;
+  min-height: 50px;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
   border: 1px solid rgba(255, 255, 255, .14);
   border-radius: 8px;
   background: rgba(255, 255, 255, .035);
   color: #f6f6f6;
   font-family: Cormorant, "Cormorant Garamond", Georgia, serif;
-  font-size: 22px;
+  font-size: 18px;
   line-height: 1;
   text-decoration: none;
   text-transform: lowercase;
   transition: border-color .18s ease, background .18s ease, transform .18s ease;
+}
+
+.bbb-society-main-hub__emoji {
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .05);
+  font-family: inherit;
+  font-size: 14px;
 }
 
 .bbb-society-main-hub a:hover,
@@ -224,9 +238,9 @@
 
 .bbb-society-link-card {
   display: flex;
-  min-height: 280px;
+  min-height: 118px;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   padding: 12px;
   border: 1px solid rgba(255, 255, 255, .14);
   border-radius: 8px;
@@ -268,20 +282,32 @@
 
 .bbb-society-link-card__top {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 0 4px;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
 }
 
 .bbb-society-link-card__title {
-  font-size: 23px;
+  min-width: 0;
+  flex: 1 1 auto;
+  font-size: 20px;
   line-height: 1.02;
+}
+
+.bbb-society-link-card__emoji {
+  display: inline-grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .05);
+  font-size: 15px;
 }
 
 .bbb-society-link-card__badge {
   flex: 0 0 auto;
-  padding-top: 4px;
   color: rgba(246, 246, 246, .54);
   font-size: 10px;
 }
@@ -289,10 +315,10 @@
 .bbb-society-link-card__copy {
   display: block;
   margin-top: auto;
-  padding: 0 4px 2px;
+  padding: 0 0 2px;
   color: rgba(246, 246, 246, .7);
-  font-size: 12.5px;
-  line-height: 1.55;
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .bbb-society-page {
