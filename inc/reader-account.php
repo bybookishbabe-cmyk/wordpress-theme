@@ -174,6 +174,13 @@ function bbb_reader_fetch_account_books(WP_User $user): array {
 
 function bbb_reader_account_response(WP_User $user): array {
 	$sync = bbb_reader_sync_user_to_supabase((int) $user->ID, 'wordpress_account_api');
+	$error = is_wp_error($sync)
+		? array(
+			'code'    => $sync->get_error_code(),
+			'message' => $sync->get_error_message(),
+			'status'  => (int) ($sync->get_error_data()['status'] ?? 0),
+		)
+		: null;
 
 	return array(
 		'wordpressUser' => array(
@@ -183,6 +190,7 @@ function bbb_reader_account_response(WP_User $user): array {
 		),
 		'accessTier'    => bbb_reader_access_tier((int) $user->ID),
 		'supabaseReady' => !is_wp_error($sync),
+		'supabaseError' => $error,
 		'books'         => bbb_reader_fetch_account_books($user),
 	);
 }

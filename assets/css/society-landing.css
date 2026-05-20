@@ -96,6 +96,37 @@
   line-height: 1;
 }
 
+.bbb-society-theme__featureLink {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.bbb-society-theme__featureLink:hover h2,
+.bbb-society-theme__featureLink:focus-visible h2 {
+  color: #f3bfd5;
+}
+
+.bbb-society-theme__cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  margin-top: 14px;
+  padding: 8px 11px;
+  border: 1px solid rgba(255, 138, 199, .42);
+  border-radius: 999px;
+  color: #ff8ac7;
+  font-size: 11px;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.bbb-society-theme__featureLink:hover .bbb-society-theme__cta,
+.bbb-society-theme__featureLink:focus-visible .bbb-society-theme__cta {
+  background: rgba(255, 138, 199, .1);
+  color: #fff;
+}
+
 .bbb-society-theme p:not(.bbb-society-theme__eyebrow) {
   max-width: 72ch;
   margin: 8px 0 0;

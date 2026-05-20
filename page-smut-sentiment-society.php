@@ -20,6 +20,10 @@ $monthly_hub   = array(
 	'title'  => strtolower((string) get_theme_mod('bbb_society_month_title', 'burn for me')),
 	'text'   => strtolower((string) get_theme_mod('bbb_society_month_text', 'dark romance month with mafia, obsession, enemies to lovers, and the member tools that keep the whole reading life in one place.')),
 );
+if ('this month inside the society' === $monthly_hub['kicker']) {
+	$monthly_hub['kicker'] = 'monthly theme';
+}
+$monthly_theme_url = bbb_page_url('monthly-theme');
 
 $monthly_hub_links = array();
 for ($i = 1; $i <= 6; $i++) {
@@ -90,11 +94,12 @@ get_header();
 		</div>
 
 		<aside class="bbb-society-theme bbb-society-theme--main" aria-label="<?php echo esc_attr($monthly_theme); ?>">
-			<div class="bbb-society-theme__header">
+			<a class="bbb-society-theme__featureLink" href="<?php echo esc_url($monthly_theme_url); ?>">
 				<p class="bbb-society-theme__eyebrow"><?php echo esc_html($monthly_hub['kicker']); ?></p>
 				<h2><?php echo esc_html($monthly_hub['title']); ?></h2>
 				<p><?php echo esc_html($monthly_hub['text']); ?></p>
-			</div>
+				<span class="bbb-society-theme__cta">open monthly theme</span>
+			</a>
 			<?php if ($monthly_hub_links) : ?>
 				<div class="bbb-society-main-hub" aria-label="monthly society hub links">
 					<?php foreach ($monthly_hub_links as $link) : ?>

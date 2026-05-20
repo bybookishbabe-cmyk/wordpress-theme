@@ -1,13 +1,16 @@
 <?php
 declare(strict_types=1);
+
+$monthly_title = strtolower((string) get_theme_mod('bbb_society_month_title', 'burn for me'));
+$monthly_text  = strtolower((string) get_theme_mod('bbb_society_month_text', 'dark romance month with mafia, obsession, enemies to lovers, and the member tools that keep the whole reading life in one place.'));
 ?>
 <section class="sss-memberdash">
 	<div class="sss-memberdash__wrap">
 		<div class="sss-memberdash__intro">
 			<div class="sss-memberdash__sparkles" aria-hidden="true"><?php echo str_repeat('<span>✦</span>', 12); ?></div>
-			<p class="sss-memberdash__kicker">classified for members</p>
-			<h1 class="sss-memberdash__title">welcome back to the society.</h1>
-			<p class="sss-memberdash__sub">your recommendations, your books, your monthly drop.</p>
+			<p class="sss-memberdash__kicker">monthly theme</p>
+			<h1 class="sss-memberdash__title"><?php echo esc_html($monthly_title); ?></h1>
+			<p class="sss-memberdash__sub"><?php echo esc_html($monthly_text); ?></p>
 		</div>
 		<div class="sss-memberdash__grid">
 			<article class="sss-memberdash__card">
@@ -23,7 +26,7 @@ declare(strict_types=1);
 				</div>
 			</article>
 			<article class="sss-memberdash__card">
-				<p class="sss-memberdash__cardKicker">this month inside the society</p>
+				<p class="sss-memberdash__cardKicker">monthly theme</p>
 				<h2 class="sss-memberdash__cardTitle">the current obsession, all in one place</h2>
 				<div class="sss-memberdash__stackLinks">
 					<button type="button" data-memberdash-target="moodboard">current drop atmosphere</button>

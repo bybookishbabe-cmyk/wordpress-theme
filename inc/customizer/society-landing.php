@@ -19,7 +19,7 @@ function bbb_society_landing_customizer_settings(WP_Customize_Manager $wp_custom
 	$text_settings = array(
 		'bbb_society_month_kicker' => array(
 			'label'   => __('Monthly hub kicker', 'bybookishbabe-shopify-port'),
-			'default' => 'this month inside the society',
+			'default' => 'monthly theme',
 			'type'    => 'text',
 		),
 		'bbb_society_month_title' => array(
@@ -53,7 +53,7 @@ function bbb_society_landing_customizer_settings(WP_Customize_Manager $wp_custom
 	}
 
 	$link_defaults = array(
-		1 => array('label' => 'start here', 'url' => '/society-library/'),
+		1 => array('label' => 'monthly theme', 'url' => '/monthly-theme/'),
 		2 => array('label' => 'track your reads', 'url' => '/sss-library/'),
 		3 => array('label' => 'member dashboard', 'url' => '/member-dashboard/'),
 		4 => array('label' => 'my bookshelf', 'url' => '/my-bookshelf/'),

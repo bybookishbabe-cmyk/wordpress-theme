@@ -19,6 +19,14 @@ $account_data = ($is_logged_in && $user instanceof WP_User && function_exists('b
 $books        = isset($account_data['books']) && is_array($account_data['books']) ? $account_data['books'] : array();
 $tier         = (string) ($account_data['accessTier'] ?? ($is_society ? 'society' : 'free'));
 $synced       = !empty($account_data['supabaseReady']);
+$sync_error   = isset($account_data['supabaseError']) && is_array($account_data['supabaseError']) ? $account_data['supabaseError'] : array();
+$sync_status  = (int) ($sync_error['status'] ?? 0);
+$sync_title   = $synced ? 'account sync is active.' : 'account sync is not active.';
+$sync_copy    = $synced ? 'Your tier and bookshelf can now be read from Supabase.' : 'Add SUPABASE_SERVICE_ROLE_KEY on WordPress to sync this account server-side.';
+if (!$synced && 401 === $sync_status) {
+	$sync_title = 'Supabase rejected the server key.';
+	$sync_copy  = 'The key is present in wp-config.php, but Supabase returned 401 Invalid API key. Replace it with the current service_role or secret key for this project.';
+}
 
 get_header();
 ?>
@@ -56,8 +64,8 @@ get_header();
 					<div class="bbb-account-shelf__statusMain">
 						<span class="bbb-account-shelf__statusIcon" aria-hidden="true">*</span>
 						<div>
-							<strong><?php echo esc_html($synced ? 'account sync is active.' : 'account sync needs Supabase settings.'); ?></strong>
-							<span><?php echo esc_html($synced ? 'Your tier and bookshelf can now be read from Supabase.' : 'Add SUPABASE_SERVICE_ROLE_KEY on WordPress to sync this account server-side.'); ?></span>
+							<strong><?php echo esc_html($sync_title); ?></strong>
+							<span><?php echo esc_html($sync_copy); ?></span>
 						</div>
 					</div>
 				</div>
