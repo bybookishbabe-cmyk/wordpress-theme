@@ -89,7 +89,52 @@ function bbb_book_taxonomy_term_emoji(WP_Term $term): string {
 		}
 	}
 
-	return '';
+	return bbb_book_taxonomy_fallback_emoji($term->slug, $term->name);
+}
+
+function bbb_book_taxonomy_fallback_emoji(string $slug, string $name = ''): string {
+	$key = sanitize_title($slug ?: $name);
+	$map = array(
+		'contemporary-romance' => '💋',
+		'dark-romance'        => '🖤',
+		'fantasy-romance'     => '🔮',
+		'hockey-romance'      => '🏒',
+		'mafia-romance'       => '🥀',
+		'monster-romance'     => '🐺',
+		'paranormal-romance'  => '🌙',
+		'romantasy'           => '🔮',
+		'romantic-suspense'   => '🕯',
+		'sci-fi-romance'      => '🚀',
+		'small-town-romance'  => '🌲',
+		'sports-romance'      => '🏒',
+		'western-romance'     => '🤠',
+	);
+
+	if (isset($map[$key])) {
+		return $map[$key];
+	}
+
+	if (str_contains($key, 'dark') || str_contains($key, 'mafia')) {
+		return '🖤';
+	}
+
+	if (str_contains($key, 'fantasy') || str_contains($key, 'romantasy')) {
+		return '🔮';
+	}
+
+	if (str_contains($key, 'sport') || str_contains($key, 'hockey') || str_contains($key, 'football') || str_contains($key, 'baseball')) {
+		return '🏒';
+	}
+
+	if (str_contains($key, 'small-town')) {
+		return '🌲';
+	}
+
+	if (str_contains($key, 'paranormal') || str_contains($key, 'vampire') || str_contains($key, 'wolf')) {
+		return '🌙';
+	}
+
+	return '📚';
 }
 
 function bbb_book_taxonomy_term_description(WP_Term $term): string {

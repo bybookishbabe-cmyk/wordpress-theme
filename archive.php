@@ -115,6 +115,14 @@ $archive_trope_data = static function ($trope) use ($archive_get_field): array {
 	);
 };
 
+$archive_fallback_emoji = static function (string $slug, string $name = ''): string {
+	if (function_exists('bbb_book_taxonomy_fallback_emoji')) {
+		return bbb_book_taxonomy_fallback_emoji($slug, $name);
+	}
+
+	return '📚';
+};
+
 $current_issue = null;
 $trope_one     = null;
 $trope_two     = null;
@@ -194,10 +202,12 @@ $shelf_pages = $is_page_one ? get_posts(
 
 $shelf_items = array();
 foreach ($shelf_pages as $shelf_page) {
+	$shelf_name  = (string) $archive_get_field('shelf_name', $shelf_page->ID, get_the_title($shelf_page->ID));
+	$shelf_emoji = (string) $archive_get_field('shelf_emoji', $shelf_page->ID, '');
 	$shelf_items[$shelf_page->post_name] = array(
 		'url'         => get_permalink($shelf_page->ID),
-		'name'        => (string) $archive_get_field('shelf_name', $shelf_page->ID, get_the_title($shelf_page->ID)),
-		'emoji'       => (string) $archive_get_field('shelf_emoji', $shelf_page->ID, ''),
+		'name'        => $shelf_name,
+		'emoji'       => $shelf_emoji ?: $archive_fallback_emoji($shelf_page->post_name, $shelf_name),
 		'description' => (string) $archive_get_field('shelf_description', $shelf_page->ID, ''),
 	);
 }
