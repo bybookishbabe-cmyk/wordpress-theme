@@ -54,6 +54,7 @@ function bbb_page_route_registry(): array {
 		'sss-freebies'                   => '',
 		'sss-library'                    => 'page-sss-library.php',
 		'sss-library-page'               => 'page-sss-library-page.php',
+		'member-dashboard'               => 'page-sss-made-for-you.php',
 		'sss-made-for-you'               => 'page-sss-made-for-you.php',
 		'made-for-you'                   => 'page-sss-made-for-you.php',
 		'sss-printable-kindle'           => '',
