@@ -102,7 +102,17 @@ function sss_specific_link_from_value($value): ?array {
 	}
 	if (is_string($value) && trim($value) !== '') {
 		$value = trim($value);
-		if (str_starts_with($value, 'http') || str_starts_with($value, '/')) {
+		if (str_starts_with($value, 'http')) {
+			$path = (string) wp_parse_url($value, PHP_URL_PATH);
+			$home_host = (string) wp_parse_url(home_url('/'), PHP_URL_HOST);
+			$link_host = (string) wp_parse_url($value, PHP_URL_HOST);
+			if ($path && $home_host && $link_host === $home_host) {
+				return sss_resolve_shopify_path($path);
+			}
+			$title = $path ? basename(untrailingslashit($path)) : $value;
+			return array('url' => $value, 'title' => ucwords(str_replace('-', ' ', $title)), 'post' => null);
+		}
+		if (str_starts_with($value, '/')) {
 			return sss_resolve_shopify_path($value);
 		}
 		$post = get_page_by_path(sanitize_title($value), OBJECT, array('post', 'page'));
