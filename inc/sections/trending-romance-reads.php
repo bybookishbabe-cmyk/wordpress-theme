@@ -219,6 +219,45 @@ if ($issue_post_types) {
 			$matched_books[$issue] = $book;
 		}
 	}
+
+	foreach ($issue_types as $issue_type) {
+		if (!empty($matched_books[$issue_type])) {
+			continue;
+		}
+
+		$fallback = null;
+		$fallback_ts = 0;
+		foreach ($issues as $newsletter_issue) {
+			if (!$newsletter_issue instanceof WP_Post) {
+				continue;
+			}
+
+			$issue_label = str_replace(array('_', '-'), ' ', bbb_trending_issue_label($newsletter_issue));
+			if ('' === $issue_label || !str_contains($issue_label, $issue_type)) {
+				continue;
+			}
+
+			$issue_date = bbb_trending_issue_date($newsletter_issue, $timezone);
+			if (!$issue_date || $issue_date->format('Y-m-d') > $today) {
+				continue;
+			}
+
+			$book = function_exists('sss_get_obsession_book') ? sss_get_obsession_book($newsletter_issue) : null;
+			if (!$book instanceof WP_Post || !bbb_trending_book_is_visible((int) $book->ID)) {
+				continue;
+			}
+
+			$timestamp = $issue_date->getTimestamp();
+			if ($timestamp >= $fallback_ts) {
+				$fallback_ts = $timestamp;
+				$fallback = $book;
+			}
+		}
+
+		if ($fallback instanceof WP_Post) {
+			$matched_books[$issue_type] = $fallback;
+		}
+	}
 }
 ?>
 <section class="bbb-trending">
