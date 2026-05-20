@@ -242,7 +242,7 @@ if (!$drop) {
 			<header class="sss-drop-theme__hero">
 				<p class="sss-drop-theme__kicker">monthly theme</p>
 				<h1>drop data missing</h1>
-				<p class="sss-drop-theme__mood">the monthly theme needs the shopify <code>sss_drop</code> export at <code>firstpass/migration/exports/metaobjects/sss_drop.json</code>.</p>
+				<p class="sss-drop-theme__mood">import the Shopify <code>sss_drop.json</code> in WordPress under <code>Users > Society Drops</code>, or keep the export file at <code>firstpass/migration/exports/metaobjects/sss_drop.json</code>.</p>
 			</header>
 		</div>
 	</section>
