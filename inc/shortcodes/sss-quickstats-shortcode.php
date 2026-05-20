@@ -30,6 +30,9 @@ function sss_quickstats_series_books(WP_Post $series): array {
 function sss_quickstats_shortcode($atts): string {
 	$atts = shortcode_atts(array('index' => 1, 'post_id' => get_the_ID()), $atts, 'sss_quickstats');
 	$books = sss_article_post_books((int) $atts['post_id']);
+	if (!$books) {
+		$books = sss_article_books_for_post((int) $atts['post_id']);
+	}
 	$book = $books[max(0, (int) $atts['index'] - 1)] ?? null;
 	if (!$book instanceof WP_Post) {
 		return '';
@@ -111,3 +114,4 @@ function sss_quickstats_shortcode($atts): string {
 	return ob_get_clean();
 }
 add_shortcode('sss_quickstats', 'sss_quickstats_shortcode');
+add_shortcode('quickstats', 'sss_quickstats_shortcode');

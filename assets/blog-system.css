@@ -808,6 +808,33 @@ border-bottom:1px solid rgba(232,90,155,.6);
 opacity:.82;
 border-bottom-color:#e85a9b;
 }
+
+.blog-ku-cta{
+margin:28px 0;
+padding:24px;
+border:1px solid rgba(232,90,155,.24);
+border-radius:18px;
+background:linear-gradient(135deg, rgba(232,90,155,.13), rgba(255,255,255,.03));
+box-shadow:0 18px 46px rgba(0,0,0,.24);
+}
+
+.blog-ku-cta__intro,
+.blog-ku-cta__outro{
+margin:0;
+}
+
+.blog-ku-cta__outro{
+margin-top:10px;
+font-size:.92rem;
+letter-spacing:.04em;
+}
+
+.article-template__content .blog-ku-cta__accent{
+color:#f4b8d8;
+font-weight:800;
+text-decoration:none !important;
+border-bottom:1px solid rgba(244,184,216,.55);
+}
 /* LIBRARY BOOK HOVER */
 
 .sss-blog-library__card{

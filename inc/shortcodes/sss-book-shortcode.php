@@ -84,21 +84,94 @@ function sss_article_post($value): ?WP_Post {
 	return null;
 }
 
+function sss_article_book_from_slug(string $slug): ?WP_Post {
+	$slug = sanitize_title($slug);
+	if (!$slug) {
+		return null;
+	}
+
+	foreach (array('bbb_book', 'sss_book') as $post_type) {
+		$post = get_page_by_path($slug, OBJECT, $post_type);
+		if ($post instanceof WP_Post) {
+			return $post;
+		}
+	}
+
+	return null;
+}
+
 function sss_article_posts($value): array {
 	if (!is_array($value)) {
 		$post = sss_article_post($value);
-		return $post ? array($post) : array();
+		if ($post) {
+			return array($post);
+		}
+
+		if (is_string($value)) {
+			$posts = array();
+			foreach (preg_split('/[\s,]+/', $value) ?: array() as $slug) {
+				$post = sss_article_book_from_slug($slug);
+				if ($post instanceof WP_Post) {
+					$posts[$post->ID] = $post;
+				}
+			}
+			return array_values($posts);
+		}
+
+		return array();
 	}
 
 	$posts = array();
 	foreach ($value as $item) {
 		$post = sss_article_post($item);
+		if (!$post && is_string($item)) {
+			$post = sss_article_book_from_slug($item);
+		}
 		if ($post instanceof WP_Post) {
-			$posts[] = $post;
+			$posts[$post->ID] = $post;
 		}
 	}
 
-	return $posts;
+	return array_values($posts);
+}
+
+function sss_article_match_text(string $text): string {
+	$text = html_entity_decode(wp_strip_all_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+	$text = strtolower($text);
+	$text = preg_replace('/[^a-z0-9]+/', ' ', $text) ?? $text;
+
+	return trim(preg_replace('/\s+/', ' ', $text) ?? $text);
+}
+
+function sss_article_books_mentioned_in_post(int $post_id): array {
+	$title_text = ' ' . sss_article_match_text((string) get_the_title($post_id)) . ' ';
+	$body_text = ' ' . sss_article_match_text((string) get_post_field('post_content', $post_id)) . ' ';
+	$matches = array();
+
+	foreach (sss_article_all_visible_books() as $book) {
+		$needle = sss_article_match_text(get_the_title($book));
+		if (strlen($needle) < 4) {
+			continue;
+		}
+
+		$title_pos = strpos($title_text, ' ' . $needle . ' ');
+		$body_pos = strpos($body_text, ' ' . $needle . ' ');
+		if (false === $title_pos && false === $body_pos) {
+			continue;
+		}
+
+		$matches[$book->ID] = array(
+			'book' => $book,
+			'pos'  => false !== $title_pos ? $title_pos : 100000 + (int) $body_pos,
+		);
+	}
+
+	uasort(
+		$matches,
+		static fn(array $a, array $b): int => $a['pos'] <=> $b['pos']
+	);
+
+	return array_values(array_map(static fn(array $match): WP_Post => $match['book'], $matches));
 }
 
 function sss_article_cover_url(int $book_id): string {
@@ -374,9 +447,11 @@ function sss_render_article_book_card(int $book_id, bool $show_why = false): str
 }
 
 function sss_article_post_books(int $post_id): array {
-	$books = sss_article_posts(sss_article_field('book', $post_id, array()));
-	if ($books) {
-		return $books;
+	foreach (array('book', 'books', 'library_book', 'library_books', 'featured_books', 'article_books') as $field) {
+		$books = sss_article_posts(sss_article_field($field, $post_id, array()));
+		if ($books) {
+			return $books;
+		}
 	}
 
 	$book_ids = get_post_meta($post_id, '_bbb_article_books', true);
@@ -389,17 +464,20 @@ function sss_article_post_books(int $post_id): array {
 
 	$books = array();
 	for ($index = 1; $index <= 24; $index++) {
-		$book_id = (int) get_post_meta($post_id, '_bbb_article_book_' . $index, true);
-		if ($book_id <= 0) {
-			continue;
+		$value = get_post_meta($post_id, '_bbb_article_book_' . $index, true);
+		if (!$value) {
+			$value = get_post_meta($post_id, 'book_' . $index, true);
 		}
-		$book = get_post($book_id);
+		$book = sss_article_post($value);
+		if (!$book && is_string($value)) {
+			$book = sss_article_book_from_slug($value);
+		}
 		if ($book instanceof WP_Post) {
 			$books[] = $book;
 		}
 	}
 
-	return $books;
+	return $books ?: sss_article_books_mentioned_in_post($post_id);
 }
 
 function sss_article_book_visible(WP_Post $book): bool {
@@ -642,6 +720,7 @@ function sss_bookcard_shortcode($atts): string {
 	return ob_get_clean();
 }
 add_shortcode('sss_bookcard', 'sss_bookcard_shortcode');
+add_shortcode('bookcard', 'sss_bookcard_shortcode');
 
 function sss_pillar_bookcard_shortcode($atts): string {
 	$atts = shortcode_atts(array('post_id' => get_the_ID()), $atts, 'sss_pillar_bookcard');
@@ -689,3 +768,13 @@ function sss_pillar_bookcard_shortcode($atts): string {
 	return ob_get_clean();
 }
 add_shortcode('sss_pillar_bookcard', 'sss_pillar_bookcard_shortcode');
+add_shortcode('pillarbookcard', 'sss_pillar_bookcard_shortcode');
+
+function sss_ku_shortcode($atts): string {
+	return '<div class="blog-ku-cta">
+		<p class="blog-ku-cta__intro">most of the recs in the library are on kindle unlimited, which makes the spiral slightly easier to justify.</p>
+		<p class="blog-ku-cta__outro"><span class="blog-ku-cta__outroText">(i use it constantly, and it is very much part of the reader math.)</span> <a class="blog-ku-cta__accent" href="https://amzn.to/4uZ8Y3a" target="_blank" rel="noopener sponsored">try it here &rarr;</a></p>
+	</div>';
+}
+add_shortcode('sss_ku', 'sss_ku_shortcode');
+add_shortcode('ku', 'sss_ku_shortcode');

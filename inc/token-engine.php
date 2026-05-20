@@ -45,6 +45,7 @@ function sss_token_engine(string $content, int $post_id): string {
 		'/\[series\]/i'                => '[sss_series post_id="' . $post_id . '"]',
 		'/\[(?:pillar|pillar\s*nav)\]/i' => '[sss_pillar_nav post_id="' . $post_id . '"]',
 		'/\[newsletter(?:\s+preview)?\]/i' => '[sss_newsletter]',
+		'/\[ku\]/i'                    => '[sss_ku post_id="' . $post_id . '"]',
 	);
 
 	foreach ($map as $pattern => $replacement) {
