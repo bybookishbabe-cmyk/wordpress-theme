@@ -31,7 +31,7 @@ if (!$quotes && function_exists('bbb_quote_export_entries')) {
 		<p class="sss-lib__archiveKicker">quote library</p>
 		<h2 class="sss-lib__archiveTitle">lines worth reopening.</h2>
 		<p class="sss-lib__archiveSub">
-			<?php echo esc_html($is_society ? 'Your full quote wall is open.' : 'Preview a few lines. Paid members get the full quote wall.'); ?>
+			<?php echo esc_html($is_society ? 'a private little archive of the lines worth keeping.' : 'preview a few lines. paid members get the full quote wall.'); ?>
 		</p>
 		<a class="sss-lib__quoteCtaBtn" href="<?php echo esc_url($quote_url); ?>">
 			<?php echo esc_html($is_society ? 'open quote wall' : 'preview quote wall'); ?>
