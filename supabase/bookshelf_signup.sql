@@ -37,6 +37,12 @@ create index if not exists bookshelf_subscribers_shopify_customer_idx
 create index if not exists bookshelf_subscribers_wordpress_user_idx
   on public.bookshelf_subscribers (wordpress_user_id);
 
+update public.bookshelf_subscribers
+set access_tier = 'society',
+    updated_at = now()
+where society_key_used_at is not null
+  and access_tier <> 'society';
+
 alter table public.bookshelf_subscribers enable row level security;
 
 drop policy if exists "allow anon upsert bookshelf subscribers" on public.bookshelf_subscribers;

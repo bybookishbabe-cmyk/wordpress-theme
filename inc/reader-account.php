@@ -72,17 +72,84 @@ function bbb_reader_supabase_request(string $method, string $table, array $query
 	return is_array($decoded) ? $decoded : array();
 }
 
-function bbb_reader_access_tier(int $user_id = 0): string {
+function bbb_reader_user_has_wp_society_access(int $user_id = 0): bool {
 	$user_id = $user_id ?: get_current_user_id();
+	if (!$user_id) {
+		return false;
+	}
 
-	return (function_exists('bbb_user_is_society') && bbb_user_is_society($user_id))
+	$user = get_user_by('id', $user_id);
+	if (!$user instanceof WP_User) {
+		return false;
+	}
+
+	return in_array('society', (array) $user->roles, true)
+		|| in_array('paid', (array) $user->roles, true)
+		|| in_array('society_member', (array) $user->roles, true)
+		|| (function_exists('bbb_user_is_society') && bbb_user_is_society($user_id))
 		|| '1' === get_user_meta($user_id, 'bbb_society_member', true)
 		|| '1' === get_user_meta($user_id, '_bbb_society_member_active', true)
-		? 'society'
-		: 'free';
+		|| (
+			function_exists('wc_memberships_is_user_active_member')
+			&& wc_memberships_is_user_active_member($user_id, 'smut-sentiment-society')
+		);
 }
 
-function bbb_reader_account_payload(WP_User $user, string $source = 'wordpress_account'): array {
+function bbb_reader_subscriber_has_society_access(array $subscriber): bool {
+	return 'society' === (string) ($subscriber['access_tier'] ?? '')
+		|| !empty($subscriber['society_key_used_at']);
+}
+
+function bbb_reader_fetch_subscriber_by_email(string $email) {
+	$email = bbb_reader_normalize_email($email);
+	if ('' === $email) {
+		return null;
+	}
+
+	$rows = bbb_reader_supabase_request(
+		'GET',
+		'bookshelf_subscribers',
+		array(
+			'select'           => 'email_normalized,access_tier,society_key_used_at',
+			'email_normalized' => 'eq.' . $email,
+			'limit'            => 1,
+		)
+	);
+
+	if (is_wp_error($rows)) {
+		return $rows;
+	}
+
+	return isset($rows[0]) && is_array($rows[0]) ? $rows[0] : null;
+}
+
+function bbb_reader_access_tier(int $user_id = 0, ?array $subscriber = null): string {
+	static $subscriber_cache = array();
+
+	$user_id = $user_id ?: get_current_user_id();
+
+	if (bbb_reader_user_has_wp_society_access($user_id)) {
+		return 'society';
+	}
+
+	if (null === $subscriber && $user_id) {
+		if (!array_key_exists($user_id, $subscriber_cache)) {
+			$user = get_user_by('id', $user_id);
+			$fetched = $user instanceof WP_User ? bbb_reader_fetch_subscriber_by_email((string) $user->user_email) : null;
+			$subscriber_cache[$user_id] = is_wp_error($fetched) ? null : $fetched;
+		}
+
+		$subscriber = is_array($subscriber_cache[$user_id]) ? $subscriber_cache[$user_id] : null;
+	}
+
+	if (is_array($subscriber) && bbb_reader_subscriber_has_society_access($subscriber)) {
+		return 'society';
+	}
+
+	return 'free';
+}
+
+function bbb_reader_account_payload(WP_User $user, string $source = 'wordpress_account', ?array $subscriber = null): array {
 	$email = bbb_reader_normalize_email((string) $user->user_email);
 
 	return array(
@@ -92,7 +159,7 @@ function bbb_reader_account_payload(WP_User $user, string $source = 'wordpress_a
 		'shopify_customer_id' => (string) $user->ID,
 		'customer_email'    => (string) $user->user_email,
 		'account_status'    => 'logged_in',
-		'access_tier'       => bbb_reader_access_tier((int) $user->ID),
+		'access_tier'       => bbb_reader_access_tier((int) $user->ID, $subscriber),
 		'source'            => $source,
 		'last_synced_at'    => gmdate('c'),
 		'metadata'          => array(
@@ -109,11 +176,16 @@ function bbb_reader_sync_user_to_supabase(int $user_id, string $source = 'wordpr
 		return new WP_Error('bbb_reader_invalid_user', 'A valid WordPress user is required.');
 	}
 
+	$subscriber = bbb_reader_fetch_subscriber_by_email((string) $user->user_email);
+	if (is_wp_error($subscriber)) {
+		$subscriber = null;
+	}
+
 	return bbb_reader_supabase_request(
 		'POST',
 		'bookshelf_subscribers',
 		array('on_conflict' => 'email_normalized'),
-		array(bbb_reader_account_payload($user, $source))
+		array(bbb_reader_account_payload($user, $source, $subscriber))
 	);
 }
 
@@ -174,6 +246,7 @@ function bbb_reader_fetch_account_books(WP_User $user): array {
 
 function bbb_reader_account_response(WP_User $user): array {
 	$sync = bbb_reader_sync_user_to_supabase((int) $user->ID, 'wordpress_account_api');
+	$synced_subscriber = !is_wp_error($sync) && isset($sync[0]) && is_array($sync[0]) ? $sync[0] : null;
 	$error = is_wp_error($sync)
 		? array(
 			'code'    => $sync->get_error_code(),
@@ -188,7 +261,7 @@ function bbb_reader_account_response(WP_User $user): array {
 			'email'       => (string) $user->user_email,
 			'displayName' => (string) $user->display_name,
 		),
-		'accessTier'    => bbb_reader_access_tier((int) $user->ID),
+		'accessTier'    => bbb_reader_access_tier((int) $user->ID, $synced_subscriber),
 		'supabaseReady' => !is_wp_error($sync),
 		'supabaseError' => $error,
 		'books'         => bbb_reader_fetch_account_books($user),

@@ -19,7 +19,8 @@ $account_url         = wp_login_url();
 
 if (is_user_logged_in()) {
 	$account_url = function_exists('bbb_wc_account_url') ? bbb_wc_account_url() : home_url('/account/');
-	if (function_exists('bbb_reader_is_society') && bbb_reader_is_society()) {
+	$reader_tier = function_exists('bbb_reader_access_tier') ? bbb_reader_access_tier((int) get_current_user_id()) : 'free';
+	if ('society' === $reader_tier || (function_exists('bbb_user_is_society') && bbb_user_is_society())) {
 		$account_status      = 'paid';
 		$account_status_text = __('paid society member', 'bybookishbabe-shopify-port');
 	} else {

@@ -12,7 +12,7 @@ wp_enqueue_style('bbb-my-bookshelf', get_theme_file_uri('assets/css/my-bookshelf
 
 $is_logged_in = is_user_logged_in();
 $user         = $is_logged_in ? wp_get_current_user() : null;
-$is_society   = function_exists('bbb_reader_is_society') ? bbb_reader_is_society() : false;
+$is_society   = ($user instanceof WP_User && function_exists('bbb_reader_access_tier') && 'society' === bbb_reader_access_tier((int) $user->ID));
 $account_data = ($is_logged_in && $user instanceof WP_User && function_exists('bbb_reader_account_response'))
 	? bbb_reader_account_response($user)
 	: array();
