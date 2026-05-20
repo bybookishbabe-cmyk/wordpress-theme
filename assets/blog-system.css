@@ -2895,6 +2895,39 @@ BLOG BOOK MODAL: match public library modal
   color:#ffffff !important;
 }
 
+/* keep blog posts on one clean page scroll */
+body.single-post,
+body.single-post .gradient,
+body.single-post main,
+body.single-post .article-template{
+  max-width:100%;
+  overflow-x:clip;
+}
+
+body.single-post .article-template header,
+body.single-post .article-template__content,
+body.single-post .article-template__title{
+  box-sizing:border-box;
+  width:min(720px, calc(100vw - 32px));
+  max-width:720px;
+}
+
+body.single-post .article-template__content img,
+body.single-post .article-template__content iframe,
+body.single-post .article-template__content video{
+  max-width:100%;
+}
+
+@media (max-width:700px){
+  body.single-post .article-template header,
+  body.single-post .article-template__content,
+  body.single-post .article-template__title{
+    width:calc(100vw - 32px);
+    padding-left:0;
+    padding-right:0;
+  }
+}
+
 .blog-specific-links{
   display:flex;
   flex-wrap:wrap;
