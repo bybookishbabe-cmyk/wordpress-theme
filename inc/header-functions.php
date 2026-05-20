@@ -125,11 +125,13 @@ function bbb_flatten_society_menu_item(array $items): array {
 	foreach ($items as $item) {
 		$title  = sanitize_title((string) ($item->title ?? ''));
 		$handle = bbb_menu_item_handle($item);
-		$url    = isset($item->url) ? (string) $item->url : '';
+		$url    = isset($item->url) ? trailingslashit((string) $item->url) : '';
 
 		if (
 			'the-society' === $title
+			|| 'society' === $title
 			|| 'the-society' === $handle
+			|| 'society' === $handle
 			|| str_contains($url, '/smut-sentiment-society/')
 		) {
 			$item->children = array();
