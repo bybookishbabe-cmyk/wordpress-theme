@@ -446,7 +446,7 @@ function sss_render_article_book_card(int $book_id, bool $show_why = false): str
 	return ob_get_clean();
 }
 
-function sss_article_post_books(int $post_id): array {
+function sss_article_post_books(int $post_id, bool $include_mentions = true): array {
 	foreach (array('book', 'books', 'library_book', 'library_books', 'featured_books', 'article_books') as $field) {
 		$books = sss_article_posts(sss_article_field($field, $post_id, array()));
 		if ($books) {
@@ -477,7 +477,7 @@ function sss_article_post_books(int $post_id): array {
 		}
 	}
 
-	return $books ?: sss_article_books_mentioned_in_post($post_id);
+	return $books ?: ($include_mentions ? sss_article_books_mentioned_in_post($post_id) : array());
 }
 
 function sss_article_book_visible(WP_Post $book): bool {
@@ -628,7 +628,8 @@ function sss_article_books_for_inferred_context(int $post_id): array {
 }
 
 function sss_article_books_for_post(int $post_id): array {
-	$books = sss_article_post_books($post_id);
+	$include_mentions = function_exists('sss_content_has_pillar') ? !sss_content_has_pillar((string) get_post_field('post_content', $post_id)) : true;
+	$books = sss_article_post_books($post_id, $include_mentions);
 	if ($books) {
 		return $books;
 	}

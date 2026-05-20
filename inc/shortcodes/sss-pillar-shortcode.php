@@ -38,6 +38,13 @@ function sss_pillar_nav_shortcode($atts): string {
 	}
 
 	$counts = array(1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0);
+	$labels = array(
+		1 => array('🌶 1', 'soft open door'),
+		2 => array('🌶🌶 2', 'some heat'),
+		3 => array('🌶🌶🌶 3', 'balanced'),
+		4 => array('🌶🌶🌶🌶 4', 'high spice'),
+		5 => array('🌶🌶🌶🌶🌶 5', 'wreck me'),
+	);
 	foreach ($books as $book) {
 		$level = max(1, min(5, (int) sss_article_field('spice_level', $book->ID, 0)));
 		$counts[$level]++;
@@ -78,8 +85,8 @@ function sss_pillar_nav_shortcode($atts): string {
   <div class="blog-pillar-nav__links">
   <?php foreach ($counts as $level => $count) : ?>
     <a class="blog-pillar-nav__link<?php echo $count > 0 ? '' : ' is-disabled'; ?>"<?php echo $count > 0 ? ' href="#spice-' . esc_attr((string) $level) . '"' : ' aria-disabled="true" tabindex="-1"'; ?>>
-      spice <?php echo esc_html((string) $level); ?>
-      <span><?php echo esc_html((string) $count); ?> rec<?php echo 1 === $count ? '' : 's'; ?></span>
+      <span><?php echo esc_html($labels[$level][0]); ?></span>
+      <?php echo esc_html($labels[$level][1]); ?>
     </a>
   <?php endforeach; ?>
   </div>
