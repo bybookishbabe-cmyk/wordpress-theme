@@ -40,9 +40,9 @@ foreach ($books as $book) {
 	<div class="sss-lib__wrap">
 		<header class="sss-tropeTop">
 			<div class="sss-tropeTop__left">
-				<p class="sss-lib__kicker">browse by spice</p>
-				<h1 class="sss-lib__title">romance books by spice level</h1>
-				<p class="sss-lib__spiceDesc">Choose how much heat you want tonight and let the library narrow itself for you, from barely-there tension to five-chili chaos.</p>
+				<p class="sss-lib__kicker">the spice archive</p>
+				<h1 class="sss-lib__title">pick your spice level 🌶</h1>
+				<p class="sss-lib__spiceDesc">choose how much heat you want tonight and let the library narrow itself for you.</p>
 			</div>
 			<div class="sss-tropeTop__right">
 				<div class="sss-lib__societyInviteCard">
@@ -53,11 +53,11 @@ foreach ($books as $book) {
 			</div>
 		</header>
 		<nav class="sss-spiceNav">
-			<button class="sss-spiceNav__pill" type="button" data-spice-filter="1">🌶 barely there <span><?php echo esc_html((string) $spice_counts[1]); ?></span></button>
-			<button class="sss-spiceNav__pill" type="button" data-spice-filter="2">🌶🌶 warming up <span><?php echo esc_html((string) $spice_counts[2]); ?></span></button>
-			<button class="sss-spiceNav__pill" type="button" data-spice-filter="3">🌶🌶🌶 medium heat <span><?php echo esc_html((string) $spice_counts[3]); ?></span></button>
-			<button class="sss-spiceNav__pill" type="button" data-spice-filter="4">🌶🌶🌶🌶 getting hot <span><?php echo esc_html((string) $spice_counts[4]); ?></span></button>
-			<button class="sss-spiceNav__pill" type="button" data-spice-filter="5">🌶🌶🌶🌶🌶 five chili nights <span><?php echo esc_html((string) $spice_counts[5]); ?></span></button>
+			<button class="sss-spiceNav__pill" type="button" data-spice-filter="1">🌶 1 <span>soft open door</span><span class="sss-spiceNav__count"><?php echo esc_html((string) $spice_counts[1]); ?></span></button>
+			<button class="sss-spiceNav__pill" type="button" data-spice-filter="2">🌶🌶 2 <span>some heat</span><span class="sss-spiceNav__count"><?php echo esc_html((string) $spice_counts[2]); ?></span></button>
+			<button class="sss-spiceNav__pill" type="button" data-spice-filter="3">🌶🌶🌶 3 <span>balanced</span><span class="sss-spiceNav__count"><?php echo esc_html((string) $spice_counts[3]); ?></span></button>
+			<button class="sss-spiceNav__pill" type="button" data-spice-filter="4">🌶🌶🌶🌶 4 <span>high spice</span><span class="sss-spiceNav__count"><?php echo esc_html((string) $spice_counts[4]); ?></span></button>
+			<button class="sss-spiceNav__pill" type="button" data-spice-filter="5">🌶🌶🌶🌶🌶 5 <span>wreck me</span><span class="sss-spiceNav__count"><?php echo esc_html((string) $spice_counts[5]); ?></span></button>
 		</nav>
 		<p class="sss-lib__spiceCount">showing <span id="sssSpiceCount">0</span> books</p>
 		<div class="sss-lib__grid sss-lib__grid--spicePage" id="sssSpiceGrid">
