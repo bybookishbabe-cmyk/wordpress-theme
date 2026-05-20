@@ -54,3 +54,6 @@ function sss_pillar_nav_shortcode($atts): string {
 	return ob_get_clean();
 }
 add_shortcode('sss_pillar_nav', 'sss_pillar_nav_shortcode');
+add_shortcode('pillar', 'sss_pillar_nav_shortcode');
+add_shortcode('pillarnav', 'sss_pillar_nav_shortcode');
+add_shortcode('pillar_nav', 'sss_pillar_nav_shortcode');
