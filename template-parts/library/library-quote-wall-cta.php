@@ -10,14 +10,7 @@ declare(strict_types=1);
 $is_society = !empty($args['is_society']);
 $quote_url  = home_url('/sss-quote-wall/');
 
-$quote_post_types = array_values(
-	array_filter(
-		array('sss_quote', 'bbb_quote'),
-		static function (string $post_type): bool {
-			return post_type_exists($post_type);
-		}
-	)
-);
+$quote_post_types = function_exists('bbb_quote_post_types') ? bbb_quote_post_types() : array();
 $quotes = $quote_post_types
 	? get_posts(
 		array(
@@ -29,6 +22,9 @@ $quotes = $quote_post_types
 		)
 	)
 	: array();
+if (!$quotes && function_exists('bbb_quote_export_entries')) {
+	$quotes = bbb_quote_export_entries(3);
+}
 ?>
 <section class="sss-lib__quoteCta" id="quote-wall-preview">
 	<div class="sss-lib__quoteCtaCopy">
@@ -47,21 +43,24 @@ $quotes = $quote_post_types
 		<?php endif; ?>
 		<?php foreach ($quotes as $quote) : ?>
 			<?php
-			if (!$quote instanceof WP_Post) {
+			if ($quote instanceof WP_Post) {
+				$text = trim((string) get_post_meta($quote->ID, '_quote_text', true));
+				if ('' === $text) {
+					$text = trim((string) get_post_meta($quote->ID, 'quote_text', true));
+				}
+				if ('' === $text) {
+					$text = trim((string) get_post_meta($quote->ID, 'quote', true));
+				}
+				if ('' === $text) {
+					$text = trim((string) get_post_meta($quote->ID, '_bbb_quote', true));
+				}
+				if ('' === $text) {
+					$text = trim(wp_strip_all_tags($quote->post_content));
+				}
+			} elseif (is_array($quote)) {
+				$text = trim((string) ($quote['text'] ?? ''));
+			} else {
 				continue;
-			}
-			$text = trim((string) get_post_meta($quote->ID, '_quote_text', true));
-			if ('' === $text) {
-				$text = trim((string) get_post_meta($quote->ID, 'quote_text', true));
-			}
-			if ('' === $text) {
-				$text = trim((string) get_post_meta($quote->ID, 'quote', true));
-			}
-			if ('' === $text) {
-				$text = trim((string) get_post_meta($quote->ID, '_bbb_quote', true));
-			}
-			if ('' === $text) {
-				$text = trim(wp_strip_all_tags($quote->post_content));
 			}
 			if ('' === $text) {
 				continue;

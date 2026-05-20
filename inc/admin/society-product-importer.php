@@ -187,17 +187,22 @@ function bbb_society_product_importer_is_digital(array $product): bool {
 		return true;
 	}
 
-	if (bbb_society_product_importer_download_files($product)) {
-		return true;
-	}
-
 	$type     = strtolower((string) ($product['product_type'] ?? $product['productType'] ?? ''));
 	$title    = strtolower((string) ($product['title'] ?? $product['name'] ?? ''));
 	$handle   = strtolower((string) ($product['handle'] ?? $product['slug'] ?? ''));
+	$description = strtolower(wp_strip_all_tags((string) ($product['description'] ?? $product['body_html'] ?? $product['descriptionHtml'] ?? '')));
 	$keywords = $type . ' ' . $title . ' ' . $handle . ' ' . strtolower(implode(' ', bbb_society_product_importer_split_terms($product['tags'] ?? '')));
 
 	if (str_contains($type, 'physical') || str_contains($type, 'bookmark')) {
 		return false;
+	}
+
+	if (str_contains($description, 'physical item') || str_contains($description, 'not a digital download')) {
+		return false;
+	}
+
+	if (bbb_society_product_importer_download_files($product)) {
+		return true;
 	}
 
 	return (bool) preg_match('/printable|digital|template|vault|tracker|download|canva/', $keywords);

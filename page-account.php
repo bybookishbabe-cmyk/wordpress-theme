@@ -98,7 +98,6 @@ get_header();
 
 				<div class="bbb-account-shelf__actions">
 					<?php if ($is_logged_in) : ?>
-						<a class="bbb-account-shelf__button" href="<?php echo esc_url(home_url('/my-bookshelf/')); ?>">open my bookshelf</a>
 						<a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="<?php echo esc_url(get_edit_user_link((int) $user->ID)); ?>">edit profile</a>
 						<a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="<?php echo esc_url(wp_logout_url(home_url('/'))); ?>">log out</a>
 					<?php else : ?>

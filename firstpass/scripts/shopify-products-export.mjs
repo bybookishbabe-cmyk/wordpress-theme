@@ -235,8 +235,6 @@ function normalizeProduct(product, dropProductHandles, files) {
 }
 
 function isDigitalProduct(product, variant, downloadUrl) {
-  if (downloadUrl) return true;
-
   const productType = String(product.productType || '').toLowerCase();
   const handle = String(product.handle || '').toLowerCase();
   const title = String(product.title || '').toLowerCase();
@@ -251,6 +249,8 @@ function isDigitalProduct(product, variant, downloadUrl) {
   if (description.includes('physical item') || description.includes('not a digital download')) {
     return false;
   }
+
+  if (downloadUrl) return true;
 
   if (variant?.inventoryItem?.requiresShipping === true && !/printable|digital|template|vault|tracker|download/.test(haystack)) {
     return false;

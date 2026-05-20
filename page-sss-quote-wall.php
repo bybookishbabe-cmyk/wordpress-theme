@@ -121,14 +121,7 @@ if (!function_exists('bbb_quote_wall_theme')) {
 	}
 }
 
-$quote_post_types = array_values(
-	array_filter(
-		array('sss_quote', 'bbb_quote'),
-		static function (string $post_type): bool {
-			return post_type_exists($post_type);
-		}
-	)
-);
+$quote_post_types = function_exists('bbb_quote_post_types') ? bbb_quote_post_types() : array();
 $is_society = function_exists('bbb_reader_is_society') ? bbb_reader_is_society() : false;
 $quote_limit = $is_society ? -1 : 6;
 $quotes = $quote_post_types
@@ -142,6 +135,9 @@ $quotes = $quote_post_types
 		)
 	)
 	: array();
+if (!$quotes && function_exists('bbb_quote_export_entries')) {
+	$quotes = bbb_quote_export_entries((int) $quote_limit);
+}
 
 $join_url = get_option('bbb_society_gate_member_url', 'https://thesmutandsentimentsociety.substack.com/subscribe');
 
@@ -173,14 +169,28 @@ get_header();
 
 		<?php foreach ($quotes as $index => $quote) : ?>
 			<?php
-			if (!$quote instanceof WP_Post) {
+			$book_meta = array('title' => '', 'author' => '', 'handle' => '', 'shelf' => '', 'url' => home_url('/library/'));
+			if ($quote instanceof WP_Post) {
+				$text = bbb_quote_wall_text($quote);
+				$book_meta = bbb_quote_wall_book_meta(bbb_quote_wall_book($quote));
+				$fallback_title = get_the_title($quote);
+			} elseif (is_array($quote)) {
+				$text = trim((string) ($quote['text'] ?? ''));
+				$book_handle = (string) ($quote['book_handle'] ?? '');
+				$book_meta = array(
+					'title'  => (string) ($quote['book_title'] ?? ''),
+					'author' => '',
+					'handle' => $book_handle,
+					'shelf'  => '',
+					'url'    => '' !== $book_handle ? home_url('/library/?book=' . rawurlencode($book_handle)) : home_url('/library/'),
+				);
+				$fallback_title = '';
+			} else {
 				continue;
 			}
-			$text = bbb_quote_wall_text($quote);
 			if ('' === $text) {
 				continue;
 			}
-			$book_meta = bbb_quote_wall_book_meta(bbb_quote_wall_book($quote));
 			$theme = bbb_quote_wall_theme((string) $book_meta['shelf'], (int) $index);
 			?>
 			<article class="bbb-quote-card bbb-quote-card--<?php echo esc_attr($theme); ?>">
@@ -193,7 +203,7 @@ get_header();
 							<span>by <?php echo esc_html((string) $book_meta['author']); ?></span>
 						<?php endif; ?>
 					<?php else : ?>
-						<span><?php echo esc_html(get_the_title($quote)); ?></span>
+						<span><?php echo esc_html($fallback_title); ?></span>
 					<?php endif; ?>
 				</footer>
 			</article>

@@ -110,7 +110,7 @@
       "type": "sss-quote-wall",
       "name": "sss quote wall",
       "settings": {
-        "kicker": "sss quote library",
+        "kicker": "quote library",
         "title": "lines that ruined me (in a good way).",
         "subtext": "tap a quote to revisit the rec.",
         "new_tab": false
