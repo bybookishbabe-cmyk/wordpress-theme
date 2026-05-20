@@ -121,7 +121,8 @@
 .bbb-account-shelf__toolbar,
 .bbb-account-shelf__panel,
 .bbb-account-shelf__dropCta,
-.bbb-account-shelf__preview {
+.bbb-account-shelf__preview,
+.bbb-account-shelf__feature {
   border: 1px solid rgba(255,255,255,.12);
   border-radius: 8px;
   background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.025));
@@ -171,6 +172,204 @@
   font-family: "Cormorant Garamond", serif;
   font-size: clamp(2rem, 3vw, 2.8rem);
   font-weight: 400;
+  text-transform: lowercase;
+}
+
+.bbb-account-shelf__feature {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(260px, .7fr);
+  gap: 22px;
+  margin-bottom: 26px;
+  padding: 22px;
+  overflow: hidden;
+}
+
+.bbb-account-shelf__feature[hidden] {
+  display: none;
+}
+
+.bbb-account-shelf__readShelf {
+  position: relative;
+  min-height: 360px;
+  padding: 28px 24px 34px;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(255,138,199,.22), transparent 30%),
+    linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.018));
+}
+
+.bbb-account-shelf__featureHead {
+  max-width: 560px;
+}
+
+.bbb-account-shelf__featureKicker {
+  margin: 0 0 10px;
+  color: #ff8ac7;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: lowercase;
+}
+
+.bbb-account-shelf__feature h2,
+.bbb-account-shelf__quoteCard blockquote {
+  margin: 0;
+  color: #fff;
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 400;
+  text-transform: lowercase;
+}
+
+.bbb-account-shelf__feature h2 {
+  font-size: clamp(2.5rem, 4.6vw, 4.5rem);
+  line-height: .96;
+}
+
+.bbb-account-shelf__featureHead p:not(.bbb-account-shelf__featureKicker) {
+  max-width: 520px;
+  margin: 14px 0 0;
+  color: rgba(247,243,238,.68);
+  line-height: 1.65;
+}
+
+.bbb-account-shelf__coverStage {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-height: 190px;
+  margin-top: 28px;
+  padding: 0 12px 24px;
+}
+
+.bbb-account-shelf__rail {
+  position: absolute;
+  right: 28px;
+  bottom: 34px;
+  left: 28px;
+  height: 24px;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 4px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.03)),
+    #151515;
+  box-shadow: 0 16px 28px rgba(0,0,0,.32);
+}
+
+.bbb-account-shelf__readCover {
+  position: relative;
+  display: flex;
+  flex: 0 0 clamp(72px, 11vw, 118px);
+  flex-direction: column;
+  gap: 10px;
+  margin-right: clamp(-20px, -2vw, -10px);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  transform: translateY(calc(var(--i) * -4px)) rotate(calc(var(--i) * 1.8deg));
+  transition: transform .22s ease, filter .22s ease;
+}
+
+.bbb-account-shelf__readCover:hover,
+.bbb-account-shelf__readCover:focus-visible {
+  z-index: 4;
+  filter: brightness(1.08);
+  outline: 0;
+  transform: translateY(-14px) rotate(0deg);
+}
+
+.bbb-account-shelf__readCover img,
+.bbb-account-shelf__readCover > span:first-child {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 6px;
+  background: linear-gradient(135deg, #20121a, #080808);
+  object-fit: cover;
+  box-shadow: 0 20px 34px rgba(0,0,0,.38);
+}
+
+.bbb-account-shelf__readCover > span:first-child {
+  display: grid;
+  place-items: center;
+  color: #ffb8dc;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 3rem;
+}
+
+.bbb-account-shelf__readCover span:last-child {
+  position: absolute;
+  right: -20px;
+  bottom: -22px;
+  left: -20px;
+  color: rgba(247,243,238,.72);
+  font-size: 1.05rem;
+  line-height: 1.2;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity .22s ease, transform .22s ease;
+}
+
+.bbb-account-shelf__readCover:hover span:last-child,
+.bbb-account-shelf__readCover:focus-visible span:last-child {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.bbb-account-shelf__readPlaceholder {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  width: 100%;
+  padding-bottom: 16px;
+}
+
+.bbb-account-shelf__readPlaceholder span {
+  display: block;
+  width: clamp(72px, 11vw, 118px);
+  aspect-ratio: 2 / 3;
+  border: 1px dashed rgba(255,255,255,.18);
+  border-radius: 6px;
+  background: rgba(255,255,255,.035);
+}
+
+.bbb-account-shelf__quoteCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 360px;
+  padding: 28px;
+  border: 1px solid rgba(255,138,199,.24);
+  border-radius: 8px;
+  background:
+    linear-gradient(145deg, rgba(255,138,199,.16), rgba(255,255,255,.035)),
+    #101010;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color .22s ease, transform .22s ease;
+}
+
+.bbb-account-shelf__quoteCard:hover,
+.bbb-account-shelf__quoteCard:focus-visible {
+  border-color: rgba(255,255,255,.58);
+  outline: 0;
+  transform: translateY(-2px);
+}
+
+.bbb-account-shelf__quoteCard blockquote {
+  font-size: clamp(2.2rem, 3vw, 3.4rem);
+  line-height: 1.05;
+}
+
+.bbb-account-shelf__quoteCard span {
+  color: #ffb8dc;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  line-height: 1.4;
   text-transform: lowercase;
 }
 
@@ -404,6 +603,10 @@
 }
 
 @media (max-width: 900px) {
+  .bbb-account-shelf__feature {
+    grid-template-columns: 1fr;
+  }
+
   .bbb-account-shelf__grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -430,6 +633,22 @@
 
   .bbb-account-shelf__previewGrid {
     grid-template-columns: 1fr;
+  }
+
+  .bbb-account-shelf__feature,
+  .bbb-account-shelf__readShelf,
+  .bbb-account-shelf__quoteCard {
+    padding: 18px;
+  }
+
+  .bbb-account-shelf__readShelf,
+  .bbb-account-shelf__quoteCard {
+    min-height: 300px;
+  }
+
+  .bbb-account-shelf__coverStage {
+    min-height: 158px;
+    padding-inline: 0;
   }
 
   .bbb-account-shelf__grid {

@@ -72,7 +72,7 @@ console.log(`${localized.filter((product) => String(product.image_url || '').inc
 
 function collectProductImageUrls(product, fullProduct) {
   const urls = [];
-  addUrl(urls, product.image_url);
+  addUrl(urls, normalizeLocalizedUrl(product.image_url));
   addUrl(urls, fullProduct.featuredImage?.url);
 
   for (const node of fullProduct.media?.nodes || []) {
@@ -80,6 +80,16 @@ function collectProductImageUrls(product, fullProduct) {
   }
 
   return urls;
+}
+
+function normalizeLocalizedUrl(value) {
+  const url = String(value || '').trim();
+  const marker = '/wp-content/uploads/edd/shopify-product-media/';
+  if (url.includes(marker)) {
+    return `${marker}${url.split(marker).pop()}`;
+  }
+
+  return url;
 }
 
 async function downloadIfNeeded(url, targetPath) {
