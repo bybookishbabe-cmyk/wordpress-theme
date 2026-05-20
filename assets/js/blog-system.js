@@ -242,6 +242,39 @@ const previewClose = document.getElementById("bbbPreviewClose");
 const previewShareButton = document.getElementById("bbbPreviewShare");
 let currentPreviewShare = null;
 let currentPreviewBook = null;
+let previewScrollY = 0;
+
+function lockPreviewScroll(){
+  previewScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+  document.body.classList.add("bbb-book-preview-open");
+  document.body.style.top = `-${previewScrollY}px`;
+  document.body.style.position = "fixed";
+  document.body.style.width = "100%";
+}
+
+function unlockPreviewScroll(){
+  document.body.classList.remove("bbb-book-preview-open");
+  document.body.style.position = "";
+  document.body.style.top = "";
+  document.body.style.width = "";
+  window.scrollTo(0, previewScrollY || 0);
+}
+
+function openBookPreview(){
+  if (!preview) return;
+  preview.style.display = "flex";
+  preview.hidden = false;
+  preview.setAttribute("aria-hidden", "false");
+  lockPreviewScroll();
+}
+
+function closeBookPreview(){
+  if (!preview || preview.hidden) return;
+  preview.style.display = "none";
+  preview.hidden = true;
+  preview.setAttribute("aria-hidden", "true");
+  unlockPreviewScroll();
+}
 
 function getBlogShelf(){
   try {
@@ -466,30 +499,30 @@ if (previewShareButton) {
   previewShareButton.textContent = "📲";
 }
 
-preview.style.display = "flex";
-preview.hidden = false;
-preview.setAttribute("aria-hidden", "false");
+openBookPreview();
 preview.__currentBook = currentPreviewBook;
 
 });
 
 });
 
-previewClose.addEventListener("click", () => {
-preview.style.display = "none";
-preview.hidden = true;
-preview.setAttribute("aria-hidden", "true");
-});
+if (previewClose) {
+  previewClose.addEventListener("click", () => {
+    closeBookPreview();
+  });
+}
 
 if (preview) {
   preview.addEventListener("click", function(event){
     if (event.target.closest("[data-close]")) {
-      preview.style.display = "none";
-      preview.hidden = true;
-      preview.setAttribute("aria-hidden", "true");
+      closeBookPreview();
     }
   });
 }
+
+document.addEventListener("keydown", function(event){
+  if (event.key === "Escape") closeBookPreview();
+});
 
 if (preview) {
   preview.addEventListener("click", function(event){

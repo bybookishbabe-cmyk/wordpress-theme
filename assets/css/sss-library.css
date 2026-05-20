@@ -8038,3 +8038,70 @@ font-size:13px;
     z-index:6;
   }
 }
+
+/* Mobile cover and modal containment */
+.sss-lib__cover,
+.sss-lib__book img[class*="cover"],
+.sss-lib__coverWrap img{
+  object-fit:contain;
+}
+
+.sss-lib__coverWrap{
+  max-height:min(360px, 58svh);
+}
+
+.sss-lib__coverWrap .sss-lib__cover{
+  max-height:min(360px, 58svh);
+}
+
+.sss-lib__modal .sss-lib__dialog{
+  width:min(720px, calc(100vw - 32px));
+  max-height:min(82svh, 760px);
+  overflow-y:auto;
+}
+
+.sss-lib__modal .sss-lib__mcoverWrap{
+  align-self:start;
+  max-height:min(320px, 48svh);
+}
+
+.sss-lib__modal .sss-lib__mcoverFrame{
+  max-height:min(320px, 48svh);
+}
+
+.sss-lib__modal .sss-lib__mcover{
+  height:auto;
+  max-height:min(320px, 48svh);
+  object-fit:contain;
+}
+
+@media (max-width:749px){
+  .sss-lib__coverWrap,
+  .sss-lib__coverWrap .sss-lib__cover{
+    max-height:min(300px, 52svh);
+  }
+
+  .sss-lib__modal{
+    padding:14px;
+    box-sizing:border-box;
+  }
+
+  .sss-lib__modal .sss-lib__dialog{
+    width:min(92vw, 430px);
+    max-height:78svh;
+    top:auto;
+    bottom:12px;
+    transform:translateX(-50%);
+  }
+
+  .sss-lib__modal .sss-lib__mcoverWrap{
+    width:96px;
+    min-width:96px;
+    max-height:148px;
+  }
+
+  .sss-lib__modal .sss-lib__mcoverFrame,
+  .sss-lib__modal .sss-lib__mcover{
+    max-height:148px;
+  }
+}

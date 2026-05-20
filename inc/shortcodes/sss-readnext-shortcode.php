@@ -78,30 +78,117 @@ function sss_resolve_shopify_path(string $path): array {
 	);
 }
 
-function sss_specific_links_shortcode($atts): string {
-	$atts = shortcode_atts(array('post_id' => get_the_ID(), 'cluster' => '', 'context' => ''), $atts, 'sss_specific_links');
-	$post_id = (int) $atts['post_id'];
-	$prompt = (string) sss_article_field('specific_prompt', $post_id, 'looking for something specific?');
-	$cluster = sanitize_title((string) $atts['cluster']);
-	if (!$cluster) {
-		$context = (string) $atts['context'];
-		$cluster = sss_detect_cluster($context ?: sss_readnext_context($post_id));
+function sss_specific_link_from_value($value): ?array {
+	if ($value instanceof WP_Post) {
+		return array('url' => get_permalink($value), 'title' => get_the_title($value), 'post' => $value);
 	}
-	$paths = sss_specific_link_clusters()[$cluster] ?? array();
-	if (!$paths) {
+	if (is_numeric($value)) {
+		$post = get_post((int) $value);
+		if ($post instanceof WP_Post) {
+			return array('url' => get_permalink($post), 'title' => get_the_title($post), 'post' => $post);
+		}
+	}
+	if (is_array($value)) {
+		if (isset($value['url'])) {
+			$title = (string) ($value['title'] ?? $value['label'] ?? $value['name'] ?? $value['url']);
+			return array('url' => (string) $value['url'], 'title' => $title, 'post' => null);
+		}
+		if (isset($value['ID'])) {
+			return sss_specific_link_from_value((int) $value['ID']);
+		}
+		if (isset($value[0])) {
+			return sss_specific_link_from_value($value[0]);
+		}
+	}
+	if (is_string($value) && trim($value) !== '') {
+		$value = trim($value);
+		if (str_starts_with($value, 'http') || str_starts_with($value, '/')) {
+			return sss_resolve_shopify_path($value);
+		}
+		$post = get_page_by_path(sanitize_title($value), OBJECT, array('post', 'page'));
+		if ($post instanceof WP_Post) {
+			return array('url' => get_permalink($post), 'title' => get_the_title($post), 'post' => $post);
+		}
+	}
+
+	return null;
+}
+
+function sss_specific_manual_links(int $post_id): array {
+	$links = array();
+	$raw_links = sss_article_field('specific_links', $post_id, array());
+	if (is_array($raw_links)) {
+		foreach ($raw_links as $item) {
+			$link = sss_specific_link_from_value($item);
+			if (!$link && is_array($item)) {
+				$link = sss_specific_link_from_value($item['link'] ?? $item['page'] ?? $item['post'] ?? $item['url'] ?? null);
+			}
+			if ($link) {
+				$link['title'] = (string) ($item['label'] ?? $item['title'] ?? $link['title']);
+				$links[] = $link;
+			}
+		}
+	}
+
+	for ($i = 1; $i <= 3; $i++) {
+		if (count($links) >= 3) {
+			break;
+		}
+		$link = sss_specific_link_from_value(sss_article_field('specific_link_' . $i, $post_id, null));
+		if (!$link) {
+			$url = (string) sss_article_field('specific_link_' . $i . '_url', $post_id, '');
+			if ($url) {
+				$link = sss_resolve_shopify_path($url);
+			}
+		}
+		if ($link) {
+			$label = (string) sss_article_field('specific_link_' . $i . '_label', $post_id, '');
+			if (!$label) {
+				$label = (string) sss_article_field('specific_link_' . $i . '_title', $post_id, '');
+			}
+			if ($label) {
+				$link['title'] = $label;
+			}
+			$links[] = $link;
+		}
+	}
+
+	$deduped = array();
+	foreach ($links as $link) {
+		if (empty($link['url']) || isset($deduped[$link['url']])) {
+			continue;
+		}
+		$deduped[$link['url']] = $link;
+	}
+
+	return array_slice(array_values($deduped), 0, 3);
+}
+
+function sss_specific_links_shortcode($atts): string {
+	$atts = shortcode_atts(array('post_id' => get_the_ID()), $atts, 'sss_specific_links');
+	$post_id = (int) $atts['post_id'];
+	$prompt = (string) sss_article_field('specific_prompt', $post_id, 'looking for something more specific?');
+	$links = sss_specific_manual_links($post_id);
+	if (!$links) {
 		return '';
 	}
 
 	ob_start();
 	?>
-<nav class="blog-specific-links" aria-label="specific <?php echo esc_attr($cluster); ?> guide links">
-  <span class="blog-specific-links__prompt"><?php echo esc_html($prompt); ?></span>
-  <span class="blog-specific-links__arrow" aria-hidden="true">→</span>
-  <?php foreach ($paths as $i => $path) : ?>
-    <?php $link = sss_resolve_shopify_path($path); ?>
-    <?php if ($i > 0) : ?><span class="blog-specific-links__dot" aria-hidden="true">·</span><?php endif; ?>
-    <a href="<?php echo esc_url($link['url']); ?>"><?php echo esc_html(strtolower($link['title'])); ?></a>
+<nav class="blog-specific-links" aria-label="specific guide links">
+  <div class="blog-specific-links__head">
+    <span class="blog-specific-links__kicker">keep browsing</span>
+    <span class="blog-specific-links__prompt"><?php echo esc_html($prompt); ?></span>
+  </div>
+  <div class="blog-specific-links__grid">
+  <?php foreach ($links as $i => $link) : ?>
+    <a class="blog-specific-links__card" href="<?php echo esc_url($link['url']); ?>">
+      <span class="blog-specific-links__number"><?php echo esc_html(str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT)); ?></span>
+      <span class="blog-specific-links__title"><?php echo esc_html(strtolower((string) $link['title'])); ?></span>
+      <span class="blog-specific-links__cta">open guide →</span>
+    </a>
   <?php endforeach; ?>
+  </div>
 </nav>
 	<?php
 	return ob_get_clean();
