@@ -56,7 +56,7 @@ function bbb_page_route_registry(): array {
 		'sss-quote-wall'                 => '',
 		'sss-series'                     => '',
 		'sss-series-page'                => '',
-		'weekly-obsession'               => '',
+		'weekly-obsession'               => 'page-weekly-obsession.php',
 		'what-to-read-next'              => 'page-what-to-read-next.php',
 	);
 }
