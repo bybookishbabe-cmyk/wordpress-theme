@@ -7,7 +7,11 @@
 
 declare(strict_types=1);
 
-wp_enqueue_style('bbb-quote-wall', get_template_directory_uri() . '/assets/css/sss-quote-wall.css', array(), wp_get_theme()->get('Version'));
+if (function_exists('bbb_enqueue_css')) {
+	bbb_enqueue_css('bbb-quote-wall', 'assets/css/sss-quote-wall.css');
+} else {
+	wp_enqueue_style('bbb-quote-wall', get_template_directory_uri() . '/assets/css/sss-quote-wall.css', array(), wp_get_theme()->get('Version'));
+}
 
 if (!function_exists('bbb_quote_wall_text')) {
 	function bbb_quote_wall_text(WP_Post $quote): string {
@@ -111,7 +115,7 @@ if (!function_exists('bbb_quote_wall_theme')) {
 			return 'rose';
 		}
 		if (str_contains($shelf, 'fantasy') || str_contains($shelf, 'romantasy')) {
-			return 'blue';
+			return 'paper';
 		}
 		if (str_contains($shelf, 'soft') || str_contains($shelf, 'sentimental')) {
 			return 'gold';

@@ -24,8 +24,8 @@
   margin: 0 0 10px;
   color: rgba(246, 246, 246, .62);
   font-size: 11px;
-  letter-spacing: .18em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: lowercase;
 }
 
 .bbb-quote-wall h1 {
@@ -66,9 +66,20 @@
   color: #fff;
   background: rgba(255, 138, 199, .12);
   font-size: 11px;
-  letter-spacing: .14em;
+  letter-spacing: 0;
   text-decoration: none;
-  text-transform: uppercase;
+  text-transform: lowercase;
+  transition: background .2s ease, border-color .2s ease, color .2s ease, transform .2s ease;
+}
+
+.bbb-quote-wall__actions a:hover,
+.bbb-quote-wall__actions a:focus-visible,
+.bbb-quote-wall__gate a:hover,
+.bbb-quote-wall__gate a:focus-visible {
+  border-color: rgba(255, 138, 199, .84);
+  color: #171414;
+  background: #ff8ac7;
+  transform: translateY(-2px);
 }
 
 .bbb-quote-wall__board {
@@ -89,7 +100,6 @@
 }
 
 .bbb-quote-card--rose { background: #ffe4f1; }
-.bbb-quote-card--blue { background: #e3edff; }
 .bbb-quote-card--gold { background: #fff0bd; }
 .bbb-quote-card--gray { background: #e8e2dc; }
 
@@ -149,8 +159,8 @@
   margin: 0 0 8px;
   color: rgba(246, 246, 246, .6);
   font-size: 11px;
-  letter-spacing: .16em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: lowercase;
 }
 
 .bbb-quote-wall__gate h2 {

@@ -727,6 +727,7 @@ a.button--secondary {
 html, body {
   max-width: 100%;
   overflow-x: hidden;
+  background: #000;
 }
 
 html,
@@ -738,6 +739,14 @@ body.gradient {
 body.gradient {
   margin: 0;
   max-width: none;
+  background: #000;
+}
+
+html:has(body.admin-bar),
+body.admin-bar,
+body.admin-bar.gradient,
+body.admin-bar::before,
+body.admin-bar .section-header {
   background: #000;
 }
 

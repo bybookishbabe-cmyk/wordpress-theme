@@ -1307,11 +1307,17 @@ background:#0e0e0e;
 .sss-lib__quoteCta .sss-lib__archiveKicker,
 .sss-lib__quoteCta .sss-lib__archiveTitle,
 .sss-lib__quoteCta .sss-lib__archiveSub{
+  color:#f6f6f6;
+  letter-spacing:0;
   text-transform:lowercase;
 }
 
 .sss-lib__quoteCta .sss-lib__archiveKicker{
-  letter-spacing:0;
+  color:rgba(246,246,246,.62);
+}
+
+.sss-lib__quoteCta .sss-lib__archiveSub{
+  color:rgba(246,246,246,.7);
 }
 
 .sss-lib__quoteCtaBtn{
@@ -1390,7 +1396,7 @@ background:#0e0e0e;
 
 .sss-lib__quoteCtaStack blockquote:nth-child(3){
   animation-delay:8s;
-  background:#e8e2dc;
+  background:#f6f1e9;
 }
 
 .sss-lib__quoteCtaStack blockquote:only-child{
