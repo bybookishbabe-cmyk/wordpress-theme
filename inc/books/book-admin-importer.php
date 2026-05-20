@@ -22,6 +22,7 @@ add_action(
 
 add_action('admin_post_bbb_import_books_json', 'bbb_handle_books_json_import');
 add_action('admin_post_bbb_import_newsletter_issues_json', 'bbb_handle_newsletter_issues_json_import');
+add_action('admin_post_bbb_import_blog_post_dates_json', 'bbb_handle_blog_post_dates_json_import');
 
 function bbb_render_shopify_import_page(): void {
 	if (!current_user_can('manage_options')) {
@@ -124,6 +125,17 @@ function bbb_render_shopify_import_page(): void {
 					<?php submit_button(__('Import Newsletter Issues JSON', 'bybookishbabe-shopify-port')); ?>
 				</form>
 			</div>
+
+			<div class="card" style="max-width:none;">
+				<h2><?php esc_html_e('Blog Post Dates', 'bybookishbabe-shopify-port'); ?></h2>
+				<p><?php esc_html_e('Use Shopify blog-articles.json from the content export. This updates existing WordPress posts by slug so archive and post dates match Shopify.', 'bybookishbabe-shopify-port'); ?></p>
+				<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" enctype="multipart/form-data">
+					<input type="hidden" name="action" value="bbb_import_blog_post_dates_json">
+					<?php wp_nonce_field('bbb_import_blog_post_dates_json'); ?>
+					<input type="file" name="bbb_import_file" accept=".json,application/json" required>
+					<?php submit_button(__('Reload Blog Post Dates JSON', 'bybookishbabe-shopify-port')); ?>
+				</form>
+			</div>
 		</div>
 	</div>
 	<?php
@@ -211,6 +223,10 @@ function bbb_handle_books_json_import(): void {
 
 function bbb_handle_newsletter_issues_json_import(): void {
 	bbb_handle_shopify_json_import('bbb_import_newsletter_issues_json', 'bbb_import_newsletter_issues_from_data', 'newsletter issues');
+}
+
+function bbb_handle_blog_post_dates_json_import(): void {
+	bbb_handle_shopify_json_import('bbb_import_blog_post_dates_json', 'bbb_import_blog_post_dates_from_data', 'blog post dates');
 }
 
 function bbb_handle_shopify_json_import(string $nonce_action, string $import_callback, string $label): void {

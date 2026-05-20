@@ -112,6 +112,21 @@ function bbb_import_metaobject_edges_from_export(array $data): array {
 	return bbb_import_books_edges_from_export($data);
 }
 
+function bbb_import_is_list(array $data): bool {
+	if (function_exists('array_is_list')) {
+		return array_is_list($data);
+	}
+
+	$expected = 0;
+	foreach (array_keys($data) as $key) {
+		if ($key !== $expected++) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 function bbb_import_field_reference_handle(array $fields, string $key): string {
 	$reference = $fields[$key]['reference'] ?? null;
 	if (is_array($reference) && !empty($reference['handle'])) {
@@ -131,6 +146,68 @@ function bbb_import_newsletter_issue_url(array $fields): string {
 	}
 
 	return '';
+}
+
+function bbb_import_normalize_date($value): string {
+	if (!is_scalar($value)) {
+		return '';
+	}
+
+	$raw = trim((string) $value);
+	if ('' === $raw) {
+		return '';
+	}
+
+	if (preg_match('/^\d{8}$/', $raw)) {
+		return substr($raw, 0, 4) . '-' . substr($raw, 4, 2) . '-' . substr($raw, 6, 2);
+	}
+
+	if (preg_match('/^(\d{4}-\d{2}-\d{2})/', $raw, $matches)) {
+		return $matches[1];
+	}
+
+	$timestamp = strtotime($raw);
+	if (false === $timestamp) {
+		return '';
+	}
+
+	return wp_date('Y-m-d', $timestamp);
+}
+
+function bbb_import_wp_datetime($value, string $date_only_time = '10:00:00'): array {
+	if (!is_scalar($value)) {
+		return array('', '');
+	}
+
+	$raw = trim((string) $value);
+	if ('' === $raw) {
+		return array('', '');
+	}
+
+	$wp_tz = wp_timezone();
+	$la_tz = new DateTimeZone('America/Los_Angeles');
+
+	try {
+		if (preg_match('/^\d{8}$/', $raw)) {
+			$raw = substr($raw, 0, 4) . '-' . substr($raw, 4, 2) . '-' . substr($raw, 6, 2);
+		}
+
+		if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $raw)) {
+			$dt = new DateTimeImmutable($raw . ' ' . $date_only_time, $la_tz);
+		} else {
+			$dt = new DateTimeImmutable($raw);
+		}
+	} catch (Exception $e) {
+		return array('', '');
+	}
+
+	$local = $dt->setTimezone($wp_tz);
+	$gmt   = $dt->setTimezone(new DateTimeZone('UTC'));
+
+	return array(
+		$local->format('Y-m-d H:i:s'),
+		$gmt->format('Y-m-d H:i:s'),
+	);
 }
 
 function bbb_import_newsletter_book_handle(array $fields): string {
@@ -158,6 +235,119 @@ function bbb_import_newsletter_book_handle(array $fields): string {
 	}
 
 	return '';
+}
+
+function bbb_import_blog_article_groups_from_export(array $data): array {
+	if (isset($data['articles']) && is_array($data['articles'])) {
+		return array(array('blog' => $data['blog'] ?? array(), 'articles' => $data['articles']));
+	}
+
+	if (isset($data['data']['blogs']['edges']) && is_array($data['data']['blogs']['edges'])) {
+		$groups = array();
+		foreach ($data['data']['blogs']['edges'] as $blog_edge) {
+			$blog     = $blog_edge['node'] ?? array();
+			$articles = array();
+			foreach (($blog['articles']['edges'] ?? array()) as $article_edge) {
+				if (isset($article_edge['node']) && is_array($article_edge['node'])) {
+					$articles[] = $article_edge['node'];
+				}
+			}
+			$groups[] = array('blog' => $blog, 'articles' => $articles);
+		}
+
+		return $groups;
+	}
+
+	$is_group_list = bbb_import_is_list($data) && isset($data[0]) && is_array($data[0]) && isset($data[0]['articles']);
+	if ($is_group_list) {
+		return $data;
+	}
+
+	if (bbb_import_is_list($data) && isset($data[0]) && is_array($data[0]) && (isset($data[0]['handle']) || isset($data[0]['slug']))) {
+		return array(array('blog' => array(), 'articles' => $data));
+	}
+
+	return array();
+}
+
+function bbb_import_blog_post_dates_from_data(array $data, ?callable $logger = null): array {
+	$groups   = bbb_import_blog_article_groups_from_export($data);
+	$count    = 0;
+	$missing  = 0;
+	$messages = array();
+	$log      = static function (string $message) use (&$messages, $logger): void {
+		$messages[] = $message;
+		if ($logger) {
+			$logger($message);
+		}
+	};
+
+	foreach ($groups as $group) {
+		foreach (($group['articles'] ?? array()) as $article) {
+			if (!is_array($article)) {
+				continue;
+			}
+
+			$handle = sanitize_title((string) ($article['handle'] ?? $article['slug'] ?? ''));
+			if ('' === $handle) {
+				continue;
+			}
+
+			$post = get_page_by_path($handle, OBJECT, 'post');
+			if (!$post instanceof WP_Post) {
+				++$missing;
+				$log('Skipped missing blog post: ' . $handle);
+				continue;
+			}
+
+			$published = (string) ($article['published_at'] ?? $article['publishedAt'] ?? $article['created_at'] ?? $article['createdAt'] ?? '');
+			$modified  = (string) ($article['updated_at'] ?? $article['updatedAt'] ?? $published);
+			[$post_date, $post_date_gmt]         = bbb_import_wp_datetime($published, '00:00:00');
+			[$modified_date, $modified_date_gmt] = bbb_import_wp_datetime($modified, '00:00:00');
+
+			if ('' === $post_date) {
+				$log('Skipped blog post without a valid date: ' . $handle);
+				continue;
+			}
+
+			$postarr = array(
+				'ID'            => $post->ID,
+				'post_date'     => $post_date,
+				'post_date_gmt' => $post_date_gmt,
+			);
+
+			if ('' !== $modified_date) {
+				$postarr['post_modified']     = $modified_date;
+				$postarr['post_modified_gmt'] = $modified_date_gmt;
+			}
+
+			$updated = wp_update_post($postarr, true);
+			if (is_wp_error($updated)) {
+				$log('Failed blog date update: ' . $handle . ' - ' . $updated->get_error_message());
+				continue;
+			}
+
+			update_post_meta((int) $post->ID, '_shopify_published_at', $published);
+			if ('' !== $modified) {
+				update_post_meta((int) $post->ID, '_shopify_updated_at', $modified);
+			}
+
+			++$count;
+			$log('Updated blog date: ' . $handle . ' → ' . $post_date);
+		}
+	}
+
+	if (0 === $count) {
+		$log('No blog post dates were updated. Upload the Shopify blog-articles.json export from the content export.');
+	}
+	if ($missing > 0) {
+		array_unshift($messages, sprintf('%d exported blog posts were not found in WordPress by slug.', $missing));
+	}
+
+	return array(
+		'count'    => $count,
+		'messages' => $messages,
+	);
 }
 
 function bbb_import_assign_book_shelf(int $post_id, array $fields): bool {
@@ -427,16 +617,13 @@ function bbb_import_newsletter_issues_from_data(array $data, ?callable $logger =
 			?? $handle
 		);
 
-		$publish_date = (string) (
+		$raw_publish_date = (string) (
 			$fields['publish_date']['value']
 			?? $fields['date']['value']
 			?? ''
 		);
-
-		$post_date = $publish_date;
-		if (preg_match('/^\d{8}$/', $post_date)) {
-			$post_date = substr($post_date, 0, 4) . '-' . substr($post_date, 4, 2) . '-' . substr($post_date, 6, 2);
-		}
+		$publish_date = bbb_import_normalize_date($raw_publish_date);
+		[$post_date, $post_date_gmt] = bbb_import_wp_datetime($raw_publish_date ?: $publish_date);
 
 		$existing = get_page_by_path($handle, OBJECT, 'newsletter_issue');
 		$postarr  = array(
@@ -446,8 +633,9 @@ function bbb_import_newsletter_issues_from_data(array $data, ?callable $logger =
 			'post_name'   => $handle,
 		);
 
-		if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $post_date)) {
-			$postarr['post_date'] = $post_date . ' 10:00:00';
+		if ('' !== $post_date) {
+			$postarr['post_date']     = $post_date;
+			$postarr['post_date_gmt'] = $post_date_gmt;
 		}
 
 		if ($existing instanceof WP_Post) {
@@ -470,6 +658,7 @@ function bbb_import_newsletter_issues_from_data(array $data, ?callable $logger =
 		$issue_url = bbb_import_newsletter_issue_url($fields);
 		if ('' !== $issue_url) {
 			update_post_meta((int) $post_id, '_bbb_newsletter_url', $issue_url);
+			update_post_meta((int) $post_id, 'issue_url', $issue_url);
 		}
 
 		foreach (
@@ -560,124 +749,36 @@ if (defined('WP_CLI') && WP_CLI) {
 			}
 
 			$data   = json_decode((string) file_get_contents($file), true);
-			$issues = is_array($data) ? bbb_import_metaobject_edges_from_export($data) : array();
-			$count  = 0;
+			$result = is_array($data)
+				? bbb_import_newsletter_issues_from_data($data)
+				: array('count' => 0, 'messages' => array('The uploaded file is not valid JSON.'));
 
-			foreach ($issues as $edge) {
-				$node   = $edge['node'] ?? array();
-				$handle = (string) ($node['handle'] ?? '');
-				if ('' === $handle) {
-					WP_CLI::warning('Skipped a newsletter issue without a handle.');
-					continue;
-				}
-
-				$fields = array();
-				foreach (($node['fields'] ?? array()) as $field) {
-					if (isset($field['key'])) {
-						$fields[$field['key']] = $field;
-					}
-				}
-
-				$title = (string) (
-					$fields['title']['value']
-					?? $fields['subject']['value']
-					?? $fields['name']['value']
-					?? $handle
-				);
-
-				$publish_date = (string) (
-					$fields['publish_date']['value']
-					?? $fields['date']['value']
-					?? ''
-				);
-
-				$post_date = $publish_date;
-				if (preg_match('/^\d{8}$/', $post_date)) {
-					$post_date = substr($post_date, 0, 4) . '-' . substr($post_date, 4, 2) . '-' . substr($post_date, 6, 2);
-				}
-
-				$existing = get_page_by_path($handle, OBJECT, 'newsletter_issue');
-				$postarr  = array(
-					'post_type'   => 'newsletter_issue',
-					'post_status' => 'publish',
-					'post_title'  => $title,
-					'post_name'   => $handle,
-				);
-
-				if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $post_date)) {
-					$postarr['post_date'] = $post_date . ' 10:00:00';
-				}
-
-				if ($existing instanceof WP_Post) {
-					$postarr['ID'] = $existing->ID;
-					$post_id       = wp_update_post($postarr, true);
-				} else {
-					$post_id = wp_insert_post($postarr, true);
-				}
-
-				if (is_wp_error($post_id)) {
-					WP_CLI::warning('Failed newsletter issue: ' . $handle . ' - ' . $post_id->get_error_message());
-					continue;
-				}
-
-				if ('' !== $publish_date) {
-					update_post_meta((int) $post_id, 'publish_date', $publish_date);
-					update_post_meta((int) $post_id, '_issue_publish_date', $publish_date);
-				}
-
-				$issue_url = bbb_import_newsletter_issue_url($fields);
-				if ('' !== $issue_url) {
-					update_post_meta((int) $post_id, '_bbb_newsletter_url', $issue_url);
-				}
-
-				foreach (
-					array(
-						'excerpt'    => '_issue_excerpt',
-						'subtitle'   => '_issue_subtitle',
-						'issue_no'   => '_issue_no',
-						'issue_label'=> '_issue_label',
-						'label'      => '_issue_label',
-						'tropes'     => '_issue_tropes',
-					) as $shopify_key => $wp_meta
-				) {
-					$value = bbb_import_metaobject_field_value($fields, $shopify_key);
-					if ('' !== $value) {
-						update_post_meta((int) $post_id, $wp_meta, $value);
-					}
-				}
-
-				$book_handle = bbb_import_newsletter_book_handle($fields);
-
-				if ('' !== $book_handle) {
-					update_post_meta((int) $post_id, '_issue_book_handle', $book_handle);
-					$book = get_page_by_path($book_handle, OBJECT, array('bbb_book', 'sss_book'));
-					if ($book instanceof WP_Post) {
-						update_post_meta((int) $post_id, '_issue_book_id', (int) $book->ID);
-						update_post_meta((int) $post_id, '_issue_library_book_id', (int) $book->ID);
-
-						if ('' !== $publish_date) {
-							if ('bbb_book' === $book->post_type) {
-								update_post_meta((int) $book->ID, '_bbb_newsletter_date', $publish_date);
-							} else {
-								update_post_meta((int) $book->ID, 'featured_in_newsletter_date', $publish_date);
-							}
-						}
-
-						if ('' !== $issue_url) {
-							if ('bbb_book' === $book->post_type) {
-								update_post_meta((int) $book->ID, '_bbb_newsletter_url', $issue_url);
-							} else {
-								update_post_meta((int) $book->ID, 'newsletter_url', $issue_url);
-							}
-						}
-					}
-				}
-
-				$count++;
-				WP_CLI::log('Imported newsletter issue: ' . $handle);
+			foreach (($result['messages'] ?? array()) as $message) {
+				WP_CLI::log((string) $message);
 			}
 
-			WP_CLI::success("Done. $count newsletter issues imported.");
+			WP_CLI::success('Done. ' . (int) ($result['count'] ?? 0) . ' newsletter issues imported.');
+		}
+	);
+
+	WP_CLI::add_command(
+		'bbb import-blog-post-dates',
+		static function ($args, $assoc_args): void {
+			$file = $assoc_args['file'] ?? '';
+			if (!file_exists($file)) {
+				WP_CLI::error("File not found: $file");
+			}
+
+			$data   = json_decode((string) file_get_contents($file), true);
+			$result = is_array($data)
+				? bbb_import_blog_post_dates_from_data($data)
+				: array('count' => 0, 'messages' => array('The uploaded file is not valid JSON.'));
+
+			foreach (($result['messages'] ?? array()) as $message) {
+				WP_CLI::log((string) $message);
+			}
+
+			WP_CLI::success('Done. ' . (int) ($result['count'] ?? 0) . ' blog post dates updated.');
 		}
 	);
 }
