@@ -14,7 +14,7 @@ get_header();
 ?>
 
 <main id="MainContent" class="content-for-layout focus-none" role="main" tabindex="-1">
-	<section class="bbb-livequiz bbb-livequiz--mood" id="reader-mood-quiz" data-reader-quiz data-quiz-type="mood">
+	<section class="bbb-livequiz bbb-livequiz--mood" id="reader-mood-quiz" data-reader-quiz data-quiz-type="mood" data-sss-lib="public">
 		<div class="bbb-livequiz__wrap">
 			<nav class="bbb-livequiz__topbar" aria-label="quiz navigation">
 				<a class="bbb-livequiz__back" href="<?php echo esc_url(home_url('/reader-quizes/')); ?>">back to all quizzes</a>

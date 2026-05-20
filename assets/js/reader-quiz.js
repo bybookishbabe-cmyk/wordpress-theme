@@ -143,6 +143,98 @@
     });
   }
 
+  function shelfKey(book) {
+    return text(book && (book.handle || book.title));
+  }
+
+  function getShelf() {
+    try {
+      var primary = JSON.parse(localStorage.getItem('sssMyShelf') || 'null');
+      if (Array.isArray(primary)) return primary;
+    } catch (error) {}
+
+    try {
+      var legacy = JSON.parse(localStorage.getItem('sssShelf') || '[]');
+      return Array.isArray(legacy) ? legacy : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function setShelf(items) {
+    try {
+      localStorage.setItem('sssMyShelf', JSON.stringify(items));
+      localStorage.setItem('sssShelf', JSON.stringify(items));
+    } catch (error) {}
+
+    document.dispatchEvent(new CustomEvent('sss:bookshelf-updated', {
+      detail: { count: Array.isArray(items) ? items.length : 0 }
+    }));
+  }
+
+  function shelfBook(book) {
+    return {
+      handle: book.handle || '',
+      title: book.title || '',
+      author: book.author || '',
+      cover: book.cover || '',
+      amazon: book.amazon || '',
+      bookshop: book.bookshop || '',
+      spice: book.spice || '',
+      darkness: book.darkness || '',
+      tropes: (book.tropes || []).join(', '),
+      tropesDisplay: (book.tropes || []).join(', '),
+      why: book.why || '',
+      newsletter: book.newsletter || '',
+      mini: book.mini || '',
+      series: book.series || '',
+      seriesName: book.seriesName || '',
+      seriesNumber: book.seriesNumber || '',
+      tension: book.tension || '',
+      damage: book.damage || '',
+      yearning: book.yearning || '',
+      boyfriend: book.boyfriend || '',
+      boyfriendName: book.boyfriendName || '',
+      reread: book.reread || '',
+      ku: book.ku || '',
+      standalone: book.standalone || 'false',
+      privateShelf: 'false',
+      saved_at: Date.now()
+    };
+  }
+
+  function isSaved(book) {
+    var key = shelfKey(book);
+    return getShelf().some(function (item) {
+      return shelfKey(item) === key || text(item.title) === text(book && book.title);
+    });
+  }
+
+  function updateHeart(heart, saved) {
+    if (!heart) return;
+    var icon = heart.querySelector('[data-heart-icon]');
+    var label = heart.querySelector('[data-heart-label]');
+    heart.classList.toggle('is-saved', !!saved);
+    heart.setAttribute('aria-label', saved ? 'remove from your bookshelf' : 'save to your bookshelf');
+    if (icon) icon.textContent = saved ? '♥' : '♡';
+    if (label) label.textContent = saved ? 'saved' : 'save';
+  }
+
+  function toggleSave(book, heart) {
+    if (!book || !book.title) return;
+    var key = shelfKey(book);
+    var removed = false;
+    var shelf = getShelf().filter(function (item) {
+      var same = shelfKey(item) === key || text(item.title) === text(book.title);
+      if (same) removed = true;
+      return !same;
+    });
+
+    if (!removed) shelf.unshift(shelfBook(book));
+    setShelf(shelf);
+    updateHeart(heart, !removed);
+  }
+
   function dataAttrs(book) {
     var tropes = (book.tropes || []).join(', ');
     return [
@@ -190,12 +282,27 @@
     return '<article class="bbb-livequiz__book">' +
       '<p class="bbb-livequiz__bookLabel">' + esc(label) + '</p>' +
       '<button type="button" class="sss-lib__book sss-lib__book--mini" ' + dataAttrs(book) + '>' +
-        '<div class="sss-lib__coverWrap">' + spiceHtml + cover + '</div>' +
+        '<div class="sss-lib__coverWrap">' +
+          '<span class="sss-lib__heart' + (isSaved(book) ? ' is-saved' : '') + '" data-heart data-quiz-save role="button" aria-label="' + (isSaved(book) ? 'remove from your bookshelf' : 'save to your bookshelf') + '">' +
+            '<span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">' + (isSaved(book) ? '♥' : '♡') + '</span>' +
+            '<span class="sss-lib__heartLabel" data-heart-label>' + (isSaved(book) ? 'saved' : 'save') + '</span>' +
+          '</span>' +
+          spiceHtml + cover +
+        '</div>' +
         '<div class="sss-lib__under"><div class="sss-lib__name">' + esc(book.title) + '</div><div class="sss-lib__author">' + esc(book.author) + '</div></div>' +
       '</button>' +
       '<div class="bbb-livequiz__bookTropes">' + tropes + '</div>' +
       '<p class="bbb-livequiz__bookWhy">' + esc(book.mini || book.why || 'this one fits the mood you just picked.') + '</p>' +
     '</article>';
+  }
+
+  function resultTitle(type, profile, picks) {
+    if (type === 'boyfriend') {
+      var name = picks[0] && picks[0].boyfriendName;
+      if (name) return 'your fictional boyfriend is ' + name;
+    }
+
+    return profile.title;
   }
 
   function renderResult(root, scores) {
@@ -219,7 +326,7 @@
     result.hidden = false;
     result.innerHTML =
       '<p class="bbb-livequiz__resultKicker">' + esc(profile.kicker) + '</p>' +
-      '<h2>' + esc(profile.title) + '</h2>' +
+      '<h2>' + esc(resultTitle(type, profile, picks)) + '</h2>' +
       '<p class="bbb-livequiz__resultCopy">' + esc(profile.copy) + '</p>' +
       '<div class="bbb-livequiz__tags">' + profile.tags.map(function (tag) { return '<span>' + esc(tag) + '</span>'; }).join('') + '</div>' +
       '<div class="bbb-livequiz__books">' + picks.map(function (book, index) {
@@ -229,6 +336,7 @@
         '<a href="/what-to-read-next/">open the rec engine</a>' +
         '<a href="/library/">browse the library</a>' +
       '</div>';
+    root.classList.remove('is-started');
     root.classList.add('is-showing-result');
     result.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -268,6 +376,20 @@
     again && again.addEventListener('click', reset);
 
     root.addEventListener('click', function (event) {
+      var save = event.target.closest('[data-quiz-save]');
+      if (save && root.contains(save)) {
+        var bookBtn = save.closest('.sss-lib__book');
+        var handle = bookBtn ? bookBtn.dataset.handle : '';
+        var data = root.querySelector('[data-quiz-books]');
+        var books = [];
+        try { books = JSON.parse(data ? data.textContent : '[]') || []; } catch (error) { books = []; }
+        var book = books.find(function (item) { return item.handle === handle; });
+        event.preventDefault();
+        event.stopPropagation();
+        toggleSave(book, save);
+        return;
+      }
+
       var answer = event.target.closest('[data-quiz-answer]');
       if (!answer || !root.contains(answer)) return;
 

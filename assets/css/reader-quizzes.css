@@ -502,6 +502,10 @@
   display: block;
 }
 
+.bbb-livequiz.is-showing-result .bbb-livequiz__track {
+  display: none;
+}
+
 .bbb-livequiz__slide {
   display: none;
   min-width: 100%;
@@ -691,7 +695,7 @@
   gap: 14px;
   justify-items: center;
   align-items: start;
-  width: min(190px, 100%);
+  width: min(240px, 100%);
   padding: 0;
   margin: 0 auto;
   border: 0;
@@ -702,14 +706,14 @@
 
 .bbb-livequiz__book .sss-lib__coverWrap {
   position: relative;
-  width: min(170px, 100%);
+  width: min(220px, 100%);
   margin: 0 auto;
 }
 
 .bbb-livequiz__book .sss-lib__cover {
   width: 100%;
   aspect-ratio: 2 / 3;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 8px;
   border: 1px solid rgba(255,255,255,.12);
   background: rgba(255,255,255,.06);
