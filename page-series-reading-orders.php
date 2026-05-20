@@ -295,9 +295,35 @@ if (!function_exists('bbb_series_guide_post_for_series')) {
 					return $post;
 				}
 			}
+
+			if (bbb_series_title_matches_guide_post($post, $series)) {
+				return $post;
+			}
 		}
 
 		return null;
+	}
+}
+
+if (!function_exists('bbb_series_title_matches_guide_post')) {
+	function bbb_series_title_matches_guide_post(WP_Post $post, $series): bool {
+		$series_slug = sanitize_title(bbb_series_entity_slug($series));
+		$title_slug  = sanitize_title(bbb_series_entity_title($series));
+		$post_slug   = sanitize_title($post->post_name);
+		$post_title  = sanitize_title(get_the_title($post));
+		$haystack    = $post_slug . ' ' . $post_title;
+
+		if ('' === $series_slug && '' === $title_slug) {
+			return false;
+		}
+
+		$looks_like_reading_order = str_contains($haystack, 'series-reading-order') || str_contains($haystack, 'reading-order');
+		if (!$looks_like_reading_order) {
+			return false;
+		}
+
+		return ('' !== $series_slug && str_contains($haystack, $series_slug))
+			|| ('' !== $title_slug && str_contains($haystack, $title_slug));
 	}
 }
 
