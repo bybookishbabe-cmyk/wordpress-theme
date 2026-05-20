@@ -85,6 +85,7 @@ function bbb_reader_user_has_wp_society_access(int $user_id = 0): bool {
 
 	return in_array('society', (array) $user->roles, true)
 		|| in_array('paid', (array) $user->roles, true)
+		|| in_array('sss_member', (array) $user->roles, true)
 		|| in_array('society_member', (array) $user->roles, true)
 		|| (function_exists('bbb_user_is_society') && bbb_user_is_society($user_id))
 		|| '1' === get_user_meta($user_id, 'bbb_society_member', true)

@@ -17,7 +17,7 @@ $account_data = ($is_logged_in && $user instanceof WP_User && function_exists('b
 	? bbb_reader_account_response($user)
 	: array();
 $books        = isset($account_data['books']) && is_array($account_data['books']) ? $account_data['books'] : array();
-$tier         = (string) ($account_data['accessTier'] ?? ($is_society ? 'society' : 'free'));
+$tier         = $is_society ? 'society' : (string) ($account_data['accessTier'] ?? 'free');
 $synced       = !empty($account_data['supabaseReady']);
 $sync_error   = isset($account_data['supabaseError']) && is_array($account_data['supabaseError']) ? $account_data['supabaseError'] : array();
 $sync_status  = (int) ($sync_error['status'] ?? 0);
@@ -38,7 +38,7 @@ get_header();
 				<p class="bbb-account-shelf__kicker">reader account</p>
 				<div class="bbb-account-shelf__memberBadge<?php echo 'society' === $tier ? ' bbb-account-shelf__memberBadge--secret' : ''; ?>">
 					<span aria-hidden="true"><?php echo esc_html('society' === $tier ? '♥' : '*'); ?></span>
-					<span><?php echo esc_html('society' === $tier ? 'secret society member' : ($is_logged_in ? 'free reader account' : 'visitor')); ?></span>
+					<span><?php echo esc_html('society' === $tier ? 'paid society member' : ($is_logged_in ? 'free reader account' : 'visitor')); ?></span>
 				</div>
 				<h1 class="bbb-account-shelf__title">account</h1>
 				<p class="bbb-account-shelf__sub">
@@ -71,7 +71,7 @@ get_header();
 				</div>
 
 				<div class="bbb-account-shelf__perk">
-					<p class="bbb-account-shelf__perkKicker"><?php echo esc_html('society' === $tier ? 'society shelf' : 'free shelf'); ?></p>
+					<p class="bbb-account-shelf__perkKicker"><?php echo esc_html('society' === $tier ? 'paid society shelf' : 'free shelf'); ?></p>
 					<h2><?php echo esc_html((string) $user->display_name ?: 'reader profile'); ?></h2>
 					<p>
 						<?php echo esc_html((string) $user->user_email); ?><br>

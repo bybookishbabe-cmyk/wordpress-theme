@@ -102,7 +102,12 @@ function bbb_is_sss_member(): bool {
 	$user = wp_get_current_user();
 
 	return in_array('sss_member', (array) $user->roles, true)
+		|| in_array('society', (array) $user->roles, true)
+		|| in_array('paid', (array) $user->roles, true)
 		|| in_array('society_member', (array) $user->roles, true)
+		|| (function_exists('bbb_user_is_society') && bbb_user_is_society(get_current_user_id()))
+		|| '1' === get_user_meta(get_current_user_id(), 'bbb_society_member', true)
+		|| '1' === get_user_meta(get_current_user_id(), '_bbb_society_member_active', true)
 		|| (function_exists('wc_memberships_is_user_active_member')
 			&& wc_memberships_is_user_active_member(get_current_user_id(), 'smut-sentiment-society'));
 }
