@@ -18,14 +18,43 @@ $account_data = ($is_logged_in && $user instanceof WP_User && function_exists('b
 	: array();
 $books        = isset($account_data['books']) && is_array($account_data['books']) ? $account_data['books'] : array();
 $tier         = $is_society ? 'society' : (string) ($account_data['accessTier'] ?? 'free');
-$synced       = !empty($account_data['supabaseReady']);
-$sync_error   = isset($account_data['supabaseError']) && is_array($account_data['supabaseError']) ? $account_data['supabaseError'] : array();
-$sync_status  = (int) ($sync_error['status'] ?? 0);
-$sync_title   = $synced ? 'account sync is active.' : 'account sync is not active.';
-$sync_copy    = $synced ? 'Your tier and bookshelf can now be read from Supabase.' : 'Add SUPABASE_SERVICE_ROLE_KEY on WordPress to sync this account server-side.';
-if (!$synced && 401 === $sync_status) {
-	$sync_title = 'Supabase rejected the server key.';
-	$sync_copy  = 'The key is present in wp-config.php, but Supabase returned 401 Invalid API key. Replace it with the current service_role or secret key for this project.';
+$display_name = ($user instanceof WP_User && '' !== trim((string) $user->display_name)) ? (string) $user->display_name : 'reader';
+$tier_label   = 'society' === $tier ? 'tier: paid society member' : ($is_logged_in ? 'tier: free reader member' : 'tier: visitor');
+$account_url  = function_exists('bbb_page_url') ? bbb_page_url('account') : home_url('/account/');
+$bookshelf_url = function_exists('bbb_page_url') ? bbb_page_url('my-bookshelf') : home_url('/my-bookshelf/');
+$dashboard_url = function_exists('bbb_page_url') ? bbb_page_url('member-dashboard') : home_url('/member-dashboard/');
+$monthly_drop_url = function_exists('bbb_page_url') ? bbb_page_url('monthly-theme') : home_url('/monthly-theme/');
+$shop_url = function_exists('bbb_page_url') ? bbb_page_url('shop') : home_url('/shop/');
+$purchase_rows = array();
+
+if ($is_logged_in && $user instanceof WP_User && function_exists('wc_get_orders')) {
+	$orders = wc_get_orders(
+		array(
+			'customer_id' => (int) $user->ID,
+			'limit'       => 4,
+			'orderby'     => 'date',
+			'order'       => 'DESC',
+			'status'      => array('wc-completed', 'wc-processing', 'wc-on-hold'),
+		)
+	);
+
+	foreach ($orders as $order) {
+		if (!$order instanceof WC_Order) {
+			continue;
+		}
+
+		$items = array();
+		foreach ($order->get_items() as $item) {
+			$items[] = $item->get_name();
+		}
+
+		$purchase_rows[] = array(
+			'title'  => $items ? implode(', ', array_slice($items, 0, 2)) : sprintf('order #%s', $order->get_order_number()),
+			'meta'   => trim(sprintf('%s - %s', wc_get_order_status_name($order->get_status()), $order->get_date_created() ? $order->get_date_created()->date_i18n('M j, Y') : '')),
+			'url'    => $order->get_view_order_url(),
+			'total'  => wp_strip_all_tags($order->get_formatted_order_total()),
+		);
+	}
 }
 
 get_header();
@@ -38,11 +67,11 @@ get_header();
 				<p class="bbb-account-shelf__kicker">reader account</p>
 				<div class="bbb-account-shelf__memberBadge<?php echo 'society' === $tier ? ' bbb-account-shelf__memberBadge--secret' : ''; ?>">
 					<span aria-hidden="true"><?php echo esc_html('society' === $tier ? '♥' : '*'); ?></span>
-					<span><?php echo esc_html('society' === $tier ? 'paid society member' : ($is_logged_in ? 'free reader account' : 'visitor')); ?></span>
+					<span><?php echo esc_html($tier_label); ?></span>
 				</div>
-				<h1 class="bbb-account-shelf__title">account</h1>
+				<h1 class="bbb-account-shelf__title">reader account</h1>
 				<p class="bbb-account-shelf__sub">
-					<?php echo esc_html($is_logged_in ? 'Your WordPress login is connected to your reader tier and bookshelf.' : 'Log in or create an account to keep your bookshelf synced across devices.'); ?>
+					<?php echo esc_html($is_logged_in ? 'Everything tied to your reader life lives here: purchases, tier access, dashboard shortcuts, and your bookshelf.' : 'Log in or create an account to keep purchases, tier access, and your bookshelf in one place.'); ?>
 				</p>
 
 				<div class="bbb-account-shelf__actions">
@@ -60,32 +89,72 @@ get_header();
 			</div>
 
 			<?php if ($is_logged_in && $user instanceof WP_User) : ?>
-				<div class="bbb-account-shelf__status">
-					<div class="bbb-account-shelf__statusMain">
-						<span class="bbb-account-shelf__statusIcon" aria-hidden="true">*</span>
-						<div>
-							<strong><?php echo esc_html($sync_title); ?></strong>
-							<span><?php echo esc_html($sync_copy); ?></span>
-						</div>
+				<div class="bbb-account-shelf__panel">
+					<div>
+						<p class="bbb-account-shelf__perkKicker">your purchases</p>
+						<h2><?php echo esc_html($display_name); ?></h2>
+						<p><?php echo esc_html((string) $user->user_email); ?></p>
 					</div>
+					<?php if ($purchase_rows) : ?>
+						<div class="bbb-account-shelf__purchaseList">
+							<?php foreach ($purchase_rows as $purchase) : ?>
+								<a class="bbb-account-shelf__purchase" href="<?php echo esc_url($purchase['url']); ?>">
+									<span>
+										<strong><?php echo esc_html($purchase['title']); ?></strong>
+										<small><?php echo esc_html($purchase['meta']); ?></small>
+									</span>
+									<em><?php echo esc_html($purchase['total']); ?></em>
+								</a>
+							<?php endforeach; ?>
+						</div>
+					<?php else : ?>
+						<div class="bbb-account-shelf__quiet">
+							<strong>no purchases yet</strong>
+							<span>Your shop orders and digital drops will show here once they are tied to this account.</span>
+							<a href="<?php echo esc_url($shop_url); ?>">browse the shop</a>
+						</div>
+					<?php endif; ?>
 				</div>
 
-				<div class="bbb-account-shelf__perk">
-					<p class="bbb-account-shelf__perkKicker"><?php echo esc_html('society' === $tier ? 'paid society shelf' : 'free shelf'); ?></p>
-					<h2><?php echo esc_html((string) $user->display_name ?: 'reader profile'); ?></h2>
-					<p>
-						<?php echo esc_html((string) $user->user_email); ?><br>
-						<?php echo esc_html(count($books) . (1 === count($books) ? ' saved book connected' : ' saved books connected')); ?>
-					</p>
-					<a href="<?php echo esc_url(home_url('society' === $tier ? '/sss-library-page/' : '/smut-sentiment-society/')); ?>">
-						<?php echo esc_html('society' === $tier ? 'open the society library ->' : 'see society access ->'); ?>
+				<?php if ('society' === $tier) : ?>
+					<div class="bbb-account-shelf__dropCta">
+						<p class="bbb-account-shelf__perkKicker">monthly drop</p>
+						<h2>your member drop is ready.</h2>
+						<p>Open this month's society theme, files, prompts, and member-only extras.</p>
+						<a class="bbb-account-shelf__button" href="<?php echo esc_url($monthly_drop_url); ?>">open monthly drop</a>
+					</div>
+				<?php endif; ?>
+
+				<div class="bbb-account-shelf__previewGrid">
+					<a class="bbb-account-shelf__preview" href="<?php echo esc_url($dashboard_url); ?>">
+						<p class="bbb-account-shelf__perkKicker">dashboard preview</p>
+						<h2>member dashboard</h2>
+						<p><?php echo esc_html('society' === $tier ? 'Made-for-you reader logic, mood-based recommendations, and smarter next-read picks.' : 'Your dashboard preview is here. Upgrade to unlock the richer recommendation layer.'); ?></p>
+						<span><?php echo esc_html('society' === $tier ? 'open dashboard ->' : 'preview dashboard ->'); ?></span>
+					</a>
+					<a class="bbb-account-shelf__preview" href="<?php echo esc_url($bookshelf_url); ?>">
+						<p class="bbb-account-shelf__perkKicker">bookshelf preview</p>
+						<h2><?php echo esc_html(count($books) . (1 === count($books) ? ' saved book' : ' saved books')); ?></h2>
+						<p>Your saved books, current obsessions, and personal romance archive.</p>
+						<?php if ($books) : ?>
+							<div class="bbb-account-shelf__miniShelf" aria-hidden="true">
+								<?php foreach (array_slice($books, 0, 4) as $book) : ?>
+									<?php $cover = (string) ($book['cover'] ?? ''); ?>
+									<?php if ('' !== $cover) : ?>
+										<img src="<?php echo esc_url($cover); ?>" alt="">
+									<?php endif; ?>
+								<?php endforeach; ?>
+							</div>
+						<?php endif; ?>
+						<span>open bookshelf -></span>
 					</a>
 				</div>
 			<?php else : ?>
 				<div class="bbb-account-shelf__empty">
 					<div class="bbb-account-shelf__emptyIcon" aria-hidden="true">*</div>
-					<h2>your account is waiting.</h2>
-					<p>Create a WordPress account with the same email you use for Society access, then your tier and shelf can follow you.</p>
+					<h2>your reader account is waiting.</h2>
+					<p>Create a WordPress account with the same email you use for Society access, then purchases, tier access, and your shelf can follow you.</p>
+					<a href="<?php echo esc_url(wp_login_url($account_url)); ?>">log in</a>
 				</div>
 			<?php endif; ?>
 		</div>

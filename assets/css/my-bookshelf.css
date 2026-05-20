@@ -117,7 +117,10 @@
 .bbb-account-shelf__status,
 .bbb-account-shelf__perk,
 .bbb-account-shelf__empty,
-.bbb-account-shelf__toolbar {
+.bbb-account-shelf__toolbar,
+.bbb-account-shelf__panel,
+.bbb-account-shelf__dropCta,
+.bbb-account-shelf__preview {
   border: 1px solid rgba(255,255,255,.12);
   border-radius: 8px;
   background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.025));
@@ -261,7 +264,22 @@
   padding: 24px;
 }
 
-.bbb-account-shelf__perk h2 {
+.bbb-account-shelf__panel,
+.bbb-account-shelf__dropCta {
+  margin-bottom: 24px;
+  padding: 24px;
+}
+
+.bbb-account-shelf__panel {
+  display: grid;
+  grid-template-columns: minmax(220px, .8fr) minmax(0, 1.2fr);
+  gap: 22px;
+}
+
+.bbb-account-shelf__perk h2,
+.bbb-account-shelf__panel h2,
+.bbb-account-shelf__dropCta h2,
+.bbb-account-shelf__preview h2 {
   margin: 0;
   color: #fff;
   font-family: "Cormorant Garamond", serif;
@@ -270,15 +288,127 @@
   text-transform: lowercase;
 }
 
-.bbb-account-shelf__perk p:not(.bbb-account-shelf__perkKicker) {
+.bbb-account-shelf__perk p:not(.bbb-account-shelf__perkKicker),
+.bbb-account-shelf__panel p,
+.bbb-account-shelf__dropCta p,
+.bbb-account-shelf__preview p {
   max-width: 680px;
   color: rgba(247,243,238,.7);
   line-height: 1.65;
 }
 
+.bbb-account-shelf__purchaseList {
+  display: grid;
+  gap: 10px;
+}
+
+.bbb-account-shelf__purchase,
+.bbb-account-shelf__quiet,
+.bbb-account-shelf__preview {
+  color: inherit;
+  text-decoration: none;
+}
+
+.bbb-account-shelf__purchase {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 68px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 8px;
+  background: rgba(0,0,0,.18);
+  transition: border-color .22s ease, transform .22s ease;
+}
+
+.bbb-account-shelf__purchase:hover,
+.bbb-account-shelf__preview:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255,138,199,.42);
+}
+
+.bbb-account-shelf__purchase strong,
+.bbb-account-shelf__quiet strong {
+  display: block;
+  color: #fff;
+}
+
+.bbb-account-shelf__purchase small,
+.bbb-account-shelf__quiet span {
+  display: block;
+  margin-top: 4px;
+  color: rgba(247,243,238,.58);
+  font-size: 1.2rem;
+  line-height: 1.4;
+}
+
+.bbb-account-shelf__purchase em {
+  flex: 0 0 auto;
+  color: #ffb8dc;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.bbb-account-shelf__quiet {
+  min-height: 112px;
+  padding: 16px;
+  border: 1px dashed rgba(255,255,255,.16);
+  border-radius: 8px;
+  background: rgba(0,0,0,.12);
+}
+
+.bbb-account-shelf__quiet a,
+.bbb-account-shelf__preview span {
+  display: inline-flex;
+  margin-top: 12px;
+  color: #ff8ac7;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.bbb-account-shelf__dropCta {
+  background:
+    linear-gradient(135deg, rgba(255,138,199,.2), rgba(255,255,255,.035)),
+    #101010;
+}
+
+.bbb-account-shelf__previewGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.bbb-account-shelf__preview {
+  display: block;
+  min-height: 260px;
+  padding: 24px;
+  transition: border-color .22s ease, transform .22s ease;
+}
+
+.bbb-account-shelf__miniShelf {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.bbb-account-shelf__miniShelf img {
+  width: 54px;
+  aspect-ratio: 2 / 3;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 6px;
+  object-fit: cover;
+}
+
 @media (max-width: 900px) {
   .bbb-account-shelf__grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .bbb-account-shelf__panel {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -295,6 +425,10 @@
   .bbb-account-shelf__status {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .bbb-account-shelf__previewGrid {
+    grid-template-columns: 1fr;
   }
 
   .bbb-account-shelf__grid {
