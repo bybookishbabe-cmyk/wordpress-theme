@@ -36,6 +36,7 @@ $all_public_books = array_values(
 		<?php get_template_part('template-parts/library/library-starter-pack', null, array('books' => $all_public_books)); ?>
 		<?php get_template_part('template-parts/library/library-books-of-month', null, array('books' => $all_public_books)); ?>
 		<?php get_template_part('template-parts/library/library-society-layer', null, array('mode' => 'matchmaker', 'books' => $all_books, 'public_books' => $all_public_books, 'is_society' => $is_society)); ?>
+		<?php get_template_part('template-parts/library/library-quote-wall-cta', null, array('is_society' => $is_society)); ?>
 		<?php get_template_part('template-parts/library/library-mood-shelves', null, array('books' => $all_public_books)); ?>
 		<?php get_template_part('template-parts/library/library-full-archive', null, array('books' => $all_public_books)); ?>
 		<?php get_template_part('template-parts/library/library-modal'); ?>

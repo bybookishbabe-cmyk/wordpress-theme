@@ -1285,6 +1285,66 @@ background:#0e0e0e;
   justify-content:flex-end;
 }
 
+.sss-lib__quoteCta{
+  display:grid;
+  grid-template-columns:minmax(0, .9fr) minmax(280px, 1.1fr);
+  gap:22px;
+  align-items:center;
+  margin:54px 0;
+  padding:30px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:24px;
+  background:
+    radial-gradient(520px 220px at 100% 0, rgba(255,138,199,.18), transparent 66%),
+    rgba(255,255,255,.035);
+  box-shadow:0 24px 60px rgba(0,0,0,.24);
+}
+
+.sss-lib__quoteCtaBtn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:44px;
+  margin-top:18px;
+  padding:0 18px;
+  border:1px solid rgba(255,138,199,.46);
+  border-radius:999px;
+  color:#fff;
+  background:rgba(255,138,199,.14);
+  font-size:11px;
+  letter-spacing:.14em;
+  text-decoration:none;
+  text-transform:uppercase;
+}
+
+.sss-lib__quoteCtaStack{
+  display:grid;
+  gap:12px;
+}
+
+.sss-lib__quoteCtaStack blockquote{
+  margin:0;
+  padding:16px 18px;
+  border:2px solid rgba(23,20,20,.72);
+  border-radius:18px;
+  background:#f6f1e9;
+  color:#171414;
+  box-shadow:0 16px 32px rgba(0,0,0,.24);
+  font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size:13px;
+  line-height:1.55;
+}
+
+.sss-lib__quoteCtaStack blockquote:nth-child(2){
+  transform:rotate(-1.2deg);
+  background:#ffe4f1;
+}
+
+.sss-lib__quoteCtaStack blockquote:nth-child(3){
+  transform:rotate(1deg);
+  background:#e8e2dc;
+}
+
 @media(max-width:749px){
   .sss-lib__societyLayer{
     margin:38px 0;
@@ -1299,6 +1359,13 @@ background:#0e0e0e;
 
   .sss-lib__societyLockedActions{
     justify-content:flex-start;
+  }
+
+  .sss-lib__quoteCta{
+    grid-template-columns:1fr;
+    margin:38px 0;
+    padding:20px 16px;
+    border-radius:20px;
   }
 }
 

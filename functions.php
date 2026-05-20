@@ -346,7 +346,6 @@ function bbb_society_gate_check(): void {
 		'sss-made-for-you',
 		'sss-printable-kindle-inserts',
 		'sss-canva-templates',
-		'sss-quote-wall',
 		'sss-freebies',
 	);
 

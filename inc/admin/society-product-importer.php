@@ -41,6 +41,18 @@ function bbb_society_product_importer_array_is_list(array $value): bool {
 	return array_keys($value) === range(0, count($value) - 1);
 }
 
+function bbb_society_product_importer_platform(): string {
+	if (post_type_exists('download')) {
+		return 'edd';
+	}
+
+	if (post_type_exists('product')) {
+		return 'woocommerce';
+	}
+
+	return '';
+}
+
 function bbb_society_product_importer_money($value): string {
 	if (is_array($value)) {
 		$value = $value['amount'] ?? $value['value'] ?? '';
@@ -251,8 +263,9 @@ function bbb_society_product_importer_normalize_row(array $row, bool $default_fr
 }
 
 function bbb_society_product_importer_upsert_product(array $product) {
-	if (!post_type_exists('product')) {
-		return new WP_Error('bbb_society_products_no_woo', 'WooCommerce needs to be active before importing products.');
+	$platform = bbb_society_product_importer_platform();
+	if ('' === $platform) {
+		return new WP_Error('bbb_society_products_no_platform', 'Activate Easy Digital Downloads or WooCommerce before importing products.');
 	}
 
 	$handle = sanitize_title((string) ($product['handle'] ?? ''));
@@ -261,11 +274,12 @@ function bbb_society_product_importer_upsert_product(array $product) {
 		return new WP_Error('bbb_society_products_missing_handle', 'A product row is missing a handle or title.');
 	}
 
-	$existing = get_page_by_path($handle, OBJECT, 'product');
+	$post_type = 'edd' === $platform ? 'download' : 'product';
+	$existing  = get_page_by_path($handle, OBJECT, $post_type);
 	$post_id  = $existing instanceof WP_Post ? (int) $existing->ID : 0;
 	$args     = array(
 		'ID'           => $post_id,
-		'post_type'    => 'product',
+		'post_type'    => $post_type,
 		'post_status'  => (string) ($product['status'] ?? 'draft'),
 		'post_name'    => $handle,
 		'post_title'   => $title,
@@ -284,8 +298,8 @@ function bbb_society_product_importer_upsert_product(array $product) {
 	$is_free      = !empty($product['society_free']);
 	$is_digital   = !empty($product['is_digital']);
 
-	wp_set_object_terms($post_id, 'simple', 'product_type', false);
 	update_post_meta($post_id, '_bbb_import_source', 'society_product_importer');
+	update_post_meta($post_id, '_bbb_import_platform', $platform);
 	update_post_meta($post_id, '_bbb_shopify_product_gid', (string) ($product['id'] ?? ''));
 	update_post_meta($post_id, '_bbb_shopify_product_handle', $handle);
 	update_post_meta($post_id, '_bbb_shopify_product_type', (string) ($product['product_type'] ?? ''));
@@ -295,34 +309,60 @@ function bbb_society_product_importer_upsert_product(array $product) {
 	update_post_meta($post_id, '_bbb_shopify_variant_gid', (string) ($product['source_variant_id'] ?? ''));
 	update_post_meta($post_id, '_bbb_is_digital_product', $is_digital ? 'yes' : 'no');
 	update_post_meta($post_id, '_bbb_society_free_download', $is_free ? 'yes' : 'no');
-	update_post_meta($post_id, '_virtual', $is_digital ? 'yes' : 'no');
-	update_post_meta($post_id, '_downloadable', '' !== $download_url ? 'yes' : 'no');
-	update_post_meta($post_id, '_stock_status', 'instock');
-	update_post_meta($post_id, '_sold_individually', 'yes');
-	update_post_meta($post_id, '_regular_price', $price);
-	update_post_meta($post_id, '_price', $price);
-	update_post_meta($post_id, '_purchase_note', '' !== $download_url ? 'Your download will be available after checkout.' : '');
+
+	if ('edd' === $platform) {
+		update_post_meta($post_id, '_edd_price', $price);
+		update_post_meta($post_id, 'edd_price', $price);
+		update_post_meta($post_id, '_edd_product_type', 'default');
+
+		if ('' !== $download_url) {
+			update_post_meta(
+				$post_id,
+				'edd_download_files',
+				array(
+					array(
+						'name'      => $title,
+						'file'      => $download_url,
+						'condition' => '0',
+					),
+				)
+			);
+		}
+	} else {
+		wp_set_object_terms($post_id, 'simple', 'product_type', false);
+		update_post_meta($post_id, '_virtual', $is_digital ? 'yes' : 'no');
+		update_post_meta($post_id, '_downloadable', '' !== $download_url ? 'yes' : 'no');
+		update_post_meta($post_id, '_stock_status', 'instock');
+		update_post_meta($post_id, '_sold_individually', 'yes');
+		update_post_meta($post_id, '_regular_price', $price);
+		update_post_meta($post_id, '_price', $price);
+		update_post_meta($post_id, '_purchase_note', '' !== $download_url ? 'Your download will be available after checkout.' : '');
+	}
 
 	if ('' !== $download_url) {
 		$file_key = md5($download_url);
-		update_post_meta(
-			$post_id,
-			'_downloadable_files',
-			array(
-				$file_key => array(
-					'name' => $title,
-					'file' => $download_url,
-				),
-			)
-		);
-		update_post_meta($post_id, '_download_limit', '');
-		update_post_meta($post_id, '_download_expiry', '');
+		if ('woocommerce' === $platform) {
+			update_post_meta(
+				$post_id,
+				'_downloadable_files',
+				array(
+					$file_key => array(
+						'name' => $title,
+						'file' => $download_url,
+					),
+				)
+			);
+			update_post_meta($post_id, '_download_limit', '');
+			update_post_meta($post_id, '_download_expiry', '');
+		}
 		delete_post_meta($post_id, '_bbb_missing_download_url');
 	} elseif ($is_digital) {
 		delete_post_meta($post_id, '_downloadable_files');
+		delete_post_meta($post_id, 'edd_download_files');
 		update_post_meta($post_id, '_bbb_missing_download_url', 'yes');
 	} else {
 		delete_post_meta($post_id, '_downloadable_files');
+		delete_post_meta($post_id, 'edd_download_files');
 		delete_post_meta($post_id, '_bbb_missing_download_url');
 	}
 
@@ -331,11 +371,17 @@ function bbb_society_product_importer_upsert_product(array $product) {
 	}
 
 	if (!empty($product['categories'])) {
-		wp_set_object_terms($post_id, (array) $product['categories'], 'product_cat', false);
+		$taxonomy = 'edd' === $platform ? 'download_category' : 'product_cat';
+		if (taxonomy_exists($taxonomy)) {
+			wp_set_object_terms($post_id, (array) $product['categories'], $taxonomy, false);
+		}
 	}
 
 	if (!empty($product['tags'])) {
-		wp_set_object_terms($post_id, (array) $product['tags'], 'product_tag', false);
+		$taxonomy = 'edd' === $platform ? 'download_tag' : 'product_tag';
+		if (taxonomy_exists($taxonomy)) {
+			wp_set_object_terms($post_id, (array) $product['tags'], $taxonomy, false);
+		}
 	}
 
 	return array(
@@ -344,6 +390,7 @@ function bbb_society_product_importer_upsert_product(array $product) {
 		'downloadable' => '' !== $download_url,
 		'missing_download' => $is_digital && '' === $download_url,
 		'society_free' => $is_free,
+		'platform'     => $platform,
 	);
 }
 
@@ -402,9 +449,11 @@ function bbb_society_product_importer_handle_request() {
 function bbb_society_product_importer_admin_page(): void {
 	$result   = bbb_society_product_importer_handle_request();
 	$missing_downloads = is_array($result) ? count(array_filter($result, static fn($item): bool => !empty($item['missing_download']))) : 0;
-	$products = post_type_exists('product') ? get_posts(
+	$platform = bbb_society_product_importer_platform();
+	$product_post_type = 'edd' === $platform ? 'download' : 'product';
+	$products = '' !== $platform ? get_posts(
 		array(
-			'post_type'      => 'product',
+			'post_type'      => $product_post_type,
 			'post_status'    => 'any',
 			'posts_per_page' => 50,
 			'meta_key'       => '_bbb_import_source',
@@ -416,10 +465,14 @@ function bbb_society_product_importer_admin_page(): void {
 	?>
 	<div class="wrap bbb-society-products-admin">
 		<h1>Society Products</h1>
-		<p class="description">Import Shopify digital products into WooCommerce as clean draft products, preserve source metadata, attach download URLs, and mark which products paid Society members receive for free.</p>
+		<p class="description">Import Shopify digital products into Easy Digital Downloads or WooCommerce as clean draft products, preserve source metadata, attach download URLs, and mark which products paid Society members receive for free.</p>
 
-		<?php if (!post_type_exists('product')) : ?>
-			<div class="notice notice-warning"><p>WooCommerce is not active yet. Activate WooCommerce before importing products.</p></div>
+		<?php if ('' === $platform) : ?>
+			<div class="notice notice-warning"><p>Easy Digital Downloads or WooCommerce needs to be active before importing products.</p></div>
+		<?php elseif ('edd' === $platform) : ?>
+			<div class="notice notice-info"><p>Import target: Easy Digital Downloads.</p></div>
+		<?php else : ?>
+			<div class="notice notice-info"><p>Import target: WooCommerce.</p></div>
 		<?php endif; ?>
 
 		<?php if (is_wp_error($result)) : ?>
@@ -468,11 +521,13 @@ gothic-lace-calendar,gothic lace calendar,7.00,https://example.com/calendar.pdf,
 				<?php endif; ?>
 				<?php foreach ($products as $product_post) : ?>
 					<?php $files = get_post_meta($product_post->ID, '_downloadable_files', true); ?>
+					<?php $edd_files = get_post_meta($product_post->ID, 'edd_download_files', true); ?>
+					<?php $price = 'edd' === get_post_meta($product_post->ID, '_bbb_import_platform', true) ? get_post_meta($product_post->ID, '_edd_price', true) : get_post_meta($product_post->ID, '_regular_price', true); ?>
 					<tr>
 						<td><a href="<?php echo esc_url(get_edit_post_link($product_post->ID)); ?>"><?php echo esc_html(get_the_title($product_post)); ?></a></td>
 						<td><code><?php echo esc_html((string) get_post_meta($product_post->ID, '_bbb_shopify_product_handle', true)); ?></code></td>
-						<td><?php echo esc_html((string) get_post_meta($product_post->ID, '_regular_price', true)); ?></td>
-						<td><?php echo esc_html(!empty($files) ? 'attached' : ('yes' === get_post_meta($product_post->ID, '_bbb_missing_download_url', true) ? 'missing' : 'none')); ?></td>
+						<td><?php echo esc_html((string) $price); ?></td>
+						<td><?php echo esc_html(!empty($files) || !empty($edd_files) ? 'attached' : ('yes' === get_post_meta($product_post->ID, '_bbb_missing_download_url', true) ? 'missing' : 'none')); ?></td>
 						<td><?php echo esc_html('yes' === get_post_meta($product_post->ID, '_bbb_society_free_download', true) ? 'free' : 'paid'); ?></td>
 						<td><?php echo esc_html((string) get_post_meta($product_post->ID, '_bbb_shopify_product_type', true)); ?></td>
 					</tr>
