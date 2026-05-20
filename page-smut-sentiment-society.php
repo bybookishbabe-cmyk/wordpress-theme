@@ -28,6 +28,9 @@ for ($i = 1; $i <= 6; $i++) {
 	if ('' === trim($label) || '' === trim($url)) {
 		continue;
 	}
+	if ('your dashboard' === $label && '/what-to-read-next/' === trim($url)) {
+		$url = '/sss-made-for-you/';
+	}
 
 	$monthly_hub_links[] = array(
 		'label' => $label,
@@ -57,7 +60,7 @@ $sections = array(
 		'items' => array(
 			array('title' => 'book tracking calendar', 'copy' => 'the shopify read tracker: click a day, choose the book you read, and let the cover live there.', 'url' => bbb_page_url('sss-library'), 'badge' => 'society'),
 			array('title' => 'my bookshelf', 'copy' => 'your saved books, current obsessions, and personal romance archive.', 'url' => bbb_page_url('my-bookshelf'), 'badge' => 'free'),
-			array('title' => 'your dashboard', 'copy' => 'made-for-you reader logic, mood-based recommendations, and smarter next-read picks.', 'url' => bbb_page_url('what-to-read-next'), 'badge' => 'preview'),
+			array('title' => 'your dashboard', 'copy' => 'made-for-you reader logic, mood-based recommendations, and smarter next-read picks.', 'url' => bbb_page_url('sss-made-for-you'), 'badge' => 'society'),
 		),
 	),
 	array(

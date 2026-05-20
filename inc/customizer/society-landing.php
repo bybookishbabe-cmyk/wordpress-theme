@@ -55,7 +55,7 @@ function bbb_society_landing_customizer_settings(WP_Customize_Manager $wp_custom
 	$link_defaults = array(
 		1 => array('label' => 'start here', 'url' => '/society-library/'),
 		2 => array('label' => 'track your reads', 'url' => '/sss-library/'),
-		3 => array('label' => 'your dashboard', 'url' => '/what-to-read-next/'),
+		3 => array('label' => 'your dashboard', 'url' => '/sss-made-for-you/'),
 		4 => array('label' => 'my bookshelf', 'url' => '/my-bookshelf/'),
 		5 => array('label' => 'printables', 'url' => '/sss-printable-kindle-inserts/'),
 		6 => array('label' => 'quote library', 'url' => '/sss-quote-wall/'),
