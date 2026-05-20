@@ -82,9 +82,10 @@ get_header();
 
 			<section class="bbb-livequiz__result" data-quiz-result hidden></section>
 			<script type="application/json" data-quiz-books><?php echo wp_json_encode($books, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?></script>
-		</div>
-	</section>
-</main>
+			</div>
+		</section>
+		<?php bbb_render_component('sss-library-modal'); ?>
+	</main>
 
 <?php
 get_footer();
