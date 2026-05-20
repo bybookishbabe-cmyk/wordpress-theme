@@ -132,6 +132,178 @@ function bbb_society_admin_fetch_supabase_counts(array $config): array {
 	);
 }
 
+function bbb_society_admin_csv_key(string $value): string {
+	return strtolower((string) preg_replace('/[^a-z0-9]+/i', '_', trim($value)));
+}
+
+function bbb_society_admin_find_csv_column(array $headers, array $patterns): string {
+	foreach ($headers as $header) {
+		foreach ($patterns as $pattern) {
+			if (preg_match($pattern, $header)) {
+				return $header;
+			}
+		}
+	}
+
+	return '';
+}
+
+function bbb_society_admin_csv_row_is_paid(array $row): bool {
+	$signals = array();
+
+	foreach ($row as $key => $value) {
+		$key = bbb_society_admin_csv_key((string) $key);
+		if (!preg_match('/(tier|type|status|plan|subscription|stripe|paid|comp|founding|membership)/', $key)) {
+			continue;
+		}
+
+		$signals[] = strtolower(trim((string) $value));
+	}
+
+	$text = trim(implode(' ', array_filter($signals)));
+	if ('' === $text) {
+		return false;
+	}
+
+	if (preg_match('/\b(free|unpaid|inactive|cancell?ed|expired|paused|trial_ended)\b/', $text)) {
+		return false;
+	}
+
+	return (bool) preg_match('/\b(paid|active|founding|monthly|annual|yearly|comped|gifted|subscriber|member|society)\b/', $text);
+}
+
+function bbb_society_admin_parse_substack_csv(string $file_path): array {
+	$handle = fopen($file_path, 'r');
+	if (!$handle) {
+		return new WP_Error('bbb_substack_csv_open_failed', 'Could not open the uploaded CSV.');
+	}
+
+	$raw_headers = fgetcsv($handle);
+	if (!is_array($raw_headers)) {
+		fclose($handle);
+		return new WP_Error('bbb_substack_csv_empty', 'The CSV is empty.');
+	}
+
+	$headers = array_map('bbb_society_admin_csv_key', $raw_headers);
+	$email_column = bbb_society_admin_find_csv_column($headers, array('/(^|_)email$/', '/email/'));
+	if ('' === $email_column) {
+		fclose($handle);
+		return new WP_Error('bbb_substack_csv_missing_email', 'Could not find an email column in the CSV.');
+	}
+
+	$rows = array();
+	$seen = array();
+	while (($cells = fgetcsv($handle)) !== false) {
+		$row = array();
+		foreach ($headers as $index => $header) {
+			$row[$header] = isset($cells[$index]) ? (string) $cells[$index] : '';
+		}
+
+		$email = bbb_society_admin_normalize_email((string) ($row[$email_column] ?? ''));
+		if ('' === $email || !is_email($email) || isset($seen[$email])) {
+			continue;
+		}
+
+		$seen[$email] = true;
+		$is_paid = bbb_society_admin_csv_row_is_paid($row);
+		$rows[] = array(
+			'email'               => $email,
+			'email_normalized'    => $email,
+			'customer_email'      => $email,
+			'account_status'      => 'email_only',
+			'access_tier'         => $is_paid ? 'society' : 'free',
+			'society_key_used_at' => $is_paid ? gmdate('c') : null,
+			'society_key_source'  => $is_paid ? 'substack_csv_import' : null,
+			'weekly_email_opt_in' => true,
+			'source'              => 'substack_csv_import',
+			'last_synced_at'      => gmdate('c'),
+			'metadata'            => array(
+				'imported_from' => 'substack_csv',
+				'csv_status'    => array_filter(
+					$row,
+					static fn($key): bool => (bool) preg_match('/(tier|type|status|plan|subscription|stripe|paid|comp|founding|membership)/', (string) $key),
+					ARRAY_FILTER_USE_KEY
+				),
+			),
+		);
+	}
+
+	fclose($handle);
+	return $rows;
+}
+
+function bbb_society_admin_upsert_substack_rows(array $rows) {
+	$config = bbb_society_admin_supabase_config();
+	if ('' === $config['url'] || '' === $config['key']) {
+		return new WP_Error('bbb_supabase_not_configured', 'Supabase service role key is not configured.');
+	}
+
+	$imported = 0;
+	foreach (array_chunk($rows, 500) as $chunk) {
+		$response = wp_remote_request(
+			$config['url'] . '/rest/v1/bookshelf_subscribers?on_conflict=email_normalized',
+			array(
+				'method'  => 'POST',
+				'timeout' => 30,
+				'headers' => array(
+					'apikey'        => $config['key'],
+					'Authorization' => 'Bearer ' . $config['key'],
+					'Accept'        => 'application/json',
+					'Content-Type'  => 'application/json',
+					'Prefer'        => 'resolution=merge-duplicates,return=minimal',
+				),
+				'body'    => wp_json_encode($chunk),
+			)
+		);
+
+		if (is_wp_error($response)) {
+			return $response;
+		}
+
+		$code = (int) wp_remote_retrieve_response_code($response);
+		if ($code < 200 || $code >= 300) {
+			return new WP_Error(
+				'bbb_supabase_import_failed',
+				'Supabase rejected the subscriber import.',
+				array('status' => $code, 'body' => wp_remote_retrieve_body($response))
+			);
+		}
+
+		$imported += count($chunk);
+	}
+
+	return $imported;
+}
+
+function bbb_society_admin_handle_substack_import() {
+	if (
+		empty($_POST['bbb_substack_import'])
+		|| !current_user_can('manage_options')
+		|| empty($_FILES['bbb_substack_csv']['tmp_name'])
+	) {
+		return null;
+	}
+
+	check_admin_referer('bbb_substack_import', 'bbb_substack_import_nonce');
+
+	$rows = bbb_society_admin_parse_substack_csv((string) $_FILES['bbb_substack_csv']['tmp_name']);
+	if (is_wp_error($rows)) {
+		return $rows;
+	}
+
+	$result = bbb_society_admin_upsert_substack_rows($rows);
+	if (is_wp_error($result)) {
+		return $result;
+	}
+
+	$paid = count(array_filter($rows, static fn(array $row): bool => 'society' === $row['access_tier']));
+	return array(
+		'imported' => (int) $result,
+		'paid'     => $paid,
+		'free'     => max((int) $result - $paid, 0),
+	);
+}
+
 function bbb_society_admin_wp_user_is_paid(WP_User $user): bool {
 	$user_id = (int) $user->ID;
 
@@ -255,6 +427,7 @@ function bbb_society_admin_page(): void {
 		wp_die(esc_html__('You do not have permission to view this page.', 'bybookishbabe-shopify-port'));
 	}
 
+	$import_result = bbb_society_admin_handle_substack_import();
 	$data = bbb_society_admin_member_rows();
 	$rows = bbb_society_admin_filter_rows($data['rows']);
 	$counts = is_array($data['counts'] ?? null) ? $data['counts'] : array();
@@ -270,11 +443,36 @@ function bbb_society_admin_page(): void {
 			<div class="notice notice-warning"><p><?php echo esc_html($data['error']); ?></p></div>
 		<?php endif; ?>
 
+		<?php if (is_wp_error($import_result)) : ?>
+			<div class="notice notice-error"><p><?php echo esc_html($import_result->get_error_message()); ?></p></div>
+		<?php elseif (is_array($import_result)) : ?>
+			<div class="notice notice-success"><p>
+				<?php
+				echo esc_html(
+					sprintf(
+						'Imported %1$d Substack subscribers: %2$d paid/society and %3$d free.',
+						(int) $import_result['imported'],
+						(int) $import_result['paid'],
+						(int) $import_result['free']
+					)
+				);
+				?>
+			</p></div>
+		<?php endif; ?>
+
 		<div class="bbb-society-admin-summary">
 			<div><strong><?php echo esc_html((string) $total_count); ?></strong><span>total</span></div>
 			<div><strong><?php echo esc_html((string) $paid_count); ?></strong><span>paid/society</span></div>
 			<div><strong><?php echo esc_html((string) $free_count); ?></strong><span>free/no paid access</span></div>
 		</div>
+
+		<form method="post" enctype="multipart/form-data" class="bbb-society-admin-import">
+			<h2><?php esc_html_e('Import Substack CSV', 'bybookishbabe-shopify-port'); ?></h2>
+			<p>Export subscribers from Substack with all columns, then upload the CSV here. WordPress will sync those emails into Supabase and mark paid subscribers as society access.</p>
+			<?php wp_nonce_field('bbb_substack_import', 'bbb_substack_import_nonce'); ?>
+			<input type="file" name="bbb_substack_csv" accept=".csv,text/csv" required>
+			<button class="button button-primary" name="bbb_substack_import" value="1">Import Substack subscribers</button>
+		</form>
 
 		<form method="get" class="bbb-society-admin-filters">
 			<input type="hidden" name="page" value="bbb-society-members">
@@ -325,6 +523,9 @@ function bbb_society_admin_page(): void {
 		.bbb-society-admin-summary div{min-width:150px;padding:14px 16px;background:#fff;border:1px solid #dcdcde;border-radius:6px}
 		.bbb-society-admin-summary strong{display:block;font-size:24px;line-height:1.1}
 		.bbb-society-admin-summary span{display:block;margin-top:4px;color:#646970}
+		.bbb-society-admin-import{max-width:760px;margin:0 0 18px;padding:16px;background:#fff;border:1px solid #dcdcde;border-radius:6px}
+		.bbb-society-admin-import h2{margin:0 0 8px}
+		.bbb-society-admin-import p{margin:0 0 12px;color:#646970}
 		.bbb-society-admin-filters{display:flex;gap:8px;align-items:center;margin:0 0 14px}
 		.bbb-society-admin-badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;background:#f0f0f1;color:#2c3338;font-size:12px}
 		.bbb-society-admin-badge.is-paid{background:#fce7f3;color:#9d174d}
