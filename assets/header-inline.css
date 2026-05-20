@@ -136,9 +136,14 @@ summary.list-menu__item {
   border-radius: 999px;
   box-shadow: none;
   display: inline-flex;
+  font-family: var(--font-heading-family, Georgia, serif);
+  font-size: 1.5rem;
+  font-weight: 700;
   height: 2.9rem;
   justify-content: center;
   line-height: 1;
+  padding-bottom: 0.1rem;
+  text-transform: uppercase;
   width: 2.9rem;
 }
 

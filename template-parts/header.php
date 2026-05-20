@@ -52,7 +52,7 @@ if (is_user_logged_in()) {
 					aria-label="<?php echo esc_attr($account_status_text); ?>"
 					title="<?php echo esc_attr($account_status_text); ?>"
 				>
-					<span class="header__account-dot" aria-hidden="true"></span>
+					<span class="header__account-dot" aria-hidden="true">A</span>
 				</a>
 
 				<?php get_template_part('template-parts/header/reader-bookshelf-access'); ?>
