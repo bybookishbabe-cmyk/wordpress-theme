@@ -128,16 +128,35 @@ function bbb_mark_virtual_route_found(): void {
 
 	if ($wp_query instanceof WP_Query) {
 		$wp_query->is_404 = false;
+		$wp_query->is_page = true;
+		$wp_query->is_singular = true;
 	}
 
 	status_header(200);
 	nocache_headers();
 }
 
+function bbb_virtual_route_title(string $slug): string {
+	return ucwords(str_replace('-', ' ', $slug));
+}
+
+add_filter(
+	'document_title_parts',
+	static function (array $title): array {
+		$slug = bbb_current_route_slug();
+		if ('' === bbb_route_template_for_slug($slug)) {
+			return $title;
+		}
+
+		$title['title'] = bbb_virtual_route_title($slug);
+		return $title;
+	}
+);
+
 function bbb_render_waiting_on_template(string $slug): void {
 	bbb_mark_virtual_route_found();
 
-	$title = ucwords(str_replace('-', ' ', $slug));
+	$title = bbb_virtual_route_title($slug);
 
 	get_header();
 	?>
@@ -188,7 +207,6 @@ add_action(
 
 		if (
 			($request_path === 'cart' && function_exists('wc_get_cart_url'))
-			|| (($request_path === 'account' || str_starts_with($request_path, 'account/')) && function_exists('wc_get_account_endpoint_url'))
 			|| $request_path === 'account/login'
 		) {
 			return;
