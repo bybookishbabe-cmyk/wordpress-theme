@@ -12,6 +12,7 @@ function bbb_page_route_registry(): array {
 		'artprints'                      => '',
 		'book-reviews'                   => 'page-book-reviews.php',
 		'bookish-templates'              => '',
+		'book-tracking-calendar'         => 'page-book-tracking-calendar.php',
 		'books-like'                     => 'page-books-like.php',
 		'books-like-directory'           => 'page-books-like-directory.php',
 		'bookshelf-weekly-preview'       => '',

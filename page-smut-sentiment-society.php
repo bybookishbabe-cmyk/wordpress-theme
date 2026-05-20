@@ -78,7 +78,7 @@ $sections = array(
 	array(
 		'label' => 'member tools',
 		'items' => array(
-			array('title' => 'book tracking calendar', 'copy' => 'the shopify read tracker: click a day, choose the book you read, and let the cover live there.', 'url' => bbb_page_url('sss-library'), 'badge' => 'society', 'emoji' => '📅'),
+			array('title' => 'book tracking calendar', 'copy' => 'the shopify read tracker: click a day, choose the book you read, and let the cover live there.', 'url' => bbb_page_url('book-tracking-calendar'), 'badge' => 'society', 'emoji' => '📅'),
 			array('title' => 'my bookshelf', 'copy' => 'your saved books, current obsessions, and personal romance archive.', 'url' => bbb_page_url('my-bookshelf'), 'badge' => 'free', 'emoji' => '📚'),
 			array('title' => 'member dashboard', 'copy' => 'made-for-you reader logic, mood-based recommendations, and smarter next-read picks.', 'url' => bbb_page_url('member-dashboard'), 'badge' => 'society', 'emoji' => '✨'),
 		),
