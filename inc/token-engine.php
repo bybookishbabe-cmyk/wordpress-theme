@@ -56,6 +56,10 @@ function sss_token_engine(string $content, int $post_id): string {
 		$content = preg_replace($pattern, $replacement, $content) ?? $content;
 	}
 
+	if (preg_match('/\[faq\]/i', $content)) {
+		$content = preg_replace('/<h[1-4]\b[^>]*>\s*frequently\s+asked\s+questions\s*<\/h[1-4]>\s*(?:<hr\s*\/?>\s*)?/i', '', $content) ?? $content;
+	}
+
 	$content = preg_replace('/<p\b[^>]*>\s*(\[faq\])/i', '$1', $content) ?? $content;
 	$content = preg_replace('/(\[\/faq\])\s*<\/p>/i', '$1', $content) ?? $content;
 

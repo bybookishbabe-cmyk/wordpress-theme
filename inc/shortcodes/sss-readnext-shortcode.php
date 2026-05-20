@@ -159,7 +159,7 @@ function sss_faq_shortcode($atts, ?string $content = null): string {
 		}
 	}
 
-	return '<section class="blog-faq" aria-label="frequently asked questions"><div class="blog-faq__kicker">questions readers ask</div><h2 class="blog-faq__title">frequently asked questions</h2><div class="blog-faq__list">' . $items . '</div></section>';
+	return '<section class="blog-faq" aria-label="frequently asked questions"><div class="blog-faq__list">' . $items . '</div></section>';
 }
 add_shortcode('faq', 'sss_faq_shortcode');
 

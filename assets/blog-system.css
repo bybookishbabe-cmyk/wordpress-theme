@@ -2971,6 +2971,7 @@ body.single-post .article-template__content video{
 }
 
 .blog-faq__kicker{
+  display:none;
   margin:0 0 .45rem;
   color:#ff8ac7;
   font-size:.72rem;
@@ -2979,6 +2980,7 @@ body.single-post .article-template__content video{
 }
 
 .blog-faq__title{
+  display:none;
   margin:0 0 1.5rem;
   font-family:var(--font-heading-family, Georgia, serif);
   font-size:clamp(1.65rem, 3vw, 2.35rem);
