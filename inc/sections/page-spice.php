@@ -42,6 +42,7 @@ foreach ($books as $book) {
 			<div class="sss-tropeTop__left">
 				<p class="sss-lib__kicker">browse by spice</p>
 				<h1 class="sss-lib__title">romance books by spice level</h1>
+				<p class="sss-lib__spiceDesc">Choose how much heat you want tonight and let the library narrow itself for you, from barely-there tension to five-chili chaos.</p>
 			</div>
 			<div class="sss-tropeTop__right">
 				<div class="sss-lib__societyInviteCard">
