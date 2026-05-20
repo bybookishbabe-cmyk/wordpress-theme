@@ -14,10 +14,16 @@ wp_enqueue_script('bbb-sss-library', get_template_directory_uri() . '/assets/js/
 get_header();
 
 $all_books        = sss_get_all_books();
-$all_public_books = $all_books;
+$is_society       = function_exists('bbb_reader_is_society') ? bbb_reader_is_society() : false;
+$all_public_books = array_values(
+	array_filter(
+		$all_books,
+		static fn(WP_Post $book): bool => !function_exists('sss_book_is_private') || !sss_book_is_private($book->ID)
+	)
+);
 ?>
 
-<section class="sss-lib sss-lib--public" id="sss-lib-public" data-sss-lib="public">
+<section class="sss-lib sss-lib--public<?php echo $is_society ? ' sss-lib--society-unlocked' : ''; ?>" id="sss-lib-public" data-sss-lib="<?php echo esc_attr($is_society ? 'society' : 'public'); ?>">
 	<div class="sss-lib__wrap">
 		<?php get_template_part('template-parts/library/library-header'); ?>
 		<?php get_template_part('template-parts/library/library-trending-shelf', null, array('books' => $all_public_books)); ?>
@@ -25,6 +31,7 @@ $all_public_books = $all_books;
 		<?php get_template_part('template-parts/library/library-spice-tease'); ?>
 		<?php get_template_part('template-parts/library/library-rec-demo'); ?>
 		<?php get_template_part('template-parts/library/library-my-shelf'); ?>
+		<?php get_template_part('template-parts/library/library-society-layer', null, array('books' => $all_books, 'public_books' => $all_public_books, 'is_society' => $is_society)); ?>
 		<?php get_template_part('template-parts/library/library-society-classics', null, array('books' => $all_public_books)); ?>
 		<?php get_template_part('template-parts/library/library-starter-pack', null, array('books' => $all_public_books)); ?>
 		<?php get_template_part('template-parts/library/library-books-of-month', null, array('books' => $all_public_books)); ?>

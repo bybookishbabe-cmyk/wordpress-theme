@@ -121,6 +121,29 @@ function bbb_normalize_menu_item_tree(array $items): array {
 	return $items;
 }
 
+function bbb_flatten_society_menu_item(array $items): array {
+	foreach ($items as $item) {
+		$title  = sanitize_title((string) ($item->title ?? ''));
+		$handle = bbb_menu_item_handle($item);
+		$url    = isset($item->url) ? (string) $item->url : '';
+
+		if (
+			'the-society' === $title
+			|| 'the-society' === $handle
+			|| str_contains($url, '/smut-sentiment-society/')
+		) {
+			$item->children = array();
+			continue;
+		}
+
+		if (!empty($item->children) && is_array($item->children)) {
+			$item->children = bbb_flatten_society_menu_item($item->children);
+		}
+	}
+
+	return $items;
+}
+
 function bbb_get_header_menu_items(): array {
 	$locations = get_nav_menu_locations();
 	$menu_id   = $locations['main-menu'] ?? 0;
@@ -144,12 +167,12 @@ function bbb_get_header_menu_items(): array {
 			$tree[] = $item;
 		}
 
-		return bbb_normalize_menu_item_tree($tree);
+		return bbb_flatten_society_menu_item(bbb_normalize_menu_item_tree($tree));
 	}
 
 	// No WP menu assigned yet — use the hardcoded Shopify-faithful fallback.
 	// Configure a real menu at Appearance → Menus → Main Navigation to override.
-	return function_exists( 'bbb_get_fallback_menu_tree' ) ? bbb_normalize_menu_item_tree(bbb_get_fallback_menu_tree()) : array();
+	return function_exists( 'bbb_get_fallback_menu_tree' ) ? bbb_flatten_society_menu_item(bbb_normalize_menu_item_tree(bbb_get_fallback_menu_tree())) : array();
 }
 
 function bbb_menu_item_handle(WP_Post $item): string {

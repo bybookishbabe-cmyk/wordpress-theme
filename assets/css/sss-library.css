@@ -1249,6 +1249,59 @@ background:#0e0e0e;
   color:rgba(246,246,246,.64);
 }
 
+.sss-lib__societyLayer{
+  margin:54px 0;
+  padding:30px;
+  border:1px solid rgba(255,138,199,.18);
+  border-radius:24px;
+  background:linear-gradient(180deg, rgba(255,138,199,.07), rgba(255,255,255,.02));
+  box-shadow:0 24px 60px rgba(0,0,0,.24);
+}
+
+.sss-lib__societyLayerHead{
+  max-width:760px;
+}
+
+.sss-lib__societyLayer .sss-lib__finder{
+  margin-bottom:34px;
+}
+
+.sss-lib__societyLocked{
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) auto;
+  gap:20px;
+  align-items:end;
+  margin-top:22px;
+  padding:24px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:20px;
+  background:rgba(0,0,0,.24);
+}
+
+.sss-lib__societyLockedActions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  justify-content:flex-end;
+}
+
+@media(max-width:749px){
+  .sss-lib__societyLayer{
+    margin:38px 0;
+    padding:20px 16px;
+    border-radius:20px;
+  }
+
+  .sss-lib__societyLocked{
+    grid-template-columns:1fr;
+    align-items:start;
+  }
+
+  .sss-lib__societyLockedActions{
+    justify-content:flex-start;
+  }
+}
+
 .sss-lib__book.is-mobile-hidden{
   display:none !important;
 }
