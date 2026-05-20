@@ -227,26 +227,36 @@ wp_enqueue_style(
 	file_exists($weekly_obsession_css_path) ? (string) filemtime($weekly_obsession_css_path) : wp_get_theme()->get('Version')
 );
 
-$current_issue = function_exists('sss_get_current_newsletter_issue') ? sss_get_current_newsletter_issue() : null;
-$featured_book = $current_issue && function_exists('sss_get_obsession_book') ? sss_get_obsession_book($current_issue) : null;
+$obsession_context = function_exists('sss_get_current_obsession_context') ? sss_get_current_obsession_context() : array();
+$current_issue     = $obsession_context['issue'] ?? (function_exists('sss_get_current_newsletter_issue') ? sss_get_current_newsletter_issue() : null);
+$featured_book     = $obsession_context['book'] ?? ($current_issue && function_exists('sss_get_obsession_book') ? sss_get_obsession_book($current_issue) : null);
 if (!$featured_book instanceof WP_Post && function_exists('sss_get_latest_featured_book')) {
 	$featured_book = sss_get_latest_featured_book();
 }
 
 $book_data = $featured_book instanceof WP_Post ? bbb_weekly_book_data($featured_book) : array();
-$issue_title = bbb_weekly_issue_meta($current_issue, array('_issue_title_override', 'title'), $current_issue instanceof WP_Post ? $current_issue->post_title : 'this week’s obsession');
-$issue_subtitle = bbb_weekly_issue_meta($current_issue, array('_issue_subtitle', 'subtitle'), '');
+$issue_title = (string) ($obsession_context['title'] ?? '');
+if ('' === trim($issue_title)) {
+	$issue_title = bbb_weekly_issue_meta($current_issue, array('_issue_title_override', 'title'), $current_issue instanceof WP_Post ? $current_issue->post_title : 'this week’s obsession');
+}
+$issue_subtitle = (string) ($obsession_context['subtitle'] ?? '');
+if ('' === trim($issue_subtitle)) {
+	$issue_subtitle = bbb_weekly_issue_meta($current_issue, array('_issue_subtitle', 'subtitle'), '');
+}
 $issue_excerpt = bbb_weekly_issue_meta($current_issue, array('_issue_excerpt', 'excerpt'), '');
 if ('' === $issue_excerpt && $current_issue instanceof WP_Post) {
 	$issue_excerpt = $current_issue->post_excerpt ?: wp_trim_words(wp_strip_all_tags($current_issue->post_content), 42, '');
 }
-$issue_link = bbb_weekly_issue_meta($current_issue, array('_bbb_newsletter_url', '_issue_url', 'url', 'newsletter_url'), (string) ($book_data['newsletter'] ?? ''));
+$issue_link = (string) ($obsession_context['url'] ?? '');
+if ('' === trim($issue_link)) {
+	$issue_link = bbb_weekly_issue_meta($current_issue, array('_bbb_newsletter_url', '_issue_url', 'url', 'newsletter_url'), (string) ($book_data['newsletter'] ?? ''));
+}
 $issue_link = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value($issue_link) : $issue_link;
 if ('' === $issue_link && !empty($book_data['newsletter'])) {
 	$issue_link = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value($book_data['newsletter']) : (string) $book_data['newsletter'];
 }
 $issue_link_url = esc_url($issue_link);
-$issue_date = bbb_weekly_issue_date($current_issue);
+$issue_date = !empty($obsession_context['timestamp']) ? wp_date('M j, Y', (int) $obsession_context['timestamp']) : bbb_weekly_issue_date($current_issue);
 $boyfriend_name = trim((string) ($book_data['boyfriend_name'] ?? ''));
 if ('' === $boyfriend_name) {
 	$boyfriend_name = trim((string) ($book_data['boyfriend'] ?? ''));

@@ -54,13 +54,18 @@ $parse_issue_date = static function (string $raw): int {
 	return false === $timestamp ? 0 : $timestamp;
 };
 
-$now          = current_time('timestamp');
-$ten_hours    = 10 * 60 * 60;
-$latest_issue = function_exists('sss_get_current_newsletter_issue') ? sss_get_current_newsletter_issue() : null;
-$latest_ts    = $parse_issue_date($society_issue_meta($latest_issue, array('_issue_publish_date', 'publish_date')));
+$now               = current_time('timestamp');
+$ten_hours         = 10 * 60 * 60;
+$obsession_context = function_exists('sss_get_current_obsession_context') ? sss_get_current_obsession_context() : array();
+$latest_issue      = $obsession_context['issue'] ?? (function_exists('sss_get_current_newsletter_issue') ? sss_get_current_newsletter_issue() : null);
+$latest_book       = $obsession_context['book'] ?? ($latest_issue instanceof WP_Post && function_exists('sss_get_obsession_book') ? sss_get_obsession_book($latest_issue) : null);
+$latest_ts         = (int) ($obsession_context['timestamp'] ?? 0);
+if (!$latest_ts) {
+	$latest_ts = $parse_issue_date($society_issue_meta($latest_issue, array('_issue_publish_date', 'publish_date')));
+}
 
 $is_new = false;
-if ($latest_issue) {
+if ($latest_ts) {
 	$live_ts = $latest_ts + $ten_hours;
 	$diff    = $now - $live_ts;
 	$is_new  = $diff < 604800;
@@ -89,15 +94,21 @@ $society_url   = function_exists('bbb_resolve_shopify_url') ? bbb_resolve_shopif
 
 		<div class="bbb-newsletter-cta__grid">
 
-			<?php if ($latest_issue) : ?>
+			<?php if ($latest_issue || $latest_book instanceof WP_Post) : ?>
 				<?php
-				$issue_url      = $society_issue_meta($latest_issue, array('_bbb_newsletter_url', 'issue_url', 'url', 'newsletter_url'));
+				$issue_url      = (string) ($obsession_context['url'] ?? '');
+				if ('' === trim($issue_url)) {
+					$issue_url = $society_issue_meta($latest_issue, array('_bbb_newsletter_url', 'issue_url', 'url', 'newsletter_url'));
+				}
 				$issue_no       = $society_issue_meta($latest_issue, array('_issue_no', 'issue_no'));
 				$issue_label    = $society_issue_meta($latest_issue, array('_issue_label', 'issue_label', 'label'));
-				$issue_subtitle = $society_issue_meta($latest_issue, array('_issue_subtitle', 'issue_subtitle', 'subtitle'));
+				$issue_subtitle = (string) ($obsession_context['subtitle'] ?? '');
+				if ('' === trim($issue_subtitle)) {
+					$issue_subtitle = $society_issue_meta($latest_issue, array('_issue_subtitle', 'issue_subtitle', 'subtitle'));
+				}
 				$preview_img    = '';
-				$img_field      = function_exists('get_field') ? get_field('preview_image', $latest_issue->ID) : null;
-				$issue_book     = function_exists('sss_get_obsession_book') ? sss_get_obsession_book($latest_issue) : null;
+				$img_field      = $latest_issue instanceof WP_Post && function_exists('get_field') ? get_field('preview_image', $latest_issue->ID) : null;
+				$issue_book     = $latest_book instanceof WP_Post ? $latest_book : ($latest_issue instanceof WP_Post && function_exists('sss_get_obsession_book') ? sss_get_obsession_book($latest_issue) : null);
 
 				if (is_array($img_field) && !empty($img_field['url'])) {
 					$preview_img = (string) $img_field['url'];
@@ -116,7 +127,13 @@ $society_url   = function_exists('bbb_resolve_shopify_url') ? bbb_resolve_shopif
 
 				$issue_label    = '' !== trim($issue_label) ? $issue_label : 'latest edition ✦';
 				$issue_subtitle = '' !== trim($issue_subtitle) ? $issue_subtitle : 'one book a week. quotes, recs, and reader-core chaos.';
-				$issue_title    = get_the_title($latest_issue);
+				$issue_title    = (string) ($obsession_context['title'] ?? '');
+				if ('' === trim($issue_title) && $latest_issue instanceof WP_Post) {
+					$issue_title = get_the_title($latest_issue);
+				}
+				if ('' === trim($issue_title) && $issue_book instanceof WP_Post) {
+					$issue_title = get_the_title($issue_book);
+				}
 				$issue_date     = $latest_ts ? wp_date('M j, Y', $latest_ts) : '';
 				?>
 				<article class="bbb-nc bbb-nc--latest">

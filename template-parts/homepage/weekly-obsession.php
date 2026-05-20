@@ -8,10 +8,11 @@
 
 declare(strict_types=1);
 
-$current_issue = sss_get_current_newsletter_issue();
-$featured_book = $current_issue ? sss_get_obsession_book($current_issue) : null;
-if (!$featured_book) {
-	$featured_book = function_exists('sss_get_latest_featured_book') ? sss_get_latest_featured_book() : null;
+$obsession_context = function_exists('sss_get_current_obsession_context') ? sss_get_current_obsession_context() : array();
+$current_issue     = $obsession_context['issue'] ?? (function_exists('sss_get_current_newsletter_issue') ? sss_get_current_newsletter_issue() : null);
+$featured_book     = $obsession_context['book'] ?? ($current_issue instanceof WP_Post ? sss_get_obsession_book($current_issue) : null);
+if (!$featured_book instanceof WP_Post && function_exists('sss_get_latest_featured_book')) {
+	$featured_book = sss_get_latest_featured_book();
 }
 
 if (!$featured_book instanceof WP_Post) {
@@ -50,13 +51,19 @@ $tropes      = ($trope_terms && !is_wp_error($trope_terms))
 	? array_slice($trope_terms, 0, 3)
 	: array();
 
-$issue_title = $current_issue && !empty(get_post_meta($current_issue->ID, '_issue_title_override', true))
-	? get_post_meta($current_issue->ID, '_issue_title_override', true)
-	: ($current_issue ? $current_issue->post_title : '');
+$issue_title = (string) ($obsession_context['title'] ?? '');
+if ('' === trim($issue_title)) {
+	$issue_title = $current_issue && !empty(get_post_meta($current_issue->ID, '_issue_title_override', true))
+		? get_post_meta($current_issue->ID, '_issue_title_override', true)
+		: ($current_issue ? $current_issue->post_title : '');
+}
 if (empty($issue_title)) {
 	$issue_title = $featured_book->post_title;
 }
-$issue_subtitle = $current_issue ? get_post_meta($current_issue->ID, '_issue_subtitle', true) : get_post_meta($book_id, '_bbb_mini_note', true);
+$issue_subtitle = (string) ($obsession_context['subtitle'] ?? '');
+if ('' === trim($issue_subtitle)) {
+	$issue_subtitle = $current_issue ? get_post_meta($current_issue->ID, '_issue_subtitle', true) : get_post_meta($book_id, '_bbb_mini_note', true);
+}
 $cover_url      = 'bbb_book' === $featured_book->post_type ? (string) get_post_meta($book_id, '_bbb_cover_url', true) : '';
 ?>
 
