@@ -5740,16 +5740,15 @@ function initReadFinder(){
     var hasTropeOne = !!tropeOneSelect.value;
 
     if (stepTwoField) {
-      stepTwoField.classList.toggle('is-locked', !hasShelf);
+      stepTwoField.classList.remove('is-locked');
     }
 
     if (stepThreeField) {
-      stepThreeField.classList.toggle('is-hidden', !hasShelf);
       stepThreeField.classList.toggle('is-locked', !hasTropeOne);
     }
 
     if (submitBtn) {
-      var ready = hasShelf && hasTropeOne;
+      var ready = hasShelf || hasTropeOne;
       submitBtn.disabled = !ready;
       submitBtn.classList.toggle('is-ready', ready);
     }
@@ -5811,8 +5810,8 @@ function initReadFinder(){
   }
 
   function recommend(note){
-    if (!shelfSelect.value || !tropeOneSelect.value) {
-      showEmptyState('pick a genre and at least one trope so i know where to start.');
+    if (!shelfSelect.value && !tropeOneSelect.value) {
+      showEmptyState('pick a genre or a trope so i know where to start.');
       return;
     }
 

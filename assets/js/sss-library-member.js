@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
+	if (document.getElementById('sssFinderTropeOne')) return;
+
 	var dataNode = document.getElementById('sssFinderData');
 	var books = [];
 	try {
