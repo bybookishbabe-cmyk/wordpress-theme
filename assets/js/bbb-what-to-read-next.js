@@ -191,6 +191,90 @@
     }
   }
 
+  function shelfKey(book) {
+    return normalizeText(book && (book.handle || book.title));
+  }
+
+  function readShelf() {
+    try {
+      var primary = JSON.parse(window.localStorage.getItem('sssMyShelf') || 'null');
+      if (Array.isArray(primary)) return primary;
+    } catch (error) {}
+
+    try {
+      var legacy = JSON.parse(window.localStorage.getItem('sssShelf') || '[]');
+      return Array.isArray(legacy) ? legacy : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function writeShelf(items) {
+    try {
+      window.localStorage.setItem('sssMyShelf', JSON.stringify(items));
+      window.localStorage.setItem('sssShelf', JSON.stringify(items));
+    } catch (error) {}
+
+    document.dispatchEvent(new CustomEvent('sss:bookshelf-updated', {
+      detail: { count: Array.isArray(items) ? items.length : 0 }
+    }));
+  }
+
+  function shelfBook(book) {
+    var tropes = uniq(book.tropes || []);
+    return {
+      handle: book.handle || '',
+      title: book.title || '',
+      author: book.author || '',
+      cover: book.cover || '',
+      amazon: book.amazon || '',
+      bookshop: book.bookshop || '',
+      spice: book.spice || '',
+      darkness: book.darkness || '',
+      tropes: tropes.join(', '),
+      tropesDisplay: tropes.join(', '),
+      why: book.why || '',
+      newsletter: book.newsletter || '',
+      mini: book.mini || '',
+      series: book.series || '',
+      seriesName: book.seriesName || '',
+      seriesNumber: book.seriesNumber || '',
+      tension: book.tension || '',
+      damage: book.damage || '',
+      yearning: book.yearning || '',
+      boyfriend: book.boyfriend || '',
+      boyfriendName: book.boyfriendName || '',
+      reread: book.reread || '',
+      ku: book.ku || '',
+      standalone: 'true',
+      privateShelf: 'false',
+      saved_at: Date.now()
+    };
+  }
+
+  function saveBookToShelf(book) {
+    if (!book || !book.title) return;
+    var key = shelfKey(book);
+    var shelf = readShelf();
+    var exists = shelf.some(function(item) {
+      return shelfKey(item) === key || normalizeText(item.title) === normalizeText(book.title);
+    });
+
+    if (!exists) {
+      shelf.unshift(shelfBook(book));
+      writeShelf(shelf);
+    } else {
+      writeShelf(shelf);
+    }
+  }
+
+  function isBookSaved(book) {
+    var key = shelfKey(book);
+    return readShelf().some(function(item) {
+      return shelfKey(item) === key || normalizeText(item.title) === normalizeText(book && book.title);
+    });
+  }
+
   function writeStatus(handle, status) {
     if (!handle) return;
     var store = readStatusStore();
@@ -198,6 +282,9 @@
     try {
       window.localStorage.setItem('sssBookStatuses', JSON.stringify(store));
     } catch (error) {}
+
+    document.dispatchEvent(new CustomEvent('bbb:book-statuses-updated', { detail: { statuses: store } }));
+    document.dispatchEvent(new CustomEvent('bbb:book-status-changed', { detail: { key: handle, status: status || '', source: 'what-to-read-next' } }));
   }
 
   ready(function() {
@@ -311,7 +398,19 @@
       }
       Array.prototype.slice.call(card.querySelectorAll('[data-next-status]')).forEach(function(button) {
         button.setAttribute('data-next-status-handle', book.handle || '');
+        button.classList.toggle('is-selected', readStatusStore()[book.handle] === button.getAttribute('data-next-status'));
+        button.setAttribute('aria-pressed', button.classList.contains('is-selected') ? 'true' : 'false');
       });
+      var heart = card.querySelector('[data-next-heart]');
+      if (heart) {
+        var saved = isBookSaved(book);
+        var icon = heart.querySelector('[data-heart-icon]');
+        var label = heart.querySelector('[data-heart-label]');
+        heart.classList.toggle('is-saved', saved);
+        heart.setAttribute('aria-label', saved ? 'saved to your bookshelf' : 'save to your bookshelf');
+        if (icon) icon.textContent = saved ? '♥' : '♡';
+        if (label) label.textContent = saved ? 'saved' : 'save';
+      }
     }
 
     function renderResults(book) {
@@ -344,11 +443,19 @@
       event.stopPropagation();
       var handle = statusButton.getAttribute('data-next-status-handle') || '';
       var status = statusButton.getAttribute('data-next-status') || '';
-      writeStatus(handle, status);
       statusButton.classList.add('is-selected');
+      statusButton.setAttribute('aria-pressed', 'true');
       Array.prototype.slice.call(statusButton.parentNode.querySelectorAll('[data-next-status]')).forEach(function(sibling) {
-        if (sibling !== statusButton) sibling.classList.remove('is-selected');
+        if (sibling !== statusButton) {
+          sibling.classList.remove('is-selected');
+          sibling.setAttribute('aria-pressed', 'false');
+        }
       });
+      writeStatus(handle, status);
+      if (byHandle[handle]) {
+        saveBookToShelf(byHandle[handle]);
+        renderResults(selected);
+      }
     });
     document.addEventListener('keydown', function(event) {
       if (event.key === 'Escape' && !searchModal.hidden) closeSearch();

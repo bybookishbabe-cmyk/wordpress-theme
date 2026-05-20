@@ -298,7 +298,15 @@
 	border: 1px solid currentColor;
 	display: inline-block;
 	height: 10px;
+	position: relative;
 	width: 10px;
+}
+
+.bbb-next__statusCheck.is-selected .bbb-next__statusBox::after {
+	background: currentColor;
+	content: "";
+	inset: 2px;
+	position: absolute;
 }
 
 .bbb-next__cardLink {
