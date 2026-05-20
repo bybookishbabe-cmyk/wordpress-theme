@@ -44,6 +44,21 @@ get_header();
 			<p class="sss-readcal__month"><?php echo esc_html($month_name . ' ' . $year); ?></p>
 			<h1 class="sss-readcal__title">track your reads</h1>
 			<p class="sss-readcal__sub">click a day, choose the book you read, and let the cover live there.</p>
+			<div class="sss-readcal__goal" data-readcal-goal>
+				<div class="sss-readcal__goalTop">
+					<div>
+						<p class="sss-readcal__goalLabel">monthly book goal</p>
+						<p class="sss-readcal__goalText"><span data-readcal-read-count>0</span> of <span data-readcal-goal-count>5</span> books read</p>
+					</div>
+					<label class="sss-readcal__goalField">
+						<span>goal</span>
+						<input type="number" min="1" max="99" step="1" value="5" data-readcal-goal-input>
+					</label>
+				</div>
+				<div class="sss-readcal__goalTrack" aria-hidden="true">
+					<span data-readcal-goal-progress></span>
+				</div>
+			</div>
 			<div class="sss-readcal__actions">
 				<button type="button" class="sss-readcal__actionBtn" data-readcal-share>share your calendar</button>
 				<button type="button" class="sss-readcal__actionBtn sss-readcal__actionBtn--ghost" data-readcal-save>save as png</button>
@@ -145,6 +160,72 @@ get_header();
 	color:rgba(246,241,235,.74);
 	font-size:16px;
 	line-height:1.65;
+}
+.sss-readcal__goal{
+	width:min(100%, 520px);
+	margin-top:18px;
+	padding:14px;
+	border:1px solid rgba(255,255,255,.1);
+	border-radius:18px;
+	background:linear-gradient(135deg, rgba(255,138,199,.12), rgba(255,255,255,.03));
+}
+.sss-readcal__goalTop{
+	display:flex;
+	align-items:center;
+	justify-content:space-between;
+	gap:16px;
+}
+.sss-readcal__goalLabel{
+	margin:0;
+	font-size:10px;
+	letter-spacing:.16em;
+	text-transform:uppercase;
+	color:rgba(246,241,235,.54);
+}
+.sss-readcal__goalText{
+	margin:6px 0 0;
+	font-family:"Cormorant Garamond", Cormorant, serif;
+	font-size:24px;
+	line-height:1;
+	color:#fff;
+}
+.sss-readcal__goalField{
+	display:grid;
+	gap:5px;
+	min-width:72px;
+	font-size:10px;
+	letter-spacing:.12em;
+	text-transform:uppercase;
+	color:rgba(246,241,235,.54);
+}
+.sss-readcal__goalField input{
+	width:72px;
+	min-height:38px;
+	padding:0 10px;
+	border-radius:12px;
+	border:1px solid rgba(255,255,255,.14);
+	background:rgba(0,0,0,.22);
+	color:#fff;
+	font:inherit;
+	font-size:15px;
+	letter-spacing:0;
+	text-transform:lowercase;
+}
+.sss-readcal__goalTrack{
+	position:relative;
+	height:8px;
+	margin-top:12px;
+	overflow:hidden;
+	border-radius:999px;
+	background:rgba(255,255,255,.08);
+}
+.sss-readcal__goalTrack span{
+	display:block;
+	width:0%;
+	height:100%;
+	border-radius:inherit;
+	background:linear-gradient(90deg, #ff8ac7, #f6f1eb);
+	transition:width .2s ease;
 }
 .sss-readcal__actions{
 	display:flex;
@@ -391,6 +472,12 @@ get_header();
 		padding:8px;
 		border-radius:14px;
 	}
+	.sss-readcal__goalTop{
+		align-items:flex-start;
+	}
+	.sss-readcal__goalText{
+		font-size:20px;
+	}
 	.sss-readcal__cover{
 		width:34px;
 		height:48px;
@@ -427,9 +514,14 @@ get_header();
 	var clearWrap = root.querySelector('[data-readcal-clear]');
 	var shareBtn = root.querySelector('[data-readcal-share]');
 	var saveBtn = root.querySelector('[data-readcal-save]');
+	var goalInput = root.querySelector('[data-readcal-goal-input]');
+	var readCountEl = root.querySelector('[data-readcal-read-count]');
+	var goalCountEl = root.querySelector('[data-readcal-goal-count]');
+	var goalProgressEl = root.querySelector('[data-readcal-goal-progress]');
 	var books = [];
 	var activeDate = '';
 	var storageKey = 'sssReadTrackerCalendar';
+	var goalKey = 'sssReadTrackerGoal-<?php echo esc_js((string) $year . '-' . sprintf('%02d', $month_num)); ?>';
 
 	try {
 		books = JSON.parse(dataEl.textContent || '[]') || [];
@@ -447,6 +539,44 @@ get_header();
 
 	function setState(next){
 		localStorage.setItem(storageKey, JSON.stringify(next));
+	}
+
+	function getGoal(){
+		var stored = parseInt(localStorage.getItem(goalKey), 10);
+		return stored > 0 ? stored : 5;
+	}
+
+	function setGoal(nextGoal){
+		var cleaned = Math.max(1, Math.min(99, parseInt(nextGoal, 10) || 5));
+		localStorage.setItem(goalKey, String(cleaned));
+		return cleaned;
+	}
+
+	function getCurrentMonthReadCount(state){
+		var monthPrefix = '<?php echo esc_js(sprintf('%d-%02d-', $year, $month_num)); ?>';
+		var handles = {};
+		var count = 0;
+		Object.keys(state).forEach(function(date){
+			var entry = state[date];
+			var key = entry && (entry.handle || entry.title);
+			if (date.indexOf(monthPrefix) !== 0 || !key) return;
+			key = String(key).toLowerCase();
+			if (handles[key]) return;
+			handles[key] = true;
+			count += 1;
+		});
+		return count;
+	}
+
+	function renderGoal(state){
+		var goal = getGoal();
+		var readCount = getCurrentMonthReadCount(state || getState());
+		var progress = Math.min(100, Math.round((readCount / goal) * 100));
+
+		if (goalInput) goalInput.value = String(goal);
+		if (readCountEl) readCountEl.textContent = String(readCount);
+		if (goalCountEl) goalCountEl.textContent = String(goal);
+		if (goalProgressEl) goalProgressEl.style.width = String(progress) + '%';
 	}
 
 	function renderCalendar(){
@@ -471,6 +601,7 @@ get_header();
 			label.textContent = entry.title || '';
 			slot.appendChild(label);
 		});
+		renderGoal(state);
 	}
 
 	function renderResults(query){
@@ -589,6 +720,17 @@ get_header();
 	if (search) {
 		search.addEventListener('input', function(){
 			renderResults(search.value || '');
+		});
+	}
+
+	if (goalInput) {
+		goalInput.addEventListener('change', function(){
+			setGoal(goalInput.value);
+			renderGoal();
+		});
+		goalInput.addEventListener('input', function(){
+			setGoal(goalInput.value);
+			renderGoal();
 		});
 	}
 
