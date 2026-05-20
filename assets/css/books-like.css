@@ -2,7 +2,7 @@
 .bbb-like {
 	background: #050505;
 	color: #f8f5f2;
-	font-family: var(--font-body-family, "Libre Baskerville", serif);
+	font-family: var(--font-body-family, "Assistant", Arial, sans-serif);
 	min-height: 100vh;
 }
 
@@ -30,9 +30,10 @@
 .bbb-like__kicker,
 .bbb-like__sectionKicker {
 	color: #d98fbe;
-	font-size: .72rem;
+	font-size: .95rem;
 	font-weight: 700;
-	letter-spacing: .28em;
+	letter-spacing: .16em;
+	line-height: 1.35;
 	margin: 0 0 12px;
 	text-transform: uppercase;
 }
@@ -51,8 +52,8 @@
 .bbb-books-like-directory__subtext,
 .bbb-like__subtext {
 	color: rgba(248, 245, 242, .78);
-	font-size: 1rem;
-	line-height: 1.8;
+	font-size: 1.08rem;
+	line-height: 1.72;
 	margin: 18px 0 0;
 	max-width: 720px;
 }
@@ -66,8 +67,9 @@
 .bbb-like__sectionTitle {
 	border-bottom: 1px solid rgba(248, 245, 242, .28);
 	color: rgba(248, 245, 242, .82);
-	font-size: .84rem;
-	letter-spacing: .26em;
+	font-size: 1.02rem;
+	letter-spacing: .14em;
+	line-height: 1.45;
 	margin: 0 0 22px;
 	padding-bottom: 12px;
 	text-transform: uppercase;
@@ -118,7 +120,7 @@
 .bbb-books-like-directory__cardCopy h3 {
 	color: #fff;
 	font-family: var(--font-heading-family, "Cormorant", serif);
-	font-size: 1.45rem;
+	font-size: 1.75rem;
 	font-weight: 400;
 	letter-spacing: 0;
 	line-height: 1.05;
@@ -128,8 +130,8 @@
 
 .bbb-books-like-directory__cardCopy p {
 	color: rgba(248, 245, 242, .68);
-	font-size: .82rem;
-	letter-spacing: .08em;
+	font-size: .98rem;
+	letter-spacing: .04em;
 	line-height: 1.5;
 	margin: 0;
 	text-transform: uppercase;
@@ -145,8 +147,8 @@
 .bbb-books-like-directory__note,
 .bbb-books-like-directory__empty {
 	color: rgba(248, 245, 242, .62);
-	font-size: .78rem;
-	letter-spacing: .18em;
+	font-size: .95rem;
+	letter-spacing: .08em;
 	line-height: 1.7;
 	margin-top: 36px;
 	text-transform: uppercase;
@@ -166,9 +168,9 @@
 	color: #f8f5f2;
 	cursor: pointer;
 	font: inherit;
-	font-size: .72rem;
+	font-size: .9rem;
 	font-weight: 700;
-	letter-spacing: .18em;
+	letter-spacing: .12em;
 	padding: 12px 18px;
 	text-transform: uppercase;
 }
@@ -185,8 +187,9 @@
 	border: 1px solid rgba(217, 143, 190, .28);
 	border-radius: 999px;
 	color: #f7d7e8;
-	font-size: .76rem;
-	letter-spacing: .08em;
+	font-size: .92rem;
+	letter-spacing: .04em;
+	line-height: 1.35;
 	padding: 8px 12px;
 	text-transform: uppercase;
 }
@@ -245,14 +248,16 @@
 
 .bbb-like__sourceMeta p {
 	color: rgba(248, 245, 242, .72);
+	font-size: 1.05rem;
 	line-height: 1.8;
 	margin: 0 0 18px;
 }
 
 .bbb-like__sourceAuthor {
 	color: #d98fbe;
-	font-size: .82rem;
-	letter-spacing: .16em;
+	font-size: .98rem;
+	letter-spacing: .1em;
+	line-height: 1.45;
 	margin-bottom: 18px;
 	text-transform: uppercase;
 }
@@ -267,14 +272,17 @@
 	background: rgba(255, 255, 255, .035);
 	border: 1px solid rgba(248, 245, 242, .1);
 	border-radius: 8px;
+	font-size: 1rem;
+	line-height: 1.35;
 	padding: 12px;
 }
 
 .bbb-like__stat span {
 	color: rgba(248, 245, 242, .55);
 	display: block;
-	font-size: .68rem;
-	letter-spacing: .18em;
+	font-size: .82rem;
+	letter-spacing: .1em;
+	line-height: 1.35;
 	margin-bottom: 5px;
 	text-transform: uppercase;
 }
@@ -318,7 +326,7 @@
 
 .bbb-like__recCopy h3 {
 	font-family: var(--font-heading-family, "Cormorant", serif);
-	font-size: 1.55rem;
+	font-size: 1.9rem;
 	font-weight: 400;
 	letter-spacing: 0;
 	line-height: 1.05;
@@ -330,16 +338,17 @@
 .bbb-like__recWhy,
 .bbb-like__recScore {
 	color: rgba(248, 245, 242, .7);
-	font-size: .84rem;
+	font-size: 1rem;
 	line-height: 1.6;
 	margin: 0 0 12px;
 }
 
 .bbb-like__recScore {
 	color: #d98fbe;
-	font-size: .7rem;
+	font-size: .9rem;
 	font-weight: 700;
-	letter-spacing: .18em;
+	letter-spacing: .1em;
+	line-height: 1.35;
 	text-transform: uppercase;
 }
 
@@ -354,8 +363,9 @@
 	background: rgba(248, 245, 242, .08);
 	border-radius: 999px;
 	color: rgba(248, 245, 242, .78);
-	font-size: .68rem;
-	letter-spacing: .1em;
+	font-size: .86rem;
+	letter-spacing: .04em;
+	line-height: 1.35;
 	padding: 6px 9px;
 	text-transform: uppercase;
 }
@@ -387,9 +397,9 @@
 	border-radius: 999px;
 	color: #f7d7e8;
 	display: inline-flex;
-	font-size: .72rem;
+	font-size: .92rem;
 	font-weight: 700;
-	letter-spacing: .18em;
+	letter-spacing: .1em;
 	margin-top: 12px;
 	padding: 12px 18px;
 	text-transform: uppercase;
