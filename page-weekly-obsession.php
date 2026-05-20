@@ -235,6 +235,11 @@ if ('' === $issue_excerpt && $current_issue instanceof WP_Post) {
 	$issue_excerpt = $current_issue->post_excerpt ?: wp_trim_words(wp_strip_all_tags($current_issue->post_content), 42, '');
 }
 $issue_link = bbb_weekly_issue_meta($current_issue, array('_bbb_newsletter_url', '_issue_url', 'url', 'newsletter_url'), (string) ($book_data['newsletter'] ?? ''));
+$issue_link = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value($issue_link) : $issue_link;
+if ('' === $issue_link && !empty($book_data['newsletter'])) {
+	$issue_link = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value($book_data['newsletter']) : (string) $book_data['newsletter'];
+}
+$issue_link_url = esc_url($issue_link);
 $issue_date = bbb_weekly_issue_date($current_issue);
 $boyfriend_name = trim((string) ($book_data['boyfriend_name'] ?? ''));
 if ('' === $boyfriend_name) {
@@ -272,8 +277,8 @@ get_header();
 					</div>
 
 					<div class="sss-wo__copyCol">
-						<?php if ($issue_link) : ?>
-							<a class="sss-wo__stamp" href="<?php echo esc_url($issue_link); ?>" target="_blank" rel="noopener">newsletter saw it first</a>
+						<?php if ($issue_link_url) : ?>
+							<a class="sss-wo__stamp" href="<?php echo $issue_link_url; ?>" target="_blank" rel="noopener">newsletter saw it first</a>
 						<?php else : ?>
 							<div class="sss-wo__stamp">newsletter saw it first</div>
 						<?php endif; ?>
@@ -354,8 +359,8 @@ get_header();
 
 						<div class="sss-wo__actions">
 							<a class="sss-wo__btn sss-wo__btn--ghost" href="<?php echo esc_url(home_url('/library/')); ?>">see the library</a>
-							<?php if ($issue_link) : ?>
-								<a class="sss-wo__btn sss-wo__btn--primary" href="<?php echo esc_url($issue_link); ?>" target="_blank" rel="noopener">read the newsletter</a>
+							<?php if ($issue_link_url) : ?>
+								<a class="sss-wo__btn sss-wo__btn--primary" href="<?php echo $issue_link_url; ?>" target="_blank" rel="noopener">read the newsletter</a>
 							<?php endif; ?>
 						</div>
 					</div>

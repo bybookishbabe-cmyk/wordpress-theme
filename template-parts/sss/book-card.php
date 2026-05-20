@@ -118,8 +118,8 @@ $title         = (string) bbb_sss_card_field('title', $book_id, get_the_title($b
 $title         = '' !== $title ? $title : get_the_title($book_id);
 $author        = (string) bbb_sss_card_field('author', $book_id, '');
 $cover_url     = bbb_sss_card_cover_url($book_id);
-$amazon_link   = (string) bbb_sss_card_field('amazon_link', $book_id, '');
-$bookshop_link = (string) bbb_sss_card_field('bookshop_link', $book_id, '');
+$amazon_link   = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(bbb_sss_card_field('amazon_link', $book_id, '')) : (string) bbb_sss_card_field('amazon_link', $book_id, '');
+$bookshop_link = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(bbb_sss_card_field('bookshop_link', $book_id, '')) : (string) bbb_sss_card_field('bookshop_link', $book_id, '');
 $shelf         = (string) bbb_sss_card_field('shelf', $book_id, '');
 $shelf_terms   = get_the_terms($book_id, 'sss_shelf');
 

@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 function bbb_get_field(string $key, $post_id = null, $default = null) {
 	$post_id = null === $post_id ? get_the_ID() : (int) $post_id;
+	$is_url_field = str_contains($key, 'url') || str_contains($key, 'link');
 
 	if ('bbb_book' === get_post_type($post_id)) {
 		$bbb_map = array(
@@ -33,7 +34,7 @@ function bbb_get_field(string $key, $post_id = null, $default = null) {
 		if (isset($bbb_map[$key])) {
 			$value = get_post_meta($post_id, $bbb_map[$key], true);
 			if ('' !== $value && null !== $value) {
-				return $value;
+				return $is_url_field && function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value($value) : $value;
 			}
 		}
 	}
@@ -41,17 +42,56 @@ function bbb_get_field(string $key, $post_id = null, $default = null) {
 	if (function_exists('get_field')) {
 		$value = get_field($key, $post_id);
 		if (null !== $value && '' !== $value && false !== $value) {
-			return $value;
+			return $is_url_field && function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value($value) : $value;
 		}
 	}
 
 	$raw = get_post_meta($post_id, $key, true);
 	if ('' !== $raw) {
-		return $raw;
+		return $is_url_field && function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value($raw) : $raw;
 	}
 
 	$legacy = get_post_meta($post_id, '_' . $key, true);
-	return '' !== $legacy ? $legacy : $default;
+	if ('' !== $legacy) {
+		return $is_url_field && function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value($legacy) : $legacy;
+	}
+
+	return $default;
+}
+
+function bbb_normalize_url_value($value): string {
+	if (is_array($value)) {
+		foreach (array('url', 'href', 'link') as $key) {
+			if (!empty($value[$key]) && is_scalar($value[$key])) {
+				return trim((string) $value[$key]);
+			}
+		}
+
+		return '';
+	}
+
+	if (!is_scalar($value)) {
+		return '';
+	}
+
+	$url = trim((string) $value);
+	if ('' === $url) {
+		return '';
+	}
+
+	$decoded = json_decode($url, true);
+	if (is_array($decoded)) {
+		return bbb_normalize_url_value($decoded);
+	}
+
+	if (
+		(strlen($url) >= 2)
+		&& (('"' === $url[0] && '"' === substr($url, -1)) || ("'" === $url[0] && "'" === substr($url, -1)))
+	) {
+		$url = substr($url, 1, -1);
+	}
+
+	return trim($url);
 }
 
 function bbb_is_sss_member(): bool {
