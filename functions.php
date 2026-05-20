@@ -97,7 +97,10 @@ function bbb_enqueue_css(string $handle, string $relative_path, array $deps = ar
 		return;
 	}
 
-	wp_enqueue_style($handle, get_theme_file_uri($relative_path), $deps, wp_get_theme()->get('Version'), $media ?: 'all');
+	$asset_path = get_theme_file_path($relative_path);
+	$version    = file_exists($asset_path) ? (string) filemtime($asset_path) : wp_get_theme()->get('Version');
+
+	wp_enqueue_style($handle, get_theme_file_uri($relative_path), $deps, $version, $media ?: 'all');
 }
 
 function bbb_enqueue_js(string $handle, string $relative_path, array $deps = array(), bool $in_footer = true): void {
@@ -105,7 +108,10 @@ function bbb_enqueue_js(string $handle, string $relative_path, array $deps = arr
 		return;
 	}
 
-	wp_enqueue_script($handle, get_theme_file_uri($relative_path), $deps, wp_get_theme()->get('Version'), $in_footer);
+	$asset_path = get_theme_file_path($relative_path);
+	$version    = file_exists($asset_path) ? (string) filemtime($asset_path) : wp_get_theme()->get('Version');
+
+	wp_enqueue_script($handle, get_theme_file_uri($relative_path), $deps, $version, $in_footer);
 }
 
 add_action(
