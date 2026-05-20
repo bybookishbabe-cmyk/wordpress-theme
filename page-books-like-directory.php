@@ -54,7 +54,6 @@ $groups = function_exists('bbb_books_like_grouped_guides') ? bbb_books_like_grou
 						</section>
 					<?php endforeach; ?>
 				</div>
-				<p class="bbb-books-like-directory__note">each card links directly to its blog post · grouped by genre · author and main trope visible at a glance</p>
 			<?php else : ?>
 				<p class="bbb-books-like-directory__empty">waiting on books like guide posts</p>
 			<?php endif; ?>
