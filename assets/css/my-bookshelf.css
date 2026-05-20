@@ -139,6 +139,7 @@
   align-items: center;
   gap: 14px;
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .bbb-account-shelf__status strong {
@@ -170,7 +171,10 @@
 }
 
 .bbb-account-shelf__tools {
+  flex: 0 0 auto;
   margin-top: 0;
+  margin-left: auto;
+  justify-content: flex-end;
 }
 
 .bbb-account-shelf__tools[hidden] {

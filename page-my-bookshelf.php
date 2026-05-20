@@ -7,8 +7,10 @@
 
 declare(strict_types=1);
 
-wp_enqueue_style('bbb-my-bookshelf', get_theme_file_uri('assets/css/my-bookshelf.css'), array('bbb-sss-library'), wp_get_theme()->get('Version'));
-wp_enqueue_script('bbb-my-bookshelf', get_theme_file_uri('assets/js/my-bookshelf.js'), array('bbb-sss-library', 'bbb-supabase'), wp_get_theme()->get('Version'), true);
+$my_bookshelf_css_path = get_theme_file_path('assets/css/my-bookshelf.css');
+$my_bookshelf_js_path  = get_theme_file_path('assets/js/my-bookshelf.js');
+wp_enqueue_style('bbb-my-bookshelf', get_theme_file_uri('assets/css/my-bookshelf.css'), array('bbb-sss-library'), file_exists($my_bookshelf_css_path) ? (string) filemtime($my_bookshelf_css_path) : wp_get_theme()->get('Version'));
+wp_enqueue_script('bbb-my-bookshelf', get_theme_file_uri('assets/js/my-bookshelf.js'), array('bbb-sss-library', 'bbb-supabase'), file_exists($my_bookshelf_js_path) ? (string) filemtime($my_bookshelf_js_path) : wp_get_theme()->get('Version'), true);
 
 $is_society = function_exists('bbb_reader_is_society') ? bbb_reader_is_society() : false;
 $account    = wp_get_current_user();
@@ -58,13 +60,6 @@ get_header();
 				<div class="bbb-account-shelf__tools" data-account-shelf-tools hidden>
 					<button type="button" data-account-copy>copy list</button>
 					<button type="button" data-account-email>email list</button>
-				</div>
-			</div>
-
-			<div class="bbb-account-shelf__toolbar" data-account-shelf-toolbar hidden>
-				<div>
-					<p class="bbb-account-shelf__toolbarKicker">saved stack</p>
-					<h2 data-account-shelf-count>0 books saved</h2>
 				</div>
 			</div>
 
