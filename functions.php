@@ -175,6 +175,9 @@ add_action(
 		bbb_enqueue_css('bbb-favorite-card-atc', 'assets/bbb-favorite-card-atc.css', array('bbb-component-cart-items'));
 		bbb_enqueue_css('bbb-holiday-overlay', 'assets/bbb-holiday-overlay.css', array('bbb-favorite-card-atc'));
 		bbb_enqueue_css('bbb-society-gate', 'assets/bbb-society-gate.css', array('bbb-holiday-overlay'));
+		if (function_exists('bbb_current_route_slug') && 'smut-sentiment-society' === bbb_current_route_slug()) {
+			bbb_enqueue_css('bbb-society-landing', 'assets/css/society-landing.css', array('bbb-society-gate'));
+		}
 		if (is_front_page()) {
 			bbb_enqueue_css('bbb-hero', 'assets/css/hero-smut-sentiment.css', array('bbb-society-gate'));
 			bbb_enqueue_css('bbb-browse-by-trope', 'assets/css/sections/browse-by-trope.css', array('bbb-hero'));
