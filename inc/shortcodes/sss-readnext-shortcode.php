@@ -121,20 +121,42 @@ function sss_faq_shortcode($atts, ?string $content = null): string {
 		return '';
 	}
 
+	$content = (string) preg_replace('/<p>\s*(\[\/?(?:faq|q|a)\])\s*<\/p>/i', '$1', $content);
+	$content = str_ireplace(array('[FAQ]', '[/FAQ]', '[Q]', '[/Q]', '[A]', '[/A]'), array('[faq]', '[/faq]', '[q]', '[/q]', '[a]', '[/a]'), $content);
 	$items = '';
-	if (preg_match_all('/\[q\](.*?)\[\/q\]\s*\[a\](.*?)\[\/a\]/is', $content, $matches, PREG_SET_ORDER)) {
-		foreach ($matches as $match) {
-			$question = trim(wp_strip_all_tags(do_shortcode($match[1])));
-			$answer   = trim($match[2]);
-			if (!$question || !$answer) {
+
+	if (preg_match_all('/\[(q|a)\](.*?)\[\/\1\]/is', $content, $tokens, PREG_SET_ORDER)) {
+		$question = '';
+		foreach ($tokens as $token) {
+			$type = strtolower($token[1]);
+			$body = trim($token[2]);
+			if ('q' === $type) {
+				$question = trim(wp_strip_all_tags(do_shortcode($body)));
 				continue;
 			}
-			$items .= '<details class="blog-faq__item"><summary class="blog-faq__question"><span>' . esc_html($question) . '</span><span class="blog-faq__arrow" aria-hidden="true">⌄</span></summary><div class="blog-faq__answer">' . wp_kses_post(do_shortcode($answer)) . '</div></details>';
+			if ('a' !== $type || '' === $question || '' === $body) {
+				continue;
+			}
+			$items .= '<details class="blog-faq__item"><summary class="blog-faq__question"><span>' . esc_html($question) . '</span><span class="blog-faq__arrow" aria-hidden="true">⌄</span></summary><div class="blog-faq__answer">' . wp_kses_post(do_shortcode($body)) . '</div></details>';
+			$question = '';
 		}
 	}
 
 	if (!$items) {
-		return '<section class="blog-faq">' . wp_kses_post(do_shortcode($content)) . '</section>';
+		$rendered = do_shortcode($content);
+		if (preg_match_all('/<div class="blog-faq__q">(.*?)<\/div>\s*<div class="blog-faq__a">(.*?)<\/div>/is', $rendered, $pairs, PREG_SET_ORDER)) {
+			foreach ($pairs as $pair) {
+				$question = trim(wp_strip_all_tags($pair[1]));
+				$answer   = trim($pair[2]);
+				if (!$question || !$answer) {
+					continue;
+				}
+				$items .= '<details class="blog-faq__item"><summary class="blog-faq__question"><span>' . esc_html($question) . '</span><span class="blog-faq__arrow" aria-hidden="true">⌄</span></summary><div class="blog-faq__answer">' . wp_kses_post($answer) . '</div></details>';
+			}
+		}
+		if (!$items) {
+			return '<section class="blog-faq">' . wp_kses_post($rendered) . '</section>';
+		}
 	}
 
 	return '<section class="blog-faq" aria-label="frequently asked questions"><div class="blog-faq__kicker">questions readers ask</div><h2 class="blog-faq__title">frequently asked questions</h2><div class="blog-faq__list">' . $items . '</div></section>';
