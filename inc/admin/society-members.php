@@ -36,7 +36,7 @@ function bbb_society_admin_fetch_supabase_members(): array {
 		array(
 			'select' => 'id,email,email_normalized,access_tier,society_key_used_at,weekly_email_opt_in,subscribed_at,updated_at,last_weekly_sent_at,account_status',
 			'order'  => 'subscribed_at.desc',
-			'limit'  => 500,
+			'limit'  => 5000,
 		),
 		'',
 		'&',
@@ -324,7 +324,7 @@ function bbb_society_admin_member_rows(): array {
 			continue;
 		}
 
-		$is_paid = !empty($subscriber['society_key_used_at']);
+		$is_paid = 'society' === (string) ($subscriber['access_tier'] ?? '') || !empty($subscriber['society_key_used_at']);
 		$rows[$email] = array(
 			'email'              => $email,
 			'name'               => '',
