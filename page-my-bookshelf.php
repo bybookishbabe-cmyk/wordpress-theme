@@ -72,15 +72,6 @@ get_header();
 				<a href="<?php echo esc_url(home_url('/library/')); ?>">find your first save →</a>
 			</div>
 
-			<div class="bbb-account-shelf__perk">
-				<p class="bbb-account-shelf__perkKicker" data-account-shelf-tier><?php echo esc_html($is_society ? 'society shelf' : 'free shelf'); ?></p>
-				<h2 data-account-shelf-perk-title><?php echo esc_html($is_society ? 'your private reader layer is ready.' : 'save books now. unlock smarter recs later.'); ?></h2>
-				<p data-account-shelf-perk-copy>
-					<?php echo esc_html($is_society ? 'Society features can build from here: private notes, richer unlocks, mood shelves, and custom recommendations based on what you save.' : 'Free readers can keep a saved bookshelf. Society readers can become the private layer: richer notes, extra shelves, and future custom recommendation unlocks.'); ?>
-				</p>
-				<a href="<?php echo esc_url(home_url($is_society ? '/sss-library-page/' : '/smut-sentiment-society/')); ?>" data-account-shelf-perk-link><?php echo esc_html($is_society ? 'open the society library →' : 'enter the society →'); ?></a>
-			</div>
-
 			<script type="application/json" data-account-library-books><?php echo wp_json_encode($books, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?></script>
 		</div>
 	</section>
