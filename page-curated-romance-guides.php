@@ -18,6 +18,23 @@ if ($wp_query instanceof WP_Query) {
 }
 status_header(200);
 
+$bbb_guides_title       = 'curated romance guides - bybookishbabe';
+$bbb_guides_description = 'curated romance reading guides for readers looking for their next obsession, from trope deep dives to booktok favorite series.';
+add_filter('pre_get_document_title', static fn(): string => $bbb_guides_title, 99);
+add_filter('rank_math/frontend/title', static fn(): string => $bbb_guides_title, 99);
+add_filter('rank_math/frontend/description', static fn(): string => $bbb_guides_description, 99);
+add_filter(
+	'rank_math/frontend/robots',
+	static function (array $robots): array {
+		unset($robots['noindex'], $robots['nofollow']);
+		$robots['index']  = 'index';
+		$robots['follow'] = 'follow';
+
+		return $robots;
+	},
+	99
+);
+
 if (function_exists('bbb_enqueue_css')) {
 	bbb_enqueue_css('component-card', 'assets/css/component-card.css', array('bbb-bookshelf-signup'));
 	bbb_enqueue_css('component-article-card', 'assets/css/component-article-card.css', array('component-card'));
