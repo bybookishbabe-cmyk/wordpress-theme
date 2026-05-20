@@ -133,7 +133,6 @@ $mfy_books  = bbb_made_for_you_books();
 $mfy_quotes = bbb_made_for_you_quotes($mfy_books);
 
 get_header();
-bbb_render_component('sss-folder-tabs');
 ?>
 <section class="sss-lib sss-lib--mfy-page" id="sss-lib-made-for-you" data-sss-lib="society">
 		<div class="sss-lib__wrap">
@@ -145,7 +144,6 @@ bbb_render_component('sss-folder-tabs');
 			<div class="sss-mfy__dashboardIntro" aria-label="member dashboard shortcuts">
 				<a class="sss-lib__finderBtn" href="<?php echo esc_url(bbb_page_url('sss-library-page')); ?>">open the library</a>
 				<a class="sss-lib__finderBtn sss-lib__finderBtn--ghost" href="<?php echo esc_url(bbb_page_url('my-bookshelf')); ?>">open my bookshelf</a>
-				<a class="sss-lib__finderBtn sss-lib__finderBtn--ghost" href="<?php echo esc_url(bbb_page_url('sss-quote-wall')); ?>">open quote library</a>
 			</div>
 			<?php if (!$mfy_books) : ?>
 				<div class="sss-mfy__empty sss-mfy__empty--page">member dashboard is connected, but there are not any visible library books available for recommendations yet.</div>
