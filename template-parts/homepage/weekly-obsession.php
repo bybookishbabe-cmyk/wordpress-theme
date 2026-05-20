@@ -84,52 +84,52 @@ $cover_url      = 'bbb_book' === $featured_book->post_type ? (string) get_post_m
 		<div class="bbb-home-obsession__row">
 
 			<!-- Cover column -->
-			<a class="bbb-home-obsession__coverLink" href="<?php echo esc_url($obsession_url); ?>">
-
-				<div class="bbb-home-obsession__coverWrap">
-					<?php if ($thumb_id) : ?>
-						<?php if ($has_native_dims) : ?>
-							<?php
-							echo wp_get_attachment_image(
-								$thumb_id,
-								'full',
-								false,
-								array(
-									'class'    => 'bbb-home-obsession__cover',
-									'sizes'    => '(max-width: 749px) 78vw, 280px',
-									'loading'  => 'lazy',
-									'decoding' => 'async',
-									'alt'      => esc_attr($featured_book->post_title),
-								)
-							);
-							?>
-						<?php else : ?>
+			<div class="bbb-home-obsession__feature">
+				<a class="bbb-home-obsession__coverLink" href="<?php echo esc_url($obsession_url); ?>">
+					<div class="bbb-home-obsession__coverWrap">
+						<?php if ($thumb_id) : ?>
+							<?php if ($has_native_dims) : ?>
+								<?php
+								echo wp_get_attachment_image(
+									$thumb_id,
+									'full',
+									false,
+									array(
+										'class'    => 'bbb-home-obsession__cover',
+										'sizes'    => '(max-width: 749px) 78vw, 340px',
+										'loading'  => 'lazy',
+										'decoding' => 'async',
+										'alt'      => esc_attr($featured_book->post_title),
+									)
+								);
+								?>
+							<?php else : ?>
+								<img
+									src="<?php echo esc_url(wp_get_attachment_url($thumb_id)); ?>"
+									alt="<?php echo esc_attr($featured_book->post_title); ?>"
+									class="bbb-home-obsession__cover"
+									loading="lazy"
+									decoding="async"
+								>
+							<?php endif; ?>
+						<?php elseif ($cover_url) : ?>
 							<img
-								src="<?php echo esc_url(wp_get_attachment_url($thumb_id)); ?>"
+								src="<?php echo esc_url($cover_url); ?>"
 								alt="<?php echo esc_attr($featured_book->post_title); ?>"
 								class="bbb-home-obsession__cover"
 								loading="lazy"
 								decoding="async"
 							>
 						<?php endif; ?>
-					<?php elseif ($cover_url) : ?>
-						<img
-							src="<?php echo esc_url($cover_url); ?>"
-							alt="<?php echo esc_attr($featured_book->post_title); ?>"
-							class="bbb-home-obsession__cover"
-							loading="lazy"
-							decoding="async"
-						>
-					<?php endif; ?>
 
-					<?php if ($spice_level > 0) : ?>
-						<div class="bbb-home-obsession__spice">
-							<?php echo esc_html(str_repeat('🌶️', $spice_level)); ?>
-						</div>
-					<?php endif; ?>
-				</div><!-- /.bbb-home-obsession__coverWrap -->
+						<?php if ($spice_level > 0) : ?>
+							<div class="bbb-home-obsession__spice">
+								<?php echo esc_html(str_repeat('🌶️', $spice_level)); ?>
+							</div>
+						<?php endif; ?>
+					</div><!-- /.bbb-home-obsession__coverWrap -->
+				</a><!-- /.bbb-home-obsession__coverLink -->
 
-				<!-- Meta: shelf + trope pills -->
 				<div class="bbb-home-obsession__meta">
 
 					<?php if ($shelf_name) : ?>
@@ -170,8 +170,7 @@ $cover_url      = 'bbb_book' === $featured_book->post_type ? (string) get_post_m
 					<?php endif; ?>
 
 				</div><!-- /.bbb-home-obsession__meta -->
-
-			</a><!-- /.bbb-home-obsession__coverLink -->
+			</div><!-- /.bbb-home-obsession__feature -->
 
 			<!-- Copy column -->
 			<div class="bbb-home-obsession__copy">

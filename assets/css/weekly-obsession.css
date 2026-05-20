@@ -120,24 +120,31 @@
 /* ── 2-col row ── */
 .bbb-home-obsession__row {
   display: grid;
-  grid-template-columns: minmax(290px, 360px) minmax(360px, 520px);
-  gap: clamp(44px, 8vw, 124px);
+  grid-template-columns: minmax(280px, 420px) minmax(320px, 560px);
+  gap: clamp(48px, 8vw, 132px);
   align-items: center;
   justify-content: center;
-  max-width: 1080px;
+  max-width: 1160px;
   margin: 0 auto;
+}
+
+.bbb-home-obsession__feature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-self: center;
+  min-width: 0;
+  width: 100%;
 }
 
 /* ── Cover link ── */
 .bbb-home-obsession__coverLink {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  display: block;
   text-decoration: none;
   color: inherit;
   margin-top: 18px;
   justify-self: center;
-  width: min(100%, 340px);
+  width: min(100%, 360px);
   transition: transform .24s ease, filter .24s ease;
 }
 
@@ -177,7 +184,7 @@
 .bbb-home-obsession__cover {
   display: block;
   width: 100%;
-  aspect-ratio: 3 / 4.2;
+  aspect-ratio: 2 / 3;
   object-fit: cover;
   filter: none;
   transform: none;
@@ -203,20 +210,17 @@
 
 /* ── Meta (shelf + tropes) ── */
 .bbb-home-obsession__meta {
-  margin-top: 14px;
+  margin-top: 22px;
   width: 100%;
-  text-align: left;
+  max-width: 430px;
+  text-align: center;
   transition: transform .24s ease;
-}
-
-.bbb-home-obsession__coverLink:hover .bbb-home-obsession__meta,
-.bbb-home-obsession__coverLink:focus-visible .bbb-home-obsession__meta {
-  transform: translateY(-1px);
 }
 
 .bbb-home-obsession__shelf {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
   font-size: 11px;
   letter-spacing: .16em;
@@ -237,7 +241,7 @@
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 14px;
-  justify-content: flex-start;
+  justify-content: center;
 }
 
 .bbb-home-obsession__trope {
@@ -269,7 +273,7 @@ a.bbb-home-obsession__trope:focus-visible {
   align-items: center;
   text-align: center;
   justify-self: center;
-  max-width: 520px;
+  max-width: 560px;
   padding-top: 0;
 }
 
@@ -306,7 +310,7 @@ a.bbb-home-obsession__trope:focus-visible {
 
   .bbb-home-obsession__row {
     grid-template-columns: 1fr;
-    gap: 18px;
+    gap: 22px;
     justify-items: center;
   }
 
@@ -328,10 +332,15 @@ a.bbb-home-obsession__trope:focus-visible {
   }
 
   /* On mobile: copy goes above cover */
-  .bbb-home-obsession__coverLink {
+  .bbb-home-obsession__feature {
     order: 2;
+    width: min(100%, 330px);
+  }
+
+  .bbb-home-obsession__coverLink {
     margin-top: 10px;
     justify-self: center;
+    width: 100%;
   }
 
   .bbb-home-obsession__copy {
@@ -354,6 +363,14 @@ a.bbb-home-obsession__trope:focus-visible {
 
   .bbb-home-obsession__cover {
     filter: none;
+  }
+
+  .bbb-home-obsession__meta {
+    margin-top: 18px;
+  }
+
+  .bbb-home-obsession__tropes {
+    gap: 8px;
   }
 
   .bbb-home-obsession__inner {

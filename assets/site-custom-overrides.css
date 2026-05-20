@@ -1244,14 +1244,21 @@ body {
   }
 
   .bbb-home-obsession__row {
-    grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
-    gap: 2.4rem;
+    grid-template-columns: minmax(250px, 330px) minmax(0, 1fr);
+    gap: 3rem;
     max-width: 100%;
+  }
+
+  .bbb-home-obsession__feature {
+    justify-self: center;
+    width: 100%;
+    max-width: 330px;
   }
 
   .bbb-home-obsession__coverLink {
     justify-self: center;
     margin-top: 0;
+    width: 100%;
   }
 
   .main-blog__hero {
