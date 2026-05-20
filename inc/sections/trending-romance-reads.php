@@ -259,6 +259,63 @@ if ($issue_post_types) {
 		}
 	}
 }
+
+$book_post_types = array_values(
+	array_filter(
+		array('bbb_book', 'sss_book'),
+		static fn(string $post_type): bool => post_type_exists($post_type)
+	)
+);
+
+if ($book_post_types && count($matched_books) < count($issue_types)) {
+	$books = get_posts(
+		array(
+			'post_type'      => $book_post_types,
+			'post_status'    => 'publish',
+			'posts_per_page' => 100,
+			'meta_query'     => array(
+				'relation' => 'OR',
+				array(
+					'key'     => '_bbb_newsletter_date',
+					'compare' => 'EXISTS',
+				),
+				array(
+					'key'     => 'featured_in_newsletter_date',
+					'compare' => 'EXISTS',
+				),
+			),
+		)
+	);
+
+	foreach ($books as $book) {
+		if (!$book instanceof WP_Post || !bbb_trending_book_is_visible((int) $book->ID)) {
+			continue;
+		}
+
+		$date = 'bbb_book' === $book->post_type
+			? (string) get_post_meta($book->ID, '_bbb_newsletter_date', true)
+			: (string) get_post_meta($book->ID, 'featured_in_newsletter_date', true);
+
+		if (preg_match('/^\d{8}$/', $date)) {
+			$date = substr($date, 0, 4) . '-' . substr($date, 4, 2) . '-' . substr($date, 6, 2);
+		}
+
+		$date = substr(trim($date), 0, 10);
+		if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) || substr($date, 0, 7) !== $current_month || $date > $today) {
+			continue;
+		}
+
+		$sunday_index = bbb_trending_sunday_index_for_date(new DateTimeImmutable($date, $timezone), $sundays);
+		if ($sunday_index < 1 || $sunday_index > count($issue_types)) {
+			continue;
+		}
+
+		$slot = $issue_types[$sunday_index - 1];
+		if (empty($matched_books[$slot])) {
+			$matched_books[$slot] = $book;
+		}
+	}
+}
 ?>
 <section class="bbb-trending">
 	<div class="bbb-trending__inner">
