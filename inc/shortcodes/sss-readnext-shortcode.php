@@ -121,7 +121,7 @@ function sss_faq_shortcode($atts, ?string $content = null): string {
 		return '';
 	}
 
-	$content = (string) preg_replace('/<p>\s*(\[\/?(?:faq|q|a)\])\s*<\/p>/i', '$1', $content);
+	$content = (string) preg_replace('/<p\b[^>]*>\s*(\[\/?(?:faq|q|a)\])\s*<\/p>/i', '$1', $content);
 	$content = str_ireplace(array('[FAQ]', '[/FAQ]', '[Q]', '[/Q]', '[A]', '[/A]'), array('[faq]', '[/faq]', '[q]', '[/q]', '[a]', '[/a]'), $content);
 	$items = '';
 
