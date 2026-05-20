@@ -343,13 +343,13 @@
 	box-shadow: 0 22px 90px rgba(0,0,0,.55);
 	left: 50%;
 	max-height: min(720px, 88vh);
-	max-width: 720px;
+	max-width: 1040px;
 	overflow: auto;
 	padding: 28px;
 	position: absolute;
 	top: 50%;
 	transform: translate(-50%, -50%);
-	width: min(calc(100vw - 32px), 720px);
+	width: min(calc(100vw - 32px), 1040px);
 }
 
 .bbb-next__searchClose {
@@ -376,11 +376,13 @@
 
 .bbb-next__searchResults {
 	display: grid;
-	gap: 10px;
+	gap: 18px;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .bbb-next__searchResult {
-	align-items: center;
+	align-content: start;
+	align-items: start;
 	background: rgba(255,255,255,.04);
 	border: 1px solid rgba(248,245,242,.12);
 	border-radius: 8px;
@@ -388,10 +390,19 @@
 	cursor: pointer;
 	display: grid;
 	font: inherit;
-	gap: 12px;
-	grid-template-columns: 42px minmax(0, 1fr);
-	padding: 10px;
-	text-align: left;
+	gap: 10px;
+	justify-items: center;
+	min-height: 100%;
+	padding: 12px;
+	text-align: center;
+	transition: transform .2s ease, border-color .2s ease, background .2s ease;
+}
+
+.bbb-next__searchResult:hover,
+.bbb-next__searchResult:focus-visible {
+	background: rgba(255,138,199,.09);
+	border-color: rgba(255,138,199,.42);
+	transform: translateY(-2px);
 }
 
 .bbb-next__searchResult img,
@@ -400,7 +411,9 @@
 	background: rgba(255,255,255,.08);
 	display: block;
 	object-fit: cover;
-	width: 42px;
+	width: min(100%, 120px);
+	border-radius: 6px;
+	box-shadow: 0 12px 24px rgba(0,0,0,.28);
 }
 
 .bbb-next__searchResult strong,
@@ -412,6 +425,12 @@
 	color: rgba(248,245,242,.62);
 	font-size: .82rem;
 	font-style: normal;
+}
+
+.bbb-next__searchResult strong {
+	color: #fff;
+	font-size: 1rem;
+	line-height: 1.15;
 }
 
 @media (max-width: 900px) {
@@ -441,5 +460,25 @@
 		font-weight: 700;
 		letter-spacing: .14em;
 		text-transform: uppercase;
+	}
+
+	.bbb-next__searchResults {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 700px) {
+	.bbb-next__searchPanel {
+		padding: 22px;
+	}
+
+	.bbb-next__searchResults {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 460px) {
+	.bbb-next__searchResults {
+		grid-template-columns: 1fr;
 	}
 }
