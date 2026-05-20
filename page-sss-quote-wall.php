@@ -8,9 +8,17 @@
 declare(strict_types=1);
 
 if (function_exists('bbb_enqueue_css')) {
+	bbb_enqueue_css('bbb-sss-library', 'assets/css/sss-library.css');
 	bbb_enqueue_css('bbb-quote-wall', 'assets/css/sss-quote-wall.css');
 } else {
+	wp_enqueue_style('bbb-sss-library', get_template_directory_uri() . '/assets/css/sss-library.css', array(), wp_get_theme()->get('Version'));
 	wp_enqueue_style('bbb-quote-wall', get_template_directory_uri() . '/assets/css/sss-quote-wall.css', array(), wp_get_theme()->get('Version'));
+}
+wp_enqueue_script('bbb-supabase', 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2', array(), null, false);
+if (function_exists('bbb_enqueue_js')) {
+	bbb_enqueue_js('bbb-sss-library', 'assets/js/sss-library.js', array('bbb-supabase'), false);
+} else {
+	wp_enqueue_script('bbb-sss-library', get_template_directory_uri() . '/assets/js/sss-library.js', array('bbb-supabase'), wp_get_theme()->get('Version'), false);
 }
 
 if (!function_exists('bbb_quote_wall_text')) {
@@ -82,6 +90,22 @@ if (!function_exists('bbb_quote_wall_book')) {
 }
 
 if (!function_exists('bbb_quote_wall_book_meta')) {
+	function bbb_quote_wall_url_value($value): string {
+		if (is_array($value)) {
+			return (string) ($value['url'] ?? $value['href'] ?? '');
+		}
+
+		$value = trim((string) $value);
+		if (str_starts_with($value, '{')) {
+			$decoded = json_decode($value, true);
+			if (is_array($decoded)) {
+				return (string) ($decoded['url'] ?? $decoded['href'] ?? '');
+			}
+		}
+
+		return $value;
+	}
+
 	function bbb_quote_wall_book_meta(?WP_Post $book): array {
 		if (!$book instanceof WP_Post) {
 			return array('title' => '', 'author' => '', 'handle' => '', 'shelf' => '', 'url' => home_url('/library/'), 'modal' => array());
@@ -113,9 +137,9 @@ if (!function_exists('bbb_quote_wall_book_meta')) {
 					'handle'         => (string) ($data['handle'] ?? $book->post_name),
 					'title'          => (string) ($data['title'] ?? get_the_title($book)),
 					'author'         => (string) ($data['author'] ?? ''),
-					'cover'          => (string) ($data['cover'] ?? ''),
-					'amazon'         => (string) ($data['amazon'] ?? ''),
-					'bookshop'       => (string) ($data['bookshop'] ?? ''),
+					'cover'          => bbb_quote_wall_url_value($data['cover'] ?? ''),
+					'amazon'         => bbb_quote_wall_url_value($data['amazon'] ?? ''),
+					'bookshop'       => bbb_quote_wall_url_value($data['bookshop'] ?? ''),
 					'shelf'          => (string) ($data['shelf'] ?? ''),
 					'private-shelf'  => !empty($data['is_private']) ? 'true' : 'false',
 					'spice'          => (string) ($data['spice'] ?? ''),
@@ -123,7 +147,7 @@ if (!function_exists('bbb_quote_wall_book_meta')) {
 					'tropes-display' => implode(', ', $trope_display),
 					'trope-urls'     => implode(', ', $trope_urls),
 					'why'            => (string) ($data['why'] ?? ''),
-					'newsletter'     => (string) ($data['newsletter'] ?? ''),
+					'newsletter'     => bbb_quote_wall_url_value($data['newsletter'] ?? ''),
 					'mini'           => (string) ($data['mini'] ?? ''),
 					'series'         => (string) ($data['series_handle'] ?? ''),
 					'series-name'    => (string) ($data['series_name'] ?? ''),
@@ -156,16 +180,16 @@ if (!function_exists('bbb_quote_wall_theme')) {
 	function bbb_quote_wall_theme(string $shelf, int $index): string {
 		$shelf = strtolower($shelf);
 		if (str_contains($shelf, 'dark') || str_contains($shelf, 'private')) {
-			return 'rose';
+			return 'red';
 		}
 		if (str_contains($shelf, 'fantasy') || str_contains($shelf, 'romantasy')) {
-			return 'paper';
+			return 'blue';
 		}
 		if (str_contains($shelf, 'soft') || str_contains($shelf, 'sentimental')) {
-			return 'gold';
+			return 'yellow';
 		}
 
-		return array('paper', 'rose', 'gray')[$index % 3];
+		return array('default', 'red', 'gray', 'yellow')[$index % 4];
 	}
 }
 
@@ -192,26 +216,38 @@ $join_url = get_option('bbb_society_gate_member_url', 'https://thesmutandsentime
 get_header();
 ?>
 
-<main class="bbb-quote-wall<?php echo $is_society ? ' is-unlocked' : ' is-preview'; ?>" data-sss-lib="<?php echo esc_attr($is_society ? 'society' : 'public'); ?>">
-	<section class="bbb-quote-wall__hero">
-		<div class="bbb-quote-wall__heroInner">
-			<p class="bbb-quote-wall__kicker">quote library</p>
-			<h1>lines that ruined me in a good way.</h1>
-			<p>Soft damage, sharp longing, and the book lines worth pinning somewhere dramatic.</p>
-			<div class="bbb-quote-wall__actions">
-				<a href="<?php echo esc_url(home_url('/library/')); ?>">back to the library</a>
-				<?php if (!$is_society) : ?>
-					<a href="<?php echo esc_url($join_url); ?>">unlock the full wall</a>
-				<?php endif; ?>
+<section class="sss-qw<?php echo $is_society ? ' is-unlocked' : ' is-preview'; ?>" data-sss-quote-wall data-sss-lib="<?php echo esc_attr($is_society ? 'society' : 'public'); ?>">
+	<div class="sss-qw__wrap">
+		<p class="sss-kicker">quote library</p>
+		<h1 class="sss-title">faded pages & fatal lines.</h1>
+		<p class="sss-sub">tap a line to open the book. search by quote, book, author, trope, or shelf.</p>
+
+		<div class="sss-qw__feature">
+			<p class="sss-qw__featureKicker">quote dossier</p>
+			<h2 class="sss-qw__featureTitle">save the lines you want to keep.</h2>
+			<p class="sss-qw__featureBody">this should feel less like a list and more like a little archive of lines that ruined you properly.</p>
+		</div>
+
+		<div class="sss-qw__tools">
+			<label class="screen-reader-text" for="bbbQuoteWallSearch">search quote wall</label>
+			<input
+				type="search"
+				id="bbbQuoteWallSearch"
+				class="sss-qw__search"
+				placeholder="search by quote, book, author, trope, or shelf"
+				autocomplete="off"
+				data-qw-search
+			>
+			<div class="sss-qw__metaRow">
+				<div class="sss-qw__count" data-qw-count>all quotes</div>
+				<div class="sss-qw__hint">paid members get the full wall.</div>
 			</div>
 		</div>
-	</section>
 
-	<section class="bbb-quote-wall__board" aria-label="<?php esc_attr_e('Quote wall', 'bybookishbabe-shopify-port'); ?>" data-qw-list>
+		<div class="qw-list" aria-label="<?php esc_attr_e('Quote wall', 'bybookishbabe-shopify-port'); ?>" data-qw-list>
 		<?php if (!$quotes) : ?>
-			<div class="bbb-quote-wall__empty">
-				<h2>No quotes yet.</h2>
-				<p>Add quotes under the Quotes admin area and they will land here.</p>
+			<div class="sss-qw__empty is-visible">
+				no quotes yet. add quotes under the Quotes admin area and they will land here.
 			</div>
 		<?php endif; ?>
 
@@ -240,64 +276,146 @@ get_header();
 				continue;
 			}
 			$theme = bbb_quote_wall_theme((string) $book_meta['shelf'], (int) $index);
+			$align = 0 === ((int) $index % 2) ? 'is-left' : 'is-right';
+			$modal = (array) ($book_meta['modal'] ?? array());
 			?>
-			<article class="bbb-quote-card bbb-quote-card--<?php echo esc_attr($theme); ?> <?php echo 0 === ((int) $index % 2) ? 'is-left' : 'is-right'; ?>" data-qw-item style="--d: <?php echo esc_attr((string) (((int) $index % 8) * 45)); ?>ms;">
-				<div class="bbb-quote-card__pin" aria-hidden="true"></div>
-				<blockquote><span><?php echo esc_html('"' . $text . '"'); ?></span></blockquote>
-				<footer>
-					<?php if ('' !== $book_meta['title']) : ?>
-						<?php if (!empty($book_meta['modal'])) : ?>
-							<button
-								type="button"
-								class="bbb-quote-card__book"
-								<?php foreach ((array) $book_meta['modal'] as $attr => $value) : ?>
-									data-<?php echo esc_attr((string) $attr); ?>="<?php echo esc_attr((string) $value); ?>"
-								<?php endforeach; ?>
-							><?php echo esc_html((string) $book_meta['title']); ?></button>
-						<?php else : ?>
-							<a href="<?php echo esc_url((string) $book_meta['url']); ?>"><?php echo esc_html((string) $book_meta['title']); ?></a>
-						<?php endif; ?>
-						<?php if ('' !== $book_meta['author']) : ?>
-							<span>by <?php echo esc_html((string) $book_meta['author']); ?></span>
-						<?php endif; ?>
+			<div
+				class="qw-item <?php echo esc_attr($align); ?>"
+				data-qw-item
+				data-qw-quote="<?php echo esc_attr($text); ?>"
+				data-qw-title="<?php echo esc_attr((string) $book_meta['title']); ?>"
+				data-qw-author="<?php echo esc_attr((string) $book_meta['author']); ?>"
+				data-qw-shelf="<?php echo esc_attr((string) $book_meta['shelf']); ?>"
+				data-qw-tropes="<?php echo esc_attr((string) ($modal['tropes'] ?? '')); ?>"
+				data-qw-boyfriend="<?php echo esc_attr((string) ($modal['boyfriend'] ?? '')); ?>"
+				style="--d: <?php echo esc_attr((string) (((int) $index % 8) * 45)); ?>ms;"
+			>
+				<div class="qw-card">
+					<?php if ($modal) : ?>
+						<button
+							type="button"
+							class="qw-cardSurface sss-lib__book"
+							data-qw-open
+							<?php foreach ($modal as $attr => $value) : ?>
+								data-<?php echo esc_attr((string) $attr); ?>="<?php echo esc_attr((string) $value); ?>"
+							<?php endforeach; ?>
+						>
 					<?php else : ?>
-						<span><?php echo esc_html($fallback_title); ?></span>
+						<a class="qw-cardSurface" href="<?php echo esc_url((string) $book_meta['url']); ?>">
 					<?php endif; ?>
-				</footer>
-			</article>
+							<div class="qw-paper">
+								<p class="qw-quote">
+									<span class="hl hl--<?php echo esc_attr($theme); ?>">"<?php echo esc_html($text); ?>"</span>
+								</p>
+								<div class="qw-meta">
+									<div class="qw-book">
+										<?php if ('' !== $book_meta['title']) : ?>
+											<?php echo esc_html((string) $book_meta['title']); ?>
+											<?php if ('' !== $book_meta['author']) : ?>
+												<?php echo esc_html(' — ' . (string) $book_meta['author']); ?>
+											<?php endif; ?>
+										<?php else : ?>
+											<?php echo esc_html($fallback_title); ?>
+										<?php endif; ?>
+									</div>
+								</div>
+							</div>
+					<?php echo $modal ? '</button>' : '</a>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				</div>
+			</div>
 		<?php endforeach; ?>
-	</section>
+		</div>
+		<div class="sss-qw__empty" data-qw-empty>no matches yet. try a book title, author, shelf, or trope instead.</div>
 
 	<?php if (!$is_society) : ?>
-		<section class="bbb-quote-wall__gate">
+		<section class="sss-qw__gate">
 			<p>preview mode</p>
 			<h2>paid members get the full quote wall.</h2>
 			<a href="<?php echo esc_url($join_url); ?>">join the society</a>
 		</section>
 	<?php endif; ?>
+	</div>
 
 	<?php get_template_part('template-parts/library/library-modal'); ?>
-</main>
+</section>
 
 <script>
 (function(){
-	var items = document.querySelectorAll('[data-qw-item]');
-	if (!items.length) return;
+	function initQuoteWall(){
+		var roots = document.querySelectorAll('[data-sss-quote-wall]');
+		if (!roots.length) return;
 
-	if (!('IntersectionObserver' in window)) {
-		items.forEach(function(item){ item.classList.add('is-in'); });
-		return;
+		roots.forEach(function(root){
+			if (root.__qwBound) return;
+			root.__qwBound = true;
+
+			var items = Array.prototype.slice.call(root.querySelectorAll('[data-qw-item]'));
+			var searchInput = root.querySelector('[data-qw-search]');
+			var countLabel = root.querySelector('[data-qw-count]');
+			var emptyState = root.querySelector('[data-qw-empty]');
+			if (!items.length) return;
+
+			function updateCount(visibleCount, query){
+				if (!countLabel) return;
+				if (!query){
+					countLabel.textContent = visibleCount === 1 ? '1 quote' : visibleCount + ' quotes';
+					return;
+				}
+				countLabel.textContent = visibleCount === 1
+					? '1 match for "' + query + '"'
+					: visibleCount + ' matches for "' + query + '"';
+			}
+
+			function applyFilter(){
+				var query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+				var terms = query.replace(/[^\w\s]+/g, ' ').trim().split(/\s+/).filter(Boolean);
+				var visibleCount = 0;
+
+				items.forEach(function(item){
+					var haystack = [
+						item.getAttribute('data-qw-quote') || '',
+						item.getAttribute('data-qw-title') || '',
+						item.getAttribute('data-qw-author') || '',
+						item.getAttribute('data-qw-shelf') || '',
+						item.getAttribute('data-qw-tropes') || '',
+						item.getAttribute('data-qw-boyfriend') || ''
+					].join(' ').toLowerCase().replace(/[^\w\s]+/g, ' ');
+					var isMatch = !terms.length || terms.every(function(term){ return haystack.indexOf(term) !== -1; });
+					item.hidden = !isMatch;
+					item.style.display = isMatch ? '' : 'none';
+					if (isMatch) visibleCount += 1;
+				});
+
+				if (emptyState) emptyState.classList.toggle('is-visible', visibleCount === 0);
+				updateCount(visibleCount, query);
+			}
+
+			if (searchInput){
+				searchInput.addEventListener('input', applyFilter);
+				searchInput.addEventListener('search', applyFilter);
+				searchInput.addEventListener('change', applyFilter);
+			}
+
+			applyFilter();
+
+			if (!('IntersectionObserver' in window)) {
+				items.forEach(function(item){ item.classList.add('is-in'); });
+				return;
+			}
+
+			var observer = new IntersectionObserver(function(entries){
+				entries.forEach(function(entry){
+					if (!entry.isIntersecting) return;
+					entry.target.classList.add('is-in');
+					observer.unobserve(entry.target);
+				});
+			}, { threshold: 0.12, rootMargin: '0px 0px -10% 0px' });
+
+			items.forEach(function(item){ observer.observe(item); });
+		});
 	}
 
-	var observer = new IntersectionObserver(function(entries){
-		entries.forEach(function(entry){
-			if (!entry.isIntersecting) return;
-			entry.target.classList.add('is-in');
-			observer.unobserve(entry.target);
-		});
-	}, { threshold: 0.12, rootMargin: '0px 0px -10% 0px' });
-
-	items.forEach(function(item){ observer.observe(item); });
+	initQuoteWall();
 })();
 </script>
 

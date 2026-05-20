@@ -129,6 +129,69 @@ function bbb_society_product_importer_media_urls(array $product): array {
 	return array_values(array_unique($urls));
 }
 
+function bbb_society_product_importer_attachment_from_url(string $url, int $post_id = 0): int {
+	$url = esc_url_raw($url);
+	if ('' === $url) {
+		return 0;
+	}
+
+	$uploads = wp_upload_dir();
+	$baseurl = (string) ($uploads['baseurl'] ?? '');
+	$basedir = (string) ($uploads['basedir'] ?? '');
+	$path    = '';
+
+	if (str_starts_with($url, '/wp-content/uploads/') && defined('ABSPATH')) {
+		$path = wp_normalize_path(ABSPATH . ltrim($url, '/'));
+	} elseif ('' !== $baseurl && str_starts_with($url, $baseurl)) {
+		$relative = ltrim(substr($url, strlen($baseurl)), '/');
+		$path     = wp_normalize_path(trailingslashit($basedir) . $relative);
+	}
+
+	if ('' === $path || !file_exists($path)) {
+		return 0;
+	}
+
+	$relative_upload = ltrim(str_replace(wp_normalize_path(trailingslashit($basedir)), '', wp_normalize_path($path)), '/');
+	$existing = get_posts(
+		array(
+			'post_type'      => 'attachment',
+			'post_status'    => 'inherit',
+			'posts_per_page' => 1,
+			'fields'         => 'ids',
+			'meta_key'       => '_wp_attached_file',
+			'meta_value'     => $relative_upload,
+		)
+	);
+	if (!empty($existing[0])) {
+		return (int) $existing[0];
+	}
+
+	$filetype = wp_check_filetype(basename($path));
+	$attachment_id = wp_insert_attachment(
+		array(
+			'post_mime_type' => $filetype['type'] ?: 'image/png',
+			'post_title'     => sanitize_text_field(pathinfo($path, PATHINFO_FILENAME)),
+			'post_content'   => '',
+			'post_status'    => 'inherit',
+		),
+		$path,
+		$post_id,
+		true
+	);
+
+	if (is_wp_error($attachment_id) || !$attachment_id) {
+		return 0;
+	}
+
+	require_once ABSPATH . 'wp-admin/includes/image.php';
+	$metadata = wp_generate_attachment_metadata((int) $attachment_id, $path);
+	if (!is_wp_error($metadata) && !empty($metadata)) {
+		wp_update_attachment_metadata((int) $attachment_id, $metadata);
+	}
+
+	return (int) $attachment_id;
+}
+
 function bbb_society_product_importer_download_url(array $product): string {
 	foreach (array('download_url', 'downloadUrl', 'file_url', 'fileUrl', 'digital_file', 'digitalFile') as $key) {
 		if (!empty($product[$key]) && is_scalar($product[$key])) {
@@ -465,10 +528,27 @@ function bbb_society_product_importer_upsert_product(array $product) {
 
 	if ('' !== $image_url) {
 		update_post_meta($post_id, '_bbb_source_image_url', $image_url);
+		$thumbnail_id = bbb_society_product_importer_attachment_from_url($image_url, $post_id);
+		if ($thumbnail_id > 0) {
+			set_post_thumbnail($post_id, $thumbnail_id);
+		}
 	}
 
 	if (!empty($product['media_urls'])) {
-		update_post_meta($post_id, '_bbb_product_media_urls', array_values(array_filter((array) $product['media_urls'])));
+		$media_urls = array_values(array_filter((array) $product['media_urls']));
+		update_post_meta($post_id, '_bbb_product_media_urls', $media_urls);
+
+		$attachment_ids = array_values(
+			array_filter(
+				array_map(
+					static fn($url): int => bbb_society_product_importer_attachment_from_url((string) $url, $post_id),
+					$media_urls
+				)
+			)
+		);
+		if ($attachment_ids) {
+			update_post_meta($post_id, '_bbb_product_media_attachment_ids', $attachment_ids);
+		}
 	}
 
 	if (!empty($product['categories'])) {
