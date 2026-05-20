@@ -131,25 +131,27 @@ summary.list-menu__item {
 
 .header__account-dot {
   align-items: center;
+  background: transparent;
+  border: 0.2rem solid rgba(255, 255, 255, 0.82);
   border-radius: 999px;
-  box-shadow: 0 0 0 0.1rem rgba(17, 17, 17, 0.16), 0 0.6rem 1.6rem rgba(0, 0, 0, 0.16);
+  box-shadow: none;
   display: inline-flex;
-  height: 3rem;
+  height: 2.9rem;
   justify-content: center;
   line-height: 1;
-  width: 3rem;
+  width: 2.9rem;
 }
 
 .header__account-indicator--visitor .header__account-dot {
-  background: #fff;
+  border-color: rgba(17, 17, 17, 0.45);
 }
 
 .header__account-indicator--free .header__account-dot {
-  background: #22c55e;
+  border-color: #22c55e;
 }
 
 .header__account-indicator--paid .header__account-dot {
-  background: #ff8ac7;
+  border-color: #ff8ac7;
 }
 
 .bbb-bookshelf-header__emoji {
