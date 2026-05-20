@@ -933,10 +933,10 @@ box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
 .article-template__content .blog-obsession-banner--article{
 display:block;
 width:100%;
-margin:56px 0 86px;
-padding:42px 36px 40px;
+margin:38px 0 54px;
+padding:28px 28px 26px;
 border:1px solid rgba(255,255,255,.14);
-border-radius:28px;
+border-radius:22px;
 background:
 radial-gradient(circle at 86% 18%, rgba(255,138,199,.09), transparent 34%),
 linear-gradient(135deg, rgba(255,255,255,.055), rgba(255,255,255,.018));
@@ -962,11 +962,11 @@ pointer-events:none;
 
 .article-template__content .blog-obsession-banner--article .blog-obsession-banner__text{
 margin:0;
-max-width:52rem;
+max-width:43rem;
 font-family:"Cormorant Garamond", Georgia, serif;
-font-size:clamp(2.45rem, 4vw, 3.85rem);
+font-size:clamp(1.85rem, 3vw, 2.65rem);
 font-weight:500;
-line-height:1.22;
+line-height:1.18;
 letter-spacing:0;
 color:#f7f2f4;
 }
@@ -999,8 +999,8 @@ font-style:normal;
 
 .article-template__content .blog-obsession-banner--article .blog-obsession-banner__cta{
 display:block;
-margin-top:28px;
-font-size:13px;
+margin-top:20px;
+font-size:12px;
 line-height:1.2;
 letter-spacing:.24em;
 text-transform:uppercase;
@@ -3558,20 +3558,20 @@ body.single-post .article-template{
   }
 
   .article-template__content .blog-obsession-banner--article{
-    margin:38px 0 58px;
-    padding:28px 22px 30px;
-    border-radius:22px;
+    margin:30px 0 44px;
+    padding:22px 18px 24px;
+    border-radius:18px;
   }
 
   .article-template__content .blog-obsession-banner--article .blog-obsession-banner__text{
-    font-size:clamp(2rem, 9vw, 2.65rem);
-    line-height:1.24;
+    font-size:clamp(1.55rem, 7.2vw, 2.05rem);
+    line-height:1.2;
   }
 
   .article-template__content .blog-obsession-banner--article .blog-obsession-banner__cta{
-    margin-top:22px;
-    font-size:11px;
-    letter-spacing:.2em;
+    margin-top:16px;
+    font-size:10px;
+    letter-spacing:.18em;
     white-space:normal;
   }
 
