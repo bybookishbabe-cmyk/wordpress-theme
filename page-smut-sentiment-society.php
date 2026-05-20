@@ -25,34 +25,6 @@ if ('this month inside the society' === $monthly_hub['kicker']) {
 }
 $monthly_theme_url = bbb_page_url('monthly-theme');
 
-$monthly_hub_links = array();
-$monthly_link_emojis = array(
-	'monthly theme'    => '🕯️',
-	'start here'       => '🕯️',
-	'track your reads' => '📅',
-	'member dashboard' => '✨',
-	'your dashboard'   => '✨',
-	'my bookshelf'     => '📚',
-	'printables'       => '🖨️',
-	'quote library'    => '💬',
-);
-for ($i = 1; $i <= 6; $i++) {
-	$label = strtolower((string) get_theme_mod("bbb_society_month_link_{$i}_label", ''));
-	$url   = (string) get_theme_mod("bbb_society_month_link_{$i}_url", '');
-	if ('' === trim($label) || '' === trim($url)) {
-		continue;
-	}
-	if (in_array($label, array('your dashboard', 'member dashboard'), true) && '/what-to-read-next/' === trim($url)) {
-		$url = '/member-dashboard/';
-	}
-
-	$monthly_hub_links[] = array(
-		'label' => $label,
-		'url'   => bbb_resolve_shopify_url($url),
-		'emoji' => $monthly_link_emojis[$label] ?? '♡',
-	);
-}
-
 $sections = array(
 	array(
 		'label' => 'the newsletter',
@@ -111,16 +83,6 @@ get_header();
 				<p><?php echo esc_html($monthly_hub['text']); ?></p>
 				<span class="bbb-society-theme__cta">open monthly theme</span>
 			</a>
-			<?php if ($monthly_hub_links) : ?>
-				<div class="bbb-society-main-hub" aria-label="monthly society hub links">
-					<?php foreach ($monthly_hub_links as $link) : ?>
-						<a href="<?php echo esc_url($link['url']); ?>">
-							<span class="bbb-society-main-hub__emoji" aria-hidden="true"><?php echo esc_html($link['emoji']); ?></span>
-							<span><?php echo esc_html($link['label']); ?></span>
-						</a>
-					<?php endforeach; ?>
-				</div>
-			<?php endif; ?>
 		</aside>
 
 		<div class="bbb-society-sections">
