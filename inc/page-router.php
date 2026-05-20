@@ -42,7 +42,7 @@ function bbb_page_route_registry(): array {
 		'series'                         => 'page-series.php',
 		'series-reading-orders'          => 'page-series-reading-orders.php',
 		'shelf'                          => 'page-shelf.php',
-		'shop'                           => '',
+		'shop'                           => 'page-shop.php',
 		'slow-burn-books'                => 'page-trope.php',
 		'smut-sentiment-society'         => 'page-smut-sentiment-society.php',
 		'newsletter-submissions'         => 'page-society-submissions.php',

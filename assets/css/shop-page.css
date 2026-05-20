@@ -87,6 +87,28 @@
   padding: 44px 0 64px;
 }
 
+.bbb-shop__notice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+  width: min(1180px, calc(100vw - 32px));
+  margin: 22px auto 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(157, 69, 104, 0.22);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--shop-muted);
+  font: 700 13px/1.4 Assistant, system-ui, sans-serif;
+}
+
+.bbb-shop__notice p {
+  margin: 0;
+  color: #9d4568;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
 .bbb-shop__sectionHead {
   display: flex;
   align-items: end;

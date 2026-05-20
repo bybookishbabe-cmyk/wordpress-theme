@@ -163,7 +163,7 @@ get_header();
 		</div>
 	</section>
 
-	<section class="bbb-quote-wall__board" aria-label="<?php esc_attr_e('Quote wall', 'bybookishbabe-shopify-port'); ?>">
+	<section class="bbb-quote-wall__board" aria-label="<?php esc_attr_e('Quote wall', 'bybookishbabe-shopify-port'); ?>" data-qw-list>
 		<?php if (!$quotes) : ?>
 			<div class="bbb-quote-wall__empty">
 				<h2>No quotes yet.</h2>
@@ -197,7 +197,7 @@ get_header();
 			}
 			$theme = bbb_quote_wall_theme((string) $book_meta['shelf'], (int) $index);
 			?>
-			<article class="bbb-quote-card bbb-quote-card--<?php echo esc_attr($theme); ?>">
+			<article class="bbb-quote-card bbb-quote-card--<?php echo esc_attr($theme); ?> <?php echo 0 === ((int) $index % 2) ? 'is-left' : 'is-right'; ?>" data-qw-item style="--d: <?php echo esc_attr((string) (((int) $index % 8) * 45)); ?>ms;">
 				<div class="bbb-quote-card__pin" aria-hidden="true"></div>
 				<blockquote><?php echo esc_html($text); ?></blockquote>
 				<footer>
@@ -222,5 +222,27 @@ get_header();
 		</section>
 	<?php endif; ?>
 </main>
+
+<script>
+(function(){
+	var items = document.querySelectorAll('[data-qw-item]');
+	if (!items.length) return;
+
+	if (!('IntersectionObserver' in window)) {
+		items.forEach(function(item){ item.classList.add('is-in'); });
+		return;
+	}
+
+	var observer = new IntersectionObserver(function(entries){
+		entries.forEach(function(entry){
+			if (!entry.isIntersecting) return;
+			entry.target.classList.add('is-in');
+			observer.unobserve(entry.target);
+		});
+	}, { threshold: 0.12, rootMargin: '0px 0px -10% 0px' });
+
+	items.forEach(function(item){ observer.observe(item); });
+})();
+</script>
 
 <?php get_footer(); ?>

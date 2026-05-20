@@ -10,63 +10,43 @@ declare(strict_types=1);
 $is_society = !empty($args['is_society']);
 $quote_url  = home_url('/sss-quote-wall/');
 
-$quote_post_types = function_exists('bbb_quote_post_types') ? bbb_quote_post_types() : array();
-$quotes = $quote_post_types
-	? get_posts(
-		array(
-			'post_type'      => $quote_post_types,
-			'post_status'    => array('publish', 'draft'),
-			'posts_per_page' => 3,
-			'orderby'        => 'date',
-			'order'          => 'DESC',
-		)
-	)
-	: array();
-if (!$quotes && function_exists('bbb_quote_export_entries')) {
-	$quotes = bbb_quote_export_entries(3);
-}
+$tiles = array(
+	array(
+		'eyebrow' => 'save',
+		'title'   => 'favorite the fatal lines',
+		'copy'    => 'keep the quotes you want to come back to when the book hangover hits.',
+	),
+	array(
+		'eyebrow' => 'browse',
+		'title'   => 'wander by book mood',
+		'copy'    => 'scan the little quote cards and let the next read choose itself.',
+	),
+	array(
+		'eyebrow' => 'return',
+		'title'   => 'jump back to the book',
+		'copy'    => 'each line points back to its library card when you need the full rec.',
+	),
+);
 ?>
 <section class="sss-lib__quoteCta" id="quote-wall-preview">
 	<div class="sss-lib__quoteCtaCopy">
 		<p class="sss-lib__archiveKicker">quote library</p>
 		<h2 class="sss-lib__archiveTitle">lines worth reopening.</h2>
 		<p class="sss-lib__archiveSub">
-			<?php echo esc_html($is_society ? 'a private little archive of the lines worth keeping.' : 'preview a few lines. paid members get the full quote wall.'); ?>
+			<?php echo esc_html($is_society ? 'a private little archive of the lines worth keeping.' : 'a peek at the softer, sharper side of the library.'); ?>
 		</p>
 		<a class="sss-lib__quoteCtaBtn" href="<?php echo esc_url($quote_url); ?>">
 			<?php echo esc_html($is_society ? 'open quote wall' : 'preview quote wall'); ?>
 		</a>
 	</div>
-	<div class="sss-lib__quoteCtaStack" aria-hidden="true">
-		<?php if (!$quotes) : ?>
-			<blockquote>Saved lines, soft damage, and the quotes worth returning to will live here.</blockquote>
-		<?php endif; ?>
-		<?php foreach ($quotes as $quote) : ?>
-			<?php
-			if ($quote instanceof WP_Post) {
-				$text = trim((string) get_post_meta($quote->ID, '_quote_text', true));
-				if ('' === $text) {
-					$text = trim((string) get_post_meta($quote->ID, 'quote_text', true));
-				}
-				if ('' === $text) {
-					$text = trim((string) get_post_meta($quote->ID, 'quote', true));
-				}
-				if ('' === $text) {
-					$text = trim((string) get_post_meta($quote->ID, '_bbb_quote', true));
-				}
-				if ('' === $text) {
-					$text = trim(wp_strip_all_tags($quote->post_content));
-				}
-			} elseif (is_array($quote)) {
-				$text = trim((string) ($quote['text'] ?? ''));
-			} else {
-				continue;
-			}
-			if ('' === $text) {
-				continue;
-			}
-			?>
-			<blockquote><?php echo esc_html(wp_trim_words(wp_strip_all_tags($text), 22)); ?></blockquote>
+	<div class="sss-lib__quoteCuteGrid" aria-hidden="true">
+		<?php foreach ($tiles as $index => $tile) : ?>
+			<div class="sss-lib__quoteCuteCard">
+				<span><?php echo esc_html('0' . (string) ($index + 1)); ?></span>
+				<p><?php echo esc_html($tile['eyebrow']); ?></p>
+				<h3><?php echo esc_html($tile['title']); ?></h3>
+				<small><?php echo esc_html($tile['copy']); ?></small>
+			</div>
 		<?php endforeach; ?>
 	</div>
 </section>
