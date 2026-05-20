@@ -310,7 +310,7 @@ function sss_get_latest_featured_book(): ?WP_Post {
 		array(
 			'post_type'      => $post_types,
 			'post_status'    => 'publish',
-			'posts_per_page' => 50,
+			'posts_per_page' => -1,
 			'meta_query'     => array(
 				'relation' => 'OR',
 				array(
