@@ -38,7 +38,15 @@ $sections = array(
 	array(
 		'label' => 'the newsletter',
 		'items' => array(
-			array('title' => 'visitor page', 'copy' => 'what the society is, what is free, and where to begin.', 'url' => bbb_page_url('society-visitor'), 'badge' => 'open'),
+			array('title' => 'about', 'copy' => 'what the society is, who it is for, and how the newsletter fits in.', 'url' => bbb_page_url('about-the-society'), 'badge' => 'start'),
+			array('title' => 'recent', 'copy' => 'the latest newsletter issues and current dispatches.', 'url' => bbb_page_url('society-newsletter-recent'), 'badge' => 'latest'),
+			array('title' => 'full archive', 'copy' => 'the complete newsletter shelf, wired to the imported issues.', 'url' => bbb_page_url('society-newsletter-archive'), 'badge' => 'archive'),
+		),
+	),
+	array(
+		'label' => 'member paths',
+		'items' => array(
+			array('title' => 'visitor page', 'copy' => 'what is public, what is free, and where to begin.', 'url' => bbb_page_url('society-visitor'), 'badge' => 'open'),
 			array('title' => 'free member page', 'copy' => 'recent issues, reader updates, and preview access.', 'url' => bbb_page_url('society-free-member'), 'badge' => 'free'),
 			array('title' => 'paid member page', 'copy' => 'full archive, monthly extras, and paid member notes.', 'url' => bbb_page_url('society-paid-member'), 'badge' => 'society'),
 		),

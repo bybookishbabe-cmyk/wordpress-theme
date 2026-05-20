@@ -18,6 +18,7 @@ require_once get_theme_file_path('inc/weekly-obsession-query.php');
 require_once get_theme_file_path('inc/newsletter-issue-cpt.php');
 require_once get_theme_file_path('inc/acf-society-hero-options.php');
 require_once get_theme_file_path('inc/blog-society-recommendations.php');
+require_once get_theme_file_path('inc/society-pages.php');
 require_once get_theme_file_path('inc/books/book-cpt.php');
 require_once get_theme_file_path('inc/books/book-visibility.php');
 require_once get_theme_file_path('inc/books/trope-colors.php');
@@ -176,7 +177,13 @@ add_action(
 		bbb_enqueue_css('bbb-favorite-card-atc', 'assets/bbb-favorite-card-atc.css', array('bbb-component-cart-items'));
 		bbb_enqueue_css('bbb-holiday-overlay', 'assets/bbb-holiday-overlay.css', array('bbb-favorite-card-atc'));
 		bbb_enqueue_css('bbb-society-gate', 'assets/bbb-society-gate.css', array('bbb-holiday-overlay'));
-		if (function_exists('bbb_current_route_slug') && 'smut-sentiment-society' === bbb_current_route_slug()) {
+		$bbb_society_page_routes = array(
+			'about-the-society',
+			'smut-sentiment-society',
+			'society-newsletter-recent',
+			'society-newsletter-archive',
+		);
+		if (function_exists('bbb_current_route_slug') && in_array(bbb_current_route_slug(), $bbb_society_page_routes, true)) {
 			bbb_enqueue_css('bbb-society-landing', 'assets/css/society-landing.css', array('bbb-society-gate'));
 		}
 		if (is_front_page()) {
