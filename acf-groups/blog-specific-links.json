@@ -1,0 +1,57 @@
+{
+  "key": "group_bbb_blog_specific_links",
+  "title": "Blog Specific Links",
+  "fields": [
+    {
+      "key": "field_bbb_specific_prompt",
+      "label": "Specific Links Prompt",
+      "name": "specific_prompt",
+      "type": "text",
+      "default_value": "looking for something more specific?"
+    },
+    {
+      "key": "field_bbb_specific_link_1",
+      "label": "Specific Link 1",
+      "name": "specific_link_1",
+      "type": "post_object",
+      "post_type": ["post", "page"],
+      "return_format": "object"
+    },
+    {
+      "key": "field_bbb_specific_link_1_label",
+      "label": "Specific Link 1 Label",
+      "name": "specific_link_1_label",
+      "type": "text"
+    },
+    {
+      "key": "field_bbb_specific_link_2",
+      "label": "Specific Link 2",
+      "name": "specific_link_2",
+      "type": "post_object",
+      "post_type": ["post", "page"],
+      "return_format": "object"
+    },
+    {
+      "key": "field_bbb_specific_link_2_label",
+      "label": "Specific Link 2 Label",
+      "name": "specific_link_2_label",
+      "type": "text"
+    },
+    {
+      "key": "field_bbb_specific_link_3",
+      "label": "Specific Link 3",
+      "name": "specific_link_3",
+      "type": "post_object",
+      "post_type": ["post", "page"],
+      "return_format": "object"
+    },
+    {
+      "key": "field_bbb_specific_link_3_label",
+      "label": "Specific Link 3 Label",
+      "name": "specific_link_3_label",
+      "type": "text"
+    }
+  ],
+  "location": [[{"param": "post_type", "operator": "==", "value": "post"}]],
+  "active": true
+}
