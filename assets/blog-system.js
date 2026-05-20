@@ -614,3 +614,28 @@ threshold:0.2
 revealItems.forEach(el => observer.observe(el));
 
 }
+
+/* ======================
+BACK TO TOP
+====================== */
+
+if (document.body.classList.contains("single-post") && !document.getElementById("bbbBackToTop")) {
+  const backToTop = document.createElement("button");
+  backToTop.type = "button";
+  backToTop.id = "bbbBackToTop";
+  backToTop.className = "bbb-back-to-top";
+  backToTop.setAttribute("aria-label", "back to top");
+  backToTop.innerHTML = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 19V5"></path><path d="M6 11l6-6 6 6"></path></svg>';
+  document.body.appendChild(backToTop);
+
+  const syncBackToTop = () => {
+    backToTop.classList.toggle("is-visible", window.scrollY > 520);
+  };
+
+  backToTop.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  window.addEventListener("scroll", syncBackToTop, { passive: true });
+  syncBackToTop();
+}

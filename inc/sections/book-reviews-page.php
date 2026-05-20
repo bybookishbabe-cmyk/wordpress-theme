@@ -164,17 +164,28 @@ if (!function_exists('bbb_review_index_has_review_flag')) {
 
 if (!function_exists('bbb_review_index_card_image')) {
 	function bbb_review_index_card_image(WP_Post $post, ?WP_Post $book): array {
-		$url = get_the_post_thumbnail_url($post, 'large') ?: '';
+		$url = '';
 		$alt = get_the_title($post);
+
+		if ($book instanceof WP_Post) {
+			if (function_exists('bbb_get_book_cover_url')) {
+				$url = bbb_get_book_cover_url($book->ID);
+			} elseif (function_exists('sss_get_book_cover_url')) {
+				$url = sss_get_book_cover_url($book->ID);
+			} elseif (function_exists('sss_article_cover_url')) {
+				$url = sss_article_cover_url($book->ID);
+			}
+			$alt = get_the_title($book);
+		}
+
+		if (!$url) {
+			$url = get_the_post_thumbnail_url($post, 'large') ?: '';
+			$alt = get_the_title($post);
+		}
 
 		if (!$url) {
 			$url = (string) get_post_meta($post->ID, '_thumbnail_external_url', true);
 			$alt = (string) get_post_meta($post->ID, '_thumbnail_external_alt', true) ?: $alt;
-		}
-
-		if (!$url && $book instanceof WP_Post) {
-			$url = function_exists('bbb_get_book_cover_url') ? bbb_get_book_cover_url($book->ID) : '';
-			$alt = get_the_title($book);
 		}
 
 		return array($url, $alt);
@@ -183,23 +194,16 @@ if (!function_exists('bbb_review_index_card_image')) {
 
 if (!function_exists('bbb_review_index_review_meta')) {
 	function bbb_review_index_review_meta(int $post_id, ?WP_Post $book): array {
-		$rating = (string) bbb_review_index_field($post_id, array('review_rating', 'rating', '_bbb_review_rating'), '');
-		$label  = (string) bbb_review_index_field($post_id, array('review_label', 'verdict', 'review_verdict', '_bbb_review_label'), '');
+		$spice = (string) bbb_review_index_field($post_id, array('spice_level', 'review_spice', '_bbb_spice'), '');
 
-		if (!$rating && $book instanceof WP_Post) {
+		if (!$spice && $book instanceof WP_Post) {
 			$spice = 'bbb_book' === $book->post_type
 				? (string) get_post_meta($book->ID, '_bbb_spice', true)
 				: (string) bbb_review_index_field($book->ID, array('spice_level'), '');
-			if ($spice !== '') {
-				$rating = str_repeat('🌶', max(1, min(5, (int) $spice)));
-			}
 		}
 
-		if (!$label && $book instanceof WP_Post) {
-			$label = (string) bbb_review_index_field($book->ID, array('reread_badge', '_bbb_reread'), '');
-		}
-
-		return array($rating, $label);
+		$level = (int) $spice;
+		return array($level > 0 ? str_repeat('🌶', max(1, min(5, $level))) : '');
 	}
 }
 
@@ -247,15 +251,14 @@ if (!function_exists('bbb_render_review_index_card')) {
     </p>
     <?php endif; ?>
 
-    <?php if ($meta[0] || $meta[1]) : ?>
+    <?php if (!empty($meta[0])) : ?>
     <p class="bbb-review-card__reviewMeta">
       <?php if ($meta[0]) : ?><span><?php echo esc_html($meta[0]); ?></span><?php endif; ?>
-      <?php if ($meta[1]) : ?><span><?php echo esc_html($meta[1]); ?></span><?php endif; ?>
     </p>
     <?php endif; ?>
 
     <?php if ($excerpt) : ?>
-    <p class="bbb-review-card__excerpt"><?php echo esc_html(wp_trim_words(wp_strip_all_tags($excerpt), 24)); ?></p>
+    <p class="bbb-review-card__excerpt"><?php echo esc_html(wp_trim_words(wp_strip_all_tags($excerpt), 10)); ?></p>
     <?php endif; ?>
   </div>
 </a>

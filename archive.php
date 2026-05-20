@@ -89,6 +89,40 @@ $archive_image_url = static function ($image): string {
 	return is_string($image) ? $image : '';
 };
 
+$archive_book_cover_url = static function (int $book_id) use ($archive_get_field, $archive_image_url): string {
+	if ($book_id <= 0) {
+		return '';
+	}
+
+	if (function_exists('bbb_get_book_cover_url')) {
+		$cover = bbb_get_book_cover_url($book_id);
+		if ($cover) {
+			return $cover;
+		}
+	}
+
+	if (function_exists('sss_get_book_cover_url')) {
+		$cover = sss_get_book_cover_url($book_id);
+		if ($cover) {
+			return $cover;
+		}
+	}
+
+	if (function_exists('sss_article_cover_url')) {
+		$cover = sss_article_cover_url($book_id);
+		if ($cover) {
+			return $cover;
+		}
+	}
+
+	$cover = $archive_image_url($archive_get_field('cover', $book_id, ''));
+	if ($cover) {
+		return $cover;
+	}
+
+	return get_the_post_thumbnail_url($book_id, 'medium') ?: '';
+};
+
 $archive_trope_data = static function ($trope) use ($archive_get_field): array {
 	if ($trope instanceof WP_Term) {
 		$name  = $trope->name;
@@ -225,8 +259,49 @@ $rec_pick_title       = (string) $archive_get_field('rec_pick_title', 'option', 
 $rec_result_title     = (string) $archive_get_field('rec_result_title', 'option', '');
 $tease_pick_book      = $rec_pick_title ? get_page_by_path(sanitize_title($rec_pick_title), OBJECT, array('bbb_book', 'sss_book', 'library_book')) : null;
 $tease_result_book    = $rec_result_title ? get_page_by_path(sanitize_title($rec_result_title), OBJECT, array('bbb_book', 'sss_book', 'library_book')) : null;
-$tease_pick_cover_url = $tease_pick_book ? $archive_image_url($archive_get_field('cover', $tease_pick_book->ID, '')) : '';
-$tease_result_cover_url = $tease_result_book ? $archive_image_url($archive_get_field('cover', $tease_result_book->ID, '')) : '';
+
+if ((!$tease_pick_book || !$tease_result_book) && $is_page_one) {
+	$tease_fallback_books = get_posts(
+		array(
+			'post_type'      => array('bbb_book', 'sss_book', 'library_book'),
+			'post_status'    => 'publish',
+			'posts_per_page' => 8,
+			'orderby'        => 'date',
+			'order'          => 'DESC',
+		)
+	);
+
+	foreach ($tease_fallback_books as $fallback_book) {
+		if (!$fallback_book instanceof WP_Post || !$archive_book_cover_url((int) $fallback_book->ID)) {
+			continue;
+		}
+
+		if (!$tease_pick_book) {
+			$tease_pick_book = $fallback_book;
+			continue;
+		}
+
+		if (!$tease_result_book && (int) $fallback_book->ID !== (int) $tease_pick_book->ID) {
+			$tease_result_book = $fallback_book;
+			break;
+		}
+	}
+}
+
+if (!$rec_pick_title && $tease_pick_book instanceof WP_Post) {
+	$rec_pick_title = get_the_title($tease_pick_book);
+}
+
+if (!$rec_result_title && $tease_result_book instanceof WP_Post) {
+	$rec_result_title = get_the_title($tease_result_book);
+}
+
+$tease_pick_cover_url   = $tease_pick_book instanceof WP_Post ? $archive_book_cover_url((int) $tease_pick_book->ID) : '';
+$tease_result_cover_url = $tease_result_book instanceof WP_Post ? $archive_book_cover_url((int) $tease_result_book->ID) : '';
+$rec_demo_cta           = (string) $archive_get_field('rec_title', 'option', 'open the matcher');
+if ('' === trim($rec_demo_cta)) {
+	$rec_demo_cta = 'open the matcher';
+}
 
 $featured_guides = array(
 	array(
@@ -381,7 +456,7 @@ get_header();
 				<div class="bbb-homeRecDemo__kicker"><?php echo esc_html((string) $archive_get_field('rec_kicker', 'option', '')); ?></div>
 				<div class="bbb-homeRecDemo__title"><span>if you liked...</span></div>
 				<div class="bbb-homeRecDemo__sub">read this next</div>
-				<div class="bbb-homeRecDemo__cta"><?php echo esc_html((string) $archive_get_field('rec_title', 'option', '')); ?></div>
+				<div class="bbb-homeRecDemo__cta"><?php echo esc_html($rec_demo_cta); ?></div>
 			</div>
 
 			<div class="bbb-homeRecDemo__stage" aria-hidden="true">

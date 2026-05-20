@@ -23,7 +23,7 @@ function sss_token_engine(string $content, int $post_id): string {
 	$books = is_array($books) ? array_values(array_filter($books)) : array();
 	$trope = function_exists('get_field') ? get_field('trope', $post_id) : null;
 
-	$block_tokens = '(?:book(?::\d+)?|bookcard|pillar\s*bookcard|library|read\s*next|series|ku|quickstats(?::\d+)?|newsletter(?:\s+preview)?|newsletter:[^\]]+|specific|specific\s+links|looking\s+for\s+something\s+specific|specific:[^\]]+|bigspecific)';
+	$block_tokens = '(?:book(?::\d+)?|bookcard|pillar\s*bookcard|library|read\s*next|weekly\s+obsession|series|ku|quickstats(?::\d+)?|newsletter(?:\s+preview)?|newsletter:[^\]]+|specific|specific\s+links|looking\s+for\s+something\s+specific|specific:[^\]]+|bigspecific)';
 	$content = preg_replace('/<p\b[^>]*>\s*(\[' . $block_tokens . '\])\s*<\/p>/i', '$1', $content) ?? $content;
 
 	$content = preg_replace_callback(
@@ -46,6 +46,7 @@ function sss_token_engine(string $content, int $post_id): string {
 		'/\[(?:specific|specific\s+links|looking\s+for\s+something\s+specific)\]/i' => '[sss_specific_links post_id="' . $post_id . '"]',
 		'/\[bigspecific\]/i'           => '[sss_bigspecific]',
 		'/\[read\s*next\]/i'           => '[sss_readnext post_id="' . $post_id . '"]',
+		'/\[weekly\s+obsession\]/i'    => '[sss_weekly_obsession]',
 		'/\[series\]/i'                => '[sss_series post_id="' . $post_id . '"]',
 		'/\[(?:pillar|pillar\s*nav)\]/i' => '[sss_pillar_nav post_id="' . $post_id . '"]',
 		'/\[newsletter(?:\s+preview)?\]/i' => '[sss_newsletter]',

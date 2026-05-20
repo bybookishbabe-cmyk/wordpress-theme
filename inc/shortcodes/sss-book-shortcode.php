@@ -636,6 +636,11 @@ function sss_render_weekly_obsession_banner(): string {
 	return ob_get_clean();
 }
 
+function sss_weekly_obsession_shortcode(): string {
+	return sss_render_weekly_obsession_banner();
+}
+add_shortcode('sss_weekly_obsession', 'sss_weekly_obsession_shortcode');
+
 function sss_book_shortcode($atts): string {
 	$atts = shortcode_atts(array('index' => 1, 'post_id' => get_the_ID()), $atts, 'sss_book');
 	$books = sss_article_post_books((int) $atts['post_id']);

@@ -256,16 +256,27 @@
     if (!book || !book.title) return;
     var key = shelfKey(book);
     var shelf = readShelf();
+    var savedBook = shelfBook(book);
     var exists = shelf.some(function(item) {
       return shelfKey(item) === key || normalizeText(item.title) === normalizeText(book.title);
     });
 
     if (!exists) {
-      shelf.unshift(shelfBook(book));
+      shelf.unshift(savedBook);
       writeShelf(shelf);
     } else {
       writeShelf(shelf);
     }
+
+    document.dispatchEvent(new CustomEvent('bbb:shelf-saved', {
+      detail: {
+        count: shelf.length,
+        bookTitle: savedBook.title,
+        bookHandle: savedBook.handle,
+        book: savedBook,
+        source: 'what-to-read-next'
+      }
+    }));
   }
 
   function isBookSaved(book) {
@@ -451,9 +462,11 @@
           sibling.setAttribute('aria-pressed', 'false');
         }
       });
-      writeStatus(handle, status);
       if (byHandle[handle]) {
         saveBookToShelf(byHandle[handle]);
+      }
+      writeStatus(handle, status);
+      if (byHandle[handle]) {
         renderResults(selected);
       }
     });
