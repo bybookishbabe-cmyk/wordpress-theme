@@ -474,6 +474,20 @@ function bbb_society_admin_page(): void {
 			<button class="button button-primary" name="bbb_substack_import" value="1">Import Substack subscribers</button>
 		</form>
 
+		<div class="bbb-society-admin-import">
+			<h2><?php esc_html_e('Automatic Substack Sync', 'bybookishbabe-shopify-port'); ?></h2>
+			<p>Use this webhook URL in Zapier, Make, SubstackSync, or another Substack-compatible automation. Send a JSON payload with <code>email</code> and a paid/free status field.</p>
+			<p><code><?php echo esc_html(rest_url('bbb/v1/substack-subscriber')); ?></code></p>
+			<p>
+				<?php if (function_exists('bbb_reader_substack_sync_secret') && '' !== bbb_reader_substack_sync_secret()) : ?>
+					<strong><?php esc_html_e('Webhook secret is configured.', 'bybookishbabe-shopify-port'); ?></strong>
+				<?php else : ?>
+					<strong><?php esc_html_e('Webhook secret is not configured.', 'bybookishbabe-shopify-port'); ?></strong>
+					<?php esc_html_e('Add SUBSTACK_SYNC_SECRET to wp-config.php before using automatic sync.', 'bybookishbabe-shopify-port'); ?>
+				<?php endif; ?>
+			</p>
+		</div>
+
 		<form method="get" class="bbb-society-admin-filters">
 			<input type="hidden" name="page" value="bbb-society-members">
 			<select name="bbb_tier">

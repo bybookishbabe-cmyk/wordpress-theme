@@ -18,6 +18,10 @@ function bbb_reader_supabase_config(): array {
 	);
 }
 
+function bbb_reader_substack_sync_secret(): string {
+	return defined('SUBSTACK_SYNC_SECRET') ? (string) SUBSTACK_SYNC_SECRET : (string) getenv('SUBSTACK_SYNC_SECRET');
+}
+
 function bbb_reader_supabase_request(string $method, string $table, array $query = array(), $body = null) {
 	$config = bbb_reader_supabase_config();
 	if ('' === $config['url'] || '' === $config['key']) {
@@ -70,6 +74,92 @@ function bbb_reader_supabase_request(string $method, string $table, array $query
 	}
 
 	return is_array($decoded) ? $decoded : array();
+}
+
+function bbb_reader_substack_payload_is_paid(array $payload): bool {
+	$signals = array(
+		(string) ($payload['access_tier'] ?? ''),
+		(string) ($payload['tier'] ?? ''),
+		(string) ($payload['status'] ?? ''),
+		(string) ($payload['subscription_status'] ?? ''),
+		(string) ($payload['subscription_type'] ?? ''),
+		(string) ($payload['plan'] ?? ''),
+	);
+
+	$text = strtolower(trim(implode(' ', array_filter($signals))));
+	if ('' === $text) {
+		return false;
+	}
+
+	if (preg_match('/\b(free|unpaid|inactive|cancell?ed|expired|paused|trial_ended)\b/', $text)) {
+		return false;
+	}
+
+	return (bool) preg_match('/\b(paid|active|founding|monthly|annual|yearly|comped|gifted|subscriber|member|society)\b/', $text);
+}
+
+function bbb_reader_substack_payload_is_inactive(array $payload): bool {
+	$text = strtolower(
+		trim(
+			implode(
+				' ',
+				array_filter(
+					array(
+						(string) ($payload['status'] ?? ''),
+						(string) ($payload['subscription_status'] ?? ''),
+						(string) ($payload['event'] ?? ''),
+						(string) ($payload['action'] ?? ''),
+					)
+				)
+			)
+		)
+	);
+
+	return (bool) preg_match('/\b(unsubscribed|inactive|cancell?ed|expired|paused|deleted)\b/', $text);
+}
+
+function bbb_reader_sync_external_subscriber(array $payload, string $source = 'substack_webhook') {
+	$email = bbb_reader_normalize_email((string) ($payload['email'] ?? $payload['subscriber_email'] ?? $payload['customer_email'] ?? ''));
+	if ('' === $email || !is_email($email)) {
+		return new WP_Error('bbb_substack_missing_email', 'A valid subscriber email is required.', array('status' => 400));
+	}
+
+	$is_inactive = bbb_reader_substack_payload_is_inactive($payload);
+	$is_paid = !$is_inactive && bbb_reader_substack_payload_is_paid($payload);
+
+	return bbb_reader_supabase_request(
+		'POST',
+		'bookshelf_subscribers',
+		array('on_conflict' => 'email_normalized'),
+		array(
+			array(
+				'email'               => $email,
+				'email_normalized'    => $email,
+				'customer_email'      => $email,
+				'account_status'      => 'email_only',
+				'access_tier'         => $is_paid ? 'society' : 'free',
+				'society_key_used_at' => $is_paid ? gmdate('c') : null,
+				'society_key_source'  => $is_paid ? $source : null,
+				'weekly_email_opt_in' => !$is_inactive,
+				'source'              => $source,
+				'last_synced_at'      => gmdate('c'),
+				'metadata'            => array(
+					'imported_from' => $source,
+					'raw_status'    => array_filter(
+						array(
+							'event'               => $payload['event'] ?? null,
+							'action'              => $payload['action'] ?? null,
+							'status'              => $payload['status'] ?? null,
+							'subscription_status' => $payload['subscription_status'] ?? null,
+							'subscription_type'   => $payload['subscription_type'] ?? null,
+							'tier'                => $payload['tier'] ?? null,
+							'plan'                => $payload['plan'] ?? null,
+						)
+					),
+				),
+			),
+		)
+	);
 }
 
 function bbb_reader_user_has_wp_society_access(int $user_id = 0): bool {
@@ -357,6 +447,43 @@ add_action(
 				'methods'             => WP_REST_Server::CREATABLE,
 				'permission_callback' => static fn(): bool => is_user_logged_in(),
 				'callback'            => 'bbb_reader_sync_current_shelf',
+			)
+		);
+
+		register_rest_route(
+			'bbb/v1',
+			'/substack-subscriber',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'permission_callback' => static function (WP_REST_Request $request): bool {
+					$secret = bbb_reader_substack_sync_secret();
+					if ('' === $secret) {
+						return false;
+					}
+
+					$provided = (string) ($request->get_header('x-bbb-substack-secret') ?: $request->get_param('secret'));
+					return hash_equals($secret, $provided);
+				},
+				'callback'            => static function (WP_REST_Request $request) {
+					$params = $request->get_json_params();
+					if (!is_array($params) || !$params) {
+						$params = $request->get_params();
+					}
+
+					$sync = bbb_reader_sync_external_subscriber($params, 'substack_webhook');
+					if (is_wp_error($sync)) {
+						return $sync;
+					}
+
+					return rest_ensure_response(
+						array(
+							'ok'      => true,
+							'email'   => bbb_reader_normalize_email((string) ($params['email'] ?? $params['subscriber_email'] ?? $params['customer_email'] ?? '')),
+							'tier'    => bbb_reader_substack_payload_is_paid($params) ? 'society' : 'free',
+							'updated' => gmdate('c'),
+						)
+					);
+				},
 			)
 		);
 	}

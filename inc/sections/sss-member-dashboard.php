@@ -228,6 +228,30 @@ if (!function_exists('bbb_sss_active_drop')) {
 $drop = bbb_sss_active_drop();
 $fields = $drop ? bbb_sss_drop_field_map($drop) : array();
 
+if (!$drop) {
+	?>
+	<section class="sss-drop-theme sss-drop-theme--empty">
+		<div class="sss-drop-theme__wrap">
+			<header class="sss-drop-theme__hero">
+				<p class="sss-drop-theme__kicker">monthly theme</p>
+				<h1>drop data missing</h1>
+				<p class="sss-drop-theme__mood">the monthly theme needs the shopify <code>sss_drop</code> export at <code>firstpass/migration/exports/metaobjects/sss_drop.json</code>.</p>
+			</header>
+		</div>
+	</section>
+	<style>
+	.sss-drop-theme{background:#050505;color:#f6f6f6;padding:clamp(34px,6vw,76px) 18px;text-transform:lowercase}
+	.sss-drop-theme__wrap{width:min(1180px,100%);margin:0 auto}
+	.sss-drop-theme__hero{text-align:center;padding:10px 0 30px}
+	.sss-drop-theme__kicker{margin:0 0 8px;color:#ff8ac7;font-size:11px;letter-spacing:.16em;text-transform:lowercase}
+	.sss-drop-theme h1{margin:0;color:#fff;font-family:Cormorant,"Cormorant Garamond",Georgia,serif;font-size:clamp(48px,8vw,104px);font-weight:400;line-height:.9;letter-spacing:0;text-transform:lowercase}
+	.sss-drop-theme__mood{max-width:760px;margin:18px auto 0;color:rgba(246,246,246,.72);font-size:15px;line-height:1.6}
+	.sss-drop-theme code{color:#fff}
+	</style>
+	<?php
+	return;
+}
+
 $name       = bbb_sss_drop_value($fields, 'name', 'monthly theme');
 $mood_title = bbb_sss_drop_value($fields, 'moodboard_title', $name);
 $quote      = bbb_sss_drop_value($fields, 'quote_text', 'the atmosphere, the notes, and the songs are all gathered here.');
