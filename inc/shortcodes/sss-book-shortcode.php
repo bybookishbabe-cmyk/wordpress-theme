@@ -549,6 +549,78 @@ function sss_article_books_for_guide_category(WP_Post $category): array {
 	);
 }
 
+function sss_article_books_for_inferred_context(int $post_id): array {
+	$taxonomies = array_values(array_filter(array('category', 'post_tag', 'bbb_trope', 'bbb_shelf'), 'taxonomy_exists'));
+	$term_names = $taxonomies ? wp_get_post_terms($post_id, $taxonomies, array('fields' => 'names')) : array();
+	$term_names = (!is_wp_error($term_names) && is_array($term_names)) ? $term_names : array();
+	$haystack = sss_article_match_text(
+		implode(
+			' ',
+			array_filter(
+				array(
+					(string) get_the_title($post_id),
+					(string) get_post_field('post_name', $post_id),
+					(string) get_post_field('post_content', $post_id),
+					implode(' ', $term_names),
+				)
+			)
+		)
+	);
+	if ('' === $haystack) {
+		return array();
+	}
+
+	$generic_terms = array('book', 'books', 'romance', 'romances', 'read', 'reads', 'guide', 'guides', 'best', 'ultimate', 'list');
+	$matches = array();
+
+	foreach (sss_article_all_visible_books() as $book) {
+		$data = sss_article_book_data($book->ID);
+		$series_number = (int) $data['series_number'];
+		if ($series_number !== 0 && $series_number !== 1 && !$data['standalone']) {
+			continue;
+		}
+
+		$score = 0;
+		$terms = array();
+		if (!empty($data['shelf']['name'])) {
+			$terms[] = (string) $data['shelf']['name'];
+		}
+		if (!empty($data['shelf']['slug'])) {
+			$terms[] = (string) $data['shelf']['slug'];
+		}
+		foreach ($data['tropes'] as $trope) {
+			$terms[] = (string) ($trope['name'] ?? '');
+			$terms[] = (string) ($trope['slug'] ?? '');
+		}
+
+		foreach (array_unique(array_filter($terms)) as $term) {
+			$needle = sss_article_match_text($term);
+			if ('' === $needle || in_array($needle, $generic_terms, true)) {
+				continue;
+			}
+			if (str_contains(' ' . $haystack . ' ', ' ' . $needle . ' ')) {
+				$score += str_contains($needle, ' ') ? 3 : 1;
+			}
+		}
+
+		if ($score > 0) {
+			$matches[$book->ID] = array('book' => $book, 'score' => $score);
+		}
+	}
+
+	uasort(
+		$matches,
+		static function (array $a, array $b): int {
+			if ($a['score'] !== $b['score']) {
+				return $b['score'] <=> $a['score'];
+			}
+			return strcasecmp(get_the_title($a['book']), get_the_title($b['book']));
+		}
+	);
+
+	return array_values(array_map(static fn(array $match): WP_Post => $match['book'], $matches));
+}
+
 function sss_article_books_for_post(int $post_id): array {
 	$books = sss_article_post_books($post_id);
 	if ($books) {
@@ -589,7 +661,14 @@ function sss_article_books_for_post(int $post_id): array {
 		$category = $category_slug ? get_page_by_path($category_slug, OBJECT, 'page') : null;
 	}
 
-	return $category ? sss_article_books_for_guide_category($category) : array();
+	if ($category) {
+		$books = sss_article_books_for_guide_category($category);
+		if ($books) {
+			return $books;
+		}
+	}
+
+	return sss_article_books_for_inferred_context($post_id);
 }
 
 function sss_render_weekly_obsession_banner(): string {
