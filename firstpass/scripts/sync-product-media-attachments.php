@@ -10,10 +10,16 @@
 
 declare(strict_types=1);
 
-$wp_load = dirname(__DIR__, 4) . '/wp-load.php';
+$wp_load = dirname(__DIR__, 5) . '/wp-load.php';
 if (!file_exists($wp_load)) {
 	fwrite(STDERR, "Could not find wp-load.php from this script location.\n");
 	exit(1);
+}
+
+$db_socket = getenv('BBB_WP_DB_SOCKET') ?: '/Users/autumnmarie/Library/Application Support/Local/run/1wlaP1REx/mysql/mysqld.sock';
+if (file_exists($db_socket)) {
+	ini_set('mysqli.default_socket', $db_socket);
+	ini_set('pdo_mysql.default_socket', $db_socket);
 }
 
 require_once $wp_load;
