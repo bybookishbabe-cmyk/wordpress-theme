@@ -687,31 +687,27 @@
 
 .bbb-livequiz__book .sss-lib__book {
   display: grid;
-  grid-template-columns: 80px minmax(0, 1fr);
-  gap: 20px;
-  align-items: flex-start;
-  width: 100%;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  justify-items: center;
+  align-items: start;
+  width: min(190px, 100%);
   padding: 0;
+  margin: 0 auto;
   border: 0;
   background: transparent;
   color: #f6f6f6;
-  text-align: left;
+  text-align: center;
 }
 
 .bbb-livequiz__book .sss-lib__coverWrap {
   position: relative;
-  width: 80px;
-  margin: 0;
-}
-
-.bbb-livequiz__book .sss-lib__coverWrap::after {
-  content: "";
-  display: block;
-  clear: both;
+  width: min(170px, 100%);
+  margin: 0 auto;
 }
 
 .bbb-livequiz__book .sss-lib__cover {
-  width: 80px;
+  width: 100%;
   aspect-ratio: 2 / 3;
   object-fit: cover;
   border-radius: 8px;
@@ -743,7 +739,7 @@
   font-size: 18px;
   line-height: 1.3;
   font-weight: 400;
-  text-align: left;
+  text-align: center;
 }
 
 .bbb-livequiz__book .sss-lib__author,
@@ -752,12 +748,12 @@
   color: rgba(246,246,246,.58);
   font-size: 13px;
   line-height: 1.35;
-  text-align: left;
+  text-align: center;
 }
 
 .bbb-livequiz__bookTropes {
-  justify-content: flex-start;
-  margin: 12px 0 0 100px;
+  justify-content: center;
+  margin: 16px auto 0;
 }
 
 .bbb-livequiz__bookTropes span {
@@ -768,10 +764,12 @@
 }
 
 .bbb-livequiz__bookWhy {
-  margin: 12px 0 0 100px;
+  max-width: 52ch;
+  margin: 14px auto 0;
   color: rgba(246,246,246,.72);
   font-size: 14px;
   line-height: 1.65;
+  text-align: center;
 }
 
 @media (max-width: 720px) {
@@ -819,26 +817,14 @@
     grid-template-columns: 1fr;
   }
 
-  .bbb-livequiz__book .sss-lib__book {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    text-align: center;
-  }
-
   .bbb-livequiz__book .sss-lib__coverWrap {
-    width: 100%;
-    max-width: 120px;
-  }
-
-  .bbb-livequiz__book .sss-lib__cover {
-    width: 100%;
+    width: min(150px, 100%);
   }
 
   .bbb-livequiz__book .sss-lib__name,
   .bbb-livequiz__book .sss-lib__author,
   .bbb-livequiz__bookTropes,
   .bbb-livequiz__bookWhy {
-    margin-left: 0;
     text-align: center;
     justify-content: center;
   }
