@@ -26,6 +26,7 @@ $obsession_url    = sss_get_homepage_field('wo_obsession_url', '/pages/weekly-ob
 if (empty(trim($obsession_url))) {
 	$obsession_url = '/pages/weekly-obsession';
 }
+$obsession_url = function_exists('bbb_resolve_shopify_url') ? bbb_resolve_shopify_url($obsession_url) : $obsession_url;
 
 $book_id         = $featured_book->ID;
 $thumb_id        = get_post_thumbnail_id($book_id);

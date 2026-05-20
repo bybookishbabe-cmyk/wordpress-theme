@@ -14,6 +14,30 @@ $society_hero_option = static function (string $field_name, string $default): st
 	return '' !== $value ? $value : $default;
 };
 
+$society_issue_meta = static function (?WP_Post $issue, array $keys, string $default = ''): string {
+	if (!$issue instanceof WP_Post) {
+		return $default;
+	}
+
+	foreach ($keys as $key) {
+		$value = get_post_meta($issue->ID, $key, true);
+		if ('' !== $value && null !== $value) {
+			return is_scalar($value) ? trim((string) $value) : $default;
+		}
+	}
+
+	if (function_exists('get_field')) {
+		foreach ($keys as $key) {
+			$value = get_field($key, $issue->ID);
+			if (is_scalar($value) && '' !== trim((string) $value)) {
+				return trim((string) $value);
+			}
+		}
+	}
+
+	return $default;
+};
+
 $parse_issue_date = static function (string $raw): int {
 	$raw = trim($raw);
 	if ('' === $raw) {
@@ -30,47 +54,10 @@ $parse_issue_date = static function (string $raw): int {
 	return false === $timestamp ? 0 : $timestamp;
 };
 
-$now       = current_time('timestamp');
-$ten_hours = 10 * 60 * 60;
-$issues    = get_posts(
-	array(
-		'post_type'      => 'newsletter_issue',
-		'posts_per_page' => -1,
-		'post_status'    => 'publish',
-		'meta_query'     => array(
-			'relation' => 'OR',
-			array(
-				'key'     => 'publish_date',
-				'compare' => 'EXISTS',
-			),
-			array(
-				'key'     => '_issue_publish_date',
-				'compare' => 'EXISTS',
-			),
-		),
-	)
-);
-
-$latest_issue = null;
-$latest_ts    = 0;
-
-foreach ($issues as $issue) {
-	$raw = function_exists('get_field') ? get_field('publish_date', $issue->ID) : get_post_meta($issue->ID, 'publish_date', true);
-	if (!$raw) {
-		$raw = get_post_meta($issue->ID, '_issue_publish_date', true);
-	}
-
-	$ts = $parse_issue_date((string) $raw);
-	if (!$ts) {
-		continue;
-	}
-
-	$live_ts = $ts + $ten_hours;
-	if ($live_ts <= $now && $ts > $latest_ts) {
-		$latest_ts    = $ts;
-		$latest_issue = $issue;
-	}
-}
+$now          = current_time('timestamp');
+$ten_hours    = 10 * 60 * 60;
+$latest_issue = function_exists('sss_get_current_newsletter_issue') ? sss_get_current_newsletter_issue() : null;
+$latest_ts    = $parse_issue_date($society_issue_meta($latest_issue, array('_issue_publish_date', 'publish_date')));
 
 $is_new = false;
 if ($latest_issue) {
@@ -85,6 +72,7 @@ $subtitle      = $society_hero_option('sh_subtitle', "weekly letters, obsessive 
 $society_title = $society_hero_option('sh_society_title', 'inside the society');
 $society_text  = $society_hero_option('sh_society_text', 'the archive. reading lists. the fictional men problem. a tasteful amount of chaos.');
 $society_url   = $society_hero_option('sh_society_url', '/pages/smut-sentiment-society');
+$society_url   = function_exists('bbb_resolve_shopify_url') ? bbb_resolve_shopify_url($society_url) : $society_url;
 ?>
 
 <section class="bbb-newsletter-cta" id="bbb-newsletter-cta-society-hero">
@@ -103,22 +91,33 @@ $society_url   = $society_hero_option('sh_society_url', '/pages/smut-sentiment-s
 
 			<?php if ($latest_issue) : ?>
 				<?php
-				$issue_url      = function_exists('get_field') ? (string) get_field('issue_url', $latest_issue->ID) : (string) get_post_meta($latest_issue->ID, 'issue_url', true);
-				$issue_no       = function_exists('get_field') ? get_field('issue_no', $latest_issue->ID) : get_post_meta($latest_issue->ID, 'issue_no', true);
-				$issue_label    = function_exists('get_field') ? (string) get_field('issue_label', $latest_issue->ID) : (string) get_post_meta($latest_issue->ID, 'issue_label', true);
-				$issue_subtitle = function_exists('get_field') ? (string) get_field('issue_subtitle', $latest_issue->ID) : (string) get_post_meta($latest_issue->ID, 'issue_subtitle', true);
+				$issue_url      = $society_issue_meta($latest_issue, array('_bbb_newsletter_url', 'issue_url', 'url', 'newsletter_url'));
+				$issue_no       = $society_issue_meta($latest_issue, array('_issue_no', 'issue_no'));
+				$issue_label    = $society_issue_meta($latest_issue, array('_issue_label', 'issue_label', 'label'));
+				$issue_subtitle = $society_issue_meta($latest_issue, array('_issue_subtitle', 'issue_subtitle', 'subtitle'));
 				$preview_img    = '';
 				$img_field      = function_exists('get_field') ? get_field('preview_image', $latest_issue->ID) : null;
+				$issue_book     = function_exists('sss_get_obsession_book') ? sss_get_obsession_book($latest_issue) : null;
 
 				if (is_array($img_field) && !empty($img_field['url'])) {
 					$preview_img = (string) $img_field['url'];
 				} elseif (is_string($img_field)) {
 					$preview_img = $img_field;
 				}
+				if ('' === $issue_url && $issue_book instanceof WP_Post) {
+					$issue_url = 'bbb_book' === $issue_book->post_type
+						? (string) get_post_meta($issue_book->ID, '_bbb_newsletter_url', true)
+						: (string) bbb_get_field('newsletter_url', $issue_book->ID, '');
+				}
+				$issue_url = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value($issue_url) : $issue_url;
+				if ('' === $issue_url) {
+					$issue_url = 'https://thesmutandsentimentsociety.substack.com';
+				}
 
 				$issue_label    = '' !== trim($issue_label) ? $issue_label : 'latest edition ✦';
 				$issue_subtitle = '' !== trim($issue_subtitle) ? $issue_subtitle : 'one book a week. quotes, recs, and reader-core chaos.';
 				$issue_title    = get_the_title($latest_issue);
+				$issue_date     = $latest_ts ? wp_date('M j, Y', $latest_ts) : '';
 				?>
 				<article class="bbb-nc bbb-nc--latest">
 					<a class="bbb-nc__latestLink" href="<?php echo esc_url($issue_url); ?>" target="_blank" rel="noopener">
@@ -126,8 +125,12 @@ $society_url   = $society_hero_option('sh_society_url', '/pages/smut-sentiment-s
 							<div class="bbb-nc__copy">
 
 								<div class="bbb-nc__meta">
-									<span><?php echo esc_html(wp_date('M j, Y', $latest_ts)); ?></span>
-									<span><?php echo esc_html('issue ' . $issue_no); ?></span>
+									<?php if ($issue_date) : ?>
+										<span><?php echo esc_html($issue_date); ?></span>
+									<?php endif; ?>
+									<?php if ($issue_no) : ?>
+										<span><?php echo esc_html('issue ' . $issue_no); ?></span>
+									<?php endif; ?>
 								</div>
 
 								<div class="bbb-nc__top">

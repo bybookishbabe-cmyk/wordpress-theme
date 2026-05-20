@@ -14,7 +14,7 @@ $settings = wp_parse_args(
 		'demo_title'        => 'for the bookaholics who love romance',
 		'demo_subtext'      => 'pick one book and watch the next recommendation slide into place based on shelf chemistry, tropes, and mood.',
 		'demo_button'       => 'try the rec engine →',
-		'demo_link'         => 'https://bybookishbabe.com/pages/what-to-read-next',
+		'demo_link'         => '/pages/what-to-read-next',
 		'demo_pick_cover'   => '',
 		'demo_pick_title'   => 'daggermouth',
 		'demo_pick_meta'    => 'dystopian romance + enemies to lovers',
@@ -80,6 +80,7 @@ if (!function_exists('bbb_library_preview_cover')) {
 
 $demo_pick_cover   = bbb_library_preview_cover((string) $settings['demo_pick_cover'], (string) $settings['demo_pick_title']);
 $demo_result_cover = bbb_library_preview_cover((string) $settings['demo_result_cover'], (string) $settings['demo_result_title']);
+$demo_link         = function_exists('bbb_resolve_shopify_url') ? bbb_resolve_shopify_url((string) $settings['demo_link']) : (string) $settings['demo_link'];
 $post_types        = array_values(
 	array_filter(
 		array('sss_library', 'sss_book', 'bbb_book'),
@@ -192,7 +193,7 @@ if (count($top_shelf_books) < 5 && function_exists('sss_get_all_books')) {
 ?>
 <section class="sss-lib sss-lib--preview" data-sss-lib="public">
 	<div class="sss-lib__wrap">
-		<a class="bbb-homeRecDemo" href="<?php echo esc_url((string) $settings['demo_link']); ?>">
+		<a class="bbb-homeRecDemo" href="<?php echo esc_url($demo_link); ?>">
 			<div class="bbb-homeRecDemo__copy">
 				<div class="bbb-homeRecDemo__kicker">
 					<?php echo esc_html((string) $settings['demo_kicker']); ?>
@@ -259,7 +260,7 @@ if (count($top_shelf_books) < 5 && function_exists('sss_get_all_books')) {
 		</div>
 
 		<div class="sss-lib__previewLink">
-			<a href="/pages/library">
+			<a href="<?php echo esc_url(function_exists('bbb_page_url') ? bbb_page_url('library') : home_url('/library/')); ?>">
 				explore the full library →
 			</a>
 		</div>

@@ -112,6 +112,28 @@ if (!function_exists('bbb_trending_issue_date')) {
 	}
 }
 
+if (!function_exists('bbb_trending_issue_label')) {
+	function bbb_trending_issue_label(WP_Post $issue): string {
+		foreach (array('_issue_label', 'issue_label', 'label') as $key) {
+			$value = get_post_meta($issue->ID, $key, true);
+			if ('' !== $value && null !== $value) {
+				return strtolower(trim((string) $value));
+			}
+		}
+
+		if (function_exists('get_field')) {
+			foreach (array('issue_label', 'label') as $key) {
+				$value = get_field($key, $issue->ID);
+				if (is_string($value) && '' !== trim($value)) {
+					return strtolower(trim($value));
+				}
+			}
+		}
+
+		return '';
+	}
+}
+
 $settings = wp_parse_args(
 	$args ?? array(),
 	array(
@@ -122,6 +144,7 @@ $settings = wp_parse_args(
 		'cta_link'  => '/pages/library',
 	)
 );
+$settings['cta_link'] = function_exists('bbb_resolve_shopify_url') ? bbb_resolve_shopify_url((string) $settings['cta_link']) : (string) $settings['cta_link'];
 
 $current_month = wp_date('Y-m');
 $today         = wp_date('Y-m-d');
@@ -168,9 +191,23 @@ if ($issue_post_types) {
 			continue;
 		}
 
-		$sunday_index = bbb_trending_sunday_index_for_date($issue_date, $sundays);
-		if ($sunday_index < 1 || $sunday_index > count($issue_types)) {
-			continue;
+		$issue_label = str_replace(array('_', '-'), ' ', bbb_trending_issue_label($newsletter_issue));
+		$issue       = in_array($issue_label, $issue_types, true) ? $issue_label : '';
+		if ('' === $issue) {
+			foreach ($issue_types as $issue_type) {
+				if ('' !== $issue_label && str_contains($issue_label, $issue_type)) {
+					$issue = $issue_type;
+					break;
+				}
+			}
+		}
+
+		if ('' === $issue) {
+			$sunday_index = bbb_trending_sunday_index_for_date($issue_date, $sundays);
+			if ($sunday_index < 1 || $sunday_index > count($issue_types)) {
+				continue;
+			}
+			$issue = $issue_types[$sunday_index - 1];
 		}
 
 		$book = function_exists('sss_get_obsession_book') ? sss_get_obsession_book($newsletter_issue) : null;
@@ -178,7 +215,6 @@ if ($issue_post_types) {
 			continue;
 		}
 
-		$issue = $issue_types[$sunday_index - 1];
 		if (empty($matched_books[$issue])) {
 			$matched_books[$issue] = $book;
 		}
