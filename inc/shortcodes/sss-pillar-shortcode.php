@@ -20,7 +20,7 @@ function sss_spice_shortcode($atts): string {
 	$data = $map[$level];
 
 	return sprintf(
-		'<section class="blog-pillar-spice" id="spice-%1$d"><div class="blog-pillar-spice__line" aria-hidden="true"></div><div class="blog-pillar-spice__head"><div><p class="blog-pillar-spice__label">spice %1$d</p><h2 class="blog-pillar-spice__title">%2$s</h2></div><div class="blog-pillar-spice__heat" aria-label="%4$s spice">%4$s</div></div><p class="blog-pillar-spice__copy">%3$s</p></section>',
+		'<section class="blog-pillar-spice" id="spice-%1$d"><div class="blog-pillar-spice__line" aria-hidden="true"></div><div class="blog-pillar-spice__head"><p class="blog-pillar-spice__label">spice %1$d</p><h2 class="blog-pillar-spice__title">%2$s</h2><div class="blog-pillar-spice__heat" aria-label="%4$s spice">%4$s</div></div><p class="blog-pillar-spice__copy">%3$s</p></section>',
 		$level,
 		esc_html($data[0]),
 		esc_html($data[1]),
