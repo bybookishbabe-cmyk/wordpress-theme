@@ -108,6 +108,18 @@ summary.list-menu__item {
   text-decoration: none;
 }
 
+.header__sss-link {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.header__sss-link:hover,
+.header__sss-link:focus-visible {
+  border-color: rgba(255, 255, 255, 0.82);
+  transform: translateY(-0.1rem);
+}
+
 .header__account-indicator,
 .bbb-bookshelf-header {
   background: #fff;
