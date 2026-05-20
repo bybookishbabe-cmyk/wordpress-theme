@@ -21,28 +21,50 @@ $paths = array(
 		'slug'  => 'visitor',
 		'title' => 'visitor',
 		'url'   => bbb_page_url('society-visitor'),
-		'tone'  => 'pink',
-		'badge' => 'open',
-		'copy'  => 'peek inside the society, see what is free, and decide where you want to start.',
-		'links' => array('about the society', 'recent issues', 'join free'),
 	),
 	array(
 		'slug'  => 'free member',
 		'title' => 'free member',
 		'url'   => bbb_page_url('society-free-member'),
-		'tone'  => 'teal',
-		'badge' => 'free',
-		'copy'  => 'use the free shelf, preview member picks, and keep your reader profile warm.',
-		'links' => array('my bookshelf', 'free previews', 'reader updates'),
 	),
 	array(
 		'slug'  => 'paid member',
 		'title' => 'paid member',
 		'url'   => bbb_page_url('society-paid-member'),
-		'tone'  => 'amber',
-		'badge' => 'society',
-		'copy'  => 'enter the full smut and sentiment society archive, tools, printables, and member shelves.',
-		'links' => array('full archive', 'printable pack', 'member tools'),
+	),
+);
+
+$sections = array(
+	array(
+		'label' => 'the newsletter',
+		'items' => array(
+			array('title' => 'visitor page', 'copy' => 'what the society is, what is free, and where to begin.', 'url' => bbb_page_url('society-visitor'), 'badge' => 'open'),
+			array('title' => 'free member page', 'copy' => 'recent issues, reader updates, and preview access.', 'url' => bbb_page_url('society-free-member'), 'badge' => 'free'),
+			array('title' => 'paid member page', 'copy' => 'full archive, monthly extras, and paid member notes.', 'url' => bbb_page_url('society-paid-member'), 'badge' => 'society'),
+		),
+	),
+	array(
+		'label' => 'society exclusives',
+		'items' => array(
+			array('title' => 'reading guides', 'copy' => 'deep-dive trope guides and member-only rec lists.', 'url' => bbb_page_url('society-paid-member'), 'badge' => 'society'),
+			array('title' => 'exclusive rec lists', 'copy' => 'book lists that do not live on the public blog.', 'url' => bbb_page_url('society-paid-member'), 'badge' => 'society'),
+			array('title' => 'early access', 'copy' => 'posts and picks before they go public.', 'url' => bbb_page_url('society-free-member'), 'badge' => 'preview'),
+		),
+	),
+	array(
+		'label' => 'member tools',
+		'items' => array(
+			array('title' => 'reading tracker', 'copy' => 'tbr, ratings, notes, and reading history.', 'url' => bbb_page_url('my-bookshelf'), 'badge' => 'society'),
+			array('title' => 'ai rec tool', 'copy' => 'a conversational recommender for your current mood.', 'url' => bbb_page_url('what-to-read-next'), 'badge' => 'preview'),
+			array('title' => 'reading challenge', 'copy' => 'monthly prompts and themed reading goals.', 'url' => bbb_page_url('society-paid-member'), 'badge' => 'society'),
+		),
+	),
+	array(
+		'label' => 'shop perks',
+		'items' => array(
+			array('title' => 'monthly freebie', 'copy' => 'a rotating digital good for paid members.', 'url' => bbb_page_url('society-paid-member'), 'badge' => 'society'),
+			array('title' => 'shop discount', 'copy' => 'member savings on templates, printables, and extras.', 'url' => bbb_page_url('shop'), 'badge' => 'society'),
+		),
 	),
 );
 
@@ -55,16 +77,22 @@ get_header();
 			<p class="bbb-society-landing__eyebrow">the smut and sentiment society</p>
 			<h1 id="bbb-society-title">the society</h1>
 			<p class="bbb-society-landing__intro">
-				choose your doorway: visitor, free member, or paid member. each path will get its own page next.
+				a central page for the newsletter, the member paths, and the pieces that live behind each level.
 			</p>
 			<div class="bbb-society-landing__status">
-				<span>current view</span>
+				<span class="bbb-society-landing__statusLabel">current view</span>
 				<strong><?php echo esc_html($reader_state); ?></strong>
+				<nav class="bbb-society-view-nav" aria-label="society view pages">
+					<?php foreach ($paths as $path) : ?>
+						<a class="<?php echo $reader_state === $path['title'] ? 'is-active' : ''; ?>" href="<?php echo esc_url($path['url']); ?>">
+							<?php echo esc_html($path['title']); ?>
+						</a>
+					<?php endforeach; ?>
+				</nav>
 			</div>
 		</div>
 
 		<aside class="bbb-society-theme" aria-label="<?php echo esc_attr($monthly_theme); ?>">
-			<div class="bbb-society-theme__icon" aria-hidden="true">s</div>
 			<div>
 				<p class="bbb-society-theme__eyebrow"><?php echo esc_html($monthly_theme); ?>. live now</p>
 				<h2>burn for me</h2>
@@ -77,21 +105,22 @@ get_header();
 			</div>
 		</aside>
 
-		<div class="bbb-society-paths" aria-label="society paths">
-			<?php foreach ($paths as $path) : ?>
-				<a class="bbb-society-path bbb-society-path--<?php echo esc_attr($path['tone']); ?>" href="<?php echo esc_url($path['url']); ?>">
-					<span class="bbb-society-path__badge"><?php echo esc_html($path['badge']); ?></span>
-					<span class="bbb-society-path__icon" aria-hidden="true"><?php echo esc_html(substr($path['slug'], 0, 1)); ?></span>
-					<span class="bbb-society-path__body">
-						<span class="bbb-society-path__title"><?php echo esc_html($path['title']); ?></span>
-						<span class="bbb-society-path__copy"><?php echo esc_html($path['copy']); ?></span>
-						<span class="bbb-society-path__links">
-							<?php foreach ($path['links'] as $link) : ?>
-								<span><?php echo esc_html($link); ?></span>
-							<?php endforeach; ?>
-						</span>
-					</span>
-				</a>
+		<div class="bbb-society-sections">
+			<?php foreach ($sections as $section) : ?>
+				<section class="bbb-society-section" aria-labelledby="<?php echo esc_attr(sanitize_title($section['label'])); ?>">
+					<h2 id="<?php echo esc_attr(sanitize_title($section['label'])); ?>"><?php echo esc_html($section['label']); ?></h2>
+					<div class="bbb-society-link-grid">
+						<?php foreach ($section['items'] as $item) : ?>
+							<a class="bbb-society-link-card" href="<?php echo esc_url($item['url']); ?>">
+								<span class="bbb-society-link-card__top">
+									<span class="bbb-society-link-card__title"><?php echo esc_html($item['title']); ?></span>
+									<span class="bbb-society-link-card__badge"><?php echo esc_html($item['badge']); ?></span>
+								</span>
+								<span class="bbb-society-link-card__copy"><?php echo esc_html($item['copy']); ?></span>
+							</a>
+						<?php endforeach; ?>
+					</div>
+				</section>
 			<?php endforeach; ?>
 		</div>
 	</div>

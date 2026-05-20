@@ -31,10 +31,11 @@ $all_public_books = array_values(
 		<?php get_template_part('template-parts/library/library-spice-tease'); ?>
 		<?php get_template_part('template-parts/library/library-rec-demo'); ?>
 		<?php get_template_part('template-parts/library/library-my-shelf'); ?>
+		<?php get_template_part('template-parts/library/library-society-layer', null, array('mode' => 'private_shelf', 'books' => $all_books, 'public_books' => $all_public_books, 'is_society' => $is_society)); ?>
 		<?php get_template_part('template-parts/library/library-society-classics', null, array('books' => $all_public_books)); ?>
 		<?php get_template_part('template-parts/library/library-starter-pack', null, array('books' => $all_public_books)); ?>
 		<?php get_template_part('template-parts/library/library-books-of-month', null, array('books' => $all_public_books)); ?>
-		<?php get_template_part('template-parts/library/library-society-layer', null, array('books' => $all_books, 'public_books' => $all_public_books, 'is_society' => $is_society)); ?>
+		<?php get_template_part('template-parts/library/library-society-layer', null, array('mode' => 'matchmaker', 'books' => $all_books, 'public_books' => $all_public_books, 'is_society' => $is_society)); ?>
 		<?php get_template_part('template-parts/library/library-mood-shelves', null, array('books' => $all_public_books)); ?>
 		<?php get_template_part('template-parts/library/library-full-archive', null, array('books' => $all_public_books)); ?>
 		<?php get_template_part('template-parts/library/library-modal'); ?>

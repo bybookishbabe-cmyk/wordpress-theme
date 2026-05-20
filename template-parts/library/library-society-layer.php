@@ -10,6 +10,9 @@ declare(strict_types=1);
 $books        = array_values(array_filter($args['books'] ?? array(), static fn($book): bool => $book instanceof WP_Post));
 $public_books = array_values(array_filter($args['public_books'] ?? array(), static fn($book): bool => $book instanceof WP_Post));
 $is_society   = !empty($args['is_society']);
+$mode         = (string) ($args['mode'] ?? 'all');
+$show_private = in_array($mode, array('all', 'private_shelf'), true);
+$show_match   = in_array($mode, array('all', 'matchmaker'), true);
 
 $private_books = array_values(
 	array_filter(
@@ -39,15 +42,18 @@ $finder_books = array_map(
 $join_url  = get_option('bbb_society_gate_member_url', 'https://thesmutandsentimentsociety.substack.com/subscribe');
 $login_url = wp_login_url(get_permalink());
 ?>
-<section class="sss-lib__societyLayer" id="society-library">
+<section class="sss-lib__societyLayer sss-lib__societyLayer--<?php echo esc_attr(str_replace('_', '-', $mode)); ?>" id="<?php echo esc_attr($show_match ? 'society-matchmaker' : 'society-private-shelf'); ?>">
 	<div class="sss-lib__societyLayerHead">
 		<p class="sss-lib__archiveKicker">society library</p>
-		<h2 class="sss-lib__archiveTitle">the private reader layer</h2>
-		<p class="sss-lib__archiveSub">book matchmaker plus the private shelf, tucked into the main library for paid members.</p>
+		<h2 class="sss-lib__archiveTitle"><?php echo esc_html($show_match ? 'book matchmaker' : 'the private shelf'); ?></h2>
+		<p class="sss-lib__archiveSub">
+			<?php echo esc_html($show_match ? 'Pick a shelf and trope, then let the library pull your next read.' : 'Member-only books, private notes, and the recs tucked inside the society.'); ?>
+		</p>
 	</div>
 
 	<?php if ($is_society) : ?>
-		<div class="sss-lib__finder" id="sssReadFinder">
+		<?php if ($show_match) : ?>
+			<div class="sss-lib__finder" id="sssReadFinder">
 			<div class="sss-lib__finderHead">
 				<p class="sss-lib__finderKicker">book matchmaker</p>
 				<h3 class="sss-lib__finderTitle">find your next read</h3>
@@ -94,9 +100,10 @@ $login_url = wp_login_url(get_permalink());
 			</div>
 		</div>
 
-		<script type="application/json" id="sssFinderData"><?php echo wp_json_encode($finder_books); ?></script>
+			<script type="application/json" id="sssFinderData"><?php echo wp_json_encode($finder_books); ?></script>
+		<?php endif; ?>
 
-		<?php if ($private_books) : ?>
+		<?php if ($show_private && $private_books) : ?>
 			<section class="sss-lib__shelf sss-lib__shelf--private" id="private-shelf">
 				<div class="sss-lib__shelfHead">
 					<div class="sss-lib__privateKicker">members only</div>
@@ -114,8 +121,10 @@ $login_url = wp_login_url(get_permalink());
 		<div class="sss-lib__societyLocked">
 			<div>
 				<p class="sss-lib__finderKicker">paid member access</p>
-				<h3 class="sss-lib__finderTitle">book matchmaker + private shelf</h3>
-				<p class="sss-lib__finderSub">Paid members unlock the private shelf and the library matchmaker here, without leaving the main Library page.</p>
+				<h3 class="sss-lib__finderTitle"><?php echo esc_html($show_match ? 'book matchmaker' : 'the private shelf'); ?></h3>
+				<p class="sss-lib__finderSub">
+					<?php echo esc_html($show_match ? 'Paid members can use the library matchmaker here.' : 'Paid members can open the private shelf here.'); ?>
+				</p>
 			</div>
 			<div class="sss-lib__societyLockedActions">
 				<a class="sss-lib__finderBtn" href="<?php echo esc_url($join_url); ?>">join the society</a>
