@@ -57,7 +57,8 @@ if (!function_exists('bbb_reader_quiz_cover_urls')) {
 	}
 }
 
-wp_enqueue_style('bbb-reader-quizzes', get_theme_file_uri('assets/css/reader-quizzes.css'), array('bbb-sss-library'), wp_get_theme()->get('Version'));
+$quiz_css_path = get_theme_file_path('assets/css/reader-quizzes.css');
+wp_enqueue_style('bbb-reader-quizzes', get_theme_file_uri('assets/css/reader-quizzes.css'), array('bbb-sss-library'), file_exists($quiz_css_path) ? (string) filemtime($quiz_css_path) : wp_get_theme()->get('Version'));
 
 $feature_covers = bbb_reader_quiz_cover_urls(0, 3);
 $mood_covers    = bbb_reader_quiz_cover_urls(3, 3);

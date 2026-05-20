@@ -70,7 +70,10 @@ function bbb_reader_quiz_books(): array {
 }
 
 function bbb_reader_quiz_enqueue_assets(): void {
-	wp_enqueue_style('bbb-reader-quizzes', get_theme_file_uri('assets/css/reader-quizzes.css'), array('bbb-sss-library'), wp_get_theme()->get('Version'));
-	wp_enqueue_script('bbb-reader-quiz', get_theme_file_uri('assets/js/reader-quiz.js'), array('bbb-sss-library'), wp_get_theme()->get('Version'), true);
-}
+	$css_path = get_theme_file_path('assets/css/reader-quizzes.css');
+	$js_path  = get_theme_file_path('assets/js/reader-quiz.js');
+	$version  = wp_get_theme()->get('Version');
 
+	wp_enqueue_style('bbb-reader-quizzes', get_theme_file_uri('assets/css/reader-quizzes.css'), array('bbb-sss-library'), file_exists($css_path) ? (string) filemtime($css_path) : $version);
+	wp_enqueue_script('bbb-reader-quiz', get_theme_file_uri('assets/js/reader-quiz.js'), array('bbb-sss-library'), file_exists($js_path) ? (string) filemtime($js_path) : $version, true);
+}
