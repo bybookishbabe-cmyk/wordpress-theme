@@ -31,8 +31,14 @@ display:none;
 .sss-blog-library__card{
 flex:0 0 auto;
 width:90px;
+padding:0;
+border:0;
+background:transparent;
 text-decoration:none;
 color:inherit;
+font:inherit;
+text-align:left;
+cursor:pointer;
 }
 
 .sss-blog-library__card img{
@@ -3734,18 +3740,25 @@ body.single-post .article-template__content video{
 .bbb-bigspecific__cta{
   display:inline-flex;
   align-items:center;
+  justify-content:center;
   min-height:42px;
-  padding:0 .95rem;
-  background:#e85a9b;
-  color:#fff;
-  text-decoration:none;
+  padding:0 1.1rem;
+  border:1px solid #ffffff;
+  background:#ffffff;
+  color:#e85a9b !important;
+  text-decoration:none !important;
   text-transform:lowercase;
+  transition:background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
 }
 
 .bbb-bigspecific__cta:hover,
 .bbb-bigspecific__cta:focus-visible{
-  background:#ff8ac7;
-  color:#fff;
+  background:#e85a9b;
+  border-color:#e85a9b;
+  color:#ffffff !important;
+  transform:translateY(-2px);
+  box-shadow:0 12px 28px rgba(232,90,155,.24);
+  outline:none;
 }
 
 .article-book-card__buttonText--short {
@@ -3917,4 +3930,42 @@ body.single-post main,
 body.single-post .content-for-layout,
 body.single-post .article-template{
   overflow-y:visible !important;
+}
+
+/* Canonical blog scroll owner: only the viewport should scroll. */
+html:has(body.single-post),
+html:has(body.blog),
+html:has(body.category),
+html:has(body.tag){
+  height:auto !important;
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+}
+
+body.single-post:not(.bbb-book-preview-open),
+body.blog,
+body.category,
+body.tag{
+  height:auto !important;
+  min-height:100% !important;
+  max-height:none !important;
+  overflow-x:hidden !important;
+  overflow-y:visible !important;
+}
+
+body.single-post #MainContent,
+body.single-post .content-for-layout,
+body.single-post .article-template,
+body.single-post .article-template__content,
+body.blog #MainContent,
+body.category #MainContent,
+body.tag #MainContent{
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  overflow:visible !important;
+}
+
+body.single-post.bbb-book-preview-open{
+  overflow:hidden !important;
 }

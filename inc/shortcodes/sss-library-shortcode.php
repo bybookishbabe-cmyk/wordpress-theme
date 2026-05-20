@@ -32,16 +32,13 @@ function sss_library_shortcode($atts): string {
   <div class="sss-blog-library__row">
     <?php foreach ($selected as $book_post) : ?>
       <?php $book = sss_article_book_data($book_post->ID); ?>
-      <div class="sss-blog-library__card" data-book-preview
-        data-title="<?php echo esc_attr($book['title']); ?>" data-author="<?php echo esc_attr($book['author']); ?>" data-cover="<?php echo esc_attr($book['cover']); ?>"
-        data-amazon="<?php echo esc_attr($book['amazon']); ?>" data-bookshop="<?php echo esc_attr($book['bookshop']); ?>"
-        data-spice="<?php echo esc_attr((string) $book['spice']); ?>" data-tropes="<?php echo esc_attr(implode(', ', wp_list_pluck($book['tropes'], 'name'))); ?>">
+      <button class="sss-blog-library__card" type="button" data-book-preview <?php echo sss_article_data_attrs($book); ?>>
         <?php if ($book['cover']) : ?>
         <img src="<?php echo esc_url($book['cover']); ?>" alt="<?php echo esc_attr($book['title']); ?>" loading="lazy">
         <?php endif; ?>
         <div class="sss-blog-library__title"><?php echo esc_html($book['title']); ?></div>
         <div class="sss-blog-library__author"><?php echo esc_html($book['author']); ?></div>
-      </div>
+      </button>
     <?php endforeach; ?>
   </div>
 </div>
