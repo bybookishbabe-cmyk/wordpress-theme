@@ -148,6 +148,40 @@ function bbb_import_newsletter_issue_url(array $fields): string {
 	return '';
 }
 
+function bbb_import_newsletter_preview_image(array $fields): array {
+	foreach (array('preview', 'preview_image', 'image') as $key) {
+		$reference = $fields[$key]['reference'] ?? null;
+		if (is_array($reference)) {
+			$image = $reference['image'] ?? null;
+			if (is_array($image) && !empty($image['url'])) {
+				return array(
+					'url' => (string) $image['url'],
+					'alt' => isset($image['altText']) ? (string) $image['altText'] : '',
+				);
+			}
+
+			foreach (array('url', 'previewUrl', 'originalSource') as $reference_key) {
+				if (!empty($reference[$reference_key]) && is_string($reference[$reference_key])) {
+					return array(
+						'url' => $reference[$reference_key],
+						'alt' => '',
+					);
+				}
+			}
+		}
+
+		$value = bbb_import_metaobject_field_value($fields, $key);
+		if (filter_var($value, FILTER_VALIDATE_URL)) {
+			return array(
+				'url' => $value,
+				'alt' => '',
+			);
+		}
+	}
+
+	return array('url' => '', 'alt' => '');
+}
+
 function bbb_import_normalize_date($value): string {
 	if (!is_scalar($value)) {
 		return '';
@@ -659,6 +693,12 @@ function bbb_import_newsletter_issues_from_data(array $data, ?callable $logger =
 		if ('' !== $issue_url) {
 			update_post_meta((int) $post_id, '_bbb_newsletter_url', $issue_url);
 			update_post_meta((int) $post_id, 'issue_url', $issue_url);
+		}
+
+		$preview_image = bbb_import_newsletter_preview_image($fields);
+		if ('' !== $preview_image['url']) {
+			update_post_meta((int) $post_id, '_issue_preview_url', esc_url_raw($preview_image['url']));
+			update_post_meta((int) $post_id, '_issue_preview_alt', sanitize_text_field($preview_image['alt']));
 		}
 
 		foreach (

@@ -44,6 +44,47 @@ function bbb_society_newsletter_issue_summary(WP_Post $issue): string {
 	return '' !== $summary ? wp_strip_all_tags($summary) : 'a society dispatch from the smut and sentiment shelf.';
 }
 
+function bbb_society_newsletter_issue_image(WP_Post $issue): array {
+	$image_url = '';
+	$image_alt = '';
+
+	if (function_exists('get_field')) {
+		$image_field = get_field('preview_image', $issue->ID);
+		if (is_array($image_field) && !empty($image_field['url'])) {
+			$image_url = (string) $image_field['url'];
+			$image_alt = isset($image_field['alt']) ? (string) $image_field['alt'] : '';
+		} elseif (is_string($image_field) && '' !== trim($image_field)) {
+			$image_url = trim($image_field);
+		}
+	}
+
+	if ('' === $image_url) {
+		$image_url = (string) get_post_meta($issue->ID, '_issue_preview_url', true);
+		$image_alt = (string) get_post_meta($issue->ID, '_issue_preview_alt', true);
+	}
+
+	if ('' === $image_url && function_exists('sss_get_obsession_book')) {
+		$book = sss_get_obsession_book($issue);
+		if ($book instanceof WP_Post) {
+			if (function_exists('sss_article_cover_url')) {
+				$image_url = (string) sss_article_cover_url($book);
+			}
+			if ('' === $image_url) {
+				$image_url = (string) get_post_meta($book->ID, '_bbb_cover_url', true);
+			}
+			if ('' === $image_url) {
+				$image_url = (string) get_post_meta($book->ID, 'cover', true);
+			}
+			$image_alt = get_the_title($book);
+		}
+	}
+
+	return array(
+		'url' => $image_url,
+		'alt' => '' !== $image_alt ? $image_alt : get_the_title($issue),
+	);
+}
+
 function bbb_society_get_newsletter_issues(int $limit = 3): array {
 	if (!post_type_exists('newsletter_issue')) {
 		return array();
@@ -83,8 +124,14 @@ function bbb_society_render_newsletter_issue_grid(array $issues): void {
 			if ('' === $label) {
 				$label = bbb_society_newsletter_issue_date($issue);
 			}
+			$image = bbb_society_newsletter_issue_image($issue);
 			?>
 			<a class="bbb-society-link-card" href="<?php echo esc_url(bbb_society_newsletter_issue_url($issue)); ?>" target="_blank" rel="noopener">
+				<?php if ('' !== $image['url']) : ?>
+					<span class="bbb-society-link-card__media">
+						<img src="<?php echo esc_url($image['url']); ?>" alt="<?php echo esc_attr($image['alt']); ?>" loading="lazy">
+					</span>
+				<?php endif; ?>
 				<span class="bbb-society-link-card__top">
 					<span class="bbb-society-link-card__title"><?php echo esc_html(strtolower(get_the_title($issue))); ?></span>
 					<span class="bbb-society-link-card__badge"><?php echo esc_html(strtolower($label)); ?></span>

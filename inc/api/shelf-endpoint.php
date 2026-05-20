@@ -1,6 +1,6 @@
 <?php
 /**
- * Reader shelf REST placeholders.
+ * Backward-compatible reader shelf REST route.
  *
  * @package ByBookishBabeShopifyPort
  */
@@ -17,6 +17,10 @@ add_action(
 				array(
 					'methods'             => WP_REST_Server::READABLE,
 					'callback'            => static function (WP_REST_Request $request) {
+						if (is_user_logged_in() && function_exists('bbb_reader_account_response')) {
+							return rest_ensure_response(bbb_reader_account_response(wp_get_current_user()));
+						}
+
 						return rest_ensure_response(
 							array(
 								'email' => sanitize_email((string) $request->get_param('email')),
@@ -28,7 +32,13 @@ add_action(
 				),
 				array(
 					'methods'             => WP_REST_Server::CREATABLE,
-					'callback'            => static fn() => rest_ensure_response(array('saved' => true)),
+					'callback'            => static function (WP_REST_Request $request) {
+						if (function_exists('bbb_reader_sync_current_shelf')) {
+							return bbb_reader_sync_current_shelf($request);
+						}
+
+						return rest_ensure_response(array('saved' => true));
+					},
 					'permission_callback' => static fn() => is_user_logged_in(),
 				),
 			)

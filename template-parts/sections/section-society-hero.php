@@ -115,6 +115,9 @@ $society_url   = function_exists('bbb_resolve_shopify_url') ? bbb_resolve_shopif
 				} elseif (is_string($img_field)) {
 					$preview_img = $img_field;
 				}
+				if ('' === $preview_img && $latest_issue instanceof WP_Post) {
+					$preview_img = (string) get_post_meta($latest_issue->ID, '_issue_preview_url', true);
+				}
 				if ('' === $issue_url && $issue_book instanceof WP_Post) {
 					$issue_url = 'bbb_book' === $issue_book->post_type
 						? (string) get_post_meta($issue_book->ID, '_bbb_newsletter_url', true)
