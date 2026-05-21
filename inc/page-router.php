@@ -194,6 +194,19 @@ add_filter(
 	}
 );
 
+add_filter(
+	'pre_get_document_title',
+	static function (string $title): string {
+		$slug = bbb_current_route_slug();
+		if ('' === bbb_route_template_for_slug($slug)) {
+			return $title;
+		}
+
+		return bbb_virtual_route_title($slug) . ' - ' . get_bloginfo('name');
+	},
+	99
+);
+
 function bbb_render_waiting_on_template(string $slug): void {
 	bbb_mark_virtual_route_found();
 
