@@ -5,11 +5,11 @@ $tabs = $args['tabs'] ?? array(
 	array('label' => 'monthly theme', 'icon' => '📁', 'slug' => 'monthly-theme', 'sub' => 'current'),
 	array('label' => 'library', 'icon' => '📚', 'slug' => 'library', 'sub' => 'books'),
 	array('label' => 'member dashboard', 'icon' => '✨', 'slug' => 'member-dashboard', 'sub' => 'recs'),
-	array('label' => 'printable inserts', 'icon' => '🖨️', 'slug' => 'sss-printable-kindle-inserts', 'sub' => 'drops'),
-	array('label' => 'bookish templates', 'icon' => '⌨️', 'slug' => 'sss-canva-templates', 'sub' => 'canva'),
-	array('label' => 'free extras', 'icon' => '🎁', 'slug' => 'sss-freebies', 'sub' => 'downloads'),
-	array('label' => 'quote library', 'icon' => '"', 'slug' => 'sss-quote-wall', 'sub' => 'quotes'),
-	array('label' => 'private shelf', 'icon' => '🔓', 'slug' => 'sss-private-shelf', 'sub' => 'members'),
+	array('label' => 'printable inserts', 'icon' => '🖨️', 'slug' => 'kindle-inserts', 'sub' => 'drops'),
+	array('label' => 'bookish templates', 'icon' => '⌨️', 'slug' => 'canva-templates', 'sub' => 'canva'),
+	array('label' => 'free extras', 'icon' => '🎁', 'slug' => 'freebies', 'sub' => 'downloads'),
+	array('label' => 'quote library', 'icon' => '"', 'slug' => 'quote-wall', 'sub' => 'quotes'),
+	array('label' => 'private shelf', 'icon' => '🔓', 'slug' => 'private-shelf', 'sub' => 'members'),
 );
 ?>
 <nav class="sss-folder-tabs" aria-label="<?php esc_attr_e('Society navigation', 'bybookishbabe-shopify-port'); ?>">

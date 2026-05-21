@@ -113,6 +113,10 @@ function bbb_is_sss_member(): bool {
 }
 
 function bbb_resolve_page_url(string $slug): string {
+	if (function_exists('bbb_page_url')) {
+		return bbb_page_url($slug);
+	}
+
 	$page = get_page_by_path($slug);
 
 	return $page ? get_permalink($page) : home_url('/' . trim($slug, '/') . '/');

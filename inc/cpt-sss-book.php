@@ -31,6 +31,7 @@ add_action(
 				),
 				'public'       => false,
 				'show_ui'      => true,
+				'show_in_menu' => false,
 				'show_in_rest' => true,
 				'menu_icon'    => 'dashicons-book-alt',
 				'supports'     => array('title'),

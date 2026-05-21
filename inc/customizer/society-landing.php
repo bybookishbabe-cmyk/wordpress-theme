@@ -54,11 +54,11 @@ function bbb_society_landing_customizer_settings(WP_Customize_Manager $wp_custom
 
 	$link_defaults = array(
 		1 => array('label' => 'monthly theme', 'url' => '/monthly-theme/'),
-		2 => array('label' => 'track your reads', 'url' => '/sss-library/'),
+		2 => array('label' => 'track your reads', 'url' => '/member-library/'),
 		3 => array('label' => 'member dashboard', 'url' => '/member-dashboard/'),
 		4 => array('label' => 'my bookshelf', 'url' => '/my-bookshelf/'),
-		5 => array('label' => 'printables', 'url' => '/sss-printable-kindle-inserts/'),
-		6 => array('label' => 'quote library', 'url' => '/sss-quote-wall/'),
+		5 => array('label' => 'printables', 'url' => '/kindle-inserts/'),
+		6 => array('label' => 'quote library', 'url' => '/quote-wall/'),
 	);
 
 	foreach ($link_defaults as $index => $defaults) {

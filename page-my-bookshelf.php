@@ -134,7 +134,7 @@ get_header();
 					<div class="bbb-account-shelf__rail" aria-hidden="true"></div>
 					<div class="bbb-account-shelf__coverStage" data-account-read-covers></div>
 				</div>
-				<a class="bbb-account-shelf__quoteCard" href="<?php echo esc_url(home_url('/sss-quote-wall/')); ?>" data-account-quote-card>
+				<a class="bbb-account-shelf__quoteCard" href="<?php echo esc_url(bbb_page_url('quote-wall')); ?>" data-account-quote-card>
 					<p class="bbb-account-shelf__featureKicker">pulled from the quote wall</p>
 					<blockquote data-account-quote-text>mark a few books as read and a related quote can find you here.</blockquote>
 					<span data-account-quote-source>visit the quote wall →</span>

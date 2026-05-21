@@ -165,6 +165,21 @@ function bbb_page_url( string $slug ): string {
 		return home_url( '/' );
 	}
 
+	$clean_slugs = array(
+		'sss-library'                  => 'member-library',
+		'sss-library-page'             => 'member-library',
+		'sss-made-for-you'             => 'made-for-you',
+		'sss-printable-kindle'         => 'kindle-inserts',
+		'sss-printable-kindle-inserts' => 'kindle-inserts',
+		'sss-canva-templates'          => 'canva-templates',
+		'sss-freebies'                 => 'freebies',
+		'sss-private-shelf'            => 'private-shelf',
+		'sss-quote-wall'               => 'quote-wall',
+		'sss-series'                   => 'series',
+		'sss-series-page'              => 'series',
+	);
+	$slug = $clean_slugs[ $slug ] ?? $slug;
+
 	$page = get_page_by_path( $slug );
 	if ( $page instanceof WP_Post ) {
 		$permalink = get_permalink( $page );

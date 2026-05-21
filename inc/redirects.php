@@ -86,6 +86,23 @@ function bbb_shopify_collection_permalink(string $handle): string {
 function bbb_shopify_legacy_redirect_target(string $path): string {
 	$path = trim($path, '/');
 
+	$clean_pages = array(
+		'sss-library'                  => 'member-library',
+		'sss-library-page'             => 'member-library',
+		'sss-made-for-you'             => 'made-for-you',
+		'sss-printable-kindle'         => 'kindle-inserts',
+		'sss-printable-kindle-inserts' => 'kindle-inserts',
+		'sss-canva-templates'          => 'canva-templates',
+		'sss-freebies'                 => 'freebies',
+		'sss-private-shelf'            => 'private-shelf',
+		'sss-quote-wall'               => 'quote-wall',
+		'sss-series'                   => 'series',
+		'sss-series-page'              => 'series',
+	);
+	if (isset($clean_pages[$path])) {
+		return bbb_page_url($clean_pages[$path]);
+	}
+
 	if (str_starts_with($path, 'pages/')) {
 		return bbb_page_url(substr($path, strlen('pages/')));
 	}

@@ -65,7 +65,7 @@ function bbb_popular_pages_candidates(): array {
 		array('Books Like X', 'books-like', 'reading guide', 'next-read guides based on books you already loved.'),
 		array('Series Reading Orders', 'series-reading-orders', 'reading order', 'start the series in the right place and avoid the chaos.'),
 		array('Weekly Obsession', 'weekly-obsession', 'weekly pick', 'the current book taking up too much space in the group chat.'),
-		array('Quote Wall', 'sss-quote-wall', 'quote archive', 'reader-favorite lines, beautifully collected.'),
+		array('Quote Wall', 'quote-wall', 'quote archive', 'reader-favorite lines, beautifully collected.'),
 		array('Library', 'library', 'book library', 'the full recommendation library by shelf, trope, and mood.'),
 	);
 

@@ -18,6 +18,7 @@ add_action(
 					'singular_name' => __('Quote', 'bybookishbabe-shopify-port'),
 				),
 				'public'       => true,
+				'show_in_menu' => false,
 				'show_in_rest' => true,
 				'menu_icon'    => 'dashicons-format-quote',
 				'supports'     => array('title', 'editor', 'custom-fields'),
