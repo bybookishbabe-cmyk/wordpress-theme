@@ -1,4 +1,5 @@
-.bbb-shop {
+.bbb-shop,
+.bbb-product {
   --shop-bg: #050505;
   --shop-panel: #0d0d0d;
   --shop-panel-soft: #151515;
@@ -492,6 +493,45 @@
 
 .bbb-product__purchaseForm {
   display: grid !important;
+}
+
+.bbb-product__actions .edd_download_purchase_form,
+.bbb-product__actions .edd_purchase_submit_wrapper {
+  display: grid;
+  gap: 14px;
+}
+
+.bbb-product__actions .edd-cart-ajax-alert {
+  min-height: 0;
+}
+
+.bbb-product__actions .edd-cart-added-alert,
+.bbb-product .edd_added_to_cart_alert {
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 138, 199, 0.42);
+  border-radius: 6px;
+  background: rgba(255, 138, 199, 0.12);
+  color: var(--shop-ink);
+  font: 800 13px/1.35 Assistant, system-ui, sans-serif;
+  text-transform: lowercase;
+}
+
+.bbb-product__actions .edd-cart-added-alert[style*="block"] {
+  display: inline-flex !important;
+}
+
+.bbb-product__actions .edd-cart-added-alert svg {
+  width: 16px;
+  height: 16px;
+  fill: var(--shop-pink);
+}
+
+.bbb-product .edd_added_to_cart_alert {
+  display: none;
 }
 
 .bbb-product__note {
