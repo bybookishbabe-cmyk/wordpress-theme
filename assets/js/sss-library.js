@@ -1444,6 +1444,7 @@ function init(){
         darkness: btn.dataset.darkness || '',
         yearning: btn.dataset.yearning || '',
         boyfriend: btn.dataset.boyfriend || '',
+        boyfriendName: btn.dataset.boyfriendName || '',
         reread: btn.dataset.reread || '',
         ku: btn.dataset.ku || '',
         mini: btn.dataset.mini || '',
@@ -1589,11 +1590,7 @@ if(modalHeart){
         kuEl.textContent = (kuState ? '✓' : '✕') + ' on kindle unlimited: ' + (kuState ? 'yes' : 'no');
       }
 
-      if (darknessEl){
-        darknessEl.textContent = data.darkness
-          ? "💀 darkness: " + data.darkness + "/5"
-          : '';
-      }
+	      if (darknessEl) darknessEl.textContent = '';
 
 var seriesEl = modal.querySelector('[data-mseries]');
 
@@ -1703,9 +1700,10 @@ if (seriesOrderEl){
       }
 
       if (newsletterBtn){
-        newsletterBtn.style.display = data.newsletter ? '' : 'none';
-        if (data.newsletter) newsletterBtn.href = data.newsletter;
-        newsletterBtn.onclick = data.newsletter ? function(){
+        var showNewsletter = libraryType === 'society' && data.newsletter;
+        newsletterBtn.style.display = showNewsletter ? '' : 'none';
+        if (showNewsletter) newsletterBtn.href = data.newsletter;
+        newsletterBtn.onclick = showNewsletter ? function(){
           trackSiteEvent("book_link_clicked", {
             bookHandle: data.handle || '',
             bookTitle: data.title || '',
@@ -1734,6 +1732,12 @@ if (seriesOrderEl){
   if (damageEl){
     damageEl.textContent = data.damage
       ? "💔 emotional damage: " + data.damage + "/5"
+      : '';
+  }
+
+  if (darknessEl){
+    darknessEl.textContent = data.darkness
+      ? "💀 darkness: " + data.darkness + "/5"
       : '';
   }
 
@@ -1769,6 +1773,19 @@ if (yearningEl){
     rereadEl.textContent = data.reread ? "reread worthy" : '';
   }
 
+  if (boyfriendEl){
+    boyfriendEl.textContent = data.boyfriend
+      ? "book boyfriend: " + (data.boyfriendName ? data.boyfriendName + " · " : "") + data.boyfriend
+      : '';
+  }
+
+} else {
+  if (tensionEl) tensionEl.textContent = '';
+  if (damageEl) damageEl.textContent = '';
+  if (yearningEl) yearningEl.innerHTML = '';
+  if (boyfriendEl) boyfriendEl.textContent = '';
+  if (darknessEl) darknessEl.textContent = '';
+  if (rereadEl) rereadEl.textContent = '';
 }
 
       modal.hidden = false;

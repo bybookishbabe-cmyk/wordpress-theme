@@ -252,6 +252,70 @@ if (!function_exists('bbb_sss_active_drop')) {
 			}
 		}
 
+		global $wpdb;
+		if (is_object($wpdb) && isset($wpdb->posts, $wpdb->postmeta)) {
+			$rows = $wpdb->get_results(
+				"SELECT p.ID, p.post_name, entry_meta.meta_value AS entry_json, handle_meta.meta_value AS handle, release_meta.meta_value AS release_date, end_meta.meta_value AS end_date
+				FROM {$wpdb->posts} p
+				INNER JOIN {$wpdb->postmeta} entry_meta ON entry_meta.post_id = p.ID AND entry_meta.meta_key = '_bbb_sss_drop_entry'
+				LEFT JOIN {$wpdb->postmeta} handle_meta ON handle_meta.post_id = p.ID AND handle_meta.meta_key = '_bbb_sss_drop_handle'
+				LEFT JOIN {$wpdb->postmeta} release_meta ON release_meta.post_id = p.ID AND release_meta.meta_key = '_bbb_sss_drop_release_date'
+				LEFT JOIN {$wpdb->postmeta} end_meta ON end_meta.post_id = p.ID AND end_meta.meta_key = '_bbb_sss_drop_end_date'
+				WHERE p.post_type = 'sss_drop' AND p.post_status = 'publish'
+				ORDER BY release_meta.meta_value DESC, p.ID DESC"
+			);
+
+			if (is_array($rows) && $rows) {
+				$today = (int) current_time('timestamp');
+				$best = null;
+				$best_time = 0;
+				$fallback = null;
+				$fallback_time = 0;
+				$newest = null;
+				$newest_time = 0;
+
+				foreach ($rows as $row) {
+					$row_handle = sanitize_title((string) ($row->handle ?? ''));
+					$post_name = sanitize_title((string) ($row->post_name ?? ''));
+					if ('' !== $current_handle && ($row_handle === $current_handle || $post_name === $current_handle)) {
+						$entry = json_decode((string) ($row->entry_json ?? ''), true);
+						return is_array($entry) ? $entry : array();
+					}
+
+					$release = (string) ($row->release_date ?? '');
+					$time = '' !== $release ? strtotime($release . ' 00:00:00') : false;
+					if (!$time) {
+						continue;
+					}
+
+					$end = (string) ($row->end_date ?? '');
+					$end_time = '' !== $end ? strtotime($end . ' 23:59:59') : false;
+					if ($time <= $today && (!$end_time || $end_time >= $today) && $time >= $best_time) {
+						$best = $row;
+						$best_time = $time;
+					}
+
+					if ($time <= $today && $time >= $fallback_time) {
+						$fallback = $row;
+						$fallback_time = $time;
+					}
+
+					if ($time >= $newest_time) {
+						$newest = $row;
+						$newest_time = $time;
+					}
+				}
+
+				$active_row = $best ?: $fallback ?: $newest ?: $rows[0];
+				if ($active_row) {
+					$entry = json_decode((string) ($active_row->entry_json ?? ''), true);
+					if (is_array($entry)) {
+						return $entry;
+					}
+				}
+			}
+		}
+
 		$path = get_theme_file_path('firstpass/migration/exports/metaobjects/sss_drop.json');
 		if (!file_exists($path)) {
 			return array();

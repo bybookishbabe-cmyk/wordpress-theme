@@ -8132,6 +8132,20 @@ font-size:13px;
   color:#fff;
 }
 
+.sss-lib__modal .sss-lib__mbtn--newsletter{
+  grid-column:1 / -1;
+  background:rgba(255,138,199,.14);
+  border-color:rgba(255,138,199,.46);
+  color:#fff;
+}
+
+.sss-lib__modal .sss-lib__mbtn--newsletter:hover,
+.sss-lib__modal .sss-lib__mbtn--newsletter:focus-visible{
+  background:#ff8ac7;
+  border-color:#ff8ac7;
+  color:#0b0b0b;
+}
+
 .sss-lib__modal .sss-lib__mku{
   margin-top:2px;
   text-align:left;

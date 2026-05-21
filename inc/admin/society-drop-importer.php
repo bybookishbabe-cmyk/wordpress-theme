@@ -207,7 +207,7 @@ function bbb_sss_drop_importer_import_entry(array $entry, bool $create_product_s
 	$products = bbb_sss_drop_importer_product_refs($fields);
 	$files    = bbb_sss_drop_importer_file_refs($fields);
 
-	update_post_meta($post_id, '_bbb_sss_drop_entry', wp_json_encode($entry));
+	update_post_meta($post_id, '_bbb_sss_drop_entry', wp_slash(wp_json_encode($entry)));
 	update_post_meta($post_id, '_bbb_sss_drop_handle', $handle);
 	update_post_meta($post_id, '_bbb_sss_drop_shopify_id', (string) ($entry['id'] ?? ''));
 	update_post_meta($post_id, '_bbb_sss_drop_release_date', bbb_sss_drop_importer_field_value($fields, 'release_date'));
