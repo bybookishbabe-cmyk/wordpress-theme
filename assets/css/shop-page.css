@@ -363,6 +363,24 @@
   color: var(--shop-ink);
 }
 
+.bbb-shop-card__details {
+  display: inline-flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 8px;
+  color: var(--shop-muted);
+  font: 800 12px/1 Assistant, system-ui, sans-serif;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-transform: lowercase;
+}
+
+.bbb-shop-card__details:hover,
+.bbb-shop-card__details:focus-visible {
+  color: var(--shop-pink);
+  outline: none;
+}
+
 .bbb-shop__empty {
   padding: 60px 0 82px;
 }

@@ -522,6 +522,7 @@ if (function_exists('edd_purchase_variable_pricing')) {
 										<a class="bbb-shop-card__button bbb-shop-card__button--ghost" href="<?php echo esc_url(get_edit_post_link($post_id)); ?>">finish setup</a>
 									<?php elseif (function_exists('edd_get_purchase_link')) : ?>
 										<?php bbb_shop_download_purchase_form($post_id); ?>
+										<a class="bbb-shop-card__details" href="<?php echo esc_url($permalink); ?>">view details</a>
 									<?php else : ?>
 										<a class="bbb-shop-card__button" href="<?php echo esc_url(get_permalink($download)); ?>">view details</a>
 									<?php endif; ?>

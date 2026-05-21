@@ -244,7 +244,51 @@ function bbb_society_product_importer_attachment_from_url(string $url, int $post
 	}
 
 	if ('' === $path || !file_exists($path)) {
-		return 0;
+		if (!str_starts_with($url, 'http://') && !str_starts_with($url, 'https://')) {
+			return 0;
+		}
+
+		$existing = get_posts(
+			array(
+				'post_type'      => 'attachment',
+				'post_status'    => 'inherit',
+				'posts_per_page' => 1,
+				'fields'         => 'ids',
+				'meta_key'       => '_bbb_remote_source_url',
+				'meta_value'     => $url,
+			)
+		);
+		if (!empty($existing[0])) {
+			return (int) $existing[0];
+		}
+
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		require_once ABSPATH . 'wp-admin/includes/media.php';
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+
+		$tmp = download_url($url, 45);
+		if (is_wp_error($tmp)) {
+			return 0;
+		}
+
+		$name = basename((string) wp_parse_url($url, PHP_URL_PATH));
+		if ('' === $name) {
+			$name = 'product-media-' . md5($url) . '.jpg';
+		}
+
+		$file = array(
+			'name'     => sanitize_file_name($name),
+			'tmp_name' => $tmp,
+		);
+
+		$attachment_id = media_handle_sideload($file, $post_id);
+		if (is_wp_error($attachment_id)) {
+			@unlink($tmp);
+			return 0;
+		}
+
+		update_post_meta((int) $attachment_id, '_bbb_remote_source_url', $url);
+		return (int) $attachment_id;
 	}
 
 	$relative_upload = ltrim(str_replace(wp_normalize_path(trailingslashit($basedir)), '', wp_normalize_path($path)), '/');
