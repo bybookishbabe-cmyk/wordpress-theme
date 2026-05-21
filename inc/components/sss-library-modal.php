@@ -51,6 +51,7 @@ $GLOBALS['bbb_sss_library_modal_rendered'] = true;
 				<div class="sss-lib__mcta">
 					<a class="sss-lib__mbtn sss-lib__mbtn--amazon" href="#" target="_blank" rel="noopener" data-amazon-btn>ku/amazon</a>
 					<a class="sss-lib__mbtn sss-lib__mbtn--bookshop" href="#" target="_blank" rel="noopener" data-bookshop-btn>support indie bookstore</a>
+					<a class="sss-lib__mbtn sss-lib__mbtn--newsletter" href="#" target="_blank" rel="noopener" data-newsletter-btn>read the newsletter</a>
 				</div>
 
 				<div class="sss-lib__mku" data-mku></div>
@@ -65,6 +66,7 @@ $GLOBALS['bbb_sss_library_modal_rendered'] = true;
 						<div class="sss-lib__mdamage" data-mdamage></div>
 						<div class="sss-lib__myearning" data-myearning></div>
 						<div class="sss-lib__mboyfriend" data-mboyfriend></div>
+						<div class="sss-lib__mdarkness" data-mdarkness></div>
 						<div class="sss-lib__mreread" data-mreread></div>
 					</div>
 

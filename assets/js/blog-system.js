@@ -237,9 +237,9 @@ if (signoff) {
 BOOK PREVIEW POPUP
 ====================== */
 const previewCards = document.querySelectorAll("[data-book-preview]");
-const preview = document.getElementById("bbbBookPreview");
-const previewClose = document.getElementById("bbbPreviewClose");
-const previewShareButton = document.getElementById("bbbPreviewShare");
+const preview = document.getElementById("bbbBookPreview") || document.querySelector(".sss-lib__modal");
+const previewClose = document.getElementById("bbbPreviewClose") || (preview ? preview.querySelector(".sss-lib__x[data-close]") : null);
+const previewShareButton = document.getElementById("bbbPreviewShare") || (preview ? preview.querySelector("[data-modal-share-btn]") : null);
 let currentPreviewShare = null;
 let currentPreviewBook = null;
 let previewScrollY = 0;
@@ -266,7 +266,7 @@ function unlockPreviewScroll(){
 
 function openBookPreview(){
   if (!preview) return;
-  preview.style.display = "flex";
+  preview.style.display = "";
   preview.hidden = false;
   preview.setAttribute("aria-hidden", "false");
   lockPreviewScroll();

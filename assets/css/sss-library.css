@@ -1499,14 +1499,22 @@ background:#0e0e0e;
   }
 
   .sss-lib__quoteCuteGrid{
-    grid-template-columns:1fr;
+    display:flex;
+    gap:10px;
+    margin-inline:-4px;
+    overflow-x:auto;
+    padding:2px 4px 10px;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
   }
 
   .sss-lib__quoteCuteCard,
   .sss-lib__quoteCuteCard:nth-child(2),
   .sss-lib__quoteCuteCard:nth-child(3){
+    flex:0 0 min(74vw, 240px);
     min-height:0;
     transform:none;
+    scroll-snap-align:start;
   }
 }
 
@@ -8006,6 +8014,37 @@ font-size:13px;
 }
 
 @media (max-width: 768px){
+  #sssArchiveGrid{
+    grid-template-columns:repeat(3, minmax(0, 1fr)) !important;
+    justify-content:stretch !important;
+    width:100%;
+    gap:14px 10px !important;
+  }
+
+  #sssArchiveGrid .sss-lib__book{
+    width:100%;
+    min-width:0;
+  }
+
+  #sssArchiveGrid .sss-lib__coverWrap{
+    width:100%;
+  }
+
+  #sssArchiveGrid .sss-lib__under{
+    margin-top:7px;
+  }
+
+  #sssArchiveGrid .sss-lib__name{
+    font-size:10px;
+    line-height:1.25;
+  }
+
+  #sssArchiveGrid .sss-lib__author{
+    margin-top:2px;
+    font-size:9.5px;
+    line-height:1.25;
+  }
+
   .sss-lib__grid--browsePage{
     grid-template-columns:repeat(3, minmax(0, 1fr)) !important;
     justify-content:stretch !important;

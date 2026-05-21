@@ -345,7 +345,6 @@ add_action(
 
 function bbb_society_gate_check(): void {
 	$gated_slugs = array(
-		'society-library',
 		'sss-library-page',
 		'sss-private-shelf',
 		'sss-made-for-you',
