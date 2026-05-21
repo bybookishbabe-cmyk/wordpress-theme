@@ -329,6 +329,40 @@ function bbb_books_like_grouped_guides(): array {
 	return $groups;
 }
 
+function bbb_books_like_grouped_blog_guides(): array {
+	$groups = array();
+	foreach (bbb_books_like_blog_guide_posts() as $guide) {
+		$source = $guide['source'];
+		$key    = 'more-books-like';
+		$name   = 'more books like';
+		if ($source instanceof WP_Post) {
+			$data = bbb_books_like_book_data($source->ID);
+			$key  = (string) ($data['shelf']['slug'] ?? '');
+			$name = (string) ($data['shelf']['name'] ?? '');
+		}
+		if ('' === $key) {
+			$key = 'more-books-like';
+		}
+		if ('' === $name) {
+			$name = 'more books like';
+		}
+		if (!isset($groups[$key])) {
+			$groups[$key] = array(
+				'name'  => $name,
+				'items' => array(),
+			);
+		}
+		$groups[$key]['items'][] = $guide;
+	}
+
+	uasort(
+		$groups,
+		static fn(array $a, array $b): int => strcasecmp((string) $a['name'], (string) $b['name'])
+	);
+
+	return $groups;
+}
+
 function bbb_books_like_all_visible_books(): array {
 	$books = get_posts(
 		array(

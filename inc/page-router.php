@@ -25,6 +25,7 @@ function bbb_page_route_registry(): array {
 		'fictional-boyfriend-quiz'       => 'page-fictional-boyfriend-quiz.php',
 		'find-your-read'                 => 'page-what-to-read-next.php',
 		'for-readers'                    => '',
+		'if-you-liked-pages'             => 'page-if-you-liked-pages.php',
 		'kindle-insert-vault'            => '',
 		'kindle-inserts'                 => '',
 		'library'                        => 'page-library.php',

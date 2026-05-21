@@ -306,7 +306,7 @@ $sections = array(
 		'label' => 'society exclusives',
 		'items' => array(
 			array('title' => 'reader favorites', 'copy' => 'the 10 most-visited quizzes, trope pages, guides, and blog reads.', 'url' => bbb_page_url('popular-pages'), 'badge' => 'popular', 'emoji' => '📖'),
-			array('title' => 'exclusive rec lists', 'copy' => 'if you liked pages built from the books-like template.', 'url' => bbb_page_url('books-like-directory'), 'badge' => 'society', 'emoji' => '🌹'),
+			array('title' => 'exclusive rec lists', 'copy' => 'if you liked pages built from the books-like template.', 'url' => bbb_page_url('if-you-liked-pages'), 'badge' => 'society', 'emoji' => '🌹'),
 			array('title' => 'early access', 'copy' => 'posts and picks before they go public.', 'url' => bbb_page_url('society-newsletter-recent'), 'badge' => 'preview', 'emoji' => '🔐'),
 		),
 	),

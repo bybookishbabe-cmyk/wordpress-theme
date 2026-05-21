@@ -1,6 +1,6 @@
 <?php
 /**
- * Shopify-compatible "books like x" directory page.
+ * Society-only directory for imported books-like page-template guides.
  *
  * @package ByBookishBabeShopifyPort
  */
@@ -11,16 +11,16 @@ $books_like_css_path = get_theme_file_path('assets/css/books-like.css');
 wp_enqueue_style('bbb-books-like', get_theme_file_uri('assets/css/books-like.css'), array('bbb-sss-library'), file_exists($books_like_css_path) ? (string) filemtime($books_like_css_path) : wp_get_theme()->get('Version'));
 get_header();
 
-$groups = function_exists('bbb_books_like_grouped_blog_guides') ? bbb_books_like_grouped_blog_guides() : array();
+$groups = function_exists('bbb_books_like_grouped_guides') ? bbb_books_like_grouped_guides() : array();
 ?>
 
 <main id="MainContent" class="content-for-layout focus-none" role="main" tabindex="-1">
 	<section class="bbb-books-like-directory">
 		<div class="bbb-books-like-directory__wrap">
 			<header class="bbb-books-like-directory__hero">
-				<p class="bbb-books-like-directory__kicker">reading guides</p>
-				<h1 class="bbb-books-like-directory__title">books like x</h1>
-				<p class="bbb-books-like-directory__subtext">finished something that wrecked you and have no idea what to read next? start here. every list has been read, curated, and personally recommended.</p>
+				<p class="bbb-books-like-directory__kicker">society exclusives</p>
+				<h1 class="bbb-books-like-directory__title">if you liked pages</h1>
+				<p class="bbb-books-like-directory__subtext">the custom Shopify books-like page-template guides, preserved separately from the public blog guide hub.</p>
 			</header>
 
 			<?php if ($groups) : ?>
@@ -55,7 +55,7 @@ $groups = function_exists('bbb_books_like_grouped_blog_guides') ? bbb_books_like
 					<?php endforeach; ?>
 				</div>
 			<?php else : ?>
-				<p class="bbb-books-like-directory__empty">waiting on books-like blog guides</p>
+				<p class="bbb-books-like-directory__empty">waiting on books-like template pages</p>
 			<?php endif; ?>
 		</div>
 	</section>
