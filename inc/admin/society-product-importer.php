@@ -238,7 +238,10 @@ function bbb_society_product_has_checkout_thumbnail(bool $has_thumbnail, $post, 
 }
 add_filter('has_post_thumbnail', 'bbb_society_product_has_checkout_thumbnail', 10, 3);
 
-function bbb_society_product_checkout_thumbnail_html(string $html, int $post_id, int $post_thumbnail_id, $size, array $attr): string {
+function bbb_society_product_checkout_thumbnail_html($html, $post_id, $post_thumbnail_id, $size, $attr): string {
+	$html = (string) $html;
+	$post_id = (int) $post_id;
+
 	if ('' !== trim($html) || $post_id <= 0 || !in_array(get_post_type($post_id), array('download', 'product'), true)) {
 		return $html;
 	}
@@ -248,7 +251,7 @@ function bbb_society_product_checkout_thumbnail_html(string $html, int $post_id,
 		return $html;
 	}
 
-	$alt = $attr['alt'] ?? get_the_title($post_id);
+	$alt = is_array($attr) && isset($attr['alt']) ? $attr['alt'] : get_the_title($post_id);
 	return sprintf(
 		'<img src="%1$s" class="attachment-thumbnail size-thumbnail wp-post-image bbb-edd-cart-image" alt="%2$s" loading="lazy">',
 		esc_url($image_url),
