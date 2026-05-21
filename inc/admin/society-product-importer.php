@@ -53,6 +53,49 @@ function bbb_society_product_importer_platform(): string {
 	return '';
 }
 
+function bbb_society_product_importer_export_paths(): array {
+	return array(
+		get_theme_file_path('data/society-products-free-for-members-seed.json'),
+		get_theme_file_path('data/society-products-seed.json'),
+		get_theme_file_path('data/digital-products-seed.json'),
+		get_theme_file_path('firstpass/migration/exports/products/society-products-free-for-members.json'),
+		get_theme_file_path('firstpass/migration/exports/products/society-products.json'),
+		get_theme_file_path('firstpass/migration/exports/products/digital-products.json'),
+	);
+}
+
+function bbb_society_product_importer_export_rows(): array {
+	$rows = array();
+	$seen = array();
+
+	foreach (bbb_society_product_importer_export_paths() as $path) {
+		if (!is_readable($path)) {
+			continue;
+		}
+
+		$data = json_decode((string) file_get_contents($path), true);
+		if (!is_array($data)) {
+			continue;
+		}
+
+		foreach ($data as $row) {
+			if (!is_array($row)) {
+				continue;
+			}
+
+			$handle = sanitize_title((string) ($row['handle'] ?? ''));
+			if ('' === $handle || isset($seen[$handle])) {
+				continue;
+			}
+
+			$seen[$handle] = true;
+			$rows[] = $row;
+		}
+	}
+
+	return $rows;
+}
+
 function bbb_society_product_importer_money($value): string {
 	if (is_array($value)) {
 		$value = $value['amount'] ?? $value['value'] ?? '';

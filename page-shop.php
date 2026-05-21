@@ -125,6 +125,96 @@ if (!function_exists('bbb_shop_download_kind')) {
 	}
 }
 
+if (!function_exists('bbb_shop_seed_url')) {
+	function bbb_shop_seed_url(string $url): string {
+		$url = trim($url);
+		if ('' === $url) {
+			return '';
+		}
+
+		if (str_starts_with($url, '/wp-content/')) {
+			return esc_url_raw(home_url($url));
+		}
+
+		return esc_url_raw($url);
+	}
+}
+
+if (!function_exists('bbb_shop_seed_file_count')) {
+	function bbb_shop_seed_file_count(array $product): int {
+		$raw = $product['download_files'] ?? $product['downloadFiles'] ?? array();
+		if (is_string($raw) && '' !== trim($raw)) {
+			$decoded = json_decode($raw, true);
+			$raw = is_array($decoded) ? $decoded : array();
+		}
+
+		return count(array_filter((array) $raw, static fn($file): bool => is_array($file) && !empty($file['url'])));
+	}
+}
+
+if (!function_exists('bbb_shop_seed_excerpt')) {
+	function bbb_shop_seed_excerpt(array $product): string {
+		$text = wp_strip_all_tags((string) ($product['description'] ?? ''));
+		$text = preg_replace('/\s+/', ' ', $text) ?: '';
+
+		return wp_trim_words($text, 22, '...');
+	}
+}
+
+if (!function_exists('bbb_shop_seed_kind')) {
+	function bbb_shop_seed_kind(array $product): string {
+		$haystack = strtolower(
+			(string) ($product['title'] ?? '') . ' ' .
+			(string) ($product['product_type'] ?? '') . ' ' .
+			(string) ($product['categories'] ?? '') . ' ' .
+			(string) ($product['tags'] ?? '')
+		);
+
+		if (str_contains($haystack, 'canva') || str_contains($haystack, 'template')) {
+			return 'templates';
+		}
+
+		if (str_contains($haystack, 'tracker') || str_contains($haystack, 'vault')) {
+			return 'tools';
+		}
+
+		return 'inserts';
+	}
+}
+
+if (!function_exists('bbb_shop_seed_products')) {
+	function bbb_shop_seed_products(): array {
+		if (!function_exists('bbb_society_product_importer_export_rows')) {
+			return array();
+		}
+
+		$products = array();
+		foreach (bbb_society_product_importer_export_rows() as $product) {
+			if (!is_array($product)) {
+				continue;
+			}
+
+			$title = trim((string) ($product['title'] ?? ''));
+			$url = bbb_shop_seed_url((string) ($product['shopify_url'] ?? ''));
+			if ('' === $title || '' === $url) {
+				continue;
+			}
+
+			$source_status = strtolower((string) ($product['source_status'] ?? 'active'));
+			if ('' !== $source_status && 'active' !== $source_status) {
+				continue;
+			}
+
+			$product['fallback_url'] = $url;
+			$product['fallback_image'] = bbb_shop_seed_url((string) ($product['image_url'] ?? ''));
+			$product['fallback_kind'] = bbb_shop_seed_kind($product);
+			$products[] = $product;
+		}
+
+		return $products;
+	}
+}
+
 if (!function_exists('bbb_shop_download_excerpt')) {
 	function bbb_shop_download_excerpt(WP_Post $download): string {
 		$text = wp_strip_all_tags((string) $download->post_content);
@@ -135,8 +225,9 @@ if (!function_exists('bbb_shop_download_excerpt')) {
 }
 
 $downloads = $downloads_query->posts;
+$seed_products = $downloads ? array() : bbb_shop_seed_products();
 $counts    = array(
-	'all'       => count($downloads),
+	'all'       => count($downloads) + count($seed_products),
 	'inserts'   => 0,
 	'templates' => 0,
 	'tools'     => 0,
@@ -153,6 +244,16 @@ foreach ($downloads as $download) {
 		$counts[$kind]++;
 		$groups[$kind][] = $download;
 	}
+}
+
+foreach ($seed_products as $product) {
+	$kind = (string) ($product['fallback_kind'] ?? 'inserts');
+	if (!isset($groups[$kind])) {
+		$kind = 'inserts';
+	}
+
+	$counts[$kind]++;
+	$groups[$kind][] = $product;
 }
 
 $sections = array(
@@ -194,7 +295,7 @@ if (function_exists('edd_purchase_variable_pricing')) {
 		</div>
 	</section>
 
-	<?php if (!$downloads) : ?>
+	<?php if (!$downloads && !$seed_products) : ?>
 		<section class="bbb-shop__empty">
 			<h2>shop downloads are almost ready.</h2>
 			<p>publish the downloads you want shown here.</p>
@@ -213,19 +314,36 @@ if (function_exists('edd_purchase_variable_pricing')) {
 				<div class="bbb-shop__grid">
 					<?php foreach ($groups[$kind] as $download) : ?>
 						<?php
-						$post_id       = (int) $download->ID;
-						$image_url     = bbb_shop_download_image($post_id);
-						$price         = bbb_shop_download_price($post_id);
-						$file_count    = bbb_shop_download_file_count($post_id);
-						$missing_files = 'yes' === get_post_meta($post_id, '_bbb_missing_download_url', true);
-						$is_free       = 'yes' === get_post_meta($post_id, '_bbb_society_free_download', true);
+						$is_seed_product = is_array($download);
+						if ($is_seed_product) {
+							$post_id       = 0;
+							$title         = strtolower((string) ($download['title'] ?? 'download'));
+							$permalink     = (string) ($download['fallback_url'] ?? '#');
+							$image_url     = (string) ($download['fallback_image'] ?? '');
+							$price_value   = trim((string) ($download['price'] ?? ''));
+							$price         = '' !== $price_value ? '$' . number_format((float) $price_value, 2) : '';
+							$file_count    = bbb_shop_seed_file_count($download);
+							$missing_files = (bool) ($download['download_missing'] ?? false);
+							$is_free       = bbb_society_product_importer_truthy($download['society_free'] ?? false);
+							$excerpt       = bbb_shop_seed_excerpt($download);
+						} else {
+							$post_id       = (int) $download->ID;
+							$title         = get_the_title($download);
+							$permalink     = get_permalink($download);
+							$image_url     = bbb_shop_download_image($post_id);
+							$price         = bbb_shop_download_price($post_id);
+							$file_count    = bbb_shop_download_file_count($post_id);
+							$missing_files = 'yes' === get_post_meta($post_id, '_bbb_missing_download_url', true);
+							$is_free       = 'yes' === get_post_meta($post_id, '_bbb_society_free_download', true);
+							$excerpt       = bbb_shop_download_excerpt($download);
+						}
 						?>
 						<article class="bbb-shop-card bbb-shop-card--<?php echo esc_attr($kind); ?>">
-							<a class="bbb-shop-card__media" href="<?php echo esc_url(get_permalink($download)); ?>">
+							<a class="bbb-shop-card__media" href="<?php echo esc_url($permalink); ?>">
 								<?php if ($image_url) : ?>
-									<img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr(get_the_title($download)); ?>" loading="lazy">
+									<img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr($title); ?>" loading="lazy">
 								<?php else : ?>
-									<span><?php echo esc_html(substr(get_the_title($download), 0, 1)); ?></span>
+									<span><?php echo esc_html(substr($title, 0, 1)); ?></span>
 								<?php endif; ?>
 							</a>
 							<div class="bbb-shop-card__body">
@@ -234,21 +352,23 @@ if (function_exists('edd_purchase_variable_pricing')) {
 									<?php if ($is_free) : ?>
 										<span>member free</span>
 									<?php endif; ?>
-									<?php if ('publish' !== get_post_status($download)) : ?>
+									<?php if (!$is_seed_product && 'publish' !== get_post_status($download)) : ?>
 										<span><?php echo esc_html(get_post_status($download)); ?></span>
 									<?php endif; ?>
 									<?php if ($missing_files) : ?>
 										<span>needs file</span>
 									<?php endif; ?>
 								</div>
-								<h3><a href="<?php echo esc_url(get_permalink($download)); ?>"><?php echo esc_html(get_the_title($download)); ?></a></h3>
-								<p><?php echo esc_html(bbb_shop_download_excerpt($download)); ?></p>
+								<h3><a href="<?php echo esc_url($permalink); ?>"><?php echo esc_html($title); ?></a></h3>
+								<p><?php echo esc_html($excerpt); ?></p>
 								<div class="bbb-shop-card__meta">
 									<strong><?php echo esc_html($price); ?></strong>
 									<span><?php echo esc_html($file_count ? $file_count . ' file' . (1 === $file_count ? '' : 's') : 'file pending'); ?></span>
 								</div>
 								<div class="bbb-shop-card__actions">
-									<?php if ($missing_files && $is_admin_preview) : ?>
+									<?php if ($is_seed_product) : ?>
+										<a class="bbb-shop-card__button" href="<?php echo esc_url($permalink); ?>">view details</a>
+									<?php elseif ($missing_files && $is_admin_preview) : ?>
 										<a class="bbb-shop-card__button bbb-shop-card__button--ghost" href="<?php echo esc_url(get_edit_post_link($post_id)); ?>">finish setup</a>
 									<?php elseif (function_exists('edd_get_purchase_link')) : ?>
 										<?php

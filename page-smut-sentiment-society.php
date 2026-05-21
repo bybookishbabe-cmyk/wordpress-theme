@@ -123,29 +123,13 @@ if (!function_exists('bbb_society_landing_product_export_images')) {
 		}
 
 		$images = array();
-		$paths = array(
-			get_theme_file_path('firstpass/migration/exports/products/society-products-free-for-members.json'),
-			get_theme_file_path('firstpass/migration/exports/products/society-products.json'),
-			get_theme_file_path('firstpass/migration/exports/products/digital-products.json'),
-		);
-
-		foreach ($paths as $path) {
-			if (!file_exists($path)) {
+		$products = function_exists('bbb_society_product_importer_export_rows') ? bbb_society_product_importer_export_rows() : array();
+		foreach ($products as $product) {
+			if (!is_array($product) || empty($product['handle']) || empty($product['image_url'])) {
 				continue;
 			}
 
-			$products = json_decode((string) file_get_contents($path), true);
-			if (!is_array($products)) {
-				continue;
-			}
-
-			foreach ($products as $product) {
-				if (!is_array($product) || empty($product['handle']) || empty($product['image_url'])) {
-					continue;
-				}
-
-				$images[sanitize_title((string) $product['handle'])] = bbb_society_landing_upload_url((string) $product['image_url']);
-			}
+			$images[sanitize_title((string) $product['handle'])] = bbb_society_landing_upload_url((string) $product['image_url']);
 		}
 
 		return $images;

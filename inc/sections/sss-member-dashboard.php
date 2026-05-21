@@ -223,32 +223,15 @@ if (!function_exists('bbb_sss_drop_product_export_index')) {
 		}
 
 		$index = array();
-		$files = array(
-			'/firstpass/migration/exports/products/society-products-free-for-members.json',
-			'/firstpass/migration/exports/products/society-products.json',
-			'/firstpass/migration/exports/products/digital-products.json',
-		);
-
-		foreach ($files as $relative_path) {
-			$path = get_template_directory() . $relative_path;
-			if (!is_readable($path)) {
+		$rows = function_exists('bbb_society_product_importer_export_rows') ? bbb_society_product_importer_export_rows() : array();
+		foreach ($rows as $row) {
+			if (!is_array($row)) {
 				continue;
 			}
 
-			$rows = json_decode((string) file_get_contents($path), true);
-			if (!is_array($rows)) {
-				continue;
-			}
-
-			foreach ($rows as $row) {
-				if (!is_array($row)) {
-					continue;
-				}
-
-				$handle = sanitize_title((string) ($row['handle'] ?? ''));
-				if ('' !== $handle && empty($index[$handle])) {
-					$index[$handle] = $row;
-				}
+			$handle = sanitize_title((string) ($row['handle'] ?? ''));
+			if ('' !== $handle && empty($index[$handle])) {
+				$index[$handle] = $row;
 			}
 		}
 
