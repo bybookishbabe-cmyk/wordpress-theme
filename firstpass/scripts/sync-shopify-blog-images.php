@@ -10,6 +10,11 @@
 
 declare(strict_types=1);
 
+if ('cli' !== PHP_SAPI) {
+	http_response_code(403);
+	exit('This maintenance script can only be run from the command line.');
+}
+
 $wp_load = dirname(__DIR__, 5) . '/wp-load.php';
 if (!file_exists($wp_load)) {
 	fwrite(STDERR, "Could not find wp-load.php from this script location.\n");
