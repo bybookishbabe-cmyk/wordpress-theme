@@ -252,10 +252,6 @@
   }
 
   function getShelfRedirectUrl(sourcePage){
-    var path = String(sourcePage || window.location.pathname || "").toLowerCase();
-    if (path.indexOf("/sss-library-page") === 0) {
-      return "/sss-library-page/?shelf=open";
-    }
     return "/library/?shelf=open";
   }
 

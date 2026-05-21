@@ -199,6 +199,24 @@ function bbb_books_like_source_title_candidates(string $title): array {
 	return array_values(array_unique(array_filter($candidates)));
 }
 
+function bbb_books_like_source_title_candidates_from_slug(string $slug): array {
+	$slug = trim(sanitize_title($slug), '-');
+	if ('' === $slug) {
+		return array();
+	}
+
+	if (str_starts_with($slug, 'books-like-')) {
+		$slug = substr($slug, strlen('books-like-'));
+	} elseif (str_starts_with($slug, 'if-you-liked-')) {
+		$slug = substr($slug, strlen('if-you-liked-'));
+		$slug = preg_replace('/-read-these-next$/', '', $slug) ?: $slug;
+	} else {
+		return array();
+	}
+
+	return bbb_books_like_source_title_candidates('books like ' . str_replace('-', ' ', $slug));
+}
+
 function bbb_books_like_source_for_guide(WP_Post $post): ?WP_Post {
 	if (function_exists('sss_article_post')) {
 		foreach (array('source_book', 'book', 'books') as $key) {
@@ -218,6 +236,13 @@ function bbb_books_like_source_for_guide(WP_Post $post): ?WP_Post {
 	}
 
 	foreach (bbb_books_like_source_title_candidates($post->post_title) as $candidate) {
+		$book = bbb_books_like_find_book($candidate);
+		if ($book instanceof WP_Post) {
+			return $book;
+		}
+	}
+
+	foreach (bbb_books_like_source_title_candidates_from_slug((string) $post->post_name) as $candidate) {
 		$book = bbb_books_like_find_book($candidate);
 		if ($book instanceof WP_Post) {
 			return $book;
@@ -502,6 +527,15 @@ function bbb_books_like_current_source_book(): ?WP_Post {
 					return $book;
 				}
 			}
+		}
+	}
+
+	$request_path = isset($_SERVER['REQUEST_URI']) ? (string) wp_unslash($_SERVER['REQUEST_URI']) : '';
+	$request_slug = basename((string) wp_parse_url($request_path, PHP_URL_PATH));
+	foreach (bbb_books_like_source_title_candidates_from_slug($request_slug) as $candidate) {
+		$book = bbb_books_like_find_book($candidate);
+		if ($book instanceof WP_Post) {
+			return $book;
 		}
 	}
 

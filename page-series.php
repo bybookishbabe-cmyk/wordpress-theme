@@ -258,7 +258,7 @@ get_header();
 
 	<div class="series-shelf-banner" id="seriesShelfBanner" hidden>
 		<span>you’ve saved books to your shelf ♥</span>
-		<a href="/sss-library-page/">view your list</a>
+		<a href="<?php echo esc_url(home_url('/library/?shelf=open')); ?>">view your list</a>
 	</div>
 
 	<?php foreach ($series_list as $series) : ?>

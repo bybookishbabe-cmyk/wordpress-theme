@@ -20,7 +20,7 @@ function sss_library_shortcode($atts): string {
 	for ($i = 0; $i < min(5, $count); $i++) {
 		$selected[] = $books[($offset + $i) % $count];
 	}
-	$library_url = function_exists('bbb_resolve_page_url') ? bbb_resolve_page_url('library') : home_url('/pages/library/');
+	$library_url = function_exists('bbb_resolve_page_url') ? bbb_resolve_page_url('library') : home_url('/library/');
 
 	ob_start();
 	?>

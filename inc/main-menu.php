@@ -67,7 +67,7 @@ function bbb_get_fallback_main_menu(): array {
 			'children' => array(),
 		),
 
-		// ── Library [CONFIRMED — primary hero CTA: shopify://pages/library] ─────
+		// ── Library [CONFIRMED — primary hero CTA: /library/] ─────
 		array(
 			'title'    => 'library',
 			'url'      => bbb_page_url( 'library' ),

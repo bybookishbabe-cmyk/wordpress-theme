@@ -69,10 +69,7 @@
       backBtn.href = defaultHref;
       backBtn.textContent = defaultLabel;
 
-      if (referrer.includes('/sss-library-page')) {
-        backBtn.href = referrer;
-        backBtn.textContent = '← back to the society library';
-      } else if (referrer.includes('/library')) {
+      if (referrer.includes('/library')) {
         backBtn.href = referrer;
         backBtn.textContent = '← back to library';
       }

@@ -141,7 +141,7 @@ $settings = wp_parse_args(
 		'title'     => 'trending romance reads',
 		'subtext'   => 'the books currently circulating through the smut & sentiment society.',
 		'cta_label' => 'explore the full library →',
-		'cta_link'  => '/pages/library',
+		'cta_link'  => '/library/',
 	)
 );
 $settings['cta_link'] = function_exists('bbb_resolve_shopify_url') ? bbb_resolve_shopify_url((string) $settings['cta_link']) : (string) $settings['cta_link'];
