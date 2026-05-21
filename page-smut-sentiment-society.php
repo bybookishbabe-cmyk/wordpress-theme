@@ -308,7 +308,6 @@ get_header();
 										<?php if ($product['image']) : ?>
 											<img src="<?php echo esc_url($product['image']); ?>" alt="<?php echo esc_attr($product['title']); ?>" loading="lazy">
 										<?php endif; ?>
-										<span><?php echo esc_html($product['title']); ?></span>
 									</span>
 								<?php endforeach; ?>
 							</span>
