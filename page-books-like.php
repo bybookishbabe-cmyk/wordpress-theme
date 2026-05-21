@@ -18,12 +18,16 @@ wp_enqueue_style('bbb-books-like', get_theme_file_uri('assets/css/books-like.css
 get_header();
 
 $source = bbb_books_like_book_data($source_post->ID);
-$recommendations = array_slice(bbb_books_like_recommendations($source_post->ID), 0, 9);
+$is_paid_society_member = function_exists('bbb_reader_is_society') && bbb_reader_is_society();
+$all_recommendations = array_slice(bbb_books_like_recommendations($source_post->ID), 0, 9);
+$preview_limit = 2;
+$recommendations = $is_paid_society_member ? $all_recommendations : array_slice($all_recommendations, 0, $preview_limit);
+$locked_count = max(0, count($all_recommendations) - count($recommendations));
 $source_tropes = array_slice((array) $source['tropes'], 0, 5);
 ?>
 
 <main id="MainContent" class="content-for-layout focus-none" role="main" tabindex="-1">
-	<section class="bbb-like" data-books-like data-sss-lib="public">
+	<section class="bbb-like<?php echo $is_paid_society_member ? ' is-unlocked' : ' is-preview'; ?>" data-books-like data-sss-lib="<?php echo esc_attr($is_paid_society_member ? 'society' : 'public'); ?>">
 		<div class="bbb-like__wrap">
 			<header class="bbb-like__hero">
 				<div class="bbb-like__top">
@@ -117,11 +121,13 @@ $source_tropes = array_slice((array) $source['tropes'], 0, 5);
 				</div>
 			</section>
 
-			<section class="bbb-like__lock" data-like-lock>
-				<h2>want the deeper cut?</h2>
-				<p class="bbb-like__subtext">save this list to your bookshelf, then keep going through the full library when your mood gets more specific.</p>
-				<a class="bbb-like__cta" href="<?php echo esc_url(home_url('/library/')); ?>">explore library</a>
-			</section>
+			<?php if (!$is_paid_society_member && $locked_count > 0) : ?>
+				<section class="bbb-like__lock" data-like-lock>
+					<h2>want the deeper cut?</h2>
+					<p class="bbb-like__subtext">+<?php echo esc_html((string) $locked_count); ?> more matching picks are waiting in the private society library.</p>
+					<a class="bbb-like__cta" href="<?php echo esc_url(get_option('bbb_society_gate_member_url', 'https://thesmutandsentimentsociety.substack.com/subscribe')); ?>">unlock the picks</a>
+				</section>
+			<?php endif; ?>
 
 			<section class="bbb-like__quiz">
 				<h2>not quite the mood?</h2>

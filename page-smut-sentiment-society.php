@@ -117,25 +117,73 @@ if (!function_exists('bbb_society_landing_product_export_images')) {
 		}
 
 		$images = array();
-		$path = get_theme_file_path('firstpass/migration/exports/products/society-products.json');
-		if (!file_exists($path)) {
-			return $images;
-		}
+		$paths = array(
+			get_theme_file_path('firstpass/migration/exports/products/society-products-free-for-members.json'),
+			get_theme_file_path('firstpass/migration/exports/products/society-products.json'),
+			get_theme_file_path('firstpass/migration/exports/products/digital-products.json'),
+		);
 
-		$products = json_decode((string) file_get_contents($path), true);
-		if (!is_array($products)) {
-			return $images;
-		}
-
-		foreach ($products as $product) {
-			if (!is_array($product) || empty($product['handle']) || empty($product['image_url'])) {
+		foreach ($paths as $path) {
+			if (!file_exists($path)) {
 				continue;
 			}
 
-			$images[sanitize_title((string) $product['handle'])] = (string) $product['image_url'];
+			$products = json_decode((string) file_get_contents($path), true);
+			if (!is_array($products)) {
+				continue;
+			}
+
+			foreach ($products as $product) {
+				if (!is_array($product) || empty($product['handle']) || empty($product['image_url'])) {
+					continue;
+				}
+
+				$images[sanitize_title((string) $product['handle'])] = bbb_society_landing_upload_url((string) $product['image_url']);
+			}
 		}
 
 		return $images;
+	}
+}
+
+if (!function_exists('bbb_society_landing_upload_url')) {
+	function bbb_society_landing_upload_url(string $url): string {
+		$url = trim($url);
+		if ('' === $url) {
+			return '';
+		}
+
+		if (str_starts_with($url, '/wp-content/')) {
+			return home_url($url);
+		}
+
+		$path = (string) wp_parse_url($url, PHP_URL_PATH);
+		if (str_starts_with($path, '/wp-content/')) {
+			$query = (string) wp_parse_url($url, PHP_URL_QUERY);
+			return home_url($path . ('' !== $query ? '?' . $query : ''));
+		}
+
+		return esc_url_raw($url);
+	}
+}
+
+if (!function_exists('bbb_society_landing_download_image')) {
+	function bbb_society_landing_download_image(string $handle): string {
+		if ('' === $handle || !post_type_exists('download')) {
+			return '';
+		}
+
+		$download = get_page_by_path($handle, OBJECT, 'download');
+		if (!$download instanceof WP_Post) {
+			return '';
+		}
+
+		$image = get_the_post_thumbnail_url($download, 'medium_large');
+		if (is_string($image) && '' !== $image) {
+			return $image;
+		}
+
+		return bbb_society_landing_upload_url((string) get_post_meta($download->ID, '_bbb_source_image_url', true));
 	}
 }
 
@@ -158,7 +206,8 @@ if (!function_exists('bbb_society_landing_product_url')) {
 }
 
 $reader_state = 'visitor';
-if (function_exists('bbb_reader_is_society') && bbb_reader_is_society()) {
+$is_paid_society_member = function_exists('bbb_reader_is_society') && bbb_reader_is_society();
+if ($is_paid_society_member) {
 	$reader_state = 'paid member';
 } elseif (is_user_logged_in()) {
 	$reader_state = 'free member';
@@ -214,6 +263,10 @@ if ($active_fields) {
 
 		$seen_products[$handle] = true;
 		$image = $product_images[$handle] ?? '';
+		if ('' === $image) {
+			$image = bbb_society_landing_download_image($handle);
+		}
+
 		if ('' === $image && post_type_exists('product')) {
 			$wp_product = get_page_by_path($handle, OBJECT, 'product');
 			if ($wp_product instanceof WP_Post) {
@@ -268,6 +321,7 @@ $sections = array(
 		),
 	),
 );
+$exclusive_rec_guides = function_exists('bbb_books_like_guide_posts') ? bbb_books_like_guide_posts() : array();
 
 get_header();
 ?>
@@ -333,6 +387,46 @@ get_header();
 							</a>
 						<?php endforeach; ?>
 					</div>
+					<?php if ('society exclusives' === $section['label'] && $exclusive_rec_guides) : ?>
+						<div class="bbb-society-rec-lists<?php echo $is_paid_society_member ? ' is-unlocked' : ' is-preview'; ?>">
+							<div class="bbb-society-rec-lists__header">
+								<div>
+									<p class="bbb-society-rec-lists__kicker">exclusive rec lists</p>
+									<h3>if you liked...</h3>
+								</div>
+								<?php if (!$is_paid_society_member) : ?>
+									<a href="<?php echo esc_url(get_option('bbb_society_gate_member_url', 'https://thesmutandsentimentsociety.substack.com/subscribe')); ?>">unlock full lists</a>
+								<?php endif; ?>
+							</div>
+							<div class="bbb-society-rec-lists__grid">
+								<?php foreach ($exclusive_rec_guides as $index => $guide) :
+									$guide_post = $guide['post'] ?? null;
+									if (!$guide_post instanceof WP_Post) {
+										continue;
+									}
+									$source = $guide['source'] ?? null;
+									$book = $source instanceof WP_Post && function_exists('bbb_books_like_book_data') ? bbb_books_like_book_data($source->ID) : array();
+									$cover = (string) ($book['cover'] ?? get_the_post_thumbnail_url($guide_post->ID, 'medium_large'));
+									$is_locked_preview = !$is_paid_society_member && $index >= 2;
+								?>
+									<a class="bbb-society-rec-list-card<?php echo $is_locked_preview ? ' is-locked' : ''; ?>" href="<?php echo esc_url(get_permalink($guide_post)); ?>">
+										<span class="bbb-society-rec-list-card__media">
+											<?php if ($cover) : ?>
+												<img src="<?php echo esc_url($cover); ?>" alt="<?php echo esc_attr(get_the_title($guide_post)); ?>" loading="lazy">
+											<?php endif; ?>
+										</span>
+										<span class="bbb-society-rec-list-card__copy">
+											<span class="bbb-society-rec-list-card__label"><?php echo esc_html($is_locked_preview ? 'paid preview' : 'guide'); ?></span>
+											<strong><?php echo esc_html(get_the_title($guide_post)); ?></strong>
+											<?php if (!empty($book['shelf']['name'])) : ?>
+												<small><?php echo esc_html((string) $book['shelf']['name']); ?></small>
+											<?php endif; ?>
+										</span>
+									</a>
+								<?php endforeach; ?>
+							</div>
+						</div>
+					<?php endif; ?>
 				</section>
 			<?php endforeach; ?>
 		</div>

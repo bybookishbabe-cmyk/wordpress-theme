@@ -307,6 +307,8 @@
 
 .bbb-shop-card__button,
 .bbb-shop-card__actions .edd-submit,
+.bbb-shop-card__actions .edd-add-to-cart,
+.bbb-shop-card__actions .edd_go_to_checkout,
 .bbb-shop-card__actions .button,
 .bbb-shop-card__actions input[type="submit"] {
   display: inline-flex;
@@ -324,6 +326,20 @@
   text-transform: lowercase;
   box-shadow: none !important;
   cursor: pointer;
+}
+
+.bbb-shop-card__actions .edd_purchase_submit_wrapper {
+  display: block;
+  width: 100%;
+  min-height: 42px;
+  overflow: visible;
+}
+
+.bbb-shop-card__actions .edd_go_to_checkout {
+  height: auto !important;
+  line-height: 1.1 !important;
+  overflow: visible !important;
+  white-space: normal;
 }
 
 .bbb-shop-card__button--ghost {
