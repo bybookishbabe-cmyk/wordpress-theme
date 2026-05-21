@@ -431,6 +431,127 @@ function bbb_society_product_importer_size_label(array $file): string {
 	return '';
 }
 
+function bbb_society_product_download_files(int $post_id): array {
+	$files = array();
+
+	foreach (array('edd_download_files', '_downloadable_files') as $meta_key) {
+		$stored_files = get_post_meta($post_id, $meta_key, true);
+		if (!is_array($stored_files)) {
+			continue;
+		}
+
+		foreach ($stored_files as $file) {
+			$url = '';
+			if (is_array($file)) {
+				$url = trim((string) ($file['file'] ?? $file['url'] ?? ''));
+			} elseif (is_scalar($file)) {
+				$url = trim((string) $file);
+			}
+
+			if ('' !== $url) {
+				$files[] = esc_url_raw($url);
+			}
+		}
+	}
+
+	return array_values(array_unique(array_filter($files)));
+}
+
+function bbb_society_product_file_count(int $post_id): int {
+	return count(bbb_society_product_download_files($post_id));
+}
+
+function bbb_society_product_is_publicly_sellable(int $post_id): bool {
+	if ('yes' === get_post_meta($post_id, '_bbb_missing_download_url', true)) {
+		return false;
+	}
+
+	return bbb_society_product_file_count($post_id) > 0;
+}
+
+function bbb_society_product_hide_fileless_from_public_queries(WP_Query $query): void {
+	if (is_admin() || current_user_can('edit_posts') || !$query->is_main_query()) {
+		return;
+	}
+
+	$post_type = $query->get('post_type');
+	$types     = is_array($post_type) ? $post_type : array($post_type ?: '');
+	if (!array_intersect($types, array('download', 'product'))) {
+		return;
+	}
+
+	$meta_query = (array) $query->get('meta_query');
+	$meta_query[] = array(
+		'relation' => 'OR',
+		array(
+			'key'     => '_bbb_missing_download_url',
+			'compare' => 'NOT EXISTS',
+		),
+		array(
+			'key'     => '_bbb_missing_download_url',
+			'value'   => 'yes',
+			'compare' => '!=',
+		),
+	);
+	$query->set('meta_query', $meta_query);
+}
+add_action('pre_get_posts', 'bbb_society_product_hide_fileless_from_public_queries');
+
+function bbb_society_product_filter_fileless_public_results(array $posts, WP_Query $query): array {
+	if (is_admin() || current_user_can('edit_posts') || !$posts) {
+		return $posts;
+	}
+
+	$has_product_posts = false;
+	foreach ($posts as $post) {
+		if ($post instanceof WP_Post && in_array($post->post_type, array('download', 'product'), true)) {
+			$has_product_posts = true;
+			break;
+		}
+	}
+
+	if (!$has_product_posts) {
+		return $posts;
+	}
+
+	return array_values(
+		array_filter(
+			$posts,
+			static function ($post): bool {
+				if (!$post instanceof WP_Post || !in_array($post->post_type, array('download', 'product'), true)) {
+					return true;
+				}
+
+				if ('society_product_importer' !== get_post_meta((int) $post->ID, '_bbb_import_source', true)) {
+					return true;
+				}
+
+				return bbb_society_product_is_publicly_sellable((int) $post->ID);
+			}
+		)
+	);
+}
+add_filter('the_posts', 'bbb_society_product_filter_fileless_public_results', 20, 2);
+
+function bbb_society_product_redirect_fileless_single(): void {
+	if (is_admin() || current_user_can('edit_posts') || !is_singular(array('download', 'product'))) {
+		return;
+	}
+
+	$post_id = get_queried_object_id();
+	if ($post_id <= 0 || 'society_product_importer' !== get_post_meta($post_id, '_bbb_import_source', true)) {
+		return;
+	}
+
+	if (bbb_society_product_is_publicly_sellable((int) $post_id)) {
+		return;
+	}
+
+	wp_safe_redirect(home_url('/shop/'), 302);
+	exit;
+}
+add_action('template_redirect', 'bbb_society_product_redirect_fileless_single', 5);
+
 function bbb_society_product_importer_edd_size_options(array $download_files, string $price, string $fallback_title): array {
 	$prices = array();
 	$files  = array();
@@ -1052,14 +1173,12 @@ gothic-lace-calendar,gothic lace calendar,7.00,https://example.com/calendar.pdf,
 					<tr><td colspan="6">No Society products imported yet.</td></tr>
 				<?php endif; ?>
 				<?php foreach ($products as $product_post) : ?>
-					<?php $files = get_post_meta($product_post->ID, '_downloadable_files', true); ?>
-					<?php $edd_files = get_post_meta($product_post->ID, 'edd_download_files', true); ?>
 					<?php $price = 'edd' === get_post_meta($product_post->ID, '_bbb_import_platform', true) ? get_post_meta($product_post->ID, '_edd_price', true) : get_post_meta($product_post->ID, '_regular_price', true); ?>
 					<tr>
 						<td><a href="<?php echo esc_url(get_edit_post_link($product_post->ID)); ?>"><?php echo esc_html(get_the_title($product_post)); ?></a></td>
 						<td><code><?php echo esc_html((string) get_post_meta($product_post->ID, '_bbb_shopify_product_handle', true)); ?></code></td>
 						<td><?php echo esc_html((string) $price); ?></td>
-						<td><?php echo esc_html(!empty($files) || !empty($edd_files) ? 'attached' : ('yes' === get_post_meta($product_post->ID, '_bbb_missing_download_url', true) ? 'missing' : 'none')); ?></td>
+						<td><?php echo esc_html(bbb_society_product_file_count((int) $product_post->ID) > 0 ? 'attached' : ('yes' === get_post_meta($product_post->ID, '_bbb_missing_download_url', true) ? 'missing' : 'none')); ?></td>
 						<td><?php echo esc_html('yes' === get_post_meta($product_post->ID, '_bbb_society_free_download', true) ? 'free' : 'paid'); ?></td>
 						<td><?php echo esc_html((string) get_post_meta($product_post->ID, '_bbb_shopify_product_type', true)); ?></td>
 					</tr>

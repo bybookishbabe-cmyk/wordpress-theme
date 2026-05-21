@@ -76,13 +76,34 @@ if (!function_exists('bbb_shop_download_price')) {
 
 if (!function_exists('bbb_shop_download_file_count')) {
 	function bbb_shop_download_file_count(int $post_id): int {
+		if (function_exists('bbb_society_product_file_count')) {
+			return bbb_society_product_file_count($post_id);
+		}
+
 		$edd_files = get_post_meta($post_id, 'edd_download_files', true);
 		if (is_array($edd_files)) {
-			return count(array_filter($edd_files));
+			$edd_files = array_filter(
+				$edd_files,
+				static fn($file): bool => is_array($file)
+					? '' !== trim((string) ($file['file'] ?? $file['url'] ?? ''))
+					: '' !== trim((string) $file)
+			);
+			return count($edd_files);
 		}
 
 		$woo_files = get_post_meta($post_id, '_downloadable_files', true);
-		return is_array($woo_files) ? count(array_filter($woo_files)) : 0;
+		if (!is_array($woo_files)) {
+			return 0;
+		}
+
+		$woo_files = array_filter(
+			$woo_files,
+			static fn($file): bool => is_array($file)
+				? '' !== trim((string) ($file['file'] ?? $file['url'] ?? ''))
+				: '' !== trim((string) $file)
+		);
+
+		return count($woo_files);
 	}
 }
 
@@ -354,6 +375,10 @@ if (!function_exists('bbb_shop_seed_products')) {
 				continue;
 			}
 
+			if (!current_user_can('edit_posts') && 0 === bbb_shop_seed_file_count($product)) {
+				continue;
+			}
+
 			$product['fallback_url'] = $url;
 			$product['fallback_image'] = bbb_shop_seed_url((string) ($product['image_url'] ?? ''));
 			$product['fallback_kind'] = bbb_shop_seed_kind($product);
@@ -373,7 +398,26 @@ if (!function_exists('bbb_shop_download_excerpt')) {
 	}
 }
 
-$downloads = $downloads_query->posts;
+$downloads = array_values(
+	array_filter(
+		$downloads_query->posts,
+		static function ($download) use ($is_admin_preview): bool {
+			if (!$download instanceof WP_Post) {
+				return false;
+			}
+
+			if ($is_admin_preview) {
+				return true;
+			}
+
+			if (function_exists('bbb_society_product_is_publicly_sellable')) {
+				return bbb_society_product_is_publicly_sellable((int) $download->ID);
+			}
+
+			return bbb_shop_download_file_count((int) $download->ID) > 0;
+		}
+	)
+);
 $seed_products = $downloads ? array() : bbb_shop_seed_products();
 $counts    = array(
 	'all'       => count($downloads) + count($seed_products),
