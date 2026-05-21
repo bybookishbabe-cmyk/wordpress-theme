@@ -1,0 +1,214 @@
+.bbb-popular{
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 16% 14%, rgba(239,137,191,.22), transparent 28%),
+    radial-gradient(circle at 82% 8%, rgba(255,255,255,.1), transparent 22%),
+    linear-gradient(180deg,#070607 0%,#111014 42%,#080708 100%);
+  color:#f8f2f5;
+  padding:6rem 0 7rem;
+}
+
+.bbb-popular a{
+  color:inherit;
+  text-decoration:none;
+}
+
+.bbb-popular__wrap{
+  width:min(118rem, calc(100% - 4rem));
+  margin:0 auto;
+}
+
+.bbb-popular__hero{
+  display:grid;
+  gap:1.6rem;
+  max-width:88rem;
+  margin:0 0 3.4rem;
+}
+
+.bbb-popular__kicker,
+.bbb-popular__type,
+.bbb-popular__meta,
+.bbb-popular__open{
+  font-family:Assistant, system-ui, sans-serif;
+  text-transform:uppercase;
+  letter-spacing:.16em;
+  font-weight:800;
+}
+
+.bbb-popular__kicker{
+  margin:0;
+  color:#ef89bf;
+  font-size:1.35rem;
+}
+
+.bbb-popular__title{
+  margin:0;
+  font-family:"Cormorant Garamond", Georgia, serif;
+  font-size:clamp(5rem, 10vw, 12rem);
+  line-height:.86;
+  letter-spacing:0;
+  text-transform:lowercase;
+}
+
+.bbb-popular__sub{
+  margin:0;
+  max-width:76rem;
+  color:rgba(248,242,245,.76);
+  font-size:2rem;
+  line-height:1.55;
+}
+
+.bbb-popular__meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:1rem;
+  color:rgba(248,242,245,.68);
+  font-size:1.15rem;
+}
+
+.bbb-popular__meta span{
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:999px;
+  background:rgba(255,255,255,.04);
+  padding:.8rem 1.2rem;
+}
+
+.bbb-popular__feature{
+  border:1px solid rgba(239,137,191,.24);
+  border-radius:2.6rem;
+  overflow:hidden;
+  background:
+    linear-gradient(125deg, rgba(239,137,191,.24), rgba(255,255,255,.04) 42%, rgba(255,255,255,.02)),
+    rgba(13,12,14,.9);
+  box-shadow:0 2.4rem 7rem rgba(0,0,0,.36);
+  margin:0 0 2rem;
+}
+
+.bbb-popular__featureLink{
+  min-height:27rem;
+  display:grid;
+  grid-template-columns:minmax(11rem, .28fr) minmax(0, 1fr);
+  align-items:end;
+  gap:2rem;
+  padding:3rem;
+}
+
+.bbb-popular__rank{
+  font-family:"Cormorant Garamond", Georgia, serif;
+  font-size:clamp(8rem, 14vw, 17rem);
+  line-height:.72;
+  color:rgba(255,255,255,.96);
+}
+
+.bbb-popular__featureCopy{
+  display:grid;
+  gap:1rem;
+  max-width:72rem;
+}
+
+.bbb-popular__featureCopy strong{
+  font-family:"Cormorant Garamond", Georgia, serif;
+  font-size:clamp(4rem, 7vw, 8.4rem);
+  line-height:.9;
+  letter-spacing:0;
+  text-transform:lowercase;
+}
+
+.bbb-popular__featureCopy span:last-child,
+.bbb-popular__cardBody span:last-child{
+  color:rgba(248,242,245,.72);
+  font-size:1.65rem;
+  line-height:1.5;
+}
+
+.bbb-popular__type{
+  color:#ef89bf;
+  font-size:1.1rem;
+}
+
+.bbb-popular__grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:1.4rem;
+}
+
+.bbb-popular__card{
+  display:grid;
+  grid-template-columns:auto minmax(0, 1fr) auto;
+  gap:1.5rem;
+  align-items:center;
+  min-height:13rem;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:1.8rem;
+  background:rgba(255,255,255,.035);
+  padding:1.8rem;
+  transition:transform .2s ease, border-color .2s ease, background .2s ease;
+}
+
+.bbb-popular__card:hover,
+.bbb-popular__card:focus-visible{
+  transform:translateY(-2px);
+  border-color:rgba(239,137,191,.45);
+  background:rgba(239,137,191,.08);
+  outline:none;
+}
+
+.bbb-popular__cardRank{
+  display:grid;
+  place-items:center;
+  width:5.4rem;
+  height:5.4rem;
+  border-radius:999px;
+  background:#ef89bf;
+  color:#160d13;
+  font-family:Assistant, system-ui, sans-serif;
+  font-weight:900;
+  letter-spacing:.08em;
+}
+
+.bbb-popular__cardBody{
+  display:grid;
+  gap:.55rem;
+}
+
+.bbb-popular__cardBody strong{
+  font-family:"Cormorant Garamond", Georgia, serif;
+  font-size:clamp(2.8rem, 3vw, 4rem);
+  line-height:.96;
+  letter-spacing:0;
+  text-transform:lowercase;
+}
+
+.bbb-popular__open{
+  color:rgba(248,242,245,.58);
+  font-size:1rem;
+}
+
+@media screen and (max-width: 860px){
+  .bbb-popular{
+    padding:4rem 0 5rem;
+  }
+
+  .bbb-popular__wrap{
+    width:min(100% - 2.4rem, 118rem);
+  }
+
+  .bbb-popular__featureLink,
+  .bbb-popular__grid,
+  .bbb-popular__card{
+    grid-template-columns:1fr;
+  }
+
+  .bbb-popular__featureLink{
+    min-height:0;
+    padding:2.2rem;
+  }
+
+  .bbb-popular__card{
+    gap:1rem;
+  }
+
+  .bbb-popular__open{
+    justify-self:start;
+  }
+}

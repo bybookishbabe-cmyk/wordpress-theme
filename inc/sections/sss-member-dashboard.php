@@ -428,7 +428,7 @@ if (!function_exists('bbb_sss_render_drop_products')) {
 			return;
 		}
 		?>
-		<section class="sss-drop-theme__products">
+		<section class="sss-drop-theme__products" data-drop-reveal="products">
 			<div class="sss-drop-theme__sectionHead">
 				<p><?php echo esc_html($kicker); ?></p>
 				<h2><?php echo esc_html($heading); ?></h2>
@@ -869,7 +869,7 @@ $drop_nav = array_filter(
 			</nav>
 		<?php endif; ?>
 
-		<div class="sss-drop-theme__grid" id="drop-atmosphere">
+		<div class="sss-drop-theme__grid" id="drop-atmosphere" data-drop-reveal="atmosphere">
 			<?php if ('' !== $gram_image) : ?>
 				<article class="sss-drop-theme__panel sss-drop-theme__panel--gram">
 					<div>
@@ -896,7 +896,7 @@ $drop_nav = array_filter(
 		</div>
 
 		<?php if ($mood_images || $mood_stickers || $era_images || $mood_quotes) : ?>
-			<section class="sss-drop-theme__moodboard" id="drop-moodboard">
+			<section class="sss-drop-theme__moodboard" id="drop-moodboard" data-drop-reveal="moodboard">
 				<div class="sss-drop-theme__sectionHead">
 					<p>moodboard</p>
 					<h2>the vibe file</h2>
@@ -924,7 +924,7 @@ $drop_nav = array_filter(
 		<?php endif; ?>
 
 		<?php if ($wallpapers) : ?>
-			<section class="sss-drop-theme__wallpapers" id="drop-wallpapers">
+			<section class="sss-drop-theme__wallpapers" id="drop-wallpapers" data-drop-reveal="wallpapers">
 				<div class="sss-drop-theme__sectionHead">
 					<p>wallpapers</p>
 					<h2>change up your wallpaper</h2>
@@ -943,7 +943,7 @@ $drop_nav = array_filter(
 		<?php endif; ?>
 
 		<?php if ('' !== $calendar_image || $prompts) : ?>
-			<section class="sss-drop-theme__calendar" id="drop-calendar">
+			<section class="sss-drop-theme__calendar" id="drop-calendar" data-drop-reveal="calendar">
 				<div class="sss-drop-theme__sectionHead">
 					<p>journal + calendar</p>
 					<h2>daily prompts</h2>

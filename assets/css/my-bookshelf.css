@@ -745,11 +745,13 @@
 }
 
 .bbb-account-shelf__journalPromptMeta {
+  display: block;
   margin: 10px 0 16px;
   color: rgba(247,243,238,.77);
 }
 
 .bbb-account-shelf__journalPromptBody {
+  display: block;
   margin: 0;
   max-width: 820px;
   color: #fff;
