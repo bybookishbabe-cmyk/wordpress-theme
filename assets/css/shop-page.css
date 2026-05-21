@@ -216,7 +216,14 @@
 }
 
 .bbb-shop-card__actions {
+  display: block;
   align-self: end;
+}
+
+.bbb-shop-card__purchaseForm {
+  display: grid !important;
+  gap: 10px;
+  width: 100%;
 }
 
 .bbb-shop-card__actions form,
@@ -227,11 +234,16 @@
 }
 
 .bbb-shop-card__size {
-  display: grid;
+  display: grid !important;
   gap: 6px;
+  width: 100%;
+  margin: 0 0 2px;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .bbb-shop-card__size label {
+  display: block !important;
   color: var(--shop-pink);
   font: 900 10px/1 Assistant, system-ui, sans-serif;
   letter-spacing: 0.08em;
@@ -239,6 +251,8 @@
 }
 
 .bbb-shop-card__size select {
+  display: block !important;
+  appearance: auto;
   width: 100%;
   min-height: 40px;
   padding: 9px 34px 9px 10px;
@@ -248,6 +262,8 @@
   color: var(--shop-ink);
   font: 800 13px/1.2 Assistant, system-ui, sans-serif;
   text-transform: lowercase;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .bbb-shop-card__size select:focus-visible {
