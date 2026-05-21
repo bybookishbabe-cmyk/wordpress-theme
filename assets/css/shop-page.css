@@ -561,11 +561,12 @@
 .bbb-product__details {
   padding: 38px 0 76px;
   border-top: 1px solid var(--shop-line);
+  text-align: center;
 }
 
 .bbb-product__content {
   max-width: 760px;
-  margin-top: 14px;
+  margin: 14px auto 0;
   color: var(--shop-muted);
   font: 500 16px/1.75 Assistant, system-ui, sans-serif;
 }
