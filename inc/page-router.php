@@ -241,6 +241,16 @@ add_action(
 		}
 
 		$request_path   = trim((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
+		if (preg_match('#^romance-books-by-spice-level/(?:spice-)?([1-5])/?$#', $request_path, $matches)) {
+			set_query_var('bbb_spice_level', (int) $matches[1]);
+			$template = bbb_route_template_for_slug('romance-books-by-spice-level');
+			if ($template !== '') {
+				bbb_mark_virtual_route_found();
+				require $template;
+				exit;
+			}
+		}
+
 		if (preg_match('#^(?:blogs/)?curated-romance-guides/page/([0-9]+)/?$#', $request_path, $matches)) {
 			set_query_var('paged', max(1, (int) $matches[1]));
 			$template = bbb_route_template_for_slug('curated-romance-guides');

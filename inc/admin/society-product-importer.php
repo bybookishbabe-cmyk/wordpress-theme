@@ -248,6 +248,10 @@ function bbb_society_product_importer_attachment_from_url(string $url, int $post
 			return 0;
 		}
 
+		if (!apply_filters('bbb_society_product_importer_sideload_remote_media', true, $url, $post_id)) {
+			return 0;
+		}
+
 		$existing = get_posts(
 			array(
 				'post_type'      => 'attachment',
@@ -827,6 +831,127 @@ function bbb_society_product_importer_import(string $payload, string $format, bo
 
 	return $results;
 }
+
+function bbb_society_product_importer_seed_signature(array $rows): string {
+	$signature_rows = array_map(
+		static fn(array $row): array => array(
+			'handle'         => sanitize_title((string) ($row['handle'] ?? '')),
+			'price'          => (string) ($row['price'] ?? ''),
+			'download_files' => (string) ($row['download_files'] ?? ''),
+			'image_url'      => (string) ($row['image_url'] ?? ''),
+			'media_urls'     => (string) ($row['media_urls'] ?? ''),
+		),
+		$rows
+	);
+
+	return md5(wp_json_encode($signature_rows) . '|2026-05-21-products-v2');
+}
+
+function bbb_society_product_importer_seed_needs_sync(array $rows, string $signature): bool {
+	$post_type = 'edd' === bbb_society_product_importer_platform() ? 'download' : 'product';
+	if (!post_type_exists($post_type)) {
+		return false;
+	}
+
+	if (get_option('bbb_society_product_seed_signature') !== $signature) {
+		return true;
+	}
+
+	$expected_count = count($rows);
+	$expected_variable = 0;
+	foreach ($rows as $row) {
+		if (count(bbb_society_product_importer_download_files($row)) > 1) {
+			$expected_variable++;
+		}
+	}
+
+	$existing_count = (int) (new WP_Query(
+		array(
+			'post_type'      => $post_type,
+			'post_status'    => array('publish', 'draft', 'private'),
+			'fields'         => 'ids',
+			'posts_per_page' => 1,
+			'no_found_rows'  => false,
+			'meta_query'     => array(
+				array(
+					'key'   => '_bbb_import_source',
+					'value' => 'society_product_importer',
+				),
+			),
+		)
+	))->found_posts;
+
+	$variable_count = (int) (new WP_Query(
+		array(
+			'post_type'      => $post_type,
+			'post_status'    => array('publish', 'draft', 'private'),
+			'fields'         => 'ids',
+			'posts_per_page' => 1,
+			'no_found_rows'  => false,
+			'meta_query'     => array(
+				array(
+					'key'   => '_bbb_import_source',
+					'value' => 'society_product_importer',
+				),
+				array(
+					'key'   => '_variable_pricing',
+					'value' => '1',
+				),
+			),
+		)
+	))->found_posts;
+
+	return $existing_count < $expected_count || $variable_count < $expected_variable;
+}
+
+function bbb_society_product_importer_sync_seed_products(): void {
+	if (!current_user_can('manage_options') || '' === bbb_society_product_importer_platform()) {
+		return;
+	}
+
+	$rows = bbb_society_product_importer_export_rows();
+	if (!$rows) {
+		return;
+	}
+
+	$signature = bbb_society_product_importer_seed_signature($rows);
+	if (!bbb_society_product_importer_seed_needs_sync($rows, $signature)) {
+		return;
+	}
+
+	if (get_transient('bbb_society_product_seed_sync_lock')) {
+		return;
+	}
+
+	set_transient('bbb_society_product_seed_sync_lock', '1', 5 * MINUTE_IN_SECONDS);
+	add_filter('bbb_society_product_importer_sideload_remote_media', '__return_false');
+
+	foreach ($rows as &$row) {
+		$row['status'] = 'publish';
+	}
+	unset($row);
+
+	if (function_exists('set_time_limit')) {
+		@set_time_limit(120);
+	}
+
+	$result = bbb_society_product_importer_import((string) wp_json_encode($rows), 'json', false);
+	remove_filter('bbb_society_product_importer_sideload_remote_media', '__return_false');
+	delete_transient('bbb_society_product_seed_sync_lock');
+
+	if (!is_wp_error($result)) {
+		update_option('bbb_society_product_seed_signature', $signature, false);
+		update_option(
+			'bbb_society_product_seed_sync_stats',
+			array(
+				'synced_at' => current_time('mysql'),
+				'count'     => is_array($result) ? count($result) : 0,
+			),
+			false
+		);
+	}
+}
+add_action('wp_loaded', 'bbb_society_product_importer_sync_seed_products', 20);
 
 function bbb_society_product_importer_handle_request() {
 	if (empty($_POST['bbb_society_products_import']) || !current_user_can('manage_options')) {

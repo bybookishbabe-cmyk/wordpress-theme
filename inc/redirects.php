@@ -147,6 +147,12 @@ add_action(
 	static function (): void {
 		$path = trim((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
 
+		$spice_level = isset($_GET['spice']) ? absint(wp_unslash($_GET['spice'])) : 0;
+		if ('romance-books-by-spice-level' === $path && $spice_level >= 1 && $spice_level <= 5) {
+			wp_safe_redirect(home_url('/romance-books-by-spice-level/spice-' . $spice_level . '/'), 301);
+			exit;
+		}
+
 		if ($path === 'cart' && function_exists('wc_get_cart_url')) {
 			bbb_redirect_with_query_string(wc_get_cart_url(), 302);
 		}
