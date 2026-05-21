@@ -205,35 +205,30 @@ function bbb_books_like_source_for_guide(WP_Post $post): ?WP_Post {
 }
 
 function bbb_books_like_guide_posts(): array {
-	$posts = get_posts(
+	$pages = get_posts(
 		array(
-			'post_type'      => 'post',
+			'post_type'      => 'page',
 			'post_status'    => 'publish',
 			'posts_per_page' => -1,
-			'orderby'        => 'date',
-			'order'          => 'DESC',
+			'orderby'        => 'menu_order title',
+			'order'          => 'ASC',
+			'meta_query'     => array(
+				array(
+					'key'     => '_wp_page_template',
+					'value'   => array('page-books-like.php', 'templates/page.books-like.json', 'page.books-like'),
+					'compare' => 'IN',
+				),
+			),
 		)
 	);
 
 	$guides = array();
-	foreach ($posts as $post) {
-		$title_is_books_like = false !== strpos(strtolower($post->post_title), 'books like ');
-		$meta_is_books_like  = false;
-		foreach (array('books_like', '_books_like', 'custom_books_like', '_custom_books_like') as $meta_key) {
-			$raw = get_post_meta($post->ID, $meta_key, true);
-			if (function_exists('bbb_truthy') ? bbb_truthy($raw) : in_array(strtolower((string) $raw), array('1', 'true', 'yes'), true)) {
-				$meta_is_books_like = true;
-				break;
-			}
-		}
-
-		$source = bbb_books_like_source_for_guide($post);
-		if ($title_is_books_like || $meta_is_books_like || $source instanceof WP_Post) {
-			$guides[] = array(
-				'post'   => $post,
-				'source' => $source,
-			);
-		}
+	foreach ($pages as $page) {
+		$source = bbb_books_like_source_for_guide($page);
+		$guides[] = array(
+			'post'   => $page,
+			'source' => $source,
+		);
 	}
 
 	return $guides;

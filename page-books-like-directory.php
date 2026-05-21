@@ -55,7 +55,7 @@ $groups = function_exists('bbb_books_like_grouped_guides') ? bbb_books_like_grou
 					<?php endforeach; ?>
 				</div>
 			<?php else : ?>
-				<p class="bbb-books-like-directory__empty">waiting on books like guide posts</p>
+				<p class="bbb-books-like-directory__empty">waiting on books-like template pages</p>
 			<?php endif; ?>
 		</div>
 	</section>
