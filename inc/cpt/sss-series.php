@@ -16,8 +16,11 @@ function bbb_series_meta_fields(): array {
 		array('label' => 'Books In Series', 'key' => '_bbb_series_books_in_series', 'type' => 'number'),
 		array('label' => 'Linked Book Handles', 'key' => '_bbb_series_book_handles', 'type' => 'textarea'),
 		array('label' => 'Linked Book IDs', 'key' => '_bbb_series_book_ids', 'type' => 'textarea'),
-		array('label' => 'Linked Blog Post URL', 'key' => '_bbb_series_linked_blog_post_url', 'type' => 'url'),
+		array('label' => 'Linked Blog Post ID', 'key' => '_bbb_series_linked_blog_post_id', 'type' => 'number', 'readonly' => true),
 		array('label' => 'Linked Blog Post Handle', 'key' => '_bbb_series_linked_blog_post_handle', 'type' => 'text'),
+		array('label' => 'Linked Blog Post Title', 'key' => '_bbb_series_linked_blog_post_title', 'type' => 'text', 'readonly' => true),
+		array('label' => 'Linked Blog Post Shopify ID', 'key' => '_bbb_series_linked_blog_post_shopify_id', 'type' => 'text', 'readonly' => true),
+		array('label' => 'Linked Blog Post URL', 'key' => '_bbb_series_linked_blog_post_url', 'type' => 'url'),
 		array('label' => 'Raw Shopify Entry JSON', 'key' => '_bbb_series_shopify_entry_json', 'type' => 'textarea', 'readonly' => true),
 	);
 }

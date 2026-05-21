@@ -52,6 +52,22 @@ function sss_article_field(string $key, int $post_id, $default = '') {
 		}
 	}
 
+	if ('sss_series' === get_post_type($post_id)) {
+		$meta_map = array(
+			'author'             => '_bbb_series_author',
+			'linked_blog_post'   => '_bbb_series_linked_blog_post_id',
+			'linked_blog_handle' => '_bbb_series_linked_blog_post_handle',
+			'linked_blog_title'  => '_bbb_series_linked_blog_post_title',
+			'linked_blog_url'    => '_bbb_series_linked_blog_post_url',
+		);
+		if (isset($meta_map[$key])) {
+			$mapped = get_post_meta($post_id, $meta_map[$key], true);
+			if ($mapped !== '' && $mapped !== null) {
+				return $mapped;
+			}
+		}
+	}
+
 	return $default;
 }
 

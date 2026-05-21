@@ -281,6 +281,22 @@ if (!function_exists('bbb_series_matches_guide_value')) {
 
 if (!function_exists('bbb_series_guide_post_for_series')) {
 	function bbb_series_guide_post_for_series($series, array $guide_posts): ?WP_Post {
+		$linked_id = absint(bbb_series_entity_meta($series, '_bbb_series_linked_blog_post_id', 0));
+		if ($linked_id > 0) {
+			$post = get_post($linked_id);
+			if ($post instanceof WP_Post && 'post' === $post->post_type && 'publish' === $post->post_status) {
+				return $post;
+			}
+		}
+
+		$linked_handle = sanitize_title((string) bbb_series_entity_meta($series, '_bbb_series_linked_blog_post_handle', ''));
+		if ('' !== $linked_handle) {
+			$post = get_page_by_path($linked_handle, OBJECT, 'post');
+			if ($post instanceof WP_Post && 'publish' === $post->post_status) {
+				return $post;
+			}
+		}
+
 		$field_keys = array('sss_series', '_sss_series', 'series', '_series');
 
 		foreach ($guide_posts as $post) {
@@ -302,6 +318,20 @@ if (!function_exists('bbb_series_guide_post_for_series')) {
 		}
 
 		return null;
+	}
+}
+
+if (!function_exists('bbb_series_guide_url_for_series')) {
+	function bbb_series_guide_url_for_series($series, ?WP_Post $guide_post): string {
+		if ($guide_post instanceof WP_Post) {
+			$permalink = get_permalink($guide_post);
+			if ($permalink) {
+				return $permalink;
+			}
+		}
+
+		$imported_url = (string) bbb_series_entity_meta($series, '_bbb_series_linked_blog_post_url', '');
+		return filter_var($imported_url, FILTER_VALIDATE_URL) ? $imported_url : '';
 	}
 }
 
@@ -369,7 +399,7 @@ foreach ($series_list as $series) {
 	$shelf_groups[$shelf_slug] = $shelf_name;
 
 	$guide_post   = bbb_series_guide_post_for_series($series, $guide_posts);
-	$destination  = $guide_post instanceof WP_Post ? get_permalink($guide_post) : '';
+	$destination  = bbb_series_guide_url_for_series($series, $guide_post);
 
 	$series_cards[] = array(
 		'series'           => $series,
@@ -465,7 +495,7 @@ get_header();
 				</div>
 			</section>
 
-			<p class="bbb-seriesOrders__note">cards open only when a matching guide post has SSS Series filled in · filtered by vibe · spice levels visible at a glance</p>
+			<p class="bbb-seriesOrders__note">cards open when a series has an imported Shopify guide link or a matching guide post · filtered by vibe · spice levels visible at a glance</p>
 		<?php else : ?>
 			<div class="bbb-seriesOrders__empty">No series are ready to show here yet.</div>
 		<?php endif; ?>

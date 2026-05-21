@@ -492,11 +492,15 @@ function bbb_import_series_from_data(array $data, ?callable $logger = null): arr
 		}
 
 		$book_refs = bbb_import_series_book_refs($fields, $handle);
-		$article   = $fields['linked_blog_post']['reference'] ?? array();
-		$article_handle = is_array($article) ? sanitize_title((string) ($article['handle'] ?? '')) : '';
-		$article_url    = '' !== $article_handle ? home_url('/' . $article_handle . '/') : '';
-		$article_post   = '' !== $article_handle ? get_page_by_path($article_handle, OBJECT, 'post') : null;
+		$article         = $fields['linked_blog_post']['reference'] ?? array();
+		$article_handle  = is_array($article) ? sanitize_title((string) ($article['handle'] ?? '')) : '';
+		$article_title   = is_array($article) ? (string) ($article['title'] ?? '') : '';
+		$article_gid     = is_array($article) ? (string) ($article['id'] ?? '') : '';
+		$article_url     = '' !== $article_handle ? home_url('/' . $article_handle . '/') : '';
+		$article_post_id = 0;
+		$article_post    = '' !== $article_handle ? get_page_by_path($article_handle, OBJECT, 'post') : null;
 		if ($article_post instanceof WP_Post) {
+			$article_post_id = (int) $article_post->ID;
 			$permalink = get_permalink($article_post);
 			if ($permalink) {
 				$article_url = $permalink;
@@ -511,7 +515,10 @@ function bbb_import_series_from_data(array $data, ?callable $logger = null): arr
 		update_post_meta((int) $post_id, '_bbb_series_books_in_series', '' !== $books_in_series ? absint($books_in_series) : count($book_refs['handles']));
 		update_post_meta((int) $post_id, '_bbb_series_book_handles', implode("\n", $book_refs['handles']));
 		update_post_meta((int) $post_id, '_bbb_series_book_ids', implode("\n", $book_refs['ids']));
+		update_post_meta((int) $post_id, '_bbb_series_linked_blog_post_id', $article_post_id);
 		update_post_meta((int) $post_id, '_bbb_series_linked_blog_post_handle', $article_handle);
+		update_post_meta((int) $post_id, '_bbb_series_linked_blog_post_title', $article_title);
+		update_post_meta((int) $post_id, '_bbb_series_linked_blog_post_shopify_id', $article_gid);
 		update_post_meta((int) $post_id, '_bbb_series_linked_blog_post_url', $article_url);
 		update_post_meta((int) $post_id, '_bbb_series_shopify_entry_json', wp_json_encode($node, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 

@@ -13,10 +13,42 @@ function sss_series_books(WP_Post $series): array {
 		$books = sss_article_posts(sss_article_field('books_in_series', $series->ID, array()));
 	}
 	if (!$books) {
+		$book_ids = preg_split('/[\s,]+/', (string) get_post_meta($series->ID, '_bbb_series_book_ids', true)) ?: array();
+		$books    = array_values(
+			array_filter(
+				array_map(
+					static function (string $book_id): ?WP_Post {
+						$post = get_post(absint($book_id));
+						return $post instanceof WP_Post ? $post : null;
+					},
+					$book_ids
+				)
+			)
+		);
+	}
+	if (!$books) {
+		$handles = preg_split('/[\s,]+/', (string) get_post_meta($series->ID, '_bbb_series_book_handles', true)) ?: array();
+		foreach ($handles as $handle) {
+			$book = sss_article_book_from_slug($handle);
+			if ($book instanceof WP_Post) {
+				$books[$book->ID] = $book;
+			}
+		}
+		$books = array_values($books);
+	}
+	if (!$books) {
+		$series_handle = (string) get_post_meta($series->ID, '_bbb_series_handle', true);
 		$books = array_values(
 			array_filter(
 				sss_article_all_visible_books(),
-				static fn(WP_Post $book): bool => ($book_series = sss_article_post(sss_article_field('series', $book->ID, null))) && (int) $book_series->ID === (int) $series->ID
+				static function (WP_Post $book) use ($series, $series_handle): bool {
+					$book_series = sss_article_post(sss_article_field('series', $book->ID, null));
+					if ($book_series && (int) $book_series->ID === (int) $series->ID) {
+						return true;
+					}
+
+					return '' !== $series_handle && (string) get_post_meta($book->ID, '_bbb_series_handle', true) === $series_handle;
+				}
 			)
 		);
 	}
@@ -35,14 +67,62 @@ function sss_series_books(WP_Post $series): array {
 	return $books;
 }
 
+function sss_series_from_blog_post(int $post_id): ?WP_Post {
+	$post = get_post($post_id);
+	if (!$post instanceof WP_Post) {
+		return null;
+	}
+
+	$query = get_posts(
+		array(
+			'post_type'      => 'sss_series',
+			'post_status'    => 'publish',
+			'posts_per_page' => 1,
+			'meta_key'       => '_bbb_series_linked_blog_post_id',
+			'meta_value'     => (string) $post_id,
+		)
+	);
+	if (!empty($query[0]) && $query[0] instanceof WP_Post) {
+		return $query[0];
+	}
+
+	$handle = sanitize_title($post->post_name);
+	if ('' === $handle) {
+		return null;
+	}
+
+	$query = get_posts(
+		array(
+			'post_type'      => 'sss_series',
+			'post_status'    => 'publish',
+			'posts_per_page' => 1,
+			'meta_key'       => '_bbb_series_linked_blog_post_handle',
+			'meta_value'     => $handle,
+		)
+	);
+
+	return (!empty($query[0]) && $query[0] instanceof WP_Post) ? $query[0] : null;
+}
+
 function sss_series_url(WP_Post $series): string {
 	$linked_post = sss_article_post(sss_article_field('linked_blog_post', $series->ID, null));
 	if ($linked_post) {
 		return get_permalink($linked_post);
 	}
 
+	$handle = sanitize_title((string) sss_article_field('linked_blog_handle', $series->ID, ''));
+	if ('' !== $handle) {
+		$post = get_page_by_path($handle, OBJECT, 'post');
+		if ($post instanceof WP_Post) {
+			$permalink = get_permalink($post);
+			if ($permalink) {
+				return $permalink;
+			}
+		}
+	}
+
 	$url = (string) sss_article_field('linked_blog_url', $series->ID, '');
-	return $url ?: home_url('/pages/series?series=' . $series->post_name);
+	return $url ?: home_url('/series/?series=' . $series->post_name);
 }
 
 function sss_series_shortcode($atts): string {
@@ -51,6 +131,9 @@ function sss_series_shortcode($atts): string {
 	$series = sss_article_post(sss_article_field('sss_series', $post_id, null));
 	if (!$series) {
 		$series = sss_article_post(sss_article_field('series', $post_id, null));
+	}
+	if (!$series) {
+		$series = sss_series_from_blog_post($post_id);
 	}
 	if (!$series) {
 		return '';
