@@ -3925,6 +3925,187 @@ body.single-post.bbb-book-preview-open{
   overflow:hidden !important;
 }
 
+/* Final blog book modal layout */
+#bbbBookPreview.sss-lib__modal{
+  position:fixed !important;
+  inset:0 !important;
+  z-index:10050 !important;
+  display:none;
+  align-items:center !important;
+  justify-content:center !important;
+  padding:clamp(16px, 3vw, 34px);
+  background:rgba(0,0,0,.74);
+  overflow:hidden;
+}
+
+#bbbBookPreview.sss-lib__modal[aria-hidden="false"]{
+  display:flex !important;
+}
+
+#bbbBookPreview .sss-lib__backdrop{
+  position:absolute;
+  inset:0;
+}
+
+#bbbBookPreview .sss-lib__dialog,
+#bbbBookPreview .bbbBookPreview__inner{
+  position:relative !important;
+  top:auto !important;
+  left:auto !important;
+  transform:none !important;
+  width:min(960px, calc(100vw - 48px)) !important;
+  max-height:min(82svh, 760px) !important;
+  padding:24px 24px 58px !important;
+  border-radius:18px !important;
+  overflow:auto !important;
+  overscroll-behavior:contain;
+}
+
+#bbbBookPreview .sss-lib__mhead{
+  padding-right:4.4rem !important;
+}
+
+#bbbBookPreview .sss-lib__mbody{
+  display:grid !important;
+  grid-template-columns:minmax(138px, 178px) minmax(0, 1fr) !important;
+  gap:18px !important;
+  align-items:start !important;
+  margin-top:18px !important;
+}
+
+#bbbBookPreview .sss-lib__mcoverWrap{
+  width:100% !important;
+  min-width:0 !important;
+  max-height:none !important;
+  height:auto !important;
+  aspect-ratio:2 / 3 !important;
+  align-self:start !important;
+  border-radius:12px !important;
+  overflow:hidden !important;
+}
+
+#bbbBookPreview .sss-lib__mcoverFrame,
+#bbbBookPreview .sss-lib__mcover{
+  width:100% !important;
+  height:100% !important;
+  max-height:none !important;
+}
+
+#bbbBookPreview .sss-lib__mcover{
+  display:block !important;
+  object-fit:cover !important;
+  object-position:center top !important;
+  border:0 !important;
+  border-radius:0 !important;
+}
+
+#bbbBookPreview .sss-lib__mcontent{
+  display:flex !important;
+  min-width:0 !important;
+  flex-direction:column !important;
+  gap:12px !important;
+}
+
+#bbbBookPreview .sss-lib__mmini{
+  min-height:0 !important;
+  margin:0 !important;
+}
+
+#bbbBookPreview .sss-lib__mcta{
+  display:grid !important;
+  grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+  gap:10px !important;
+  margin:0 !important;
+}
+
+#bbbBookPreview .sss-lib__mbtn{
+  width:100% !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  min-height:44px !important;
+  white-space:normal !important;
+}
+
+#bbbBookPreview .sss-lib__mbtn[hidden]{
+  display:none !important;
+}
+
+#bbbBookPreview .sss-lib__mbtn--newsletter{
+  grid-column:1 / -1;
+}
+
+#bbbBookPreview .sss-lib__mku{
+  margin:0 !important;
+  text-align:left !important;
+}
+
+#bbbBookPreview .sss-lib__mbelow{
+  grid-column:1 / -1 !important;
+  margin-top:2px !important;
+}
+
+#bbbBookPreview .sss-lib__mmeta,
+#bbbBookPreview .sss-lib__mtropes,
+#bbbBookPreview .sss-lib__mratings,
+#bbbBookPreview .sss-lib__mwhy,
+#bbbBookPreview .sss-lib__mstatus,
+#bbbBookPreview .sss-lib__mstatusLabel{
+  text-align:left !important;
+}
+
+#bbbBookPreview .sss-lib__mstatusButtons{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+#bbbBookPreview .sss-lib__mshare{
+  top:auto !important;
+  right:16px !important;
+  bottom:16px !important;
+  left:auto !important;
+  z-index:5;
+}
+
+@media (max-width:749px){
+  #bbbBookPreview.sss-lib__modal{
+    align-items:flex-end !important;
+    padding:12px;
+  }
+
+  #bbbBookPreview .sss-lib__dialog,
+  #bbbBookPreview .bbbBookPreview__inner{
+    width:min(94vw, 430px) !important;
+    max-height:80svh !important;
+    padding:16px 16px 56px !important;
+    border-radius:16px !important;
+  }
+
+  #bbbBookPreview .sss-lib__mbody{
+    grid-template-columns:96px minmax(0, 1fr) !important;
+    gap:12px !important;
+  }
+
+  #bbbBookPreview .sss-lib__mcoverWrap{
+    width:96px !important;
+  }
+
+  #bbbBookPreview .sss-lib__mcontent{
+    display:contents !important;
+  }
+
+  #bbbBookPreview .sss-lib__mmini{
+    grid-column:2 !important;
+  }
+
+  #bbbBookPreview .sss-lib__mcta,
+  #bbbBookPreview .sss-lib__mku,
+  #bbbBookPreview .sss-lib__mbelow{
+    grid-column:1 / -1 !important;
+    width:100% !important;
+  }
+}
+
 body.single-post .article-template__content,
 body.single-post main,
 body.single-post .content-for-layout,

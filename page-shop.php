@@ -73,6 +73,38 @@ if (!function_exists('bbb_shop_download_file_count')) {
 	}
 }
 
+if (!function_exists('bbb_shop_purchase_size_select')) {
+	function bbb_shop_purchase_size_select(int $download_id, array $args = array()): void {
+		if (!function_exists('edd_has_variable_prices') || !edd_has_variable_prices($download_id) || !function_exists('edd_get_variable_prices')) {
+			return;
+		}
+
+		$prices = edd_get_variable_prices($download_id);
+		if (!is_array($prices) || count($prices) < 2) {
+			return;
+		}
+
+		$default_price_id = function_exists('edd_get_default_variable_price') ? (string) edd_get_default_variable_price($download_id) : (string) array_key_first($prices);
+		$select_id        = 'bbb-shop-size-' . $download_id;
+		if (!empty($args['form_id'])) {
+			$select_id .= '-' . sanitize_html_class((string) $args['form_id']);
+		}
+		?>
+		<div class="bbb-shop-card__size">
+			<label for="<?php echo esc_attr($select_id); ?>">size</label>
+			<select id="<?php echo esc_attr($select_id); ?>" class="bbb-shop-card__sizeSelect" onchange="this.closest('form').querySelector('.edd_price_option_<?php echo esc_attr((string) $download_id); ?>[type=hidden]').value=this.value;">
+				<?php foreach ($prices as $price_id => $price) : ?>
+					<option value="<?php echo esc_attr((string) $price_id); ?>" <?php selected((string) $price_id, $default_price_id); ?>>
+						<?php echo esc_html((string) ($price['name'] ?? 'size ' . $price_id)); ?>
+					</option>
+				<?php endforeach; ?>
+			</select>
+			<input type="hidden" name="edd_options[price_id][]" class="edd_price_option_<?php echo esc_attr((string) $download_id); ?>" value="<?php echo esc_attr($default_price_id); ?>">
+		</div>
+		<?php
+	}
+}
+
 if (!function_exists('bbb_shop_download_kind')) {
 	function bbb_shop_download_kind(WP_Post $download): string {
 		$title = strtolower(get_the_title($download));
@@ -140,6 +172,11 @@ $sections = array(
 		'title'  => 'reader tools',
 	),
 );
+
+if (function_exists('edd_purchase_variable_pricing')) {
+	remove_action('edd_purchase_link_top', 'edd_purchase_variable_pricing', 10);
+	add_action('edd_purchase_link_top', 'bbb_shop_purchase_size_select', 10, 2);
+}
 ?>
 
 <main class="bbb-shop" id="main">
@@ -218,7 +255,7 @@ $sections = array(
 										echo edd_get_purchase_link(
 											array(
 												'download_id' => $post_id,
-												'text'        => $is_free ? 'download free' : 'add to cart',
+												'text'        => '#50',
 												'price'       => false,
 												'class'       => 'bbb-shop-card__button',
 												'style'       => 'button',
@@ -239,5 +276,9 @@ $sections = array(
 </main>
 
 <?php
+if (function_exists('edd_purchase_variable_pricing')) {
+	remove_action('edd_purchase_link_top', 'bbb_shop_purchase_size_select', 10);
+	add_action('edd_purchase_link_top', 'edd_purchase_variable_pricing', 10, 2);
+}
 wp_reset_postdata();
 get_footer();

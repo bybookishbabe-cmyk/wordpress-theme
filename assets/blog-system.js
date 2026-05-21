@@ -244,6 +244,10 @@ let currentPreviewShare = null;
 let currentPreviewBook = null;
 let previewScrollY = 0;
 
+function blogReaderIsSociety(){
+  return Boolean(window.BBBReaderAccount && window.BBBReaderAccount.isSociety);
+}
+
 function lockPreviewScroll(){
   previewScrollY = window.scrollY || document.documentElement.scrollTop || 0;
   document.body.classList.add("bbb-book-preview-open");
@@ -387,6 +391,7 @@ const authorEl = preview.querySelector("[data-mauthor]");
 const coverEl = preview.querySelector("[data-mcover]");
 const amazonEl = preview.querySelector("[data-amazon-btn]");
 const shopEl = preview.querySelector("[data-bookshop-btn]");
+const newsletterEl = preview.querySelector("[data-newsletter-btn]");
 const miniEl = preview.querySelector("[data-mmini]");
 const tropesEl = preview.querySelector("[data-mtropes]");
 const whyEl = preview.querySelector("[data-mwhy]");
@@ -468,6 +473,12 @@ if (shopEl) {
   shopEl.classList.add("sss-lib__mbtn--bookshop");
   shopEl.href = bookshop || "#";
   shopEl.hidden = !bookshop;
+}
+
+if (newsletterEl) {
+  const showNewsletter = blogReaderIsSociety() && newsletter;
+  newsletterEl.href = showNewsletter ? newsletter : "#";
+  newsletterEl.hidden = !showNewsletter;
 }
 
 if (kuEl) {

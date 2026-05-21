@@ -142,6 +142,240 @@ if (!function_exists('bbb_sss_drop_product_url')) {
 	}
 }
 
+if (!function_exists('bbb_sss_drop_normalize_asset_url')) {
+	function bbb_sss_drop_normalize_asset_url(string $url): string {
+		$url = trim($url);
+		if ('' === $url) {
+			return '';
+		}
+
+		if (str_starts_with($url, '//')) {
+			$url = 'https:' . $url;
+		}
+
+		if (str_contains($url, 'dropbox.com')) {
+			$url = str_replace('www.dropbox.com', 'dl.dropboxusercontent.com', $url);
+			$url = remove_query_arg(array('dl', 'raw'), $url);
+		}
+
+		if (str_starts_with($url, '/wp-content/')) {
+			return home_url($url);
+		}
+
+		$path = (string) wp_parse_url($url, PHP_URL_PATH);
+		if (str_starts_with($path, '/wp-content/')) {
+			$query = (string) wp_parse_url($url, PHP_URL_QUERY);
+			return home_url($path . ('' !== $query ? '?' . $query : ''));
+		}
+
+		return esc_url_raw($url);
+	}
+}
+
+if (!function_exists('bbb_sss_drop_size_label')) {
+	function bbb_sss_drop_size_label(array $file): string {
+		if (function_exists('bbb_society_product_importer_size_label')) {
+			$label = bbb_society_product_importer_size_label($file);
+			if ('' !== $label) {
+				return $label;
+			}
+		}
+
+		$haystack = strtolower(rawurldecode((string) ($file['name'] ?? '') . ' ' . (string) ($file['url'] ?? '') . ' ' . (string) ($file['file'] ?? '')));
+		$haystack = str_replace(array('_', '-', '%20'), ' ', $haystack);
+		$sizes = array(
+			'6 inch'   => array('6inch', '6 inch', '6-inch'),
+			'10th gen' => array('10thgen', '10th gen', '10th-gen', '10th generation'),
+			'11th gen' => array('11thgen', '11th gen', '11th-gen', '11th generation'),
+			'12th gen' => array('12thgen', '12th gen', '12th-gen', '12th generation'),
+		);
+
+		foreach ($sizes as $label => $needles) {
+			foreach ($needles as $needle) {
+				if (str_contains($haystack, $needle)) {
+					return $label;
+				}
+			}
+		}
+
+		$name = trim((string) ($file['name'] ?? ''));
+		return '' !== $name ? strtolower((string) preg_replace('/\.[^.]+$/', '', $name)) : 'download';
+	}
+}
+
+if (!function_exists('bbb_sss_drop_product_export_index')) {
+	function bbb_sss_drop_product_export_index(): array {
+		static $index = null;
+		if (null !== $index) {
+			return $index;
+		}
+
+		$index = array();
+		$files = array(
+			'/firstpass/migration/exports/products/society-products-free-for-members.json',
+			'/firstpass/migration/exports/products/society-products.json',
+			'/firstpass/migration/exports/products/digital-products.json',
+		);
+
+		foreach ($files as $relative_path) {
+			$path = get_template_directory() . $relative_path;
+			if (!is_readable($path)) {
+				continue;
+			}
+
+			$rows = json_decode((string) file_get_contents($path), true);
+			if (!is_array($rows)) {
+				continue;
+			}
+
+			foreach ($rows as $row) {
+				if (!is_array($row)) {
+					continue;
+				}
+
+				$handle = sanitize_title((string) ($row['handle'] ?? ''));
+				if ('' !== $handle && empty($index[$handle])) {
+					$index[$handle] = $row;
+				}
+			}
+		}
+
+		return $index;
+	}
+}
+
+if (!function_exists('bbb_sss_drop_product_export')) {
+	function bbb_sss_drop_product_export(string $handle): array {
+		$index = bbb_sss_drop_product_export_index();
+		return $index[$handle] ?? array();
+	}
+}
+
+if (!function_exists('bbb_sss_drop_edd_product_post')) {
+	function bbb_sss_drop_edd_product_post(string $handle): ?WP_Post {
+		if ('' === $handle || !post_type_exists('download')) {
+			return null;
+		}
+
+		$post = get_page_by_path($handle, OBJECT, 'download');
+		return $post instanceof WP_Post ? $post : null;
+	}
+}
+
+if (!function_exists('bbb_sss_drop_product_image_url')) {
+	function bbb_sss_drop_product_image_url(array $product, string $handle): string {
+		$post = bbb_sss_drop_edd_product_post($handle);
+		if ($post instanceof WP_Post) {
+			$thumbnail = get_the_post_thumbnail_url($post, 'medium_large');
+			if (is_string($thumbnail) && '' !== $thumbnail) {
+				return $thumbnail;
+			}
+		}
+
+		$export = bbb_sss_drop_product_export($handle);
+		$image = trim((string) ($export['image_url'] ?? $product['image_url'] ?? $product['featuredImage']['url'] ?? ''));
+		return bbb_sss_drop_normalize_asset_url($image);
+	}
+}
+
+if (!function_exists('bbb_sss_drop_export_download_files')) {
+	function bbb_sss_drop_export_download_files(array $export): array {
+		$raw = $export['download_files'] ?? $export['downloadFiles'] ?? array();
+		if (is_string($raw) && '' !== trim($raw)) {
+			$decoded = json_decode($raw, true);
+			$raw = is_array($decoded) ? $decoded : array();
+		}
+
+		$files = array();
+		foreach ((array) $raw as $file) {
+			if (!is_array($file)) {
+				continue;
+			}
+
+			$url = bbb_sss_drop_normalize_asset_url((string) ($file['url'] ?? $file['file'] ?? ''));
+			if ('' === $url) {
+				continue;
+			}
+
+			$files[] = array(
+				'label' => bbb_sss_drop_size_label($file),
+				'name'  => (string) ($file['name'] ?? ''),
+				'url'   => $url,
+			);
+		}
+
+		return $files;
+	}
+}
+
+if (!function_exists('bbb_sss_drop_product_download_files')) {
+	function bbb_sss_drop_product_download_files(string $handle): array {
+		$files = array();
+		$post = bbb_sss_drop_edd_product_post($handle);
+
+		if ($post instanceof WP_Post) {
+			$price_labels = array();
+			$prices = get_post_meta($post->ID, 'edd_variable_prices', true);
+			if (is_array($prices)) {
+				foreach ($prices as $price_id => $price) {
+					if (is_array($price) && !empty($price['name'])) {
+						$price_labels[(string) $price_id] = strtolower((string) $price['name']);
+					}
+				}
+			}
+
+			$edd_files = get_post_meta($post->ID, 'edd_download_files', true);
+			if (is_array($edd_files)) {
+				foreach ($edd_files as $file) {
+					if (!is_array($file)) {
+						continue;
+					}
+
+					$url = bbb_sss_drop_normalize_asset_url((string) ($file['file'] ?? $file['url'] ?? ''));
+					if ('' === $url) {
+						continue;
+					}
+
+					$condition = (string) ($file['condition'] ?? '');
+					$files[] = array(
+						'label' => $price_labels[$condition] ?? bbb_sss_drop_size_label($file),
+						'name'  => (string) ($file['name'] ?? ''),
+						'url'   => $url,
+					);
+				}
+			}
+		}
+
+		if (!$files) {
+			$files = bbb_sss_drop_export_download_files(bbb_sss_drop_product_export($handle));
+		}
+
+		$seen = array();
+		$files = array_values(
+			array_filter(
+				$files,
+				static function (array $file) use (&$seen): bool {
+					$key = strtolower((string) ($file['label'] ?? '') . '|' . (string) ($file['url'] ?? ''));
+					if ('' === trim((string) ($file['url'] ?? '')) || isset($seen[$key])) {
+						return false;
+					}
+
+					$seen[$key] = true;
+					return true;
+				}
+			)
+		);
+
+		$order = array('6 inch' => 1, '10th gen' => 2, '11th gen' => 3, '12th gen' => 4);
+		usort(
+			$files,
+			static fn(array $a, array $b): int => ($order[strtolower((string) ($a['label'] ?? ''))] ?? 99) <=> ($order[strtolower((string) ($b['label'] ?? ''))] ?? 99)
+		);
+
+		return $files;
+	}
+}
+
 if (!function_exists('bbb_sss_render_drop_products')) {
 	function bbb_sss_render_drop_products(array $products, string $heading, string $kicker): void {
 		if (!$products) {
@@ -159,11 +393,32 @@ if (!function_exists('bbb_sss_render_drop_products')) {
 					$title  = strtolower((string) ($product['title'] ?? 'printable'));
 					$handle = sanitize_title((string) ($product['handle'] ?? ''));
 					$url    = bbb_sss_drop_product_url($product);
+					$image  = bbb_sss_drop_product_image_url($product, $handle);
+					$files  = bbb_sss_drop_product_download_files($handle);
 					?>
-					<a href="<?php echo esc_url($url); ?>" data-shopify-product-handle="<?php echo esc_attr($handle); ?>">
-						<span><?php echo esc_html($title); ?></span>
-						<small><?php echo esc_html($handle ? 'wordpress product slug: ' . $handle : 'product reference'); ?></small>
-					</a>
+					<article class="sss-drop-theme__productCard" data-shopify-product-handle="<?php echo esc_attr($handle); ?>">
+						<?php if ('' !== $image) : ?>
+							<a class="sss-drop-theme__productMedia" href="<?php echo esc_url($url); ?>">
+								<img src="<?php echo esc_url($image); ?>" alt="<?php echo esc_attr($title); ?>" loading="lazy">
+							</a>
+						<?php endif; ?>
+						<div class="sss-drop-theme__productBody">
+							<a class="sss-drop-theme__productTitle" href="<?php echo esc_url($url); ?>"><?php echo esc_html($title); ?></a>
+							<?php if ($files) : ?>
+								<div class="sss-drop-theme__downloadGrid" aria-label="<?php echo esc_attr($title . ' downloads'); ?>">
+									<?php foreach ($files as $file) : ?>
+										<a href="<?php echo esc_url((string) $file['url']); ?>" target="_blank" rel="noopener" download>
+											<span><?php echo esc_html((string) ($file['label'] ?? 'download')); ?></span>
+											<small>download</small>
+										</a>
+									<?php endforeach; ?>
+								</div>
+							<?php else : ?>
+								<a class="sss-drop-theme__productFallback" href="<?php echo esc_url($url); ?>">open product</a>
+								<small class="sss-drop-theme__downloadMissing">download files need attaching</small>
+							<?php endif; ?>
+						</div>
+					</article>
 				<?php endforeach; ?>
 			</div>
 		</section>
@@ -640,7 +895,7 @@ $drop_nav = array_filter(
 .sss-drop-theme iframe{display:block;margin-top:14px;border:0;border-radius:8px;background:#111}
 .sss-drop-theme__wallpapers,.sss-drop-theme__calendar,.sss-drop-theme__products,.sss-drop-theme__moodboard{margin-top:16px;padding:16px}
 .sss-drop-theme__sectionHead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:14px}
-.sss-drop-theme__sectionHead a,.sss-drop-theme__actions a,.sss-drop-theme__productGrid a{color:#ff8ac7;text-decoration:none}
+.sss-drop-theme__sectionHead a,.sss-drop-theme__actions a{color:#ff8ac7;text-decoration:none}
 .sss-drop-theme__quoteRow{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
 .sss-drop-theme__quoteRow span{display:inline-flex;padding:8px 10px;border:1px solid rgba(255,255,255,.1);border-radius:999px;background:rgba(0,0,0,.2);color:rgba(246,246,246,.72);font-size:12px}
 .sss-drop-theme__assetLabel{margin:16px 0 8px;color:var(--drop-accent);font-size:11px;letter-spacing:.14em;text-transform:lowercase}
@@ -654,8 +909,20 @@ $drop_nav = array_filter(
 .sss-drop-theme__prompts li{counter-increment:prompts;padding:11px;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(0,0,0,.2);color:rgba(246,246,246,.74);font-size:13px;line-height:1.45}
 .sss-drop-theme__prompts li:before{content:counter(prompts,decimal-leading-zero);display:block;margin-bottom:6px;color:var(--drop-accent);font-size:10px;letter-spacing:.12em}
 .sss-drop-theme__productGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-.sss-drop-theme__productGrid a{min-height:92px;padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:8px;background:rgba(0,0,0,.2);font-family:Cormorant,"Cormorant Garamond",Georgia,serif;font-size:21px;line-height:1.05}
-.sss-drop-theme__productGrid span,.sss-drop-theme__productGrid small{display:block}
-.sss-drop-theme__productGrid small{margin-top:10px;color:rgba(246,246,246,.46);font-family:inherit;font-size:11px;line-height:1.35}
+.sss-drop-theme__productCard{overflow:hidden;border:1px solid rgba(255,255,255,.12);border-radius:8px;background:rgba(0,0,0,.22)}
+.sss-drop-theme__productMedia{display:block;background:#111}
+.sss-drop-theme__productMedia img{display:block;width:100%;aspect-ratio:1;object-fit:cover}
+.sss-drop-theme__productBody{display:grid;gap:11px;padding:12px}
+.sss-drop-theme__productTitle{min-height:45px;color:#fff;font-family:Cormorant,"Cormorant Garamond",Georgia,serif;font-size:21px;line-height:1.05;text-decoration:none}
+.sss-drop-theme__productTitle:hover,.sss-drop-theme__productTitle:focus{color:#ff8ac7;outline:none}
+.sss-drop-theme__downloadGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.sss-drop-theme__downloadGrid a,.sss-drop-theme__productFallback{display:flex;min-height:46px;align-items:center;justify-content:center;padding:8px;border:1px solid rgba(255,138,199,.34);border-radius:7px;background:rgba(255,138,199,.08);color:#ffb1d8;text-align:center;text-decoration:none}
+.sss-drop-theme__downloadGrid a{flex-direction:column}
+.sss-drop-theme__downloadGrid a:hover,.sss-drop-theme__downloadGrid a:focus,.sss-drop-theme__productFallback:hover,.sss-drop-theme__productFallback:focus{border-color:#ff8ac7;background:rgba(255,138,199,.15);color:#fff;outline:none}
+.sss-drop-theme__downloadGrid span{display:block;font-size:12px;font-weight:700;letter-spacing:.04em}
+.sss-drop-theme__downloadGrid small,.sss-drop-theme__downloadMissing{display:block;color:rgba(246,246,246,.5);font-size:10px;letter-spacing:.1em;line-height:1.25;text-transform:lowercase}
+.sss-drop-theme__downloadGrid small{margin-top:3px}
+.sss-drop-theme__productFallback{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:lowercase}
+.sss-drop-theme__downloadMissing{margin-top:-4px}
 @media (max-width:800px){.sss-drop-theme__grid,.sss-drop-theme__prompts,.sss-drop-theme__productGrid,.sss-drop-theme__assetGrid{grid-template-columns:1fr}.sss-drop-theme__nav{position:relative;justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap}.sss-drop-theme__nav a{white-space:nowrap}.sss-drop-theme__wallpaperGrid{display:flex;overflow-x:auto;padding-bottom:4px}.sss-drop-theme__wallpaperGrid a{min-width:46%}.sss-drop-theme__sectionHead{display:block}.sss-drop-theme__actions{justify-content:flex-start;margin-top:10px}}
 </style>

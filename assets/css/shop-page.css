@@ -226,6 +226,36 @@
   margin: 0;
 }
 
+.bbb-shop-card__size {
+  display: grid;
+  gap: 6px;
+}
+
+.bbb-shop-card__size label {
+  color: var(--shop-pink);
+  font: 900 10px/1 Assistant, system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+}
+
+.bbb-shop-card__size select {
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 34px 9px 10px;
+  border: 1px solid rgba(255, 138, 199, 0.34);
+  border-radius: 4px;
+  background-color: #090909;
+  color: var(--shop-ink);
+  font: 800 13px/1.2 Assistant, system-ui, sans-serif;
+  text-transform: lowercase;
+}
+
+.bbb-shop-card__size select:focus-visible {
+  border-color: var(--shop-pink);
+  outline: 2px solid rgba(255, 138, 199, 0.2);
+  outline-offset: 2px;
+}
+
 .bbb-shop-card__actions .edd_price_options {
   margin: 0;
   padding: 0;
