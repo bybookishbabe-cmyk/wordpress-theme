@@ -55,6 +55,7 @@ require_once get_theme_file_path('inc/shortcodes/sss-newsletter-shortcode.php');
 require_once get_theme_file_path('inc/admin/society-members.php');
 require_once get_theme_file_path('inc/admin/society-drop-importer.php');
 require_once get_theme_file_path('inc/admin/society-product-importer.php');
+require_once get_theme_file_path('inc/site-stability.php');
 
 function bbb_reader_is_society(): bool {
 	if (is_user_logged_in() && current_user_can('manage_options')) {
