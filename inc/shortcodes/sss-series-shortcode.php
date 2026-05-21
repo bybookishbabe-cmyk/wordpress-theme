@@ -122,7 +122,7 @@ function sss_series_url(WP_Post $series): string {
 	}
 
 	$url = (string) sss_article_field('linked_blog_url', $series->ID, '');
-	return $url ?: home_url('/series/?series=' . $series->post_name);
+	return $url ?: home_url('/series/' . $series->post_name . '/');
 }
 
 function sss_series_shortcode($atts): string {

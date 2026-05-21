@@ -23,11 +23,11 @@ $back_url    = $back_page instanceof WP_Post ? get_permalink($back_page) : home_
 		<?php endif; ?>
 		<div class="sss-membergate__actions">
 			<?php if (is_user_logged_in()) : ?>
-				<a class="sss-membergate__btn sss-membergate__btn--primary" href="<?php echo esc_url($join_url); ?>">join the society</a>
+				<a class="sss-membergate__btn sss-membergate__btn--primary" href="<?php echo esc_url($join_url); ?>">upgrade to paid society</a>
 				<a class="sss-membergate__btn" href="<?php echo esc_url($account_url); ?>">open account</a>
 			<?php else : ?>
 				<a class="sss-membergate__btn sss-membergate__btn--primary" href="<?php echo esc_url($account_url); ?>">log in</a>
-				<a class="sss-membergate__btn" href="<?php echo esc_url($join_url); ?>">join the society</a>
+				<a class="sss-membergate__btn" href="<?php echo esc_url($join_url); ?>">upgrade to paid society</a>
 			<?php endif; ?>
 			<a class="sss-membergate__btn" href="<?php echo esc_url($back_url); ?>">back</a>
 		</div>

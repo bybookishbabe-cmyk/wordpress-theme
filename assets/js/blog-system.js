@@ -445,7 +445,7 @@ if (modalSpiceEl) {
 
 if (seriesEl) {
   if (seriesName) {
-    const seriesHref = series ? `/pages/series?series=${encodeURIComponent(series || "")}` : "#";
+    const seriesHref = series ? `/series/${encodeURIComponent(series || "")}/` : "#";
     seriesEl.hidden = false;
     seriesEl.innerHTML = `<a href="${seriesHref}" class="sss-lib__seriesLink">${seriesName} series →</a>`;
   } else {

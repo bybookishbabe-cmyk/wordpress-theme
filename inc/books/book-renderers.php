@@ -125,7 +125,7 @@ function bbb_render_library_book_card(int $post_id, bool $mini = false): string 
 	if ($series_number !== '' && $series_number !== null) {
 		$badge_class  = 'sss-lib__seriesBadge' . ($is_standalone ? ' sss-lib__seriesBadge--standalone' : '');
 		$series_badge = sprintf(
-			'<span class="%s" data-series-url="/pages/series?series=%s" aria-label="open series page for %s">%s</span>',
+			'<span class="%s" data-series-url="/series/%s/" aria-label="open series page for %s">%s</span>',
 			esc_attr($badge_class),
 			esc_attr((string) $series_handle),
 			esc_attr($series_name),

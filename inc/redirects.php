@@ -153,6 +153,12 @@ add_action(
 			exit;
 		}
 
+		$series_handle = isset($_GET['series']) ? sanitize_title(wp_unslash($_GET['series'])) : '';
+		if ('series' === $path && '' !== $series_handle) {
+			wp_safe_redirect(home_url('/series/' . $series_handle . '/'), 301);
+			exit;
+		}
+
 		if ($path === 'cart' && function_exists('wc_get_cart_url')) {
 			bbb_redirect_with_query_string(wc_get_cart_url(), 302);
 		}

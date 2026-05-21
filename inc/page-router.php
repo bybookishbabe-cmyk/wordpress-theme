@@ -251,6 +251,16 @@ add_action(
 			}
 		}
 
+		if (preg_match('#^series/([^/]+)/?$#', $request_path, $matches)) {
+			set_query_var('bbb_series_handle', sanitize_title($matches[1]));
+			$template = bbb_route_template_for_slug('series');
+			if ($template !== '') {
+				bbb_mark_virtual_route_found();
+				require $template;
+				exit;
+			}
+		}
+
 		if (preg_match('#^(?:blogs/)?curated-romance-guides/page/([0-9]+)/?$#', $request_path, $matches)) {
 			set_query_var('paged', max(1, (int) $matches[1]));
 			$template = bbb_route_template_for_slug('curated-romance-guides');

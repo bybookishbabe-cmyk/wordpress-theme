@@ -214,6 +214,7 @@ if ($is_paid_society_member) {
 } elseif (is_user_logged_in()) {
 	$reader_state = 'free member';
 }
+$join_url = get_option('bbb_society_gate_member_url', 'https://thesmutandsentimentsociety.substack.com/subscribe');
 
 $monthly_theme = strtolower((string) date_i18n('F')) . ' theme';
 $monthly_hub = array(
@@ -378,14 +379,28 @@ get_header();
 					<h2 id="<?php echo esc_attr(sanitize_title($section['label'])); ?>"><?php echo esc_html($section['label']); ?></h2>
 					<div class="bbb-society-link-grid">
 						<?php foreach ($section['items'] as $item) : ?>
-							<a class="bbb-society-link-card" href="<?php echo esc_url($item['url']); ?>">
-								<span class="bbb-society-link-card__top">
-									<span class="bbb-society-link-card__emoji" aria-hidden="true"><?php echo esc_html($item['emoji'] ?? '♡'); ?></span>
-									<span class="bbb-society-link-card__title"><?php echo esc_html($item['title']); ?></span>
-									<span class="bbb-society-link-card__badge"><?php echo esc_html($item['badge']); ?></span>
-								</span>
-								<span class="bbb-society-link-card__copy"><?php echo esc_html($item['copy']); ?></span>
-							</a>
+							<?php $is_locked_society_item = !$is_paid_society_member && 'society' === (string) ($item['badge'] ?? ''); ?>
+							<?php if ($is_locked_society_item) : ?>
+								<article class="bbb-society-link-card bbb-society-link-card--locked" aria-label="<?php echo esc_attr($item['title'] . ' locked preview'); ?>">
+									<span class="bbb-society-link-card__top">
+										<span class="bbb-society-link-card__emoji" aria-hidden="true"><?php echo esc_html($item['emoji'] ?? '♡'); ?></span>
+										<span class="bbb-society-link-card__title"><?php echo esc_html($item['title']); ?></span>
+										<span class="bbb-society-link-card__badge">locked</span>
+									</span>
+									<span class="bbb-society-link-card__copy"><?php echo esc_html($item['copy']); ?></span>
+									<span class="bbb-society-link-card__lock">paid society preview</span>
+									<a class="bbb-society-link-card__upgrade" href="<?php echo esc_url($join_url); ?>" target="_blank" rel="noopener">upgrade to paid society</a>
+								</article>
+							<?php else : ?>
+								<a class="bbb-society-link-card" href="<?php echo esc_url($item['url']); ?>">
+									<span class="bbb-society-link-card__top">
+										<span class="bbb-society-link-card__emoji" aria-hidden="true"><?php echo esc_html($item['emoji'] ?? '♡'); ?></span>
+										<span class="bbb-society-link-card__title"><?php echo esc_html($item['title']); ?></span>
+										<span class="bbb-society-link-card__badge"><?php echo esc_html($item['badge']); ?></span>
+									</span>
+									<span class="bbb-society-link-card__copy"><?php echo esc_html($item['copy']); ?></span>
+								</a>
+							<?php endif; ?>
 						<?php endforeach; ?>
 					</div>
 				</section>

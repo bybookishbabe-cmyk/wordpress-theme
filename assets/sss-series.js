@@ -4,7 +4,8 @@
     if (!seriesRoot) return;
 
     var params = new URLSearchParams(window.location.search);
-    var slug = params.get('series');
+    var pathMatch = window.location.pathname.match(/\/series\/([^/]+)\/?$/);
+    var slug = pathMatch ? decodeURIComponent(pathMatch[1]) : params.get('series');
     var archive = document.querySelector('[data-series-archive]');
     var sections = document.querySelectorAll('[data-series]');
     var shown = false;

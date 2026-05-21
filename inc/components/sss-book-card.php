@@ -214,7 +214,7 @@ $standalone = bbb_sss_card_bool(bbb_sss_card_field('read_as_standalone', $book_i
 		<?php if ('' !== $series_number) : ?>
 			<span
 				class="sss-lib__seriesBadge<?php echo $standalone ? ' sss-lib__seriesBadge--standalone' : ''; ?>"
-				data-series-url="/series?series=<?php echo esc_attr($series_handle); ?>"
+				data-series-url="/series/<?php echo esc_attr($series_handle); ?>/"
 				aria-label="open series page for <?php echo esc_attr($series_name); ?>"
 			>
 				<?php echo esc_html($series_number); ?>

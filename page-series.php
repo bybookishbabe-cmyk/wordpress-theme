@@ -229,7 +229,7 @@ get_header();
 						$title  = bbb_series_entity_title($series);
 						$tropes = array_slice($data['tropes'] ? array_column($data['tropes'], 'name') : bbb_series_term_tropes($series), 0, 3);
 						?>
-						<a class="series-archive-card" href="/series/?series=<?php echo esc_attr($slug); ?>" data-series-card="<?php echo esc_attr($slug); ?>">
+						<a class="series-archive-card" href="/series/<?php echo esc_attr($slug); ?>/" data-series-card="<?php echo esc_attr($slug); ?>">
 							<div class="series-archive-coverWrap">
 								<?php if ($data['spice'] > 0) : ?>
 									<div class="series-archive-spice"><?php echo esc_html(str_repeat('🌶', $data['spice'])); ?></div>
@@ -305,7 +305,7 @@ get_header();
 						$related_slug = bbb_series_entity_slug($other_series);
 						$related_count++;
 						?>
-						<a class="related-series-card" href="/series/?series=<?php echo esc_attr($related_slug); ?>">
+						<a class="related-series-card" href="/series/<?php echo esc_attr($related_slug); ?>/">
 							<div class="related-series-coverWrap">
 								<?php if ('' !== $related_data['cover']) : ?>
 									<img class="related-series-cover" src="<?php echo esc_url($related_data['cover']); ?>" alt="<?php echo esc_attr($related_data['title']); ?>">

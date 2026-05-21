@@ -1599,7 +1599,7 @@ if (seriesEl){
   if (data.seriesName || data.seriesNumber){
 
 var slug = (data.series || '').toLowerCase().trim();
-    var url = slug ? "/pages/series?series=" + slug : "#";
+    var url = slug ? "/series/" + encodeURIComponent(slug) + "/" : "#";
 
     var name = data.seriesName ? data.seriesName + " series →" : "";
 
@@ -5878,7 +5878,7 @@ function initReadFinder(){
       finderSeriesBadge.textContent = seriesNumber ? String(parseInt(seriesNumber, 10) || seriesNumber) : '';
       finderSeriesBadge.classList.toggle('sss-lib__seriesBadge--standalone', String(book && book.standalone) === 'true');
       if (book && book.series){
-        finderSeriesBadge.setAttribute('data-series-url', '/series/?series=' + encodeURIComponent(book.series));
+        finderSeriesBadge.setAttribute('data-series-url', '/series/' + encodeURIComponent(book.series) + '/');
       } else {
         finderSeriesBadge.removeAttribute('data-series-url');
       }
