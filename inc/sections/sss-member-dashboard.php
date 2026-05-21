@@ -180,6 +180,78 @@ if (!function_exists('bbb_sss_active_drop')) {
 			}
 		}
 
+		$current_handle = '';
+		if (function_exists('bbb_sss_drop_importer_current_handle')) {
+			$current_handle = bbb_sss_drop_importer_current_handle();
+		} elseif (function_exists('get_field')) {
+			$field_handle = get_field('current_drop_handle', 'option');
+			$current_handle = is_string($field_handle) ? sanitize_title($field_handle) : '';
+		}
+
+		$imported_posts = get_posts(
+			array(
+				'post_type'      => 'sss_drop',
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+				'meta_key'       => '_bbb_sss_drop_release_date',
+				'orderby'        => 'meta_value',
+				'order'          => 'DESC',
+			)
+		);
+
+		if ($imported_posts) {
+			$today = (int) current_time('timestamp');
+			$best = null;
+			$best_time = 0;
+			$fallback = null;
+			$fallback_time = 0;
+			$newest = null;
+			$newest_time = 0;
+
+			foreach ($imported_posts as $post) {
+				if (!$post instanceof WP_Post) {
+					continue;
+				}
+
+				$post_handle = sanitize_title((string) get_post_meta($post->ID, '_bbb_sss_drop_handle', true));
+				if ('' !== $current_handle && ($post->post_name === $current_handle || $post_handle === $current_handle)) {
+					$entry = json_decode((string) get_post_meta($post->ID, '_bbb_sss_drop_entry', true), true);
+					return is_array($entry) ? $entry : array();
+				}
+
+				$release = (string) get_post_meta($post->ID, '_bbb_sss_drop_release_date', true);
+				$time = '' !== $release ? strtotime($release . ' 00:00:00') : false;
+				if (!$time) {
+					continue;
+				}
+
+				$end = (string) get_post_meta($post->ID, '_bbb_sss_drop_end_date', true);
+				$end_time = '' !== $end ? strtotime($end . ' 23:59:59') : false;
+				if ($time <= $today && (!$end_time || $end_time >= $today) && $time >= $best_time) {
+					$best = $post;
+					$best_time = $time;
+				}
+
+				if ($time <= $today && $time >= $fallback_time) {
+					$fallback = $post;
+					$fallback_time = $time;
+				}
+
+				if ($time >= $newest_time) {
+					$newest = $post;
+					$newest_time = $time;
+				}
+			}
+
+			$active_post = $best ?: $fallback ?: $newest ?: $imported_posts[0];
+			if ($active_post instanceof WP_Post) {
+				$entry = json_decode((string) get_post_meta($active_post->ID, '_bbb_sss_drop_entry', true), true);
+				if (is_array($entry)) {
+					return $entry;
+				}
+			}
+		}
+
 		$path = get_theme_file_path('firstpass/migration/exports/metaobjects/sss_drop.json');
 		if (!file_exists($path)) {
 			return array();
@@ -200,10 +272,17 @@ if (!function_exists('bbb_sss_active_drop')) {
 		$best_time = 0;
 		$fallback = array();
 		$fallback_time = 0;
+		$newest = array();
+		$newest_time = 0;
 		foreach ($data['entries'] as $entry) {
 			if (!is_array($entry)) {
 				continue;
 			}
+
+			if ('' !== $current_handle && sanitize_title((string) ($entry['handle'] ?? '')) === $current_handle) {
+				return $entry;
+			}
+
 			$fields = bbb_sss_drop_field_map($entry);
 			$date   = bbb_sss_drop_value($fields, 'release_date');
 			if ('' === $date) {
@@ -226,9 +305,14 @@ if (!function_exists('bbb_sss_active_drop')) {
 				$fallback      = $entry;
 				$fallback_time = $time;
 			}
+
+			if ($time >= $newest_time) {
+				$newest      = $entry;
+				$newest_time = $time;
+			}
 		}
 
-		return $best ?: $fallback;
+		return $best ?: $fallback ?: $newest;
 	}
 }
 
@@ -304,6 +388,16 @@ $bonus_printable = bbb_sss_drop_reference_item($fields, 'bonus_printable_product
 $bonus_physical = bbb_sss_drop_reference_item($fields, 'bonus_physical_product');
 $bonus_products = array_values(array_filter(array($bonus_printable, $bonus_physical)));
 $drop_handle = (string) ($drop['handle'] ?? '');
+$drop_nav = array_filter(
+	array(
+		array('href' => '#drop-atmosphere', 'label' => 'atmosphere', 'show' => '' !== $gram_image || '' !== $spotify_id),
+		array('href' => '#drop-moodboard', 'label' => 'moodboard', 'show' => (bool) ($mood_images || $mood_stickers || $era_images || $mood_quotes)),
+		array('href' => '#drop-wallpapers', 'label' => 'wallpapers', 'show' => (bool) $wallpapers),
+		array('href' => '#drop-calendar', 'label' => 'calendar', 'show' => '' !== $calendar_image || (bool) $prompts),
+		array('href' => '#drop-products', 'label' => 'shop the drop', 'show' => (bool) ($printable_products || $physical_products || $bonus_products)),
+	),
+	static fn(array $item): bool => (bool) $item['show']
+);
 ?>
 <section class="sss-drop-theme" style="--drop-accent: <?php echo esc_attr($accent); ?>; --drop-pill-bg: <?php echo esc_attr($pill_bg); ?>; --drop-pill-ink: <?php echo esc_attr($pill_ink); ?>;">
 	<div class="sss-drop-theme__wrap">
@@ -324,6 +418,14 @@ $drop_handle = (string) ($drop['handle'] ?? '');
 			</div>
 		</header>
 
+		<?php if ($drop_nav) : ?>
+			<nav class="sss-drop-theme__nav" aria-label="monthly theme sections">
+				<?php foreach ($drop_nav as $item) : ?>
+					<a href="<?php echo esc_url($item['href']); ?>"><?php echo esc_html($item['label']); ?></a>
+				<?php endforeach; ?>
+			</nav>
+		<?php endif; ?>
+
 		<?php if ($mood_pills) : ?>
 			<section class="sss-drop-theme__pills" aria-label="reader mood pills">
 				<h2>how are we entering this theme?</h2>
@@ -335,7 +437,7 @@ $drop_handle = (string) ($drop['handle'] ?? '');
 			</section>
 		<?php endif; ?>
 
-		<div class="sss-drop-theme__grid">
+		<div class="sss-drop-theme__grid" id="drop-atmosphere">
 			<?php if ('' !== $gram_image) : ?>
 				<article class="sss-drop-theme__panel sss-drop-theme__panel--gram">
 					<div>
@@ -362,7 +464,7 @@ $drop_handle = (string) ($drop['handle'] ?? '');
 		</div>
 
 		<?php if ($mood_images || $mood_stickers || $era_images || $mood_quotes) : ?>
-			<section class="sss-drop-theme__moodboard">
+			<section class="sss-drop-theme__moodboard" id="drop-moodboard">
 				<div class="sss-drop-theme__sectionHead">
 					<p>moodboard</p>
 					<h2>the vibe file</h2>
@@ -390,7 +492,7 @@ $drop_handle = (string) ($drop['handle'] ?? '');
 		<?php endif; ?>
 
 		<?php if ($wallpapers) : ?>
-			<section class="sss-drop-theme__wallpapers">
+			<section class="sss-drop-theme__wallpapers" id="drop-wallpapers">
 				<div class="sss-drop-theme__sectionHead">
 					<p>wallpapers</p>
 					<h2>the visual file</h2>
@@ -409,7 +511,7 @@ $drop_handle = (string) ($drop['handle'] ?? '');
 		<?php endif; ?>
 
 		<?php if ('' !== $calendar_image || $prompts) : ?>
-			<section class="sss-drop-theme__calendar">
+			<section class="sss-drop-theme__calendar" id="drop-calendar">
 				<div class="sss-drop-theme__sectionHead">
 					<p>journal + calendar</p>
 					<h2>daily prompts</h2>
@@ -438,9 +540,11 @@ $drop_handle = (string) ($drop['handle'] ?? '');
 			</section>
 		<?php endif; ?>
 
+		<div id="drop-products">
 		<?php bbb_sss_render_drop_products($printable_products, 'printable kindle inserts', 'current drop'); ?>
 		<?php bbb_sss_render_drop_products($physical_products, 'physical kindle inserts', 'current drop'); ?>
 		<?php bbb_sss_render_drop_products($bonus_products, 'bonus products', 'member bonus'); ?>
+		</div>
 	</div>
 </section>
 
@@ -457,6 +561,9 @@ $drop_handle = (string) ($drop['handle'] ?? '');
 .sss-drop-theme blockquote{max-width:820px;margin:22px auto 0;color:rgba(246,246,246,.88);font-family:Cormorant,"Cormorant Garamond",Georgia,serif;font-size:clamp(24px,4vw,42px);font-style:italic;line-height:1.12}
 .sss-drop-theme__emojis{display:flex;justify-content:center;gap:10px;margin-top:18px}
 .sss-drop-theme__emojis span,.sss-drop-theme__pillRow span{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:8px 12px;border:1px solid rgba(255,255,255,.14);border-radius:999px;background:rgba(255,255,255,.045)}
+.sss-drop-theme__nav{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 0 24px;padding:10px;border:1px solid rgba(255,255,255,.12);border-radius:14px;background:rgba(5,5,5,.86);backdrop-filter:blur(14px);box-shadow:0 16px 40px rgba(0,0,0,.28)}
+.sss-drop-theme__nav a{display:inline-flex;align-items:center;min-height:36px;padding:0 13px;border:1px solid rgba(255,255,255,.13);border-radius:999px;background:rgba(255,255,255,.05);color:rgba(246,246,246,.82);font-size:12px;letter-spacing:.08em;text-decoration:none}
+.sss-drop-theme__nav a:hover,.sss-drop-theme__nav a:focus{border-color:var(--drop-accent);color:#fff;outline:none}
 .sss-drop-theme__pills{margin:0 auto 26px;text-align:center}
 .sss-drop-theme__pillRow{display:flex;flex-wrap:wrap;justify-content:center;gap:9px;margin-top:14px}
 .sss-drop-theme__pillRow span{background:var(--drop-pill-bg);color:var(--drop-pill-ink);border-color:rgba(255,255,255,.22);font-size:13px}
@@ -486,5 +593,5 @@ $drop_handle = (string) ($drop['handle'] ?? '');
 .sss-drop-theme__productGrid a{min-height:92px;padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:8px;background:rgba(0,0,0,.2);font-family:Cormorant,"Cormorant Garamond",Georgia,serif;font-size:21px;line-height:1.05}
 .sss-drop-theme__productGrid span,.sss-drop-theme__productGrid small{display:block}
 .sss-drop-theme__productGrid small{margin-top:10px;color:rgba(246,246,246,.46);font-family:inherit;font-size:11px;line-height:1.35}
-@media (max-width:800px){.sss-drop-theme__grid,.sss-drop-theme__prompts,.sss-drop-theme__productGrid,.sss-drop-theme__assetGrid{grid-template-columns:1fr}.sss-drop-theme__wallpaperGrid{display:flex;overflow-x:auto;padding-bottom:4px}.sss-drop-theme__wallpaperGrid a{min-width:46%}.sss-drop-theme__sectionHead{display:block}.sss-drop-theme__actions{justify-content:flex-start;margin-top:10px}}
+@media (max-width:800px){.sss-drop-theme__grid,.sss-drop-theme__prompts,.sss-drop-theme__productGrid,.sss-drop-theme__assetGrid{grid-template-columns:1fr}.sss-drop-theme__nav{position:relative;justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap}.sss-drop-theme__nav a{white-space:nowrap}.sss-drop-theme__wallpaperGrid{display:flex;overflow-x:auto;padding-bottom:4px}.sss-drop-theme__wallpaperGrid a{min-width:46%}.sss-drop-theme__sectionHead{display:block}.sss-drop-theme__actions{justify-content:flex-start;margin-top:10px}}
 </style>

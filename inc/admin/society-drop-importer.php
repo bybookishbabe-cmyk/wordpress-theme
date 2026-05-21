@@ -250,7 +250,74 @@ function bbb_sss_drop_importer_import_json(string $json, bool $create_product_st
 	return $results;
 }
 
+function bbb_sss_drop_importer_entry_from_post(WP_Post $post): array {
+	$raw = (string) get_post_meta($post->ID, '_bbb_sss_drop_entry', true);
+	$entry = json_decode($raw, true);
+
+	return is_array($entry) ? $entry : array();
+}
+
+function bbb_sss_drop_importer_current_handle(): string {
+	$handle = '';
+	if (function_exists('get_field')) {
+		$field_handle = get_field('current_drop_handle', 'option');
+		if (is_string($field_handle)) {
+			$handle = $field_handle;
+		}
+	}
+
+	if ('' === trim($handle)) {
+		$handle = (string) get_option('current_drop_handle', '');
+	}
+
+	if ('' === trim($handle)) {
+		$handle = (string) get_option('bbb_current_drop_handle', '');
+	}
+
+	return sanitize_title($handle);
+}
+
 function bbb_sss_drop_importer_active_entry(): array {
+	$current_handle = bbb_sss_drop_importer_current_handle();
+	if ('' !== $current_handle) {
+		$handled = get_posts(
+			array(
+				'post_type'      => 'sss_drop',
+				'post_status'    => 'publish',
+				'name'           => $current_handle,
+				'posts_per_page' => 1,
+			)
+		);
+
+		if (!empty($handled[0]) && $handled[0] instanceof WP_Post) {
+			$entry = bbb_sss_drop_importer_entry_from_post($handled[0]);
+			if ($entry) {
+				return $entry;
+			}
+		}
+
+		$handled = get_posts(
+			array(
+				'post_type'      => 'sss_drop',
+				'post_status'    => 'publish',
+				'posts_per_page' => 1,
+				'meta_query'     => array(
+					array(
+						'key'   => '_bbb_sss_drop_handle',
+						'value' => $current_handle,
+					),
+				),
+			)
+		);
+
+		if (!empty($handled[0]) && $handled[0] instanceof WP_Post) {
+			$entry = bbb_sss_drop_importer_entry_from_post($handled[0]);
+			if ($entry) {
+				return $entry;
+			}
+		}
+	}
+
 	$posts = get_posts(
 		array(
 			'post_type'      => 'sss_drop',
@@ -271,6 +338,8 @@ function bbb_sss_drop_importer_active_entry(): array {
 	$best_time = 0;
 	$fallback = null;
 	$fallback_time = 0;
+	$newest = null;
+	$newest_time = 0;
 
 	foreach ($posts as $post) {
 		if (!$post instanceof WP_Post) {
@@ -294,17 +363,19 @@ function bbb_sss_drop_importer_active_entry(): array {
 			$fallback = $post;
 			$fallback_time = $time;
 		}
+
+		if ($time >= $newest_time) {
+			$newest = $post;
+			$newest_time = $time;
+		}
 	}
 
-	$active = $best ?: $fallback;
+	$active = $best ?: $fallback ?: $newest ?: $posts[0];
 	if (!$active instanceof WP_Post) {
 		return array();
 	}
 
-	$raw = (string) get_post_meta($active->ID, '_bbb_sss_drop_entry', true);
-	$entry = json_decode($raw, true);
-
-	return is_array($entry) ? $entry : array();
+	return bbb_sss_drop_importer_entry_from_post($active);
 }
 
 function bbb_sss_drop_importer_handle_request() {

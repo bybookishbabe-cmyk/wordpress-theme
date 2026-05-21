@@ -265,6 +265,69 @@ function bbb_society_product_importer_download_files(array $product): array {
 	return $files;
 }
 
+function bbb_society_product_importer_size_label(array $file): string {
+	$haystack = strtolower(rawurldecode((string) ($file['name'] ?? '') . ' ' . (string) ($file['url'] ?? '') . ' ' . (string) ($file['file'] ?? '')));
+	$haystack = str_replace(array('_', '-', '%20'), ' ', $haystack);
+
+	$sizes = array(
+		'6 inch'  => array('6inch', '6 inch', '6-inch'),
+		'10th gen' => array('10thgen', '10th gen', '10th-gen', '10th generation'),
+		'11th gen' => array('11thgen', '11th gen', '11th-gen', '11th generation'),
+		'12th gen' => array('12thgen', '12th gen', '12th-gen', '12th generation'),
+	);
+
+	foreach ($sizes as $label => $needles) {
+		foreach ($needles as $needle) {
+			if (str_contains($haystack, $needle)) {
+				return $label;
+			}
+		}
+	}
+
+	return '';
+}
+
+function bbb_society_product_importer_edd_size_options(array $download_files, string $price, string $fallback_title): array {
+	$prices = array();
+	$files  = array();
+	$seen   = array();
+	$index  = 1;
+
+	foreach ($download_files as $file) {
+		if (!is_array($file) || empty($file['url'])) {
+			continue;
+		}
+
+		$label = bbb_society_product_importer_size_label($file);
+		if ('' === $label || isset($seen[$label])) {
+			continue;
+		}
+
+		$seen[$label] = true;
+		$prices[(string) $index] = array(
+			'name'   => $label,
+			'amount' => $price,
+			'index'  => $index,
+		);
+		$files[] = array(
+			'name'      => '' !== trim((string) ($file['name'] ?? '')) ? (string) $file['name'] : $fallback_title . ' - ' . $label,
+			'file'      => esc_url_raw((string) $file['url']),
+			'condition' => (string) $index,
+		);
+		$index++;
+	}
+
+	if (count($prices) < 2) {
+		return array();
+	}
+
+	return array(
+		'default_price_id' => '1',
+		'prices'           => $prices,
+		'files'            => $files,
+	);
+}
+
 function bbb_society_product_importer_is_digital(array $product): bool {
 	if (isset($product['is_digital'])) {
 		return bbb_society_product_importer_truthy($product['is_digital']);
@@ -461,18 +524,31 @@ function bbb_society_product_importer_upsert_product(array $product) {
 		update_post_meta($post_id, '_edd_product_type', 'default');
 
 		if ($download_files) {
-			update_post_meta(
-				$post_id,
-				'edd_download_files',
-				array_map(
-					static fn(array $file): array => array(
-						'name'      => (string) ($file['name'] ?? $title),
-						'file'      => esc_url_raw((string) ($file['url'] ?? '')),
-						'condition' => '0',
-					),
-					$download_files
-				)
-			);
+			$size_options = bbb_society_product_importer_edd_size_options($download_files, $price, $title);
+			if ($size_options) {
+				update_post_meta($post_id, '_variable_pricing', '1');
+				update_post_meta($post_id, 'edd_variable_prices', $size_options['prices']);
+				update_post_meta($post_id, '_edd_default_price_id', $size_options['default_price_id']);
+				delete_post_meta($post_id, '_edd_price_options_mode');
+				update_post_meta($post_id, 'edd_download_files', $size_options['files']);
+			} else {
+				delete_post_meta($post_id, '_variable_pricing');
+				delete_post_meta($post_id, 'edd_variable_prices');
+				delete_post_meta($post_id, '_edd_default_price_id');
+				delete_post_meta($post_id, '_edd_price_options_mode');
+				update_post_meta(
+					$post_id,
+					'edd_download_files',
+					array_map(
+						static fn(array $file): array => array(
+							'name'      => (string) ($file['name'] ?? $title),
+							'file'      => esc_url_raw((string) ($file['url'] ?? '')),
+							'condition' => 'all',
+						),
+						$download_files
+					)
+				);
+			}
 		}
 	} else {
 		wp_set_object_terms($post_id, 'simple', 'product_type', false);
@@ -519,10 +595,18 @@ function bbb_society_product_importer_upsert_product(array $product) {
 	} elseif ($is_digital) {
 		delete_post_meta($post_id, '_downloadable_files');
 		delete_post_meta($post_id, 'edd_download_files');
+		delete_post_meta($post_id, '_variable_pricing');
+		delete_post_meta($post_id, 'edd_variable_prices');
+		delete_post_meta($post_id, '_edd_default_price_id');
+		delete_post_meta($post_id, '_edd_price_options_mode');
 		update_post_meta($post_id, '_bbb_missing_download_url', 'yes');
 	} else {
 		delete_post_meta($post_id, '_downloadable_files');
 		delete_post_meta($post_id, 'edd_download_files');
+		delete_post_meta($post_id, '_variable_pricing');
+		delete_post_meta($post_id, 'edd_variable_prices');
+		delete_post_meta($post_id, '_edd_default_price_id');
+		delete_post_meta($post_id, '_edd_price_options_mode');
 		delete_post_meta($post_id, '_bbb_missing_download_url');
 	}
 

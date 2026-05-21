@@ -219,6 +219,62 @@
   align-self: end;
 }
 
+.bbb-shop-card__actions form,
+.bbb-shop-card__actions .edd_download_purchase_form {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.bbb-shop-card__actions .edd_price_options {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.bbb-shop-card__actions .edd_price_options ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bbb-shop-card__actions .edd_price_options li {
+  margin: 0;
+  padding: 0;
+}
+
+.bbb-shop-card__actions .edd_price_options label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 8px 9px;
+  border: 1px solid rgba(255, 138, 199, 0.28);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--shop-ink);
+  font: 800 11px/1.15 Assistant, system-ui, sans-serif;
+  text-transform: lowercase;
+  overflow-wrap: anywhere;
+}
+
+.bbb-shop-card__actions .edd_price_options input {
+  flex: 0 0 auto;
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  accent-color: var(--shop-pink);
+}
+
+.bbb-shop-card__actions .edd_price_option_sep,
+.bbb-shop-card__actions .edd_price_option_price,
+.bbb-shop-card__actions .edd_download_quantity_wrapper {
+  display: none;
+}
+
 .bbb-shop-card__button,
 .bbb-shop-card__actions .edd-submit,
 .bbb-shop-card__actions .button,
@@ -282,6 +338,10 @@
   }
 
   .bbb-shop__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bbb-shop-card__actions .edd_price_options ul {
     grid-template-columns: 1fr;
   }
 }

@@ -1298,7 +1298,19 @@ background:#0e0e0e;
     radial-gradient(760px 220px at 50% 100%, rgba(255,138,199,.15), transparent 72%),
     rgba(255,255,255,.035);
   box-shadow:0 24px 60px rgba(0,0,0,.24);
+  color:inherit;
+  text-decoration:none;
   overflow:hidden;
+  cursor:pointer;
+  transition:border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+}
+
+.sss-lib__quoteCta:hover,
+.sss-lib__quoteCta:focus-visible{
+  border-color:rgba(255,138,199,.42);
+  outline:0;
+  transform:translateY(-2px);
+  box-shadow:0 30px 70px rgba(0,0,0,.32);
 }
 
 .sss-lib__quoteCtaCopy{
@@ -1344,8 +1356,8 @@ background:#0e0e0e;
     box-shadow .2s ease;
 }
 
-.sss-lib__quoteCtaBtn:hover,
-.sss-lib__quoteCtaBtn:focus-visible{
+.sss-lib__quoteCta:hover .sss-lib__quoteCtaBtn,
+.sss-lib__quoteCta:focus-visible .sss-lib__quoteCtaBtn{
   border-color:rgba(255,138,199,.84);
   color:#171414;
   background:#ff8ac7;

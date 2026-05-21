@@ -28,16 +28,16 @@ $tiles = array(
 	),
 );
 ?>
-<section class="sss-lib__quoteCta" id="quote-wall-preview">
+<a class="sss-lib__quoteCta" id="quote-wall-preview" href="<?php echo esc_url($quote_url); ?>" aria-label="<?php echo esc_attr($is_society ? 'open quote library' : 'preview quote library'); ?>">
 	<div class="sss-lib__quoteCtaCopy">
 		<p class="sss-lib__archiveKicker">quote library</p>
 		<h2 class="sss-lib__archiveTitle">lines worth reopening.</h2>
 		<p class="sss-lib__archiveSub">
 			<?php echo esc_html($is_society ? 'a private little archive of the lines worth keeping.' : 'a peek at the softer, sharper side of the library.'); ?>
 		</p>
-		<a class="sss-lib__quoteCtaBtn" href="<?php echo esc_url($quote_url); ?>">
+		<span class="sss-lib__quoteCtaBtn">
 			<?php echo esc_html($is_society ? 'open quote wall' : 'preview quote wall'); ?>
-		</a>
+		</span>
 	</div>
 	<div class="sss-lib__quoteCuteGrid" aria-hidden="true">
 		<?php foreach ($tiles as $index => $tile) : ?>
@@ -49,4 +49,4 @@ $tiles = array(
 			</div>
 		<?php endforeach; ?>
 	</div>
-</section>
+</a>
