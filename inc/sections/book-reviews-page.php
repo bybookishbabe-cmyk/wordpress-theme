@@ -40,6 +40,13 @@ if (!function_exists('bbb_review_index_field')) {
 	}
 }
 
+if (!function_exists('bbb_review_index_page_setting')) {
+	function bbb_review_index_page_setting(string $key, int $page_id, $default = '') {
+		$value = function_exists('bbb_get_field') ? bbb_get_field($key, $page_id, $default) : $default;
+		return ('' === $value || null === $value || false === $value) ? $default : $value;
+	}
+}
+
 if (!function_exists('bbb_review_index_posts')) {
 	function bbb_review_index_posts(string $blog_handle): array {
 		$posts = get_posts(
@@ -268,8 +275,8 @@ if (!function_exists('bbb_render_review_index_card')) {
 }
 
 $page_id           = get_the_ID();
-$blog_handle       = sanitize_title((string) bbb_get_field('blog', $page_id, 'curated-romance-guides'));
-$page_size         = max(1, (int) bbb_get_field('articles_per_page', $page_id, 20));
+$blog_handle       = sanitize_title((string) bbb_review_index_page_setting('blog', (int) $page_id, 'curated-romance-guides'));
+$page_size         = max(6, (int) bbb_review_index_page_setting('articles_per_page', (int) $page_id, 20));
 $posts             = bbb_review_index_posts($blog_handle ?: 'curated-romance-guides');
 $review_posts      = array_values(array_filter($posts, static fn(WP_Post $post): bool => bbb_review_index_has_review_flag($post->ID)));
 $trending_post     = $review_posts[0] ?? null;
@@ -279,9 +286,9 @@ $review_section_id = 'BookReviews-' . (int) $page_id;
 <section class="bbb-review-index" id="<?php echo esc_attr($review_section_id); ?>" data-review-index data-review-page-size="<?php echo esc_attr((string) $page_size); ?>">
   <div class="bbb-review-index__wrap page-width">
     <header class="bbb-review-index__hero">
-      <p class="bbb-review-index__kicker"><?php echo esc_html((string) bbb_get_field('kicker', $page_id, 'bybookishbabe book reviews')); ?></p>
-      <h1 class="bbb-review-index__title"><?php echo esc_html((string) bbb_get_field('heading', $page_id, 'book reviews')); ?></h1>
-      <?php $subtext = (string) bbb_get_field('subtext', $page_id, "every book on this page has been read, rated, and actually recommended by bybookishbabe.\n\nspice levels, darkness ratings, tropes, and the honest take - no filler, no algorithm, no books i haven't personally finished.\n\nif it's here, it earned its place."); ?>
+      <p class="bbb-review-index__kicker"><?php echo esc_html((string) bbb_review_index_page_setting('kicker', (int) $page_id, 'bybookishbabe book reviews')); ?></p>
+      <h1 class="bbb-review-index__title"><?php echo esc_html((string) bbb_review_index_page_setting('heading', (int) $page_id, 'book reviews')); ?></h1>
+      <?php $subtext = (string) bbb_review_index_page_setting('subtext', (int) $page_id, "every book on this page has been read, rated, and actually recommended by bybookishbabe.\n\nspice levels, darkness ratings, tropes, and the honest take - no filler, no algorithm, no books i haven't personally finished.\n\nif it's here, it earned its place."); ?>
       <?php if ($subtext) : ?>
       <p class="bbb-review-index__sub"><?php echo nl2br(esc_html($subtext)); ?></p>
       <?php endif; ?>
@@ -290,16 +297,16 @@ $review_section_id = 'BookReviews-' . (int) $page_id;
     <?php if ($trending_post instanceof WP_Post) : ?>
     <section class="bbb-review-index__trending" aria-labelledby="BookReviewsTrending-<?php echo esc_attr((string) $page_id); ?>" data-review-trending>
       <div class="bbb-review-index__sectionHead">
-        <p class="bbb-review-index__sectionKicker"><?php echo esc_html((string) bbb_get_field('trending_kicker', $page_id, 'latest book review')); ?></p>
-        <h2 class="bbb-review-index__sectionTitle" id="BookReviewsTrending-<?php echo esc_attr((string) $page_id); ?>"><?php echo esc_html((string) bbb_get_field('trending_heading', $page_id, 'trending now')); ?></h2>
+        <p class="bbb-review-index__sectionKicker"><?php echo esc_html((string) bbb_review_index_page_setting('trending_kicker', (int) $page_id, 'latest book review')); ?></p>
+        <h2 class="bbb-review-index__sectionTitle" id="BookReviewsTrending-<?php echo esc_attr((string) $page_id); ?>"><?php echo esc_html((string) bbb_review_index_page_setting('trending_heading', (int) $page_id, 'trending now')); ?></h2>
       </div>
-      <?php echo bbb_render_review_index_card($trending_post, true, (string) bbb_get_field('trending_label', $page_id, 'trending now')); ?>
+      <?php echo bbb_render_review_index_card($trending_post, true, (string) bbb_review_index_page_setting('trending_label', (int) $page_id, 'trending now')); ?>
     </section>
 
     <section class="bbb-review-index__archive" aria-labelledby="BookReviewsArchive-<?php echo esc_attr((string) $page_id); ?>">
       <div class="bbb-review-index__sectionHead bbb-review-index__sectionHead--archive">
-        <p class="bbb-review-index__sectionKicker"><?php echo esc_html((string) bbb_get_field('archive_kicker', $page_id, 'read, rated, recommended')); ?></p>
-        <h2 class="bbb-review-index__sectionTitle" id="BookReviewsArchive-<?php echo esc_attr((string) $page_id); ?>"><?php echo esc_html((string) bbb_get_field('archive_heading', $page_id, 'all book reviews')); ?></h2>
+        <p class="bbb-review-index__sectionKicker"><?php echo esc_html((string) bbb_review_index_page_setting('archive_kicker', (int) $page_id, 'read, rated, recommended')); ?></p>
+        <h2 class="bbb-review-index__sectionTitle" id="BookReviewsArchive-<?php echo esc_attr((string) $page_id); ?>"><?php echo esc_html((string) bbb_review_index_page_setting('archive_heading', (int) $page_id, 'all book reviews')); ?></h2>
       </div>
 
       <div class="bbb-review-index__grid" data-review-grid>
@@ -317,11 +324,11 @@ $review_section_id = 'BookReviews-' . (int) $page_id;
         <button type="button" class="bbb-review-index__pagerButton" data-review-next>next</button>
       </nav>
       <?php elseif (count($archive_posts) === 0) : ?>
-      <div class="bbb-review-index__empty"><?php echo esc_html((string) bbb_get_field('single_empty_text', $page_id, 'Only one reviewed guide is live right now. Set book_review to true on another blog post and it will appear here.')); ?></div>
+      <div class="bbb-review-index__empty"><?php echo esc_html((string) bbb_review_index_page_setting('single_empty_text', (int) $page_id, 'Only one reviewed guide is live right now. Set book_review to true on another blog post and it will appear here.')); ?></div>
       <?php endif; ?>
     </section>
     <?php else : ?>
-    <div class="bbb-review-index__empty"><?php echo esc_html((string) bbb_get_field('empty_text', $page_id, 'No reviewed guides are showing yet. Set book_review to true on the blog posts you want here.')); ?></div>
+    <div class="bbb-review-index__empty"><?php echo esc_html((string) bbb_review_index_page_setting('empty_text', (int) $page_id, 'No reviewed guides are showing yet. Set book_review to true on the blog posts you want here.')); ?></div>
     <?php endif; ?>
   </div>
 </section>
