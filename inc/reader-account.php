@@ -336,7 +336,30 @@ function bbb_reader_fetch_account_books(WP_User $user): array {
 }
 
 if (!function_exists('bbb_reader_drop_field_value')) {
+	function bbb_reader_drop_field_map(array $fields): array {
+		if (!$fields) {
+			return array();
+		}
+
+		$first_key = array_key_first($fields);
+		if (is_string($first_key)) {
+			return $fields;
+		}
+
+		$mapped = array();
+		foreach ($fields as $field) {
+			if (!is_array($field) || empty($field['key'])) {
+				continue;
+			}
+
+			$mapped[(string) $field['key']] = $field;
+		}
+
+		return $mapped;
+	}
+
 	function bbb_reader_drop_field_value(array $fields, string $key, string $default = ''): string {
+		$fields = bbb_reader_drop_field_map($fields);
 		if (!isset($fields[$key]) || !is_array($fields[$key])) {
 			return $default;
 		}
