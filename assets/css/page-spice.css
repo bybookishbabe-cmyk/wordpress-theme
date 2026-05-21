@@ -173,6 +173,37 @@
 }
 
 @media (max-width: 760px) {
+  .sss-lib__grid--spicePage {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    justify-content: stretch !important;
+    gap: 14px 10px !important;
+    width: 100%;
+  }
+
+  .sss-lib__grid--spicePage .sss-lib__book {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .sss-lib__grid--spicePage .sss-lib__coverWrap {
+    width: 100%;
+  }
+
+  .sss-lib__grid--spicePage .sss-lib__under {
+    margin-top: 7px;
+  }
+
+  .sss-lib__grid--spicePage .sss-lib__name {
+    font-size: 10px;
+    line-height: 1.25;
+  }
+
+  .sss-lib__grid--spicePage .sss-lib__author {
+    font-size: 9.5px;
+    line-height: 1.25;
+    margin-top: 2px;
+  }
+
   .sss-spiceNav {
     grid-template-columns: repeat(5, 128px);
     margin-top: 22px;

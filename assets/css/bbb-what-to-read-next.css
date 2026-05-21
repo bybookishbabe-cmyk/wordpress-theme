@@ -212,9 +212,9 @@
 .bbb-next__cards {
 	display: grid;
 	gap: 22px;
-	grid-template-columns: repeat(3, minmax(190px, 1fr));
+	grid-template-columns: repeat(4, minmax(170px, 1fr));
 	margin: 28px auto 0;
-	max-width: 920px;
+	max-width: 1040px;
 }
 
 .bbb-next__card {
@@ -222,6 +222,22 @@
 	border: 1px solid rgba(248,245,242,.12);
 	border-radius: 8px;
 	padding: 18px;
+}
+
+.bbb-next__card.is-entering {
+	animation: bbbNextMatchSlide .46s cubic-bezier(.2,.78,.22,1) both;
+	animation-delay: calc(var(--next-card-index, 0) * 55ms);
+}
+
+@keyframes bbbNextMatchSlide {
+	from {
+		opacity: 0;
+		transform: translateX(26px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
 }
 
 .bbb-next__cardMood {
@@ -444,9 +460,45 @@
 @media (max-width: 900px) {
 	.bbb-next__top,
 	.bbb-next__picker,
-	.bbb-next__source,
-	.bbb-next__cards {
+	.bbb-next__source {
 		grid-template-columns: 1fr;
+	}
+
+	.bbb-next__cards {
+		gap: 10px;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		max-width: none;
+		width: 100%;
+	}
+
+	.bbb-next__card {
+		padding: 8px 6px;
+	}
+
+	.bbb-next__cardPill,
+	.bbb-next__cardMood,
+	.bbb-next__cardMeta,
+	.bbb-next__cardReason,
+	.bbb-next__statusRow,
+	.bbb-next__cardLink {
+		display: none;
+	}
+
+	.bbb-next__cardCoverWrap {
+		margin-bottom: 8px;
+		max-width: none;
+		width: 100%;
+	}
+
+	.bbb-next__cardTitle {
+		font-size: 1rem;
+		line-height: 1.05;
+		overflow-wrap: anywhere;
+	}
+
+	.bbb-next__cardAuthor {
+		font-size: .68rem;
+		line-height: 1.25;
 	}
 
 	.bbb-next__societyInvite {

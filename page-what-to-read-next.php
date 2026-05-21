@@ -135,7 +135,7 @@ if (function_exists('bbb_books_like_all_visible_books') && function_exists('bbb_
 				</div>
 
 				<div class="bbb-next__cards">
-					<?php foreach (array(1 => 'closest match', 2 => 'similar vibes', 3 => 'maybe something new') as $index => $pill) : ?>
+					<?php foreach (array(1 => 'closest match', 2 => 'similar vibes', 3 => 'spice twin', 4 => 'wildcard') as $index => $pill) : ?>
 						<article class="bbb-next__card is-hidden" data-next-card="<?php echo esc_attr((string) $index); ?>" hidden>
 							<div class="bbb-next__cardPill"><?php echo esc_html($pill); ?></div>
 							<div class="bbb-next__cardMood" data-next-mood></div>

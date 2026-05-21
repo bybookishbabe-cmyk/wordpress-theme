@@ -158,7 +158,9 @@
     var second = pick(tropePool, used, rotationStep + 1);
     if (second) used.push(second.book.handle);
     var third = pick(spicePool, used, rotationStep + 2);
-    return [first, second, third].filter(Boolean);
+    if (third) used.push(third.book.handle);
+    var fourth = pick(candidates, used, rotationStep + 3);
+    return [first, second, third, fourth].filter(Boolean);
   }
 
   function metaText(book, shared) {
@@ -431,7 +433,13 @@
       setHidden(resultsWrap, false);
       var matches = getMatches(books, book, rotationStep);
       Array.prototype.slice.call(section.querySelectorAll('[data-next-card]')).forEach(function(card, index) {
+        card.classList.remove('is-entering');
         renderCard(card, matches[index], index);
+        if (!card.hidden) {
+          card.style.setProperty('--next-card-index', String(index));
+          void card.offsetWidth;
+          card.classList.add('is-entering');
+        }
       });
     }
 

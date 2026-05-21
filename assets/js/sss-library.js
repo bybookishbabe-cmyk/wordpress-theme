@@ -257,6 +257,10 @@ function initMobileGridPagination(){
       card.classList.remove('is-mobile-hidden');
     });
 
+    function cardIsVisible(card){
+      return !card.hidden && card.style.display !== 'none';
+    }
+
     var isArchiveGrid = !!grid.closest('[data-archive-section]');
     var isBrowsePageGrid = grid.classList.contains('sss-lib__grid--browsePage');
     var desktopInitialCount = 36;
@@ -280,12 +284,10 @@ function initMobileGridPagination(){
     if (!shouldPaginate) return;
 
     function updateVisibleBooks(){
-      var matchingCards = cards.filter(function(card){
-        return card.style.display !== 'none';
-      });
+      var matchingCards = cards.filter(cardIsVisible);
 
       cards.forEach(function(card){
-        if (card.style.display === 'none'){
+        if (!cardIsVisible(card)){
           card.classList.remove('is-mobile-hidden');
         }
       });
@@ -314,9 +316,7 @@ function initMobileGridPagination(){
       visibleCount += increment;
       updateVisibleBooks();
 
-      var remainingVisibleCards = cards.filter(function(card){
-        return card.style.display !== 'none';
-      });
+      var remainingVisibleCards = cards.filter(cardIsVisible);
 
       if (visibleCount >= remainingVisibleCards.length){
         wrap.remove();
@@ -341,6 +341,7 @@ function refreshPaginatedGridVisibility(){
     }
   });
 }
+window.refreshPaginatedGridVisibility = refreshPaginatedGridVisibility;
 /* ======================
    PERSONAL SHELF STORAGE
 ====================== */
