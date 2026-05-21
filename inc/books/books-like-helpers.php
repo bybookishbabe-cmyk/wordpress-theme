@@ -403,6 +403,19 @@ function bbb_books_like_current_source_book(): ?WP_Post {
 				return $book;
 			}
 		}
+
+		$page = get_post($page_id);
+		if ($page instanceof WP_Post) {
+			$inferred = bbb_books_like_infer_source_title($page->post_title);
+			if (!$inferred && str_starts_with((string) $page->post_name, 'books-like-')) {
+				$inferred = str_replace('-', ' ', substr((string) $page->post_name, strlen('books-like-')));
+			}
+
+			$book = bbb_books_like_find_book($inferred);
+			if ($book instanceof WP_Post) {
+				return $book;
+			}
+		}
 	}
 
 	return null;

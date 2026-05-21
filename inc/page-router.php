@@ -298,6 +298,24 @@ add_action(
 			|| str_starts_with($request_path, 'curated-romance-guides/');
 		$is_registered_route = array_key_exists($slug, $routes);
 
+		$page_id = is_page() ? get_queried_object_id() : 0;
+		if ($page_id) {
+			$shopify_template = (string) get_post_meta($page_id, '_shopify_template_suffix', true);
+			$shopify_templates = array(
+				'books-like'           => 'page-books-like.php',
+				'books-like-directory' => 'page-books-like-directory.php',
+			);
+			$template = (string) ($shopify_templates[$shopify_template] ?? '');
+			if ($template !== '') {
+				$template_path = get_theme_file_path($template);
+				if (file_exists($template_path)) {
+					bbb_mark_virtual_route_found();
+					require $template_path;
+					exit;
+				}
+			}
+		}
+
 		if (!$is_registered_route && !$is_legacy_path) {
 			return;
 		}

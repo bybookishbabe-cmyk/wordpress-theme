@@ -159,7 +159,7 @@
 .bbb-account-shelf__empty,
 .bbb-account-shelf__toolbar,
 .bbb-account-shelf__panel,
-.bbb-account-shelf__dropCta,
+.bbb-account-shelf__dropPrompt,
 .bbb-account-shelf__preview,
 .bbb-account-shelf__feature,
 .bbb-account-shelf__lane,
@@ -704,7 +704,7 @@
 }
 
 .bbb-account-shelf__panel,
-.bbb-account-shelf__dropCta,
+.bbb-account-shelf__dropPrompt,
 .bbb-account-shelf__journalPrompt {
   margin-bottom: 24px;
   padding: 24px;
@@ -725,7 +725,6 @@
 
 .bbb-account-shelf__perk h2,
 .bbb-account-shelf__panel h2,
-.bbb-account-shelf__dropCta h2,
 .bbb-account-shelf__preview h2,
 .bbb-account-shelf__journalPrompt h2 {
   margin: 0;
@@ -738,7 +737,6 @@
 
 .bbb-account-shelf__perk p:not(.bbb-account-shelf__perkKicker),
 .bbb-account-shelf__panel p,
-.bbb-account-shelf__dropCta p,
 .bbb-account-shelf__preview p,
 .bbb-account-shelf__journalPrompt p {
   max-width: 680px;
@@ -760,41 +758,6 @@
   line-height: 1.18;
   letter-spacing: .005em;
   font-style: italic;
-}
-
-.bbb-account-shelf__journalPromptActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 9px;
-  margin-top: 18px;
-}
-
-.bbb-account-shelf__journalPromptActions a,
-.bbb-account-shelf__journalPromptActions button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 38px;
-  padding: 0 13px;
-  border: 1px solid rgba(255, 138, 199, .34);
-  border-radius: 999px;
-  background: rgba(255, 138, 199, .08);
-  color: #fff;
-  font: inherit;
-  font-size: 12px;
-  letter-spacing: .08em;
-  text-decoration: none;
-  text-transform: lowercase;
-  cursor: pointer;
-}
-
-.bbb-account-shelf__journalPromptActions a:hover,
-.bbb-account-shelf__journalPromptActions a:focus-visible,
-.bbb-account-shelf__journalPromptActions button:hover,
-.bbb-account-shelf__journalPromptActions button:focus-visible {
-  border-color: #ff8ac7;
-  background: rgba(255, 138, 199, .16);
-  outline: none;
 }
 
 .bbb-account-shelf__purchaseList {

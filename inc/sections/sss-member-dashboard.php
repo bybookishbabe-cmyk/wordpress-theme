@@ -818,7 +818,7 @@ $mood_visuals = array_values(
 		)
 	)
 );
-$drop_visuals = bbb_sss_drop_unique_urls(array_merge(array($calendar_image, $gram_image), $product_visuals, $mood_visuals));
+$drop_visuals = bbb_sss_drop_unique_urls(array_merge(array($gram_image, $calendar_image), $product_visuals, $mood_visuals));
 $hero_visual = (string) ($drop_visuals[0] ?? '');
 $hero_support_visuals = array_slice($drop_visuals, 1, 5);
 list($accent_r, $accent_g, $accent_b) = bbb_sss_drop_hex_to_rgb($accent);
@@ -1014,7 +1014,7 @@ $drop_nav = array_filter(
 .sss-drop-theme__heroArt{display:grid;gap:14px;align-self:stretch;align-content:center}
 .sss-drop-theme__heroFrame{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.18);border-radius:18px;background:rgba(0,0,0,.32);box-shadow:0 24px 64px rgba(0,0,0,.5);transform:rotate(1.2deg)}
 .sss-drop-theme__heroFrame:before{content:"";position:absolute;inset:10px;border:1px solid rgba(255,255,255,.18);border-radius:12px;pointer-events:none;z-index:1}
-.sss-drop-theme__heroFrame img{display:block;width:100%;height:min(56vh,540px);object-fit:cover}
+.sss-drop-theme__heroFrame img{display:block;width:100%;height:min(56vh,540px);object-fit:contain;background:rgba(0,0,0,.26)}
 .sss-drop-theme__miniRail{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;align-items:end}
 .sss-drop-theme__miniRail img{width:100%;aspect-ratio:1;object-fit:cover;border:1px solid rgba(255,255,255,.15);border-radius:10px;background:#111;box-shadow:0 14px 34px rgba(0,0,0,.36)}
 .sss-drop-theme__miniRail img:nth-child(even){transform:translateY(12px) rotate(2deg)}
@@ -1039,7 +1039,7 @@ $drop_nav = array_filter(
 .sss-drop-theme__assetGrid img{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;background:#111}
 .sss-drop-theme__wallpaperGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .sss-drop-theme__wallpaperGrid img{display:block;width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:8px}
-.sss-drop-theme__calendarImage{display:block;width:100%;border-radius:8px}
+.sss-drop-theme__calendarImage{display:block;width:100%;height:auto;max-height:none;object-fit:contain;border-radius:8px;background:rgba(0,0,0,.24)}
 .sss-drop-theme__actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end}
 .sss-drop-theme__dailyPrompt{
 	border:1px solid rgba(255,255,255,.16);
