@@ -72,9 +72,7 @@ function bbb_user_has_avatar(int $user_id = 0): bool {
 }
 
 function bbb_wc_account_url(): string {
-	return function_exists('wc_get_account_endpoint_url')
-		? wc_get_account_endpoint_url('dashboard')
-		: home_url('/account/');
+	return home_url('/account/');
 }
 
 function bbb_wc_cart_url(): string {

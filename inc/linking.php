@@ -64,13 +64,11 @@ function bbb_resolve_shopify_url( string $url ): string {
 		}
 
 		if ( 'account/login' === trim( $stripped, '/' ) ) {
-			return wp_login_url();
+			return home_url( '/account/' );
 		}
 
 		if ( 'account' === trim( $stripped, '/' ) || str_starts_with( $stripped, 'account/' ) ) {
-			return function_exists( 'wc_get_account_endpoint_url' )
-				? wc_get_account_endpoint_url( 'dashboard' )
-				: home_url( '/account/' );
+			return home_url( '/account/' );
 		}
 
 		if ( bbb_shopify_path_has_rewrite_rule( $stripped ) ) {

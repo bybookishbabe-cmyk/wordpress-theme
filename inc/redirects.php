@@ -164,11 +164,7 @@ add_action(
 		}
 
 		if ($path === 'account/login') {
-			bbb_redirect_with_query_string(wp_login_url(), 302);
-		}
-
-		if (($path === 'account' || str_starts_with($path, 'account/')) && function_exists('wc_get_account_endpoint_url')) {
-			bbb_redirect_with_query_string(wc_get_account_endpoint_url('dashboard'), 302);
+			bbb_redirect_with_query_string(home_url('/account/'), 302);
 		}
 
 		$legacy_target = bbb_shopify_legacy_redirect_target($path);

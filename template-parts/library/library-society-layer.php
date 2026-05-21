@@ -153,7 +153,7 @@ natcasesort($finder_tropes);
 $finder_tropes = array_values($finder_tropes);
 
 $join_url  = get_option('bbb_society_gate_member_url', 'https://thesmutandsentimentsociety.substack.com/subscribe');
-$login_url = wp_login_url(get_permalink());
+$login_url = home_url('/account/');
 ?>
 <section class="sss-lib__societyLayer sss-lib__societyLayer--<?php echo esc_attr(str_replace('_', '-', $mode)); ?>" id="<?php echo esc_attr($show_match ? 'society-matchmaker' : 'society-private-shelf'); ?>">
 	<div class="sss-lib__societyLayerHead">

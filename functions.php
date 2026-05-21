@@ -286,7 +286,7 @@ add_action(
 					'isSociety'    => bbb_reader_is_society(),
 					'bookshelfUrl' => $bookshelf,
 					'accountUrl'   => $account_url,
-					'loginUrl'     => wp_login_url($bookshelf),
+					'loginUrl'     => $account_url,
 				),
 				'routes'                    => array(
 					'cart_add_url'          => admin_url('admin-ajax.php'),
