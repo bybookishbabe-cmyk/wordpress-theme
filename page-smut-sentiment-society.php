@@ -143,6 +143,13 @@ if (!function_exists('bbb_society_landing_upload_url')) {
 			return '';
 		}
 
+		if (function_exists('bbb_society_product_importer_media_url')) {
+			$media_url = bbb_society_product_importer_media_url($url);
+			if ('' !== $media_url) {
+				return $media_url;
+			}
+		}
+
 		if (str_starts_with($url, '/wp-content/')) {
 			$url = home_url($url);
 		} else {

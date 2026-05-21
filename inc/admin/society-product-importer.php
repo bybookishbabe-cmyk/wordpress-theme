@@ -96,6 +96,59 @@ function bbb_society_product_importer_export_rows(): array {
 	return $rows;
 }
 
+function bbb_society_product_importer_media_source_map(): array {
+	static $map = null;
+	if (null !== $map) {
+		return $map;
+	}
+
+	$map = array();
+	$paths = array(
+		get_theme_file_path('data/product-media-url-map-seed.json'),
+		get_theme_file_path('firstpass/migration/exports/products/localized-product-media-url-map.json'),
+	);
+
+	foreach ($paths as $path) {
+		if (!is_readable($path)) {
+			continue;
+		}
+
+		$data = json_decode((string) file_get_contents($path), true);
+		if (!is_array($data)) {
+			continue;
+		}
+
+		foreach ($data as $source_url => $localized_url) {
+			if (!is_string($source_url) || !is_string($localized_url) || '' === $source_url || '' === $localized_url) {
+				continue;
+			}
+
+			$map[$localized_url] = $source_url;
+		}
+	}
+
+	return $map;
+}
+
+function bbb_society_product_importer_media_url(string $url): string {
+	$url = trim($url);
+	if ('' === $url) {
+		return '';
+	}
+
+	$source_map = bbb_society_product_importer_media_source_map();
+	if (isset($source_map[$url])) {
+		return esc_url_raw($source_map[$url]);
+	}
+
+	$path = (string) wp_parse_url($url, PHP_URL_PATH);
+	if (isset($source_map[$path])) {
+		return esc_url_raw($source_map[$path]);
+	}
+
+	return esc_url_raw($url);
+}
+
 function bbb_society_product_importer_money($value): string {
 	if (is_array($value)) {
 		$value = $value['amount'] ?? $value['value'] ?? '';

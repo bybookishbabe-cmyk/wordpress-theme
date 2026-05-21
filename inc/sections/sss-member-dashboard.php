@@ -269,6 +269,10 @@ if (!function_exists('bbb_sss_drop_product_image_url')) {
 
 		$export = bbb_sss_drop_product_export($handle);
 		$image = trim((string) ($export['image_url'] ?? $product['image_url'] ?? $product['featuredImage']['url'] ?? ''));
+		if (function_exists('bbb_society_product_importer_media_url')) {
+			$image = bbb_society_product_importer_media_url($image);
+		}
+
 		return bbb_sss_drop_normalize_asset_url($image);
 	}
 }

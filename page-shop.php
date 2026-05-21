@@ -38,7 +38,8 @@ if (!function_exists('bbb_shop_download_image')) {
 			return (string) $thumbnail;
 		}
 
-		return esc_url_raw((string) get_post_meta($post_id, '_bbb_source_image_url', true));
+		$image_url = (string) get_post_meta($post_id, '_bbb_source_image_url', true);
+		return function_exists('bbb_society_product_importer_media_url') ? bbb_society_product_importer_media_url($image_url) : esc_url_raw($image_url);
 	}
 }
 
@@ -132,6 +133,13 @@ if (!function_exists('bbb_shop_seed_url')) {
 			return '';
 		}
 
+		if (function_exists('bbb_society_product_importer_media_url')) {
+			$media_url = bbb_society_product_importer_media_url($url);
+			if ('' !== $media_url) {
+				return $media_url;
+			}
+		}
+
 		if (str_starts_with($url, '/wp-content/')) {
 			return esc_url_raw(home_url($url));
 		}
@@ -140,15 +148,58 @@ if (!function_exists('bbb_shop_seed_url')) {
 	}
 }
 
-if (!function_exists('bbb_shop_seed_file_count')) {
-	function bbb_shop_seed_file_count(array $product): int {
+if (!function_exists('bbb_shop_seed_download_files')) {
+	function bbb_shop_seed_download_files(array $product): array {
 		$raw = $product['download_files'] ?? $product['downloadFiles'] ?? array();
 		if (is_string($raw) && '' !== trim($raw)) {
 			$decoded = json_decode($raw, true);
 			$raw = is_array($decoded) ? $decoded : array();
 		}
 
-		return count(array_filter((array) $raw, static fn($file): bool => is_array($file) && !empty($file['url'])));
+		return array_values(array_filter((array) $raw, static fn($file): bool => is_array($file) && !empty($file['url'])));
+	}
+}
+
+if (!function_exists('bbb_shop_seed_file_count')) {
+	function bbb_shop_seed_file_count(array $product): int {
+		return count(bbb_shop_seed_download_files($product));
+	}
+}
+
+if (!function_exists('bbb_shop_seed_size_label')) {
+	function bbb_shop_seed_size_label(array $file): string {
+		if (function_exists('bbb_society_product_importer_size_label')) {
+			$label = bbb_society_product_importer_size_label($file);
+			if ('' !== $label) {
+				return $label;
+			}
+		}
+
+		$name = trim((string) ($file['name'] ?? ''));
+		return '' !== $name ? strtolower((string) preg_replace('/\.[^.]+$/', '', $name)) : 'download';
+	}
+}
+
+if (!function_exists('bbb_shop_seed_size_select')) {
+	function bbb_shop_seed_size_select(array $product): void {
+		$files = bbb_shop_seed_download_files($product);
+		if (count($files) < 2) {
+			return;
+		}
+
+		$select_id = 'bbb-shop-size-' . sanitize_html_class((string) ($product['handle'] ?? uniqid('seed-', false)));
+		?>
+		<div class="bbb-shop-card__size">
+			<label for="<?php echo esc_attr($select_id); ?>">size</label>
+			<select id="<?php echo esc_attr($select_id); ?>" class="bbb-shop-card__sizeSelect">
+				<?php foreach ($files as $file) : ?>
+					<option value="<?php echo esc_attr((string) ($file['url'] ?? '')); ?>">
+						<?php echo esc_html(bbb_shop_seed_size_label($file)); ?>
+					</option>
+				<?php endforeach; ?>
+			</select>
+		</div>
+		<?php
 	}
 }
 
@@ -367,6 +418,7 @@ if (function_exists('edd_purchase_variable_pricing')) {
 								</div>
 								<div class="bbb-shop-card__actions">
 									<?php if ($is_seed_product) : ?>
+										<?php bbb_shop_seed_size_select($download); ?>
 										<a class="bbb-shop-card__button" href="<?php echo esc_url($permalink); ?>">view details</a>
 									<?php elseif ($missing_files && $is_admin_preview) : ?>
 										<a class="bbb-shop-card__button bbb-shop-card__button--ghost" href="<?php echo esc_url(get_edit_post_link($post_id)); ?>">finish setup</a>
