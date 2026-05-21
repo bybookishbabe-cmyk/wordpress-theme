@@ -24,8 +24,19 @@ $account_url  = function_exists('bbb_page_url') ? bbb_page_url('account') : home
 $bookshelf_url = function_exists('bbb_page_url') ? bbb_page_url('my-bookshelf') : home_url('/my-bookshelf/');
 $dashboard_url = function_exists('bbb_page_url') ? bbb_page_url('member-dashboard') : home_url('/member-dashboard/');
 $monthly_drop_url = function_exists('bbb_page_url') ? bbb_page_url('monthly-theme') : home_url('/monthly-theme/');
+$society_url = function_exists('bbb_page_url') ? bbb_page_url('smut-sentiment-society') : home_url('/smut-sentiment-society/');
 $shop_url = function_exists('bbb_page_url') ? bbb_page_url('shop') : home_url('/shop/');
 $purchase_rows = array();
+$bookshelf_preview_books = array_slice(
+	array_values(
+		array_filter(
+			$books,
+			static fn($book): bool => is_array($book) && ('' !== trim((string) ($book['cover'] ?? '')) || '' !== trim((string) ($book['book_title'] ?? $book['title'] ?? '')))
+		)
+	),
+	0,
+	3
+);
 
 if ($is_logged_in && $user instanceof WP_User && function_exists('wc_get_orders')) {
 	$order_args = array(
@@ -97,6 +108,10 @@ get_header();
 				</p>
 
 				<div class="bbb-account-shelf__actions">
+					<a class="bbb-account-shelf__backSociety" href="<?php echo esc_url($society_url); ?>">
+						<span aria-hidden="true">←</span>
+						back to society
+					</a>
 					<?php if ($is_logged_in) : ?>
 						<a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="<?php echo esc_url(get_edit_user_link((int) $user->ID)); ?>">edit profile</a>
 						<a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="<?php echo esc_url(wp_logout_url(home_url('/'))); ?>">log out</a>
@@ -154,19 +169,31 @@ get_header();
 						<span><?php echo esc_html('society' === $tier ? 'open dashboard ->' : 'preview dashboard ->'); ?></span>
 					</a>
 					<a class="bbb-account-shelf__preview" href="<?php echo esc_url($bookshelf_url); ?>">
-						<p class="bbb-account-shelf__perkKicker">bookshelf preview</p>
-						<h2><?php echo esc_html(count($books) . (1 === count($books) ? ' saved book' : ' saved books')); ?></h2>
-						<p>your saved books, current obsessions, and personal romance archive.</p>
-						<?php if ($books) : ?>
+						<div class="bbb-account-shelf__previewSplit">
+							<div>
+								<p class="bbb-account-shelf__perkKicker">bookshelf preview</p>
+								<h2>track your reads</h2>
+								<p><?php echo esc_html(count($books) . (1 === count($books) ? ' saved book' : ' saved books')); ?> in your personal romance archive.</p>
+							</div>
 							<div class="bbb-account-shelf__miniShelf" aria-hidden="true">
-								<?php foreach (array_slice($books, 0, 4) as $book) : ?>
-									<?php $cover = (string) ($book['cover'] ?? ''); ?>
+								<?php foreach ($bookshelf_preview_books as $index => $book) : ?>
+									<?php
+									$cover = (string) ($book['cover'] ?? '');
+									$title = (string) ($book['book_title'] ?? $book['title'] ?? 'book');
+									?>
 									<?php if ('' !== $cover) : ?>
-										<img src="<?php echo esc_url($cover); ?>" alt="">
+										<img style="--i: <?php echo esc_attr((string) $index); ?>;" src="<?php echo esc_url($cover); ?>" alt="">
+									<?php else : ?>
+										<span style="--i: <?php echo esc_attr((string) $index); ?>;"><?php echo esc_html(mb_substr($title, 0, 1)); ?></span>
 									<?php endif; ?>
 								<?php endforeach; ?>
+								<?php if (!$bookshelf_preview_books) : ?>
+									<span style="--i: 0;">b</span>
+									<span style="--i: 1;">b</span>
+									<span style="--i: 2;">b</span>
+								<?php endif; ?>
 							</div>
-						<?php endif; ?>
+						</div>
 						<span>open bookshelf -></span>
 					</a>
 				</div>

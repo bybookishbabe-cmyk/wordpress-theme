@@ -255,7 +255,7 @@ if (function_exists('edd_purchase_variable_pricing')) {
 										echo edd_get_purchase_link(
 											array(
 												'download_id' => $post_id,
-												'text'        => '#50',
+												'text'        => 'add to cart',
 												'price'       => false,
 												'class'       => 'bbb-shop-card__button',
 												'style'       => 'button',
