@@ -345,14 +345,21 @@
   cursor: pointer;
 }
 
+.bbb-shop-card__actions .edd-no-js,
+.bbb-product__actions .edd-no-js {
+  display: none !important;
+}
+
 .bbb-shop-card__actions .edd_purchase_submit_wrapper {
-  display: block;
+  display: grid;
+  gap: 0;
   width: 100%;
   min-height: 42px;
   overflow: visible;
 }
 
 .bbb-shop-card__actions .edd_go_to_checkout {
+  margin: 0 !important;
   height: auto !important;
   line-height: 1.1 !important;
   overflow: visible !important;
@@ -495,14 +502,24 @@
   display: grid !important;
 }
 
-.bbb-product__actions .edd_download_purchase_form,
-.bbb-product__actions .edd_purchase_submit_wrapper {
+.bbb-product__actions .edd_download_purchase_form {
   display: grid;
   gap: 14px;
 }
 
+.bbb-product__actions .edd_purchase_submit_wrapper {
+  display: grid;
+  gap: 0;
+  width: 100%;
+  min-height: 48px;
+}
+
+.bbb-product__actions .edd_go_to_checkout {
+  margin: 0 !important;
+}
+
 .bbb-product__actions .edd-cart-ajax-alert {
-  min-height: 0;
+  display: none !important;
 }
 
 .bbb-product__actions .edd-cart-added-alert,
