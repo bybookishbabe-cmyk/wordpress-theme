@@ -5641,11 +5641,15 @@ function initReadFinder(){
     return normalize(item.label) !== 'private shelf';
   });
 
+  if (!allShelves.length) {
+    allShelves = [{ label: 'all romance', count: books.length }];
+  }
+
   function booksForShelf(){
     var shelf = normalize(shelfSelect.value);
 
     return books.filter(function(book){
-      return !shelf || normalize(book.shelf) === shelf;
+      return !shelf || shelf === 'all romance' || normalize(book.shelf) === shelf;
     });
   }
 

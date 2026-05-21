@@ -21,16 +21,49 @@ $private_books = array_values(
 	)
 );
 
+if (!function_exists('bbb_library_matchmaker_shelf_name')) {
+	function bbb_library_matchmaker_shelf_name(WP_Post $book, array $data): string {
+		$shelf = trim((string) ($data['shelf'] ?? ''));
+		if ('' !== $shelf) {
+			return $shelf;
+		}
+
+		foreach (array('bbb_shelf', 'sss_shelf') as $taxonomy) {
+			if (!taxonomy_exists($taxonomy)) {
+				continue;
+			}
+
+			$terms = get_the_terms($book->ID, $taxonomy);
+			if ($terms && !is_wp_error($terms)) {
+				$term = reset($terms);
+				if ($term instanceof WP_Term && '' !== trim($term->name)) {
+					return trim($term->name);
+				}
+			}
+		}
+
+		foreach (array('_bbb_shelf_name', 'sss_shelf') as $meta_key) {
+			$meta = trim((string) get_post_meta($book->ID, $meta_key, true));
+			if ('' !== $meta) {
+				return $meta;
+			}
+		}
+
+		return 'all romance';
+	}
+}
+
 $finder_books = array_map(
 	static function (WP_Post $book): array {
 		$data = sss_book_data($book);
+		$shelf = bbb_library_matchmaker_shelf_name($book, $data);
 
 		return array(
 			'handle' => $data['handle'],
 			'title'  => $data['title'],
 			'author' => $data['author'],
 			'cover'  => $data['cover'],
-			'shelf'  => $data['shelf'],
+			'shelf'  => $shelf,
 			'tropes' => array_values(array_filter(array_column($data['tropes'], 'name'))),
 			'why'    => $data['why'],
 			'mini'   => $data['mini'],
