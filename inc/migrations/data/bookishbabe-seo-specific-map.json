@@ -1,0 +1,716 @@
+[
+  {
+    "row": 2,
+    "title": "the best dark romance books (the ultimate list)",
+    "slug": "dark-romance-books",
+    "type": "PILLAR",
+    "seo_title": "The Best Dark Romance Books (Ultimate List)",
+    "description": "The ultimate dark romance book list — morally gray men, obsessive heroes, disturbing reads, and every trope that will ruin you. Updated 2026.",
+    "focus_keyword": "dark romance books",
+    "recommendation_target_rows": [
+      5,
+      6,
+      7
+    ]
+  },
+  {
+    "row": 3,
+    "title": "the best romantasy books (the ultimate reading guide)",
+    "slug": "romantasy-books",
+    "type": "PILLAR",
+    "seo_title": "The Best Romantasy Books: Ultimate Reading Guide",
+    "description": "The best romantasy books ranked — from spicy fae romance to dark fantasy love stories with morally gray heroes. Your complete reading guide.",
+    "focus_keyword": "romantasy books",
+    "recommendation_target_rows": [
+      13,
+      14,
+      15
+    ]
+  },
+  {
+    "row": 4,
+    "title": "the best sports romance books (the ultimate reading guide)",
+    "slug": "sports-romance-books",
+    "type": "PILLAR",
+    "seo_title": "The Best Sports Romance Books: Ultimate Guide",
+    "description": "The best sports romance books ranked by spice — hockey romance, football romance, BookTok favorites and underrated reads you need to know about.",
+    "focus_keyword": "sports romance books",
+    "recommendation_target_rows": [
+      30,
+      31,
+      48
+    ]
+  },
+  {
+    "row": 5,
+    "title": "the best morally gray men romance books (dark romance that will ruin you)",
+    "slug": "morally-gray-men-romance-books",
+    "type": "CLUSTER",
+    "seo_title": "Best Morally Gray Men Romance Books (2026)",
+    "description": "The best dark romance books with morally gray men — obsessive, dangerous, and impossible to put down. This list will ruin you for normal heroes.",
+    "focus_keyword": "morally gray men romance books",
+    "recommendation_target_rows": [
+      2,
+      7,
+      10
+    ]
+  },
+  {
+    "row": 6,
+    "title": "dark romance books 2026 (the ones worth clearing your schedule for)",
+    "slug": "dark-romance-books-2026",
+    "type": "CLUSTER",
+    "seo_title": "Best Dark Romance Books 2026 (Worth Your Time)",
+    "description": "The best new dark romance books of 2026 — morally gray heroes, obsessive love interests, and dark twists that will keep you up all night.",
+    "focus_keyword": "dark romance books 2026",
+    "recommendation_target_rows": [
+      2,
+      5,
+      13
+    ]
+  },
+  {
+    "row": 7,
+    "title": "dark romance books that are actually disturbing (but you won't stop reading)",
+    "slug": "dark-romance-books-that-are-actually-disturbing",
+    "type": "CLUSTER",
+    "seo_title": "Dark Romance Books That Are Actually Disturbing",
+    "description": "Dark romance books that go further than most — deeply disturbing, morally complex, and completely impossible to stop reading. You've been warned.",
+    "focus_keyword": "disturbing dark romance books",
+    "recommendation_target_rows": [
+      2,
+      5,
+      12
+    ]
+  },
+  {
+    "row": 8,
+    "title": "dark romance books where he has to beg for her",
+    "slug": "dark-romance-books-where-he-begs",
+    "type": "CLUSTER",
+    "seo_title": "Dark Romance Books Where He Has to Beg for Her",
+    "description": "Dark romance books where the power shifts and he has to earn her — obsessive heroes brought to their knees. The best revenge-era reading list.",
+    "focus_keyword": "dark romance books he begs for her",
+    "recommendation_target_rows": [
+      2,
+      26,
+      22
+    ]
+  },
+  {
+    "row": 9,
+    "title": "dark romance books where she's trapped with him (and it changes everything)",
+    "slug": "dark-romance-books-trapped-with-him",
+    "type": "CLUSTER",
+    "seo_title": "Dark Romance Books: Trapped With Him Trope",
+    "description": "Dark romance books where she's trapped with him — captive romance, forced proximity, and the slow burn of falling for someone you shouldn't. The best of the trope.",
+    "focus_keyword": "trapped with him dark romance books",
+    "recommendation_target_rows": [
+      2,
+      5,
+      7
+    ]
+  },
+  {
+    "row": 10,
+    "title": "touch her and die romance books: the ultimate trope guide",
+    "slug": "touch-her-and-die-romance-books",
+    "type": "CLUSTER",
+    "seo_title": "Touch Her and Die Romance Books: The Trope Guide",
+    "description": "The ultimate guide to touch-her-and-die romance — obsessive protective heroes who would burn the world down. Every book worth reading, ranked.",
+    "focus_keyword": "touch her and die romance books",
+    "recommendation_target_rows": [
+      2,
+      11,
+      5
+    ]
+  },
+  {
+    "row": 11,
+    "title": "touch her and die romance books (where he would burn the world for her)",
+    "slug": "touch-her-and-die-books-burn-the-world",
+    "type": "CLUSTER",
+    "seo_title": "Touch Her and Die Books: He'd Burn the World",
+    "description": "Dark romance books where he would burn the world for her — the most obsessive, protective, dangerous heroes in romance. Sorted by intensity.",
+    "focus_keyword": "touch her and die books burn the world",
+    "recommendation_target_rows": [
+      2,
+      10,
+      15
+    ]
+  },
+  {
+    "row": 12,
+    "title": "romance books with toxic but addictive relationships",
+    "slug": "romance-books-toxic-addictive-relationships",
+    "type": "CLUSTER",
+    "seo_title": "Romance Books With Toxic but Addictive Relationships",
+    "description": "Romance books with toxic, addictive relationships that you know are bad but can't stop reading — obsessive love, red flags, and impossible chemistry.",
+    "focus_keyword": "toxic addictive romance books",
+    "recommendation_target_rows": [
+      2,
+      5,
+      7
+    ]
+  },
+  {
+    "row": 13,
+    "title": "dark romantasy books with morally gray love interests (the ones with actual teeth)",
+    "slug": "dark-romantasy-morally-gray-love-interests",
+    "type": "CLUSTER",
+    "seo_title": "Dark Romantasy Books With Morally Gray Love Interests",
+    "description": "Dark romantasy books with morally gray love interests who actually have teeth — fae kings, fallen gods, and fantasy heroes who make the wrong choices beautifully.",
+    "focus_keyword": "dark romantasy morally gray love interests",
+    "recommendation_target_rows": [
+      3,
+      5,
+      14
+    ]
+  },
+  {
+    "row": 14,
+    "title": "spicy romantasy books that are actually worth it",
+    "slug": "spicy-romantasy-books",
+    "type": "CLUSTER",
+    "seo_title": "Spicy Romantasy Books That Are Actually Worth It",
+    "description": "Spicy romantasy books that deliver on the fantasy AND the romance — no fade to black, no let-downs. Ranked by how badly they'll consume your life.",
+    "focus_keyword": "spicy romantasy books",
+    "recommendation_target_rows": [
+      3,
+      13,
+      15
+    ]
+  },
+  {
+    "row": 15,
+    "title": "romantasy books where he's obsessed with her (in a dangerous way)",
+    "slug": "romantasy-books-obsessed-hero",
+    "type": "CLUSTER",
+    "seo_title": "Romantasy Books Where He's Obsessed With Her",
+    "description": "Romantasy books with dangerously obsessed heroes — possessive fae, morally gray kings, and fantasy love interests who can't stay away. Ranked by intensity.",
+    "focus_keyword": "romantasy books obsessed hero",
+    "recommendation_target_rows": [
+      3,
+      10,
+      13
+    ]
+  },
+  {
+    "row": 16,
+    "title": "fantasy romance books that will completely consume you",
+    "slug": "fantasy-romance-books",
+    "type": "CLUSTER",
+    "seo_title": "Fantasy Romance Books That Will Consume You",
+    "description": "Fantasy romance books that pull you completely under — rich world-building, slow burn tension, and love interests you won't recover from. The best of the genre.",
+    "focus_keyword": "fantasy romance books",
+    "recommendation_target_rows": [
+      3,
+      14,
+      13
+    ]
+  },
+  {
+    "row": 17,
+    "title": "books like fourth wing (for when xaden riorson ruined you for everyone else)",
+    "slug": "books-like-fourth-wing",
+    "type": "CLUSTER",
+    "seo_title": "Books Like Fourth Wing (If Xaden Ruined You)",
+    "description": "Books like Fourth Wing for when Xaden Riorson permanently ruined your standards — dark romantasy, morally gray love interests, and high-stakes magic.",
+    "focus_keyword": "books like fourth wing",
+    "recommendation_target_rows": [
+      3,
+      18,
+      13
+    ]
+  },
+  {
+    "row": 18,
+    "title": "books like fourth wing but darker",
+    "slug": "books-like-fourth-wing-but-darker",
+    "type": "CLUSTER",
+    "seo_title": "Books Like Fourth Wing But Darker",
+    "description": "Books like Fourth Wing but darker — romantasy reads that go further into the morally gray, the violent, and the obsessive. For when Fourth Wing wasn't enough.",
+    "focus_keyword": "books like fourth wing but darker",
+    "recommendation_target_rows": [
+      3,
+      17,
+      13
+    ]
+  },
+  {
+    "row": 19,
+    "title": "books like quicksilver (for when he hates you but would still burn the world down for you)",
+    "slug": "books-like-quicksilver",
+    "type": "CLUSTER",
+    "seo_title": "Books Like Quicksilver (He Hates You But Stays)",
+    "description": "Books like Quicksilver — enemies to lovers romantasy with morally gray heroes who hate you but would burn the world for you anyway. Ranked by tension.",
+    "focus_keyword": "books like quicksilver",
+    "recommendation_target_rows": [
+      3,
+      17,
+      13
+    ]
+  },
+  {
+    "row": 20,
+    "title": "best enemies to lovers romance books (booktok favorites + underrated reads)",
+    "slug": "enemies-to-lovers-romance-books",
+    "type": "CLUSTER",
+    "seo_title": "Best Enemies to Lovers Romance Books (2026)",
+    "description": "The best enemies to lovers romance books — BookTok favorites and underrated reads with slow burn tension, sharp banter, and impossible chemistry.",
+    "focus_keyword": "enemies to lovers romance books",
+    "recommendation_target_rows": [
+      2,
+      21,
+      22
+    ]
+  },
+  {
+    "row": 21,
+    "title": "the best slow burn romance books (worth the wait)",
+    "slug": "slow-burn-romance-books",
+    "type": "CLUSTER",
+    "seo_title": "Best Slow Burn Romance Books (Worth the Wait)",
+    "description": "The best slow burn romance books where the wait is absolutely worth it — aching tension, perfect payoffs, and love stories that build until you can't breathe.",
+    "focus_keyword": "slow burn romance books",
+    "recommendation_target_rows": [
+      2,
+      20,
+      23
+    ]
+  },
+  {
+    "row": 22,
+    "title": "romance books with messy relationships and emotional damage",
+    "slug": "romance-books-messy-relationships",
+    "type": "CLUSTER",
+    "seo_title": "Romance Books With Messy Relationships and Damage",
+    "description": "Romance books with messy, complicated relationships and real emotional damage — no clean love stories, just characters who break each other and figure it out anyway.",
+    "focus_keyword": "romance books messy relationships",
+    "recommendation_target_rows": [
+      2,
+      12,
+      20
+    ]
+  },
+  {
+    "row": 23,
+    "title": "romance books you won't stop thinking about",
+    "slug": "romance-books-you-wont-stop-thinking-about",
+    "type": "CLUSTER",
+    "seo_title": "Romance Books You Won't Stop Thinking About",
+    "description": "Romance books that live rent-free in your head long after you finish — the ones that leave you staring at a wall, rereading passages, and demanding sequels.",
+    "focus_keyword": "romance books you can't stop thinking about",
+    "recommendation_target_rows": [
+      2,
+      5,
+      7
+    ]
+  },
+  {
+    "row": 24,
+    "title": "romance books that feel soft but still completely addictive",
+    "slug": "romance-books-soft-but-addictive",
+    "type": "CLUSTER",
+    "seo_title": "Romance Books That Feel Soft but Stay Addictive",
+    "description": "Romance books that feel warm and soft but are still completely addictive — low angst, high charm, and love stories that make you feel safe and happy.",
+    "focus_keyword": "soft addictive romance books",
+    "recommendation_target_rows": [
+      2,
+      21,
+      23
+    ]
+  },
+  {
+    "row": 25,
+    "title": "best second chance romance books that will make you cry",
+    "slug": "second-chance-romance-books",
+    "type": "CLUSTER",
+    "seo_title": "Best Second Chance Romance Books (You Will Cry)",
+    "description": "The best second chance romance books that will make you cry — emotional reunions, earned forgiveness, and love stories that get a second shot at forever.",
+    "focus_keyword": "second chance romance books",
+    "recommendation_target_rows": [
+      2,
+      26,
+      21
+    ]
+  },
+  {
+    "row": 26,
+    "title": "second chance romance books where he has to earn her back",
+    "slug": "second-chance-romance-he-earns-her-back",
+    "type": "CLUSTER",
+    "seo_title": "Second Chance Romance: He Has to Earn Her Back",
+    "description": "Second chance romance books where he has to work for it — groveling heroes, stubborn heroines, and the slow, satisfying process of earning trust back.",
+    "focus_keyword": "second chance romance he has to earn her back",
+    "recommendation_target_rows": [
+      2,
+      25,
+      8
+    ]
+  },
+  {
+    "row": 27,
+    "title": "emotional contemporary romance books that will wreck you",
+    "slug": "emotional-contemporary-romance-books",
+    "type": "CLUSTER",
+    "seo_title": "Emotional Contemporary Romance Books That Wreck You",
+    "description": "Emotional contemporary romance books that will absolutely wreck you — real love stories with real heartbreak, real healing, and characters you'll never forget.",
+    "focus_keyword": "emotional contemporary romance books",
+    "recommendation_target_rows": [
+      2,
+      25,
+      22
+    ]
+  },
+  {
+    "row": 28,
+    "title": "romance book series you won't be able to put down",
+    "slug": "addictive-romance-book-series",
+    "type": "CLUSTER",
+    "seo_title": "Romance Book Series You Won't Put Down (2026)",
+    "description": "The most addictive romance book series you won't be able to put down — binge-worthy worlds, characters you love, and enough books to keep you busy for months.",
+    "focus_keyword": "addictive romance book series",
+    "recommendation_target_rows": [
+      2,
+      14,
+      4
+    ]
+  },
+  {
+    "row": 29,
+    "title": "the best sports romance books — booktok favorites and underrated reads",
+    "slug": "best-sports-romance-books-booktok",
+    "type": "CLUSTER",
+    "seo_title": "Best Sports Romance Books: BookTok Favorites (2026)",
+    "description": "The best sports romance books — BookTok favorites and underrated reads you haven't heard of yet, ranked by spice and emotional damage.",
+    "focus_keyword": "best sports romance books booktok",
+    "recommendation_target_rows": [
+      4,
+      30,
+      48
+    ]
+  },
+  {
+    "row": 30,
+    "title": "the best hockey romance books — ranked by spice",
+    "slug": "hockey-romance-books",
+    "type": "CLUSTER",
+    "seo_title": "Best Hockey Romance Books — Ranked by Spice",
+    "description": "The best hockey romance books ranked by spice level — from sweet slow burns to absolutely filthy reads. Your complete guide to the genre's hottest trope.",
+    "focus_keyword": "hockey romance books",
+    "recommendation_target_rows": [
+      4,
+      29,
+      48
+    ]
+  },
+  {
+    "row": 31,
+    "title": "the best mafia romance books — ranked by spice",
+    "slug": "mafia-romance-books",
+    "type": "CLUSTER",
+    "seo_title": "Best Mafia Romance Books — Ranked by Spice",
+    "description": "The best mafia romance books ranked by spice — dangerous men, morally gray bosses, and dark romance reads that will have you rooting for the villain.",
+    "focus_keyword": "mafia romance books",
+    "recommendation_target_rows": [
+      2,
+      5,
+      12
+    ]
+  },
+  {
+    "row": 32,
+    "title": "haunting adeline review — h.d. carlton (spice level, tropes & is it worth it)",
+    "slug": "haunting-adeline-review",
+    "type": "CLUSTER",
+    "seo_title": "Haunting Adeline Review: Spice, Tropes & Is It Worth It",
+    "description": "Haunting Adeline review — spice level, tropes, content warnings and whether it's worth the hype. Everything you need to know before you read H.D. Carlton's debut.",
+    "focus_keyword": "haunting adeline review",
+    "recommendation_target_rows": [
+      2,
+      33,
+      34
+    ]
+  },
+  {
+    "row": 33,
+    "title": "books like haunting adeline (because one read was never going to be enough)",
+    "slug": "books-like-haunting-adeline",
+    "type": "CLUSTER",
+    "seo_title": "Books Like Haunting Adeline (One Read Wasn't Enough)",
+    "description": "Books like Haunting Adeline for when one read was never going to be enough — dark romance with obsessive stalker heroes, morally gray men, and no redemption arcs.",
+    "focus_keyword": "books like haunting adeline",
+    "recommendation_target_rows": [
+      2,
+      32,
+      34
+    ]
+  },
+  {
+    "row": 34,
+    "title": "cat and mouse duet reading order — h.d. carlton (haunting adeline)",
+    "slug": "cat-and-mouse-duet-reading-order",
+    "type": "CLUSTER",
+    "seo_title": "Cat and Mouse Duet Reading Order — H.D. Carlton",
+    "description": "The complete Cat and Mouse duet reading order by H.D. Carlton — Haunting Adeline, Hunting Adeline, and everything in between. Start here.",
+    "focus_keyword": "cat and mouse duet reading order",
+    "recommendation_target_rows": [
+      2,
+      32,
+      33
+    ]
+  },
+  {
+    "row": 35,
+    "title": "my dreadful darling review — h.d. carlton (spice level, tropes & should you read it)",
+    "slug": "my-dreadful-darling-review",
+    "type": "CLUSTER",
+    "seo_title": "My Dreadful Darling Review: H.D. Carlton (Worth It?)",
+    "description": "My Dreadful Darling review — spice level, tropes, and whether it lives up to H.D. Carlton's reputation. Spoiler-free with content warnings included.",
+    "focus_keyword": "my dreadful darling review",
+    "recommendation_target_rows": [
+      2,
+      32,
+      34
+    ]
+  },
+  {
+    "row": 36,
+    "title": "shatter me series reading order — tahereh mafi (complete guide)",
+    "slug": "shatter-me-series-reading-order",
+    "type": "CLUSTER",
+    "seo_title": "Shatter Me Series Reading Order — Complete Guide",
+    "description": "The complete Shatter Me series reading order by Tahereh Mafi — all novels, novellas, and the right order to read them so nothing gets spoiled.",
+    "focus_keyword": "shatter me series reading order",
+    "recommendation_target_rows": [
+      2,
+      37,
+      28
+    ]
+  },
+  {
+    "row": 37,
+    "title": "books like shatter me (for when aaron warner permanently altered your brain chemistry)",
+    "slug": "books-like-shatter-me",
+    "type": "CLUSTER",
+    "seo_title": "Books Like Shatter Me (Aaron Warner Did Damage)",
+    "description": "Books like Shatter Me for when Aaron Warner permanently altered your brain chemistry — dark YA romance, morally gray heroes, and dystopian love stories with bite.",
+    "focus_keyword": "books like shatter me",
+    "recommendation_target_rows": [
+      2,
+      36,
+      5
+    ]
+  },
+  {
+    "row": 38,
+    "title": "society of villains series reading order — l.j. shen (bad bishop & twisted pawn)",
+    "slug": "society-of-villains-reading-order",
+    "type": "CLUSTER",
+    "seo_title": "Society of Villains Reading Order — L.J. Shen",
+    "description": "The complete Society of Villains reading order by L.J. Shen — Bad Bishop, Twisted Pawn, and how to read the series without spoilers.",
+    "focus_keyword": "society of villains reading order",
+    "recommendation_target_rows": [
+      2,
+      39,
+      28
+    ]
+  },
+  {
+    "row": 39,
+    "title": "twisted pawn review — spice level, tropes, and is it worth it",
+    "slug": "twisted-pawn-review",
+    "type": "CLUSTER",
+    "seo_title": "Twisted Pawn Review: Spice, Tropes & Is It Worth It",
+    "description": "Twisted Pawn review by L.J. Shen — spice level, tropes, content warnings and whether it's worth reading. Everything you need before you start.",
+    "focus_keyword": "twisted pawn review",
+    "recommendation_target_rows": [
+      2,
+      38,
+      7
+    ]
+  },
+  {
+    "row": 40,
+    "title": "kings of blackwater series review — raven wood (the dark bully romance series nobody is talking about)",
+    "slug": "kings-of-blackwater-review",
+    "type": "CLUSTER",
+    "seo_title": "Kings of Blackwater Review: The Dark Series You're Missing",
+    "description": "Kings of Blackwater series review by Raven Wood — the dark bully romance series nobody is talking about but absolutely should be. Spice, tropes, and verdict.",
+    "focus_keyword": "kings of blackwater review",
+    "recommendation_target_rows": [
+      2,
+      7,
+      12
+    ]
+  },
+  {
+    "row": 41,
+    "title": "lights out review — is it worth buying? (yes. here's why.)",
+    "slug": "lights-out-review",
+    "type": "CLUSTER",
+    "seo_title": "Lights Out Review — Navessa Allen (Worth Buying?)",
+    "description": "Lights Out by Navessa Allen review — spice level, tropes, content warnings and why yes, it is absolutely worth buying. Full verdict inside.",
+    "focus_keyword": "lights out navessa allen review",
+    "recommendation_target_rows": [
+      2,
+      7,
+      9
+    ]
+  },
+  {
+    "row": 42,
+    "title": "craving venom review — spice level, tropes, and is it worth it",
+    "slug": "craving-venom-review",
+    "type": "CLUSTER",
+    "seo_title": "Craving Venom Review: Spice, Tropes & Verdict",
+    "description": "Craving Venom review — spice level, tropes, content warnings and the full verdict on whether this dark romance lives up to the hype.",
+    "focus_keyword": "craving venom review",
+    "recommendation_target_rows": [
+      2,
+      7,
+      12
+    ]
+  },
+  {
+    "row": 43,
+    "title": "daggermouth review — h.m. wolfe (spice level, tropes & what to read next)",
+    "slug": "daggermouth-review",
+    "type": "CLUSTER",
+    "seo_title": "Daggermouth Review: H.M. Wolfe — Spice & Tropes",
+    "description": "Daggermouth review by H.M. Wolfe — spice level, tropes, content warnings and exactly what to read next if you loved it. Full spoiler-free verdict.",
+    "focus_keyword": "daggermouth review",
+    "recommendation_target_rows": [
+      2,
+      7,
+      5
+    ]
+  },
+  {
+    "row": 44,
+    "title": "wrath of an exile review — monty jay (spice level, tropes & should you read it)",
+    "slug": "wrath-of-an-exile-review",
+    "type": "CLUSTER",
+    "seo_title": "Wrath of an Exile Review: Monty Jay (Worth It?)",
+    "description": "Wrath of an Exile review by Monty Jay — spice level, tropes, content warnings and whether you should read it. Full spoiler-free verdict inside.",
+    "focus_keyword": "wrath of an exile review",
+    "recommendation_target_rows": [
+      3,
+      13,
+      16
+    ]
+  },
+  {
+    "row": 45,
+    "title": "when we had forever — shaylin gandhi (spice level, tropes & should you read it)",
+    "slug": "when-we-had-forever-review",
+    "type": "CLUSTER",
+    "seo_title": "When We Had Forever Review: Shaylin Gandhi",
+    "description": "When We Had Forever review by Shaylin Gandhi — spice level, tropes, content warnings and whether this emotional contemporary romance is worth your time.",
+    "focus_keyword": "when we had forever review",
+    "recommendation_target_rows": [
+      2,
+      27,
+      25
+    ]
+  },
+  {
+    "row": 46,
+    "title": "please don't go review — e. salvador (spice level, tropes & should you read it)",
+    "slug": "please-dont-go-review",
+    "type": "CLUSTER",
+    "seo_title": "Please Don't Go Review: E. Salvador — Worth It?",
+    "description": "Please Don't Go review by E. Salvador — spice level, tropes, content warnings and the full verdict on this emotional second chance romance.",
+    "focus_keyword": "please don't go review",
+    "recommendation_target_rows": [
+      2,
+      25,
+      27
+    ]
+  },
+  {
+    "row": 47,
+    "title": "in her own league review — liz tomforde (spice level, tropes & should you read it)",
+    "slug": "in-her-own-league-review",
+    "type": "CLUSTER",
+    "seo_title": "In Her Own League Review: Liz Tomforde (Worth It?)",
+    "description": "In Her Own League review by Liz Tomforde — spice level, tropes, content warnings and whether this sports romance is worth reading. Full verdict inside.",
+    "focus_keyword": "in her own league review",
+    "recommendation_target_rows": [
+      4,
+      48,
+      30
+    ]
+  },
+  {
+    "row": 48,
+    "title": "windy city series reading order — liz tomforde (all 5 books)",
+    "slug": "windy-city-series-reading-order",
+    "type": "CLUSTER",
+    "seo_title": "Windy City Series Reading Order — Liz Tomforde",
+    "description": "The complete Windy City series reading order by Liz Tomforde — all 5 books in the right order so you don't accidentally spoil yourself.",
+    "focus_keyword": "windy city series reading order",
+    "recommendation_target_rows": [
+      4,
+      47,
+      30
+    ]
+  },
+  {
+    "row": 49,
+    "title": "books like insatiable (for when that feeling won't leave you alone)",
+    "slug": "books-like-insatiable",
+    "type": "CLUSTER",
+    "seo_title": "Books Like Insatiable (That Feeling Won't Leave)",
+    "description": "Books like Insatiable for when that feeling won't leave you alone — dark romance with obsessive, morally gray heroes and stories that get completely under your skin.",
+    "focus_keyword": "books like insatiable",
+    "recommendation_target_rows": [
+      2,
+      7,
+      12
+    ]
+  },
+  {
+    "row": 50,
+    "title": "books like say you swear (for when that feeling won't go away)",
+    "slug": "books-like-say-you-swear",
+    "type": "CLUSTER",
+    "seo_title": "Books Like Say You Swear (That Feeling Won't Go)",
+    "description": "Books like Say You Swear for when the feeling won't go away — emotional sports romance reads with best-friend betrayal, slow burn tension, and messy love stories.",
+    "focus_keyword": "books like say you swear",
+    "recommendation_target_rows": [
+      4,
+      29,
+      27
+    ]
+  },
+  {
+    "row": 51,
+    "title": "books like the ever king (for when him and that ship ruined you for everyone else)",
+    "slug": "books-like-the-ever-king",
+    "type": "CLUSTER",
+    "seo_title": "Books Like The Ever King (Ship and All)",
+    "description": "Books like The Ever King for when him and that ship ruined you for everyone else — dark pirates, morally gray fantasy heroes, and romantasy reads with the same pull.",
+    "focus_keyword": "books like the ever king",
+    "recommendation_target_rows": [
+      3,
+      13,
+      16
+    ]
+  },
+  {
+    "row": 52,
+    "title": "is a kindle worth it or overhyped? (for heavy readers)",
+    "slug": "is-a-kindle-worth-it",
+    "type": "STANDALONE",
+    "seo_title": "Is a Kindle Worth It for Heavy Readers? (Honest Answer)",
+    "description": "Is a Kindle worth it or overhyped? An honest answer for heavy romance readers — what it does well, where it falls short, and whether you actually need one.",
+    "focus_keyword": "is a kindle worth it",
+    "recommendation_target_rows": [
+      28,
+      2,
+      3
+    ]
+  }
+]
