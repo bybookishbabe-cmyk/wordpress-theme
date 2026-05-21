@@ -617,14 +617,19 @@ if (!function_exists('bbb_sss_active_drop')) {
 			}
 		}
 
-		$path = get_theme_file_path('firstpass/migration/exports/metaobjects/sss_drop.json');
-		if (!file_exists($path)) {
-			return array();
-		}
+		$raw = function_exists('bbb_sss_drop_importer_export_json') ? bbb_sss_drop_importer_export_json() : '';
+		if ('' === $raw) {
+			$path = get_theme_file_path('firstpass/migration/exports/metaobjects/sss_drop.json');
+			if (!file_exists($path)) {
+				return array();
+			}
 
-		$raw = file_get_contents($path);
-		if (!is_string($raw) || '' === trim($raw)) {
-			return array();
+			$file_raw = file_get_contents($path);
+			if (!is_string($file_raw) || '' === trim($file_raw)) {
+				return array();
+			}
+
+			$raw = $file_raw;
 		}
 
 		$data = json_decode($raw, true);

@@ -21,6 +21,7 @@ require_once get_theme_file_path('inc/acf-society-hero-options.php');
 require_once get_theme_file_path('inc/blog-society-recommendations.php');
 require_once get_theme_file_path('inc/society-pages.php');
 require_once get_theme_file_path('inc/books/book-cpt.php');
+require_once get_theme_file_path('inc/books/book-admin-fields.php');
 require_once get_theme_file_path('inc/books/book-visibility.php');
 require_once get_theme_file_path('inc/books/trope-colors.php');
 require_once get_theme_file_path('inc/books/book-renderers.php');

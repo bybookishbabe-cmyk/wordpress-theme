@@ -286,9 +286,10 @@ get_header();
 			>
 				<div class="qw-card">
 					<?php if ($modal) : ?>
-						<button
-							type="button"
+						<div
 							class="qw-cardSurface sss-lib__book"
+							role="button"
+							tabindex="0"
 							data-qw-open
 							<?php foreach ($modal as $attr => $value) : ?>
 								data-<?php echo esc_attr((string) $attr); ?>="<?php echo esc_attr((string) $value); ?>"
@@ -314,7 +315,7 @@ get_header();
 									</div>
 								</div>
 							</div>
-					<?php echo $modal ? '</button>' : '</a>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+					<?php echo $modal ? '</div>' : '</a>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				</div>
 			</div>
 		<?php endforeach; ?>
@@ -389,6 +390,13 @@ get_header();
 				searchInput.addEventListener('search', applyFilter);
 				searchInput.addEventListener('change', applyFilter);
 			}
+
+			root.addEventListener('keydown', function(event){
+				var opener = event.target.closest('[data-qw-open]');
+				if (!opener || (event.key !== 'Enter' && event.key !== ' ')) return;
+				event.preventDefault();
+				opener.click();
+			});
 
 			applyFilter();
 

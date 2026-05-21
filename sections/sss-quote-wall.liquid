@@ -190,6 +190,8 @@
     text-align:left;
     cursor:pointer;
     border-radius:18px;
+    -webkit-user-select:text;
+    user-select:text;
   }
 
   .qw-paper{
@@ -232,6 +234,9 @@
     position:relative;
     z-index:2;
     color:#151212;
+    cursor:text;
+    -webkit-user-select:text;
+    user-select:text;
   }
 
   .hl{
@@ -242,6 +247,8 @@
     border-radius:7px;
     -webkit-box-decoration-break:clone;
     box-decoration-break:clone;
+    -webkit-user-select:text;
+    user-select:text;
   }
   .hl--yellow{
     background:rgba(255, 138, 199, .38);
@@ -472,7 +479,9 @@
             data-qw-shelf="{{ shelf_name | escape }}"
             data-qw-tropes="{% for trope in linked_book.tropes.value %}{{ trope.name | escape }}{% unless forloop.last %}, {% endunless %}{% endfor %}"
             data-qw-text="{{ quote_txt | strip_html | strip | escape }}">
-            <button type="button" class="qw-cardSurface"
+            <div class="qw-cardSurface"
+              role="button"
+              tabindex="0"
               data-qw-open
               data-handle="{{ linked_book.system.handle }}"
               data-title="{{ linked_book.title.value | escape }}"
@@ -508,7 +517,7 @@
                 </div>
               </div>
               </div>
-            </button>
+            </div>
             <div class="qw-actions">
               <button type="button" class="qw-action" data-qw-save>save to made for you</button>
               <button type="button" class="qw-action qw-action--note" data-qw-note>save to notes</button>
@@ -638,6 +647,14 @@
         searchInput.addEventListener('keyup', applyFilter);
         searchInput.addEventListener('change', applyFilter);
       }
+
+      root.addEventListener('keydown', function(event){
+        var opener = event.target.closest('[data-qw-open]');
+        if (!opener || (event.key !== 'Enter' && event.key !== ' ')) return;
+        event.preventDefault();
+        opener.click();
+      });
+
       applyFilter();
       syncSaveButtons();
 

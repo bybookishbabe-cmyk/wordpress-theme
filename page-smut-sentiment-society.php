@@ -45,12 +45,18 @@ if (!function_exists('bbb_society_landing_active_drop')) {
 			}
 		}
 
-		$path = get_theme_file_path('firstpass/migration/exports/metaobjects/sss_drop.json');
-		if (!file_exists($path)) {
-			return array();
+		$json = function_exists('bbb_sss_drop_importer_export_json') ? bbb_sss_drop_importer_export_json() : '';
+		if ('' === $json) {
+			$path = get_theme_file_path('firstpass/migration/exports/metaobjects/sss_drop.json');
+			if (!file_exists($path)) {
+				return array();
+			}
+
+			$file_json = file_get_contents($path);
+			$json = is_string($file_json) ? $file_json : '';
 		}
 
-		$data = json_decode((string) file_get_contents($path), true);
+		$data = json_decode($json, true);
 		if (!is_array($data) || empty($data['entries']) || !is_array($data['entries'])) {
 			return array();
 		}

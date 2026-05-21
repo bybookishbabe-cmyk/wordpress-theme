@@ -203,6 +203,8 @@
   text-align: left;
   text-decoration: none;
   cursor: pointer;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .sss-qw .qw-cardSurface:focus-visible {
@@ -258,6 +260,9 @@
   font-size: 15px;
   letter-spacing: .01em;
   line-height: 1.65;
+  cursor: text;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .hl {
@@ -268,6 +273,8 @@
   border-radius: 7px;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .hl--yellow {

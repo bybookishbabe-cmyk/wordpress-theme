@@ -1868,6 +1868,7 @@ root.addEventListener('click', function(e){
 
   if (e.target.closest('[data-heart]')) return;
   if (e.target.closest('.sss-lib__seriesBadge')) return;
+  if (window.getSelection && String(window.getSelection()).trim()) return;
 
   e.preventDefault();
 
@@ -1885,6 +1886,7 @@ root.addEventListener('click', function(e){
         if (e.target.closest('[data-heart]')) return;
         if (e.target.closest('.sss-lib__seriesBadge')) return;
         if (btn.hasAttribute('disabled')) return;
+        if (window.getSelection && String(window.getSelection()).trim()) return;
 
         e.preventDefault();
         e.stopPropagation();
@@ -1897,6 +1899,11 @@ root.addEventListener('click', function(e){
 
       btn.addEventListener('pointerup', function(e){
         if (e.pointerType === 'mouse' && e.button !== 0) return;
+        handleOpen(e);
+      });
+
+      btn.addEventListener('keydown', function(e){
+        if (e.key !== 'Enter' && e.key !== ' ') return;
         handleOpen(e);
       });
     });

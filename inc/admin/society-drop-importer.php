@@ -133,6 +133,26 @@ function bbb_sss_drop_importer_file_refs(array $fields): array {
 	return $out;
 }
 
+function bbb_sss_drop_importer_export_paths(): array {
+	return array(
+		get_theme_file_path('data/sss-drop-seed.json'),
+		get_theme_file_path('firstpass/migration/exports/metaobjects/sss_drop.json'),
+	);
+}
+
+function bbb_sss_drop_importer_export_json(): string {
+	foreach (bbb_sss_drop_importer_export_paths() as $path) {
+		if (is_readable($path)) {
+			$json = file_get_contents($path);
+			if (is_string($json) && '' !== trim($json)) {
+				return $json;
+			}
+		}
+	}
+
+	return '';
+}
+
 function bbb_sss_drop_importer_upsert_product_stubs(array $products): int {
 	if (!post_type_exists('product')) {
 		return 0;
@@ -395,8 +415,7 @@ function bbb_sss_drop_importer_handle_request() {
 	}
 
 	if ('' === trim($json) && !empty($_POST['bbb_sss_drop_use_theme_file'])) {
-		$path = get_theme_file_path('firstpass/migration/exports/metaobjects/sss_drop.json');
-		$json = file_exists($path) ? (string) file_get_contents($path) : '';
+		$json = bbb_sss_drop_importer_export_json();
 	}
 
 	if ('' === trim($json)) {

@@ -1,0 +1,2455 @@
+{
+  "type": "sss_drop",
+  "name": "SSS Drop",
+  "count": 7,
+  "entries": [
+    {
+      "id": "gid://shopify/Metaobject/1706877354065",
+      "handle": "in-between-almost-and-forever",
+      "type": "sss_drop",
+      "displayName": "in between almost and forever",
+      "updatedAt": "2026-04-29T21:16:43Z",
+      "fields": [
+        {
+          "key": "name",
+          "type": "single_line_text_field",
+          "value": "in between almost and forever",
+          "jsonValue": "in between almost and forever",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "release_date",
+          "type": "date",
+          "value": "2026-04-01",
+          "jsonValue": "2026-04-01",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "end_date",
+          "type": "date",
+          "value": "2026-04-30",
+          "jsonValue": "2026-04-30",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "quote_text",
+          "type": "multi_line_text_field",
+          "value": "some things don’t end.\nthey just… stop somewhere in the middle of something that still felt like more.",
+          "jsonValue": "some things don’t end.\nthey just… stop somewhere in the middle of something that still felt like more.",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_kicker",
+          "type": "single_line_text_field",
+          "value": "from the gram",
+          "jsonValue": "from the gram",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_title",
+          "type": "single_line_text_field",
+          "value": "this belongs on your kindle",
+          "jsonValue": "this belongs on your kindle",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_sub",
+          "type": "multi_line_text_field",
+          "value": "in our feelings",
+          "jsonValue": "in our feelings",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_image",
+          "type": "file_reference",
+          "value": "gid://shopify/MediaImage/70777939951697",
+          "jsonValue": "gid://shopify/MediaImage/70777939951697",
+          "reference": {
+            "__typename": "MediaImage",
+            "id": "gid://shopify/MediaImage/70777939951697",
+            "image": {
+              "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/InstagramPosts_c7ed5d5e-d5b8-4c3f-b954-00f6157d9331.png?v=1775063027",
+              "altText": "",
+              "width": 1080,
+              "height": 1350
+            }
+          },
+          "references": null
+        },
+        {
+          "key": "gram_caption",
+          "type": "multi_line_text_field",
+          "value": "the kindle is the fit",
+          "jsonValue": "the kindle is the fit",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_accent",
+          "type": "color",
+          "value": "#685b3d",
+          "jsonValue": "#685b3d",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_pill_bg",
+          "type": "color",
+          "value": "#bfcbd8",
+          "jsonValue": "#bfcbd8",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_pill_ink",
+          "type": "color",
+          "value": "#2c2f48",
+          "jsonValue": "#2c2f48",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "trial",
+          "type": "list.metaobject_reference",
+          "value": "[\"gid://shopify/Metaobject/1708134694993\",\"gid://shopify/Metaobject/1708134465617\",\"gid://shopify/Metaobject/1708134105169\",\"gid://shopify/Metaobject/1708134039633\"]",
+          "jsonValue": [
+            "gid://shopify/Metaobject/1708134694993",
+            "gid://shopify/Metaobject/1708134465617",
+            "gid://shopify/Metaobject/1708134105169",
+            "gid://shopify/Metaobject/1708134039633"
+          ],
+          "reference": null,
+          "references": {
+            "nodes": [
+              {
+                "__typename": "Metaobject",
+                "id": "gid://shopify/Metaobject/1708134694993",
+                "handle": "im-fine-really",
+                "type": "sss_mood_pill",
+                "displayName": "i’m fine. really"
+              },
+              {
+                "__typename": "Metaobject",
+                "id": "gid://shopify/Metaobject/1708134465617",
+                "handle": "in-my-feelings",
+                "type": "sss_mood_pill",
+                "displayName": "in my feelings"
+              },
+              {
+                "__typename": "Metaobject",
+                "id": "gid://shopify/Metaobject/1708134105169",
+                "handle": "just-one-more-page",
+                "type": "sss_mood_pill",
+                "displayName": "just one more page"
+              },
+              {
+                "__typename": "Metaobject",
+                "id": "gid://shopify/Metaobject/1708134039633",
+                "handle": "still-thinking-about-it",
+                "type": "sss_mood_pill",
+                "displayName": "still thinking about it"
+              }
+            ]
+          }
+        },
+        {
+          "key": "moodboard_title",
+          "type": "single_line_text_field",
+          "value": "in between almost & forever",
+          "jsonValue": "in between almost & forever",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "emoji_list",
+          "type": "single_line_text_field",
+          "value": "🌙, ✦",
+          "jsonValue": "🌙, ✦",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "spotify_url",
+          "type": "url",
+          "value": "https://open.spotify.com/playlist/3BPNPiWLd5assyFuNOdrRg?si=7B3Eak0HRPOdECOiDkEmyw&pi=E5SqKNhOTvGWy",
+          "jsonValue": "https://open.spotify.com/playlist/3BPNPiWLd5assyFuNOdrRg?si=7B3Eak0HRPOdECOiDkEmyw&pi=E5SqKNhOTvGWy",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_images",
+          "type": "list.file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_quotes",
+          "type": "list.single_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_stickers",
+          "type": "list.file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "era_images",
+          "type": "list.file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "calendar_image",
+          "type": "file_reference",
+          "value": "gid://shopify/MediaImage/70727864680529",
+          "jsonValue": "gid://shopify/MediaImage/70727864680529",
+          "reference": {
+            "__typename": "MediaImage",
+            "id": "gid://shopify/MediaImage/70727864680529",
+            "image": {
+              "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/April2026.png?v=1774402931",
+              "altText": "",
+              "width": 1999,
+              "height": 1545
+            }
+          },
+          "references": null
+        },
+        {
+          "key": "pdf_link",
+          "type": "link",
+          "value": "{\"text\":\"\",\"url\":\"https://www.dropbox.com/scl/fi/cr6bo5qytuo0bcw46inqv/April2026.pdf?rlkey=zdxwe3wvf7q6vd70a577ghk50&st=w09at0dz&dl=0\"}",
+          "jsonValue": {
+            "text": "",
+            "url": "https://www.dropbox.com/scl/fi/cr6bo5qytuo0bcw46inqv/April2026.pdf?rlkey=zdxwe3wvf7q6vd70a577ghk50&st=w09at0dz&dl=0"
+          },
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "canva_link",
+          "type": "link",
+          "value": "{\"text\":\"\",\"url\":\"https://www.canva.com/design/DAHE53Seqjs/RHHWJgsC8DLSrYMRNm3xUA/view?utm_content=DAHE53Seqjs&utm_campaign=designshare&utm_medium=link&utm_source=publishsharelink&mode=preview\"}",
+          "jsonValue": {
+            "text": "",
+            "url": "https://www.canva.com/design/DAHE53Seqjs/RHHWJgsC8DLSrYMRNm3xUA/view?utm_content=DAHE53Seqjs&utm_campaign=designshare&utm_medium=link&utm_source=publishsharelink&mode=preview"
+          },
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "journal_start_date",
+          "type": "date",
+          "value": "2026-04-01",
+          "jsonValue": "2026-04-01",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "prompts",
+          "type": "multi_line_text_field",
+          "value": "What am I still thinking about that I pretend doesn’t affect me anymore? ||\nDid it really end, or did it just stop? ||\nWhat version of love do I keep going back to, even when I know better? ||\nWhere in my life does something feel unfinished? ||\nWhat would I say if I could have one honest conversation with them? ||\nWhat am I holding onto that I haven’t fully processed yet? ||\nIf timing had been different, would the outcome really have changed? ||\nWhat does closure actually look like for me — and do I need it? ||\nWhat kind of stories do I gravitate toward lately, and what does that say about me? ||\nWhat am I romanticizing that didn’t actually feel good in real time? ||\nIf my life right now were a book, what would this chapter be called? ||\nWhat am I afraid to admit I still want? ||\nWhat parts of my past still feel a little too present? ||\nWhat does “moving on” actually mean to me? ||\nWhat am I learning about myself in this in-between season? ||\nWhat kind of love am I hoping for next — and what will I do differently? ||\nWhat habits or routines are quietly shaping my life right now? ||\nWhere am I choosing comfort over honesty? ||\nWhat kind of main character energy am I stepping into this month? ||\nWhat book felt a little too real for me recently — and why? ||\nWhat emotions have I been avoiding sitting with? ||\nWhat would it look like to trust the timing of my life? ||\nWhere do I need to give myself more patience? ||\nWhat does “starting fresh” actually mean for me right now? ||\nWhat kind of relationships feel safe to me — and which ones don’t? ||\nWhat am I outgrowing, even if it’s hard to admit? ||\nIf I could rewrite one moment in my life, would I — and why? ||\nWhat do I want more of in my everyday life, not just in big moments? ||\nWhat does my ideal slow, quiet day look like? ||\nWhat am I ready to leave behind as this month begins? ||",
+          "jsonValue": "What am I still thinking about that I pretend doesn’t affect me anymore? ||\nDid it really end, or did it just stop? ||\nWhat version of love do I keep going back to, even when I know better? ||\nWhere in my life does something feel unfinished? ||\nWhat would I say if I could have one honest conversation with them? ||\nWhat am I holding onto that I haven’t fully processed yet? ||\nIf timing had been different, would the outcome really have changed? ||\nWhat does closure actually look like for me — and do I need it? ||\nWhat kind of stories do I gravitate toward lately, and what does that say about me? ||\nWhat am I romanticizing that didn’t actually feel good in real time? ||\nIf my life right now were a book, what would this chapter be called? ||\nWhat am I afraid to admit I still want? ||\nWhat parts of my past still feel a little too present? ||\nWhat does “moving on” actually mean to me? ||\nWhat am I learning about myself in this in-between season? ||\nWhat kind of love am I hoping for next — and what will I do differently? ||\nWhat habits or routines are quietly shaping my life right now? ||\nWhere am I choosing comfort over honesty? ||\nWhat kind of main character energy am I stepping into this month? ||\nWhat book felt a little too real for me recently — and why? ||\nWhat emotions have I been avoiding sitting with? ||\nWhat would it look like to trust the timing of my life? ||\nWhere do I need to give myself more patience? ||\nWhat does “starting fresh” actually mean for me right now? ||\nWhat kind of relationships feel safe to me — and which ones don’t? ||\nWhat am I outgrowing, even if it’s hard to admit? ||\nIf I could rewrite one moment in my life, would I — and why? ||\nWhat do I want more of in my everyday life, not just in big moments? ||\nWhat does my ideal slow, quiet day look like? ||\nWhat am I ready to leave behind as this month begins? ||",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "bonus_printable_product",
+          "type": "product_reference",
+          "value": "gid://shopify/Product/15733432254545",
+          "jsonValue": "gid://shopify/Product/15733432254545",
+          "reference": {
+            "__typename": "Product",
+            "id": "gid://shopify/Product/15733432254545",
+            "handle": "i-still-think-about-it-kindle-insert-printable",
+            "title": "i still think about it - kindle insert (printable)"
+          },
+          "references": null
+        },
+        {
+          "key": "bonus_physical_product",
+          "type": "product_reference",
+          "value": "gid://shopify/Product/15743125717073",
+          "jsonValue": "gid://shopify/Product/15743125717073",
+          "reference": {
+            "__typename": "Product",
+            "id": "gid://shopify/Product/15743125717073",
+            "handle": "i-still-think-about-it-kindle-insert",
+            "title": "i still think about it - kindle insert"
+          },
+          "references": null
+        },
+        {
+          "key": "monthly_collection_printable_products",
+          "type": "list.product_reference",
+          "value": "[\"gid://shopify/Product/15733432614993\",\"gid://shopify/Product/15733431992401\",\"gid://shopify/Product/15733431500881\"]",
+          "jsonValue": [
+            "gid://shopify/Product/15733432614993",
+            "gid://shopify/Product/15733431992401",
+            "gid://shopify/Product/15733431500881"
+          ],
+          "reference": null,
+          "references": {
+            "nodes": [
+              {
+                "__typename": "Product",
+                "id": "gid://shopify/Product/15733432614993",
+                "handle": "this-wasnt-the-end-kindle-insert-printable",
+                "title": "this wasn't the end — printable kindle insert"
+              },
+              {
+                "__typename": "Product",
+                "id": "gid://shopify/Product/15733431992401",
+                "handle": "not-yet-not-never-kindle-insert-printable",
+                "title": "not yet not never — printable kindle insert"
+              },
+              {
+                "__typename": "Product",
+                "id": "gid://shopify/Product/15733431500881",
+                "handle": "somewhere-in-another-life-kindle-insert-printable",
+                "title": "somewhere in another life — printable kindle insert"
+              }
+            ]
+          }
+        },
+        {
+          "key": "monthly_collection_physical_products",
+          "type": "list.product_reference",
+          "value": "[\"gid://shopify/Product/15743128731729\"]",
+          "jsonValue": [
+            "gid://shopify/Product/15743128731729"
+          ],
+          "reference": null,
+          "references": {
+            "nodes": [
+              {
+                "__typename": "Product",
+                "id": "gid://shopify/Product/15743128731729",
+                "handle": "in-between-almost-and-forever-kindle-inserts",
+                "title": "in between almost and forever - kindle inserts"
+              }
+            ]
+          }
+        },
+        {
+          "key": "wallpaper_images",
+          "type": "list.file_reference",
+          "value": "[\"gid://shopify/MediaImage/70778100711505\",\"gid://shopify/MediaImage/70778100744273\",\"gid://shopify/MediaImage/70778100777041\",\"gid://shopify/MediaImage/70778100678737\"]",
+          "jsonValue": [
+            "gid://shopify/MediaImage/70778100711505",
+            "gid://shopify/MediaImage/70778100744273",
+            "gid://shopify/MediaImage/70778100777041",
+            "gid://shopify/MediaImage/70778100678737"
+          ],
+          "reference": null,
+          "references": {
+            "nodes": [
+              {
+                "__typename": "MediaImage",
+                "id": "gid://shopify/MediaImage/70778100711505",
+                "image": {
+                  "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/iPhone_Design_IStillThinkAboutIt.png?v=1775070816",
+                  "altText": "",
+                  "width": 1080,
+                  "height": 1920
+                }
+              },
+              {
+                "__typename": "MediaImage",
+                "id": "gid://shopify/MediaImage/70778100744273",
+                "image": {
+                  "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/iPhone_Design_NotYetNotNever.png?v=1775070816",
+                  "altText": "",
+                  "width": 1080,
+                  "height": 1920
+                }
+              },
+              {
+                "__typename": "MediaImage",
+                "id": "gid://shopify/MediaImage/70778100777041",
+                "image": {
+                  "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/iPhone_Design_SomewhereInAnotherlife.png?v=1775070816",
+                  "altText": "",
+                  "width": 1080,
+                  "height": 1920
+                }
+              },
+              {
+                "__typename": "MediaImage",
+                "id": "gid://shopify/MediaImage/70778100678737",
+                "image": {
+                  "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/iPhone_Design_ThisWasntTheEnd.png?v=1775070815",
+                  "altText": "",
+                  "width": 1080,
+                  "height": 1920
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "wallpaper_canva_url",
+          "type": "url",
+          "value": "https://canva.link/kg73ih1wjkaz5od",
+          "jsonValue": "https://canva.link/kg73ih1wjkaz5od",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "calendar_pdf",
+          "type": "file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Metaobject/1692871819345",
+      "handle": "january-drop-revival",
+      "type": "sss_drop",
+      "displayName": "revival",
+      "updatedAt": "2026-04-29T22:15:59Z",
+      "fields": [
+        {
+          "key": "name",
+          "type": "single_line_text_field",
+          "value": "revival",
+          "jsonValue": "revival",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "release_date",
+          "type": "date",
+          "value": "2026-01-01",
+          "jsonValue": "2026-01-01",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "end_date",
+          "type": "date",
+          "value": "2026-01-30",
+          "jsonValue": "2026-01-30",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "quote_text",
+          "type": "multi_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_kicker",
+          "type": "single_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_title",
+          "type": "single_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_sub",
+          "type": "multi_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_image",
+          "type": "file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_caption",
+          "type": "multi_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_accent",
+          "type": "color",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_pill_bg",
+          "type": "color",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_pill_ink",
+          "type": "color",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "trial",
+          "type": "list.metaobject_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "moodboard_title",
+          "type": "single_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "emoji_list",
+          "type": "single_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "spotify_url",
+          "type": "url",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_images",
+          "type": "list.file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_quotes",
+          "type": "list.single_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_stickers",
+          "type": "list.file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "era_images",
+          "type": "list.file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "calendar_image",
+          "type": "file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "pdf_link",
+          "type": "link",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "canva_link",
+          "type": "link",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "journal_start_date",
+          "type": "date",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "prompts",
+          "type": "multi_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "bonus_printable_product",
+          "type": "product_reference",
+          "value": "gid://shopify/Product/15630909538385",
+          "jsonValue": "gid://shopify/Product/15630909538385",
+          "reference": {
+            "__typename": "Product",
+            "id": "gid://shopify/Product/15630909538385",
+            "handle": "new-year-edit-kindle-insert-exclusive",
+            "title": "New Year Edit - Kindle Insert (Printable Exclusive)"
+          },
+          "references": null
+        },
+        {
+          "key": "bonus_physical_product",
+          "type": "product_reference",
+          "value": "gid://shopify/Product/15631051489361",
+          "jsonValue": "gid://shopify/Product/15631051489361",
+          "reference": {
+            "__typename": "Product",
+            "id": "gid://shopify/Product/15631051489361",
+            "handle": "new-year-edit-kindle-insert",
+            "title": "New Year Edit - Kindle Insert (Exclusive)"
+          },
+          "references": null
+        },
+        {
+          "key": "monthly_collection_printable_products",
+          "type": "list.product_reference",
+          "value": "[\"gid://shopify/Product/15630585135185\",\"gid://shopify/Product/15630579564625\",\"gid://shopify/Product/15630585528401\"]",
+          "jsonValue": [
+            "gid://shopify/Product/15630585135185",
+            "gid://shopify/Product/15630579564625",
+            "gid://shopify/Product/15630585528401"
+          ],
+          "reference": null,
+          "references": {
+            "nodes": [
+              {
+                "__typename": "Product",
+                "id": "gid://shopify/Product/15630585135185",
+                "handle": "revival-nude-1-kindle-insert-printable",
+                "title": "revival nude #1 — printable kindle insert"
+              },
+              {
+                "__typename": "Product",
+                "id": "gid://shopify/Product/15630579564625",
+                "handle": "revival-nude-2-kindle-insert-printable",
+                "title": "revival nude #2 — printable kindle insert"
+              },
+              {
+                "__typename": "Product",
+                "id": "gid://shopify/Product/15630585528401",
+                "handle": "revival-nude-3-kindle-insert-printable",
+                "title": "revival nude #3 — printable kindle insert"
+              }
+            ]
+          }
+        },
+        {
+          "key": "monthly_collection_physical_products",
+          "type": "list.product_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "wallpaper_images",
+          "type": "list.file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "wallpaper_canva_url",
+          "type": "url",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "calendar_pdf",
+          "type": "file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Metaobject/1692875292753",
+      "handle": "silent-nights-smutty-delights",
+      "type": "sss_drop",
+      "displayName": "Silent Nights Smutty Delights",
+      "updatedAt": "2026-04-29T22:15:59Z",
+      "fields": [
+        {
+          "key": "name",
+          "type": "single_line_text_field",
+          "value": "Silent Nights Smutty Delights",
+          "jsonValue": "Silent Nights Smutty Delights",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "release_date",
+          "type": "date",
+          "value": "2025-12-01",
+          "jsonValue": "2025-12-01",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "end_date",
+          "type": "date",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "quote_text",
+          "type": "multi_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_kicker",
+          "type": "single_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_title",
+          "type": "single_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_sub",
+          "type": "multi_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_image",
+          "type": "file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_caption",
+          "type": "multi_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_accent",
+          "type": "color",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_pill_bg",
+          "type": "color",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_pill_ink",
+          "type": "color",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "trial",
+          "type": "list.metaobject_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "moodboard_title",
+          "type": "single_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "emoji_list",
+          "type": "single_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "spotify_url",
+          "type": "url",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_images",
+          "type": "list.file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_quotes",
+          "type": "list.single_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_stickers",
+          "type": "list.file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "era_images",
+          "type": "list.file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "calendar_image",
+          "type": "file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "pdf_link",
+          "type": "link",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "canva_link",
+          "type": "link",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "journal_start_date",
+          "type": "date",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "prompts",
+          "type": "multi_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "bonus_printable_product",
+          "type": "product_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "bonus_physical_product",
+          "type": "product_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "monthly_collection_printable_products",
+          "type": "list.product_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "monthly_collection_physical_products",
+          "type": "list.product_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "wallpaper_images",
+          "type": "list.file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "wallpaper_canva_url",
+          "type": "url",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "calendar_pdf",
+          "type": "file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Metaobject/1692897869905",
+      "handle": "the-season-of-subtle-obsessions",
+      "type": "sss_drop",
+      "displayName": "The Season of Subtle Obsessions",
+      "updatedAt": "2026-04-29T22:16:00Z",
+      "fields": [
+        {
+          "key": "name",
+          "type": "single_line_text_field",
+          "value": "The Season of Subtle Obsessions",
+          "jsonValue": "The Season of Subtle Obsessions",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "release_date",
+          "type": "date",
+          "value": "2025-11-01",
+          "jsonValue": "2025-11-01",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "end_date",
+          "type": "date",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "quote_text",
+          "type": "multi_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_kicker",
+          "type": "single_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_title",
+          "type": "single_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_sub",
+          "type": "multi_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_image",
+          "type": "file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_caption",
+          "type": "multi_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_accent",
+          "type": "color",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_pill_bg",
+          "type": "color",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_pill_ink",
+          "type": "color",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "trial",
+          "type": "list.metaobject_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "moodboard_title",
+          "type": "single_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "emoji_list",
+          "type": "single_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "spotify_url",
+          "type": "url",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_images",
+          "type": "list.file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_quotes",
+          "type": "list.single_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_stickers",
+          "type": "list.file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "era_images",
+          "type": "list.file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "calendar_image",
+          "type": "file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "pdf_link",
+          "type": "link",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "canva_link",
+          "type": "link",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "journal_start_date",
+          "type": "date",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "prompts",
+          "type": "multi_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "bonus_printable_product",
+          "type": "product_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "bonus_physical_product",
+          "type": "product_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "monthly_collection_printable_products",
+          "type": "list.product_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "monthly_collection_physical_products",
+          "type": "list.product_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "wallpaper_images",
+          "type": "list.file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "wallpaper_canva_url",
+          "type": "url",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "calendar_pdf",
+          "type": "file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Metaobject/1694891343953",
+      "handle": "romantically-unwell",
+      "type": "sss_drop",
+      "displayName": "romantically unwell",
+      "updatedAt": "2026-04-29T22:16:00Z",
+      "fields": [
+        {
+          "key": "name",
+          "type": "single_line_text_field",
+          "value": "romantically unwell",
+          "jsonValue": "romantically unwell",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "release_date",
+          "type": "date",
+          "value": "2026-01-28",
+          "jsonValue": "2026-01-28",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "end_date",
+          "type": "date",
+          "value": "2026-02-27",
+          "jsonValue": "2026-02-27",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "quote_text",
+          "type": "multi_line_text_field",
+          "value": "romantically unwell. emotionally unavailable. mentally in a book.",
+          "jsonValue": "romantically unwell. emotionally unavailable. mentally in a book.",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_kicker",
+          "type": "single_line_text_field",
+          "value": "from the gram",
+          "jsonValue": "from the gram",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_title",
+          "type": "single_line_text_field",
+          "value": "this belongs on your kindle",
+          "jsonValue": "this belongs on your kindle",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_sub",
+          "type": "multi_line_text_field",
+          "value": "hearts and stuff",
+          "jsonValue": "hearts and stuff",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_image",
+          "type": "file_reference",
+          "value": "gid://shopify/MediaImage/70441404301393",
+          "jsonValue": "gid://shopify/MediaImage/70441404301393",
+          "reference": {
+            "__typename": "MediaImage",
+            "id": "gid://shopify/MediaImage/70441404301393",
+            "image": {
+              "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/InstagramPhoto_1.png?v=1769894514",
+              "altText": "",
+              "width": 1080,
+              "height": 1440
+            }
+          },
+          "references": null
+        },
+        {
+          "key": "gram_caption",
+          "type": "multi_line_text_field",
+          "value": "will you be my valentine?",
+          "jsonValue": "will you be my valentine?",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_accent",
+          "type": "color",
+          "value": "#ff4d8d",
+          "jsonValue": "#ff4d8d",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_pill_bg",
+          "type": "color",
+          "value": "#ffd1e3",
+          "jsonValue": "#ffd1e3",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_pill_ink",
+          "type": "color",
+          "value": "#0b0b0b",
+          "jsonValue": "#0b0b0b",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "trial",
+          "type": "list.metaobject_reference",
+          "value": "[\"gid://shopify/Metaobject/1694922768465\",\"gid://shopify/Metaobject/1694922735697\",\"gid://shopify/Metaobject/1694922702929\",\"gid://shopify/Metaobject/1694922637393\"]",
+          "jsonValue": [
+            "gid://shopify/Metaobject/1694922768465",
+            "gid://shopify/Metaobject/1694922735697",
+            "gid://shopify/Metaobject/1694922702929",
+            "gid://shopify/Metaobject/1694922637393"
+          ],
+          "reference": null,
+          "references": {
+            "nodes": [
+              {
+                "__typename": "Metaobject",
+                "id": "gid://shopify/Metaobject/1694922768465",
+                "handle": "romantically-unwell-clinically",
+                "type": "sss_mood_pill",
+                "displayName": "romantically unwell (clinically)"
+              },
+              {
+                "__typename": "Metaobject",
+                "id": "gid://shopify/Metaobject/1694922735697",
+                "handle": "kissing-scenes-on-sight",
+                "type": "sss_mood_pill",
+                "displayName": "kissing scenes on sight"
+              },
+              {
+                "__typename": "Metaobject",
+                "id": "gid://shopify/Metaobject/1694922702929",
+                "handle": "valentine-i-thought-you-said-villain",
+                "type": "sss_mood_pill",
+                "displayName": "valentine? i thought you said villain."
+              },
+              {
+                "__typename": "Metaobject",
+                "id": "gid://shopify/Metaobject/1694922637393",
+                "handle": "cloudy-with-a-chance-of-delusion",
+                "type": "sss_mood_pill",
+                "displayName": "cloudy with a chance of delusion"
+              }
+            ]
+          }
+        },
+        {
+          "key": "moodboard_title",
+          "type": "single_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "emoji_list",
+          "type": "single_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "spotify_url",
+          "type": "url",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_images",
+          "type": "list.file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_quotes",
+          "type": "list.single_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_stickers",
+          "type": "list.file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "era_images",
+          "type": "list.file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "calendar_image",
+          "type": "file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "pdf_link",
+          "type": "link",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "canva_link",
+          "type": "link",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "journal_start_date",
+          "type": "date",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "prompts",
+          "type": "multi_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "bonus_printable_product",
+          "type": "product_reference",
+          "value": "gid://shopify/Product/15680445087825",
+          "jsonValue": "gid://shopify/Product/15680445087825",
+          "reference": {
+            "__typename": "Product",
+            "id": "gid://shopify/Product/15680445087825",
+            "handle": "lost-in-pages-kindle-insert-printable",
+            "title": "lost in pages - kindle insert (printable)"
+          },
+          "references": null
+        },
+        {
+          "key": "bonus_physical_product",
+          "type": "product_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "monthly_collection_printable_products",
+          "type": "list.product_reference",
+          "value": "[\"gid://shopify/Product/15680376635473\"]",
+          "jsonValue": [
+            "gid://shopify/Product/15680376635473"
+          ],
+          "reference": null,
+          "references": {
+            "nodes": [
+              {
+                "__typename": "Product",
+                "id": "gid://shopify/Product/15680376635473",
+                "handle": "pages-mgm-kindle-insert-printable",
+                "title": "lost in clouds - kindle insert (printable)"
+              }
+            ]
+          }
+        },
+        {
+          "key": "monthly_collection_physical_products",
+          "type": "list.product_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "wallpaper_images",
+          "type": "list.file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "wallpaper_canva_url",
+          "type": "url",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "calendar_pdf",
+          "type": "file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Metaobject/1698301313105",
+      "handle": "slow-burn-spring",
+      "type": "sss_drop",
+      "displayName": "slow burn spring",
+      "updatedAt": "2026-04-29T22:16:00Z",
+      "fields": [
+        {
+          "key": "name",
+          "type": "single_line_text_field",
+          "value": "slow burn spring",
+          "jsonValue": "slow burn spring",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "release_date",
+          "type": "date",
+          "value": "2026-03-01",
+          "jsonValue": "2026-03-01",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "end_date",
+          "type": "date",
+          "value": "2026-03-30",
+          "jsonValue": "2026-03-30",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "quote_text",
+          "type": "multi_line_text_field",
+          "value": "where the books burn with a desire to hold on",
+          "jsonValue": "where the books burn with a desire to hold on",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_kicker",
+          "type": "single_line_text_field",
+          "value": "from the gram",
+          "jsonValue": "from the gram",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_title",
+          "type": "single_line_text_field",
+          "value": "this belongs on your kindle",
+          "jsonValue": "this belongs on your kindle",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_sub",
+          "type": "multi_line_text_field",
+          "value": "we're in our bridgerton era",
+          "jsonValue": "we're in our bridgerton era",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_image",
+          "type": "file_reference",
+          "value": "gid://shopify/MediaImage/70561782431825",
+          "jsonValue": "gid://shopify/MediaImage/70561782431825",
+          "reference": {
+            "__typename": "MediaImage",
+            "id": "gid://shopify/MediaImage/70561782431825",
+            "image": {
+              "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/IMG_0637.heic?v=1771695599",
+              "altText": "",
+              "width": 4284,
+              "height": 5712
+            }
+          },
+          "references": null
+        },
+        {
+          "key": "gram_caption",
+          "type": "multi_line_text_field",
+          "value": "** reminder - kindle is the new clutch",
+          "jsonValue": "** reminder - kindle is the new clutch",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_accent",
+          "type": "color",
+          "value": "#2e2e2e",
+          "jsonValue": "#2e2e2e",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_pill_bg",
+          "type": "color",
+          "value": "#a8b8a0",
+          "jsonValue": "#a8b8a0",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_pill_ink",
+          "type": "color",
+          "value": "#2e2e2e",
+          "jsonValue": "#2e2e2e",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "trial",
+          "type": "list.metaobject_reference",
+          "value": "[\"gid://shopify/Metaobject/1698448703569\",\"gid://shopify/Metaobject/1698448670801\",\"gid://shopify/Metaobject/1698448638033\",\"gid://shopify/Metaobject/1698448605265\"]",
+          "jsonValue": [
+            "gid://shopify/Metaobject/1698448703569",
+            "gid://shopify/Metaobject/1698448670801",
+            "gid://shopify/Metaobject/1698448638033",
+            "gid://shopify/Metaobject/1698448605265"
+          ],
+          "reference": null,
+          "references": {
+            "nodes": [
+              {
+                "__typename": "Metaobject",
+                "id": "gid://shopify/Metaobject/1698448703569",
+                "handle": "blooming-quietly",
+                "type": "sss_mood_pill",
+                "displayName": "blooming quietly"
+              },
+              {
+                "__typename": "Metaobject",
+                "id": "gid://shopify/Metaobject/1698448670801",
+                "handle": "devotion-era",
+                "type": "sss_mood_pill",
+                "displayName": "devotion era"
+              },
+              {
+                "__typename": "Metaobject",
+                "id": "gid://shopify/Metaobject/1698448638033",
+                "handle": "yearning-softly",
+                "type": "sss_mood_pill",
+                "displayName": "yearning softly"
+              },
+              {
+                "__typename": "Metaobject",
+                "id": "gid://shopify/Metaobject/1698448605265",
+                "handle": "slow-burn-only",
+                "type": "sss_mood_pill",
+                "displayName": "slow burn only"
+              }
+            ]
+          }
+        },
+        {
+          "key": "moodboard_title",
+          "type": "single_line_text_field",
+          "value": "we are entering a",
+          "jsonValue": "we are entering a",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "emoji_list",
+          "type": "single_line_text_field",
+          "value": "🌷, 📖",
+          "jsonValue": "🌷, 📖",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "spotify_url",
+          "type": "url",
+          "value": "https://open.spotify.com/playlist/3B8jvFpdXbpmFadxc8W4bq?si=g0JisMGHRYmA4TshRZfUVw&pi=IGKd2IoaQxuCe",
+          "jsonValue": "https://open.spotify.com/playlist/3B8jvFpdXbpmFadxc8W4bq?si=g0JisMGHRYmA4TshRZfUVw&pi=IGKd2IoaQxuCe",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_images",
+          "type": "list.file_reference",
+          "value": "[\"gid://shopify/MediaImage/70593100513361\",\"gid://shopify/MediaImage/70593100480593\",\"gid://shopify/MediaImage/70593100447825\",\"gid://shopify/MediaImage/70593100251217\"]",
+          "jsonValue": [
+            "gid://shopify/MediaImage/70593100513361",
+            "gid://shopify/MediaImage/70593100480593",
+            "gid://shopify/MediaImage/70593100447825",
+            "gid://shopify/MediaImage/70593100251217"
+          ],
+          "reference": null,
+          "references": {
+            "nodes": [
+              {
+                "__typename": "MediaImage",
+                "id": "gid://shopify/MediaImage/70593100513361",
+                "image": {
+                  "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/cutebookstore.png?v=1772297863",
+                  "altText": "",
+                  "width": 1000,
+                  "height": 1500
+                }
+              },
+              {
+                "__typename": "MediaImage",
+                "id": "gid://shopify/MediaImage/70593100480593",
+                "image": {
+                  "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/prettyflowers.png?v=1772297863",
+                  "altText": "",
+                  "width": 1000,
+                  "height": 1500
+                }
+              },
+              {
+                "__typename": "MediaImage",
+                "id": "gid://shopify/MediaImage/70593100447825",
+                "image": {
+                  "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/tulips.png?v=1772297863",
+                  "altText": "",
+                  "width": 1000,
+                  "height": 1500
+                }
+              },
+              {
+                "__typename": "MediaImage",
+                "id": "gid://shopify/MediaImage/70593100251217",
+                "image": {
+                  "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/slowburnquote.png?v=1772297861",
+                  "altText": "",
+                  "width": 1000,
+                  "height": 1500
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "mood_quotes",
+          "type": "list.single_line_text_field",
+          "value": "[\"what is meant to be will be\",\"it was always going to be you\",\"wait for it\"]",
+          "jsonValue": [
+            "what is meant to be will be",
+            "it was always going to be you",
+            "wait for it"
+          ],
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_stickers",
+          "type": "list.file_reference",
+          "value": "[\"gid://shopify/MediaImage/70593100382289\",\"gid://shopify/MediaImage/70593100283985\",\"gid://shopify/MediaImage/70593100349521\"]",
+          "jsonValue": [
+            "gid://shopify/MediaImage/70593100382289",
+            "gid://shopify/MediaImage/70593100283985",
+            "gid://shopify/MediaImage/70593100349521"
+          ],
+          "reference": null,
+          "references": {
+            "nodes": [
+              {
+                "__typename": "MediaImage",
+                "id": "gid://shopify/MediaImage/70593100382289",
+                "image": {
+                  "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/bouquetsticker.png?v=1772297862",
+                  "altText": "",
+                  "width": 1000,
+                  "height": 1500
+                }
+              },
+              {
+                "__typename": "MediaImage",
+                "id": "gid://shopify/MediaImage/70593100283985",
+                "image": {
+                  "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/blossomquote.png?v=1772297861",
+                  "altText": "",
+                  "width": 1000,
+                  "height": 1500
+                }
+              },
+              {
+                "__typename": "MediaImage",
+                "id": "gid://shopify/MediaImage/70593100349521",
+                "image": {
+                  "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/tulipsticker.png?v=1772297862",
+                  "altText": "",
+                  "width": 1000,
+                  "height": 1500
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "era_images",
+          "type": "list.file_reference",
+          "value": "[\"gid://shopify/MediaImage/70593100447825\",\"gid://shopify/MediaImage/70593100283985\",\"gid://shopify/MediaImage/70593100415057\"]",
+          "jsonValue": [
+            "gid://shopify/MediaImage/70593100447825",
+            "gid://shopify/MediaImage/70593100283985",
+            "gid://shopify/MediaImage/70593100415057"
+          ],
+          "reference": null,
+          "references": {
+            "nodes": [
+              {
+                "__typename": "MediaImage",
+                "id": "gid://shopify/MediaImage/70593100447825",
+                "image": {
+                  "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/tulips.png?v=1772297863",
+                  "altText": "",
+                  "width": 1000,
+                  "height": 1500
+                }
+              },
+              {
+                "__typename": "MediaImage",
+                "id": "gid://shopify/MediaImage/70593100283985",
+                "image": {
+                  "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/blossomquote.png?v=1772297861",
+                  "altText": "",
+                  "width": 1000,
+                  "height": 1500
+                }
+              },
+              {
+                "__typename": "MediaImage",
+                "id": "gid://shopify/MediaImage/70593100415057",
+                "image": {
+                  "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/cutebike.png?v=1772297863",
+                  "altText": "",
+                  "width": 1000,
+                  "height": 1500
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "calendar_image",
+          "type": "file_reference",
+          "value": "gid://shopify/MediaImage/70560567689297",
+          "jsonValue": "gid://shopify/MediaImage/70560567689297",
+          "reference": {
+            "__typename": "MediaImage",
+            "id": "gid://shopify/MediaImage/70560567689297",
+            "image": {
+              "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/March2026.png?v=1771643410",
+              "altText": "",
+              "width": 1999,
+              "height": 1545
+            }
+          },
+          "references": null
+        },
+        {
+          "key": "pdf_link",
+          "type": "link",
+          "value": "{\"text\":\"\",\"url\":\"https://www.dropbox.com/scl/fi/ef837yg7d16pyl89wfhq8/March2026.pdf?rlkey=h5igelk1skx3f2jsbohdjywlu&st=l2oekstl&dl=0\"}",
+          "jsonValue": {
+            "text": "",
+            "url": "https://www.dropbox.com/scl/fi/ef837yg7d16pyl89wfhq8/March2026.pdf?rlkey=h5igelk1skx3f2jsbohdjywlu&st=l2oekstl&dl=0"
+          },
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "canva_link",
+          "type": "link",
+          "value": "{\"text\":\"\",\"url\":\"https://www.canva.com/design/DAHBu7i8E08/tRjXebKy2mdPyCYto5OJwg/view?utm_content=DAHBu7i8E08&utm_campaign=designshare&utm_medium=link&utm_source=publishsharelink&mode=preview\"}",
+          "jsonValue": {
+            "text": "",
+            "url": "https://www.canva.com/design/DAHBu7i8E08/tRjXebKy2mdPyCYto5OJwg/view?utm_content=DAHBu7i8E08&utm_campaign=designshare&utm_medium=link&utm_source=publishsharelink&mode=preview"
+          },
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "journal_start_date",
+          "type": "date",
+          "value": "2026-03-01",
+          "jsonValue": "2026-03-01",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "prompts",
+          "type": "multi_line_text_field",
+          "value": "What version of me am I becoming - and is it someone I actually like? ||\nWhere in my life am I settling out of fear instead of choosing out of desire? ||\nWhat does “success” mean to me if no one is watching? ||\nWhat am I holding onto that I’ve already outgrown? ||\nIf I trusted myself completely, what decision would I make right now? ||\nWhat patterns keep repeating in my relationships, and what are they trying to teach me? ||\nWhat does my ideal ordinary day look like - not the highlight reel, just a Tuesday? ||\nWhere am I performing instead of being authentic? ||\nWhat would change if I stopped trying to be impressive and focused on being fulfilled? ||\nWhat boundaries do I need to set to protect the woman I’m becoming? ||\nWho do I become when I’m alone - and do I feel at peace with her? ||\nWhat kind of love am I truly available for right now? ||\nWhat am I avoiding because it requires discomfort to grow? ||\nIf my 16-year-old self saw my life today, what would she be proud of? ||\nWhat financial, emotional, or physical habits would future me thank me for building now? ||\nWhat does rest look like for me when it isn’t earned? ||\nWhere in my life do I need more softness? ||\nIf this season of my life were a book, what would this chapter be called? ||\nWhat kind of main character energy am I embodying - and is it aligned with my values? ||\nWhat fears are disguised as “logic” in my decision-making? ||\nWho inspires me deeply - and what qualities do they reflect back to me about myself? ||\nIf I stopped chasing validation, what would I start building instead? ||\nWhat parts of myself only come out around certain people - and why? ||\nIf my life were a romance novel, what trope am I living right now? ||\nWhat would it look like to choose myself unapologetically this year? ||\nWhat do I crave more of - intimacy, adventure, stability, recognition - and why? ||\nWhat story about myself am I ready to rewrite? ||\nWhat does emotional safety mean to me? ||\nIf I could design my dream life five years from now, what would it feel like on a random Sunday morning? ||\nWhat am I romanticizing that may not actually be good for me? ||\nIf I treated my life like a sacred manuscript, what would I edit out - and what would I expand?",
+          "jsonValue": "What version of me am I becoming - and is it someone I actually like? ||\nWhere in my life am I settling out of fear instead of choosing out of desire? ||\nWhat does “success” mean to me if no one is watching? ||\nWhat am I holding onto that I’ve already outgrown? ||\nIf I trusted myself completely, what decision would I make right now? ||\nWhat patterns keep repeating in my relationships, and what are they trying to teach me? ||\nWhat does my ideal ordinary day look like - not the highlight reel, just a Tuesday? ||\nWhere am I performing instead of being authentic? ||\nWhat would change if I stopped trying to be impressive and focused on being fulfilled? ||\nWhat boundaries do I need to set to protect the woman I’m becoming? ||\nWho do I become when I’m alone - and do I feel at peace with her? ||\nWhat kind of love am I truly available for right now? ||\nWhat am I avoiding because it requires discomfort to grow? ||\nIf my 16-year-old self saw my life today, what would she be proud of? ||\nWhat financial, emotional, or physical habits would future me thank me for building now? ||\nWhat does rest look like for me when it isn’t earned? ||\nWhere in my life do I need more softness? ||\nIf this season of my life were a book, what would this chapter be called? ||\nWhat kind of main character energy am I embodying - and is it aligned with my values? ||\nWhat fears are disguised as “logic” in my decision-making? ||\nWho inspires me deeply - and what qualities do they reflect back to me about myself? ||\nIf I stopped chasing validation, what would I start building instead? ||\nWhat parts of myself only come out around certain people - and why? ||\nIf my life were a romance novel, what trope am I living right now? ||\nWhat would it look like to choose myself unapologetically this year? ||\nWhat do I crave more of - intimacy, adventure, stability, recognition - and why? ||\nWhat story about myself am I ready to rewrite? ||\nWhat does emotional safety mean to me? ||\nIf I could design my dream life five years from now, what would it feel like on a random Sunday morning? ||\nWhat am I romanticizing that may not actually be good for me? ||\nIf I treated my life like a sacred manuscript, what would I edit out - and what would I expand?",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "bonus_printable_product",
+          "type": "product_reference",
+          "value": "gid://shopify/Product/15702667296849",
+          "jsonValue": "gid://shopify/Product/15702667296849",
+          "reference": {
+            "__typename": "Product",
+            "id": "gid://shopify/Product/15702667296849",
+            "handle": "slow-burn-spring-kindle-insert-printable-1",
+            "title": "spring collage - kindle insert (printable)"
+          },
+          "references": null
+        },
+        {
+          "key": "bonus_physical_product",
+          "type": "product_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "monthly_collection_printable_products",
+          "type": "list.product_reference",
+          "value": "[\"gid://shopify/Product/15702661333073\"]",
+          "jsonValue": [
+            "gid://shopify/Product/15702661333073"
+          ],
+          "reference": null,
+          "references": {
+            "nodes": [
+              {
+                "__typename": "Product",
+                "id": "gid://shopify/Product/15702661333073",
+                "handle": "slow-burn-spring-kindle-insert-printable",
+                "title": "slow burn spring - kindle insert (printable)"
+              }
+            ]
+          }
+        },
+        {
+          "key": "monthly_collection_physical_products",
+          "type": "list.product_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "wallpaper_images",
+          "type": "list.file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "wallpaper_canva_url",
+          "type": "url",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "calendar_pdf",
+          "type": "file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Metaobject/1720998985809",
+      "handle": "gothic-lace",
+      "type": "sss_drop",
+      "displayName": "gothic lace",
+      "updatedAt": "2026-05-01T22:12:20Z",
+      "fields": [
+        {
+          "key": "name",
+          "type": "single_line_text_field",
+          "value": "gothic lace",
+          "jsonValue": "gothic lace",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "release_date",
+          "type": "date",
+          "value": "2026-05-01",
+          "jsonValue": "2026-05-01",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "end_date",
+          "type": "date",
+          "value": "2026-05-31",
+          "jsonValue": "2026-05-31",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "quote_text",
+          "type": "multi_line_text_field",
+          "value": "he said he'd ruin me and i said please.",
+          "jsonValue": "he said he'd ruin me and i said please.",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_kicker",
+          "type": "single_line_text_field",
+          "value": "how we are entering may",
+          "jsonValue": "how we are entering may",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_title",
+          "type": "single_line_text_field",
+          "value": "snap me",
+          "jsonValue": "snap me",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_sub",
+          "type": "multi_line_text_field",
+          "value": "this belongs on your kindle",
+          "jsonValue": "this belongs on your kindle",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "gram_image",
+          "type": "file_reference",
+          "value": "gid://shopify/MediaImage/70996116996177",
+          "jsonValue": "gid://shopify/MediaImage/70996116996177",
+          "reference": {
+            "__typename": "MediaImage",
+            "id": "gid://shopify/MediaImage/70996116996177",
+            "image": {
+              "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/IMG_0853.heic?v=1777559513",
+              "altText": "",
+              "width": 4284,
+              "height": 5712
+            }
+          },
+          "references": null
+        },
+        {
+          "key": "gram_caption",
+          "type": "multi_line_text_field",
+          "value": "in our gothic chic era",
+          "jsonValue": "in our gothic chic era",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_accent",
+          "type": "color",
+          "value": "#979998",
+          "jsonValue": "#979998",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_pill_bg",
+          "type": "color",
+          "value": "#000000",
+          "jsonValue": "#000000",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_pill_ink",
+          "type": "color",
+          "value": "#ffffff",
+          "jsonValue": "#ffffff",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "trial",
+          "type": "list.metaobject_reference",
+          "value": "[\"gid://shopify/Metaobject/1721302712401\",\"gid://shopify/Metaobject/1721302679633\",\"gid://shopify/Metaobject/1721302548561\",\"gid://shopify/Metaobject/1721302581329\"]",
+          "jsonValue": [
+            "gid://shopify/Metaobject/1721302712401",
+            "gid://shopify/Metaobject/1721302679633",
+            "gid://shopify/Metaobject/1721302548561",
+            "gid://shopify/Metaobject/1721302581329"
+          ],
+          "reference": null,
+          "references": {
+            "nodes": [
+              {
+                "__typename": "Metaobject",
+                "id": "gid://shopify/Metaobject/1721302712401",
+                "handle": "obsessed",
+                "type": "sss_mood_pill",
+                "displayName": "obsessed"
+              },
+              {
+                "__typename": "Metaobject",
+                "id": "gid://shopify/Metaobject/1721302679633",
+                "handle": "unraveling",
+                "type": "sss_mood_pill",
+                "displayName": "unraveling"
+              },
+              {
+                "__typename": "Metaobject",
+                "id": "gid://shopify/Metaobject/1721302548561",
+                "handle": "haunted",
+                "type": "sss_mood_pill",
+                "displayName": "haunted"
+              },
+              {
+                "__typename": "Metaobject",
+                "id": "gid://shopify/Metaobject/1721302581329",
+                "handle": "tender",
+                "type": "sss_mood_pill",
+                "displayName": "tender"
+              }
+            ]
+          }
+        },
+        {
+          "key": "moodboard_title",
+          "type": "single_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "emoji_list",
+          "type": "single_line_text_field",
+          "value": "🕯️,🖤",
+          "jsonValue": "🕯️,🖤",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "spotify_url",
+          "type": "url",
+          "value": "https://open.spotify.com/playlist/4971up4lXOb3X5ZSvJ4nJQ?si=Plvtayj6R4SHWQ2AtFEP1w&pi=g71b2M5-TaaJN",
+          "jsonValue": "https://open.spotify.com/playlist/4971up4lXOb3X5ZSvJ4nJQ?si=Plvtayj6R4SHWQ2AtFEP1w&pi=g71b2M5-TaaJN",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_images",
+          "type": "list.file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_quotes",
+          "type": "list.single_line_text_field",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "mood_stickers",
+          "type": "list.file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "era_images",
+          "type": "list.file_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "calendar_image",
+          "type": "file_reference",
+          "value": "gid://shopify/MediaImage/70980997120081",
+          "jsonValue": "gid://shopify/MediaImage/70980997120081",
+          "reference": {
+            "__typename": "MediaImage",
+            "id": "gid://shopify/MediaImage/70980997120081",
+            "image": {
+              "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/May2026.png?v=1777421101",
+              "altText": "",
+              "width": 1500,
+              "height": 1159
+            }
+          },
+          "references": null
+        },
+        {
+          "key": "pdf_link",
+          "type": "link",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "canva_link",
+          "type": "link",
+          "value": "{\"text\":\"\",\"url\":\"https://canva.link/ye0hc1vgoxjn7n4\"}",
+          "jsonValue": {
+            "text": "",
+            "url": "https://canva.link/ye0hc1vgoxjn7n4"
+          },
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "journal_start_date",
+          "type": "date",
+          "value": "2026-05-01",
+          "jsonValue": "2026-05-01",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "prompts",
+          "type": "multi_line_text_field",
+          "value": "What beauty am I only now learning to see in things that are broken? ||\nWhat would I do differently if I stopped being afraid of being too much? ||\nWhat does devotion look like when it isn't being performed for anyone? ||\nWhere in my life am I wearing a mask I've forgotten isn't my face? ||\nWhat would I fight for, even if I lost? ||\nWhat feeling have I been dressing up as something more acceptable? ||\nIf my heart were a locked room, what would someone find inside it? ||\nWhat am I grieving that I never got to call a loss? ||\nWhere do I feel most like myself — and how often do I go there? ||\nWhat story am I telling myself that might not be true anymore? ||\nWhat does it mean to love something that was never fully mine? ||\nIf I could be ruthlessly honest about one thing today, what would it be? ||\nWhat part of me is still waiting for permission to exist? ||\nWhat have I survived that I haven't given myself credit for? ||\nWhere does tenderness still live in me, even after everything? ||\nWhat am I drawn to in fiction that I'm afraid to want in real life? ||\nWhat would change if I stopped shrinking to make others comfortable? ||\nWhat feeling do I keep mistaking for weakness that might actually be depth? ||\nWhere am I still punishing myself for something that deserves forgiveness? ||\nWhat does it feel like to want something with no guarantee of getting it? ||\nWhat version of me existed before I learned to be careful? ||\nIf love were a place, what would mine look like right now? ||\nWhat am I protecting myself from that I might actually be ready for? ||\nWhat do I need to say out loud before I can finally let it go? ||\nWhere in my body do I carry the things I haven't said yet? ||\nWhat would it feel like to be chosen, slowly and on purpose? ||\nWhat chapter of my life do I keep rereading instead of turning the page? ||\nWhat do I secretly hope someone notices about me? ||\nIf this season of my life had a scent, a sound, a color — what would they be? ||\nWhat am I becoming, even on the days it doesn't feel like it? ||\nWhat did may ask of me — and did I answer? ||",
+          "jsonValue": "What beauty am I only now learning to see in things that are broken? ||\nWhat would I do differently if I stopped being afraid of being too much? ||\nWhat does devotion look like when it isn't being performed for anyone? ||\nWhere in my life am I wearing a mask I've forgotten isn't my face? ||\nWhat would I fight for, even if I lost? ||\nWhat feeling have I been dressing up as something more acceptable? ||\nIf my heart were a locked room, what would someone find inside it? ||\nWhat am I grieving that I never got to call a loss? ||\nWhere do I feel most like myself — and how often do I go there? ||\nWhat story am I telling myself that might not be true anymore? ||\nWhat does it mean to love something that was never fully mine? ||\nIf I could be ruthlessly honest about one thing today, what would it be? ||\nWhat part of me is still waiting for permission to exist? ||\nWhat have I survived that I haven't given myself credit for? ||\nWhere does tenderness still live in me, even after everything? ||\nWhat am I drawn to in fiction that I'm afraid to want in real life? ||\nWhat would change if I stopped shrinking to make others comfortable? ||\nWhat feeling do I keep mistaking for weakness that might actually be depth? ||\nWhere am I still punishing myself for something that deserves forgiveness? ||\nWhat does it feel like to want something with no guarantee of getting it? ||\nWhat version of me existed before I learned to be careful? ||\nIf love were a place, what would mine look like right now? ||\nWhat am I protecting myself from that I might actually be ready for? ||\nWhat do I need to say out loud before I can finally let it go? ||\nWhere in my body do I carry the things I haven't said yet? ||\nWhat would it feel like to be chosen, slowly and on purpose? ||\nWhat chapter of my life do I keep rereading instead of turning the page? ||\nWhat do I secretly hope someone notices about me? ||\nIf this season of my life had a scent, a sound, a color — what would they be? ||\nWhat am I becoming, even on the days it doesn't feel like it? ||\nWhat did may ask of me — and did I answer? ||",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "bonus_printable_product",
+          "type": "product_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "bonus_physical_product",
+          "type": "product_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "monthly_collection_printable_products",
+          "type": "list.product_reference",
+          "value": "[\"gid://shopify/Product/15779384066129\",\"gid://shopify/Product/15779407462481\",\"gid://shopify/Product/15779419062353\",\"gid://shopify/Product/15779396943953\"]",
+          "jsonValue": [
+            "gid://shopify/Product/15779384066129",
+            "gid://shopify/Product/15779407462481",
+            "gid://shopify/Product/15779419062353",
+            "gid://shopify/Product/15779396943953"
+          ],
+          "reference": null,
+          "references": {
+            "nodes": [
+              {
+                "__typename": "Product",
+                "id": "gid://shopify/Product/15779384066129",
+                "handle": "beautiful-ruin-kindle-insert-printable",
+                "title": "beautiful ruin — printable kindle insert"
+              },
+              {
+                "__typename": "Product",
+                "id": "gid://shopify/Product/15779407462481",
+                "handle": "lace-fog-printable-kindle-insert",
+                "title": "lace & fog — printable kindle insert"
+              },
+              {
+                "__typename": "Product",
+                "id": "gid://shopify/Product/15779419062353",
+                "handle": "old-romantic-printable-kindle-insert",
+                "title": "old romantic — printable kindle insert"
+              },
+              {
+                "__typename": "Product",
+                "id": "gid://shopify/Product/15779396943953",
+                "handle": "darling-its-forever-printable-kindle-insert",
+                "title": "darling it's forever — printable kindle insert"
+              }
+            ]
+          }
+        },
+        {
+          "key": "monthly_collection_physical_products",
+          "type": "list.product_reference",
+          "value": null,
+          "jsonValue": null,
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "wallpaper_images",
+          "type": "list.file_reference",
+          "value": "[\"gid://shopify/MediaImage/70995845906513\",\"gid://shopify/MediaImage/70995846004817\",\"gid://shopify/MediaImage/70995845972049\",\"gid://shopify/MediaImage/70995845939281\"]",
+          "jsonValue": [
+            "gid://shopify/MediaImage/70995845906513",
+            "gid://shopify/MediaImage/70995846004817",
+            "gid://shopify/MediaImage/70995845972049",
+            "gid://shopify/MediaImage/70995845939281"
+          ],
+          "reference": null,
+          "references": {
+            "nodes": [
+              {
+                "__typename": "MediaImage",
+                "id": "gid://shopify/MediaImage/70995845906513",
+                "image": {
+                  "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/Wallpaper_Design_OldRomantic300.png?v=1777557602",
+                  "altText": "",
+                  "width": 1080,
+                  "height": 1920
+                }
+              },
+              {
+                "__typename": "MediaImage",
+                "id": "gid://shopify/MediaImage/70995846004817",
+                "image": {
+                  "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/Wallpaper_Design_BeautifulRuin300.png?v=1777557602",
+                  "altText": "",
+                  "width": 1080,
+                  "height": 1920
+                }
+              },
+              {
+                "__typename": "MediaImage",
+                "id": "gid://shopify/MediaImage/70995845972049",
+                "image": {
+                  "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/Wallpaper_Design_DarlingItsForever300.png?v=1777557602",
+                  "altText": "",
+                  "width": 1080,
+                  "height": 1920
+                }
+              },
+              {
+                "__typename": "MediaImage",
+                "id": "gid://shopify/MediaImage/70995845939281",
+                "image": {
+                  "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/Wallpaper_Design_Lace_Fog300.png?v=1777557602",
+                  "altText": "",
+                  "width": 1080,
+                  "height": 1920
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "wallpaper_canva_url",
+          "type": "url",
+          "value": "https://canva.link/r2vvam57xsw9g4i",
+          "jsonValue": "https://canva.link/r2vvam57xsw9g4i",
+          "reference": null,
+          "references": null
+        },
+        {
+          "key": "calendar_pdf",
+          "type": "file_reference",
+          "value": "gid://shopify/GenericFile/70989695909969",
+          "jsonValue": "gid://shopify/GenericFile/70989695909969",
+          "reference": {
+            "__typename": "GenericFile",
+            "id": "gid://shopify/GenericFile/70989695909969",
+            "url": "https://cdn.shopify.com/s/files/1/0633/4968/6353/files/May2026.pdf?v=1777500789"
+          },
+          "references": null
+        }
+      ]
+    }
+  ]
+}
