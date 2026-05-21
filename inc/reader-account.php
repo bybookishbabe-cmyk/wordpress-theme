@@ -314,14 +314,20 @@ function bbb_reader_fetch_subscriber_by_email(string $email) {
 		'GET',
 		'bookshelf_subscribers',
 		array(
-			'select'           => 'email_normalized,access_tier,society_key_used_at',
-			'email_normalized' => 'eq.' . $email,
-			'limit'            => 1,
+			'select' => 'email,email_normalized,customer_email,access_tier,society_key_used_at',
+			'or'     => sprintf('(email_normalized.eq.%1$s,email.eq.%1$s,customer_email.eq.%1$s)', $email),
+			'limit'  => 10,
 		)
 	);
 
 	if (is_wp_error($rows)) {
 		return $rows;
+	}
+
+	foreach ((array) $rows as $row) {
+		if (is_array($row) && bbb_reader_subscriber_has_society_access($row)) {
+			return $row;
+		}
 	}
 
 	return isset($rows[0]) && is_array($rows[0]) ? $rows[0] : null;

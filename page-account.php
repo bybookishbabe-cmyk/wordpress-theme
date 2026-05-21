@@ -16,12 +16,13 @@ $user         = isset($identity['user']) && $identity['user'] instanceof WP_User
 $reader_email = $identity ? (string) ($identity['email'] ?? '') : '';
 $reader_user_id = $identity ? (int) ($identity['userId'] ?? 0) : 0;
 $has_reader_access = '' !== $reader_email;
-$is_society   = ($has_reader_access && function_exists('bbb_reader_access_tier_for_email') && 'society' === bbb_reader_access_tier_for_email($reader_email, $reader_user_id));
 $account_data = ($has_reader_access && function_exists('bbb_reader_account_response_for_identity'))
 	? bbb_reader_account_response_for_identity((array) $identity)
 	: array();
 $books        = isset($account_data['books']) && is_array($account_data['books']) ? $account_data['books'] : array();
-$tier         = $is_society ? 'society' : (string) ($account_data['accessTier'] ?? 'free');
+$tier         = (string) ($account_data['accessTier'] ?? 'free');
+$is_society   = 'society' === $tier || (function_exists('bbb_reader_is_society') && bbb_reader_is_society());
+$tier         = $is_society ? 'society' : $tier;
 $display_name = ($identity && '' !== trim((string) ($identity['displayName'] ?? ''))) ? (string) $identity['displayName'] : 'reader';
 $tier_label   = 'society' === $tier ? 'tier: paid society member' : ($has_reader_access ? 'tier: free reader member' : 'tier: visitor');
 $account_url  = function_exists('bbb_page_url') ? bbb_page_url('account') : home_url('/account/');
