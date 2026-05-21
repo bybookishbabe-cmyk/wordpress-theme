@@ -44,8 +44,16 @@ if (!function_exists('bbb_shop_download_image')) {
 
 if (!function_exists('bbb_shop_download_price')) {
 	function bbb_shop_download_price(int $post_id): string {
-		if (function_exists('edd_price')) {
-			return (string) edd_price($post_id, false);
+		if (function_exists('edd_get_download_price')) {
+			$price = edd_get_download_price($post_id);
+			if (function_exists('edd_format_amount')) {
+				$price = edd_format_amount($price);
+			}
+			if (function_exists('edd_currency_filter')) {
+				$price = edd_currency_filter($price);
+			}
+
+			return wp_strip_all_tags((string) $price);
 		}
 
 		$price = (string) get_post_meta($post_id, '_regular_price', true);
@@ -211,6 +219,7 @@ $sections = array(
 											array(
 												'download_id' => $post_id,
 												'text'        => $is_free ? 'download free' : 'add to cart',
+												'price'       => false,
 												'class'       => 'bbb-shop-card__button',
 												'style'       => 'button',
 											)

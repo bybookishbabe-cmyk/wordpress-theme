@@ -1,0 +1,256 @@
+.bbb-checkout {
+  --checkout-bg: #050505;
+  --checkout-panel: #0d0d0d;
+  --checkout-panel-soft: #151515;
+  --checkout-ink: #f6f1eb;
+  --checkout-muted: rgba(246, 241, 235, 0.68);
+  --checkout-dim: rgba(246, 241, 235, 0.42);
+  --checkout-line: rgba(246, 241, 235, 0.14);
+  --checkout-pink: #ff8ac7;
+  --checkout-pink-soft: rgba(255, 138, 199, 0.14);
+  min-height: 100vh;
+  background: var(--checkout-bg);
+  color: var(--checkout-ink);
+  text-transform: lowercase;
+}
+
+.bbb-checkout__hero {
+  padding: clamp(54px, 7vw, 92px) 20px 30px;
+  border-bottom: 1px solid var(--checkout-line);
+  background:
+    radial-gradient(circle at 80% 0%, rgba(255, 138, 199, 0.12), transparent 30rem),
+    linear-gradient(180deg, #050505 0%, #0a0a0a 100%);
+}
+
+.bbb-checkout__inner,
+.bbb-checkout__body {
+  width: min(1040px, calc(100vw - 32px));
+  margin: 0 auto;
+}
+
+.bbb-checkout__inner {
+  display: grid;
+  gap: 12px;
+}
+
+.bbb-checkout__kicker {
+  margin: 0;
+  color: var(--checkout-pink);
+  font: 800 12px/1.2 Assistant, system-ui, sans-serif;
+  letter-spacing: 0;
+}
+
+.bbb-checkout h1,
+.bbb-checkout h2,
+.bbb-checkout h3,
+.bbb-checkout legend {
+  margin: 0;
+  color: var(--checkout-ink);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: lowercase;
+}
+
+.bbb-checkout h1 {
+  font-size: clamp(48px, 7vw, 86px);
+  line-height: 0.92;
+}
+
+.bbb-checkout__inner p {
+  max-width: 620px;
+  margin: 0;
+  color: var(--checkout-muted);
+  font: 500 17px/1.65 Assistant, system-ui, sans-serif;
+}
+
+.bbb-checkout__body {
+  padding: 34px 0 76px;
+}
+
+.bbb-checkout__panel {
+  overflow: hidden;
+  border: 1px solid var(--checkout-line);
+  border-radius: 8px;
+  background: var(--checkout-panel);
+}
+
+.bbb-checkout .edd-blocks__checkout,
+.bbb-checkout #edd_checkout_form_wrap,
+.bbb-checkout #edd_checkout_cart_form,
+.bbb-checkout #edd_purchase_form,
+.bbb-checkout .edd_purchase_submit_wrapper {
+  color: var(--checkout-ink);
+  font-family: Assistant, system-ui, sans-serif;
+  text-transform: lowercase;
+}
+
+.bbb-checkout #edd_checkout_cart,
+.bbb-checkout #edd_checkout_cart th,
+.bbb-checkout #edd_checkout_cart td {
+  border-color: var(--checkout-line);
+}
+
+.bbb-checkout #edd_checkout_cart {
+  width: 100%;
+  margin: 0;
+  border-width: 0 0 1px;
+  background: transparent;
+}
+
+.bbb-checkout #edd_checkout_cart th,
+.bbb-checkout #edd_checkout_cart td {
+  padding: 18px;
+  color: var(--checkout-ink);
+  background: transparent;
+  font: 800 15px/1.35 Assistant, system-ui, sans-serif;
+  text-align: left;
+}
+
+.bbb-checkout #edd_checkout_cart .edd_cart_header_row th {
+  color: var(--checkout-muted);
+  font-size: 13px;
+}
+
+.bbb-checkout #edd_checkout_cart .edd_cart_item_name img {
+  width: 44px;
+  height: 44px;
+  margin-right: 12px;
+  border-radius: 4px;
+  object-fit: cover;
+  vertical-align: middle;
+}
+
+.bbb-checkout #edd_checkout_cart .edd_cart_item_price,
+.bbb-checkout #edd_checkout_cart .edd_cart_total {
+  text-align: right;
+}
+
+.bbb-checkout #edd_checkout_form_wrap {
+  padding: 26px 18px 28px;
+}
+
+.bbb-checkout #edd_checkout_user_info,
+.bbb-checkout #edd_cc_fields,
+.bbb-checkout #edd_register_account_fields,
+.bbb-checkout #edd_discount_code,
+.bbb-checkout #edd_final_total_wrap,
+.bbb-checkout #edd_checkout_form_wrap fieldset {
+  margin: 0 0 22px;
+  padding: 22px;
+  border: 1px solid var(--checkout-line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.bbb-checkout #edd_checkout_form_wrap legend,
+.bbb-checkout #edd_checkout_form_wrap fieldset > span:first-child {
+  display: inline-flex;
+  margin: 0 0 16px;
+  color: var(--checkout-ink);
+  font-size: clamp(26px, 3vw, 34px);
+  line-height: 1;
+}
+
+.bbb-checkout #edd_checkout_form_wrap p {
+  margin: 0 0 14px;
+}
+
+.bbb-checkout #edd_checkout_form_wrap label {
+  display: block;
+  margin: 0 0 7px;
+  color: var(--checkout-muted);
+  font: 800 13px/1.2 Assistant, system-ui, sans-serif;
+}
+
+.bbb-checkout #edd_checkout_form_wrap .edd-description {
+  display: block;
+  margin-top: 7px;
+  color: var(--checkout-dim);
+  font: 600 12px/1.5 Assistant, system-ui, sans-serif;
+}
+
+.bbb-checkout input[type="text"],
+.bbb-checkout input[type="email"],
+.bbb-checkout input[type="password"],
+.bbb-checkout input[type="tel"],
+.bbb-checkout select,
+.bbb-checkout textarea {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid rgba(246, 241, 235, 0.24);
+  border-radius: 4px;
+  background: #f6f1eb;
+  color: #080808;
+  font: 700 15px/1.2 Assistant, system-ui, sans-serif;
+}
+
+.bbb-checkout input:focus,
+.bbb-checkout select:focus,
+.bbb-checkout textarea:focus {
+  border-color: var(--checkout-pink);
+  box-shadow: 0 0 0 3px rgba(255, 138, 199, 0.22);
+  outline: none;
+}
+
+.bbb-checkout .edd-submit,
+.bbb-checkout input[type="submit"],
+.bbb-checkout button,
+.bbb-checkout .button {
+  min-height: 46px;
+  border: 1px solid var(--checkout-pink);
+  border-radius: 4px;
+  background: var(--checkout-pink);
+  color: #080808;
+  font: 900 13px/1 Assistant, system-ui, sans-serif;
+  text-transform: lowercase;
+}
+
+.bbb-checkout #edd_purchase_submit {
+  margin-top: 8px;
+}
+
+.bbb-checkout #edd_purchase_submit .edd-submit {
+  width: 100%;
+}
+
+.bbb-checkout .edd_errors,
+.bbb-checkout .edd-alert,
+.bbb-checkout .edd_error,
+.bbb-checkout #edd_checkout_form_wrap .edd_errors {
+  margin: 0;
+  padding: 16px 18px;
+  border: 1px solid rgba(255, 138, 199, 0.38);
+  background: rgba(255, 138, 199, 0.12);
+  color: var(--checkout-ink);
+  font: 800 14px/1.45 Assistant, system-ui, sans-serif;
+}
+
+.bbb-checkout a {
+  color: var(--checkout-pink);
+  text-underline-offset: 0.18em;
+}
+
+@media (max-width: 700px) {
+  .bbb-checkout__panel {
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+  }
+
+  .bbb-checkout #edd_checkout_cart th,
+  .bbb-checkout #edd_checkout_cart td,
+  .bbb-checkout #edd_checkout_form_wrap {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .bbb-checkout #edd_checkout_user_info,
+  .bbb-checkout #edd_cc_fields,
+  .bbb-checkout #edd_register_account_fields,
+  .bbb-checkout #edd_discount_code,
+  .bbb-checkout #edd_final_total_wrap,
+  .bbb-checkout #edd_checkout_form_wrap fieldset {
+    padding: 18px 14px;
+  }
+}

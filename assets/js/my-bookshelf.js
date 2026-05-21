@@ -204,6 +204,18 @@
     '</button>';
   }
 
+  function renderLaneBook(book) {
+    var cover = book.cover
+      ? '<img src="' + esc(book.cover) + '" alt="' + esc(book.title) + '" loading="lazy">'
+      : '<span aria-hidden="true">' + esc((book.title || 'book').charAt(0)) + '</span>';
+
+    return '<button type="button" class="bbb-account-shelf__laneBook" ' + attrs(book) + '>' +
+      '<span class="bbb-account-shelf__laneCover">' + cover + '</span>' +
+      '<span class="bbb-account-shelf__laneTitle">' + esc(book.title) + '</span>' +
+      (book.author ? '<span class="bbb-account-shelf__laneAuthor">' + esc(book.author) + '</span>' : '') +
+    '</button>';
+  }
+
   function listText(books) {
     if (!books.length) return '';
     return 'my society reading list\n\n' + books.map(function (book, index) {
@@ -311,7 +323,7 @@
       }) || quotes[0] || null;
     }
 
-    function readBooksFromStatuses(books) {
+    function booksFromStatus(books, wantedStatus, limit) {
       var statuses = getBookStatuses();
       var keyedBooks = {};
 
@@ -323,12 +335,35 @@
       });
 
       return Object.keys(statuses).filter(function (key) {
-        return statuses[key] === 'read';
+        return statuses[key] === wantedStatus;
       }).map(function (key) {
         return keyedBooks[key] || lookup[key] || null;
       }).filter(function (book) {
         return book && book.title;
-      }).slice(0, 7);
+      }).slice(0, limit || 7);
+    }
+
+    function readBooksFromStatuses(books) {
+      return booksFromStatus(books, 'read', 7);
+    }
+
+    function renderStatusLanes(books) {
+      ['read', 'reading', 'tbr'].forEach(function (statusName) {
+        var lane = root.querySelector('[data-account-status-lane="' + statusName + '"]');
+        var row = root.querySelector('[data-account-status-books="' + statusName + '"]');
+        var countEl = root.querySelector('[data-account-status-count="' + statusName + '"]');
+        if (!lane || !row) return;
+
+        var laneBooks = booksFromStatus(books, statusName, 8);
+        lane.classList.toggle('is-empty', !laneBooks.length);
+        row.innerHTML = laneBooks.length
+          ? laneBooks.map(renderLaneBook).join('')
+          : '<div class="bbb-account-shelf__laneEmpty">' + (statusName === 'read' ? 'finished books will stack here.' : statusName === 'reading' ? 'your current read will live here.' : 'your tbr pile will collect here.') + '</div>';
+
+        if (countEl) {
+          countEl.textContent = laneBooks.length + (laneBooks.length === 1 ? ' book' : ' books');
+        }
+      });
     }
 
     function renderReadFeature(books) {
@@ -351,7 +386,7 @@
       }
 
       if (quoteText && quote) {
-        quoteText.textContent = '"' + String(quote.text || '').replace(/^"+|"+$/g, '') + '"';
+        quoteText.innerHTML = '<span>' + esc('"' + String(quote.text || '').replace(/^"+|"+$/g, '') + '"') + '</span>';
       }
 
       if (quoteSource) {
@@ -364,6 +399,7 @@
     function render(books) {
       current = books;
       renderReadFeature(books);
+      renderStatusLanes(books);
       if (!grid || !empty) return;
       if (!books.length) {
         grid.innerHTML = '';

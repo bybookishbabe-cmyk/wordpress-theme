@@ -141,6 +141,34 @@ get_header();
 				</a>
 			</div>
 
+			<div class="bbb-account-shelf__lanes" data-account-shelf-lanes>
+				<article class="bbb-account-shelf__lane bbb-account-shelf__lane--read" data-account-status-lane="read">
+					<div class="bbb-account-shelf__laneHead">
+						<p>finished</p>
+						<span data-account-status-count="read">0 books</span>
+					</div>
+					<div class="bbb-account-shelf__laneBooks" data-account-status-books="read"></div>
+				</article>
+				<article class="bbb-account-shelf__lane bbb-account-shelf__lane--reading" data-account-status-lane="reading">
+					<div class="bbb-account-shelf__laneHead">
+						<p>reading now</p>
+						<span data-account-status-count="reading">0 books</span>
+					</div>
+					<div class="bbb-account-shelf__laneBooks" data-account-status-books="reading"></div>
+				</article>
+				<article class="bbb-account-shelf__lane bbb-account-shelf__lane--tbr" data-account-status-lane="tbr">
+					<div class="bbb-account-shelf__laneHead">
+						<p>on the tbr</p>
+						<span data-account-status-count="tbr">0 books</span>
+					</div>
+					<div class="bbb-account-shelf__laneBooks" data-account-status-books="tbr"></div>
+				</article>
+			</div>
+
+			<div class="bbb-account-shelf__sectionHead">
+				<p class="bbb-account-shelf__toolbarKicker">saved shelf</p>
+				<h2>all saved books</h2>
+			</div>
 			<div class="bbb-account-shelf__grid" data-account-shelf-grid></div>
 
 			<div class="bbb-account-shelf__empty" data-account-shelf-empty hidden>
