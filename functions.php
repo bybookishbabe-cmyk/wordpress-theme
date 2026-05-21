@@ -56,6 +56,10 @@ require_once get_theme_file_path('inc/admin/society-drop-importer.php');
 require_once get_theme_file_path('inc/admin/society-product-importer.php');
 
 function bbb_reader_is_society(): bool {
+	if (is_user_logged_in() && current_user_can('manage_options')) {
+		return true;
+	}
+
 	return bbb_user_is_society(get_current_user_id()) || bbb_is_sss_member();
 }
 

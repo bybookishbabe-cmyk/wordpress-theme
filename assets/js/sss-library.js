@@ -5732,7 +5732,7 @@ function initReadFinder(){
   }
 
   function refreshFinderOptions(){
-    fillSelect(shelfSelect, allShelves, 'choose a genre');
+    fillSelect(shelfSelect, allShelves, 'choose a shelf');
 
     var tropeOneOptions = buildCounts(booksForShelf(), function(book){
       return Array.isArray(book.tropes) ? dedupe(book.tropes) : [];

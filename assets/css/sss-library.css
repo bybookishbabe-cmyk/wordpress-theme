@@ -1278,6 +1278,15 @@ background:#0e0e0e;
   background:rgba(0,0,0,.24);
 }
 
+.sss-lib__societyLocked--matchmaker{
+  grid-template-columns:1fr;
+  align-items:start;
+}
+
+.sss-lib__societyLocked--matchmaker .sss-lib__finder{
+  margin:22px 0 0;
+}
+
 .sss-lib__societyLockedActions{
   display:flex;
   flex-wrap:wrap;
