@@ -810,20 +810,15 @@ $mood_visuals = array_values(
 $drop_visuals = bbb_sss_drop_unique_urls(array_merge(array($calendar_image, $gram_image), $product_visuals, $mood_visuals));
 $hero_visual = (string) ($drop_visuals[0] ?? '');
 $hero_support_visuals = array_slice($drop_visuals, 1, 5);
-$emoji_tokens = array_values(array_filter(array_map('trim', explode(',', $emoji_list))));
-if (!$emoji_tokens) {
-	$emoji_tokens = array('✦', '🖤', '📖');
-}
-
 list($accent_r, $accent_g, $accent_b) = bbb_sss_drop_hex_to_rgb($accent);
 $accent_rgb = $accent_r . ', ' . $accent_g . ', ' . $accent_b;
 $drop_nav = array_filter(
 	array(
-		array('href' => '#drop-atmosphere', 'label' => 'atmosphere', 'icon' => '🎧', 'show' => '' !== $gram_image || '' !== $spotify_id),
-		array('href' => '#drop-moodboard', 'label' => 'moodboard', 'icon' => '🖼️', 'show' => (bool) ($mood_images || $mood_stickers || $era_images || $mood_quotes)),
-		array('href' => '#drop-wallpapers', 'label' => 'wallpapers', 'icon' => '📱', 'show' => (bool) $wallpapers),
-		array('href' => '#drop-calendar', 'label' => 'calendar', 'icon' => '📅', 'show' => '' !== $calendar_image || (bool) $prompts),
-		array('href' => '#drop-products', 'label' => 'shop the drop', 'icon' => '🛍️', 'show' => (bool) ($printable_products || $physical_products || $bonus_products)),
+		array('href' => '#drop-atmosphere', 'label' => 'atmosphere', 'show' => '' !== $gram_image || '' !== $spotify_id),
+		array('href' => '#drop-moodboard', 'label' => 'moodboard', 'show' => (bool) ($mood_images || $mood_stickers || $era_images || $mood_quotes)),
+		array('href' => '#drop-wallpapers', 'label' => 'wallpapers', 'show' => (bool) $wallpapers),
+		array('href' => '#drop-calendar', 'label' => 'calendar', 'show' => '' !== $calendar_image || (bool) $prompts),
+		array('href' => '#drop-products', 'label' => 'shop the drop', 'show' => (bool) ($printable_products || $physical_products || $bonus_products)),
 	),
 	static fn(array $item): bool => (bool) $item['show']
 );
@@ -831,34 +826,13 @@ $drop_nav = array_filter(
 <section class="sss-drop-theme" style="--drop-accent: <?php echo esc_attr($accent); ?>; --drop-accent-rgb: <?php echo esc_attr($accent_rgb); ?>; --drop-pill-bg: <?php echo esc_attr($pill_bg); ?>; --drop-pill-ink: <?php echo esc_attr($pill_ink); ?>;">
 	<div class="sss-drop-theme__wrap">
 		<header class="sss-drop-theme__hero">
-			<div class="sss-drop-theme__rain" aria-hidden="true">
-				<?php for ($rain_index = 0; $rain_index < 24; $rain_index++) : ?>
-					<?php
-					$rain_emoji = $emoji_tokens[$rain_index % count($emoji_tokens)];
-					$rain_x = (string) ((($rain_index * 37) % 96) + 2);
-					$rain_duration = (string) (7 + ($rain_index % 7));
-					$rain_delay = (string) (-1 * (($rain_index * 5) % 14));
-					$rain_size = (string) (18 + (($rain_index * 3) % 18));
-					$rain_drift = (string) (-26 + (($rain_index * 11) % 52));
-					?>
-					<span style="--rain-x: <?php echo esc_attr($rain_x); ?>%; --rain-duration: <?php echo esc_attr($rain_duration); ?>s; --rain-delay: <?php echo esc_attr($rain_delay); ?>s; --rain-size: <?php echo esc_attr($rain_size); ?>px; --rain-drift: <?php echo esc_attr($rain_drift); ?>px;"><?php echo esc_html($rain_emoji); ?></span>
-				<?php endfor; ?>
-			</div>
 			<div class="sss-drop-theme__heroCopy">
 				<p class="sss-drop-theme__kicker">monthly theme</p>
 				<h1><?php echo esc_html(strtolower($name)); ?></h1>
-				<?php if ('' !== $drop_handle) : ?>
-					<p class="sss-drop-theme__handle">sss drop: <?php echo esc_html($drop_handle); ?></p>
-				<?php endif; ?>
 				<p class="sss-drop-theme__mood"><?php echo esc_html(strtolower($mood_title)); ?></p>
 				<?php if ('' !== $quote) : ?>
 					<blockquote><?php echo nl2br(esc_html(strtolower($quote))); ?></blockquote>
 				<?php endif; ?>
-				<div class="sss-drop-theme__emojis" aria-label="theme mood">
-					<?php foreach ($emoji_tokens as $emoji) : ?>
-						<span><?php echo esc_html($emoji); ?></span>
-					<?php endforeach; ?>
-				</div>
 			</div>
 			<?php if ('' !== $hero_visual) : ?>
 				<div class="sss-drop-theme__heroArt" aria-label="monthly theme visual preview">
@@ -879,20 +853,9 @@ $drop_nav = array_filter(
 		<?php if ($drop_nav) : ?>
 			<nav class="sss-drop-theme__nav" aria-label="monthly theme sections">
 				<?php foreach ($drop_nav as $item) : ?>
-					<a href="<?php echo esc_url($item['href']); ?>"><span aria-hidden="true"><?php echo esc_html((string) $item['icon']); ?></span><?php echo esc_html($item['label']); ?></a>
+					<a href="<?php echo esc_url($item['href']); ?>"><?php echo esc_html($item['label']); ?></a>
 				<?php endforeach; ?>
 			</nav>
-		<?php endif; ?>
-
-		<?php if ($mood_pills) : ?>
-			<section class="sss-drop-theme__pills" aria-label="reader mood pills">
-				<h2>how are we entering this theme?</h2>
-				<div class="sss-drop-theme__pillRow">
-					<?php foreach ($mood_pills as $pill) : ?>
-						<span><?php echo esc_html(strtolower((string) ($pill['displayName'] ?? $pill['handle'] ?? 'mood'))); ?></span>
-					<?php endforeach; ?>
-				</div>
-			</section>
 		<?php endif; ?>
 
 		<div class="sss-drop-theme__grid" id="drop-atmosphere">
@@ -1030,14 +993,8 @@ $drop_nav = array_filter(
 .sss-drop-theme h1,.sss-drop-theme h2{margin:0;color:#fff;font-family:Cormorant,"Cormorant Garamond",Georgia,serif;font-weight:400;letter-spacing:0;text-transform:lowercase}
 .sss-drop-theme h1{font-size:clamp(58px,9vw,132px);line-height:.82;max-width:10ch;text-wrap:balance;text-shadow:0 20px 60px rgba(0,0,0,.5)}
 .sss-drop-theme h2{font-size:clamp(25px,4vw,44px);line-height:1}
-.sss-drop-theme__handle{display:inline-flex;margin:14px auto 0;padding:7px 11px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(255,255,255,.04);color:rgba(246,246,246,.62);font-size:11px;letter-spacing:.08em}
 .sss-drop-theme__mood{margin:16px 0 0;max-width:620px;color:rgba(246,246,246,.78);font-size:16px;line-height:1.65}
 .sss-drop-theme blockquote{max-width:680px;margin:26px 0 0;color:rgba(246,246,246,.92);font-family:Cormorant,"Cormorant Garamond",Georgia,serif;font-size:clamp(27px,4.2vw,48px);font-style:italic;line-height:1.08}
-.sss-drop-theme__emojis{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
-.sss-drop-theme__emojis span,.sss-drop-theme__pillRow span{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:8px 12px;border:1px solid rgba(255,255,255,.14);border-radius:999px;background:rgba(255,255,255,.045)}
-.sss-drop-theme__rain{position:absolute;inset:-70px 0 0;z-index:1;pointer-events:none;overflow:hidden}
-.sss-drop-theme__rain span{position:absolute;top:-70px;left:var(--rain-x);font-size:var(--rain-size);line-height:1;opacity:.72;filter:drop-shadow(0 12px 18px rgba(0,0,0,.5));animation:sssDropRain var(--rain-duration) linear var(--rain-delay) infinite}
-@keyframes sssDropRain{0%{transform:translate3d(0,-80px,0) rotate(-18deg);opacity:0}8%{opacity:.85}88%{opacity:.74}100%{transform:translate3d(var(--rain-drift),calc(100vh + 150px),0) rotate(32deg);opacity:0}}
 .sss-drop-theme__heroArt{display:grid;gap:14px;align-self:stretch;align-content:center}
 .sss-drop-theme__heroFrame{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.18);border-radius:18px;background:rgba(0,0,0,.32);box-shadow:0 24px 64px rgba(0,0,0,.5);transform:rotate(1.2deg)}
 .sss-drop-theme__heroFrame:before{content:"";position:absolute;inset:10px;border:1px solid rgba(255,255,255,.18);border-radius:12px;pointer-events:none;z-index:1}
@@ -1047,11 +1004,8 @@ $drop_nav = array_filter(
 .sss-drop-theme__miniRail img:nth-child(even){transform:translateY(12px) rotate(2deg)}
 .sss-drop-theme__miniRail img:nth-child(odd){transform:rotate(-1.5deg)}
 .sss-drop-theme__nav{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 0 24px;padding:10px;border:1px solid rgba(255,255,255,.14);border-radius:18px;background:rgba(5,5,5,.82);backdrop-filter:blur(16px);box-shadow:0 16px 40px rgba(0,0,0,.28)}
-.sss-drop-theme__nav a{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:0 14px;border:1px solid rgba(255,255,255,.13);border-radius:999px;background:linear-gradient(135deg,rgba(var(--drop-accent-rgb),.14),rgba(255,255,255,.045));color:rgba(246,246,246,.86);font-size:12px;letter-spacing:.08em;text-decoration:none}
+.sss-drop-theme__nav a{display:inline-flex;align-items:center;min-height:38px;padding:0 14px;border:1px solid rgba(255,255,255,.13);border-radius:999px;background:linear-gradient(135deg,rgba(var(--drop-accent-rgb),.14),rgba(255,255,255,.045));color:rgba(246,246,246,.86);font-size:12px;letter-spacing:.08em;text-decoration:none}
 .sss-drop-theme__nav a:hover,.sss-drop-theme__nav a:focus{border-color:var(--drop-accent);color:#fff;outline:none}
-.sss-drop-theme__pills{margin:0 auto 26px;text-align:center}
-.sss-drop-theme__pillRow{display:flex;flex-wrap:wrap;justify-content:center;gap:9px;margin-top:14px}
-.sss-drop-theme__pillRow span{background:var(--drop-pill-bg);color:var(--drop-pill-ink);border-color:rgba(255,255,255,.22);font-size:13px}
 .sss-drop-theme__grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:24px}
 .sss-drop-theme__panel,.sss-drop-theme__wallpapers,.sss-drop-theme__calendar,.sss-drop-theme__products,.sss-drop-theme__moodboard{border:1px solid rgba(255,255,255,.13);border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,.06),rgba(255,255,255,.025));box-shadow:0 20px 60px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.08)}
 .sss-drop-theme__panel{padding:16px}
@@ -1129,5 +1083,4 @@ $drop_nav = array_filter(
 .sss-drop-theme__downloadMissing{margin-top:-4px}
 @media (max-width:900px){.sss-drop-theme__hero{grid-template-columns:1fr;min-height:0;padding:26px 18px}.sss-drop-theme__heroArt{max-width:520px;width:100%;margin:0 auto}.sss-drop-theme__heroFrame img{height:auto;aspect-ratio:4/5}.sss-drop-theme h1{max-width:9ch}.sss-drop-theme__nav{position:relative;justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap}.sss-drop-theme__nav a{white-space:nowrap}}
 @media (max-width:800px){.sss-drop-theme__grid,.sss-drop-theme__productGrid,.sss-drop-theme__assetGrid{grid-template-columns:1fr}.sss-drop-theme__productGrid{gap:12px;padding:0}.sss-drop-theme__productCard:nth-child(n){margin:0;transform:none}.sss-drop-theme__productBody{margin:-10px 10px 10px}.sss-drop-theme__wallpaperGrid{display:flex;overflow-x:auto;padding-bottom:4px}.sss-drop-theme__wallpaperGrid a{min-width:46%}.sss-drop-theme__sectionHead{display:block}.sss-drop-theme__actions{justify-content:flex-start;margin-top:10px}.sss-drop-theme__promptTop{align-items:flex-start}}
-@media (prefers-reduced-motion:reduce){.sss-drop-theme__rain span{animation:none;opacity:.25;transform:translateY(40px)}}
 </style>
