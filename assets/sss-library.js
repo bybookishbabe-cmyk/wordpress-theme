@@ -1307,7 +1307,7 @@ function showSaveToast(){
 
   function openBookshelfDestination(){
     const shelf = document.getElementById("sssMyShelfSection");
-    const libraryShelfUrl = "/pages/sss-library-page?shelf=open";
+    const libraryShelfUrl = "/library/?shelf=open";
 
     if (shelf){
       shelf.hidden = false;
@@ -1328,7 +1328,7 @@ function showSaveToast(){
   toast.classList.add("is-visible");
 
   if(link){
-    link.setAttribute("href", "/pages/sss-library-page?shelf=open");
+    link.setAttribute("href", "/library/?shelf=open");
 
     link.onclick = function(e){
 
@@ -1509,7 +1509,7 @@ if(modalHeart){
 
       if (modalShareBtn){
         var shareBookKey = data.handle || data.title || '';
-        var shareBasePath = libraryType === 'society' ? '/pages/sss-library-page' : '/pages/library';
+        var shareBasePath = '/library/';
         var shareUrl = window.location.origin + shareBasePath + '?book=' + encodeURIComponent(shareBookKey);
         var shareTitle = data.title || document.title;
         var shareText = data.author
@@ -1789,7 +1789,7 @@ if (yearningEl){
 const toastShelfLink = document.getElementById("sssToastShelfLink");
 
 if (toastShelfLink){
-  toastShelfLink.setAttribute("href", "/pages/sss-library-page?shelf=open");
+  toastShelfLink.setAttribute("href", "/library/?shelf=open");
 
   toastShelfLink.addEventListener("click", function(e){
 
@@ -1798,7 +1798,7 @@ if (toastShelfLink){
     const shelf = document.getElementById("sssMyShelfSection");
 
     if (!shelf){
-      window.location.href = "/pages/sss-library-page?shelf=open";
+      window.location.href = "/library/?shelf=open";
       return;
     }
 

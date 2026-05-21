@@ -142,7 +142,7 @@ get_header();
 				<p class="sss-lib__sub">your taste, your spice, your finished shelf, and the books most likely to hit next.</p>
 			</header>
 			<div class="sss-mfy__dashboardIntro" aria-label="member dashboard shortcuts">
-				<a class="sss-lib__finderBtn" href="<?php echo esc_url(bbb_page_url('sss-library-page')); ?>">open the library</a>
+				<a class="sss-lib__finderBtn" href="<?php echo esc_url(bbb_page_url('library')); ?>">open the library</a>
 				<a class="sss-lib__finderBtn sss-lib__finderBtn--ghost" href="<?php echo esc_url(bbb_page_url('my-bookshelf')); ?>">open my bookshelf</a>
 			</div>
 			<?php if (!$mfy_books) : ?>
@@ -155,7 +155,7 @@ get_header();
 						<div class="sss-mfy__eyebrow">a little reader profiling. a little emotional damage. a much smarter next-read list.</div>
 						<div class="sss-mfy__prepNote">
 							<strong>before you start:</strong>
-							results get much better once you have gone through the <a class="sss-mfy__prepLink" href="<?php echo esc_url(bbb_page_url('sss-library-page')); ?>">library</a> and favorited, saved, or read a few books.
+							results get much better once you have gone through the <a class="sss-mfy__prepLink" href="<?php echo esc_url(bbb_page_url('library')); ?>">library</a> and favorited, saved, or read a few books.
 						</div>
 						<div class="sss-mfy__progress">
 							<div class="sss-mfy__progressMeta">

@@ -134,7 +134,7 @@ function bbb_get_fallback_main_menu(): array {
 				),
 				array(
 					'title'    => 'society\'s library',
-					'url'      => bbb_page_url( 'society-library' ),
+					'url'      => bbb_page_url( 'library' ),
 					'children' => array(),
 				),
 				array(

@@ -101,7 +101,7 @@ get_header();
 				<p class="bbb-account-shelf__sub">saved books, current obsessions, and the beginning of your personal romance archive.</p>
 
 				<div class="bbb-account-shelf__actions">
-					<a class="bbb-account-shelf__button" href="<?php echo esc_url(home_url($is_society ? '/sss-library-page/' : '/library/')); ?>">browse the library</a>
+					<a class="bbb-account-shelf__button" href="<?php echo esc_url(bbb_page_url('library')); ?>">browse the library</a>
 					<?php if (is_user_logged_in()) : ?>
 						<a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="<?php echo esc_url(function_exists('bbb_wc_account_url') ? bbb_wc_account_url() : home_url('/account/')); ?>">account</a>
 					<?php else : ?>

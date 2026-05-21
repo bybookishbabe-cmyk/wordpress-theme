@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 $tabs = $args['tabs'] ?? array(
 	array('label' => 'monthly theme', 'icon' => '📁', 'slug' => 'monthly-theme', 'sub' => 'current'),
-	array('label' => 'library', 'icon' => '📚', 'slug' => 'sss-library-page', 'sub' => 'books'),
+	array('label' => 'library', 'icon' => '📚', 'slug' => 'library', 'sub' => 'books'),
 	array('label' => 'member dashboard', 'icon' => '✨', 'slug' => 'member-dashboard', 'sub' => 'recs'),
 	array('label' => 'printable inserts', 'icon' => '🖨️', 'slug' => 'sss-printable-kindle-inserts', 'sub' => 'drops'),
 	array('label' => 'bookish templates', 'icon' => '⌨️', 'slug' => 'sss-canva-templates', 'sub' => 'canva'),
