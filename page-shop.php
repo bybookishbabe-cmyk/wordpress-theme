@@ -474,7 +474,6 @@ if (function_exists('edd_purchase_variable_pricing')) {
 							$file_count    = bbb_shop_seed_file_count($download);
 							$missing_files = (bool) ($download['download_missing'] ?? false);
 							$is_free       = bbb_society_product_importer_truthy($download['society_free'] ?? false);
-							$excerpt       = bbb_shop_seed_excerpt($download);
 						} else {
 							$post_id       = (int) $download->ID;
 							$title         = get_the_title($download);
@@ -484,7 +483,6 @@ if (function_exists('edd_purchase_variable_pricing')) {
 							$file_count    = bbb_shop_download_file_count($post_id);
 							$missing_files = 'yes' === get_post_meta($post_id, '_bbb_missing_download_url', true);
 							$is_free       = 'yes' === get_post_meta($post_id, '_bbb_society_free_download', true);
-							$excerpt       = bbb_shop_download_excerpt($download);
 						}
 						?>
 						<article class="bbb-shop-card bbb-shop-card--<?php echo esc_attr($kind); ?>">
@@ -509,7 +507,6 @@ if (function_exists('edd_purchase_variable_pricing')) {
 									<?php endif; ?>
 								</div>
 								<h3><a href="<?php echo esc_url($permalink); ?>"><?php echo esc_html($title); ?></a></h3>
-								<p><?php echo esc_html($excerpt); ?></p>
 								<div class="bbb-shop-card__meta">
 									<strong><?php echo esc_html($price); ?></strong>
 									<span><?php echo esc_html($file_count ? $file_count . ' file' . (1 === $file_count ? '' : 's') : 'file pending'); ?></span>
