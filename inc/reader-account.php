@@ -335,9 +335,99 @@ function bbb_reader_fetch_account_books(WP_User $user): array {
 	return is_wp_error($rows) ? array() : (array) $rows;
 }
 
+if (!function_exists('bbb_reader_drop_field_value')) {
+	function bbb_reader_drop_field_value(array $fields, string $key, string $default = ''): string {
+		if (!isset($fields[$key]) || !is_array($fields[$key])) {
+			return $default;
+		}
+
+		$field = $fields[$key];
+		$value = $field['jsonValue'] ?? $field['value'] ?? $default;
+		if (is_array($value)) {
+			$value = $field['value'] ?? $default;
+		}
+
+		return trim((string) $value);
+	}
+}
+
+if (!function_exists('bbb_reader_active_society_drop')) {
+	function bbb_reader_active_society_drop(): array {
+		if (function_exists('bbb_sss_drop_importer_active_entry')) {
+			$entry = bbb_sss_drop_importer_active_entry();
+			if (is_array($entry) && !empty($entry)) {
+				return $entry;
+			}
+		}
+
+		if (function_exists('bbb_sss_active_drop')) {
+			$entry = bbb_sss_active_drop();
+			if (is_array($entry) && !empty($entry)) {
+				return $entry;
+			}
+		}
+
+		return array();
+	}
+}
+
+if (!function_exists('bbb_reader_active_society_daily_prompt')) {
+	function bbb_reader_active_society_daily_prompt(array $drop): array {
+		$fields = array();
+		if (is_array($drop['fields'] ?? null)) {
+			$fields = $drop['fields'];
+		}
+
+		$journal_start = bbb_reader_drop_field_value($fields, 'journal_start_date');
+		$prompts_raw   = bbb_reader_drop_field_value($fields, 'prompts');
+		$prompts       = array_values(array_filter(array_map('trim', preg_split('/\s*\|\|\s*/', $prompts_raw) ?: array())));
+
+		$day = 0;
+		$prompt = '';
+		$prompt_count = count($prompts);
+		if ($prompt_count > 0) {
+			$start = strtotime((string) $journal_start . ' 00:00:00');
+			$today = (int) current_time('timestamp');
+
+			if (false === $start) {
+				$day = 1;
+			} else {
+				$day = (int) floor(($today - $start) / (60 * 60 * 24)) + 1;
+			}
+
+			if ($day < 1) {
+				$day = 1;
+			} elseif ($day > $prompt_count) {
+				$day = $prompt_count;
+			}
+
+			$index = $day - 1;
+			$prompt = (string) ($prompts[$index] ?? '');
+		}
+
+		if ('' === $prompt) {
+			$day = 0;
+		}
+
+		return array(
+			'text' => $prompt,
+			'day'  => $day,
+			'total' => $prompt_count,
+		);
+	}
+}
+
 function bbb_reader_account_response(WP_User $user): array {
 	$sync = bbb_reader_sync_user_to_supabase((int) $user->ID, 'wordpress_account_api');
 	$synced_subscriber = !is_wp_error($sync) && isset($sync[0]) && is_array($sync[0]) ? $sync[0] : null;
+	$access_tier = bbb_reader_access_tier((int) $user->ID, $synced_subscriber);
+	$account_prompt = 'society' === $access_tier
+		? bbb_reader_active_society_daily_prompt(bbb_reader_active_society_drop())
+		: array(
+			'text'  => '',
+			'day'   => 0,
+			'total' => 0,
+		);
 	$error = is_wp_error($sync)
 		? array(
 			'code'    => $sync->get_error_code(),
@@ -352,7 +442,8 @@ function bbb_reader_account_response(WP_User $user): array {
 			'email'       => (string) $user->user_email,
 			'displayName' => (string) $user->display_name,
 		),
-		'accessTier'    => bbb_reader_access_tier((int) $user->ID, $synced_subscriber),
+		'accessTier'         => $access_tier,
+		'dailyJournalPrompt' => $account_prompt,
 		'supabaseReady' => !is_wp_error($sync),
 		'supabaseError' => $error,
 		'books'         => bbb_reader_fetch_account_books($user),

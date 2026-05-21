@@ -306,7 +306,7 @@ $sections = array(
 		'label' => 'society exclusives',
 		'items' => array(
 			array('title' => 'reading guides', 'copy' => 'deep-dive trope guides and member-only rec lists.', 'url' => bbb_page_url('society-library'), 'badge' => 'society', 'emoji' => '📖'),
-			array('title' => 'exclusive rec lists', 'copy' => 'book lists that do not live on the public blog.', 'url' => bbb_page_url('society-library'), 'badge' => 'society', 'emoji' => '🌹'),
+			array('title' => 'exclusive rec lists', 'copy' => 'if you liked pages built from the books-like template.', 'url' => bbb_page_url('books-like-directory'), 'badge' => 'society', 'emoji' => '🌹'),
 			array('title' => 'early access', 'copy' => 'posts and picks before they go public.', 'url' => bbb_page_url('society-newsletter-recent'), 'badge' => 'preview', 'emoji' => '🔐'),
 		),
 	),
@@ -326,7 +326,6 @@ $sections = array(
 		),
 	),
 );
-$exclusive_rec_guides = function_exists('bbb_books_like_guide_posts') ? bbb_books_like_guide_posts() : array();
 
 get_header();
 ?>
@@ -392,46 +391,6 @@ get_header();
 							</a>
 						<?php endforeach; ?>
 					</div>
-					<?php if ('society exclusives' === $section['label'] && $exclusive_rec_guides) : ?>
-						<div class="bbb-society-rec-lists<?php echo $is_paid_society_member ? ' is-unlocked' : ' is-preview'; ?>">
-							<div class="bbb-society-rec-lists__header">
-								<div>
-									<p class="bbb-society-rec-lists__kicker">exclusive rec lists</p>
-									<h3>if you liked...</h3>
-								</div>
-								<?php if (!$is_paid_society_member) : ?>
-									<a href="<?php echo esc_url(get_option('bbb_society_gate_member_url', 'https://thesmutandsentimentsociety.substack.com/subscribe')); ?>">unlock full lists</a>
-								<?php endif; ?>
-							</div>
-							<div class="bbb-society-rec-lists__grid">
-								<?php foreach ($exclusive_rec_guides as $index => $guide) :
-									$guide_post = $guide['post'] ?? null;
-									if (!$guide_post instanceof WP_Post) {
-										continue;
-									}
-									$source = $guide['source'] ?? null;
-									$book = $source instanceof WP_Post && function_exists('bbb_books_like_book_data') ? bbb_books_like_book_data($source->ID) : array();
-									$cover = (string) ($book['cover'] ?? get_the_post_thumbnail_url($guide_post->ID, 'medium_large'));
-									$is_locked_preview = !$is_paid_society_member && $index >= 2;
-								?>
-									<a class="bbb-society-rec-list-card<?php echo $is_locked_preview ? ' is-locked' : ''; ?>" href="<?php echo esc_url(get_permalink($guide_post)); ?>">
-										<span class="bbb-society-rec-list-card__media">
-											<?php if ($cover) : ?>
-												<img src="<?php echo esc_url($cover); ?>" alt="<?php echo esc_attr(get_the_title($guide_post)); ?>" loading="lazy">
-											<?php endif; ?>
-										</span>
-										<span class="bbb-society-rec-list-card__copy">
-											<span class="bbb-society-rec-list-card__label"><?php echo esc_html($is_locked_preview ? 'paid preview' : 'guide'); ?></span>
-											<strong><?php echo esc_html(get_the_title($guide_post)); ?></strong>
-											<?php if (!empty($book['shelf']['name'])) : ?>
-												<small><?php echo esc_html((string) $book['shelf']['name']); ?></small>
-											<?php endif; ?>
-										</span>
-									</a>
-								<?php endforeach; ?>
-							</div>
-						</div>
-					<?php endif; ?>
 				</section>
 			<?php endforeach; ?>
 		</div>

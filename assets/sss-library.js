@@ -5478,6 +5478,7 @@ function initReadFinder(){
   var root = document.getElementById('sssReadFinder');
 
   if (!dataEl || !root) return;
+  if (root.dataset.finderReady === 'true') return;
 
   var shelfSelect = document.getElementById('sssFinderShelf');
   var tropeOneSelect = document.getElementById('sssFinderTropeOne');
@@ -5526,6 +5527,8 @@ function initReadFinder(){
   }
 
   if (!Array.isArray(books) || !books.length) return;
+
+  root.dataset.finderReady = 'true';
 
   var seenHandles = [];
   var currentBook = null;
@@ -5904,7 +5907,11 @@ function queueSeriesGrouping(){
   });
 }
 
-initReadFinder();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initReadFinder);
+} else {
+  initReadFinder();
+}
 initMobileGridPagination();
 queueSeriesGrouping();
 

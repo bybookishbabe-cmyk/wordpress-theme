@@ -712,6 +712,39 @@ $prompts = array_values(
 		array_map('trim', preg_split('/\s*\|\|\s*/', $prompts_raw) ?: array())
 	)
 );
+$journal_start = bbb_sss_drop_value($fields, 'journal_start_date');
+$daily_prompt = array(
+	'text'  => '',
+	'day'   => 0,
+	'total' => count($prompts),
+);
+
+if ($prompts) {
+	$start = strtotime((string) $journal_start . ' 00:00:00');
+	$today = (int) current_time('timestamp');
+	$day   = 1;
+
+	if (false !== $start) {
+		$day = (int) floor(($today - $start) / (60 * 60 * 24)) + 1;
+	}
+
+	if ($day < 1) {
+		$day = 1;
+	} elseif ($day > $daily_prompt['total']) {
+		$day = $daily_prompt['total'];
+	}
+
+	$daily_prompt['day'] = $day;
+	$daily_prompt['text'] = (string) ($prompts[$day - 1] ?? '');
+
+	if ('' === $daily_prompt['text']) {
+		$daily_prompt = array(
+			'text'  => '',
+			'day'   => 0,
+			'total' => $daily_prompt['total'],
+		);
+	}
+}
 $mood_pills = bbb_sss_drop_reference_items($fields, 'trial');
 $printable_products = bbb_sss_drop_reference_items($fields, 'monthly_collection_printable_products');
 $physical_products = bbb_sss_drop_reference_items($fields, 'monthly_collection_physical_products');
@@ -858,18 +891,19 @@ $drop_nav = array_filter(
 						<?php endif; ?>
 					</div>
 				</div>
-				<?php if ('' !== $calendar_image) : ?>
-					<img class="sss-drop-theme__calendarImage" src="<?php echo esc_url($calendar_image); ?>" alt="<?php echo esc_attr($name . ' calendar'); ?>" loading="lazy">
-				<?php endif; ?>
-				<?php if ($prompts) : ?>
-					<ol class="sss-drop-theme__prompts">
-						<?php foreach (array_slice($prompts, 0, 31) as $prompt) : ?>
-							<li><?php echo esc_html(strtolower($prompt)); ?></li>
-						<?php endforeach; ?>
-					</ol>
-				<?php endif; ?>
-			</section>
-		<?php endif; ?>
+					<?php if ('' !== $calendar_image) : ?>
+						<img class="sss-drop-theme__calendarImage" src="<?php echo esc_url($calendar_image); ?>" alt="<?php echo esc_attr($name . ' calendar'); ?>" loading="lazy">
+					<?php endif; ?>
+					<?php if ('' !== $daily_prompt['text']) : ?>
+						<ol class="sss-drop-theme__prompts">
+							<li>
+								<span class="sss-drop-theme__promptDay">day <?php echo esc_html((string) $daily_prompt['day']); ?> of <?php echo esc_html((string) $daily_prompt['total']); ?></span>
+								<p><?php echo esc_html(strtolower($daily_prompt['text'])); ?></p>
+							</li>
+						</ol>
+					<?php endif; ?>
+				</section>
+			<?php endif; ?>
 
 		<div id="drop-products">
 		<?php bbb_sss_render_drop_products($printable_products, 'printable kindle inserts', 'current drop'); ?>
@@ -920,6 +954,8 @@ $drop_nav = array_filter(
 .sss-drop-theme__prompts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:14px 0 0;padding:0;list-style:none;counter-reset:prompts}
 .sss-drop-theme__prompts li{counter-increment:prompts;padding:11px;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(0,0,0,.2);color:rgba(246,246,246,.74);font-size:13px;line-height:1.45}
 .sss-drop-theme__prompts li:before{content:counter(prompts,decimal-leading-zero);display:block;margin-bottom:6px;color:var(--drop-accent);font-size:10px;letter-spacing:.12em}
+.sss-drop-theme__promptDay{display:block;margin-bottom:4px;color:var(--drop-accent);font-size:11px;letter-spacing:.08em;text-transform:lowercase}
+.sss-drop-theme__prompts p{margin:0}
 .sss-drop-theme__productGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:start;gap:0;padding:14px 12px 30px}
 .sss-drop-theme__productCard{position:relative;overflow:visible;border:1px solid rgba(255,255,255,.12);border-radius:8px;background:rgba(0,0,0,.22);box-shadow:0 22px 54px rgba(0,0,0,.34)}
 .sss-drop-theme__productCard:nth-child(1){z-index:4;transform:rotate(-1.4deg)}
