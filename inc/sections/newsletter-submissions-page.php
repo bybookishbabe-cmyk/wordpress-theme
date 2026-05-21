@@ -29,6 +29,10 @@ $table_name       = (string) bbb_get_field('table_name', $page_id, $defaults['ta
 $supabase_url     = (string) bbb_get_field('supabase_url', $page_id, $defaults['supabase_url']);
 $supabase_key     = (string) bbb_get_field('supabase_key', $page_id, $defaults['supabase_key']);
 
+if ('' === trim($submit_label)) {
+	$submit_label = $defaults['submit_label'];
+}
+
 $type_options = array_values(
 	array_filter(
 		array_map('trim', preg_split('/\R/', $submission_types) ?: array()),
@@ -238,23 +242,31 @@ $section_id = 'NewsletterSubmissions-' . ($page_id > 0 ? (string) $page_id : 'ro
 	.bbb-submission-form__actions{display:flex;flex-direction:column;gap:1.2rem;align-items:flex-start;}
 	.bbb-submission-form__submit{
 		width:100%;
+		display:flex;
+		align-items:center;
 		justify-content:center;
 		border:1px solid rgba(239,137,191,.26);
 		border-radius:1.6rem;
-		background:linear-gradient(135deg, rgba(239,137,191,.12), rgba(255,255,255,.02));
-		color:#ffffff;
+		background:#ef89bf;
+		color:#160d13;
 		font:inherit;
 		font-size:1.85rem;
-		font-weight:600;
+		font-weight:800;
 		line-height:1.2;
 		padding:1.8rem 2.4rem;
+		text-align:center;
 		cursor:pointer;
 		transition:background .22s ease, color .22s ease, border-color .22s ease, transform .22s ease;
 	}
+	.bbb-submission-form__submit span{
+		color:inherit;
+		opacity:1;
+		visibility:visible;
+	}
 	.bbb-submission-form__submit:hover,
 	.bbb-submission-form__submit:focus-visible{
-		background:#ef89bf;
-		color:#140d12;
+		background:#f5a4ce;
+		color:#120a0f;
 		border-color:#ef89bf;
 		transform:translateY(-1px);
 		outline:none;
