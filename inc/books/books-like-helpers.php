@@ -182,6 +182,23 @@ function bbb_books_like_infer_source_title(string $title): string {
 	return trim($name);
 }
 
+function bbb_books_like_source_title_candidates(string $title): array {
+	$inferred = bbb_books_like_infer_source_title($title);
+	if ('' === $inferred) {
+		return array();
+	}
+
+	$candidates = array($inferred);
+	foreach (array(' but ', ' for ', ' if ', ' when ', ' with ') as $marker) {
+		$position = stripos($inferred, $marker);
+		if (false !== $position) {
+			$candidates[] = trim(substr($inferred, 0, $position));
+		}
+	}
+
+	return array_values(array_unique(array_filter($candidates)));
+}
+
 function bbb_books_like_source_for_guide(WP_Post $post): ?WP_Post {
 	if (function_exists('sss_article_post')) {
 		foreach (array('source_book', 'book', 'books') as $key) {
@@ -200,8 +217,14 @@ function bbb_books_like_source_for_guide(WP_Post $post): ?WP_Post {
 		}
 	}
 
-	$inferred = bbb_books_like_infer_source_title($post->post_title);
-	return $inferred ? bbb_books_like_find_book($inferred) : null;
+	foreach (bbb_books_like_source_title_candidates($post->post_title) as $candidate) {
+		$book = bbb_books_like_find_book($candidate);
+		if ($book instanceof WP_Post) {
+			return $book;
+		}
+	}
+
+	return null;
 }
 
 function bbb_books_like_guide_posts(): array {
@@ -238,6 +261,34 @@ function bbb_books_like_guide_posts(): array {
 		$guides[] = array(
 			'post'   => $page,
 			'source' => $source,
+		);
+	}
+
+	return $guides;
+}
+
+function bbb_books_like_blog_guide_posts(): array {
+	$posts = get_posts(
+		array(
+			'post_type'      => 'post',
+			'post_status'    => 'publish',
+			'posts_per_page' => -1,
+			'orderby'        => 'date',
+			'order'          => 'DESC',
+		)
+	);
+
+	$guides = array();
+	foreach ($posts as $post) {
+		$title = strtolower((string) $post->post_title);
+		$slug  = strtolower((string) $post->post_name);
+		if (!str_starts_with($title, 'books like ') && !str_starts_with($slug, 'books-like-')) {
+			continue;
+		}
+
+		$guides[] = array(
+			'post'   => $post,
+			'source' => bbb_books_like_source_for_guide($post),
 		);
 	}
 
@@ -406,14 +457,16 @@ function bbb_books_like_current_source_book(): ?WP_Post {
 
 		$page = get_post($page_id);
 		if ($page instanceof WP_Post) {
-			$inferred = bbb_books_like_infer_source_title($page->post_title);
-			if (!$inferred && str_starts_with((string) $page->post_name, 'books-like-')) {
-				$inferred = str_replace('-', ' ', substr((string) $page->post_name, strlen('books-like-')));
+			$candidates = bbb_books_like_source_title_candidates($page->post_title);
+			if (!$candidates && str_starts_with((string) $page->post_name, 'books-like-')) {
+				$candidates[] = str_replace('-', ' ', substr((string) $page->post_name, strlen('books-like-')));
 			}
 
-			$book = bbb_books_like_find_book($inferred);
-			if ($book instanceof WP_Post) {
-				return $book;
+			foreach ($candidates as $candidate) {
+				$book = bbb_books_like_find_book($candidate);
+				if ($book instanceof WP_Post) {
+					return $book;
+				}
 			}
 		}
 	}

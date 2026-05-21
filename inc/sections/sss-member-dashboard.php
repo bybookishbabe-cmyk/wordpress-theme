@@ -1125,10 +1125,97 @@ $drop_nav = array_filter(
 .sss-drop-theme__downloadGrid small{margin-top:3px}
 .sss-drop-theme__productFallback{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:lowercase}
 .sss-drop-theme__downloadMissing{margin-top:-4px}
+[data-drop-reveal]{opacity:0;transition:opacity .7s ease,transform .8s cubic-bezier(.2,.8,.2,1);will-change:opacity,transform}
+[data-drop-reveal].is-visible{opacity:1;transform:none}
+[data-drop-reveal="atmosphere"]{transform:translateY(34px)}
+[data-drop-reveal="atmosphere"] .sss-drop-theme__panel{opacity:0;transform:translateX(-34px) rotate(-1.2deg);transition:opacity .7s ease,transform .85s cubic-bezier(.2,.8,.2,1)}
+[data-drop-reveal="atmosphere"] .sss-drop-theme__panel:nth-child(even){transform:translateX(34px) rotate(1.2deg)}
+[data-drop-reveal="atmosphere"].is-visible .sss-drop-theme__panel{opacity:1;transform:none}
+[data-drop-reveal="atmosphere"].is-visible .sss-drop-theme__panel:nth-child(2){transition-delay:.12s}
+[data-drop-reveal="moodboard"]{transform:scale(.98) translateY(26px)}
+[data-drop-reveal="moodboard"] .sss-drop-theme__sectionHead{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .7s ease}
+[data-drop-reveal="moodboard"] .sss-drop-theme__quoteRow span{opacity:0;transform:translateY(16px) scale(.92);transition:opacity .5s ease,transform .65s cubic-bezier(.2,.9,.2,1)}
+[data-drop-reveal="moodboard"] .sss-drop-theme__assetGrid a{opacity:0;transform:translateY(28px) rotate(-2deg);transition:opacity .65s ease,transform .8s cubic-bezier(.2,.8,.2,1)}
+[data-drop-reveal="moodboard"] .sss-drop-theme__assetGrid a:nth-child(2n){transform:translateY(28px) rotate(2deg)}
+[data-drop-reveal="moodboard"].is-visible .sss-drop-theme__sectionHead,
+[data-drop-reveal="moodboard"].is-visible .sss-drop-theme__quoteRow span,
+[data-drop-reveal="moodboard"].is-visible .sss-drop-theme__assetGrid a{opacity:1;transform:none}
+[data-drop-reveal="moodboard"].is-visible .sss-drop-theme__quoteRow span:nth-child(2),
+[data-drop-reveal="moodboard"].is-visible .sss-drop-theme__assetGrid a:nth-child(2){transition-delay:.08s}
+[data-drop-reveal="moodboard"].is-visible .sss-drop-theme__quoteRow span:nth-child(3),
+[data-drop-reveal="moodboard"].is-visible .sss-drop-theme__assetGrid a:nth-child(3){transition-delay:.16s}
+[data-drop-reveal="moodboard"].is-visible .sss-drop-theme__assetGrid a:nth-child(4){transition-delay:.24s}
+[data-drop-reveal="wallpapers"]{transform:translateY(36px)}
+[data-drop-reveal="wallpapers"] .sss-drop-theme__wallpaperGrid a{opacity:0;transform:translateY(34px) rotate(-5deg);transform-origin:50% 100%;transition:opacity .65s ease,transform .85s cubic-bezier(.2,.8,.2,1)}
+[data-drop-reveal="wallpapers"] .sss-drop-theme__wallpaperGrid a:nth-child(even){transform:translateY(34px) rotate(5deg)}
+[data-drop-reveal="wallpapers"].is-visible .sss-drop-theme__wallpaperGrid a{opacity:1;transform:none}
+[data-drop-reveal="wallpapers"].is-visible .sss-drop-theme__wallpaperGrid a:nth-child(2){transition-delay:.08s}
+[data-drop-reveal="wallpapers"].is-visible .sss-drop-theme__wallpaperGrid a:nth-child(3){transition-delay:.16s}
+[data-drop-reveal="wallpapers"].is-visible .sss-drop-theme__wallpaperGrid a:nth-child(4){transition-delay:.24s}
+[data-drop-reveal="calendar"]{transform:translateY(32px)}
+[data-drop-reveal="calendar"] .sss-drop-theme__dailyPrompt{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .85s cubic-bezier(.2,.8,.2,1)}
+[data-drop-reveal="calendar"] .sss-drop-theme__calendarImage{opacity:0;transform:translateY(24px) scale(.985);transition:opacity .8s ease .12s,transform .95s cubic-bezier(.2,.8,.2,1) .12s}
+[data-drop-reveal="calendar"].is-visible .sss-drop-theme__dailyPrompt,
+[data-drop-reveal="calendar"].is-visible .sss-drop-theme__calendarImage{opacity:1;transform:none}
+[data-drop-reveal="products"]{transform:translateY(38px)}
+[data-drop-reveal="products"] .sss-drop-theme__productCard{opacity:0;transform:translateY(36px) rotate(-2deg);transition:opacity .65s ease,transform .85s cubic-bezier(.2,.8,.2,1)}
+[data-drop-reveal="products"].is-visible .sss-drop-theme__productCard:nth-child(1){transition-delay:.04s}
+[data-drop-reveal="products"].is-visible .sss-drop-theme__productCard:nth-child(2){transition-delay:.12s}
+[data-drop-reveal="products"].is-visible .sss-drop-theme__productCard:nth-child(3){transition-delay:.2s}
+[data-drop-reveal="products"].is-visible .sss-drop-theme__productCard:nth-child(4){transition-delay:.28s}
+[data-drop-reveal="products"].is-visible .sss-drop-theme__productCard{opacity:1}
+[data-drop-reveal="products"].is-visible .sss-drop-theme__productCard:nth-child(1){transform:rotate(-1.4deg)}
+[data-drop-reveal="products"].is-visible .sss-drop-theme__productCard:nth-child(2){transform:rotate(1.2deg)}
+[data-drop-reveal="products"].is-visible .sss-drop-theme__productCard:nth-child(3){transform:rotate(-.7deg)}
+[data-drop-reveal="products"].is-visible .sss-drop-theme__productCard:nth-child(4){transform:rotate(1deg)}
 @media (max-width:900px){.sss-drop-theme__hero{grid-template-columns:1fr;min-height:0;padding:26px 18px}.sss-drop-theme__heroArt{max-width:520px;width:100%;margin:0 auto}.sss-drop-theme__heroFrame img{height:auto;aspect-ratio:4/5}.sss-drop-theme h1{max-width:9ch}.sss-drop-theme__nav{position:relative;justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap}.sss-drop-theme__nav a{white-space:nowrap}}
 @media (max-width:800px){.sss-drop-theme__grid,.sss-drop-theme__productGrid,.sss-drop-theme__assetGrid{grid-template-columns:1fr}.sss-drop-theme__productGrid{gap:12px;padding:0}.sss-drop-theme__productCard:nth-child(n){margin:0;transform:none}.sss-drop-theme__productBody{margin:-10px 10px 10px}.sss-drop-theme__wallpaperGrid{display:flex;overflow-x:auto;padding-bottom:4px}.sss-drop-theme__wallpaperGrid a{min-width:46%}.sss-drop-theme__sectionHead{display:block}.sss-drop-theme__actions{justify-content:flex-start;margin-top:10px}.sss-drop-theme__promptTop{align-items:flex-start}}
+@media (max-width:800px){[data-drop-reveal="products"].is-visible .sss-drop-theme__productCard:nth-child(n){transform:none}}
+.sss-drop-theme:not(.sss-drop-theme--reveal-ready) [data-drop-reveal],
+.sss-drop-theme:not(.sss-drop-theme--reveal-ready) [data-drop-reveal] *{opacity:1!important;transform:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){[data-drop-reveal],[data-drop-reveal] *{opacity:1!important;transform:none!important;transition:none!important}}
 </style>
 <script>
+function bbbInitMonthlyDropReveals() {
+	var root = document.querySelector('.sss-drop-theme');
+	var sections = Array.prototype.slice.call(document.querySelectorAll('[data-drop-reveal]'));
+	if (!sections.length) return;
+	if (root) root.classList.add('sss-drop-theme--reveal-ready');
+	var revealInView = function() {
+		sections.forEach(function(section) {
+			if (section.classList.contains('is-visible')) return;
+			var rect = section.getBoundingClientRect();
+			if (rect.top < window.innerHeight * .86 && rect.bottom > 0) {
+				section.classList.add('is-visible');
+			}
+		});
+	};
+	if (!('IntersectionObserver' in window)) {
+		revealInView();
+		window.addEventListener('scroll', revealInView, { passive: true });
+		window.addEventListener('resize', revealInView);
+		return;
+	}
+	var observer = new IntersectionObserver(function(entries) {
+		entries.forEach(function(entry) {
+			if (!entry.isIntersecting) return;
+			entry.target.classList.add('is-visible');
+			observer.unobserve(entry.target);
+		});
+	}, { threshold: 0.18, rootMargin: '0px 0px -10% 0px' });
+	sections.forEach(function(section) { observer.observe(section); });
+	revealInView();
+	window.setTimeout(revealInView, 250);
+	window.addEventListener('load', revealInView);
+	window.addEventListener('scroll', revealInView, { passive: true });
+	window.addEventListener('hashchange', revealInView);
+}
+if (document.readyState === 'loading') {
+	document.addEventListener('DOMContentLoaded', bbbInitMonthlyDropReveals);
+} else {
+	bbbInitMonthlyDropReveals();
+}
+
 document.addEventListener('click', function(event) {
 	var button = event.target.closest('[data-bbb-copy-text]');
 	if (!button) return;

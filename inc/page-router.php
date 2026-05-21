@@ -33,6 +33,7 @@ function bbb_page_route_registry(): array {
 		'my-bookshelf'                   => 'page-my-bookshelf.php',
 		'my-vault'                       => '',
 		'our-story'                      => 'page-our-story.php',
+		'popular-pages'                  => 'page-popular-pages.php',
 		'privacy-policy'                 => '',
 		'reader-mood-quiz'               => 'page-reader-mood-quiz.php',
 		'reader-quizes'                  => 'page-reader-quizes.php',
