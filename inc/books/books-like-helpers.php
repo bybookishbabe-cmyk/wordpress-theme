@@ -210,7 +210,7 @@ function bbb_books_like_source_for_guide(WP_Post $post): ?WP_Post {
 		}
 	}
 
-	foreach (array('_bbb_source_book', 'source_book', '_source_book', 'book', '_book', 'books', '_books') as $meta_key) {
+	foreach (array('_bbb_source_book', 'source_book', '_source_book', 'custom.source_book', 'custom_source_book', '_custom_source_book', '_shopify_metafield_custom_source_book', 'source_book_handle', '_source_book_handle', 'book', '_book', 'books', '_books') as $meta_key) {
 		$book = bbb_books_like_find_book(get_post_meta($post->ID, $meta_key, true));
 		if ($book instanceof WP_Post) {
 			return $book;
@@ -482,7 +482,7 @@ function bbb_books_like_current_source_book(): ?WP_Post {
 
 	$page_id = get_queried_object_id();
 	if ($page_id) {
-		foreach (array('source_book', '_source_book', 'book', '_book') as $meta_key) {
+		foreach (array('source_book', '_source_book', 'custom.source_book', 'custom_source_book', '_custom_source_book', '_shopify_metafield_custom_source_book', 'source_book_handle', '_source_book_handle', 'book', '_book') as $meta_key) {
 			$book = bbb_books_like_find_book(get_post_meta($page_id, $meta_key, true));
 			if ($book instanceof WP_Post) {
 				return $book;
