@@ -39,7 +39,19 @@ if (!function_exists('bbb_shop_download_image')) {
 		}
 
 		$image_url = (string) get_post_meta($post_id, '_bbb_source_image_url', true);
-		return function_exists('bbb_society_product_importer_media_url') ? bbb_society_product_importer_media_url($image_url) : esc_url_raw($image_url);
+		if (function_exists('bbb_society_product_importer_media_url')) {
+			$image_url = bbb_society_product_importer_media_url($image_url);
+		}
+
+		if ('' === $image_url || str_starts_with($image_url, '/wp-content/')) {
+			$export = bbb_shop_product_export((string) get_post_field('post_name', $post_id));
+			$export_image_url = bbb_shop_seed_url((string) ($export['image_url'] ?? ''));
+			if ('' !== $export_image_url) {
+				$image_url = $export_image_url;
+			}
+		}
+
+		return esc_url_raw($image_url);
 	}
 }
 
@@ -106,6 +118,23 @@ if (!function_exists('bbb_shop_purchase_size_select')) {
 	}
 }
 
+if (!function_exists('bbb_shop_product_export')) {
+	function bbb_shop_product_export(string $handle): array {
+		$handle = sanitize_title($handle);
+		if ('' === $handle || !function_exists('bbb_society_product_importer_export_rows')) {
+			return array();
+		}
+
+		foreach (bbb_society_product_importer_export_rows() as $product) {
+			if (is_array($product) && sanitize_title((string) ($product['handle'] ?? '')) === $handle) {
+				return $product;
+			}
+		}
+
+		return array();
+	}
+}
+
 if (!function_exists('bbb_shop_download_kind')) {
 	function bbb_shop_download_kind(WP_Post $download): string {
 		$title = strtolower(get_the_title($download));
@@ -123,6 +152,75 @@ if (!function_exists('bbb_shop_download_kind')) {
 		}
 
 		return 'inserts';
+	}
+}
+
+if (!function_exists('bbb_shop_download_size_options')) {
+	function bbb_shop_download_size_options(int $post_id): array {
+		$prices = get_post_meta($post_id, 'edd_variable_prices', true);
+		if (!is_array($prices) || count($prices) < 2) {
+			return array();
+		}
+
+		$options = array();
+		foreach ($prices as $price_id => $price) {
+			if (!is_array($price)) {
+				continue;
+			}
+
+			$options[(string) $price_id] = (string) ($price['name'] ?? 'size ' . $price_id);
+		}
+
+		return $options;
+	}
+}
+
+if (!function_exists('bbb_shop_download_purchase_form')) {
+	function bbb_shop_download_purchase_form(int $post_id): void {
+		$size_options = bbb_shop_download_size_options($post_id);
+		if (!$size_options || !function_exists('edd_get_purchase_link')) {
+			if (function_exists('edd_get_purchase_link')) {
+				echo edd_get_purchase_link(
+					array(
+						'download_id' => $post_id,
+						'text'        => 'add to cart',
+						'price'       => false,
+						'class'       => 'bbb-shop-card__button',
+						'style'       => 'button',
+					)
+				);
+			} else {
+				?>
+				<a class="bbb-shop-card__button" href="<?php echo esc_url(get_permalink($post_id)); ?>">view details</a>
+				<?php
+			}
+			return;
+		}
+
+		$default_price_id = (string) get_post_meta($post_id, '_edd_default_price_id', true);
+		if ('' === $default_price_id || !isset($size_options[$default_price_id])) {
+			$default_price_id = (string) array_key_first($size_options);
+		}
+
+		$select_id = 'bbb-shop-size-' . $post_id;
+		?>
+		<form class="edd_download_purchase_form bbb-shop-card__purchaseForm" method="post">
+			<div class="bbb-shop-card__size">
+				<label for="<?php echo esc_attr($select_id); ?>">size</label>
+				<select id="<?php echo esc_attr($select_id); ?>" class="bbb-shop-card__sizeSelect" name="edd_options[price_id][]">
+					<?php foreach ($size_options as $price_id => $label) : ?>
+						<option value="<?php echo esc_attr($price_id); ?>" <?php selected($price_id, $default_price_id); ?>>
+							<?php echo esc_html($label); ?>
+						</option>
+					<?php endforeach; ?>
+				</select>
+			</div>
+			<input type="hidden" name="download_id" value="<?php echo esc_attr((string) $post_id); ?>">
+			<input type="hidden" name="edd_action" value="add_to_cart">
+			<input type="hidden" name="edd_redirect_to_checkout" value="">
+			<button type="submit" class="edd-submit bbb-shop-card__button">add to cart</button>
+		</form>
+		<?php
 	}
 }
 
@@ -423,17 +521,7 @@ if (function_exists('edd_purchase_variable_pricing')) {
 									<?php elseif ($missing_files && $is_admin_preview) : ?>
 										<a class="bbb-shop-card__button bbb-shop-card__button--ghost" href="<?php echo esc_url(get_edit_post_link($post_id)); ?>">finish setup</a>
 									<?php elseif (function_exists('edd_get_purchase_link')) : ?>
-										<?php
-										echo edd_get_purchase_link(
-											array(
-												'download_id' => $post_id,
-												'text'        => 'add to cart',
-												'price'       => false,
-												'class'       => 'bbb-shop-card__button',
-												'style'       => 'button',
-											)
-										);
-										?>
+										<?php bbb_shop_download_purchase_form($post_id); ?>
 									<?php else : ?>
 										<a class="bbb-shop-card__button" href="<?php echo esc_url(get_permalink($download)); ?>">view details</a>
 									<?php endif; ?>
