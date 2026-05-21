@@ -21,6 +21,7 @@ add_action(
 );
 
 add_action('admin_post_bbb_import_books_json', 'bbb_handle_books_json_import');
+add_action('admin_post_bbb_import_series_json', 'bbb_handle_series_json_import');
 add_action('admin_post_bbb_import_newsletter_issues_json', 'bbb_handle_newsletter_issues_json_import');
 add_action('admin_post_bbb_import_blog_post_dates_json', 'bbb_handle_blog_post_dates_json_import');
 
@@ -102,6 +103,16 @@ function bbb_render_shopify_import_page(): void {
 					);
 					?>
 				</p>
+				<p>
+					<?php
+					echo esc_html(
+						sprintf(
+							__('Series: %d total.', 'bybookishbabe-shopify-port'),
+							$status['series_count']
+						)
+					);
+					?>
+				</p>
 			</div>
 
 			<div class="card" style="max-width:none;">
@@ -112,6 +123,23 @@ function bbb_render_shopify_import_page(): void {
 					<?php wp_nonce_field('bbb_import_books_json'); ?>
 					<input type="file" name="bbb_import_file" accept=".json,application/json" required>
 					<?php submit_button(__('Import Books JSON', 'bybookishbabe-shopify-port')); ?>
+				</form>
+			</div>
+
+			<div class="card" style="max-width:none;">
+				<h2><?php esc_html_e('Series', 'bybookishbabe-shopify-port'); ?></h2>
+				<p><?php esc_html_e('Use the sss_series export. This creates/upserts Series records and stores every Shopify metafield for future editing.', 'bybookishbabe-shopify-port'); ?></p>
+				<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" enctype="multipart/form-data">
+					<input type="hidden" name="action" value="bbb_import_series_json">
+					<?php wp_nonce_field('bbb_import_series_json'); ?>
+					<input type="file" name="bbb_import_file" accept=".json,application/json">
+					<p>
+						<label>
+							<input type="checkbox" name="bbb_use_theme_file" value="1">
+							<?php esc_html_e('Use bundled theme export if no file is uploaded', 'bybookishbabe-shopify-port'); ?>
+						</label>
+					</p>
+					<?php submit_button(__('Import Series JSON', 'bybookishbabe-shopify-port')); ?>
 				</form>
 			</div>
 
@@ -214,11 +242,16 @@ function bbb_get_shopify_import_status(): array {
 		'shelf_names'        => array_slice($shelf_names, 0, 12),
 		'newsletter_issue_count' => post_type_exists('newsletter_issue') ? (int) wp_count_posts('newsletter_issue')->publish : 0,
 		'latest_newsletter_issue' => $latest_newsletter_issue,
+		'series_count'       => post_type_exists('sss_series') ? (int) wp_count_posts('sss_series')->publish : 0,
 	);
 }
 
 function bbb_handle_books_json_import(): void {
 	bbb_handle_shopify_json_import('bbb_import_books_json', 'bbb_import_books_from_data', 'books');
+}
+
+function bbb_handle_series_json_import(): void {
+	bbb_handle_shopify_json_import('bbb_import_series_json', 'bbb_import_series_from_data', 'series');
 }
 
 function bbb_handle_newsletter_issues_json_import(): void {
@@ -242,19 +275,22 @@ function bbb_handle_shopify_json_import(string $nonce_action, string $import_cal
 		'messages' => array(),
 	);
 
-	if (!isset($_FILES['bbb_import_file']) || !is_array($_FILES['bbb_import_file'])) {
-		$result['messages'][] = __('No JSON file was uploaded.', 'bybookishbabe-shopify-port');
+	$json = false;
+	$file = isset($_FILES['bbb_import_file']) && is_array($_FILES['bbb_import_file']) ? $_FILES['bbb_import_file'] : array();
+	if (($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
+		$tmp_name = (string) ($file['tmp_name'] ?? '');
+		$json     = $tmp_name !== '' ? file_get_contents($tmp_name) : false;
+	} elseif (!empty($_POST['bbb_use_theme_file']) && 'bbb_import_series_json' === $nonce_action) {
+		$theme_file = get_theme_file_path('firstpass/migration/exports/metaobjects/sss_series.json');
+		$json       = is_readable($theme_file) ? file_get_contents($theme_file) : false;
+	} else {
+		$error = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
+		$result['messages'][] = UPLOAD_ERR_NO_FILE === $error
+			? __('No JSON file was uploaded.', 'bybookishbabe-shopify-port')
+			: sprintf(__('Upload failed with error code %d.', 'bybookishbabe-shopify-port'), $error);
 		bbb_redirect_shopify_import_result($result);
 	}
 
-	$file = $_FILES['bbb_import_file'];
-	if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
-		$result['messages'][] = sprintf(__('Upload failed with error code %d.', 'bybookishbabe-shopify-port'), (int) ($file['error'] ?? 0));
-		bbb_redirect_shopify_import_result($result);
-	}
-
-	$tmp_name = (string) ($file['tmp_name'] ?? '');
-	$json     = $tmp_name !== '' ? file_get_contents($tmp_name) : false;
 	$data     = is_string($json) ? json_decode($json, true) : null;
 
 	if (!is_array($data)) {

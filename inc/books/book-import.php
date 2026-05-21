@@ -384,6 +384,155 @@ function bbb_import_blog_post_dates_from_data(array $data, ?callable $logger = n
 	);
 }
 
+function bbb_import_series_book_refs(array $fields, string $series_handle = ''): array {
+	$handles = array();
+	$ids     = array();
+	$edges   = $fields['sss_books']['references']['edges'] ?? array();
+
+	foreach ($edges as $edge) {
+		$node   = is_array($edge) ? ($edge['node'] ?? array()) : array();
+		$handle = is_array($node) ? sanitize_title((string) ($node['handle'] ?? '')) : '';
+		if ('' === $handle) {
+			continue;
+		}
+
+		$handles[] = $handle;
+		$book      = get_page_by_path($handle, OBJECT, array('bbb_book', 'sss_book'));
+		if ($book instanceof WP_Post) {
+			$ids[] = (string) $book->ID;
+		}
+	}
+
+	if (!$handles && '' !== $series_handle) {
+		$books = get_posts(
+			array(
+				'post_type'      => array('bbb_book', 'sss_book'),
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+				'meta_key'       => '_bbb_series_number',
+				'orderby'        => 'meta_value_num',
+				'order'          => 'ASC',
+				'meta_query'     => array(
+					array(
+						'key'   => '_bbb_series_handle',
+						'value' => $series_handle,
+					),
+				),
+			)
+		);
+
+		foreach ($books as $book) {
+			if (!$book instanceof WP_Post) {
+				continue;
+			}
+
+			$handles[] = (string) $book->post_name;
+			$ids[]     = (string) $book->ID;
+		}
+	}
+
+	return array(
+		'handles' => array_values(array_unique($handles)),
+		'ids'     => array_values(array_unique($ids)),
+	);
+}
+
+function bbb_import_series_from_data(array $data, ?callable $logger = null): array {
+	$entries  = bbb_import_metaobject_edges_from_export($data);
+	$count    = 0;
+	$messages = array();
+
+	$log = static function (string $message) use (&$messages, $logger): void {
+		$messages[] = $message;
+		if ($logger) {
+			$logger($message);
+		}
+	};
+
+	foreach ($entries as $edge) {
+		$node = $edge['node'] ?? array();
+		if (!is_array($node)) {
+			continue;
+		}
+
+		$handle = sanitize_title((string) ($node['handle'] ?? ''));
+		if ('' === $handle) {
+			$log('Skipped a series without a handle.');
+			continue;
+		}
+
+		$fields = bbb_import_metaobject_fields_map($node);
+		$title  = bbb_import_field_title($fields, (string) ($node['displayName'] ?? $handle));
+
+		$existing = get_page_by_path($handle, OBJECT, 'sss_series');
+		$post_id  = $existing instanceof WP_Post
+			? wp_update_post(
+				array(
+					'ID'           => $existing->ID,
+					'post_title'   => $title,
+					'post_name'    => $handle,
+					'post_content' => bbb_import_metaobject_field_value($fields, 'description'),
+				),
+				true
+			)
+			: wp_insert_post(
+				array(
+					'post_type'    => 'sss_series',
+					'post_status'  => 'publish',
+					'post_title'   => $title,
+					'post_name'    => $handle,
+					'post_content' => bbb_import_metaobject_field_value($fields, 'description'),
+				),
+				true
+			);
+
+		if (is_wp_error($post_id)) {
+			$log('Failed: ' . $handle . ' - ' . $post_id->get_error_message());
+			continue;
+		}
+
+		$book_refs = bbb_import_series_book_refs($fields, $handle);
+		$article   = $fields['linked_blog_post']['reference'] ?? array();
+		$article_handle = is_array($article) ? sanitize_title((string) ($article['handle'] ?? '')) : '';
+		$article_url    = '' !== $article_handle ? home_url('/' . $article_handle . '/') : '';
+		$article_post   = '' !== $article_handle ? get_page_by_path($article_handle, OBJECT, 'post') : null;
+		if ($article_post instanceof WP_Post) {
+			$permalink = get_permalink($article_post);
+			if ($permalink) {
+				$article_url = $permalink;
+			}
+		}
+
+		update_post_meta((int) $post_id, '_bbb_series_handle', $handle);
+		update_post_meta((int) $post_id, '_bbb_series_shopify_id', (string) ($node['id'] ?? ''));
+		update_post_meta((int) $post_id, '_bbb_series_shopify_updated_at', (string) ($node['updatedAt'] ?? ''));
+		update_post_meta((int) $post_id, '_bbb_series_author', bbb_import_metaobject_field_value($fields, 'author'));
+		$books_in_series = bbb_import_metaobject_field_value($fields, 'books_in_series');
+		update_post_meta((int) $post_id, '_bbb_series_books_in_series', '' !== $books_in_series ? absint($books_in_series) : count($book_refs['handles']));
+		update_post_meta((int) $post_id, '_bbb_series_book_handles', implode("\n", $book_refs['handles']));
+		update_post_meta((int) $post_id, '_bbb_series_book_ids', implode("\n", $book_refs['ids']));
+		update_post_meta((int) $post_id, '_bbb_series_linked_blog_post_handle', $article_handle);
+		update_post_meta((int) $post_id, '_bbb_series_linked_blog_post_url', $article_url);
+		update_post_meta((int) $post_id, '_bbb_series_shopify_entry_json', wp_json_encode($node, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+		if (taxonomy_exists('bbb_series')) {
+			$term = get_term_by('slug', $handle, 'bbb_series');
+			if (!$term) {
+				wp_insert_term($title, 'bbb_series', array('slug' => $handle));
+			} elseif ($term instanceof WP_Term && $term->name !== $title) {
+				wp_update_term($term->term_id, 'bbb_series', array('name' => $title));
+			}
+		}
+
+		++$count;
+	}
+
+	return array(
+		'count'    => $count,
+		'messages' => array_merge(array(sprintf('Series import processed %d entries.', $count)), $messages),
+	);
+}
+
 function bbb_import_assign_book_shelf(int $post_id, array $fields): bool {
 	$shelf_name   = bbb_import_field_reference_text($fields, 'shelf', array('name', 'title'));
 	$shelf_handle = bbb_import_field_reference_handle($fields, 'shelf');
