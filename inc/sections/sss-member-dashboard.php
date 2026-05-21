@@ -159,13 +159,25 @@ if (!function_exists('bbb_sss_drop_normalize_asset_url')) {
 		}
 
 		if (str_starts_with($url, '/wp-content/')) {
-			return home_url($url);
+			return bbb_sss_drop_local_upload_url($url);
 		}
 
 		$path = (string) wp_parse_url($url, PHP_URL_PATH);
 		if (str_starts_with($path, '/wp-content/')) {
 			$query = (string) wp_parse_url($url, PHP_URL_QUERY);
-			return home_url($path . ('' !== $query ? '?' . $query : ''));
+			return bbb_sss_drop_local_upload_url($path . ('' !== $query ? '?' . $query : ''));
+		}
+
+		return esc_url_raw($url);
+	}
+}
+
+if (!function_exists('bbb_sss_drop_local_upload_url')) {
+	function bbb_sss_drop_local_upload_url(string $path): string {
+		$url = home_url($path);
+		$host = (string) wp_parse_url($url, PHP_URL_HOST);
+		if (preg_match('/(^localhost$|^127\.|\.local$)/', $host)) {
+			$url = set_url_scheme($url, 'http');
 		}
 
 		return esc_url_raw($url);
