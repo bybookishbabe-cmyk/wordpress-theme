@@ -832,10 +832,86 @@
   text-transform: lowercase;
 }
 
-.bbb-account-shelf__dropCta {
+.bbb-account-shelf__dropPrompt {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, .9fr);
+  align-items: stretch;
+  gap: 24px;
+  color: inherit;
+  text-decoration: none;
   background:
-    linear-gradient(135deg, rgba(255,138,199,.2), rgba(255,255,255,.035)),
+    radial-gradient(circle at 10% 0%, rgba(255,138,199,.24), transparent 36rem),
+    linear-gradient(135deg, rgba(255,138,199,.15), rgba(255,255,255,.035)),
     #101010;
+  transition: border-color .22s ease, transform .22s ease, box-shadow .22s ease;
+}
+
+.bbb-account-shelf__dropPrompt:hover,
+.bbb-account-shelf__dropPrompt:focus-visible {
+  border-color: rgba(255, 138, 199, .45);
+  transform: translateY(-2px);
+  box-shadow: 0 24px 64px rgba(0,0,0,.42);
+  outline: none;
+}
+
+.bbb-account-shelf__dropPromptMain,
+.bbb-account-shelf__dropPromptSide {
+  display: flex;
+  flex-direction: column;
+}
+
+.bbb-account-shelf__dropPromptMain {
+  justify-content: center;
+  min-height: 250px;
+}
+
+.bbb-account-shelf__dropPromptSide {
+  justify-content: center;
+  padding: 20px;
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 12px;
+  background: rgba(0,0,0,.24);
+}
+
+.bbb-account-shelf__dropPromptTitle,
+.bbb-account-shelf__dropPromptSideTitle {
+  display: block;
+  margin: 0;
+  color: #fff;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(2.3rem, 4vw, 3.3rem);
+  font-weight: 400;
+  line-height: 1.05;
+  text-transform: lowercase;
+}
+
+.bbb-account-shelf__dropPromptSideTitle {
+  font-size: clamp(2rem, 3vw, 2.7rem);
+}
+
+.bbb-account-shelf__dropPromptCopy {
+  display: block;
+  max-width: 680px;
+  margin-top: 22px;
+  color: rgba(247,243,238,.72);
+  line-height: 1.65;
+}
+
+.bbb-account-shelf__dropPromptCta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: max-content;
+  min-height: 50px;
+  margin-top: 28px;
+  padding: 0 22px;
+  border-radius: 8px;
+  background: #e987c6;
+  color: #0a0a0a;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: lowercase;
 }
 
 .bbb-account-shelf__previewGrid {
@@ -912,6 +988,14 @@
     grid-template-columns: 1fr;
   }
 
+  .bbb-account-shelf__dropPrompt {
+    grid-template-columns: 1fr;
+  }
+
+  .bbb-account-shelf__dropPromptMain {
+    min-height: 0;
+  }
+
   .bbb-account-shelf__previewSplit {
     grid-template-columns: 1fr;
   }
@@ -941,6 +1025,7 @@
     grid-template-columns: 1fr;
   }
 
+  .bbb-account-shelf__dropPrompt,
   .bbb-account-shelf__feature,
   .bbb-account-shelf__readShelf,
   .bbb-account-shelf__quoteCard,
