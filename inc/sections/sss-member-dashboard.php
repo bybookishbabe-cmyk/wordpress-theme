@@ -895,12 +895,13 @@ $drop_nav = array_filter(
 						<img class="sss-drop-theme__calendarImage" src="<?php echo esc_url($calendar_image); ?>" alt="<?php echo esc_attr($name . ' calendar'); ?>" loading="lazy">
 					<?php endif; ?>
 					<?php if ('' !== $daily_prompt['text']) : ?>
-						<ol class="sss-drop-theme__prompts">
-							<li>
-								<span class="sss-drop-theme__promptDay">day <?php echo esc_html((string) $daily_prompt['day']); ?> of <?php echo esc_html((string) $daily_prompt['total']); ?></span>
-								<p><?php echo esc_html(strtolower($daily_prompt['text'])); ?></p>
-							</li>
-						</ol>
+						<article class="sss-drop-theme__dailyPrompt" aria-label="daily journal prompt">
+							<div class="sss-drop-theme__promptTop">
+								<p class="sss-drop-theme__promptLabel">today's prompt</p>
+								<span class="sss-drop-theme__promptDay"><?php echo esc_html('day ' . (string) $daily_prompt['day'] . ' of ' . (string) $daily_prompt['total']); ?></span>
+							</div>
+							<p class="sss-drop-theme__promptBody"><?php echo esc_html($daily_prompt['text']); ?></p>
+						</article>
 					<?php endif; ?>
 				</section>
 			<?php endif; ?>
@@ -951,11 +952,42 @@ $drop_nav = array_filter(
 .sss-drop-theme__wallpaperGrid img{display:block;width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:8px}
 .sss-drop-theme__calendarImage{display:block;width:100%;border-radius:8px}
 .sss-drop-theme__actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end}
-.sss-drop-theme__prompts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:14px 0 0;padding:0;list-style:none;counter-reset:prompts}
-.sss-drop-theme__prompts li{counter-increment:prompts;padding:11px;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(0,0,0,.2);color:rgba(246,246,246,.74);font-size:13px;line-height:1.45}
-.sss-drop-theme__prompts li:before{content:counter(prompts,decimal-leading-zero);display:block;margin-bottom:6px;color:var(--drop-accent);font-size:10px;letter-spacing:.12em}
-.sss-drop-theme__promptDay{display:block;margin-bottom:4px;color:var(--drop-accent);font-size:11px;letter-spacing:.08em;text-transform:lowercase}
-.sss-drop-theme__prompts p{margin:0}
+.sss-drop-theme__dailyPrompt{
+	border:1px solid rgba(255,255,255,.16);
+	border-radius:12px;
+	padding:16px;
+	margin-top:14px;
+	background:radial-gradient(circle at 82% 18%, rgba(255,138,199,.14), rgba(255,138,199,0) 44%), rgba(255,255,255,.025);
+	box-shadow:0 18px 42px rgba(0,0,0,.34);
+}
+.sss-drop-theme__promptTop{
+	display:flex;
+	flex-wrap:wrap;
+	justify-content:space-between;
+	align-items:baseline;
+	gap:10px;
+	margin-bottom:10px;
+}
+.sss-drop-theme__promptLabel{
+	margin:0;
+	color:var(--drop-accent);
+	font-size:11px;
+	letter-spacing:.12em;
+	text-transform:lowercase;
+}
+.sss-drop-theme__promptDay{
+	color:rgba(246,246,246,.72);
+	font-size:11px;
+	letter-spacing:.08em;
+}
+.sss-drop-theme__promptBody{
+	margin:0;
+	font-family:"Cormorant Garamond", Georgia, serif;
+	font-size:clamp(26px,3.5vw,40px);
+	line-height:1.15;
+	color:#fff;
+	font-style:italic;
+}
 .sss-drop-theme__productGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:start;gap:0;padding:14px 12px 30px}
 .sss-drop-theme__productCard{position:relative;overflow:visible;border:1px solid rgba(255,255,255,.12);border-radius:8px;background:rgba(0,0,0,.22);box-shadow:0 22px 54px rgba(0,0,0,.34)}
 .sss-drop-theme__productCard:nth-child(1){z-index:4;transform:rotate(-1.4deg)}
@@ -976,5 +1008,5 @@ $drop_nav = array_filter(
 .sss-drop-theme__downloadGrid small{margin-top:3px}
 .sss-drop-theme__productFallback{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:lowercase}
 .sss-drop-theme__downloadMissing{margin-top:-4px}
-@media (max-width:800px){.sss-drop-theme__grid,.sss-drop-theme__prompts,.sss-drop-theme__productGrid,.sss-drop-theme__assetGrid{grid-template-columns:1fr}.sss-drop-theme__productGrid{gap:12px;padding:0}.sss-drop-theme__productCard:nth-child(n){margin:0;transform:none}.sss-drop-theme__productBody{margin:-10px 10px 10px}.sss-drop-theme__nav{position:relative;justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap}.sss-drop-theme__nav a{white-space:nowrap}.sss-drop-theme__wallpaperGrid{display:flex;overflow-x:auto;padding-bottom:4px}.sss-drop-theme__wallpaperGrid a{min-width:46%}.sss-drop-theme__sectionHead{display:block}.sss-drop-theme__actions{justify-content:flex-start;margin-top:10px}}
+@media (max-width:800px){.sss-drop-theme__grid,.sss-drop-theme__productGrid,.sss-drop-theme__assetGrid{grid-template-columns:1fr}.sss-drop-theme__productGrid{gap:12px;padding:0}.sss-drop-theme__productCard:nth-child(n){margin:0;transform:none}.sss-drop-theme__productBody{margin:-10px 10px 10px}.sss-drop-theme__nav{position:relative;justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap}.sss-drop-theme__nav a{white-space:nowrap}.sss-drop-theme__wallpaperGrid{display:flex;overflow-x:auto;padding-bottom:4px}.sss-drop-theme__wallpaperGrid a{min-width:46%}.sss-drop-theme__sectionHead{display:block}.sss-drop-theme__actions{justify-content:flex-start;margin-top:10px}.sss-drop-theme__promptTop{align-items:flex-start}}
 </style>

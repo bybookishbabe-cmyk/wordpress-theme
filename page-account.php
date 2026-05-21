@@ -26,6 +26,14 @@ $dashboard_url = function_exists('bbb_page_url') ? bbb_page_url('member-dashboar
 $monthly_drop_url = function_exists('bbb_page_url') ? bbb_page_url('monthly-theme') : home_url('/monthly-theme/');
 $society_url = function_exists('bbb_page_url') ? bbb_page_url('smut-sentiment-society') : home_url('/smut-sentiment-society/');
 $shop_url = function_exists('bbb_page_url') ? bbb_page_url('shop') : home_url('/shop/');
+$daily_prompt = is_array($account_data['dailyJournalPrompt'] ?? null) ? $account_data['dailyJournalPrompt'] : array();
+$daily_prompt_text = isset($daily_prompt['text']) ? trim((string) $daily_prompt['text']) : '';
+$daily_prompt_day = isset($daily_prompt['day']) ? (int) $daily_prompt['day'] : 0;
+$daily_prompt_total = isset($daily_prompt['total']) ? (int) $daily_prompt['total'] : 0;
+$show_daily_prompt = $is_society && '' !== $daily_prompt_text;
+$daily_prompt_meta = ($daily_prompt_day > 0 && $daily_prompt_total > 0)
+	? sprintf('day %s of %s', (string) $daily_prompt_day, (string) $daily_prompt_total)
+	: 'daily journal prompt';
 $purchase_rows = array();
 $bookshelf_preview_books = array_slice(
 	array_values(
@@ -159,6 +167,22 @@ get_header();
 						<p>open this month's society theme, files, prompts, and member-only extras.</p>
 						<a class="bbb-account-shelf__button" href="<?php echo esc_url($monthly_drop_url); ?>">open monthly drop</a>
 					</div>
+
+					<?php if ($show_daily_prompt) : ?>
+						<div class="bbb-account-shelf__journalPrompt">
+							<p class="bbb-account-shelf__perkKicker">daily journal prompt</p>
+							<h2>your prompt for today.</h2>
+							<p class="bbb-account-shelf__journalPromptMeta"><?php echo esc_html($daily_prompt_meta); ?></p>
+							<blockquote class="bbb-account-shelf__journalPromptBody"><?php echo esc_html($daily_prompt_text); ?></blockquote>
+						</div>
+					<?php else : ?>
+						<div class="bbb-account-shelf__journalPrompt">
+							<p class="bbb-account-shelf__perkKicker">daily journal prompt</p>
+							<h2>your prompt will appear here.</h2>
+							<p class="bbb-account-shelf__journalPromptMeta">journal prompts are added from your active monthly drop.</p>
+							<a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="<?php echo esc_url($monthly_drop_url); ?>">check monthly drop</a>
+						</div>
+					<?php endif; ?>
 				<?php endif; ?>
 
 				<div class="bbb-account-shelf__previewGrid">
