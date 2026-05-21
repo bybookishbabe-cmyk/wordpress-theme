@@ -779,6 +779,17 @@ if ($prompts) {
 		);
 	}
 }
+$daily_prompt_note_text = '';
+$daily_prompt_mailto = '';
+if ('' !== $daily_prompt['text']) {
+	$daily_prompt_note_text = sprintf(
+		"%s\n\n%s\n\n%s",
+		$name,
+		'today\'s prompt: ' . $daily_prompt['text'],
+		$daily_prompt['day'] > 0 ? 'day ' . (string) $daily_prompt['day'] . ' of ' . (string) $daily_prompt['total'] : 'daily journal prompt'
+	);
+	$daily_prompt_mailto = 'mailto:?subject=' . rawurlencode($name . ' journal prompt') . '&body=' . rawurlencode($daily_prompt_note_text);
+}
 $mood_pills = bbb_sss_drop_reference_items($fields, 'trial');
 $printable_products = bbb_sss_drop_reference_items($fields, 'monthly_collection_printable_products');
 $physical_products = bbb_sss_drop_reference_items($fields, 'monthly_collection_physical_products');
@@ -916,7 +927,7 @@ $drop_nav = array_filter(
 			<section class="sss-drop-theme__wallpapers" id="drop-wallpapers">
 				<div class="sss-drop-theme__sectionHead">
 					<p>wallpapers</p>
-					<h2>the visual file</h2>
+					<h2>change up your wallpaper</h2>
 					<?php if ('' !== bbb_sss_drop_value($fields, 'wallpaper_canva_url')) : ?>
 						<a href="<?php echo esc_url(bbb_sss_drop_value($fields, 'wallpaper_canva_url')); ?>" target="_blank" rel="noopener">edit in canva</a>
 					<?php endif; ?>
@@ -948,9 +959,6 @@ $drop_nav = array_filter(
 						<?php endif; ?>
 					</div>
 				</div>
-					<?php if ('' !== $calendar_image) : ?>
-						<img class="sss-drop-theme__calendarImage" src="<?php echo esc_url($calendar_image); ?>" alt="<?php echo esc_attr($name . ' calendar'); ?>" loading="lazy">
-					<?php endif; ?>
 					<?php if ('' !== $daily_prompt['text']) : ?>
 						<article class="sss-drop-theme__dailyPrompt" aria-label="daily journal prompt">
 							<div class="sss-drop-theme__promptTop">
@@ -958,7 +966,15 @@ $drop_nav = array_filter(
 								<span class="sss-drop-theme__promptDay"><?php echo esc_html('day ' . (string) $daily_prompt['day'] . ' of ' . (string) $daily_prompt['total']); ?></span>
 							</div>
 							<p class="sss-drop-theme__promptBody"><?php echo esc_html($daily_prompt['text']); ?></p>
+							<div class="sss-drop-theme__promptActions" aria-label="prompt actions">
+								<button type="button" data-bbb-copy-text="<?php echo esc_attr($daily_prompt_note_text); ?>">copy prompt</button>
+								<a href="<?php echo esc_url($daily_prompt_mailto); ?>">email it</a>
+								<a href="mobilenotes://">open notes</a>
+							</div>
 						</article>
+					<?php endif; ?>
+					<?php if ('' !== $calendar_image) : ?>
+						<img class="sss-drop-theme__calendarImage" src="<?php echo esc_url($calendar_image); ?>" alt="<?php echo esc_attr($name . ' calendar'); ?>" loading="lazy">
 					<?php endif; ?>
 				</section>
 			<?php endif; ?>
@@ -1061,6 +1077,34 @@ $drop_nav = array_filter(
 	color:#fff;
 	font-style:italic;
 }
+.sss-drop-theme__promptActions{
+	display:flex;
+	flex-wrap:wrap;
+	gap:9px;
+	margin-top:16px;
+}
+.sss-drop-theme__promptActions a,
+.sss-drop-theme__promptActions button{
+	display:inline-flex;
+	align-items:center;
+	justify-content:center;
+	min-height:38px;
+	padding:0 13px;
+	border:1px solid rgba(var(--drop-accent-rgb),.4);
+	border-radius:999px;
+	background:rgba(var(--drop-accent-rgb),.1);
+	color:#fff;
+	font:inherit;
+	font-size:12px;
+	letter-spacing:.08em;
+	text-decoration:none;
+	text-transform:lowercase;
+	cursor:pointer;
+}
+.sss-drop-theme__promptActions a:hover,
+.sss-drop-theme__promptActions a:focus,
+.sss-drop-theme__promptActions button:hover,
+.sss-drop-theme__promptActions button:focus{border-color:var(--drop-accent);background:rgba(var(--drop-accent-rgb),.18);outline:none}
 .sss-drop-theme__productGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:start;gap:0;padding:14px 12px 30px}
 .sss-drop-theme__productCard{position:relative;overflow:visible;border:1px solid rgba(255,255,255,.12);border-radius:8px;background:rgba(0,0,0,.22);box-shadow:0 22px 54px rgba(0,0,0,.34)}
 .sss-drop-theme__productCard:nth-child(1){z-index:4;transform:rotate(-1.4deg)}
@@ -1084,3 +1128,34 @@ $drop_nav = array_filter(
 @media (max-width:900px){.sss-drop-theme__hero{grid-template-columns:1fr;min-height:0;padding:26px 18px}.sss-drop-theme__heroArt{max-width:520px;width:100%;margin:0 auto}.sss-drop-theme__heroFrame img{height:auto;aspect-ratio:4/5}.sss-drop-theme h1{max-width:9ch}.sss-drop-theme__nav{position:relative;justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap}.sss-drop-theme__nav a{white-space:nowrap}}
 @media (max-width:800px){.sss-drop-theme__grid,.sss-drop-theme__productGrid,.sss-drop-theme__assetGrid{grid-template-columns:1fr}.sss-drop-theme__productGrid{gap:12px;padding:0}.sss-drop-theme__productCard:nth-child(n){margin:0;transform:none}.sss-drop-theme__productBody{margin:-10px 10px 10px}.sss-drop-theme__wallpaperGrid{display:flex;overflow-x:auto;padding-bottom:4px}.sss-drop-theme__wallpaperGrid a{min-width:46%}.sss-drop-theme__sectionHead{display:block}.sss-drop-theme__actions{justify-content:flex-start;margin-top:10px}.sss-drop-theme__promptTop{align-items:flex-start}}
 </style>
+<script>
+document.addEventListener('click', function(event) {
+	var button = event.target.closest('[data-bbb-copy-text]');
+	if (!button) return;
+	var text = button.getAttribute('data-bbb-copy-text') || '';
+	var copied = navigator.clipboard
+		? navigator.clipboard.writeText(text)
+		: new Promise(function(resolve, reject) {
+			var field = document.createElement('textarea');
+			field.value = text;
+			field.setAttribute('readonly', '');
+			field.style.position = 'fixed';
+			field.style.opacity = '0';
+			document.body.appendChild(field);
+			field.select();
+			try {
+				document.execCommand('copy') ? resolve() : reject();
+			} catch (error) {
+				reject(error);
+			}
+			document.body.removeChild(field);
+		});
+	copied.then(function() {
+		var original = button.textContent;
+		button.textContent = 'copied';
+		window.setTimeout(function() {
+			button.textContent = original;
+		}, 1600);
+	});
+});
+</script>

@@ -762,6 +762,41 @@
   font-style: italic;
 }
 
+.bbb-account-shelf__journalPromptActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 18px;
+}
+
+.bbb-account-shelf__journalPromptActions a,
+.bbb-account-shelf__journalPromptActions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid rgba(255, 138, 199, .34);
+  border-radius: 999px;
+  background: rgba(255, 138, 199, .08);
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-decoration: none;
+  text-transform: lowercase;
+  cursor: pointer;
+}
+
+.bbb-account-shelf__journalPromptActions a:hover,
+.bbb-account-shelf__journalPromptActions a:focus-visible,
+.bbb-account-shelf__journalPromptActions button:hover,
+.bbb-account-shelf__journalPromptActions button:focus-visible {
+  border-color: #ff8ac7;
+  background: rgba(255, 138, 199, .16);
+  outline: none;
+}
+
 .bbb-account-shelf__purchaseList {
   display: grid;
   gap: 10px;

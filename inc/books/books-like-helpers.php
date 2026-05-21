@@ -213,9 +213,15 @@ function bbb_books_like_guide_posts(): array {
 			'orderby'        => 'menu_order title',
 			'order'          => 'ASC',
 			'meta_query'     => array(
+				'relation' => 'OR',
 				array(
 					'key'     => '_wp_page_template',
 					'value'   => array('page-books-like.php', 'templates/page.books-like.json', 'page.books-like'),
+					'compare' => 'IN',
+				),
+				array(
+					'key'     => '_shopify_template_suffix',
+					'value'   => array('books-like', 'page.books-like'),
 					'compare' => 'IN',
 				),
 			),
@@ -224,6 +230,10 @@ function bbb_books_like_guide_posts(): array {
 
 	$guides = array();
 	foreach ($pages as $page) {
+		if (in_array($page->post_name, array('books-like', 'books-like-directory'), true)) {
+			continue;
+		}
+
 		$source = bbb_books_like_source_for_guide($page);
 		$guides[] = array(
 			'post'   => $page,

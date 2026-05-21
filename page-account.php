@@ -34,6 +34,17 @@ $show_daily_prompt = $is_society && '' !== $daily_prompt_text;
 $daily_prompt_meta = ($daily_prompt_day > 0 && $daily_prompt_total > 0)
 	? sprintf('day %s of %s', (string) $daily_prompt_day, (string) $daily_prompt_total)
 	: 'daily journal prompt';
+$daily_prompt_note_text = '';
+$daily_prompt_mailto = '';
+if ('' !== $daily_prompt_text) {
+	$daily_prompt_note_text = sprintf(
+		"%s\n\n%s\n\n%s",
+		'monthly society prompt',
+		'today\'s prompt: ' . $daily_prompt_text,
+		$daily_prompt_meta
+	);
+	$daily_prompt_mailto = 'mailto:?subject=' . rawurlencode('Daily society journal prompt') . '&body=' . rawurlencode($daily_prompt_note_text);
+}
 $purchase_rows = array();
 $bookshelf_preview_books = array_slice(
 	array_values(
@@ -174,6 +185,12 @@ get_header();
 							<h2>your prompt for today.</h2>
 							<p class="bbb-account-shelf__journalPromptMeta"><?php echo esc_html($daily_prompt_meta); ?></p>
 							<blockquote class="bbb-account-shelf__journalPromptBody"><?php echo esc_html($daily_prompt_text); ?></blockquote>
+							<div class="bbb-account-shelf__journalPromptActions" aria-label="prompt actions">
+								<button type="button" data-bbb-copy-text="<?php echo esc_attr($daily_prompt_note_text); ?>">copy prompt</button>
+								<a href="<?php echo esc_url($daily_prompt_mailto); ?>">email it</a>
+								<a href="mobilenotes://">open notes</a>
+								<a href="<?php echo esc_url($monthly_drop_url); ?>">open monthly drop</a>
+							</div>
 						</div>
 					<?php else : ?>
 						<div class="bbb-account-shelf__journalPrompt">
@@ -233,5 +250,36 @@ get_header();
 	</section>
 </main>
 
+<script>
+document.addEventListener('click', function(event) {
+	var button = event.target.closest('[data-bbb-copy-text]');
+	if (!button) return;
+	var text = button.getAttribute('data-bbb-copy-text') || '';
+	var copied = navigator.clipboard
+		? navigator.clipboard.writeText(text)
+		: new Promise(function(resolve, reject) {
+			var field = document.createElement('textarea');
+			field.value = text;
+			field.setAttribute('readonly', '');
+			field.style.position = 'fixed';
+			field.style.opacity = '0';
+			document.body.appendChild(field);
+			field.select();
+			try {
+				document.execCommand('copy') ? resolve() : reject();
+			} catch (error) {
+				reject(error);
+			}
+			document.body.removeChild(field);
+		});
+	copied.then(function() {
+		var original = button.textContent;
+		button.textContent = 'copied';
+		window.setTimeout(function() {
+			button.textContent = original;
+		}, 1600);
+	});
+});
+</script>
 <?php
 get_footer();
