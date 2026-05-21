@@ -1,20 +1,25 @@
 .bbb-shop {
-  --shop-ink: #27151d;
-  --shop-muted: #72545f;
-  --shop-line: rgba(39, 21, 29, 0.14);
-  --shop-pink: #f3b7ca;
-  --shop-rose: #fff4f7;
-  --shop-cream: #fffaf6;
-  background: var(--shop-cream);
+  --shop-bg: #050505;
+  --shop-panel: #0d0d0d;
+  --shop-panel-soft: #151515;
+  --shop-ink: #f6f1eb;
+  --shop-muted: rgba(246, 241, 235, 0.66);
+  --shop-dim: rgba(246, 241, 235, 0.42);
+  --shop-line: rgba(246, 241, 235, 0.13);
+  --shop-pink: #ff8ac7;
+  --shop-pink-soft: rgba(255, 138, 199, 0.14);
+  min-height: 100vh;
+  background: var(--shop-bg);
   color: var(--shop-ink);
+  text-transform: lowercase;
 }
 
 .bbb-shop__hero {
-  padding: clamp(56px, 7vw, 92px) 20px 32px;
+  padding: clamp(58px, 8vw, 108px) 20px 34px;
   border-bottom: 1px solid var(--shop-line);
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.76), rgba(255, 244, 247, 0.9)),
-    url("../bybookishbabe_4c4e36b4-20d6-4135-8721-c1d4c22273fb.png") center/cover;
+    radial-gradient(circle at 82% 12%, rgba(255, 138, 199, 0.12), transparent 28rem),
+    linear-gradient(180deg, #050505 0%, #0b0b0b 100%);
 }
 
 .bbb-shop__heroInner,
@@ -31,60 +36,78 @@
 
 .bbb-shop__kicker {
   margin: 0;
-  font: 700 12px/1.2 Assistant, system-ui, sans-serif;
+  color: var(--shop-pink);
+  font: 800 12px/1.2 Assistant, system-ui, sans-serif;
   letter-spacing: 0;
-  text-transform: uppercase;
-  color: #9d4568;
+  text-transform: lowercase;
 }
 
 .bbb-shop h1,
 .bbb-shop h2,
 .bbb-shop h3 {
   margin: 0;
+  color: var(--shop-ink);
   font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 500;
   letter-spacing: 0;
+  text-transform: lowercase;
 }
 
 .bbb-shop h1 {
-  max-width: 760px;
-  font-size: clamp(44px, 7vw, 86px);
-  line-height: 0.94;
+  max-width: 780px;
+  font-size: clamp(48px, 8vw, 92px);
+  line-height: 0.92;
 }
 
 .bbb-shop__intro {
-  max-width: 670px;
+  max-width: 680px;
   margin: 0;
   color: var(--shop-muted);
   font: 500 18px/1.65 Assistant, system-ui, sans-serif;
+  text-transform: lowercase;
 }
 
 .bbb-shop__filters {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
 .bbb-shop__filters a {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   min-height: 42px;
   padding: 10px 14px;
   border: 1px solid var(--shop-line);
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.035);
   color: var(--shop-ink);
-  font: 700 13px/1 Assistant, system-ui, sans-serif;
+  font: 800 13px/1 Assistant, system-ui, sans-serif;
   text-decoration: none;
+  text-transform: lowercase;
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.bbb-shop__filters a:hover,
+.bbb-shop__filters a:focus-visible {
+  border-color: rgba(255, 138, 199, 0.55);
+  background: var(--shop-pink-soft);
+  color: #fff;
+  outline: none;
 }
 
 .bbb-shop__filters span {
-  color: #9d4568;
+  color: var(--shop-pink);
 }
 
 .bbb-shop__section {
-  padding: 44px 0 64px;
+  padding: 48px 0 70px;
+}
+
+.bbb-shop__section + .bbb-shop__section {
+  border-top: 1px solid var(--shop-line);
 }
 
 .bbb-shop__sectionHead {
@@ -96,8 +119,8 @@
 }
 
 .bbb-shop__sectionHead h2 {
-  font-size: clamp(32px, 4vw, 48px);
-  line-height: 1;
+  font-size: clamp(34px, 4vw, 52px);
+  line-height: 0.98;
 }
 
 .bbb-shop__grid {
@@ -112,15 +135,15 @@
   overflow: hidden;
   border: 1px solid var(--shop-line);
   border-radius: 8px;
-  background: #fff;
+  background: var(--shop-panel);
 }
 
 .bbb-shop-card__media {
   display: grid;
   aspect-ratio: 1 / 1;
   overflow: hidden;
-  background: var(--shop-rose);
-  color: #9d4568;
+  background: var(--shop-panel-soft);
+  color: var(--shop-pink);
   font: 700 64px/1 "Cormorant Garamond", Georgia, serif;
   place-items: center;
   text-decoration: none;
@@ -130,10 +153,11 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 180ms ease;
+  transition: transform 180ms ease, opacity 180ms ease;
 }
 
 .bbb-shop-card:hover .bbb-shop-card__media img {
+  opacity: 0.92;
   transform: scale(1.035);
 }
 
@@ -152,12 +176,12 @@
 
 .bbb-shop-card__badges span {
   padding: 5px 7px;
-  border: 1px solid rgba(157, 69, 104, 0.2);
+  border: 1px solid rgba(255, 138, 199, 0.32);
   border-radius: 4px;
-  color: #9d4568;
-  background: #fff4f7;
+  color: var(--shop-pink);
+  background: var(--shop-pink-soft);
   font: 800 10px/1 Assistant, system-ui, sans-serif;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-shop-card h3 {
@@ -174,14 +198,16 @@
   margin: 0;
   color: var(--shop-muted);
   font: 500 14px/1.55 Assistant, system-ui, sans-serif;
+  text-transform: lowercase;
 }
 
 .bbb-shop-card__meta {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  color: var(--shop-muted);
-  font: 700 13px/1.2 Assistant, system-ui, sans-serif;
+  color: var(--shop-dim);
+  font: 800 13px/1.2 Assistant, system-ui, sans-serif;
+  text-transform: lowercase;
 }
 
 .bbb-shop-card__meta strong {
@@ -201,32 +227,36 @@
   width: 100%;
   min-height: 42px;
   padding: 11px 14px;
-  border: 1px solid #27151d;
+  border: 1px solid var(--shop-pink);
   border-radius: 4px;
-  background: #27151d;
-  color: #fff;
-  font: 800 13px/1 Assistant, system-ui, sans-serif;
+  background: var(--shop-pink);
+  color: #080808;
+  font: 900 13px/1 Assistant, system-ui, sans-serif;
   text-decoration: none;
   text-transform: lowercase;
 }
 
 .bbb-shop-card__button--ghost {
-  background: #fff;
-  color: #27151d;
+  background: transparent;
+  color: var(--shop-ink);
 }
 
 .bbb-shop__empty {
-  padding: 56px 0 72px;
+  padding: 60px 0 82px;
 }
 
 .bbb-shop__empty h2 {
-  font-size: clamp(30px, 4vw, 44px);
+  color: var(--shop-ink);
+  font-size: clamp(34px, 5vw, 58px);
+  line-height: 0.98;
 }
 
 .bbb-shop__empty p {
   max-width: 560px;
+  margin: 14px 0 0;
   color: var(--shop-muted);
   font: 500 16px/1.6 Assistant, system-ui, sans-serif;
+  text-transform: lowercase;
 }
 
 .bbb-shop__jumpSections {
@@ -235,7 +265,7 @@
 
 @media (max-width: 680px) {
   .bbb-shop__hero {
-    padding-top: 42px;
+    padding-top: 46px;
   }
 
   .bbb-shop__filters {

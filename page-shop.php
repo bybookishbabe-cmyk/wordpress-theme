@@ -7,7 +7,8 @@
 
 declare(strict_types=1);
 
-wp_enqueue_style('bbb-shop-page', get_template_directory_uri() . '/assets/css/shop-page.css', array('bbb-base'), wp_get_theme()->get('Version'));
+$shop_css_path = get_theme_file_path('assets/css/shop-page.css');
+wp_enqueue_style('bbb-shop-page', get_template_directory_uri() . '/assets/css/shop-page.css', array('bbb-base'), file_exists($shop_css_path) ? (string) filemtime($shop_css_path) : wp_get_theme()->get('Version'));
 
 get_header();
 
@@ -138,20 +139,20 @@ $sections = array(
 		<div class="bbb-shop__heroInner">
 			<p class="bbb-shop__kicker">digital shop</p>
 			<h1>printables, templates, and reader tools</h1>
-			<p class="bbb-shop__intro">A cleaner home for the downloads: Kindle inserts, bookish Canva templates, and the little tools that make a reading life feel prettier and easier to keep.</p>
+			<p class="bbb-shop__intro">a cleaner home for the downloads: kindle inserts, bookish canva templates, and the little tools that make a reading life feel prettier and easier to keep.</p>
 			<nav class="bbb-shop__filters" aria-label="Shop sections">
-				<a href="#shop-all">All <span><?php echo esc_html((string) $counts['all']); ?></span></a>
-				<a href="#kindle-inserts">Kindle inserts <span><?php echo esc_html((string) $counts['inserts']); ?></span></a>
-				<a href="#templates">Templates <span><?php echo esc_html((string) $counts['templates']); ?></span></a>
-				<a href="#reader-tools">Reader tools <span><?php echo esc_html((string) $counts['tools']); ?></span></a>
+				<a href="#shop-all">all <span><?php echo esc_html((string) $counts['all']); ?></span></a>
+				<a href="#kindle-inserts">kindle inserts <span><?php echo esc_html((string) $counts['inserts']); ?></span></a>
+				<a href="#templates">templates <span><?php echo esc_html((string) $counts['templates']); ?></span></a>
+				<a href="#reader-tools">reader tools <span><?php echo esc_html((string) $counts['tools']); ?></span></a>
 			</nav>
 		</div>
 	</section>
 
 	<?php if (!$downloads) : ?>
 		<section class="bbb-shop__empty">
-			<h2>Shop downloads are almost ready.</h2>
-			<p>Import the digital products, then publish the downloads you want shown here.</p>
+			<h2>shop downloads are almost ready.</h2>
+			<p>publish the downloads you want shown here.</p>
 		</section>
 	<?php else : ?>
 		<div id="shop-all"></div>
