@@ -11,6 +11,7 @@
   --checkout-pink: #f59ac8;
   --checkout-pink-deep: #9e406e;
   --checkout-mint: #cdeee3;
+  --checkout-body-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   min-height: 100vh;
   background: var(--checkout-bg);
   color: var(--checkout-ink);
@@ -43,7 +44,9 @@
 .bbb-checkout__kicker {
   margin: 0;
   color: var(--checkout-pink);
-  font: 900 12px/1.2 Assistant, system-ui, sans-serif;
+  font: 700 13px/1.25 var(--checkout-body-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .bbb-checkout h1,
@@ -67,7 +70,7 @@
   max-width: 650px;
   margin: 0;
   color: var(--checkout-muted);
-  font: 600 16px/1.6 Assistant, system-ui, sans-serif;
+  font: 500 16px/1.65 var(--checkout-body-font);
 }
 
 .bbb-checkout__steps {
@@ -78,7 +81,7 @@
   margin: 20px 0 0;
   padding: 0;
   color: var(--checkout-dim);
-  font: 900 13px/1 Assistant, system-ui, sans-serif;
+  font: 650 13px/1.2 var(--checkout-body-font);
   list-style: none;
 }
 
@@ -192,8 +195,8 @@
 .bbb-checkout .edd_purchase_receipt_files,
 .bbb-checkout .wp-block-edd-checkout {
   color: #ffffff;
-  font-family: Assistant, system-ui, sans-serif;
-  text-transform: lowercase;
+  font-family: var(--checkout-body-font);
+  text-transform: none;
 }
 
 .bbb-checkout .wp-block-edd-checkout {
@@ -216,8 +219,9 @@
   display: block;
   padding: 22px 22px 0;
   color: var(--checkout-muted);
-  font: 900 12px/1.2 Assistant, system-ui, sans-serif;
-  letter-spacing: 0.12em;
+  font: 700 13px/1.25 var(--checkout-body-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .bbb-checkout #edd_checkout_form_wrap,
@@ -274,7 +278,7 @@
   border: 0;
   background: transparent;
   color: var(--checkout-muted);
-  font: 800 14px/1.45 Assistant, system-ui, sans-serif;
+  font: 500 15px/1.5 var(--checkout-body-font);
 }
 
 .bbb-checkout #edd_checkout_cart .edd_cart_item_name,
@@ -314,7 +318,7 @@
   display: block;
   min-width: 0;
   color: #ffffff;
-  font: 800 16px/1.18 Assistant, system-ui, sans-serif;
+  font: 650 16px/1.35 var(--checkout-body-font);
   overflow-wrap: normal;
   word-break: normal;
   hyphens: none;
@@ -328,7 +332,7 @@
   justify-items: end;
   align-content: center;
   color: #ffffff;
-  font: 900 17px/1 Assistant, system-ui, sans-serif;
+  font: 700 17px/1.2 var(--checkout-body-font);
   text-align: right;
 }
 
@@ -350,7 +354,7 @@
   border: 0 !important;
   background: transparent !important;
   color: var(--checkout-pink) !important;
-  font: 900 12px/1 Assistant, system-ui, sans-serif;
+  font: 650 13px/1.2 var(--checkout-body-font);
   text-decoration: underline;
   text-underline-offset: 0.18em;
   box-shadow: none !important;
@@ -370,7 +374,7 @@
 .bbb-checkout #edd_checkout_cart .edd_cart_footer_row td,
 .bbb-checkout .edd-blocks-cart__row-footer {
   color: #ffffff;
-  font: 800 15px/1.45 Assistant, system-ui, sans-serif;
+  font: 600 15px/1.5 var(--checkout-body-font);
   text-align: left;
 }
 
@@ -411,8 +415,9 @@
   display: block;
   margin: 0 0 18px;
   color: #ffffff;
-  font: 900 12px/1.2 Assistant, system-ui, sans-serif;
-  letter-spacing: 0.12em;
+  font: 700 13px/1.25 var(--checkout-body-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .bbb-checkout #edd_checkout_form_wrap p,
@@ -431,7 +436,7 @@
   display: block;
   margin: 0 0 8px;
   color: #ffffff;
-  font: 900 14px/1.25 Assistant, system-ui, sans-serif;
+  font: 600 15px/1.35 var(--checkout-body-font);
 }
 
 .bbb-checkout #edd_checkout_form_wrap .edd-description,
@@ -439,7 +444,7 @@
   display: block;
   margin-top: 7px;
   color: rgba(255, 255, 255, 0.78);
-  font: 700 12px/1.45 Assistant, system-ui, sans-serif;
+  font: 500 13px/1.5 var(--checkout-body-font);
 }
 
 .bbb-checkout input[type="text"],
@@ -456,7 +461,7 @@
   border-radius: 6px;
   background: #252321 !important;
   color: var(--checkout-ink) !important;
-  font: 800 17px/1.2 Assistant, system-ui, sans-serif;
+  font: 500 17px/1.35 var(--checkout-body-font);
   box-shadow: none;
 }
 
@@ -517,9 +522,9 @@
   border-radius: 6px;
   background: transparent !important;
   color: var(--checkout-ink) !important;
-  font: 900 15px/1 Assistant, system-ui, sans-serif;
+  font: 700 15px/1.1 var(--checkout-body-font);
   text-decoration: none;
-  text-transform: lowercase;
+  text-transform: none;
   box-shadow: none !important;
   cursor: pointer;
 }
@@ -559,17 +564,18 @@
 
 .bbb-checkout__sample span {
   color: var(--checkout-pink);
-  font: 900 12px/1.2 Assistant, system-ui, sans-serif;
-  letter-spacing: 0.1em;
+  font: 700 13px/1.25 var(--checkout-body-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .bbb-checkout__sample strong {
-  font: 900 23px/1 Assistant, system-ui, sans-serif;
+  font: 700 23px/1.15 var(--checkout-body-font);
 }
 
 .bbb-checkout__sample em {
   color: rgba(255, 255, 255, 0.78);
-  font: 800 14px/1.45 Assistant, system-ui, sans-serif;
+  font: 500 14px/1.5 var(--checkout-body-font);
   font-style: normal;
 }
 
@@ -581,7 +587,7 @@
   border-radius: 8px;
   background: var(--checkout-panel);
   color: #ffffff;
-  font: 900 13px/1.2 Assistant, system-ui, sans-serif;
+  font: 600 14px/1.35 var(--checkout-body-font);
 }
 
 .bbb-checkout__samplePicker span {
@@ -598,7 +604,7 @@
   margin: 0;
   padding: 0;
   color: #ffffff;
-  font: 900 14px/1.35 Assistant, system-ui, sans-serif;
+  font: 500 14px/1.45 var(--checkout-body-font);
   list-style: none;
 }
 
@@ -626,7 +632,7 @@
   border-radius: 8px;
   background: rgba(245, 154, 200, 0.12);
   color: var(--checkout-ink);
-  font: 800 14px/1.45 Assistant, system-ui, sans-serif;
+  font: 500 14px/1.5 var(--checkout-body-font);
 }
 
 .bbb-checkout a {
@@ -641,7 +647,7 @@
   border-radius: 8px;
   background: var(--checkout-panel);
   color: var(--checkout-muted);
-  font: 800 16px/1.5 Assistant, system-ui, sans-serif;
+  font: 500 16px/1.5 var(--checkout-body-font);
 }
 
 .bbb-checkout #edd_purchase_receipt,
@@ -672,7 +678,7 @@
 .bbb-checkout #edd_purchase_receipt_products td {
   padding: 14px 16px;
   color: var(--checkout-ink);
-  font: 800 14px/1.45 Assistant, system-ui, sans-serif;
+  font: 500 14px/1.5 var(--checkout-body-font);
 }
 
 .bbb-checkout #edd_purchase_receipt_products ul,
