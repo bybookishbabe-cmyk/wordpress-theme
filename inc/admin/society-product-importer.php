@@ -149,6 +149,114 @@ function bbb_society_product_importer_media_url(string $url): string {
 	return esc_url_raw($url);
 }
 
+function bbb_society_product_image_url(int $post_id): string {
+	$thumbnail = get_the_post_thumbnail_url($post_id, 'medium');
+	if ($thumbnail) {
+		return esc_url_raw((string) $thumbnail);
+	}
+
+	$candidates = array((string) get_post_meta($post_id, '_bbb_source_image_url', true));
+	$attachment_ids = get_post_meta($post_id, '_bbb_product_media_attachment_ids', true);
+	if (is_array($attachment_ids)) {
+		foreach ($attachment_ids as $attachment_id) {
+			$image = wp_get_attachment_image_url((int) $attachment_id, 'medium');
+			if ($image) {
+				$candidates[] = (string) $image;
+			}
+		}
+	}
+
+	$media_urls = get_post_meta($post_id, '_bbb_product_media_urls', true);
+	if (is_string($media_urls) && '' !== trim($media_urls)) {
+		$decoded = json_decode($media_urls, true);
+		$media_urls = is_array($decoded) ? $decoded : preg_split('/[|,]/', $media_urls);
+	}
+
+	foreach ((array) $media_urls as $url) {
+		$candidates[] = (string) $url;
+	}
+
+	$handle = (string) get_post_meta($post_id, '_bbb_shopify_product_handle', true);
+	if ('' === $handle) {
+		$handle = (string) get_post_field('post_name', $post_id);
+	}
+
+	if ('' !== $handle) {
+		foreach (bbb_society_product_importer_export_rows() as $product) {
+			if (!is_array($product) || sanitize_title((string) ($product['handle'] ?? '')) !== sanitize_title($handle)) {
+				continue;
+			}
+
+			$candidates[] = (string) ($product['image_url'] ?? '');
+			$export_media = $product['media_urls'] ?? $product['mediaUrls'] ?? array();
+			if (is_string($export_media) && '' !== trim($export_media)) {
+				$decoded = json_decode($export_media, true);
+				$export_media = is_array($decoded) ? $decoded : preg_split('/[|,]/', $export_media);
+			}
+			foreach ((array) $export_media as $url) {
+				$candidates[] = (string) $url;
+			}
+			break;
+		}
+	}
+
+	foreach ($candidates as $candidate) {
+		$candidate = trim((string) $candidate);
+		if ('' === $candidate) {
+			continue;
+		}
+
+		$mapped = bbb_society_product_importer_media_url($candidate);
+		if ('' !== $mapped) {
+			$candidate = $mapped;
+		}
+
+		if (str_starts_with($candidate, '/wp-content/')) {
+			$candidate = home_url($candidate);
+		}
+
+		$candidate = esc_url_raw($candidate);
+		if ('' !== $candidate) {
+			return $candidate;
+		}
+	}
+
+	return '';
+}
+
+function bbb_society_product_has_checkout_thumbnail(bool $has_thumbnail, $post, $thumbnail_id): bool {
+	if ($has_thumbnail) {
+		return true;
+	}
+
+	$post_id = $post instanceof WP_Post ? (int) $post->ID : (int) $post;
+	if ($post_id <= 0 || !in_array(get_post_type($post_id), array('download', 'product'), true)) {
+		return $has_thumbnail;
+	}
+
+	return '' !== bbb_society_product_image_url($post_id);
+}
+add_filter('has_post_thumbnail', 'bbb_society_product_has_checkout_thumbnail', 10, 3);
+
+function bbb_society_product_checkout_thumbnail_html(string $html, int $post_id, int $post_thumbnail_id, $size, array $attr): string {
+	if ('' !== trim($html) || $post_id <= 0 || !in_array(get_post_type($post_id), array('download', 'product'), true)) {
+		return $html;
+	}
+
+	$image_url = bbb_society_product_image_url($post_id);
+	if ('' === $image_url) {
+		return $html;
+	}
+
+	$alt = $attr['alt'] ?? get_the_title($post_id);
+	return sprintf(
+		'<img src="%1$s" class="attachment-thumbnail size-thumbnail wp-post-image bbb-edd-cart-image" alt="%2$s" loading="lazy">',
+		esc_url($image_url),
+		esc_attr((string) $alt)
+	);
+}
+add_filter('post_thumbnail_html', 'bbb_society_product_checkout_thumbnail_html', 10, 5);
+
 function bbb_society_product_importer_money($value): string {
 	if (is_array($value)) {
 		$value = $value['amount'] ?? $value['value'] ?? '';
