@@ -35,11 +35,26 @@ get_header();
 			endwhile;
 			?>
 			<aside class="bbb-checkout__extras" aria-label="download notes">
-				<a class="bbb-checkout__sample" href="<?php echo esc_url(get_template_directory_uri() . '/assets/downloads/try-before-you-buy-test-file.txt'); ?>" download>
+				<a
+					class="bbb-checkout__sample"
+					href="<?php echo esc_url(get_template_directory_uri() . '/assets/6Inch_Printable_Test.pdf'); ?>"
+					target="_blank"
+					rel="noopener noreferrer"
+					data-bbb-sample-link
+				>
 					<span>try before you buy</span>
-					<strong>download the test file</strong>
-					<em>make sure downloads open nicely on your device before you checkout.</em>
+					<strong>open the sample pdf</strong>
+					<em>choose your kindle size and make sure the file feels right before checkout.</em>
 				</a>
+				<label class="bbb-checkout__samplePicker">
+					<span>sample size</span>
+					<select data-bbb-sample-select>
+						<option value="<?php echo esc_url(get_template_directory_uri() . '/assets/6Inch_Printable_Test.pdf'); ?>">6 inch kindle</option>
+						<option value="<?php echo esc_url(get_template_directory_uri() . '/assets/10thGen_Printable_Test.pdf'); ?>">10th gen kindle</option>
+						<option value="<?php echo esc_url(get_template_directory_uri() . '/assets/11thGen_Printable_Test.pdf'); ?>">11th gen kindle</option>
+						<option value="<?php echo esc_url(get_template_directory_uri() . '/assets/12thGen_Printable_Test.pdf'); ?>">12th gen kindle</option>
+					</select>
+				</label>
 				<ul class="bbb-checkout__trust">
 					<li>instant delivery after payment</li>
 					<li>download links sent to your email</li>
@@ -49,6 +64,19 @@ get_header();
 		</div>
 	</section>
 </main>
+
+<script>
+	document.addEventListener('change', function (event) {
+		var select = event.target.closest('[data-bbb-sample-select]');
+		var link = document.querySelector('[data-bbb-sample-link]');
+
+		if (!select || !link) {
+			return;
+		}
+
+		link.href = select.value;
+	});
+</script>
 
 <?php
 get_footer();
