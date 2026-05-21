@@ -154,13 +154,18 @@ if (!function_exists('bbb_society_landing_upload_url')) {
 		}
 
 		if (str_starts_with($url, '/wp-content/')) {
-			return home_url($url);
+			$url = home_url($url);
+		} else {
+			$path = (string) wp_parse_url($url, PHP_URL_PATH);
+			if (str_starts_with($path, '/wp-content/')) {
+				$query = (string) wp_parse_url($url, PHP_URL_QUERY);
+				$url = home_url($path . ('' !== $query ? '?' . $query : ''));
+			}
 		}
 
-		$path = (string) wp_parse_url($url, PHP_URL_PATH);
-		if (str_starts_with($path, '/wp-content/')) {
-			$query = (string) wp_parse_url($url, PHP_URL_QUERY);
-			return home_url($path . ('' !== $query ? '?' . $query : ''));
+		$host = (string) wp_parse_url($url, PHP_URL_HOST);
+		if (preg_match('/(^localhost$|^127\.|\.local$)/', $host)) {
+			$url = set_url_scheme($url, 'http');
 		}
 
 		return esc_url_raw($url);
@@ -180,7 +185,7 @@ if (!function_exists('bbb_society_landing_download_image')) {
 
 		$image = get_the_post_thumbnail_url($download, 'medium_large');
 		if (is_string($image) && '' !== $image) {
-			return $image;
+			return bbb_society_landing_upload_url($image);
 		}
 
 		return bbb_society_landing_upload_url((string) get_post_meta($download->ID, '_bbb_source_image_url', true));
