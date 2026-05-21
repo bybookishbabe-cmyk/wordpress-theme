@@ -1191,11 +1191,28 @@ background:#0e0e0e;
 }
 
 .sss-lib__finderCoverBtn{
+  position:relative;
+  display:block;
   padding:0;
   border:0;
   background:transparent;
   cursor:pointer;
   text-align:left;
+}
+
+.sss-lib__finderCoverBtn .sss-lib__heart{
+  bottom:8px;
+  left:8px;
+}
+
+.sss-lib__finderSeriesBadge{
+  top:8px;
+  left:8px;
+}
+
+.sss-lib__finderCoverBtn .sss-lib__floatSpice{
+  top:8px;
+  right:8px;
 }
 
 .sss-lib__finderCover{

@@ -104,6 +104,22 @@ $finder_books = array_map(
 			'tropes' => bbb_library_matchmaker_trope_names($book, $data),
 			'why'    => $data['why'],
 			'mini'   => $data['mini'],
+			'amazon' => $data['amazon'] ?? '',
+			'bookshop' => $data['bookshop'] ?? '',
+			'newsletter' => $data['newsletter'] ?? '',
+			'spice'  => $data['spice'] ?? '',
+			'darkness' => $data['darkness'] ?? '',
+			'series' => $data['series_handle'] ?? '',
+			'seriesName' => $data['series_name'] ?? '',
+			'seriesNumber' => $data['series_number'] ?? '',
+			'standalone' => !empty($data['standalone']) ? 'true' : 'false',
+			'tension' => $data['tension'] ?? '',
+			'damage' => $data['damage'] ?? '',
+			'yearning' => $data['yearning'] ?? '',
+			'boyfriend' => $data['boyfriend'] ?? '',
+			'boyfriendName' => $data['boyfriend_name'] ?? '',
+			'reread' => !empty($data['reread']) ? 'true' : 'false',
+			'ku' => !empty($data['ku']) ? 'true' : 'false',
 		);
 	},
 	$public_books
@@ -194,6 +210,12 @@ $login_url = wp_login_url(get_permalink());
 			<div class="sss-lib__finderResult" id="sssFinderResult" hidden>
 				<div class="sss-lib__finderResultCard">
 					<button class="sss-lib__finderCoverBtn" id="sssFinderOpen" type="button" hidden>
+						<span class="sss-lib__heart sss-lib__finderHeart" id="sssFinderHeart" data-finder-heart role="button" aria-label="save to your bookshelf">
+							<span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♡</span>
+							<span class="sss-lib__heartLabel" data-heart-label>save</span>
+						</span>
+						<span class="sss-lib__seriesBadge sss-lib__finderSeriesBadge" id="sssFinderSeriesBadge" hidden></span>
+						<span class="sss-lib__floatSpice sss-lib__finderSpice" id="sssFinderSpice" hidden></span>
 						<img class="sss-lib__finderCover" id="sssFinderCover" src="" alt="">
 					</button>
 					<div class="sss-lib__finderResultBody">

@@ -290,6 +290,40 @@ if (!function_exists('bbb_sss_drop_product_image_url')) {
 	}
 }
 
+if (!function_exists('bbb_sss_drop_unique_urls')) {
+	function bbb_sss_drop_unique_urls(array $urls): array {
+		$seen = array();
+		$unique = array();
+
+		foreach ($urls as $url) {
+			$url = trim((string) $url);
+			if ('' === $url || isset($seen[$url])) {
+				continue;
+			}
+
+			$seen[$url] = true;
+			$unique[] = $url;
+		}
+
+		return $unique;
+	}
+}
+
+if (!function_exists('bbb_sss_drop_hex_to_rgb')) {
+	function bbb_sss_drop_hex_to_rgb(string $hex): array {
+		$hex = ltrim(trim($hex), '#');
+		if (3 === strlen($hex)) {
+			$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+		}
+
+		if (6 !== strlen($hex) || !ctype_xdigit($hex)) {
+			return array(255, 138, 199);
+		}
+
+		return array(hexdec(substr($hex, 0, 2)), hexdec(substr($hex, 2, 2)), hexdec(substr($hex, 4, 2)));
+	}
+}
+
 if (!function_exists('bbb_sss_drop_export_download_files')) {
 	function bbb_sss_drop_export_download_files(array $export): array {
 		$raw = $export['download_files'] ?? $export['downloadFiles'] ?? array();
@@ -752,40 +786,100 @@ $bonus_printable = bbb_sss_drop_reference_item($fields, 'bonus_printable_product
 $bonus_physical = bbb_sss_drop_reference_item($fields, 'bonus_physical_product');
 $bonus_products = array_values(array_filter(array($bonus_printable, $bonus_physical)));
 $drop_handle = (string) ($drop['handle'] ?? '');
+$product_visuals = array();
+foreach (array_merge($printable_products, $physical_products, $bonus_products) as $visual_product) {
+	if (!is_array($visual_product)) {
+		continue;
+	}
+
+	$visual_handle = sanitize_title((string) ($visual_product['handle'] ?? ''));
+	$visual_url = bbb_sss_drop_product_image_url($visual_product, $visual_handle);
+	if ('' !== $visual_url) {
+		$product_visuals[] = $visual_url;
+	}
+}
+
+$mood_visuals = array_values(
+	array_filter(
+		array_map(
+			static fn(array $item): string => (string) ($item['url'] ?? ''),
+			array_merge($mood_images, $mood_stickers, $era_images, $wallpapers)
+		)
+	)
+);
+$drop_visuals = bbb_sss_drop_unique_urls(array_merge(array($calendar_image, $gram_image), $product_visuals, $mood_visuals));
+$hero_visual = (string) ($drop_visuals[0] ?? '');
+$hero_support_visuals = array_slice($drop_visuals, 1, 5);
+$emoji_tokens = array_values(array_filter(array_map('trim', explode(',', $emoji_list))));
+if (!$emoji_tokens) {
+	$emoji_tokens = array('✦', '🖤', '📖');
+}
+
+list($accent_r, $accent_g, $accent_b) = bbb_sss_drop_hex_to_rgb($accent);
+$accent_rgb = $accent_r . ', ' . $accent_g . ', ' . $accent_b;
 $drop_nav = array_filter(
 	array(
-		array('href' => '#drop-atmosphere', 'label' => 'atmosphere', 'show' => '' !== $gram_image || '' !== $spotify_id),
-		array('href' => '#drop-moodboard', 'label' => 'moodboard', 'show' => (bool) ($mood_images || $mood_stickers || $era_images || $mood_quotes)),
-		array('href' => '#drop-wallpapers', 'label' => 'wallpapers', 'show' => (bool) $wallpapers),
-		array('href' => '#drop-calendar', 'label' => 'calendar', 'show' => '' !== $calendar_image || (bool) $prompts),
-		array('href' => '#drop-products', 'label' => 'shop the drop', 'show' => (bool) ($printable_products || $physical_products || $bonus_products)),
+		array('href' => '#drop-atmosphere', 'label' => 'atmosphere', 'icon' => '🎧', 'show' => '' !== $gram_image || '' !== $spotify_id),
+		array('href' => '#drop-moodboard', 'label' => 'moodboard', 'icon' => '🖼️', 'show' => (bool) ($mood_images || $mood_stickers || $era_images || $mood_quotes)),
+		array('href' => '#drop-wallpapers', 'label' => 'wallpapers', 'icon' => '📱', 'show' => (bool) $wallpapers),
+		array('href' => '#drop-calendar', 'label' => 'calendar', 'icon' => '📅', 'show' => '' !== $calendar_image || (bool) $prompts),
+		array('href' => '#drop-products', 'label' => 'shop the drop', 'icon' => '🛍️', 'show' => (bool) ($printable_products || $physical_products || $bonus_products)),
 	),
 	static fn(array $item): bool => (bool) $item['show']
 );
 ?>
-<section class="sss-drop-theme" style="--drop-accent: <?php echo esc_attr($accent); ?>; --drop-pill-bg: <?php echo esc_attr($pill_bg); ?>; --drop-pill-ink: <?php echo esc_attr($pill_ink); ?>;">
+<section class="sss-drop-theme" style="--drop-accent: <?php echo esc_attr($accent); ?>; --drop-accent-rgb: <?php echo esc_attr($accent_rgb); ?>; --drop-pill-bg: <?php echo esc_attr($pill_bg); ?>; --drop-pill-ink: <?php echo esc_attr($pill_ink); ?>;">
 	<div class="sss-drop-theme__wrap">
 		<header class="sss-drop-theme__hero">
-			<p class="sss-drop-theme__kicker">monthly theme</p>
-			<h1><?php echo esc_html(strtolower($name)); ?></h1>
-			<?php if ('' !== $drop_handle) : ?>
-				<p class="sss-drop-theme__handle">sss drop: <?php echo esc_html($drop_handle); ?></p>
-			<?php endif; ?>
-			<p class="sss-drop-theme__mood"><?php echo esc_html(strtolower($mood_title)); ?></p>
-			<?php if ('' !== $quote) : ?>
-				<blockquote><?php echo nl2br(esc_html(strtolower($quote))); ?></blockquote>
-			<?php endif; ?>
-			<div class="sss-drop-theme__emojis" aria-label="theme mood">
-				<?php foreach (array_filter(array_map('trim', explode(',', $emoji_list))) as $emoji) : ?>
-					<span><?php echo esc_html($emoji); ?></span>
+			<div class="sss-drop-theme__rain" aria-hidden="true">
+				<?php for ($rain_index = 0; $rain_index < 24; $rain_index++) : ?>
+					<?php
+					$rain_emoji = $emoji_tokens[$rain_index % count($emoji_tokens)];
+					$rain_x = (string) ((($rain_index * 37) % 96) + 2);
+					$rain_duration = (string) (7 + ($rain_index % 7));
+					$rain_delay = (string) (-1 * (($rain_index * 5) % 14));
+					$rain_size = (string) (18 + (($rain_index * 3) % 18));
+					$rain_drift = (string) (-26 + (($rain_index * 11) % 52));
+					?>
+					<span style="--rain-x: <?php echo esc_attr($rain_x); ?>%; --rain-duration: <?php echo esc_attr($rain_duration); ?>s; --rain-delay: <?php echo esc_attr($rain_delay); ?>s; --rain-size: <?php echo esc_attr($rain_size); ?>px; --rain-drift: <?php echo esc_attr($rain_drift); ?>px;"><?php echo esc_html($rain_emoji); ?></span>
 				<?php endforeach; ?>
 			</div>
+			<div class="sss-drop-theme__heroCopy">
+				<p class="sss-drop-theme__kicker">monthly theme</p>
+				<h1><?php echo esc_html(strtolower($name)); ?></h1>
+				<?php if ('' !== $drop_handle) : ?>
+					<p class="sss-drop-theme__handle">sss drop: <?php echo esc_html($drop_handle); ?></p>
+				<?php endif; ?>
+				<p class="sss-drop-theme__mood"><?php echo esc_html(strtolower($mood_title)); ?></p>
+				<?php if ('' !== $quote) : ?>
+					<blockquote><?php echo nl2br(esc_html(strtolower($quote))); ?></blockquote>
+				<?php endif; ?>
+				<div class="sss-drop-theme__emojis" aria-label="theme mood">
+					<?php foreach ($emoji_tokens as $emoji) : ?>
+						<span><?php echo esc_html($emoji); ?></span>
+					<?php endforeach; ?>
+				</div>
+			</div>
+			<?php if ('' !== $hero_visual) : ?>
+				<div class="sss-drop-theme__heroArt" aria-label="monthly theme visual preview">
+					<div class="sss-drop-theme__heroFrame">
+						<img src="<?php echo esc_url($hero_visual); ?>" alt="<?php echo esc_attr($name . ' theme preview'); ?>" loading="eager">
+					</div>
+					<?php if ($hero_support_visuals) : ?>
+						<div class="sss-drop-theme__miniRail" aria-hidden="true">
+							<?php foreach ($hero_support_visuals as $support_visual) : ?>
+								<img src="<?php echo esc_url($support_visual); ?>" alt="" loading="eager">
+							<?php endforeach; ?>
+						</div>
+					<?php endif; ?>
+				</div>
+			<?php endif; ?>
 		</header>
 
 		<?php if ($drop_nav) : ?>
 			<nav class="sss-drop-theme__nav" aria-label="monthly theme sections">
 				<?php foreach ($drop_nav as $item) : ?>
-					<a href="<?php echo esc_url($item['href']); ?>"><?php echo esc_html($item['label']); ?></a>
+					<a href="<?php echo esc_url($item['href']); ?>"><span aria-hidden="true"><?php echo esc_html((string) $item['icon']); ?></span><?php echo esc_html($item['label']); ?></a>
 				<?php endforeach; ?>
 			</nav>
 		<?php endif; ?>

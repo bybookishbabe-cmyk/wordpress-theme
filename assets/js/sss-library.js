@@ -5567,6 +5567,9 @@ function initReadFinder(){
   var openBtn = document.getElementById('sssFinderOpen');
   var readBtn = document.getElementById('sssFinderRead');
   var retryBtn = document.getElementById('sssFinderRetry');
+  var finderHeart = document.getElementById('sssFinderHeart');
+  var finderSpice = document.getElementById('sssFinderSpice');
+  var finderSeriesBadge = document.getElementById('sssFinderSeriesBadge');
 
   if (
     !shelfSelect ||
@@ -5810,12 +5813,78 @@ function initReadFinder(){
     return selected;
   }
 
+  function setFinderBookAttrs(book){
+    if (!openBtn || !book) return;
+    var tropes = Array.isArray(book.tropes) ? dedupe(book.tropes) : [];
+    var attrs = {
+      handle: book.handle || '',
+      title: book.title || '',
+      author: book.author || '',
+      cover: book.cover || '',
+      amazon: book.amazon || '',
+      bookshop: book.bookshop || '',
+      shelf: book.shelf || '',
+      'private-shelf': 'false',
+      spice: book.spice || '',
+      tropes: tropes.join(', '),
+      'tropes-display': tropes.join(', '),
+      why: book.why || '',
+      newsletter: book.newsletter || '',
+      mini: book.mini || '',
+      series: book.series || '',
+      'series-name': book.seriesName || '',
+      'series-number': book.seriesNumber || '',
+      tension: book.tension || '',
+      damage: book.damage || '',
+      yearning: book.yearning || '',
+      boyfriend: book.boyfriend || '',
+      'boyfriend-name': book.boyfriendName || '',
+      reread: book.reread || '',
+      standalone: book.standalone || 'false',
+      ku: book.ku || '',
+      darkness: book.darkness || ''
+    };
+
+    Object.keys(attrs).forEach(function(key){
+      openBtn.setAttribute('data-' + key, attrs[key]);
+    });
+  }
+
+  function syncFinderHeart(book){
+    if (!finderHeart || !book) return;
+    var saved = getShelf().some(function(item){
+      return item && (item.handle === book.handle || item.title === book.title);
+    });
+    applyHeartSavedState(finderHeart, saved);
+  }
+
+  function updateFinderCoverMeta(book){
+    if (finderSpice){
+      var spice = parseInt(book && book.spice, 10) || 0;
+      finderSpice.hidden = spice <= 0;
+      finderSpice.textContent = spice > 0 ? '🌶'.repeat(Math.min(spice, 5)) : '';
+    }
+
+    if (finderSeriesBadge){
+      var seriesNumber = String(book && book.seriesNumber || '').trim();
+      finderSeriesBadge.hidden = !seriesNumber;
+      finderSeriesBadge.textContent = seriesNumber ? String(parseInt(seriesNumber, 10) || seriesNumber) : '';
+      finderSeriesBadge.classList.toggle('sss-lib__seriesBadge--standalone', String(book && book.standalone) === 'true');
+      if (book && book.series){
+        finderSeriesBadge.setAttribute('data-series-url', '/series/?series=' + encodeURIComponent(book.series));
+      } else {
+        finderSeriesBadge.removeAttribute('data-series-url');
+      }
+    }
+  }
+
   function renderRecommendation(book, note){
     currentBook = book;
     result.hidden = false;
     openBtn.hidden = false;
     readBtn.hidden = false;
     retryBtn.hidden = false;
+    setFinderBookAttrs(book);
     resultCover.src = book.cover || '';
     resultCover.alt = book.title ? (book.title + ' cover') : '';
     resultTitle.textContent = book.title || '';
@@ -5827,6 +5896,8 @@ function initReadFinder(){
     resultMeta.textContent = meta.join('  //  ');
     resultWhy.textContent = book.mini || book.why || 'this one fits the mood, and i have a feeling you’re going to get attached.';
     resultNote.textContent = note || 'want another option? i can keep going.';
+    updateFinderCoverMeta(book);
+    syncFinderHeart(book);
   }
 
   function showEmptyState(message){
@@ -5835,6 +5906,8 @@ function initReadFinder(){
     openBtn.hidden = true;
     readBtn.hidden = true;
     retryBtn.hidden = false;
+    if (finderSpice) finderSpice.hidden = true;
+    if (finderSeriesBadge) finderSeriesBadge.hidden = true;
     resultCover.removeAttribute('src');
     resultCover.alt = '';
     resultTitle.textContent = 'i need a slightly broader brief';
@@ -5899,6 +5972,16 @@ function initReadFinder(){
 
     card.click();
   });
+
+  if (finderHeart) {
+    finderHeart.addEventListener('click', function(event){
+      event.preventDefault();
+      event.stopPropagation();
+      if (!currentBook) return;
+      toggleSave(finderHeart, openBtn);
+      syncFinderHeart(currentBook);
+    });
+  }
 }
 
 function groupSeriesShelves(){
