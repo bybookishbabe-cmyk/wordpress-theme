@@ -110,7 +110,12 @@ $login_url = wp_login_url(get_permalink());
 			<div class="sss-lib__finderGrid">
 				<label class="sss-lib__finderField" data-finder-step="1">
 					<span>start with a shelf</span>
-					<select id="sssFinderShelf"><option value="">choose a shelf</option></select>
+					<select id="sssFinderShelf">
+						<option value="">choose a shelf</option>
+						<?php foreach ($finder_shelves as $shelf) : ?>
+							<option value="<?php echo esc_attr($shelf); ?>"><?php echo esc_html($shelf); ?></option>
+						<?php endforeach; ?>
+					</select>
 				</label>
 				<label class="sss-lib__finderField" data-finder-step="2">
 					<span>pick the main trope</span>
@@ -165,36 +170,13 @@ $login_url = wp_login_url(get_permalink());
 			</section>
 		<?php endif; ?>
 	<?php else : ?>
-		<div class="sss-lib__societyLocked<?php echo $show_match ? ' sss-lib__societyLocked--matchmaker' : ''; ?>">
+		<div class="sss-lib__societyLocked">
 			<div>
 				<p class="sss-lib__finderKicker">paid member access</p>
 				<h3 class="sss-lib__finderTitle"><?php echo esc_html($show_match ? 'book matchmaker' : 'the private shelf'); ?></h3>
 				<p class="sss-lib__finderSub">
 					<?php echo esc_html($show_match ? 'paid members can use the full library matchmaker here.' : 'paid members can open the private shelf here.'); ?>
 				</p>
-				<?php if ($show_match) : ?>
-					<div class="sss-lib__finder sss-lib__finder--lockedPreview" aria-label="book matchmaker preview">
-						<div class="sss-lib__finderGrid">
-							<label class="sss-lib__finderField">
-								<span>start with a shelf</span>
-								<select aria-label="preview shelf picker">
-									<option value="">choose a shelf</option>
-									<?php foreach ($finder_shelves as $shelf) : ?>
-										<option value="<?php echo esc_attr($shelf); ?>"><?php echo esc_html($shelf); ?></option>
-									<?php endforeach; ?>
-								</select>
-							</label>
-							<label class="sss-lib__finderField is-locked">
-								<span>pick the main trope</span>
-								<select disabled><option>unlock with society</option></select>
-							</label>
-							<label class="sss-lib__finderField is-locked">
-								<span>get your match</span>
-								<select disabled><option>paid members only</option></select>
-							</label>
-						</div>
-					</div>
-				<?php endif; ?>
 			</div>
 			<div class="sss-lib__societyLockedActions">
 				<a class="sss-lib__finderBtn" href="<?php echo esc_url($join_url); ?>">join the society</a>
