@@ -103,6 +103,8 @@ function bbb_sync_product_media_attachment(string $url, int $post_id): array {
 			'post_status'    => 'inherit',
 			'posts_per_page' => 1,
 			'fields'         => 'ids',
+			'orderby'        => 'ID',
+			'order'          => 'ASC',
 			'meta_key'       => '_wp_attached_file',
 			'meta_value'     => $relative_upload,
 		)
@@ -128,6 +130,8 @@ function bbb_sync_product_media_attachment(string $url, int $post_id): array {
 	if (is_wp_error($attachment_id) || !$attachment_id) {
 		return array('id' => 0, 'created' => false);
 	}
+
+	update_attached_file((int) $attachment_id, $path);
 
 	$metadata = wp_generate_attachment_metadata((int) $attachment_id, $path);
 	if (!is_wp_error($metadata) && !empty($metadata)) {
