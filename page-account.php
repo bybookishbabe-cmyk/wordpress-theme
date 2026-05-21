@@ -10,16 +10,20 @@ declare(strict_types=1);
 $my_bookshelf_css_path = get_theme_file_path('assets/css/my-bookshelf.css');
 wp_enqueue_style('bbb-my-bookshelf', get_theme_file_uri('assets/css/my-bookshelf.css'), array('bbb-sss-library'), file_exists($my_bookshelf_css_path) ? (string) filemtime($my_bookshelf_css_path) : wp_get_theme()->get('Version'));
 
+$identity     = function_exists('bbb_reader_current_identity') ? bbb_reader_current_identity() : null;
 $is_logged_in = is_user_logged_in();
-$user         = $is_logged_in ? wp_get_current_user() : null;
-$is_society   = ($user instanceof WP_User && function_exists('bbb_reader_access_tier') && 'society' === bbb_reader_access_tier((int) $user->ID));
-$account_data = ($is_logged_in && $user instanceof WP_User && function_exists('bbb_reader_account_response'))
-	? bbb_reader_account_response($user)
+$user         = isset($identity['user']) && $identity['user'] instanceof WP_User ? $identity['user'] : ($is_logged_in ? wp_get_current_user() : null);
+$reader_email = $identity ? (string) ($identity['email'] ?? '') : '';
+$reader_user_id = $identity ? (int) ($identity['userId'] ?? 0) : 0;
+$has_reader_access = '' !== $reader_email;
+$is_society   = ($has_reader_access && function_exists('bbb_reader_access_tier_for_email') && 'society' === bbb_reader_access_tier_for_email($reader_email, $reader_user_id));
+$account_data = ($has_reader_access && function_exists('bbb_reader_account_response_for_identity'))
+	? bbb_reader_account_response_for_identity((array) $identity)
 	: array();
 $books        = isset($account_data['books']) && is_array($account_data['books']) ? $account_data['books'] : array();
 $tier         = $is_society ? 'society' : (string) ($account_data['accessTier'] ?? 'free');
-$display_name = ($user instanceof WP_User && '' !== trim((string) $user->display_name)) ? (string) $user->display_name : 'reader';
-$tier_label   = 'society' === $tier ? 'tier: paid society member' : ($is_logged_in ? 'tier: free reader member' : 'tier: visitor');
+$display_name = ($identity && '' !== trim((string) ($identity['displayName'] ?? ''))) ? (string) $identity['displayName'] : 'reader';
+$tier_label   = 'society' === $tier ? 'tier: paid society member' : ($has_reader_access ? 'tier: free reader member' : 'tier: visitor');
 $account_url  = function_exists('bbb_page_url') ? bbb_page_url('account') : home_url('/account/');
 $bookshelf_url = function_exists('bbb_page_url') ? bbb_page_url('my-bookshelf') : home_url('/my-bookshelf/');
 $dashboard_url = function_exists('bbb_page_url') ? bbb_page_url('member-dashboard') : home_url('/member-dashboard/');
@@ -46,22 +50,24 @@ $bookshelf_preview_books = array_slice(
 	3
 );
 
-if ($is_logged_in && $user instanceof WP_User && function_exists('wc_get_orders')) {
+if ($has_reader_access && function_exists('wc_get_orders')) {
 	$order_args = array(
 		'limit'   => 4,
 		'orderby' => 'date',
 		'order'   => 'DESC',
 		'status'  => array('wc-completed', 'wc-processing', 'wc-on-hold'),
 	);
-	$orders_by_id = wc_get_orders(
-		array(
-			'customer_id' => (int) $user->ID,
+	$orders_by_id = $reader_user_id
+		? wc_get_orders(
+			array(
+				'customer_id' => $reader_user_id,
+			)
+			+ $order_args
 		)
-		+ $order_args
-	);
+		: array();
 	$orders_by_email = wc_get_orders(
 		array(
-			'billing_email' => (string) $user->user_email,
+			'billing_email' => $reader_email,
 		)
 		+ $order_args
 	);
@@ -90,7 +96,7 @@ if ($is_logged_in && $user instanceof WP_User && function_exists('wc_get_orders'
 		$purchase_rows[] = array(
 			'title'  => $items ? implode(', ', array_slice($items, 0, 2)) : sprintf('order #%s', $order->get_order_number()),
 			'meta'   => trim(sprintf('%s - %s', wc_get_order_status_name($order->get_status()), $order->get_date_created() ? $order->get_date_created()->date_i18n('M j, Y') : '')),
-			'url'    => $order->get_view_order_url(),
+			'url'    => $reader_user_id ? $order->get_view_order_url() : '',
 			'total'  => wp_strip_all_tags($order->get_formatted_order_total()),
 		);
 	}
@@ -112,7 +118,7 @@ get_header();
 				</div>
 				<h1 class="bbb-account-shelf__title">reader account</h1>
 				<p class="bbb-account-shelf__sub">
-					<?php echo esc_html($is_logged_in ? 'everything tied to your reader life lives here: purchases, tier access, dashboard shortcuts, and your bookshelf.' : 'log in or create an account to keep purchases, tier access, and your bookshelf in one place.'); ?>
+					<?php echo esc_html($has_reader_access ? 'everything tied to your reader email lives here: purchases, tier access, dashboard shortcuts, and your bookshelf.' : 'enter the email you use for bybookishbabe or the society. no extra wordpress account needed.'); ?>
 				</p>
 
 				<div class="bbb-account-shelf__actions">
@@ -120,41 +126,52 @@ get_header();
 						<span aria-hidden="true">←</span>
 						back to society
 					</a>
-					<?php if ($is_logged_in) : ?>
-						<a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="<?php echo esc_url(get_edit_user_link((int) $user->ID)); ?>">edit profile</a>
-						<a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="<?php echo esc_url(wp_logout_url(home_url('/'))); ?>">log out</a>
-					<?php else : ?>
-						<a class="bbb-account-shelf__button" href="<?php echo esc_url(wp_login_url(home_url('/account/'))); ?>">log in</a>
-						<?php if (get_option('users_can_register')) : ?>
-							<a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="<?php echo esc_url(wp_registration_url()); ?>">create account</a>
+					<?php if ($has_reader_access) : ?>
+						<?php if ($user instanceof WP_User && $user->ID) : ?>
+							<a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="<?php echo esc_url(get_edit_user_link((int) $user->ID)); ?>">edit profile</a>
+							<a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="<?php echo esc_url(wp_logout_url(home_url('/'))); ?>">log out</a>
+						<?php else : ?>
+							<a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="<?php echo esc_url(add_query_arg('bbb_reader_logout', '1', $account_url)); ?>">use a different email</a>
 						<?php endif; ?>
+					<?php else : ?>
+						<a class="bbb-account-shelf__button" href="#reader-email-access">enter email</a>
 					<?php endif; ?>
 				</div>
 			</div>
 
-			<?php if ($is_logged_in && $user instanceof WP_User) : ?>
+			<?php if ($has_reader_access) : ?>
 				<div class="bbb-account-shelf__panel">
 					<div>
 						<p class="bbb-account-shelf__perkKicker">your purchases</p>
 						<h2><?php echo esc_html($display_name); ?></h2>
-						<p><?php echo esc_html((string) $user->user_email); ?></p>
+						<p><?php echo esc_html($reader_email); ?></p>
 					</div>
 					<?php if ($purchase_rows) : ?>
 						<div class="bbb-account-shelf__purchaseList">
 							<?php foreach ($purchase_rows as $purchase) : ?>
-								<a class="bbb-account-shelf__purchase" href="<?php echo esc_url($purchase['url']); ?>">
-									<span>
-										<strong><?php echo esc_html($purchase['title']); ?></strong>
-										<small><?php echo esc_html($purchase['meta']); ?></small>
-									</span>
-									<em><?php echo esc_html($purchase['total']); ?></em>
-								</a>
+								<?php if ('' !== $purchase['url']) : ?>
+									<a class="bbb-account-shelf__purchase" href="<?php echo esc_url($purchase['url']); ?>">
+										<span>
+											<strong><?php echo esc_html($purchase['title']); ?></strong>
+											<small><?php echo esc_html($purchase['meta']); ?></small>
+										</span>
+										<em><?php echo esc_html($purchase['total']); ?></em>
+									</a>
+								<?php else : ?>
+									<div class="bbb-account-shelf__purchase">
+										<span>
+											<strong><?php echo esc_html($purchase['title']); ?></strong>
+											<small><?php echo esc_html($purchase['meta']); ?></small>
+										</span>
+										<em><?php echo esc_html($purchase['total']); ?></em>
+									</div>
+								<?php endif; ?>
 							<?php endforeach; ?>
 						</div>
 					<?php else : ?>
 						<div class="bbb-account-shelf__quiet">
 							<strong>no purchases yet</strong>
-							<span>your shop orders and digital drops will show here once they are tied to this account.</span>
+							<span>your shop orders and digital drops will show here once they are tied to this email.</span>
 							<a href="<?php echo esc_url($shop_url); ?>">browse the shop</a>
 						</div>
 					<?php endif; ?>
@@ -218,11 +235,16 @@ get_header();
 					</a>
 				</div>
 			<?php else : ?>
-				<div class="bbb-account-shelf__empty">
+				<div class="bbb-account-shelf__empty" id="reader-email-access">
 					<div class="bbb-account-shelf__emptyIcon" aria-hidden="true">*</div>
-					<h2>your reader account is waiting.</h2>
-					<p>create a wordpress account with the same email you use for society access, then purchases, tier access, and your shelf can follow you.</p>
-					<a href="<?php echo esc_url(wp_login_url($account_url)); ?>">log in</a>
+					<h2>open your reader account.</h2>
+					<p>use the same email you use for bybookishbabe or the smut & sentiment society.</p>
+					<form class="bbb-account-shelf__emailForm" data-reader-email-access-form>
+						<label class="screen-reader-text" for="bbb-reader-email">reader email</label>
+						<input id="bbb-reader-email" type="email" name="email" autocomplete="email" placeholder="you@example.com" required>
+						<button type="submit">open account</button>
+						<p class="bbb-account-shelf__formStatus" data-reader-email-access-status hidden></p>
+					</form>
 				</div>
 			<?php endif; ?>
 		</div>

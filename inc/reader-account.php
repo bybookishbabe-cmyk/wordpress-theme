@@ -22,6 +22,119 @@ function bbb_reader_substack_sync_secret(): string {
 	return defined('SUBSTACK_SYNC_SECRET') ? (string) SUBSTACK_SYNC_SECRET : (string) getenv('SUBSTACK_SYNC_SECRET');
 }
 
+function bbb_reader_email_session_cookie_name(): string {
+	return 'bbb_reader_email_access';
+}
+
+function bbb_reader_email_session_lifetime(): int {
+	return 30 * DAY_IN_SECONDS;
+}
+
+function bbb_reader_cookie_secret(): string {
+	$parts = array_filter(
+		array(
+			defined('AUTH_KEY') ? (string) AUTH_KEY : '',
+			defined('SECURE_AUTH_KEY') ? (string) SECURE_AUTH_KEY : '',
+			defined('LOGGED_IN_KEY') ? (string) LOGGED_IN_KEY : '',
+			defined('NONCE_KEY') ? (string) NONCE_KEY : '',
+		)
+	);
+
+	return $parts ? implode('|', $parts) : wp_salt('auth');
+}
+
+function bbb_reader_email_session_signature(string $email, int $expires): string {
+	return hash_hmac('sha256', $email . '|' . $expires, bbb_reader_cookie_secret());
+}
+
+function bbb_reader_set_email_session(string $email): bool {
+	$email = bbb_reader_normalize_email($email);
+	if ('' === $email || !is_email($email)) {
+		return false;
+	}
+
+	$expires = time() + bbb_reader_email_session_lifetime();
+	$value   = implode('|', array($email, (string) $expires, bbb_reader_email_session_signature($email, $expires)));
+
+	return setcookie(
+		bbb_reader_email_session_cookie_name(),
+		$value,
+		array(
+			'expires'  => $expires,
+			'path'     => COOKIEPATH ?: '/',
+			'domain'   => COOKIE_DOMAIN,
+			'secure'   => is_ssl(),
+			'httponly' => true,
+			'samesite' => 'Lax',
+		)
+	);
+}
+
+function bbb_reader_clear_email_session(): void {
+	setcookie(
+		bbb_reader_email_session_cookie_name(),
+		'',
+		array(
+			'expires'  => time() - DAY_IN_SECONDS,
+			'path'     => COOKIEPATH ?: '/',
+			'domain'   => COOKIE_DOMAIN,
+			'secure'   => is_ssl(),
+			'httponly' => true,
+			'samesite' => 'Lax',
+		)
+	);
+	unset($_COOKIE[bbb_reader_email_session_cookie_name()]);
+}
+
+function bbb_reader_email_from_session(): string {
+	$raw = isset($_COOKIE[bbb_reader_email_session_cookie_name()]) ? (string) wp_unslash($_COOKIE[bbb_reader_email_session_cookie_name()]) : '';
+	if ('' === $raw) {
+		return '';
+	}
+
+	$parts = explode('|', $raw);
+	if (3 !== count($parts)) {
+		return '';
+	}
+
+	$email   = bbb_reader_normalize_email($parts[0]);
+	$expires = absint($parts[1]);
+	$hash    = (string) $parts[2];
+
+	if ('' === $email || !is_email($email) || $expires < time()) {
+		return '';
+	}
+
+	$expected = bbb_reader_email_session_signature($email, $expires);
+	return hash_equals($expected, $hash) ? $email : '';
+}
+
+function bbb_reader_current_identity(): ?array {
+	if (is_user_logged_in()) {
+		$user = wp_get_current_user();
+		if ($user instanceof WP_User && $user->ID && is_email((string) $user->user_email)) {
+			return array(
+				'email'       => bbb_reader_normalize_email((string) $user->user_email),
+				'displayName' => '' !== trim((string) $user->display_name) ? (string) $user->display_name : bbb_reader_normalize_email((string) $user->user_email),
+				'userId'      => (int) $user->ID,
+				'user'        => $user,
+			);
+		}
+	}
+
+	$email = bbb_reader_email_from_session();
+	if ('' === $email) {
+		return null;
+	}
+
+	return array(
+		'email'       => $email,
+		'displayName' => $email,
+		'userId'      => 0,
+		'user'        => null,
+	);
+}
+
 function bbb_reader_supabase_request(string $method, string $table, array $query = array(), $body = null) {
 	$config = bbb_reader_supabase_config();
 	if ('' === $config['url'] || '' === $config['key']) {
@@ -240,6 +353,26 @@ function bbb_reader_access_tier(int $user_id = 0, ?array $subscriber = null): st
 	return 'free';
 }
 
+function bbb_reader_access_tier_for_email(string $email, int $user_id = 0, ?array $subscriber = null): string {
+	static $email_cache = array();
+
+	$email = bbb_reader_normalize_email($email);
+	if ($user_id && bbb_reader_user_has_wp_society_access($user_id)) {
+		return 'society';
+	}
+
+	if (null === $subscriber) {
+		if (!array_key_exists($email, $email_cache)) {
+			$fetched = bbb_reader_fetch_subscriber_by_email($email);
+			$email_cache[$email] = is_wp_error($fetched) ? null : $fetched;
+		}
+
+		$subscriber = is_array($email_cache[$email]) ? $email_cache[$email] : null;
+	}
+
+	return is_array($subscriber) && bbb_reader_subscriber_has_society_access($subscriber) ? 'society' : 'free';
+}
+
 function bbb_reader_account_payload(WP_User $user, string $source = 'wordpress_account', ?array $subscriber = null): array {
 	$email = bbb_reader_normalize_email((string) $user->user_email);
 
@@ -312,13 +445,11 @@ function bbb_reader_sanitize_book(array $book): ?array {
 	);
 }
 
-function bbb_reader_fetch_account_books(WP_User $user): array {
-	$email = bbb_reader_normalize_email((string) $user->user_email);
-	$or    = sprintf(
-		'(wordpress_user_id.eq.%1$d,email_normalized.eq.%2$s,shopify_customer_id.eq.%1$d)',
-		(int) $user->ID,
-		$email
-	);
+function bbb_reader_fetch_account_books_for_identity(string $email, int $user_id = 0): array {
+	$email = bbb_reader_normalize_email($email);
+	$or    = $user_id
+		? sprintf('(wordpress_user_id.eq.%1$d,email_normalized.eq.%2$s,shopify_customer_id.eq.%1$d)', $user_id, $email)
+		: sprintf('(email_normalized.eq.%1$s,customer_email.eq.%1$s)', $email);
 
 	$rows = bbb_reader_supabase_request(
 		'GET',
@@ -333,6 +464,10 @@ function bbb_reader_fetch_account_books(WP_User $user): array {
 	);
 
 	return is_wp_error($rows) ? array() : (array) $rows;
+}
+
+function bbb_reader_fetch_account_books(WP_User $user): array {
+	return bbb_reader_fetch_account_books_for_identity((string) $user->user_email, (int) $user->ID);
 }
 
 if (!function_exists('bbb_reader_drop_field_value')) {
@@ -473,15 +608,102 @@ function bbb_reader_account_response(WP_User $user): array {
 	);
 }
 
-function bbb_reader_sync_current_shelf(WP_REST_Request $request) {
-	$user = wp_get_current_user();
-	if (!$user instanceof WP_User || !$user->ID) {
-		return new WP_Error('bbb_reader_auth_required', 'You must be logged in.', array('status' => 401));
+function bbb_reader_account_response_for_identity(array $identity): array {
+	$user = $identity['user'] ?? null;
+	if ($user instanceof WP_User) {
+		return bbb_reader_account_response($user);
 	}
 
-	bbb_reader_sync_user_to_supabase((int) $user->ID, 'wordpress_bookshelf');
+	$email = bbb_reader_normalize_email((string) ($identity['email'] ?? ''));
+	if ('' === $email || !is_email($email)) {
+		return array(
+			'wordpressUser' => null,
+			'readerEmail'   => '',
+			'accessTier'    => 'free',
+			'supabaseReady' => false,
+			'supabaseError' => array(
+				'code'    => 'bbb_reader_missing_email',
+				'message' => 'A reader email is required.',
+				'status'  => 401,
+			),
+			'books' => array(),
+		);
+	}
 
-	$email = bbb_reader_normalize_email((string) $user->user_email);
+	$subscriber = bbb_reader_fetch_subscriber_by_email($email);
+	$error = is_wp_error($subscriber)
+		? array(
+			'code'    => $subscriber->get_error_code(),
+			'message' => $subscriber->get_error_message(),
+			'status'  => (int) ($subscriber->get_error_data()['status'] ?? 0),
+		)
+		: null;
+	$subscriber = is_array($subscriber) ? $subscriber : null;
+	$access_tier = bbb_reader_access_tier_for_email($email, 0, $subscriber);
+	$account_prompt = 'society' === $access_tier
+		? bbb_reader_active_society_daily_prompt(bbb_reader_active_society_drop())
+		: array(
+			'text'  => '',
+			'day'   => 0,
+			'total' => 0,
+		);
+
+	return array(
+		'wordpressUser' => null,
+		'readerEmail'   => $email,
+		'accessTier'    => $access_tier,
+		'dailyJournalPrompt' => $account_prompt,
+		'supabaseReady' => null === $error,
+		'supabaseError' => $error,
+		'books'         => bbb_reader_fetch_account_books_for_identity($email),
+	);
+}
+
+function bbb_reader_start_email_access_session(string $email) {
+	$email = bbb_reader_normalize_email($email);
+	if ('' === $email || !is_email($email)) {
+		return new WP_Error('bbb_reader_invalid_email', 'Enter a valid email address.', array('status' => 400));
+	}
+
+	$subscriber = bbb_reader_fetch_subscriber_by_email($email);
+	if (is_wp_error($subscriber)) {
+		return $subscriber;
+	}
+
+	if (!is_array($subscriber)) {
+		return new WP_Error(
+			'bbb_reader_subscriber_not_found',
+			'That email is not on the reader list yet.',
+			array('status' => 404)
+		);
+	}
+
+	bbb_reader_set_email_session($email);
+
+	return bbb_reader_account_response_for_identity(
+		array(
+			'email'       => $email,
+			'displayName' => $email,
+			'userId'      => 0,
+			'user'        => null,
+		)
+	);
+}
+
+function bbb_reader_sync_current_shelf(WP_REST_Request $request) {
+	$identity = bbb_reader_current_identity();
+	if (!$identity) {
+		return new WP_Error('bbb_reader_auth_required', 'Enter your reader email first.', array('status' => 401));
+	}
+
+	$user = $identity['user'] ?? null;
+	$user_id = isset($identity['userId']) ? (int) $identity['userId'] : 0;
+	$email = bbb_reader_normalize_email((string) ($identity['email'] ?? ''));
+
+	if ($user instanceof WP_User) {
+		bbb_reader_sync_user_to_supabase((int) $user->ID, 'wordpress_bookshelf');
+	}
+
 	$items = $request->get_param('items');
 	$items = is_array($items) ? $items : array();
 	$rows  = array();
@@ -500,9 +722,9 @@ function bbb_reader_sync_current_shelf(WP_REST_Request $request) {
 			$book,
 			array(
 				'email_normalized'    => $email,
-				'wordpress_user_id'   => (string) $user->ID,
-				'shopify_customer_id' => (string) $user->ID,
-				'customer_email'      => (string) $user->user_email,
+				'wordpress_user_id'   => $user_id ? (string) $user_id : null,
+				'shopify_customer_id' => $user_id ? (string) $user_id : null,
+				'customer_email'      => $email,
 				'source'              => 'wordpress_bookshelf',
 				'is_active'           => true,
 				'removed_at'          => null,
@@ -524,8 +746,21 @@ function bbb_reader_sync_current_shelf(WP_REST_Request $request) {
 		}
 	}
 
-	return rest_ensure_response(bbb_reader_account_response($user));
+	return rest_ensure_response(bbb_reader_account_response_for_identity($identity));
 }
+
+add_action(
+	'template_redirect',
+	static function (): void {
+		if (!isset($_GET['bbb_reader_logout'])) {
+			return;
+		}
+
+		bbb_reader_clear_email_session();
+		wp_safe_redirect(remove_query_arg('bbb_reader_logout'));
+		exit;
+	}
+);
 
 add_action('user_register', static fn(int $user_id) => bbb_reader_sync_user_to_supabase($user_id, 'wordpress_register'));
 add_action('profile_update', static fn(int $user_id) => bbb_reader_sync_user_to_supabase($user_id, 'wordpress_profile_update'));
@@ -547,9 +782,31 @@ add_action(
 			'/reader-account',
 			array(
 				'methods'             => WP_REST_Server::READABLE,
-				'permission_callback' => static fn(): bool => is_user_logged_in(),
+				'permission_callback' => static fn(): bool => (bool) bbb_reader_current_identity(),
 				'callback'            => static function (): WP_REST_Response {
-					return rest_ensure_response(bbb_reader_account_response(wp_get_current_user()));
+					return rest_ensure_response(bbb_reader_account_response_for_identity((array) bbb_reader_current_identity()));
+				},
+			)
+		);
+
+		register_rest_route(
+			'bbb/v1',
+			'/reader-account/email-session',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'permission_callback' => '__return_true',
+				'callback'            => static function (WP_REST_Request $request) {
+					$params = $request->get_json_params();
+					if (!is_array($params)) {
+						$params = $request->get_params();
+					}
+
+					$response = bbb_reader_start_email_access_session((string) ($params['email'] ?? ''));
+					if (is_wp_error($response)) {
+						return $response;
+					}
+
+					return rest_ensure_response($response);
 				},
 			)
 		);
@@ -559,7 +816,7 @@ add_action(
 			'/reader-account/shelf',
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
-				'permission_callback' => static fn(): bool => is_user_logged_in(),
+				'permission_callback' => static fn(): bool => (bool) bbb_reader_current_identity(),
 				'callback'            => 'bbb_reader_sync_current_shelf',
 			)
 		);

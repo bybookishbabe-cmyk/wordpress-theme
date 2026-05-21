@@ -12,8 +12,11 @@ $my_bookshelf_js_path  = get_theme_file_path('assets/js/my-bookshelf.js');
 wp_enqueue_style('bbb-my-bookshelf', get_theme_file_uri('assets/css/my-bookshelf.css'), array('bbb-sss-library'), file_exists($my_bookshelf_css_path) ? (string) filemtime($my_bookshelf_css_path) : wp_get_theme()->get('Version'));
 wp_enqueue_script('bbb-my-bookshelf', get_theme_file_uri('assets/js/my-bookshelf.js'), array('bbb-sss-library', 'bbb-supabase'), file_exists($my_bookshelf_js_path) ? (string) filemtime($my_bookshelf_js_path) : wp_get_theme()->get('Version'), true);
 
+$reader_identity = function_exists('bbb_reader_current_identity') ? bbb_reader_current_identity() : null;
+$reader_email    = $reader_identity ? (string) ($reader_identity['email'] ?? '') : '';
+$reader_user_id  = $reader_identity ? (int) ($reader_identity['userId'] ?? 0) : 0;
+$has_reader_access = '' !== $reader_email;
 $is_society = function_exists('bbb_reader_is_society') ? bbb_reader_is_society() : false;
-$account    = wp_get_current_user();
 $books      = function_exists('bbb_reader_quiz_books') ? bbb_reader_quiz_books() : array();
 
 if (!function_exists('bbb_my_bookshelf_quote_text')) {
@@ -85,9 +88,9 @@ get_header();
 		class="bbb-account-shelf"
 		data-account-shelf
 		data-sss-lib="<?php echo esc_attr($is_society ? 'society' : 'public'); ?>"
-		data-logged-in="<?php echo esc_attr(is_user_logged_in() ? 'true' : 'false'); ?>"
-		data-customer-id="<?php echo esc_attr(is_user_logged_in() ? (string) get_current_user_id() : ''); ?>"
-		data-customer-email="<?php echo esc_attr(is_user_logged_in() ? (string) $account->user_email : ''); ?>"
+		data-logged-in="<?php echo esc_attr($has_reader_access ? 'true' : 'false'); ?>"
+		data-customer-id="<?php echo esc_attr($reader_user_id ? (string) $reader_user_id : ''); ?>"
+		data-customer-email="<?php echo esc_attr($reader_email); ?>"
 		data-is-society="<?php echo esc_attr($is_society ? 'true' : 'false'); ?>"
 	>
 		<div class="bbb-account-shelf__wrap">
@@ -102,20 +105,20 @@ get_header();
 
 				<div class="bbb-account-shelf__actions">
 					<a class="bbb-account-shelf__button" href="<?php echo esc_url(bbb_page_url('library')); ?>">browse the library</a>
-					<?php if (is_user_logged_in()) : ?>
-						<a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="<?php echo esc_url(function_exists('bbb_wc_account_url') ? bbb_wc_account_url() : home_url('/account/')); ?>">account</a>
+					<?php if ($has_reader_access) : ?>
+						<a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="<?php echo esc_url(home_url('/account/')); ?>">account</a>
 					<?php else : ?>
-						<a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="<?php echo esc_url(wp_login_url(home_url('/my-bookshelf/'))); ?>">log in to sync</a>
+						<a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="<?php echo esc_url(home_url('/account/')); ?>">enter email to sync</a>
 					<?php endif; ?>
 				</div>
 			</div>
 
-			<div class="bbb-account-shelf__status<?php echo is_user_logged_in() ? '' : ' bbb-account-shelf__status--login'; ?>" data-account-shelf-status>
+			<div class="bbb-account-shelf__status<?php echo $has_reader_access ? '' : ' bbb-account-shelf__status--login'; ?>" data-account-shelf-status>
 				<div class="bbb-account-shelf__statusMain">
 					<span class="bbb-account-shelf__statusIcon" aria-hidden="true">📚</span>
 					<div>
-						<strong><?php echo esc_html(is_user_logged_in() ? 'syncing your shelf...' : 'log in to keep your shelf across devices.'); ?></strong>
-						<span data-account-shelf-status-copy><?php echo esc_html(is_user_logged_in() ? 'local saves show first, account saves follow when they load.' : 'you can still save books on this device, but an account makes the shelf yours everywhere.'); ?></span>
+						<strong><?php echo esc_html($has_reader_access ? 'syncing your shelf...' : 'enter your email to keep your shelf across devices.'); ?></strong>
+						<span data-account-shelf-status-copy><?php echo esc_html($has_reader_access ? 'local saves show first, email saves follow when they load.' : 'you can still save books on this device, but email access makes the shelf yours everywhere.'); ?></span>
 					</div>
 				</div>
 				<div class="bbb-account-shelf__tools" data-account-shelf-tools hidden>

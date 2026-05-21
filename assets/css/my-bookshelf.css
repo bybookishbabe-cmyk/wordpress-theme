@@ -80,6 +80,7 @@
 .bbb-account-shelf__button,
 .bbb-account-shelf__empty a,
 .bbb-account-shelf__perk a,
+.bbb-account-shelf__emailForm button,
 .bbb-account-shelf__tools button {
   display: inline-flex;
   align-items: center;
@@ -103,6 +104,7 @@
 .bbb-account-shelf__button:hover,
 .bbb-account-shelf__empty a:hover,
 .bbb-account-shelf__perk a:hover,
+.bbb-account-shelf__emailForm button:hover,
 .bbb-account-shelf__tools button:hover {
   transform: translateY(-2px);
   background: #ff9fd1;
@@ -113,6 +115,52 @@
   border: 1px solid rgba(255,138,199,.42);
   background: transparent;
   color: #ffb8dc;
+}
+
+.bbb-account-shelf__emailForm {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  gap: 12px;
+  width: min(560px, 100%);
+  margin: 22px auto 0;
+}
+
+.bbb-account-shelf__emailForm input {
+  min-height: 46px;
+  width: 100%;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 8px;
+  background: rgba(0,0,0,.26);
+  color: #fff;
+  font: inherit;
+  padding: 12px 14px;
+  text-transform: none;
+}
+
+.bbb-account-shelf__emailForm input::placeholder {
+  color: rgba(247,243,238,.48);
+}
+
+.bbb-account-shelf__emailForm button:disabled {
+  cursor: progress;
+  opacity: .72;
+  transform: none;
+}
+
+.bbb-account-shelf__formStatus {
+  grid-column: 1 / -1;
+  max-width: none;
+  margin: 0;
+  color: rgba(247,243,238,.72);
+  font-size: 1.25rem;
+}
+
+.bbb-account-shelf__formStatus[data-tone="success"] {
+  color: #ffb8dc;
+}
+
+.bbb-account-shelf__formStatus[data-tone="error"] {
+  color: #ffd0d0;
 }
 
 .bbb-account-shelf__backSociety {
@@ -1021,6 +1069,10 @@
   .bbb-account-shelf__status {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .bbb-account-shelf__emailForm {
+    grid-template-columns: 1fr;
   }
 
   .bbb-account-shelf__previewGrid {

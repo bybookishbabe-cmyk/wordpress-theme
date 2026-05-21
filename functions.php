@@ -61,6 +61,13 @@ function bbb_reader_is_society(): bool {
 		return true;
 	}
 
+	if (function_exists('bbb_reader_current_identity') && function_exists('bbb_reader_access_tier_for_email')) {
+		$identity = bbb_reader_current_identity();
+		if ($identity && 'society' === bbb_reader_access_tier_for_email((string) ($identity['email'] ?? ''), (int) ($identity['userId'] ?? 0))) {
+			return true;
+		}
+	}
+
 	return bbb_user_is_society(get_current_user_id()) || bbb_is_sss_member();
 }
 
@@ -212,6 +219,7 @@ add_action(
 
 		wp_enqueue_script('bbb-supabase', 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2', array(), null, false);
 		bbb_enqueue_js('bbb-globals', 'assets/bbb-globals.js', array(), false);
+		bbb_enqueue_js('bbb-reader-email-access', 'assets/js/reader-email-access.js', array('bbb-globals'), false);
 		bbb_enqueue_js('bbb-post-login-redirect', 'assets/bbb-post-login-redirect.js', array('bbb-globals'), false);
 		bbb_enqueue_js('bbb-constants', 'assets/constants.js', array('bbb-post-login-redirect'));
 		bbb_enqueue_js('bbb-pubsub', 'assets/pubsub.js', array('bbb-constants'));
@@ -257,8 +265,11 @@ add_action(
 
 		$user         = wp_get_current_user();
 		$is_logged_in = is_user_logged_in();
+		$reader_identity = function_exists('bbb_reader_current_identity') ? bbb_reader_current_identity() : null;
+		$reader_email    = $reader_identity ? (string) ($reader_identity['email'] ?? '') : '';
+		$reader_user_id  = $reader_identity ? (int) ($reader_identity['userId'] ?? 0) : 0;
 		$bookshelf   = home_url('/my-bookshelf/');
-		$account_url = function_exists('wc_get_page_permalink') ? wc_get_page_permalink('myaccount') : home_url('/my-account/');
+		$account_url = home_url('/account/');
 		$cart_url    = function_exists('wc_get_cart_url') ? wc_get_cart_url() : home_url('/cart/');
 
 		wp_localize_script(
@@ -268,8 +279,9 @@ add_action(
 				'shopUrl'                   => home_url(),
 				'BBBReaderAccount'          => array(
 					'loggedIn'     => $is_logged_in,
-					'customerId'   => $is_logged_in ? (int) $user->ID : null,
-					'email'        => $is_logged_in ? (string) $user->user_email : '',
+					'hasEmailAccess' => (bool) $reader_identity,
+					'customerId'   => $reader_user_id ?: null,
+					'email'        => $reader_email,
 					'firstName'    => $is_logged_in ? (string) $user->first_name : '',
 					'isSociety'    => bbb_reader_is_society(),
 					'bookshelfUrl' => $bookshelf,
@@ -318,6 +330,7 @@ add_action(
 				),
 				'readerAccount'             => array(
 					'endpoint'      => rest_url('bbb/v1/reader-account'),
+					'emailEndpoint' => rest_url('bbb/v1/reader-account/email-session'),
 					'shelfEndpoint' => rest_url('bbb/v1/reader-account/shelf'),
 					'nonce'         => wp_create_nonce('wp_rest'),
 				),
@@ -332,8 +345,8 @@ add_action(
 					'books'       => bbb_get_all_books_json(),
 					'supabaseUrl' => defined('SUPABASE_URL') ? SUPABASE_URL : 'https://efmrfxsmgbeikfgtrxjv.supabase.co',
 					'supabaseKey' => defined('SUPABASE_ANON_KEY') ? SUPABASE_ANON_KEY : 'sb_publishable_iwjASe3QwixdDvHovaXZBQ_gbXU0Utk',
-					'currentUser' => is_user_logged_in() ? wp_get_current_user()->user_email : null,
-					'isMember'    => bbb_is_sss_member(),
+					'currentUser' => $reader_email ?: null,
+					'isMember'    => bbb_reader_is_society(),
 					'ajaxUrl'     => admin_url('admin-ajax.php'),
 					'nonce'       => wp_create_nonce('bbb_shelf'),
 					'homeUrl'     => home_url('/'),
