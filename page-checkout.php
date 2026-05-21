@@ -66,6 +66,23 @@ get_header();
 </main>
 
 <script>
+	document.addEventListener('DOMContentLoaded', function () {
+		var panel = document.querySelector('.bbb-checkout__panel');
+		var extras = document.querySelector('.bbb-checkout__extras');
+		var cart = document.querySelector('#edd_checkout_cart_form, .edd-blocks__cart');
+
+		if (!panel || !extras || !cart || cart.closest('.bbb-checkout__sideRail')) {
+			return;
+		}
+
+		var sideRail = document.createElement('aside');
+		sideRail.className = 'bbb-checkout__sideRail';
+		sideRail.setAttribute('aria-label', 'checkout summary');
+		panel.appendChild(sideRail);
+		sideRail.appendChild(cart);
+		sideRail.appendChild(extras);
+	});
+
 	document.addEventListener('change', function (event) {
 		var select = event.target.closest('[data-bbb-sample-select]');
 		var link = document.querySelector('[data-bbb-sample-link]');

@@ -53,6 +53,43 @@ if (!function_exists('bbb_library_matchmaker_shelf_name')) {
 	}
 }
 
+if (!function_exists('bbb_library_matchmaker_trope_names')) {
+	function bbb_library_matchmaker_trope_names(WP_Post $book, array $data): array {
+		$names = array();
+
+		foreach ((array) ($data['tropes'] ?? array()) as $trope) {
+			if (is_array($trope)) {
+				$name = trim((string) ($trope['name'] ?? $trope['label'] ?? $trope['title'] ?? ''));
+			} else {
+				$name = trim((string) $trope);
+			}
+
+			if ('' !== $name) {
+				$names[] = $name;
+			}
+		}
+
+		foreach (array('bbb_trope', 'sss_trope') as $taxonomy) {
+			if (!taxonomy_exists($taxonomy)) {
+				continue;
+			}
+
+			$terms = get_the_terms($book->ID, $taxonomy);
+			if (!$terms || is_wp_error($terms)) {
+				continue;
+			}
+
+			foreach ($terms as $term) {
+				if ($term instanceof WP_Term && '' !== trim($term->name)) {
+					$names[] = trim($term->name);
+				}
+			}
+		}
+
+		return array_values(array_unique(array_filter($names)));
+	}
+}
+
 $finder_books = array_map(
 	static function (WP_Post $book): array {
 		$data = sss_book_data($book);
@@ -64,7 +101,7 @@ $finder_books = array_map(
 			'author' => $data['author'],
 			'cover'  => $data['cover'],
 			'shelf'  => $shelf,
-			'tropes' => array_values(array_filter(array_column($data['tropes'], 'name'))),
+			'tropes' => bbb_library_matchmaker_trope_names($book, $data),
 			'why'    => $data['why'],
 			'mini'   => $data['mini'],
 		);
@@ -85,6 +122,19 @@ $finder_shelves = array_values(
 );
 natcasesort($finder_shelves);
 $finder_shelves = array_values($finder_shelves);
+
+$finder_tropes = array_values(
+	array_unique(
+		array_merge(
+			...array_map(
+				static fn(array $book): array => array_values(array_filter(array_map('strval', (array) ($book['tropes'] ?? array())))),
+				$finder_books
+			)
+		)
+	)
+);
+natcasesort($finder_tropes);
+$finder_tropes = array_values($finder_tropes);
 
 $join_url  = get_option('bbb_society_gate_member_url', 'https://thesmutandsentimentsociety.substack.com/subscribe');
 $login_url = wp_login_url(get_permalink());
@@ -119,11 +169,21 @@ $login_url = wp_login_url(get_permalink());
 				</label>
 				<label class="sss-lib__finderField" data-finder-step="2">
 					<span>pick the main trope</span>
-					<select id="sssFinderTropeOne"><option value="">choose a trope</option></select>
+					<select id="sssFinderTropeOne">
+						<option value="">choose a trope</option>
+						<?php foreach ($finder_tropes as $trope) : ?>
+							<option value="<?php echo esc_attr($trope); ?>"><?php echo esc_html($trope); ?></option>
+						<?php endforeach; ?>
+					</select>
 				</label>
 				<label class="sss-lib__finderField" data-finder-step="3">
 					<span>add a second mood</span>
-					<select id="sssFinderTropeTwo"><option value="">surprise me</option></select>
+					<select id="sssFinderTropeTwo">
+						<option value="">surprise me</option>
+						<?php foreach ($finder_tropes as $trope) : ?>
+							<option value="<?php echo esc_attr($trope); ?>"><?php echo esc_html($trope); ?></option>
+						<?php endforeach; ?>
+					</select>
 				</label>
 			</div>
 

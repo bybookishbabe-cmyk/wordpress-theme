@@ -5616,6 +5616,16 @@ function initReadFinder(){
     });
   }
 
+  function tropeValues(book){
+    return dedupe(Array.isArray(book && book.tropes) ? book.tropes.map(function(trope){
+      if (trope && typeof trope === 'object') {
+        return trope.name || trope.label || trope.title || '';
+      }
+
+      return trope;
+    }) : []);
+  }
+
   function buildCounts(list, mapper){
     var counts = {};
 
@@ -5702,7 +5712,8 @@ function initReadFinder(){
   }
 
   books.forEach(function(book){
-    book._tropes = dedupe(Array.isArray(book.tropes) ? book.tropes : []).map(normalize);
+    book.tropes = tropeValues(book);
+    book._tropes = book.tropes.map(normalize);
   });
 
   var allShelves = buildCounts(books, function(book){
@@ -5735,13 +5746,13 @@ function initReadFinder(){
     fillSelect(shelfSelect, allShelves, 'choose a shelf');
 
     var tropeOneOptions = buildCounts(booksForShelf(), function(book){
-      return Array.isArray(book.tropes) ? dedupe(book.tropes) : [];
+      return tropeValues(book);
     });
 
     fillSelect(tropeOneSelect, tropeOneOptions, 'choose a trope');
 
     var tropeTwoOptions = buildCounts(booksForShelfAndTrope(), function(book){
-      var values = Array.isArray(book.tropes) ? dedupe(book.tropes) : [];
+      var values = tropeValues(book);
       var selectedTrope = normalize(tropeOneSelect.value);
 
       return values.filter(function(value){
