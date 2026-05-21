@@ -184,7 +184,7 @@ get_header();
 									<?php if ('' !== $cover) : ?>
 										<img style="--i: <?php echo esc_attr((string) $index); ?>;" src="<?php echo esc_url($cover); ?>" alt="">
 									<?php else : ?>
-										<span style="--i: <?php echo esc_attr((string) $index); ?>;"><?php echo esc_html(mb_substr($title, 0, 1)); ?></span>
+										<span style="--i: <?php echo esc_attr((string) $index); ?>;"><?php echo esc_html(substr($title, 0, 1)); ?></span>
 									<?php endif; ?>
 								<?php endforeach; ?>
 								<?php if (!$bookshelf_preview_books) : ?>
