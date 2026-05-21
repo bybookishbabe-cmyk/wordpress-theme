@@ -199,48 +199,31 @@ if (!function_exists('bbb_shop_download_size_options')) {
 if (!function_exists('bbb_shop_download_purchase_form')) {
 	function bbb_shop_download_purchase_form(int $post_id): void {
 		$size_options = bbb_shop_download_size_options($post_id);
-		if (!$size_options || !function_exists('edd_get_purchase_link')) {
-			if (function_exists('edd_get_purchase_link')) {
-				echo edd_get_purchase_link(
-					array(
-						'download_id' => $post_id,
-						'text'        => 'add to cart',
-						'price'       => false,
-						'class'       => 'bbb-shop-card__button',
-						'style'       => 'button',
-					)
-				);
-			} else {
-				?>
-				<a class="bbb-shop-card__button" href="<?php echo esc_url(get_permalink($post_id)); ?>">view details</a>
-				<?php
+		if (function_exists('edd_get_purchase_link')) {
+			if ($size_options && function_exists('edd_purchase_variable_pricing')) {
+				remove_action('edd_purchase_link_top', 'edd_purchase_variable_pricing', 10);
+				add_action('edd_purchase_link_top', 'bbb_shop_purchase_size_select', 10, 2);
+			}
+
+			echo edd_get_purchase_link(
+				array(
+					'download_id' => $post_id,
+					'text'        => 'add to cart',
+					'checkout'    => 'checkout',
+					'price'       => false,
+					'class'       => 'bbb-shop-card__button',
+					'style'       => 'button',
+				)
+			);
+
+			if ($size_options && function_exists('edd_purchase_variable_pricing')) {
+				remove_action('edd_purchase_link_top', 'bbb_shop_purchase_size_select', 10);
+				add_action('edd_purchase_link_top', 'edd_purchase_variable_pricing', 10, 2);
 			}
 			return;
 		}
-
-		$default_price_id = (string) get_post_meta($post_id, '_edd_default_price_id', true);
-		if ('' === $default_price_id || !isset($size_options[$default_price_id])) {
-			$default_price_id = (string) array_key_first($size_options);
-		}
-
-		$select_id = 'bbb-shop-size-' . $post_id;
 		?>
-		<form class="edd_download_purchase_form bbb-shop-card__purchaseForm" method="post">
-			<div class="bbb-shop-card__size">
-				<label for="<?php echo esc_attr($select_id); ?>">size</label>
-				<select id="<?php echo esc_attr($select_id); ?>" class="bbb-shop-card__sizeSelect" name="edd_options[price_id][]">
-					<?php foreach ($size_options as $price_id => $label) : ?>
-						<option value="<?php echo esc_attr($price_id); ?>" <?php selected($price_id, $default_price_id); ?>>
-							<?php echo esc_html($label); ?>
-						</option>
-					<?php endforeach; ?>
-				</select>
-			</div>
-			<input type="hidden" name="download_id" value="<?php echo esc_attr((string) $post_id); ?>">
-			<input type="hidden" name="edd_action" value="add_to_cart">
-			<input type="hidden" name="edd_redirect_to_checkout" value="">
-			<button type="submit" class="edd-submit bbb-shop-card__button">add to cart</button>
-		</form>
+		<a class="bbb-shop-card__button" href="<?php echo esc_url(get_permalink($post_id)); ?>">view details</a>
 		<?php
 	}
 }

@@ -206,6 +206,7 @@ if (!function_exists('bbb_single_product_purchase_form')) {
 					array(
 						'download_id' => $post_id,
 						'text'        => 'add to cart',
+						'checkout'    => 'checkout',
 						'price'       => false,
 						'class'       => 'bbb-shop-card__button',
 						'style'       => 'button',
