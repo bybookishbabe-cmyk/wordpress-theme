@@ -15,7 +15,14 @@ function sss_quickstats_series_books(WP_Post $series): array {
 	if (!$books) {
 		$books = array_filter(
 			sss_article_all_visible_books(),
-			static fn(WP_Post $book): bool => ($s = sss_article_post(sss_article_field('series', $book->ID, null))) && (int) $s->ID === (int) $series->ID
+			static function (WP_Post $book) use ($series): bool {
+				$linked_series = sss_article_post(sss_article_field('series', $book->ID, null));
+				if ($linked_series instanceof WP_Post && (int) $linked_series->ID === (int) $series->ID) {
+					return true;
+				}
+
+				return 'bbb_book' === $book->post_type && (string) get_post_meta($book->ID, '_bbb_series_handle', true) === $series->post_name;
+			}
 		);
 	}
 
@@ -42,7 +49,8 @@ function sss_quickstats_shortcode($atts): string {
 	$series_books = $data['series'] instanceof WP_Post ? sss_quickstats_series_books($data['series']) : array();
 	$first_book = $series_books[0] ?? null;
 	$trope_names = wp_list_pluck($data['tropes'], 'name');
-	$is_standalone = !$data['series'] || $data['standalone'];
+	$has_series = $data['series'] instanceof WP_Post || '' !== trim((string) ($data['series_handle'] ?? '')) || '' !== trim((string) ($data['series_name'] ?? ''));
+	$is_standalone = !$has_series || $data['standalone'];
 
 	ob_start();
 	?>

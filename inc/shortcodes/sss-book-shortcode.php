@@ -363,8 +363,14 @@ function sss_article_book_data(int $book_id): array {
 	} elseif ('bbb_book' === get_post_type($book_id)) {
 		$series_handle = (string) get_post_meta($book_id, '_bbb_series_handle', true);
 		if ($series_handle) {
+			$series_post = get_page_by_path($series_handle, OBJECT, 'sss_series');
+			if ($series_post instanceof WP_Post) {
+				$series      = $series_post;
+				$series_name = get_the_title($series_post);
+			}
+
 			$series_term = get_term_by('slug', $series_handle, 'bbb_series');
-			if ($series_term instanceof WP_Term) {
+			if ('' === $series_name && $series_term instanceof WP_Term) {
 				$series_name = $series_term->name;
 			}
 		}
