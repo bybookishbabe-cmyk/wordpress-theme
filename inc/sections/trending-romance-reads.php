@@ -346,6 +346,8 @@ if ($book_post_types && count($matched_books) < count($issue_types)) {
 			<?php endforeach; ?>
 		</div>
 
+		<?php get_template_part('template-parts/sponsorship/trending-strip', null, array('variant' => 'home-soft')); ?>
+
 		<div class="bbb-trending__cta">
 			<a href="https://thesmutandsentimentsociety.substack.com/subscribe" target="_blank" rel="noopener" class="bbb-trending__ctaSecondary">
 				don't miss a sunday →

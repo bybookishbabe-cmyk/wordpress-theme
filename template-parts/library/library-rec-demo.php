@@ -39,7 +39,7 @@ $cover_for_book = static function (?WP_Post $book): string {
 	}
 
 	if ('bbb_book' === $book->post_type) {
-		return (string) get_post_meta($book->ID, '_bbb_cover_url', true);
+		return function_exists('bbb_get_book_cover_url') ? bbb_get_book_cover_url($book->ID) : (string) get_post_meta($book->ID, '_bbb_cover_url', true);
 	}
 
 	return function_exists('sss_get_book_cover_url') ? sss_get_book_cover_url($book->ID) : '';

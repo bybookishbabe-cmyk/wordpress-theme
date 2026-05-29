@@ -1059,6 +1059,7 @@ function renderMyShelf(){
       <div 
         class="sss-lib__book sss-lib__book--mini"
         data-handle="${stringifyBookDatasetValue(hydratedBook.handle || book.handle)}"
+        data-url="${stringifyBookDatasetValue(hydratedBook.url || book.url || ((hydratedBook.handle || book.handle) ? '/books/' + encodeURIComponent(hydratedBook.handle || book.handle) + '/' : ''))}"
         data-title="${stringifyBookDatasetValue(hydratedBook.title || book.title)}"
         data-author="${stringifyBookDatasetValue(hydratedBook.author || book.author)}"
         data-cover="${stringifyBookDatasetValue(hydratedBook.cover || book.cover)}"
@@ -1396,12 +1397,12 @@ function init(){
     var titleEl = document.querySelector('[data-mtitle]');
     var authorEl = document.querySelector('[data-mauthor]');
     var coverEl = document.querySelector('[data-mcover]');
+    var kuBtn = document.querySelector('[data-ku-btn]');
     var amazonBtn = document.querySelector('[data-amazon-btn]');
     var bookshopBtn = document.querySelector('[data-bookshop-btn]');
     var tropesEl = document.querySelector('[data-mtropes]');
     var whyEl = document.querySelector('[data-mwhy]');
     var miniEl = document.querySelector('[data-mmini]');
-    var newsletterBtn = document.querySelector('[data-newsletter-btn]');
     var standaloneEl = document.querySelector('[data-mstandalone]');
     var tensionEl = document.querySelector('[data-mtension]');
     var damageEl = document.querySelector('[data-mdamage]');
@@ -1414,6 +1415,7 @@ function init(){
     var modalShareBtn = modal ? modal.querySelector('[data-modal-share-btn]') : null;
     var modalShareLabel = modal ? modal.querySelector('[data-modal-share-label]') : null;
     var modalShareIcon = modal ? modal.querySelector('.sss-lib__mshareIcon') : null;
+    var modalFullLink = modal ? modal.querySelector('[data-modal-full-link]') : null;
     var seriesOrderEl = modal ? modal.querySelector('[data-mseries-order]') : null;
 
     function ensureModalSpiceBadge(){
@@ -1428,9 +1430,10 @@ function init(){
       return spiceEl;
     }
 
-    function getModalBookData(btn){
-      return {
+	    function getModalBookData(btn){
+	      return {
         handle: btn.dataset.handle || '',
+        url: btn.dataset.url || '',
         title: btn.dataset.title || '',
         author: btn.dataset.author || '',
         cover: btn.dataset.cover || '',
@@ -1452,11 +1455,239 @@ function init(){
         series: btn.dataset.series || '',
         seriesName: btn.dataset.seriesName || '',
         seriesNumber: btn.dataset.seriesNumber || '',
-        privateShelf: btn.dataset.privateShelf || 'false'
-      };
-    }
+	        privateShelf: btn.dataset.privateShelf || 'false'
+	      };
+	    }
 
-    function openModal(data){
+	    function modalEscape(value){
+	      return String(value || '')
+	        .replace(/&/g, '&amp;')
+	        .replace(/</g, '&lt;')
+	        .replace(/>/g, '&gt;')
+	        .replace(/"/g, '&quot;')
+	        .replace(/'/g, '&#039;');
+	    }
+
+	    function modalTropeNameWithoutEmoji(tropeName){
+	      var raw = String(tropeName || '').trim();
+	      var lower = raw.toLowerCase();
+	      var knownTropes = [
+	        'touch her and die',
+	        'why choose',
+	        'who did this to you',
+	        'mafia romance',
+	        'slow burn',
+	        'enemies to lovers',
+	        'fated mates'
+	      ];
+	      for (var i = 0; i < knownTropes.length; i += 1) {
+	        if (lower.indexOf(knownTropes[i]) !== -1) return knownTropes[i];
+	      }
+	      return raw.replace(/^[^a-z0-9]+/i, '').trim();
+	    }
+
+	    function modalTropeCustomKey(tropeName){
+	      var name = modalTropeNameWithoutEmoji(tropeName);
+	      var key = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+	      var haystack = (key + ' ' + name.toLowerCase()).replace(/\s+/g, ' ');
+	      var aliases = [
+	        ['mafia-romance', ['mafia']],
+	        ['slow-burn', ['slow burn', 'slow-burn']],
+	        ['enemies-to-lovers', ['enemies to lovers', 'enemies-to-lovers']],
+	        ['friends-to-lovers', ['friends to lovers', 'friends-to-lovers']],
+	        ['he-falls-first', ['he falls first', 'he-falls-first', 'falls first']],
+	        ['billionaire-romance', ['billionaire romance', 'billionaire-romance', 'billionaire']],
+	        ['stalker-romance', ['stalker romance', 'stalker-romance', 'stalker']],
+	        ['dystopian-romance', ['dystopian romance', 'dystopian-romance']],
+	        ['sports-romance', ['sports romance', 'sports-romance', 'sports']],
+	        ['bully-romance', ['bully romance', 'bully-romance', 'bully']],
+	        ['forced-proximity', ['forced proximity', 'forced-proximity']],
+	        ['villain-gets-the-girl', ['villain gets the girl', 'villain-gets-the-girl', 'villain romance']],
+	        ['historical-romance', ['historical romance', 'historical-romance']],
+	        ['bodyguard-romance', ['bodyguard romance', 'bodyguard-romance', 'bodyguard']],
+	        ['opposites-attract', ['opposites attract', 'opposites-attract']],
+	        ['marriage-of-convenience', ['marriage of convenience', 'marriage-of-convenience']],
+	        ['found-family', ['found family', 'found-family']],
+	        ['dark-academia', ['dark academia', 'dark-academia']],
+	        ['captor-x-captive', ['captor x captive', 'captor-x-captive', 'captor captive', 'captor', 'captive']],
+	        ['boss-x-employee', ['boss x employee', 'boss-x-employee', 'boss employee']],
+	        ['age-gap', ['age gap', 'age-gap']],
+	        ['trauma-bonding', ['trauma bonding', 'trauma-bonding']],
+	        ['baseball-romance', ['baseball romance', 'baseball-romance', 'baseball']],
+	        ['hockey-romance', ['hockey romance', 'hockey-romance', 'hockey']],
+	        ['contemporary-romance', ['contemporary romance', 'contemporary-romance']],
+	        ['dark-romance', ['dark romance', 'dark-romance']],
+	        ['forbidden-love', ['forbidden love', 'forbidden-love', 'forbidden romance']],
+	        ['step-siblings', ['step siblings', 'step-siblings', 'stepsiblings']],
+	        ['nanny', ['nanny romance', 'nanny']],
+	        ['single-dad', ['single dad', 'single-dad']],
+	        ['small-town', ['small town', 'small-town']],
+	        ['grumpy-x-sunshine', ['grumpy x sunshine', 'grumpy-x-sunshine', 'grumpy sunshine']],
+	        ['one-bed', ['one bed', 'one-bed']],
+	        ['brothers-best-friend', ['brother best friend', 'brothers best friend', "brother's best friend", 'brothers-best-friend', 'brother-s-best-friend']],
+	        ['second-chance', ['second chance', 'second-chance']],
+	        ['fake-dating', ['fake dating', 'fake-dating']],
+	        ['fated-mates', ['fated mates', 'fated-mates']],
+	        ['who-did-this-to-you', ['who did this to you', 'who-did-this-to-you']],
+	        ['touch-her-and-die', ['touch her and die', 'touch-her-and-die']],
+	        ['why-choose', ['why choose', 'why-choose']],
+	        ['paranormal-romance', ['paranormal romance', 'paranormal-romance', 'paranormal']],
+	        ['romantasy', ['romantasy', 'fantasy romance']]
+	      ];
+	      for (var i = 0; i < aliases.length; i += 1) {
+	        for (var j = 0; j < aliases[i][1].length; j += 1) {
+	          if (haystack.indexOf(aliases[i][1][j]) !== -1) return aliases[i][0];
+	        }
+	      }
+	      return '';
+	    }
+
+	    function modalTropesHtml(value){
+	      var tropes = String(value || '').split(',').map(function(trope){
+	        return String(trope || '').trim();
+	      }).filter(Boolean);
+
+	      if (!tropes.length) return '';
+
+	      return 'tropes: ' + tropes.map(function(trope){
+	        var name = modalTropeNameWithoutEmoji(trope);
+	        var key = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+	        var customKey = modalTropeCustomKey(trope);
+	        if (customKey) {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/' + customKey + '.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name);
+	        }
+	        if (key === 'mafia' || key === 'mafia-romance') {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/mafia-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'mafia romance');
+	        }
+	        if (key === 'slow-burn') {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/slow-burn.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'slow burn');
+	        }
+	        if (key === 'enemies-to-lovers') {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/enemies-to-lovers.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'enemies to lovers');
+	        }
+	        if (key === 'friends-to-lovers') {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/friends-to-lovers.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'friends to lovers');
+	        }
+	        if (key === 'he-falls-first' || key === 'falls-first') {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/he-falls-first.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'he falls first');
+	        }
+	        if (key === 'billionaire-romance' || key === 'billionaire') {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/billionaire-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'billionaire romance');
+	        }
+	        if (key === 'stalker-romance' || key === 'stalker') {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/stalker-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'stalker romance');
+	        }
+	        if (key === 'dystopian-romance') {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/dystopian-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'dystopian romance');
+	        }
+	        if (key === 'sports-romance' || key === 'sports') {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/sports-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'sports romance');
+	        }
+	        if (key === 'bully-romance' || key === 'bully') {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/bully-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'bully romance');
+	        }
+	        if (key === 'forced-proximity') {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/forced-proximity.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'forced proximity');
+	        }
+	        if (key === 'villain-gets-the-girl' || key === 'villain-romance') {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/villain-gets-the-girl.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'villain gets the girl');
+	        }
+	        if (key === 'historical-romance') {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/historical-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'historical romance');
+	        }
+	        if (key === 'bodyguard-romance' || key === 'bodyguard') {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/bodyguard-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'bodyguard romance');
+	        }
+	        if (key === 'opposites-attract') {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/opposites-attract.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'opposites attract');
+	        }
+	        if (key === 'marriage-of-convenience') {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/marriage-of-convenience.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'marriage of convenience');
+	        }
+	        if (key === 'found-family') {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/found-family.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'found family');
+	        }
+	        if (key === 'dark-academia' || key === 'dark-academia-romance') {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/dark-academia.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'dark academia');
+	        }
+	          if (key === 'captor-x-captive' || key === 'captor-captive-romance') {
+	            return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/captor-x-captive.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'captor x captive');
+	          }
+	          if (key === 'boss-x-employee' || key === 'boss-employee') {
+	            return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/boss-x-employee.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'boss x employee');
+	          }
+	          if (key === 'age-gap') {
+	            return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/age-gap.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'age gap');
+	          }
+	          if (key === 'trauma-bonding') {
+	            return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/trauma-bonding.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'trauma bonding');
+	          }
+	          if (key === 'baseball-romance') {
+	            return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/baseball-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'baseball romance');
+	          }
+	          if (key === 'hockey-romance') {
+	            return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/hockey-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'hockey romance');
+	          }
+	          if (key === 'contemporary-romance') {
+	            return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/contemporary-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'contemporary romance');
+	          }
+	          if (key === 'dark-romance') {
+	            return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/dark-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'dark romance');
+	          }
+	          if (key === 'forbidden-love' || key === 'forbidden-romance') {
+	            return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/forbidden-love.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'forbidden love');
+	          }
+	          if (key === 'step-siblings' || key === 'stepsiblings') {
+	            return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/step-siblings.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'step siblings');
+	          }
+	          if (key === 'nanny' || key === 'nanny-romance') {
+	            return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/nanny.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'nanny');
+	          }
+	          if (key === 'single-dad' || key === 'single-dad-romance') {
+	            return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/single-dad.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'single dad');
+	          }
+	          if (key === 'small-town' || key === 'small-town-romance') {
+	            return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/small-town.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'small town');
+	          }
+	          if (key === 'grumpy-x-sunshine' || key === 'grumpy-sunshine') {
+	            return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/grumpy-x-sunshine.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape('grumpy x sunshine');
+	          }
+	          if (key === 'one-bed') {
+	            return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/one-bed.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'one bed');
+	          }
+	          if (key === 'brothers-best-friend' || key === 'brother-s-best-friend') {
+	            return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/brothers-best-friend.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || "brother's best friend");
+	          }
+	          if (key === 'second-chance') {
+	            return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/second-chance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'second chance');
+	          }
+	          if (key === 'fake-dating' || key === 'fake-dating-romance') {
+	            return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/fake-dating.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'fake dating');
+	          }
+	        if (key === 'fated-mates') {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/fated-mates.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'fated mates');
+	        }
+	        if (key === 'who-did-this-to-you') {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/who-did-this-to-you.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'who did this to you');
+	        }
+	        if (key === 'touch-her-and-die') {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/touch-her-and-die.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'touch her and die');
+	        }
+	        if (key === 'why-choose') {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/why-choose.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'why choose');
+	        }
+	        if (key === 'paranormal' || key === 'paranormal-romance') {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/paranormal-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'paranormal romance');
+	        }
+	        if (key === 'romantasy' || key === 'fantasy-romance') {
+	          return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/romantasy.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'romantasy');
+	        }
+
+	        return modalEscape(trope);
+	      }).join(', ');
+	    }
+
+	    function openModal(data){
 
       if (!modal) return;
       data = sanitizeBookDataForLibraryType(data, libraryType);
@@ -1475,6 +1706,16 @@ function init(){
 
       if (titleEl) titleEl.textContent = data.title || '';
       if (authorEl) authorEl.textContent = data.author ? ('by ' + data.author) : '';
+      if (modalFullLink){
+        var fullLinkUrl = data.url || (data.handle ? '/books/' + encodeURIComponent(data.handle) + '/' : '');
+        if (fullLinkUrl){
+          modalFullLink.href = fullLinkUrl;
+          modalFullLink.hidden = false;
+        } else {
+          modalFullLink.hidden = true;
+          modalFullLink.removeAttribute('href');
+        }
+      }
       renderModalBookStatus(modal, data);
 
 var modalHeart = modal.querySelector('[data-modal-heart]');
@@ -1587,7 +1828,8 @@ if(modalHeart){
       if (kuEl){
         var kuState = String(data.ku || '').toLowerCase().trim() === 'true';
         kuEl.className = 'sss-lib__mku ' + (kuState ? 'is-yes' : 'is-no');
-        kuEl.textContent = (kuState ? '✓' : '✕') + ' on kindle unlimited: ' + (kuState ? 'yes' : 'no');
+        kuEl.style.display = kuState ? '' : 'none';
+        kuEl.textContent = kuState ? 'included in your kindle unlimited subscription — no extra cost' : 'not currently included in kindle unlimited';
       }
 
       if (darknessEl){
@@ -1651,11 +1893,9 @@ if (seriesOrderEl){
 }
 
 
-      if (tropesEl){
-        tropesEl.textContent = (data.tropesDisplay || data.tropes)
-          ? "tropes: " + (data.tropesDisplay || data.tropes)
-          : '';
-      }
+	      if (tropesEl){
+	        tropesEl.innerHTML = modalTropesHtml(data.tropesDisplay || data.tropes);
+	      }
 
       if (standaloneEl){
         if (String(data.standalone || '').toLowerCase().trim() === 'true'){
@@ -1671,9 +1911,28 @@ if (seriesOrderEl){
         whyEl.textContent = data.why || '';
       }
 
+      var modalKuState = String(data.ku || '').toLowerCase().trim() === 'true';
+      if (kuBtn){
+        kuBtn.style.display = data.amazon && modalKuState ? '' : 'none';
+        if (data.amazon) kuBtn.href = data.amazon;
+        kuBtn.onclick = data.amazon && modalKuState ? function(){
+          trackSiteEvent("book_link_clicked", {
+            bookHandle: data.handle || '',
+            bookTitle: data.title || '',
+            seriesHandle: data.series || '',
+            uiLocation: "book_modal",
+            metadata: {
+              destination: "kindle_unlimited"
+            }
+          });
+        } : null;
+      }
+
       if (amazonBtn){
         amazonBtn.style.display = data.amazon ? '' : 'none';
         if (data.amazon) amazonBtn.href = data.amazon;
+        amazonBtn.innerHTML = modalKuState ? 'buy on amazon <span>· own it forever</span>' : 'buy on amazon';
+        amazonBtn.classList.remove('sss-lib__mbtn--primary');
         amazonBtn.onclick = data.amazon ? function(){
           trackSiteEvent("book_link_clicked", {
             bookHandle: data.handle || '',
@@ -1690,6 +1949,7 @@ if (seriesOrderEl){
       if (bookshopBtn){
         bookshopBtn.style.display = data.bookshop ? '' : 'none';
         if (data.bookshop) bookshopBtn.href = data.bookshop;
+        bookshopBtn.innerHTML = 'prefer indie? bookshop.org →';
         bookshopBtn.onclick = data.bookshop ? function(){
           trackSiteEvent("book_link_clicked", {
             bookHandle: data.handle || '',
@@ -1698,22 +1958,6 @@ if (seriesOrderEl){
             uiLocation: "book_modal",
             metadata: {
               destination: "bookshop"
-            }
-          });
-        } : null;
-      }
-
-      if (newsletterBtn){
-        newsletterBtn.style.display = data.newsletter ? '' : 'none';
-        if (data.newsletter) newsletterBtn.href = data.newsletter;
-        newsletterBtn.onclick = data.newsletter ? function(){
-          trackSiteEvent("book_link_clicked", {
-            bookHandle: data.handle || '',
-            bookTitle: data.title || '',
-            seriesHandle: data.series || '',
-            uiLocation: "book_modal",
-            metadata: {
-              destination: "newsletter"
             }
           });
         } : null;
@@ -2675,6 +2919,76 @@ function getTropePillColors(name){
   return tropePillColors[handle] || { bg: "#f3bfd5", text: "#4b112d" };
 }
 
+function escapeTropePopupText(value){
+  return String(value || "").replace(/[&<>"']/g, function(char){
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char];
+  });
+}
+
+function getTropePopupCustomKey(value){
+  const label = String(value || "").toLowerCase();
+  const handle = normalizeTropeHandle(value);
+  const haystack = handle + " " + label;
+  const aliases = [
+    ["found-family", ["found family", "found-family"]],
+    ["friends-to-lovers", ["friends to lovers", "friends-to-lovers"]],
+    ["step-siblings", ["step siblings", "step-siblings", "stepsiblings"]],
+    ["mafia-romance", ["mafia"]],
+    ["slow-burn", ["slow burn", "slow-burn"]],
+    ["enemies-to-lovers", ["enemies to lovers", "enemies-to-lovers"]],
+    ["fated-mates", ["fated mates", "fated-mates"]],
+    ["why-choose", ["why choose", "why-choose"]],
+    ["touch-her-and-die", ["touch her and die", "touch-her-and-die"]],
+    ["who-did-this-to-you", ["who did this to you", "who-did-this-to-you"]],
+    ["dark-academia", ["dark academia", "dark-academia"]],
+    ["dark-romance", ["dark romance", "dark-romance"]],
+    ["romantasy", ["romantasy", "fantasy romance"]],
+    ["paranormal-romance", ["paranormal"]],
+    ["fake-dating", ["fake dating", "fake-dating"]],
+    ["captor-x-captive", ["captor x captive", "captor-x-captive", "captor captive", "captor", "captive"]],
+    ["boss-x-employee", ["boss x employee", "boss-x-employee", "boss employee"]],
+    ["age-gap", ["age gap", "age-gap"]],
+    ["trauma-bonding", ["trauma bonding", "trauma-bonding"]],
+    ["baseball-romance", ["baseball romance", "baseball-romance", "baseball"]],
+    ["hockey-romance", ["hockey romance", "hockey-romance", "hockey"]],
+    ["one-bed", ["one bed", "one-bed"]],
+    ["brothers-best-friend", ["brother best friend", "brothers best friend", "brother's best friend", "brothers-best-friend", "brother-s-best-friend"]],
+    ["second-chance", ["second chance", "second-chance"]],
+    ["contemporary-romance", ["contemporary romance", "contemporary-romance"]],
+    ["forbidden-love", ["forbidden love", "forbidden-love", "forbidden romance"]],
+    ["nanny", ["nanny"]],
+    ["single-dad", ["single dad", "single-dad"]],
+    ["small-town", ["small town", "small-town"]],
+    ["grumpy-x-sunshine", ["grumpy x sunshine", "grumpy-x-sunshine", "grumpy sunshine"]],
+    ["billionaire-romance", ["billionaire"]],
+    ["stalker-romance", ["stalker"]],
+    ["dystopian-romance", ["dystopian romance", "dystopian-romance"]],
+    ["sports-romance", ["sports romance", "sports-romance", "sports"]],
+    ["bully-romance", ["bully romance", "bully-romance", "bully"]],
+    ["forced-proximity", ["forced proximity", "forced-proximity"]],
+    ["villain-gets-the-girl", ["villain gets the girl", "villain-gets-the-girl", "villain romance"]],
+    ["historical-romance", ["historical romance", "historical-romance"]],
+    ["bodyguard-romance", ["bodyguard romance", "bodyguard"]],
+    ["opposites-attract", ["opposites attract", "opposites-attract"]],
+    ["marriage-of-convenience", ["marriage of convenience", "marriage-of-convenience"]]
+  ];
+  for (let i = 0; i < aliases.length; i += 1) {
+    for (let j = 0; j < aliases[i][1].length; j += 1) {
+      if (haystack.indexOf(aliases[i][1][j]) !== -1) return aliases[i][0];
+    }
+  }
+  return "";
+}
+
+function getTropePopupHtml(name, label){
+  const displayLabel = label || name;
+  const key = getTropePopupCustomKey(name + " " + displayLabel);
+  if (!key) return escapeTropePopupText(displayLabel);
+  const emojiMap = window.BBBSiteData && window.BBBSiteData.customTropeEmojis ? window.BBBSiteData.customTropeEmojis : {};
+  const src = emojiMap[key] || ("/wp-content/themes/wordpress-theme/assets/images/custom-emojis/" + key + ".png");
+  return '<img class="bbb-custom-emoji" src="' + escapeTropePopupText(src) + '" alt="" aria-hidden="true" loading="lazy" decoding="async"> <span>' + escapeTropePopupText(displayLabel) + '</span>';
+}
+
 /* ----------------------
 CHECK IF PAGE EXISTS
 ---------------------- */
@@ -2724,7 +3038,7 @@ const colors = getTropePillColors(name);
 
 a.href = url;
 a.className = "sss-tropePopup__pill";
-a.textContent = labelText;
+a.innerHTML = getTropePopupHtml(name, labelText);
 a.style.setProperty("--trope-bg", colors.bg);
 a.style.setProperty("--trope-text", colors.text);
 

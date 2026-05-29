@@ -37,7 +37,7 @@ function sss_bool($value): bool {
 }
 
 function sss_book_is_visible(int $post_id): bool {
-	if (apply_filters('bbb_show_all_imported_books', true, $post_id)) {
+	if (apply_filters('bbb_show_all_imported_books', false, $post_id)) {
 		return 'publish' === get_post_status($post_id);
 	}
 
@@ -105,6 +105,10 @@ function sss_get_all_books(): array {
 }
 
 function sss_get_book_cover_url(int $post_id): string {
+	if (function_exists('bbb_get_book_cover_url')) {
+		return bbb_get_book_cover_url($post_id);
+	}
+
 	$cover = sss_meta($post_id, 'sss_cover_url', '');
 
 	if (is_array($cover)) {
@@ -124,11 +128,13 @@ function sss_get_book_cover_url(int $post_id): string {
 		}
 	}
 
-	if ($cover) {
+	if ($cover && !(function_exists('bbb_is_site_logo_url') && bbb_is_site_logo_url((string) $cover))) {
 		return (string) $cover;
 	}
 
-	return get_the_post_thumbnail_url($post_id, 'large') ?: '';
+	$thumbnail = (string) (get_the_post_thumbnail_url($post_id, 'large') ?: '');
+
+	return function_exists('bbb_is_site_logo_url') && bbb_is_site_logo_url($thumbnail) ? '' : $thumbnail;
 }
 
 function sss_get_book_tropes(int $post_id): array {
@@ -148,7 +154,7 @@ function sss_get_book_tropes(int $post_id): array {
 
 			$tropes[] = array(
 				'name'   => $name,
-				'emoji'  => (string) ($trope['sss_trope_emoji'] ?? $trope['emoji'] ?? ''),
+				'emoji'  => function_exists('bbb_trope_emoji') ? bbb_trope_emoji($trope['sss_trope_emoji'] ?? $trope['emoji'] ?? '') : (string) ($trope['sss_trope_emoji'] ?? $trope['emoji'] ?? '🖤'),
 				'handle' => (string) ($trope['sss_trope_handle'] ?? $trope['handle'] ?? sanitize_title($name)),
 			);
 		}
@@ -160,7 +166,7 @@ function sss_get_book_tropes(int $post_id): array {
 			foreach ($terms as $term) {
 				$tropes[] = array(
 					'name'   => $term->name,
-					'emoji'  => (string) get_term_meta($term->term_id, 'emoji', true),
+					'emoji'  => function_exists('bbb_trope_emoji') ? bbb_trope_emoji(get_term_meta($term->term_id, 'emoji', true)) : (string) get_term_meta($term->term_id, 'emoji', true),
 					'handle' => $term->slug,
 				);
 			}
@@ -203,7 +209,7 @@ function sss_book_data(WP_Post $post): array {
 			foreach ($trope_terms as $term) {
 				$tropes[] = array(
 					'name'   => $term->name,
-					'emoji'  => (string) get_term_meta($term->term_id, 'trope_emoji', true),
+					'emoji'  => function_exists('bbb_trope_emoji') ? bbb_trope_emoji(get_term_meta($term->term_id, 'trope_emoji', true)) : (string) get_term_meta($term->term_id, 'trope_emoji', true),
 					'handle' => $term->slug,
 				);
 			}
@@ -213,9 +219,10 @@ function sss_book_data(WP_Post $post): array {
 
 		return array(
 			'handle'         => $post->post_name,
+			'url'            => get_permalink($post) ?: home_url('/books/' . $post->post_name . '/'),
 			'title'          => $post->post_title,
 			'author'         => (string) get_post_meta($post->ID, '_bbb_author', true),
-			'cover'          => (string) get_post_meta($post->ID, '_bbb_cover_url', true),
+			'cover'          => function_exists('bbb_get_book_cover_url') ? bbb_get_book_cover_url($post->ID) : (string) get_post_meta($post->ID, '_bbb_cover_url', true),
 			'amazon'         => (string) get_post_meta($post->ID, '_bbb_amazon_url', true),
 			'bookshop'       => (string) get_post_meta($post->ID, '_bbb_bookshop_url', true),
 			'shelf'          => $shelf,
@@ -247,6 +254,7 @@ function sss_book_data(WP_Post $post): array {
 
 	return array(
 		'handle'         => $post->post_name,
+		'url'            => get_permalink($post) ?: home_url('/books/' . $post->post_name . '/'),
 		'title'          => $post->post_title,
 		'author'         => (string) sss_meta($post->ID, 'sss_author', ''),
 		'cover'          => sss_get_book_cover_url($post->ID),

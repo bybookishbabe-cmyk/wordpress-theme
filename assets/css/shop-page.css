@@ -107,6 +107,170 @@
   padding: 48px 0 70px;
 }
 
+.bbb-shop-obsession {
+  border-bottom: 1px solid var(--shop-line);
+  padding: 24px 20px 28px;
+}
+
+.bbb-shop-obsession__inner {
+  align-items: center;
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(128px, 190px) minmax(0, 1fr);
+  margin: 0 auto;
+  max-width: 960px;
+}
+
+.bbb-shop-obsession__media {
+  align-items: center;
+  aspect-ratio: 1;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 138, 199, 0.22);
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  padding: 18px;
+  text-decoration: none;
+}
+
+.bbb-shop-obsession__image {
+  border-radius: 8px;
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.bbb-shop-obsession__sweatshirt {
+  aspect-ratio: 1.02;
+  background: #f4edf1;
+  border-radius: 30px 30px 22px 22px;
+  box-shadow: 0 20px 42px rgba(0, 0, 0, 0.34);
+  color: #161111;
+  display: grid;
+  max-width: 140px;
+  place-items: center;
+  position: relative;
+  width: 100%;
+}
+
+.bbb-shop-obsession__sweatshirt::before,
+.bbb-shop-obsession__sweatshirt::after {
+  background: #f4edf1;
+  border-radius: 999px;
+  content: "";
+  height: 74%;
+  position: absolute;
+  top: 22%;
+  width: 34%;
+  z-index: 0;
+}
+
+.bbb-shop-obsession__sweatshirt::before {
+  left: -22%;
+  transform: rotate(18deg);
+}
+
+.bbb-shop-obsession__sweatshirt::after {
+  right: -22%;
+  transform: rotate(-18deg);
+}
+
+.bbb-shop-obsession__neck {
+  background: #050505;
+  border-radius: 0 0 999px 999px;
+  height: 22px;
+  left: 50%;
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  width: 44px;
+  z-index: 1;
+}
+
+.bbb-shop-obsession__embroidered {
+  font: 700 21px/1 "Cormorant Garamond", Georgia, serif;
+  margin-top: 18px;
+  position: relative;
+  text-transform: lowercase;
+  z-index: 1;
+}
+
+.bbb-shop-obsession__book {
+  color: #e85a9b;
+  font: 900 22px/1 Assistant, system-ui, sans-serif;
+  margin-top: -26px;
+  position: relative;
+  z-index: 1;
+}
+
+.bbb-shop-obsession__copy {
+  display: grid;
+  gap: 10px;
+}
+
+.bbb-shop-obsession__kicker {
+  color: var(--shop-pink);
+  font: 900 12px/1.2 Assistant, system-ui, sans-serif;
+  margin: 0;
+  text-transform: lowercase;
+}
+
+.bbb-shop-obsession h2 {
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 0.98;
+}
+
+.bbb-shop-obsession p {
+  color: var(--shop-muted);
+  font: 500 15px/1.55 Assistant, system-ui, sans-serif;
+  margin: 0;
+  max-width: 590px;
+}
+
+.bbb-shop-obsession__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.bbb-shop-obsession__meta span {
+  background: var(--shop-pink-soft);
+  border: 1px solid rgba(255, 138, 199, 0.32);
+  border-radius: 999px;
+  color: var(--shop-pink);
+  font: 900 10px/1 Assistant, system-ui, sans-serif;
+  padding: 7px 9px;
+  text-transform: lowercase;
+}
+
+.bbb-shop-obsession__button {
+  align-items: center;
+  background: #f6f1eb;
+  border: 1px solid #f6f1eb;
+  border-radius: 999px;
+  color: #050505;
+  display: inline-flex;
+  font: 900 12px/1 Assistant, system-ui, sans-serif;
+  justify-content: center;
+  justify-self: start;
+  min-height: 42px;
+  padding: 12px 18px;
+  text-decoration: none;
+  text-transform: lowercase;
+  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.bbb-shop-obsession__button:hover,
+.bbb-shop-obsession__button:focus-visible {
+  background: var(--shop-pink);
+  border-color: var(--shop-pink);
+  color: #050505;
+  outline: none;
+  transform: translateY(-1px);
+}
+
 .bbb-shop__section + .bbb-shop__section {
   border-top: 1px solid var(--shop-line);
 }
@@ -350,6 +514,11 @@
   display: none !important;
 }
 
+.bbb-shop-card__actions .edd-cart-added-alert,
+.bbb-shop-card__actions .edd_added_to_cart_alert {
+  display: none !important;
+}
+
 .bbb-shop-card__actions .edd_purchase_submit_wrapper {
   display: grid;
   gap: 0;
@@ -366,9 +535,32 @@
   white-space: normal;
 }
 
+.bbb-edd-cart-status {
+  min-height: 18px;
+  margin: 8px 0 0;
+  color: var(--shop-muted);
+  font: 800 12px/1.4 Assistant, system-ui, sans-serif;
+  text-transform: lowercase;
+}
+
+.is-bbb-cart-added .bbb-edd-cart-status {
+  color: #7fd08d;
+}
+
+.is-bbb-cart-pending .bbb-edd-cart-status {
+  color: var(--shop-pink);
+}
+
 .bbb-shop-card__button--ghost {
-  background: transparent;
-  color: var(--shop-ink);
+  background: transparent !important;
+  color: var(--shop-ink) !important;
+}
+
+.bbb-shop-card__button--disabled {
+  border-color: rgba(255, 138, 199, 0.22) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: var(--shop-muted) !important;
+  cursor: not-allowed;
 }
 
 .bbb-shop-card__details {
@@ -509,13 +701,57 @@
 
 .bbb-product__actions .edd_purchase_submit_wrapper {
   display: grid;
-  gap: 0;
+  grid-template-columns: 1fr;
+  gap: 8px;
   width: 100%;
   min-height: 48px;
 }
 
-.bbb-product__actions .edd_go_to_checkout {
+.bbb-product__actions .edd-submit,
+.bbb-product__actions .edd-add-to-cart,
+.bbb-product__actions .edd_go_to_checkout,
+.bbb-product__actions .button,
+.bbb-product__actions input[type="submit"],
+.bbb-product__keepShopping {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 14px;
+  border: 1px solid var(--shop-pink) !important;
+  border-radius: 4px;
+  background: var(--shop-pink) !important;
+  color: #080808 !important;
+  font: 900 13px/1 Assistant, system-ui, sans-serif;
+  text-decoration: none;
+  text-transform: lowercase;
+  box-shadow: none !important;
+  cursor: pointer;
+}
+
+.bbb-product__actions .edd_go_to_checkout,
+.bbb-product__keepShopping {
   margin: 0 !important;
+}
+
+.bbb-product__keepShopping {
+  display: none;
+  border-color: rgba(255, 138, 199, 0.46) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: var(--shop-ink) !important;
+}
+
+.bbb-product__actions .is-bbb-cart-added .edd_purchase_submit_wrapper {
+  grid-template-columns: 1fr 1fr;
+}
+
+.bbb-product__actions .is-bbb-cart-added .bbb-product__keepShopping {
+  display: inline-flex;
+}
+
+.bbb-product__actions .is-bbb-cart-added + .bbb-product__keepShopping {
+  display: inline-flex;
 }
 
 .bbb-product__actions .edd-cart-ajax-alert {
@@ -579,6 +815,10 @@
   color: var(--shop-pink);
 }
 
+.bbb-product__content .edd_download_purchase_form {
+  display: none !important;
+}
+
 .bbb-product .quantity,
 .bbb-product .single_add_to_cart_button {
   margin-top: 10px;
@@ -587,6 +827,41 @@
 @media (max-width: 680px) {
   .bbb-shop__hero {
     padding-top: 46px;
+  }
+
+  .bbb-shop-obsession {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .bbb-shop-obsession__inner {
+    gap: 16px;
+    grid-template-columns: 112px minmax(0, 1fr);
+  }
+
+  .bbb-shop-obsession__media {
+    padding: 13px;
+  }
+
+  .bbb-shop-obsession__sweatshirt {
+    max-width: 88px;
+  }
+
+  .bbb-shop-obsession__embroidered {
+    font-size: 15px;
+  }
+
+  .bbb-shop-obsession__book {
+    font-size: 17px;
+    margin-top: -20px;
+  }
+
+  .bbb-shop-obsession h2 {
+    font-size: 28px;
+  }
+
+  .bbb-shop-obsession p {
+    font-size: 14px;
   }
 
   .bbb-shop__filters {

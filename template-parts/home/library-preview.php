@@ -71,7 +71,7 @@ if (!function_exists('bbb_library_preview_cover')) {
 		}
 
 		if ('bbb_book' === $book->post_type) {
-			return (string) get_post_meta($book->ID, '_bbb_cover_url', true);
+			return function_exists('bbb_get_book_cover_url') ? bbb_get_book_cover_url($book->ID) : (string) get_post_meta($book->ID, '_bbb_cover_url', true);
 		}
 
 		return function_exists('bbb_get_book_cover_url') ? bbb_get_book_cover_url($book->ID) : (get_the_post_thumbnail_url($book->ID, 'large') ?: '');

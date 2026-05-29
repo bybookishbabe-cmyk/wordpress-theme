@@ -39,6 +39,18 @@ function sss_get_issue_publish_date(WP_Post $issue): string {
 	return sss_normalize_newsletter_date($raw);
 }
 
+function sss_get_issue_publish_weekday(WP_Post $issue): int {
+	$weekday = (int) get_post_meta($issue->ID, '_issue_publish_weekday', true);
+	if ($weekday >= 1 && $weekday <= 7) {
+		return $weekday;
+	}
+
+	$date = sss_get_issue_publish_date($issue);
+	$timestamp = sss_newsletter_date_timestamp($date);
+
+	return $timestamp > 0 ? (int) wp_date('N', $timestamp) : 0;
+}
+
 function sss_get_book_newsletter_date(WP_Post $book): string {
 	$raw = 'bbb_book' === $book->post_type
 		? (string) get_post_meta($book->ID, '_bbb_newsletter_date', true)
@@ -132,8 +144,64 @@ function sss_get_current_newsletter_issue(): ?WP_Post {
 	return $current;
 }
 
+function sss_get_latest_newsletter_issue_by_weekday(int $weekday): ?WP_Post {
+	$weekday = max(1, min(7, $weekday));
+	$now = time();
+	$post_types = array_values(
+		array_filter(
+			array('newsletter_issue', 'bbb_newsletter_issue'),
+			static fn(string $post_type): bool => post_type_exists($post_type)
+		)
+	);
+
+	if (!$post_types) {
+		return null;
+	}
+
+	$issues = get_posts(
+		array(
+			'post_type'      => $post_types,
+			'post_status'    => 'publish',
+			'posts_per_page' => -1,
+			'meta_query'     => array(
+				'relation' => 'OR',
+				array(
+					'key'     => 'publish_date',
+					'compare' => 'EXISTS',
+				),
+				array(
+					'key'     => '_issue_publish_date',
+					'compare' => 'EXISTS',
+				),
+			),
+		)
+	);
+
+	$current = null;
+	$current_ts = 0;
+	foreach ($issues as $issue) {
+		if (!$issue instanceof WP_Post || sss_get_issue_publish_weekday($issue) !== $weekday) {
+			continue;
+		}
+
+		$issue_ts = sss_newsletter_date_timestamp(sss_get_issue_publish_date($issue));
+		if (0 === $issue_ts) {
+			continue;
+		}
+
+		$live_ts = $issue_ts + 36000;
+		if ($live_ts <= $now && $issue_ts >= $current_ts) {
+			$current = $issue;
+			$current_ts = $issue_ts;
+		}
+	}
+
+	return $current;
+}
+
 function sss_get_current_obsession_context(): array {
-	$current_issue = sss_get_current_newsletter_issue();
+	$current_issue = sss_get_latest_newsletter_issue_by_weekday(7) ?: sss_get_current_newsletter_issue();
+	$secret_issue  = sss_get_latest_newsletter_issue_by_weekday(4);
 	$issue_book    = $current_issue instanceof WP_Post ? sss_get_obsession_book($current_issue) : null;
 	$latest_book   = sss_get_latest_featured_book();
 
@@ -142,20 +210,23 @@ function sss_get_current_obsession_context(): array {
 	$book_date  = $latest_book instanceof WP_Post ? sss_get_book_newsletter_date($latest_book) : '';
 	$book_ts    = sss_newsletter_date_timestamp($book_date);
 
-	$use_book_fallback = $latest_book instanceof WP_Post && $book_ts > $issue_ts;
-	$book              = $use_book_fallback ? $latest_book : $issue_book;
-
-	if (!$book instanceof WP_Post && $latest_book instanceof WP_Post) {
+	$use_book_fallback = false;
+	$book              = $issue_book;
+	if ($latest_book instanceof WP_Post && ($book_ts > $issue_ts || !$book instanceof WP_Post)) {
 		$book              = $latest_book;
-		$use_book_fallback = true;
+		$use_book_fallback = !$issue_book instanceof WP_Post;
 	}
 
-	$date     = $use_book_fallback ? $book_date : $issue_date;
+	$date     = $current_issue instanceof WP_Post ? $issue_date : $book_date;
 	$url      = '';
 	$title    = '';
 	$subtitle = '';
+	$excerpt  = '';
+	$content  = '';
+	$quote    = '';
+	$secret_url = '';
 
-	if (!$use_book_fallback && $current_issue instanceof WP_Post) {
+	if ($current_issue instanceof WP_Post) {
 		$url = (string) get_post_meta($current_issue->ID, '_bbb_newsletter_url', true);
 		$url = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value($url) : trim($url);
 		$title = (string) get_post_meta($current_issue->ID, '_issue_title_override', true);
@@ -163,6 +234,19 @@ function sss_get_current_obsession_context(): array {
 			$title = get_the_title($current_issue);
 		}
 		$subtitle = (string) get_post_meta($current_issue->ID, '_issue_subtitle', true);
+		$excerpt = (string) get_post_meta($current_issue->ID, '_issue_excerpt', true);
+		if ('' === trim($excerpt)) {
+			$excerpt = $current_issue->post_excerpt ?: wp_trim_words(wp_strip_all_tags($current_issue->post_content), 44, '');
+		}
+		$content = (string) $current_issue->post_content;
+		$quote = (string) get_post_meta($current_issue->ID, '_issue_pull_quote', true);
+	}
+	if ($secret_issue instanceof WP_Post) {
+		$secret_url = (string) get_post_meta($secret_issue->ID, '_bbb_newsletter_url', true);
+		if ('' === trim($secret_url)) {
+			$secret_url = (string) get_post_meta($secret_issue->ID, 'issue_url', true);
+		}
+		$secret_url = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value($secret_url) : trim($secret_url);
 	}
 
 	if ($book instanceof WP_Post) {
@@ -184,13 +268,18 @@ function sss_get_current_obsession_context(): array {
 	}
 
 	return array(
-		'issue'            => $use_book_fallback ? null : $current_issue,
+		'issue'            => $current_issue,
 		'book'             => $book,
 		'date'             => $date,
 		'timestamp'        => sss_newsletter_date_timestamp($date),
 		'title'            => $title,
 		'subtitle'         => $subtitle,
+		'excerpt'          => $excerpt,
+		'content'          => $content,
+		'pull_quote'       => $quote,
 		'url'              => $url,
+		'secret_issue'     => $secret_issue,
+		'secret_url'       => $secret_url,
 		'is_book_fallback' => $use_book_fallback,
 	);
 }

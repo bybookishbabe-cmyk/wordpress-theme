@@ -14,6 +14,7 @@ $books = array_values(array_filter($args['books'] ?? array(), static fn($book): 
 			<?php get_template_part('template-parts/library/book-card', null, array('post' => $book, 'mini' => true)); ?>
 		<?php endforeach; ?>
 	</div>
+	<?php get_template_part('template-parts/sponsorship/trending-strip', null, array('variant' => 'kindle-unlimited')); ?>
 	<div id="sssTrendingSourcePool" hidden>
 		<?php foreach ($books as $book) : ?>
 			<?php get_template_part('template-parts/library/book-card', null, array('post' => $book, 'mini' => true)); ?>

@@ -83,8 +83,10 @@ if (!$shelves) {
 	<?php foreach ($shelves as $shelf) : ?>
 		<?php
 		$shelf_handle = sanitize_title($shelf['name']);
-		$page         = get_page_by_path($shelf_handle . '-books') ?: get_page_by_path($shelf_handle);
-		$shelf_url    = $page instanceof WP_Post ? get_permalink($page) : home_url('/' . $shelf_handle . '-books/');
+		$shelf_term   = function_exists('bbb_find_book_taxonomy_term') ? bbb_find_book_taxonomy_term($shelf_handle, 'shelf') : null;
+		$shelf_url    = ($shelf_term instanceof WP_Term && function_exists('bbb_book_taxonomy_term_url'))
+			? bbb_book_taxonomy_term_url($shelf_term)
+			: home_url('/' . $shelf_handle . '-books/');
 		?>
 		<div class="sss-lib__shelf">
 			<div class="sss-lib__shelfBreak">

@@ -6917,6 +6917,7 @@ gap:6px;
 display:inline-flex;
 align-items:center;
 justify-content:center;
+gap:7px;
 padding:6px 11px;
 border-radius:999px;
 border:1px solid color-mix(in srgb, var(--trope-bg, #ead7e6) 78%, #ffffff 22%);
@@ -6929,6 +6930,14 @@ letter-spacing:.01em;
 line-height:1.25;
 transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease, background-color .22s ease;
 box-shadow:0 0 0 rgba(0,0,0,0);
+}
+
+.sss-tropePopup__pill .bbb-custom-emoji{
+width:22px;
+height:22px;
+object-fit:contain;
+flex:0 0 auto;
+vertical-align:middle;
 }
 
 .sss-tropePopup__pill:hover,
@@ -7438,9 +7447,9 @@ font-size:13px;
   .sss-lib__modal .sss-lib__dialog{
     width:min(92vw, 430px);
     max-height:78svh;
-    top:auto;
-    bottom:12px;
-    transform:translateX(-50%);
+    top:50%;
+    bottom:auto;
+    transform:translate(-50%, -50%);
   }
 
   .sss-lib__modal .sss-lib__mcoverWrap{

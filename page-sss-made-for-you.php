@@ -7,6 +7,29 @@
 
 declare(strict_types=1);
 
+if (!function_exists('bbb_reader_is_society') || !bbb_reader_is_society()) {
+	get_header();
+	if (function_exists('bbb_society_render_locked_preview_page')) {
+		bbb_society_render_locked_preview_page(
+			array(
+				'access'      => 'paid',
+				'kicker'      => 'paid society preview',
+				'title'       => 'made for you',
+				'intro'       => 'preview the personalized reader dashboard before unlocking the recommendations and mood logic.',
+				'panel_title' => 'upgrade to open your dashboard',
+				'panel_copy'  => 'paid society members get made-for-you reader logic, mood-based recommendations, and smarter next-read picks.',
+				'items'       => array(
+					'personal reader pattern summary',
+					'mood-based next-read picks',
+					'society-only recommendation logic',
+				),
+			)
+		);
+	}
+	get_footer();
+	return;
+}
+
 if (!function_exists('bbb_made_for_you_books')) {
 	function bbb_made_for_you_books(): array {
 		if (!function_exists('bbb_books_like_all_visible_books') || !function_exists('bbb_books_like_book_data')) {

@@ -9,6 +9,12 @@ declare(strict_types=1);
 
 $shop_css_path = get_theme_file_path('assets/css/shop-page.css');
 wp_enqueue_style('bbb-shop-page', get_template_directory_uri() . '/assets/css/shop-page.css', array('bbb-base'), file_exists($shop_css_path) ? (string) filemtime($shop_css_path) : wp_get_theme()->get('Version'));
+$shop_cart_js_path = get_theme_file_path('assets/js/shop-edd-cart.js');
+wp_enqueue_script('bbb-shop-edd-cart', get_template_directory_uri() . '/assets/js/shop-edd-cart.js', array(), file_exists($shop_cart_js_path) ? (string) filemtime($shop_cart_js_path) : wp_get_theme()->get('Version'), true);
+$shop_popup_css_path = get_theme_file_path('assets/css/shop-drop-popup.css');
+wp_enqueue_style('bbb-shop-drop-popup', get_template_directory_uri() . '/assets/css/shop-drop-popup.css', array('bbb-shop-page'), file_exists($shop_popup_css_path) ? (string) filemtime($shop_popup_css_path) : wp_get_theme()->get('Version'));
+$shop_popup_js_path = get_theme_file_path('assets/js/shop-drop-popup.js');
+wp_enqueue_script('bbb-shop-drop-popup', get_template_directory_uri() . '/assets/js/shop-drop-popup.js', array('bbb-shop-edd-cart'), file_exists($shop_popup_js_path) ? (string) filemtime($shop_popup_js_path) : wp_get_theme()->get('Version'), true);
 
 get_header();
 
@@ -381,6 +387,60 @@ if (!function_exists('bbb_shop_download_excerpt')) {
 	}
 }
 
+if (!function_exists('bbb_shop_new_drop_product')) {
+	function bbb_shop_new_drop_product(): ?array {
+		$post_type = post_type_exists('download') ? 'download' : 'product';
+		$query     = new WP_Query(
+			array(
+				'post_type'      => $post_type,
+				'post_status'    => 'publish',
+				'posts_per_page' => 8,
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+				'meta_query'     => array(
+					array(
+						'key'     => '_bbb_import_source',
+						'value'   => 'society_product_importer',
+						'compare' => '=',
+					),
+				),
+			)
+		);
+
+		foreach ($query->posts as $product) {
+			if (!$product instanceof WP_Post) {
+				continue;
+			}
+
+			$product_id = (int) $product->ID;
+			if (function_exists('bbb_society_product_is_publicly_sellable') && !bbb_society_product_is_publicly_sellable($product_id)) {
+				continue;
+			}
+
+			if (bbb_shop_download_file_count($product_id) < 1) {
+				continue;
+			}
+
+			$added_at = get_post_time('U', true, $product);
+			if (!$added_at || $added_at < current_time('timestamp', true) - WEEK_IN_SECONDS) {
+				continue;
+			}
+
+			return array(
+				'id'          => $product_id,
+				'title'       => strtolower(get_the_title($product)),
+				'url'         => get_permalink($product),
+				'image'       => bbb_shop_download_image($product_id),
+				'price'       => bbb_shop_download_price($product_id),
+				'member_free' => 'yes' === get_post_meta($product_id, '_bbb_society_free_download', true),
+				'added_at'    => $added_at,
+			);
+		}
+
+		return null;
+	}
+}
+
 $downloads = array_values(
 	array_filter(
 		$downloads_query->posts,
@@ -450,6 +510,8 @@ $sections = array(
 	),
 );
 
+$shop_drop_product = bbb_shop_new_drop_product();
+
 if (function_exists('edd_purchase_variable_pricing')) {
 	remove_action('edd_purchase_link_top', 'edd_purchase_variable_pricing', 10);
 	add_action('edd_purchase_link_top', 'bbb_shop_purchase_size_select', 10, 2);
@@ -470,6 +532,8 @@ if (function_exists('edd_purchase_variable_pricing')) {
 			</nav>
 		</div>
 	</section>
+
+	<?php get_template_part('template-parts/shop/current-obsession'); ?>
 
 	<?php if (!$downloads && !$seed_products) : ?>
 		<section class="bbb-shop__empty">
@@ -499,7 +563,8 @@ if (function_exists('edd_purchase_variable_pricing')) {
 							$price_value   = trim((string) ($download['price'] ?? ''));
 							$price         = '' !== $price_value ? '$' . number_format((float) $price_value, 2) : '';
 							$file_count    = bbb_shop_seed_file_count($download);
-							$missing_files = (bool) ($download['download_missing'] ?? false);
+							$missing_files = (bool) ($download['download_missing'] ?? false) && 0 === $file_count;
+							$can_purchase  = false;
 							$is_free       = bbb_society_product_importer_truthy($download['society_free'] ?? false);
 						} else {
 							$post_id       = (int) $download->ID;
@@ -508,7 +573,8 @@ if (function_exists('edd_purchase_variable_pricing')) {
 							$image_url     = bbb_shop_download_image($post_id);
 							$price         = bbb_shop_download_price($post_id);
 							$file_count    = bbb_shop_download_file_count($post_id);
-							$missing_files = 'yes' === get_post_meta($post_id, '_bbb_missing_download_url', true);
+							$missing_files = 'yes' === get_post_meta($post_id, '_bbb_missing_download_url', true) && 0 === $file_count;
+							$can_purchase  = 0 < $file_count && !$missing_files;
 							$is_free       = 'yes' === get_post_meta($post_id, '_bbb_society_free_download', true);
 						}
 						?>
@@ -544,8 +610,11 @@ if (function_exists('edd_purchase_variable_pricing')) {
 										<a class="bbb-shop-card__button" href="<?php echo esc_url($permalink); ?>">view details</a>
 									<?php elseif ($missing_files && $is_admin_preview) : ?>
 										<a class="bbb-shop-card__button bbb-shop-card__button--ghost" href="<?php echo esc_url(get_edit_post_link($post_id)); ?>">finish setup</a>
-									<?php elseif (function_exists('edd_get_purchase_link')) : ?>
+									<?php elseif ($can_purchase && function_exists('edd_get_purchase_link')) : ?>
 										<?php bbb_shop_download_purchase_form($post_id); ?>
+										<a class="bbb-shop-card__details" href="<?php echo esc_url($permalink); ?>">view details</a>
+									<?php elseif (!$can_purchase) : ?>
+										<span class="bbb-shop-card__button bbb-shop-card__button--disabled" aria-disabled="true">coming soon</span>
 										<a class="bbb-shop-card__details" href="<?php echo esc_url($permalink); ?>">view details</a>
 									<?php else : ?>
 										<a class="bbb-shop-card__button" href="<?php echo esc_url(get_permalink($download)); ?>">view details</a>
@@ -559,6 +628,35 @@ if (function_exists('edd_purchase_variable_pricing')) {
 		<?php endforeach; ?>
 	<?php endif; ?>
 </main>
+
+<?php if (is_array($shop_drop_product)) : ?>
+	<div
+		class="bbb-shop-drop"
+		data-bbb-shop-drop
+		data-drop-id="<?php echo esc_attr('shop-drop-' . (string) $shop_drop_product['id'] . '-' . (string) $shop_drop_product['added_at']); ?>"
+		hidden
+	>
+		<div class="bbb-shop-drop__backdrop" data-bbb-shop-drop-close></div>
+		<section class="bbb-shop-drop__dialog" role="dialog" aria-modal="true" aria-labelledby="bbb-shop-drop-title">
+			<button class="bbb-shop-drop__close" type="button" data-bbb-shop-drop-close aria-label="close shop drop popup">
+				<span aria-hidden="true">&times;</span>
+			</button>
+			<a class="bbb-shop-drop__media" href="<?php echo esc_url((string) $shop_drop_product['url']); ?>">
+				<?php if (!empty($shop_drop_product['image'])) : ?>
+					<img src="<?php echo esc_url((string) $shop_drop_product['image']); ?>" alt="<?php echo esc_attr((string) $shop_drop_product['title']); ?>">
+				<?php else : ?>
+					<span><?php echo esc_html(substr((string) $shop_drop_product['title'], 0, 1)); ?></span>
+				<?php endif; ?>
+			</a>
+			<div class="bbb-shop-drop__copy">
+				<p class="bbb-shop-drop__kicker">🌶️ new insert drop</p>
+				<h2 id="bbb-shop-drop-title">just dropped: <?php echo esc_html((string) $shop_drop_product['title']); ?></h2>
+				<p><?php echo esc_html((string) $shop_drop_product['price']); ?></p>
+				<a class="bbb-shop-drop__button" href="<?php echo esc_url((string) $shop_drop_product['url']); ?>">shop the drop</a>
+			</div>
+		</section>
+	</div>
+<?php endif; ?>
 
 <?php
 if (function_exists('edd_purchase_variable_pricing')) {

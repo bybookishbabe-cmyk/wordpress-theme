@@ -38,17 +38,41 @@
     });
   }
 
+  function itemEmoji(item){
+    if (item && item.emoji) return item.emoji;
+    var haystack = String((item && item.title) || '') + ' ' + String((item && item.type) || '');
+    haystack = haystack.toLowerCase();
+    if (haystack.indexOf('spice') !== -1) return '🌶️';
+    if (haystack.indexOf('quiz') !== -1 || haystack.indexOf('boyfriend') !== -1) return '💘';
+    if (haystack.indexOf('what to read') !== -1 || haystack.indexOf('recommendation') !== -1) return '🧭';
+    if (haystack.indexOf('enemies') !== -1) return '⚔️';
+    if (haystack.indexOf('slow burn') !== -1) return '🕯️';
+    if (haystack.indexOf('sports') !== -1) return '🏒';
+    if (haystack.indexOf('review') !== -1) return '⭐';
+    if (haystack.indexOf('books like') !== -1 || haystack.indexOf('if you liked') !== -1) return '🔎';
+    if (haystack.indexOf('series') !== -1 || haystack.indexOf('reading order') !== -1) return '📚';
+    if (haystack.indexOf('weekly') !== -1) return '💌';
+    if (haystack.indexOf('quote') !== -1) return '💬';
+    if (haystack.indexOf('library') !== -1) return '📖';
+    if (haystack.indexOf('trope') !== -1) return '🎭';
+    if (haystack.indexOf('blog') !== -1) return '📝';
+    return '✨';
+  }
+
   function itemMarkup(item, index){
     var rank = String(index + 1).padStart(2, '0');
     return [
-      '<a class="bbb-popular__card" href="' + escapeHtml(item.url) + '">',
-        '<span class="bbb-popular__cardRank">' + rank + '</span>',
+      '<a class="bbb-popular__card" href="' + escapeHtml(item.url) + '" aria-label="Open ' + escapeHtml(item.title || 'reader favorite') + '">',
+        '<span class="bbb-popular__cardIcon">',
+          '<span class="bbb-popular__cardEmoji" aria-hidden="true">' + escapeHtml(itemEmoji(item)) + '</span>',
+          '<span class="bbb-popular__cardRank">' + rank + '</span>',
+        '</span>',
         '<span class="bbb-popular__cardBody">',
           '<span class="bbb-popular__type">' + escapeHtml(item.type || 'reader favorite') + '</span>',
           '<strong>' + escapeHtml(item.title || 'reader favorite') + '</strong>',
           '<span>' + escapeHtml(item.description || 'one of the pages readers keep coming back to.') + '</span>',
         '</span>',
-        '<span class="bbb-popular__open">' + escapeHtml(item.visits ? item.visits + ' visits' : 'open') + '</span>',
+        '<span class="bbb-popular__open">' + escapeHtml(item.visits ? item.visits + ' visits →' : 'open →') + '</span>',
       '</a>'
     ].join('');
   }
@@ -56,12 +80,16 @@
   function featureMarkup(item){
     if (!item) return '';
     return [
-      '<a class="bbb-popular__featureLink" href="' + escapeHtml(item.url) + '">',
-        '<span class="bbb-popular__rank">01</span>',
+      '<a class="bbb-popular__featureLink" href="' + escapeHtml(item.url) + '" aria-label="Open ' + escapeHtml(item.title || 'reader favorite') + '">',
+        '<span class="bbb-popular__featureBadge">',
+          '<span class="bbb-popular__featureEmoji" aria-hidden="true">' + escapeHtml(itemEmoji(item)) + '</span>',
+          '<span class="bbb-popular__rank">01</span>',
+        '</span>',
         '<span class="bbb-popular__featureCopy">',
           '<span class="bbb-popular__type">' + escapeHtml(item.type || 'reader favorite') + '</span>',
           '<strong>' + escapeHtml(item.title || 'reader favorite') + '</strong>',
           '<span>' + escapeHtml(item.description || 'one of the pages readers keep coming back to.') + '</span>',
+          '<span class="bbb-popular__featureCta">open page →</span>',
         '</span>',
       '</a>'
     ].join('');
@@ -116,6 +144,7 @@
           url: known.url || path,
           path: path,
           type: known.type || 'popular page',
+          emoji: known.emoji || '',
           description: known.description || 'a page readers visited often in the last 30 days.',
           visits: 0
         };

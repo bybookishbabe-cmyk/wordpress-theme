@@ -104,6 +104,48 @@ function sss_series_from_blog_post(int $post_id): ?WP_Post {
 	return (!empty($query[0]) && $query[0] instanceof WP_Post) ? $query[0] : null;
 }
 
+function sss_series_from_article_source(int $post_id): ?WP_Post {
+	$source = (string) get_post_meta($post_id, '_bbb_article_book_source', true);
+	$value  = sanitize_title((string) get_post_meta($post_id, '_bbb_article_book_source_value', true));
+	if ('series' !== $source || '' === $value || !post_type_exists('sss_series')) {
+		return null;
+	}
+
+	$series = get_page_by_path($value, OBJECT, 'sss_series');
+	if ($series instanceof WP_Post) {
+		return $series;
+	}
+
+	$query = get_posts(
+		array(
+			'post_type'      => 'sss_series',
+			'post_status'    => array('publish', 'draft', 'pending', 'private'),
+			'posts_per_page' => 1,
+			'meta_key'       => '_bbb_series_handle',
+			'meta_value'     => $value,
+		)
+	);
+	if (!empty($query[0]) && $query[0] instanceof WP_Post) {
+		return $query[0];
+	}
+
+	$matches = get_posts(
+		array(
+			'post_type'      => 'sss_series',
+			'post_status'    => array('publish', 'draft', 'pending', 'private'),
+			's'              => str_replace('-', ' ', $value),
+			'posts_per_page' => 5,
+		)
+	);
+	foreach ($matches as $match) {
+		if (sanitize_title(get_the_title($match)) === $value) {
+			return $match;
+		}
+	}
+
+	return null;
+}
+
 function sss_series_url(WP_Post $series): string {
 	$linked_post = sss_article_post(sss_article_field('linked_blog_post', $series->ID, null));
 	if ($linked_post) {
@@ -136,6 +178,9 @@ function sss_series_shortcode($atts): string {
 		$series = sss_series_from_blog_post($post_id);
 	}
 	if (!$series) {
+		$series = sss_series_from_article_source($post_id);
+	}
+	if (!$series) {
 		return '';
 	}
 
@@ -154,7 +199,6 @@ function sss_series_shortcode($atts): string {
       <h3 class="guide-bookcard__seriesTitle"><?php echo esc_html(get_the_title($series)); ?></h3>
       <p class="guide-bookcard__seriesMeta"><?php echo esc_html(trim($author . ' · ' . count($books) . ' books', ' ·')); ?></p>
     </div>
-    <a class="guide-bookcard__seriesLink" href="<?php echo esc_url(sss_series_url($series)); ?>">open reading guide →</a>
   </div>
   <div class="guide-bookcard__list guide-bookcard__list--series">
     <?php foreach ($books as $book) : ?>

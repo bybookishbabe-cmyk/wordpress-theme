@@ -18,7 +18,7 @@
 		</div>
 
 		<div class="bbb-quiz-nudge__right">
-			<a class="bbb-quiz-nudge__btn" href="<?php echo esc_url(home_url('/reader-quizes/')); ?>">
+			<a class="bbb-quiz-nudge__btn" href="<?php echo esc_url(home_url('/reader-quizzes/')); ?>">
 				take the quiz →
 			</a>
 			<p class="bbb-quiz-nudge__tiny">quick. dramatic. painfully accurate.</p>

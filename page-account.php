@@ -16,10 +16,36 @@ $user         = isset($identity['user']) && $identity['user'] instanceof WP_User
 $reader_email = $identity ? (string) ($identity['email'] ?? '') : '';
 $reader_user_id = $identity ? (int) ($identity['userId'] ?? 0) : 0;
 $has_reader_access = '' !== $reader_email;
-$account_data = ($has_reader_access && function_exists('bbb_reader_account_response_for_identity'))
-	? bbb_reader_account_response_for_identity((array) $identity)
-	: array();
+$account_data = array();
+$account_error = null;
+
+if ($has_reader_access && function_exists('bbb_reader_account_response_for_identity')) {
+	try {
+		$account_data = bbb_reader_account_response_for_identity((array) $identity);
+	} catch (Throwable $error) {
+		$account_error = $error;
+		error_log('BBB account page failed softly: ' . $error->getMessage());
+		$account_data = array(
+			'accessTier' => 'free',
+			'books'      => array(),
+			'readerType' => array(
+				'title'     => 'fresh shelf romantic',
+				'summary'   => 'your account opened, but the bookshelf sync needs a retry.',
+				'topTropes' => array(),
+				'counts'    => array('saved' => 0, 'read' => 0, 'reading' => 0, 'tbr' => 0),
+			),
+			'nextRead'   => null,
+		);
+	}
+}
 $books        = isset($account_data['books']) && is_array($account_data['books']) ? $account_data['books'] : array();
+$reader_type  = isset($account_data['readerType']) && is_array($account_data['readerType']) ? $account_data['readerType'] : array(
+	'title'     => 'fresh shelf romantic',
+	'summary'   => 'save or tag a few books and this will start calling your pattern.',
+	'topTropes' => array(),
+	'counts'    => array('saved' => count($books), 'read' => 0, 'reading' => 0, 'tbr' => 0),
+);
+$next_read    = isset($account_data['nextRead']) && is_array($account_data['nextRead']) ? $account_data['nextRead'] : null;
 $tier         = (string) ($account_data['accessTier'] ?? 'free');
 $is_society   = 'society' === $tier || (function_exists('bbb_reader_is_society') && bbb_reader_is_society());
 $tier         = $is_society ? 'society' : $tier;
@@ -30,6 +56,8 @@ $bookshelf_url = function_exists('bbb_page_url') ? bbb_page_url('my-bookshelf') 
 $dashboard_url = function_exists('bbb_page_url') ? bbb_page_url('member-dashboard') : home_url('/member-dashboard/');
 $monthly_drop_url = function_exists('bbb_page_url') ? bbb_page_url('monthly-theme') : home_url('/monthly-theme/');
 $society_url = function_exists('bbb_page_url') ? bbb_page_url('smut-sentiment-society') : home_url('/smut-sentiment-society/');
+$society_join_url = get_option('bbb_society_gate_member_url', 'https://thesmutandsentimentsociety.substack.com/subscribe');
+$society_join_url = '' !== trim((string) $society_join_url) ? (string) $society_join_url : 'https://thesmutandsentimentsociety.substack.com/subscribe';
 $shop_url = function_exists('bbb_page_url') ? bbb_page_url('shop') : home_url('/shop/');
 $daily_prompt = is_array($account_data['dailyJournalPrompt'] ?? null) ? $account_data['dailyJournalPrompt'] : array();
 $daily_prompt_text = isset($daily_prompt['text']) ? trim((string) $daily_prompt['text']) : '';
@@ -50,6 +78,31 @@ $bookshelf_preview_books = array_slice(
 	0,
 	3
 );
+$reader_type_title = trim((string) ($reader_type['title'] ?? 'fresh shelf romantic'));
+$reader_type_summary = trim((string) ($reader_type['summary'] ?? 'save or tag a few books and this will start calling your pattern.'));
+$reader_type_counts = is_array($reader_type['counts'] ?? null) ? $reader_type['counts'] : array();
+$reader_type_tropes = is_array($reader_type['topTropes'] ?? null) ? array_values(array_filter($reader_type['topTropes'])) : array();
+$next_read_title = $next_read ? trim((string) ($next_read['book_title'] ?? $next_read['title'] ?? '')) : '';
+$next_read_author = $next_read ? trim((string) ($next_read['author'] ?? '')) : '';
+$next_read_cover = $next_read ? trim((string) ($next_read['cover'] ?? '')) : '';
+$next_read_handle = $next_read ? sanitize_title((string) ($next_read['book_handle'] ?? $next_read['handle'] ?? '')) : '';
+$next_read_amazon = $next_read ? trim((string) ($next_read['amazon'] ?? '')) : '';
+$next_read_bookshop = $next_read ? trim((string) ($next_read['bookshop'] ?? '')) : '';
+$next_read_spice = $next_read ? (int) ($next_read['spice_level'] ?? $next_read['spice'] ?? 0) : 0;
+$next_read_darkness = $next_read ? (int) ($next_read['darkness_level'] ?? $next_read['darkness'] ?? 0) : 0;
+$next_read_tropes = $next_read ? array_slice(
+	array_values(
+		array_filter(
+			array_map(
+				'trim',
+				is_array($next_read['tropes'] ?? null) ? (array) $next_read['tropes'] : preg_split('/[,|]/', (string) ($next_read['tropes'] ?? ''))
+			)
+		)
+	),
+	0,
+	3
+) : array();
+$next_read_tropes_text = implode(', ', $next_read_tropes);
 
 if ($has_reader_access && function_exists('wc_get_orders')) {
 	$order_args = array(
@@ -109,7 +162,10 @@ get_header();
 ?>
 
 <main id="MainContent" class="content-for-layout focus-none" role="main" tabindex="-1">
-	<section class="bbb-account-shelf">
+	<section
+		class="bbb-account-shelf"
+		data-sss-lib="<?php echo esc_attr($is_society ? 'society' : 'public'); ?>"
+	>
 		<div class="bbb-account-shelf__wrap">
 			<div class="bbb-account-shelf__hero">
 				<p class="bbb-account-shelf__kicker">reader account</p>
@@ -141,6 +197,90 @@ get_header();
 			</div>
 
 			<?php if ($has_reader_access) : ?>
+				<section class="bbb-account-shelf__readerProfile" aria-label="reader type">
+					<div class="bbb-account-shelf__readerType">
+						<p class="bbb-account-shelf__perkKicker">reader type</p>
+						<h2><?php echo esc_html($reader_type_title); ?></h2>
+						<p><?php echo esc_html($reader_type_summary); ?></p>
+						<div class="bbb-account-shelf__readerStats" aria-label="bookshelf stats">
+							<span><?php echo esc_html((string) ($reader_type_counts['saved'] ?? count($books))); ?> saved</span>
+							<span><?php echo esc_html((string) ($reader_type_counts['read'] ?? 0)); ?> read</span>
+							<span><?php echo esc_html((string) ($reader_type_counts['reading'] ?? 0)); ?> reading</span>
+							<span><?php echo esc_html((string) ($reader_type_counts['tbr'] ?? 0)); ?> tbr</span>
+						</div>
+						<?php if ($reader_type_tropes) : ?>
+							<div class="bbb-account-shelf__readerSignals" aria-label="top reader signals">
+								<?php foreach (array_slice($reader_type_tropes, 0, 3) as $trope) : ?>
+									<span><?php echo esc_html((string) $trope); ?></span>
+								<?php endforeach; ?>
+							</div>
+						<?php endif; ?>
+					</div>
+
+					<div class="bbb-account-shelf__nextRead<?php echo 'society' === $tier ? '' : ' bbb-account-shelf__nextRead--locked'; ?>">
+						<p class="bbb-account-shelf__perkKicker"><?php echo esc_html('society' === $tier ? 'what we suggest you read next' : 'member preview'); ?></p>
+						<?php if ($next_read_title) : ?>
+							<?php if ('society' === $tier) : ?>
+								<button
+									type="button"
+									class="bbb-account-shelf__nextReadCard"
+									data-book-preview
+									data-handle="<?php echo esc_attr($next_read_handle); ?>"
+									data-title="<?php echo esc_attr($next_read_title); ?>"
+									data-author="<?php echo esc_attr($next_read_author); ?>"
+									data-cover="<?php echo esc_attr($next_read_cover); ?>"
+									data-amazon="<?php echo esc_attr($next_read_amazon); ?>"
+									data-bookshop="<?php echo esc_attr($next_read_bookshop); ?>"
+									data-spice="<?php echo esc_attr((string) min(max($next_read_spice, 0), 5)); ?>"
+									data-tropes="<?php echo esc_attr($next_read_tropes_text); ?>"
+									data-tropes-display="<?php echo esc_attr($next_read_tropes_text); ?>"
+									data-darkness="<?php echo esc_attr((string) min(max($next_read_darkness, 0), 5)); ?>"
+									data-private-shelf="false"
+									aria-label="<?php echo esc_attr(sprintf('Open %s book details', $next_read_title)); ?>"
+								>
+							<?php else : ?>
+								<a class="bbb-account-shelf__nextReadCard" href="<?php echo esc_url($society_join_url); ?>" target="_blank" rel="noopener">
+							<?php endif; ?>
+								<span class="bbb-account-shelf__nextReadCover" aria-hidden="true">
+									<?php if ('' !== $next_read_cover) : ?>
+										<img src="<?php echo esc_url($next_read_cover); ?>" alt="">
+									<?php else : ?>
+										<span><?php echo esc_html(substr($next_read_title, 0, 1)); ?></span>
+									<?php endif; ?>
+								</span>
+								<span class="bbb-account-shelf__nextReadBody">
+									<span class="bbb-account-shelf__nextReadTitle"><?php echo esc_html('society' === $tier ? $next_read_title : 'hidden next-read pick'); ?></span>
+									<?php if ('society' === $tier && '' !== $next_read_author) : ?>
+										<span class="bbb-account-shelf__nextReadMeta">by <?php echo esc_html($next_read_author); ?></span>
+									<?php else : ?>
+										<span class="bbb-account-shelf__nextReadMeta">paid members see the book pulled from their dashboard.</span>
+									<?php endif; ?>
+									<?php if ('society' === $tier && ($next_read_tropes || $next_read_spice > 0)) : ?>
+										<span class="bbb-account-shelf__nextReadTags">
+											<?php if ($next_read_spice > 0) : ?>
+												<span><?php echo esc_html('heat x' . (string) min($next_read_spice, 5)); ?></span>
+											<?php endif; ?>
+											<?php foreach ($next_read_tropes as $trope) : ?>
+												<span><?php echo esc_html((string) $trope); ?></span>
+											<?php endforeach; ?>
+										</span>
+									<?php endif; ?>
+									<span class="bbb-account-shelf__nextReadCta"><?php echo esc_html('society' === $tier ? 'open the pick ->' : 'unlock the pick ->'); ?></span>
+								</span>
+							<?php if ('society' === $tier) : ?>
+								</button>
+							<?php else : ?>
+								</a>
+							<?php endif; ?>
+						<?php else : ?>
+							<div class="bbb-account-shelf__nextReadEmpty">
+								<strong>your next pick is waiting for a little more shelf data.</strong>
+								<span>save or tag a few books and this space will get smarter.</span>
+							</div>
+						<?php endif; ?>
+					</div>
+				</section>
+
 				<div class="bbb-account-shelf__panel">
 					<div>
 						<p class="bbb-account-shelf__perkKicker">your purchases</p>
@@ -200,11 +340,18 @@ get_header();
 				<?php endif; ?>
 
 				<div class="bbb-account-shelf__previewGrid">
-					<a class="bbb-account-shelf__preview" href="<?php echo esc_url($dashboard_url); ?>">
+					<a
+						class="bbb-account-shelf__preview<?php echo 'society' === $tier ? '' : ' bbb-account-shelf__preview--locked'; ?>"
+						href="<?php echo esc_url('society' === $tier ? $dashboard_url : $society_join_url); ?>"
+						<?php if ('society' !== $tier) : ?>
+							target="_blank"
+							rel="noopener"
+						<?php endif; ?>
+					>
 						<p class="bbb-account-shelf__perkKicker">dashboard preview</p>
 						<h2>member dashboard</h2>
 						<p><?php echo esc_html('society' === $tier ? 'made-for-you reader logic, mood-based recommendations, and smarter next-read picks.' : 'your dashboard preview is here. upgrade to unlock the richer recommendation layer.'); ?></p>
-						<span><?php echo esc_html('society' === $tier ? 'open dashboard ->' : 'preview dashboard ->'); ?></span>
+						<span><?php echo esc_html('society' === $tier ? 'open dashboard ->' : 'unlock dashboard ->'); ?></span>
 					</a>
 					<a class="bbb-account-shelf__preview" href="<?php echo esc_url($bookshelf_url); ?>">
 						<div class="bbb-account-shelf__previewSplit">

@@ -7,6 +7,29 @@
 
 declare(strict_types=1);
 
+if (!function_exists('bbb_reader_is_society') || !bbb_reader_is_society()) {
+	get_header();
+	if (function_exists('bbb_society_render_locked_preview_page')) {
+		bbb_society_render_locked_preview_page(
+			array(
+				'access'      => 'paid',
+				'kicker'      => 'paid society preview',
+				'title'       => 'track your reads',
+				'intro'       => 'preview the monthly reading calendar before unlocking the interactive book tracker.',
+				'panel_title' => 'upgrade to use the calendar',
+				'panel_copy'  => 'paid society members can click each day, choose the book they read, and save a visual calendar of the month.',
+				'items'       => array(
+					'monthly book goal progress',
+					'daily cover slots for what you read',
+					'saveable calendar view for your reader archive',
+				),
+			)
+		);
+	}
+	get_footer();
+	return;
+}
+
 $today      = current_time('timestamp');
 $month_num  = (int) date_i18n('n', $today);
 $year       = (int) date_i18n('Y', $today);

@@ -10,6 +10,7 @@ declare(strict_types=1);
 function bbb_page_route_registry(): array {
 	return array(
 		'artprints'                      => '',
+		'about'                          => 'page-about.php',
 		'book-reviews'                   => 'page-book-reviews.php',
 		'bookish-templates'              => '',
 		'book-tracking-calendar'         => 'page-book-tracking-calendar.php',
@@ -20,25 +21,33 @@ function bbb_page_route_registry(): array {
 		'about-the-society'              => 'page-about-the-society.php',
 		'cart'                           => '',
 		'contact'                        => 'page-contact.php',
+		'come-in'                        => 'page-come-in.php',
 		'curated-romance-guides'         => 'page-curated-romance-guides.php',
 		'enemies-to-lovers'              => 'page-trope.php',
 		'fictional-boyfriend-quiz'       => 'page-fictional-boyfriend-quiz.php',
 		'find-your-read'                 => 'page-what-to-read-next.php',
 		'for-readers'                    => '',
+		'historical-romance-books'       => 'page-shelf.php',
 		'if-you-liked-pages'             => 'page-if-you-liked-pages.php',
 		'kindle-insert-vault'            => '',
 		'kindle-inserts'                 => '',
 		'library'                        => 'page-library.php',
-		'media-kit'                      => '',
+		'work-with-me'                   => 'page-media-kit.php',
+		'monthly-freebie'                => 'page-monthly-freebie.php',
 		'monthly-theme'                  => 'page-societylibrary.php',
 		'my-bookshelf'                   => 'page-my-bookshelf.php',
 		'my-vault'                       => '',
 		'our-story'                      => 'page-our-story.php',
 		'popular-pages'                  => 'page-popular-pages.php',
+		'paranormal-romance-books'       => 'page-shelf.php',
 		'privacy-policy'                 => '',
 		'reader-mood-quiz'               => 'page-reader-mood-quiz.php',
 		'reader-quizes'                  => 'page-reader-quizes.php',
 		'reader-quizzes'                 => 'page-reader-quizes.php',
+		'romance-trope-quiz'             => 'page-romance-trope-quiz.php',
+		'romance-trope-dictionary'       => 'page-romance-trope-dictionary.php',
+		'romance-book-moodboards'        => 'page-romance-book-moodboards.php',
+		'reading-challenge'              => 'page-reading-challenge.php',
 		'reading-list'                   => 'page-reading-list.php',
 		'romance-books-by-spice-level'   => 'page-spice.php',
 		'series'                         => 'page-series.php',
@@ -47,12 +56,16 @@ function bbb_page_route_registry(): array {
 		'shop'                           => 'page-shop.php',
 		'slow-burn-books'                => 'page-trope.php',
 		'smut-sentiment-society'         => 'page-smut-sentiment-society.php',
+		'villain-gets-the-girl-books'    => 'page-trope.php',
 		'newsletter-submissions'         => 'page-society-submissions.php',
 		'society-newsletter-recent'      => 'page-society-newsletter-recent.php',
 		'society-newsletter-archive'     => 'page-society-newsletter-archive.php',
 		'society-library'                => 'page-societylibrary.php',
+		'society-shop-discount'          => 'page-society-shop-discount.php',
 		'society-submissions'            => 'page-society-submissions.php',
 		'societylibrary'                 => 'page-societylibrary.php',
+		'dark-romance-books'             => 'page-shelf.php',
+		'romantasy-books'                => 'page-shelf.php',
 		'sports-romance-books'           => 'page-shelf.php',
 		'canva-templates'                => '',
 		'freebies'                       => '',
@@ -71,6 +84,7 @@ function bbb_page_route_registry(): array {
 		'sss-private-shelf'              => '',
 		'sss-quote-wall'                 => 'page-sss-quote-wall.php',
 		'quote-wall'                     => 'page-sss-quote-wall.php',
+		'quote-library'                  => 'page-sss-quote-wall.php',
 		'sss-series'                     => '',
 		'sss-series-page'                => '',
 		'weekly-obsession'               => 'page-weekly-obsession.php',
@@ -131,7 +145,7 @@ function bbb_route_template_for_slug(string $slug): string {
 	return file_exists($path) ? $path : '';
 }
 
-function bbb_mark_virtual_route_found(): void {
+function bbb_mark_virtual_route_found(bool $send_nocache_headers = true): void {
 	global $post, $wp_query;
 
 	$slug  = bbb_current_route_slug();
@@ -181,18 +195,65 @@ function bbb_mark_virtual_route_found(): void {
 	}
 
 	status_header(200);
-	nocache_headers();
+	if ($send_nocache_headers) {
+		nocache_headers();
+	}
 }
 
 function bbb_virtual_route_title(string $slug): string {
+	$request_path = trim((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
+	if (preg_match('#^if-you-liked-pages/(?:books-like|if-you-liked)-([^/]+)/?$#', $request_path, $matches)) {
+		return 'if you liked ' . ucwords(str_replace('-', ' ', sanitize_title($matches[1])));
+	}
+
 	return ucwords(str_replace('-', ' ', $slug));
+}
+
+function bbb_is_nested_books_like_route(): bool {
+	$request_path = trim((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
+	return (bool) preg_match('#^if-you-liked-pages/(?:books-like|if-you-liked)-[^/]+/?$#', $request_path);
+}
+
+function bbb_current_virtual_book_taxonomy_term(): ?WP_Term {
+	if (!function_exists('bbb_find_book_taxonomy_term')) {
+		return null;
+	}
+
+	$slug     = bbb_current_route_slug();
+	$routes   = bbb_page_route_registry();
+	$template = (string) ($routes[$slug] ?? '');
+	if (!in_array($template, array('page-trope.php', 'page-shelf.php'), true)) {
+		return null;
+	}
+
+	$kind = 'page-shelf.php' === $template ? 'shelf' : 'trope';
+	return bbb_find_book_taxonomy_term($slug, $kind);
+}
+
+function bbb_virtual_book_taxonomy_meta_title(WP_Term $term): string {
+	return bbb_virtual_route_title($term->slug . '-books') . ' - ' . get_bloginfo('name');
+}
+
+function bbb_virtual_book_taxonomy_meta_description(WP_Term $term): string {
+	if (function_exists('bbb_book_taxonomy_term_description')) {
+		$description = trim((string) bbb_book_taxonomy_term_description($term));
+		if ('' !== $description) {
+			return $description;
+		}
+	}
+
+	$name = strtolower($term->name);
+	$kind = function_exists('bbb_book_taxonomy_kind_for_taxonomy') ? bbb_book_taxonomy_kind_for_taxonomy($term->taxonomy) : 'trope';
+	return 'shelf' === $kind
+		? 'browse ' . $name . ' books in the bybookishbabe library.'
+		: 'browse ' . $name . ' romance books in the bybookishbabe library.';
 }
 
 add_filter(
 	'document_title_parts',
 	static function (array $title): array {
 		$slug = bbb_current_route_slug();
-		if ('' === bbb_route_template_for_slug($slug)) {
+		if (!bbb_is_nested_books_like_route() && '' === bbb_route_template_for_slug($slug)) {
 			return $title;
 		}
 
@@ -205,11 +266,122 @@ add_filter(
 	'pre_get_document_title',
 	static function (string $title): string {
 		$slug = bbb_current_route_slug();
-		if ('' === bbb_route_template_for_slug($slug)) {
+		if (!bbb_is_nested_books_like_route() && '' === bbb_route_template_for_slug($slug)) {
 			return $title;
 		}
 
 		return bbb_virtual_route_title($slug) . ' - ' . get_bloginfo('name');
+	},
+	99
+);
+
+add_filter(
+	'rank_math/frontend/title',
+	static function (string $title): string {
+		$term = bbb_current_virtual_book_taxonomy_term();
+		if ($term instanceof WP_Term) {
+			return bbb_virtual_book_taxonomy_meta_title($term);
+		}
+
+		return bbb_is_nested_books_like_route() ? bbb_virtual_route_title(bbb_current_route_slug()) . ' - ' . get_bloginfo('name') : $title;
+	},
+	99
+);
+
+add_filter(
+	'rank_math/opengraph/facebook/title',
+	static function (string $title): string {
+		$term = bbb_current_virtual_book_taxonomy_term();
+		if ($term instanceof WP_Term) {
+			return bbb_virtual_book_taxonomy_meta_title($term);
+		}
+
+		return bbb_is_nested_books_like_route() ? bbb_virtual_route_title(bbb_current_route_slug()) . ' - ' . get_bloginfo('name') : $title;
+	},
+	99
+);
+
+add_filter(
+	'rank_math/opengraph/twitter/title',
+	static function (string $title): string {
+		$term = bbb_current_virtual_book_taxonomy_term();
+		if ($term instanceof WP_Term) {
+			return bbb_virtual_book_taxonomy_meta_title($term);
+		}
+
+		return bbb_is_nested_books_like_route() ? bbb_virtual_route_title(bbb_current_route_slug()) . ' - ' . get_bloginfo('name') : $title;
+	},
+	99
+);
+
+add_filter(
+	'rank_math/frontend/description',
+	static function (string $description): string {
+		$term = bbb_current_virtual_book_taxonomy_term();
+		return $term instanceof WP_Term ? bbb_virtual_book_taxonomy_meta_description($term) : $description;
+	},
+	99
+);
+
+add_filter(
+	'rank_math/opengraph/facebook/description',
+	static function (string $description): string {
+		$term = bbb_current_virtual_book_taxonomy_term();
+		return $term instanceof WP_Term ? bbb_virtual_book_taxonomy_meta_description($term) : $description;
+	},
+	99
+);
+
+add_filter(
+	'rank_math/opengraph/twitter/description',
+	static function (string $description): string {
+		$term = bbb_current_virtual_book_taxonomy_term();
+		return $term instanceof WP_Term ? bbb_virtual_book_taxonomy_meta_description($term) : $description;
+	},
+	99
+);
+
+add_filter(
+	'rank_math/frontend/canonical',
+	static function (string $canonical): string {
+		$term = bbb_current_virtual_book_taxonomy_term();
+		if (!$term instanceof WP_Term || !function_exists('bbb_book_taxonomy_term_url')) {
+			return $canonical;
+		}
+
+		return bbb_book_taxonomy_term_url($term);
+	},
+	99
+);
+
+add_filter(
+	'rank_math/frontend/robots',
+	static function (array $robots): array {
+		$term = bbb_current_virtual_book_taxonomy_term();
+		if (!$term instanceof WP_Term) {
+			return $robots;
+		}
+
+		unset($robots['noindex'], $robots['nofollow']);
+		$robots['index']  = 'index';
+		$robots['follow'] = 'follow';
+		return $robots;
+	},
+	99
+);
+
+add_filter(
+	'wp_robots',
+	static function (array $robots): array {
+		$term = bbb_current_virtual_book_taxonomy_term();
+		if (!$term instanceof WP_Term) {
+			return $robots;
+		}
+
+		unset($robots['noindex'], $robots['nofollow']);
+		$robots['index']  = true;
+		$robots['follow'] = true;
+		return $robots;
 	},
 	99
 );
@@ -232,6 +404,87 @@ function bbb_render_waiting_on_template(string $slug): void {
 	get_footer();
 }
 
+function bbb_render_books_like_blog_post(WP_Post $post): void {
+	global $wp_query;
+
+	if ($wp_query instanceof WP_Query) {
+		$wp_query->is_404      = false;
+		$wp_query->is_page     = false;
+		$wp_query->is_single   = true;
+		$wp_query->is_singular = true;
+		$wp_query->is_home     = false;
+		$wp_query->is_archive  = false;
+		$wp_query->post        = $post;
+		$wp_query->posts       = array($post);
+		$wp_query->post_count  = 1;
+		$wp_query->found_posts = 1;
+		$wp_query->queried_object = $post;
+		$wp_query->queried_object_id = (int) $post->ID;
+	}
+
+	status_header(200);
+	nocache_headers();
+	setup_postdata($post);
+
+	$template = locate_template('single-post.php');
+	if ('' === $template) {
+		$template = get_single_template();
+	}
+	if ('' === $template) {
+		$template = get_theme_file_path('index.php');
+	}
+
+	require $template;
+	wp_reset_postdata();
+}
+
+function bbb_route_published_post_for_path(string $request_path): ?WP_Post {
+	if (str_contains($request_path, '/')) {
+		return null;
+	}
+
+	$posts = get_posts(
+		array(
+			'name'           => sanitize_title($request_path),
+			'post_type'      => 'post',
+			'post_status'    => 'publish',
+			'posts_per_page' => 1,
+		)
+	);
+
+	return $posts[0] ?? null;
+}
+
+function bbb_render_book_taxonomy_route_for_path(string $request_path, string $kind = ''): bool {
+	if (!function_exists('bbb_find_book_taxonomy_term')) {
+		return false;
+	}
+
+	$route_term = bbb_find_book_taxonomy_term($request_path, $kind);
+	$route_kind_override = '';
+	if (!$route_term instanceof WP_Term && 'trope' === $kind && in_array($request_path, array('dark-romance-books', 'sports-romance-books'), true)) {
+		$route_term = bbb_find_book_taxonomy_term($request_path, 'shelf');
+		$route_kind_override = 'trope';
+	}
+	if (!$route_term instanceof WP_Term) {
+		return false;
+	}
+
+	$route_kind = '' !== $route_kind_override ? $route_kind_override : bbb_book_taxonomy_kind_for_taxonomy($route_term->taxonomy);
+	$template   = get_theme_file_path('page-' . $route_kind . '.php');
+	if (!file_exists($template)) {
+		return false;
+	}
+
+	$GLOBALS['bbb_book_taxonomy_route_term'] = $route_term;
+	if ('' !== $route_kind_override) {
+		$GLOBALS['bbb_book_taxonomy_route_kind_override'] = $route_kind_override;
+	}
+	bbb_mark_virtual_route_found();
+	require $template;
+	return true;
+}
+
 add_action(
 	'template_redirect',
 	static function (): void {
@@ -241,6 +494,47 @@ add_action(
 		}
 
 		$request_path   = trim((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
+		$empty_post_redirects = array(
+			'media-kit'                    => 'work-with-me',
+			'pages/media-kit'              => 'work-with-me',
+			'the-best-hockey-romance-books' => 'hockey-romance-books',
+			'the-best-mafia-romance-books'  => 'mafia-romance-books',
+			'why-choose-books'             => 'why-choose-romance-books',
+		);
+		if (isset($empty_post_redirects[$request_path])) {
+			wp_safe_redirect(home_url('/' . $empty_post_redirects[$request_path] . '/'), 301);
+			exit;
+		}
+
+		$routes              = bbb_page_route_registry();
+		$registered_template = (string) ($routes[$slug] ?? '');
+			$taxonomy_first_routes = array(
+				'dark-romance-books'          => 'shelf',
+				'romantasy-books'             => 'shelf',
+				'second-chance-romance-books' => 'trope',
+				'sports-romance-books'        => 'shelf',
+			);
+			if (isset($taxonomy_first_routes[$request_path])) {
+				if (bbb_render_book_taxonomy_route_for_path($request_path, $taxonomy_first_routes[$request_path])) {
+					exit;
+				}
+			}
+			if (bbb_render_book_taxonomy_route_for_path($request_path, 'shelf')) {
+				exit;
+			}
+
+			$published_post = bbb_route_published_post_for_path($request_path);
+		if ($published_post instanceof WP_Post) {
+			if ('' === trim(wp_strip_all_tags((string) $published_post->post_content)) && function_exists('bbb_find_book_taxonomy_term')) {
+				if (bbb_render_book_taxonomy_route_for_path($request_path)) {
+					exit;
+				}
+			}
+
+			bbb_render_books_like_blog_post($published_post);
+			exit;
+		}
+
 		if (preg_match('#^romance-books-by-spice-level/(?:spice-)?([1-5])/?$#', $request_path, $matches)) {
 			set_query_var('bbb_spice_level', (int) $matches[1]);
 			$template = bbb_route_template_for_slug('romance-books-by-spice-level');
@@ -255,6 +549,50 @@ add_action(
 			set_query_var('bbb_series_handle', sanitize_title($matches[1]));
 			$template = bbb_route_template_for_slug('series');
 			if ($template !== '') {
+				bbb_mark_virtual_route_found();
+				require $template;
+				exit;
+			}
+		}
+
+		if (preg_match('#^books-like-[^/]+/?$#', $request_path)) {
+			$blog_posts = get_posts(
+				array(
+					'name'           => sanitize_title(basename($request_path)),
+					'post_type'      => 'post',
+					'post_status'    => 'publish',
+					'posts_per_page' => 1,
+				)
+			);
+			if ($blog_posts) {
+				bbb_render_books_like_blog_post($blog_posts[0]);
+				exit;
+			}
+
+			$if_you_liked_slug = preg_replace('#^books-like-#', 'if-you-liked-', sanitize_title(basename($request_path)));
+			if (is_string($if_you_liked_slug) && '' !== $if_you_liked_slug && function_exists('bbb_books_like_source_for_slug') && bbb_books_like_source_for_slug($if_you_liked_slug) instanceof WP_Post) {
+				wp_safe_redirect(home_url('/if-you-liked-pages/' . $if_you_liked_slug . '/'), 301);
+				exit;
+			}
+		}
+
+		if ('if-you-liked-pages' !== $request_path && preg_match('#^if-you-liked-[^/]+/?$#', $request_path)) {
+			wp_safe_redirect(home_url('/if-you-liked-pages/' . sanitize_title(basename($request_path)) . '/'), 301);
+			exit;
+		}
+
+		if (preg_match('#^if-you-liked-pages/(books-like-[^/]+)/?$#', $request_path, $matches)) {
+			$if_you_liked_slug = preg_replace('#^books-like-#', 'if-you-liked-', sanitize_title($matches[1]));
+			if (is_string($if_you_liked_slug) && '' !== $if_you_liked_slug) {
+				wp_safe_redirect(home_url('/if-you-liked-pages/' . $if_you_liked_slug . '/'), 301);
+				exit;
+			}
+		}
+
+		if (preg_match('#^if-you-liked-pages/((?:books-like|if-you-liked)-[^/]+)/?$#', $request_path, $matches) && function_exists('bbb_books_like_source_for_slug')) {
+			$source = bbb_books_like_source_for_slug(sanitize_title($matches[1]));
+			$template = get_theme_file_path('page-books-like.php');
+			if ($source instanceof WP_Post && file_exists($template)) {
 				bbb_mark_virtual_route_found();
 				require $template;
 				exit;
@@ -293,8 +631,6 @@ add_action(
 			return;
 		}
 
-		$routes             = bbb_page_route_registry();
-		$registered_template = (string) ($routes[$slug] ?? '');
 		$forced_tax_kind     = '';
 		if ('page-shelf.php' === $registered_template) {
 			$forced_tax_kind = 'shelf';
@@ -302,18 +638,8 @@ add_action(
 			$forced_tax_kind = 'trope';
 		}
 
-		if (function_exists('bbb_find_book_taxonomy_term')) {
-			$route_term = bbb_find_book_taxonomy_term($slug, $forced_tax_kind);
-			if ($route_term instanceof WP_Term) {
-				$route_kind = bbb_book_taxonomy_kind_for_taxonomy($route_term->taxonomy);
-				$template   = get_theme_file_path('page-' . $route_kind . '.php');
-				if (file_exists($template)) {
-					$GLOBALS['bbb_book_taxonomy_route_term'] = $route_term;
-					bbb_mark_virtual_route_found();
-					require $template;
-					exit;
-				}
-			}
+		if (bbb_render_book_taxonomy_route_for_path($slug, $forced_tax_kind)) {
+			exit;
 		}
 
 		$is_legacy_path = str_starts_with($request_path, 'pages/')
@@ -349,7 +675,7 @@ add_action(
 
 		$template = bbb_route_template_for_slug($slug);
 		if ($template !== '') {
-			bbb_mark_virtual_route_found();
+			bbb_mark_virtual_route_found('series-reading-orders' !== $slug);
 			require $template;
 			exit;
 		}

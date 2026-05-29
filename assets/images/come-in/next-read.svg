@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Open romance book">
+  <rect width="96" height="96" rx="16" fill="#111"/>
+  <path d="M16 25c11-4 21-3 32 4 11-7 21-8 32-4v48c-11-4-21-3-32 4-11-7-21-8-32-4V25Z" fill="#f7f7f7"/>
+  <path d="M48 29v48M24 35c7-1 13 0 19 4M24 45c7-1 13 0 19 4M53 39c6-4 12-5 19-4M53 49c6-4 12-5 19-4" stroke="#111" stroke-width="3" stroke-linecap="round"/>
+  <path d="M31 23c6-9 24-9 30 0" stroke="#d985b1" stroke-width="4" stroke-linecap="round"/>
+</svg>

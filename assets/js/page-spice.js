@@ -27,9 +27,6 @@ document.addEventListener('DOMContentLoaded', function() {
       card.hidden = !show;
       if (show) count++;
     });
-    if (typeof window.refreshPaginatedGridVisibility === 'function') {
-      window.refreshPaginatedGridVisibility();
-    }
     const countNode = document.getElementById('sssSpiceCount');
     if (countNode) countNode.textContent = count;
     document.querySelectorAll('[data-spice-filter]').forEach(b =>

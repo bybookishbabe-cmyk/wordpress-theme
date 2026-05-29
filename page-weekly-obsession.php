@@ -50,7 +50,7 @@ if (!function_exists('bbb_weekly_book_data')) {
 			'id'              => $book->ID,
 			'title'           => get_the_title($book),
 			'author'          => (string) get_post_meta($book->ID, '_bbb_author', true),
-			'cover'           => (string) get_post_meta($book->ID, '_bbb_cover_url', true),
+			'cover'           => function_exists('bbb_get_book_cover_url') ? bbb_get_book_cover_url($book->ID) : (string) get_post_meta($book->ID, '_bbb_cover_url', true),
 			'newsletter'      => (string) get_post_meta($book->ID, '_bbb_newsletter_url', true),
 			'spice'           => (int) get_post_meta($book->ID, '_bbb_spice', true),
 			'ku'              => '1' === get_post_meta($book->ID, '_bbb_ku', true),
@@ -247,6 +247,14 @@ $issue_excerpt = bbb_weekly_issue_meta($current_issue, array('_issue_excerpt', '
 if ('' === $issue_excerpt && $current_issue instanceof WP_Post) {
 	$issue_excerpt = $current_issue->post_excerpt ?: wp_trim_words(wp_strip_all_tags($current_issue->post_content), 42, '');
 }
+$issue_content = (string) ($obsession_context['content'] ?? '');
+if ('' === trim($issue_content) && $current_issue instanceof WP_Post) {
+	$issue_content = (string) $current_issue->post_content;
+}
+$issue_pull_quote = trim((string) ($obsession_context['pull_quote'] ?? ''));
+if ('' === $issue_pull_quote) {
+	$issue_pull_quote = bbb_weekly_issue_meta($current_issue, array('_issue_pull_quote'), '');
+}
 $issue_link = (string) ($obsession_context['url'] ?? '');
 if ('' === trim($issue_link)) {
 	$issue_link = bbb_weekly_issue_meta($current_issue, array('_bbb_newsletter_url', '_issue_url', 'url', 'newsletter_url'), (string) ($book_data['newsletter'] ?? ''));
@@ -263,6 +271,11 @@ if ('' === $boyfriend_name) {
 }
 $featured_quote = $featured_book instanceof WP_Post ? bbb_weekly_featured_quote($featured_book) : array();
 $related_books = $featured_book instanceof WP_Post ? bbb_weekly_related_books($featured_book, $book_data, 3) : array();
+$native_issue_html = '' !== trim($issue_content) ? apply_filters('the_content', $issue_content) : '';
+$subscribe_url = function_exists('bbb_substack_subscribe_url') ? bbb_substack_subscribe_url() : 'https://thesmutandsentimentsociety.substack.com/subscribe';
+$featured_book_url = $featured_book instanceof WP_Post ? get_permalink($featured_book) : home_url('/library/');
+$secret_url = trim((string) ($obsession_context['secret_url'] ?? ''));
+$secret_url = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value($secret_url) : $secret_url;
 
 get_header();
 ?>
@@ -273,10 +286,13 @@ get_header();
 			<?php if ($featured_book instanceof WP_Post) : ?>
 				<header class="sss-lib__head sss-wo__pageHead">
 					<p class="sss-lib__kicker">weekly obsession</p>
-					<p class="sss-wo__introLine">the romance book you need to add to your tbr immediately. this week’s obsession from the smut &amp; sentiment society.</p>
+					<p class="sss-wo__introLine">the latest society issue, living here in native form with the book, the ratings, the quotes, and the full substack path when you want the inbox version.</p>
 					<div class="sss-wo__masthead">
 						<div class="sss-wo__mastDivider" aria-hidden="true"></div>
 						<h1 class="sss-lib__title"><?php echo esc_html($issue_title ?: 'this week’s obsession'); ?></h1>
+						<?php if ($secret_url && $secret_url !== $issue_link) : ?>
+							<a class="sss-wo__memberLink" href="<?php echo esc_url($secret_url); ?>" target="_blank" rel="noopener">secret society members only →</a>
+						<?php endif; ?>
 						<?php if ($issue_subtitle) : ?>
 							<p class="sss-lib__sub"><?php echo esc_html($issue_subtitle); ?></p>
 						<?php endif; ?>
@@ -330,6 +346,12 @@ get_header();
 										<span class="sss-wo__bookValue"><?php echo esc_html(str_repeat('🌶', (int) $book_data['spice'])); ?></span>
 									</div>
 								<?php endif; ?>
+								<?php if ((int) ($book_data['damage'] ?? 0) > 0) : ?>
+									<div class="sss-wo__bookLine">
+										<span class="sss-wo__bookLabel">sentiment</span>
+										<span class="sss-wo__bookValue"><?php echo esc_html((string) (int) $book_data['damage'] . '/5'); ?></span>
+									</div>
+								<?php endif; ?>
 								<div class="sss-wo__bookLine">
 									<span class="sss-wo__bookLabel">kindle unlimited</span>
 									<span class="sss-wo__bookValue sss-wo__statusValue <?php echo !empty($book_data['ku']) ? 'is-yes' : 'is-no'; ?>">
@@ -354,14 +376,15 @@ get_header();
 									$chip_classes = array('sss-wo__chip--ink', 'sss-wo__chip--plum', 'sss-wo__chip--berry', 'sss-wo__chip--rose', 'sss-wo__chip--blush', 'sss-wo__chip--pearl');
 									foreach (array_slice((array) $book_data['tropes'], 0, 6) as $index => $trope) :
 										$trope_name = (string) ($trope['name'] ?? '');
+										$trope_emoji = (string) ($trope['emoji'] ?? '');
 										if ('' === $trope_name) {
 											continue;
 										}
-									?>
-										<a class="sss-wo__chip <?php echo esc_attr($chip_classes[$index % count($chip_classes)]); ?>" href="<?php echo esc_url(bbb_weekly_trope_url($trope)); ?>">
-											<?php echo esc_html($trope_name); ?>
-										</a>
-									<?php endforeach; ?>
+										?>
+											<a class="sss-wo__chip <?php echo esc_attr($chip_classes[$index % count($chip_classes)]); ?>" href="<?php echo esc_url(bbb_weekly_trope_url($trope)); ?>">
+												<?php echo function_exists('bbb_trope_label_html') ? bbb_trope_label_html($trope_name, $trope_emoji, (string) ($trope['slug'] ?? $trope['handle'] ?? '')) : esc_html(trim(($trope_emoji ? $trope_emoji . ' ' : '') . $trope_name)); ?>
+											</a>
+										<?php endforeach; ?>
 								</div>
 							</div>
 						<?php endif; ?>
@@ -374,20 +397,40 @@ get_header();
 						<?php endif; ?>
 
 						<div class="sss-wo__actions">
-							<a class="sss-wo__btn sss-wo__btn--ghost" href="<?php echo esc_url(home_url('/library/')); ?>">see the library</a>
+							<a class="sss-wo__btn sss-wo__btn--ghost" href="<?php echo esc_url($featured_book_url); ?>">ruin my tbr</a>
+							<a class="sss-wo__btn sss-wo__btn--ghost" href="<?php echo esc_url($subscribe_url); ?>" target="_blank" rel="noopener">subscribe</a>
 							<?php if ($issue_link_url) : ?>
-								<a class="sss-wo__btn sss-wo__btn--primary" href="<?php echo $issue_link_url; ?>" target="_blank" rel="noopener">read the newsletter</a>
+								<a class="sss-wo__btn sss-wo__btn--primary" href="<?php echo $issue_link_url; ?>" target="_blank" rel="noopener">read the full take →</a>
 							<?php endif; ?>
 						</div>
 					</div>
 				</div>
 
-				<?php if (!empty($featured_quote['text'])) : ?>
+				<?php if ($native_issue_html) : ?>
+					<article class="sss-wo__nativeIssue" aria-labelledby="sss-wo-native-title">
+						<div class="sss-wo__nativeHead">
+							<p class="sss-wo__sectionKicker">latest issue</p>
+							<h2 id="sss-wo-native-title">read it here first</h2>
+							<p>the newsletter is stored here too, so the society archive has a home you own.</p>
+						</div>
+						<div class="sss-wo__nativeBody">
+							<?php echo $native_issue_html; ?>
+						</div>
+						<div class="sss-wo__nativeActions">
+							<a class="sss-wo__btn sss-wo__btn--primary" href="<?php echo esc_url($subscribe_url); ?>" target="_blank" rel="noopener">subscribe on substack</a>
+							<?php if ($issue_link_url) : ?>
+								<a class="sss-wo__btn sss-wo__btn--ghost" href="<?php echo $issue_link_url; ?>" target="_blank" rel="noopener">read the full take →</a>
+							<?php endif; ?>
+						</div>
+					</article>
+				<?php endif; ?>
+
+				<?php if ($issue_pull_quote || !empty($featured_quote['text'])) : ?>
 					<div class="sss-wo__quoteBlock">
 						<div class="sss-wo__quoteKicker">a line that ruined us</div>
-						<blockquote class="sss-wo__quote">“<?php echo esc_html((string) $featured_quote['text']); ?>”</blockquote>
+						<blockquote class="sss-wo__quote">“<?php echo esc_html($issue_pull_quote ?: (string) $featured_quote['text']); ?>”</blockquote>
 						<div class="sss-wo__quoteMeta">
-							<?php echo esc_html((string) ($book_data['title'] ?? get_the_title($featured_book))); ?><?php echo !empty($book_data['author']) ? ' by ' . esc_html((string) $book_data['author']) : ''; ?>
+							<?php echo esc_html($issue_pull_quote ? ($issue_title ?: 'the latest issue') : (string) ($book_data['title'] ?? get_the_title($featured_book))); ?><?php echo (!$issue_pull_quote && !empty($book_data['author'])) ? ' by ' . esc_html((string) $book_data['author']) : ''; ?>
 						</div>
 					</div>
 				<?php endif; ?>

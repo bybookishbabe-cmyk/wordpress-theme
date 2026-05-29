@@ -116,6 +116,62 @@ function sss_article_book_from_slug(string $slug): ?WP_Post {
 	return null;
 }
 
+function sss_article_book_from_name(string $name): ?WP_Post {
+	$name = trim(wp_strip_all_tags($name));
+	if ('' === $name) {
+		return null;
+	}
+
+	if (function_exists('bbb_books_like_find_book')) {
+		$book = bbb_books_like_find_book($name);
+		if ($book instanceof WP_Post) {
+			return $book;
+		}
+	}
+
+	$slug_book = sss_article_book_from_slug($name);
+	if ($slug_book instanceof WP_Post) {
+		return $slug_book;
+	}
+
+	$normalized_name = sss_article_match_text($name);
+	$compact_name    = preg_replace('/[^a-z0-9]+/', '', $normalized_name) ?: $normalized_name;
+	foreach (sss_article_all_visible_books() as $book) {
+		$title_match = sss_article_match_text(get_the_title($book));
+		$slug_match  = sss_article_match_text((string) get_post_field('post_name', $book->ID));
+		$handle_match = 'bbb_book' === get_post_type($book)
+			? sss_article_match_text((string) get_post_meta($book->ID, '_bbb_handle', true))
+			: '';
+		$candidates = array_filter(array($title_match, $slug_match, $handle_match));
+
+		foreach ($candidates as $candidate) {
+			$compact_candidate = preg_replace('/[^a-z0-9]+/', '', $candidate) ?: $candidate;
+			if ($candidate === $normalized_name || $compact_candidate === $compact_name) {
+				return $book;
+			}
+		}
+
+		$aliases = get_post_meta($book->ID, '_bbb_book_aliases', true);
+		$aliases = is_array($aliases) ? $aliases : preg_split('/[\r\n,]+/', (string) $aliases);
+		foreach ($aliases ?: array() as $alias) {
+			$alias_match = sss_article_match_text((string) $alias);
+			$compact_alias = preg_replace('/[^a-z0-9]+/', '', $alias_match) ?: $alias_match;
+			if ('' !== $alias_match && ($alias_match === $normalized_name || $compact_alias === $compact_name)) {
+				return $book;
+			}
+		}
+	}
+
+	foreach (sss_article_all_visible_books() as $book) {
+		$title_match = sss_article_match_text(get_the_title($book));
+		if ('' !== $normalized_name && str_contains(' ' . $title_match . ' ', ' ' . $normalized_name . ' ')) {
+			return $book;
+		}
+	}
+
+	return null;
+}
+
 function sss_article_posts($value): array {
 	if (!is_array($value)) {
 		$post = sss_article_post($value);
@@ -191,6 +247,10 @@ function sss_article_books_mentioned_in_post(int $post_id): array {
 }
 
 function sss_article_cover_url(int $book_id): string {
+	if (function_exists('bbb_get_book_cover_url')) {
+		return bbb_get_book_cover_url($book_id);
+	}
+
 	$cover = sss_article_field('cover', $book_id, '');
 	if (is_array($cover)) {
 		if (!empty($cover['url'])) {
@@ -206,11 +266,13 @@ function sss_article_cover_url(int $book_id): string {
 			return (string) $url;
 		}
 	}
-	if ($cover) {
+	if ($cover && !(function_exists('bbb_is_site_logo_url') && bbb_is_site_logo_url((string) $cover))) {
 		return (string) $cover;
 	}
 
-	return get_the_post_thumbnail_url($book_id, 'large') ?: '';
+	$thumbnail = (string) (get_the_post_thumbnail_url($book_id, 'large') ?: '');
+
+	return function_exists('bbb_is_site_logo_url') && bbb_is_site_logo_url($thumbnail) ? '' : $thumbnail;
 }
 
 function sss_article_tropes(int $book_id): array {
@@ -235,7 +297,7 @@ function sss_article_tropes(int $book_id): array {
 					'id'    => 0,
 					'name'  => $term->name,
 					'slug'  => $term->slug,
-					'emoji' => (string) get_term_meta($term->term_id, 'emoji', true),
+					'emoji' => function_exists('bbb_trope_emoji') ? bbb_trope_emoji(get_term_meta($term->term_id, 'emoji', true)) : (string) get_term_meta($term->term_id, 'emoji', true),
 					'bg'    => $colors[0],
 					'text'  => $colors[1],
 				);
@@ -252,7 +314,7 @@ function sss_article_tropes(int $book_id): array {
 					'id'    => 0,
 					'name'  => $term->name,
 					'slug'  => $term->slug,
-					'emoji' => (string) get_term_meta($term->term_id, 'trope_emoji', true),
+					'emoji' => function_exists('bbb_trope_emoji') ? bbb_trope_emoji(get_term_meta($term->term_id, 'trope_emoji', true)) : (string) get_term_meta($term->term_id, 'trope_emoji', true),
 					'bg'    => $colors[0],
 					'text'  => $colors[1],
 				);
@@ -311,6 +373,7 @@ function sss_article_book_data(int $book_id): array {
 	return array(
 		'id'            => $book_id,
 		'handle'        => get_post_field('post_name', $book_id),
+		'url'           => get_permalink($book_id) ?: home_url('/books/' . get_post_field('post_name', $book_id) . '/'),
 		'title'         => get_the_title($book_id),
 		'author'        => (string) sss_article_field('author', $book_id, ''),
 		'cover'         => sss_article_cover_url($book_id),
@@ -335,11 +398,12 @@ function sss_article_book_data(int $book_id): array {
 function sss_article_data_attrs(array $book): string {
 	$trope_names = wp_list_pluck($book['tropes'], 'name');
 	$trope_display = array_map(
-		static fn(array $trope): string => trim(($trope['emoji'] ? $trope['emoji'] . ' ' : '') . $trope['name']),
+		static fn(array $trope): string => function_exists('bbb_trope_label') ? bbb_trope_label($trope['name'], $trope['emoji'] ?? '') : trim(((string) ($trope['emoji'] ?? '') ?: '🖤') . ' ' . $trope['name']),
 		$book['tropes']
 	);
 	$attrs = array(
 		'data-handle'         => $book['handle'],
+		'data-url'            => $book['url'],
 		'data-title'          => $book['title'],
 		'data-author'         => $book['author'],
 		'data-cover'          => $book['cover'],
@@ -427,12 +491,13 @@ function sss_render_article_book_card(int $book_id, bool $show_why = false): str
     <?php endif; ?>
 
     <?php if ($book['tropes']) : ?>
-    <div class="article-book-card__tropes">
-      <?php foreach ($book['tropes'] as $trope) : ?>
-      <span class="article-book-card__trope" style="--trope-bg: <?php echo esc_attr($trope['bg']); ?>; --trope-text: <?php echo esc_attr($trope['text']); ?>;">
-        <?php echo esc_html($trope['name']); ?>
-      </span>
-      <?php endforeach; ?>
+	    <div class="article-book-card__tropes">
+	      <?php foreach ($book['tropes'] as $trope) : ?>
+	      <?php $trope_url = function_exists('bbb_trope_page_url') ? bbb_trope_page_url((string) $trope['name'], (string) ($trope['slug'] ?? $trope['handle'] ?? '')) : home_url('/' . sanitize_title((string) ($trope['slug'] ?? $trope['handle'] ?? $trope['name'])) . '-books/'); ?>
+	      <a class="article-book-card__trope" href="<?php echo esc_url($trope_url); ?>">
+	        <?php echo function_exists('bbb_trope_label_html') ? bbb_trope_label_html((string) $trope['name'], $trope['emoji'] ?? '', (string) ($trope['slug'] ?? $trope['handle'] ?? '')) : esc_html(trim(((string) ($trope['emoji'] ?? '') ?: '🖤') . ' ' . (string) $trope['name'])); ?>
+	      </a>
+	      <?php endforeach; ?>
     </div>
     <?php endif; ?>
 
@@ -444,22 +509,82 @@ function sss_render_article_book_card(int $book_id, bool $show_why = false): str
       <?php endif; ?>
     </div>
 
-    <div class="article-book-card__buttons">
-      <?php if ($book['amazon']) : ?>
-      <a class="article-book-card__button article-book-card__button--amazon" href="<?php echo esc_url($book['amazon']); ?>" target="_blank" rel="noopener">amazon</a>
-      <?php endif; ?>
-      <?php if ($book['bookshop']) : ?>
-      <a class="article-book-card__button article-book-card__button--bookshop" href="<?php echo esc_url($book['bookshop']); ?>" target="_blank" rel="noopener">
-        <span class="article-book-card__buttonText article-book-card__buttonText--full">support local bookshop</span>
-        <span class="article-book-card__buttonText article-book-card__buttonText--short">bookshop</span>
-      </a>
-      <?php endif; ?>
-    </div>
+	    <div class="article-book-card__buttons">
+	      <?php if ($book['amazon'] && $book['ku']) : ?>
+	      <a class="article-book-card__button article-book-card__button--ku" href="<?php echo esc_url($book['amazon']); ?>" target="_blank" rel="noopener">read free on kindle unlimited</a>
+	      <?php endif; ?>
+	      <?php if ($book['amazon']) : ?>
+	      <a class="article-book-card__button article-book-card__button--amazon" href="<?php echo esc_url($book['amazon']); ?>" target="_blank" rel="noopener">buy on amazon <span>· own it forever</span></a>
+	      <?php endif; ?>
+	      <?php if ($book['bookshop']) : ?>
+	      <a class="article-book-card__button article-book-card__button--bookshop" href="<?php echo esc_url($book['bookshop']); ?>" target="_blank" rel="noopener">prefer indie? bookshop.org →</a>
+	      <?php endif; ?>
+	    </div>
   </div>
 
 </div>
 	<?php
 	return ob_get_clean();
+}
+
+function sss_article_books_for_source(string $source, string $value, int $limit = 24): array {
+	$source = sanitize_key($source);
+	$value  = sanitize_title($value);
+	$limit  = max(1, min(48, $limit));
+
+	if (!in_array($source, array('trope', 'shelf', 'series'), true) || '' === $value) {
+		return array();
+	}
+
+	$books = array_values(
+		array_filter(
+			sss_article_all_visible_books(),
+			static function (WP_Post $book) use ($source, $value): bool {
+				$data = sss_article_book_data($book->ID);
+
+				if ('trope' === $source) {
+					foreach ($data['tropes'] as $trope) {
+						if ($value === ($trope['slug'] ?? '') || $value === sanitize_title((string) ($trope['name'] ?? ''))) {
+							return true;
+						}
+					}
+
+					return false;
+				}
+
+				if ('shelf' === $source) {
+					return $value === ($data['shelf']['slug'] ?? '') || $value === sanitize_title((string) ($data['shelf']['name'] ?? ''));
+				}
+
+				return $value === ($data['series_handle'] ?? '') || $value === sanitize_title((string) ($data['series_name'] ?? ''));
+			}
+		)
+	);
+
+	usort(
+		$books,
+		static function (WP_Post $a, WP_Post $b) use ($source): int {
+			if ('series' === $source) {
+				$a_number = (int) sss_article_field('series_number', $a->ID, 999);
+				$b_number = (int) sss_article_field('series_number', $b->ID, 999);
+				if ($a_number !== $b_number) {
+					return $a_number <=> $b_number;
+				}
+			}
+
+			return strcasecmp(get_the_title($a), get_the_title($b));
+		}
+	);
+
+	return array_slice($books, 0, $limit);
+}
+
+function sss_article_books_for_selected_source(int $post_id): array {
+	$source = (string) get_post_meta($post_id, '_bbb_article_book_source', true);
+	$value  = (string) get_post_meta($post_id, '_bbb_article_book_source_value', true);
+	$limit  = (int) get_post_meta($post_id, '_bbb_article_book_source_limit', true);
+
+	return sss_article_books_for_source($source, $value, $limit ?: 24);
 }
 
 function sss_article_post_books(int $post_id, bool $include_mentions = true): array {
@@ -644,6 +769,11 @@ function sss_article_books_for_inferred_context(int $post_id): array {
 }
 
 function sss_article_books_for_post(int $post_id): array {
+	$books = sss_article_books_for_selected_source($post_id);
+	if ($books) {
+		return $books;
+	}
+
 	$include_mentions = function_exists('sss_content_has_pillar') ? !sss_content_has_pillar((string) get_post_field('post_content', $post_id)) : true;
 	$books = sss_article_post_books($post_id, $include_mentions);
 	if ($books) {
@@ -725,11 +855,12 @@ function sss_render_weekly_obsession_banner(): string {
     see the book everyone is talking about...
     think
     <?php foreach ($tropes as $i => $trope) : ?>
-    <?php echo 1 === $i ? 'and' : ''; ?>
-    <span class="blog-obsession-banner__trope">
-      <span class="blog-obsession-banner__tropeEmoji"><?php echo esc_html($trope['emoji']); ?></span>
-      <?php echo esc_html($trope['name']); ?>
-    </span>
+	    <?php echo 1 === $i ? 'and' : ''; ?>
+	    <?php $trope_url = function_exists('bbb_trope_page_url') ? bbb_trope_page_url((string) ($trope['name'] ?? ''), (string) ($trope['slug'] ?? $trope['handle'] ?? '')) : home_url('/' . sanitize_title((string) ($trope['slug'] ?? $trope['handle'] ?? $trope['name'] ?? '')) . '-books/'); ?>
+	    <span class="blog-obsession-banner__trope" data-trope-url="<?php echo esc_url($trope_url); ?>" role="link" tabindex="0">
+	      <span class="blog-obsession-banner__tropeEmoji"><?php echo function_exists('bbb_trope_emoji_html') ? bbb_trope_emoji_html((string) ($trope['name'] ?? ''), $trope['emoji'] ?? '', (string) ($trope['slug'] ?? $trope['handle'] ?? '')) : esc_html(((string) ($trope['emoji'] ?? '') ?: '🖤')); ?></span>
+	      <?php echo esc_html($trope['name']); ?>
+	    </span>
     <?php endforeach; ?>
     <span class="blog-obsession-banner__cta">see the weekly obsession</span>
   </p>
@@ -744,16 +875,78 @@ function sss_weekly_obsession_shortcode(): string {
 add_shortcode('sss_weekly_obsession', 'sss_weekly_obsession_shortcode');
 
 function sss_book_shortcode($atts): string {
-	$atts = shortcode_atts(array('index' => 1, 'post_id' => get_the_ID()), $atts, 'sss_book');
+	$atts = shortcode_atts(array('index' => 1, 'name' => '', 'post_id' => get_the_ID()), $atts, 'sss_book');
+	if ('' !== trim((string) $atts['name'])) {
+		$book = sss_article_book_from_name((string) $atts['name']);
+
+		return $book instanceof WP_Post ? sss_render_article_book_card($book->ID) : '';
+	}
+
 	$books = sss_article_post_books((int) $atts['post_id']);
 	if (!$books) {
 		$books = sss_article_books_for_post((int) $atts['post_id']);
 	}
+
 	$book = $books[max(0, (int) $atts['index'] - 1)] ?? null;
 
 	return $book instanceof WP_Post ? sss_render_article_book_card($book->ID) : '';
 }
 add_shortcode('sss_book', 'sss_book_shortcode');
+
+function sss_bookpage_suggestions_source(int $post_id, string $source = ''): ?WP_Post {
+	if ('' !== trim($source)) {
+		$book = sss_article_book_from_name($source);
+		if ($book instanceof WP_Post) {
+			return $book;
+		}
+	}
+
+	$books = sss_article_post_books($post_id);
+	if (!$books) {
+		$books = sss_article_books_for_post($post_id);
+	}
+	if (!$books) {
+		$books = sss_article_books_mentioned_in_post($post_id);
+	}
+
+	$book = $books[0] ?? null;
+
+	return $book instanceof WP_Post ? $book : null;
+}
+
+function sss_bookpage_suggestions_shortcode($atts): string {
+	$atts = shortcode_atts(
+		array(
+			'post_id' => get_the_ID(),
+			'source'  => '',
+			'count'   => 3,
+		),
+		$atts,
+		'sss_bookpage_suggestions'
+	);
+
+	$source = sss_bookpage_suggestions_source((int) $atts['post_id'], (string) $atts['source']);
+	if (!$source instanceof WP_Post || !function_exists('bbb_books_like_recommendations')) {
+		return '';
+	}
+
+	$cards = '';
+	$count = 0;
+	foreach (bbb_books_like_recommendations((int) $source->ID) as $suggestion) {
+		if (empty($suggestion['id'])) {
+			continue;
+		}
+
+		$cards .= sss_render_article_book_card((int) $suggestion['id']);
+		$count++;
+		if ($count >= max(1, (int) $atts['count'])) {
+			break;
+		}
+	}
+
+	return $cards;
+}
+add_shortcode('sss_bookpage_suggestions', 'sss_bookpage_suggestions_shortcode');
 
 function sss_book_trope_shortcode($atts): string {
 	$atts = shortcode_atts(array('index' => 1, 'post_id' => get_the_ID()), $atts, 'sss_book_trope');
@@ -878,8 +1071,9 @@ add_shortcode('pillarbookcard', 'sss_pillar_bookcard_shortcode');
 
 function sss_ku_shortcode($atts): string {
 	return '<div class="blog-ku-cta">
-		<p class="blog-ku-cta__intro">most of the recs in the library are on kindle unlimited, which makes the spiral slightly easier to justify.</p>
-		<p class="blog-ku-cta__outro"><span class="blog-ku-cta__outroText">(i use it constantly, and it is very much part of the reader math.)</span> <a class="blog-ku-cta__accent" href="https://amzn.to/4uZ8Y3a" target="_blank" rel="noopener sponsored">try it here &rarr;</a></p>
+		<p class="blog-ku-cta__label">✓ on kindle unlimited</p>
+		<p class="blog-ku-cta__intro">most recs in the library are on kindle unlimited.</p>
+		<a class="blog-ku-cta__accent" href="https://amzn.to/4uZ8Y3a" target="_blank" rel="noopener sponsored">try kindle unlimited now &rarr;</a>
 	</div>';
 }
 add_shortcode('sss_ku', 'sss_ku_shortcode');

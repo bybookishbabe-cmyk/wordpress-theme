@@ -253,6 +253,51 @@ $login_url = home_url('/account/');
 		<?php endif; ?>
 	<?php else : ?>
 		<div class="sss-lib__societyLocked">
+			<div class="sss-lib__societyLockedPreview" aria-hidden="true">
+				<?php if ($show_match) : ?>
+					<div class="sss-lib__finder sss-lib__finder--lockedPreview">
+						<div class="sss-lib__finderGrid">
+							<div class="sss-lib__finderField">
+								<span>start with a shelf</span>
+								<div class="sss-lib__lockedSelect"><?php echo esc_html($finder_shelves[0] ?? 'dark romance'); ?></div>
+							</div>
+							<div class="sss-lib__finderField">
+								<span>pick the main trope</span>
+								<div class="sss-lib__lockedSelect"><?php echo esc_html($finder_tropes[0] ?? 'enemies to lovers'); ?></div>
+							</div>
+							<div class="sss-lib__finderField">
+								<span>add a second mood</span>
+								<div class="sss-lib__lockedSelect"><?php echo esc_html($finder_tropes[1] ?? 'obsession'); ?></div>
+							</div>
+						</div>
+						<div class="sss-lib__finderResultCard">
+							<?php
+							$preview_book = $public_books[0] ?? null;
+							$preview_data = $preview_book instanceof WP_Post ? sss_book_data($preview_book) : array();
+							?>
+							<div class="sss-lib__finderCoverBtn">
+								<?php if (!empty($preview_data['cover'])) : ?>
+									<img class="sss-lib__finderCover" src="<?php echo esc_url((string) $preview_data['cover']); ?>" alt="">
+								<?php endif; ?>
+							</div>
+							<div class="sss-lib__finderResultBody">
+								<div class="sss-lib__finderResultLabel">your match</div>
+								<div class="sss-lib__finderResultTitle"><?php echo esc_html((string) ($preview_data['title'] ?? 'your next society read')); ?></div>
+								<div class="sss-lib__finderResultAuthor"><?php echo esc_html(!empty($preview_data['author']) ? 'by ' . (string) $preview_data['author'] : 'curated by the society'); ?></div>
+								<div class="sss-lib__finderResultMeta">shelf chemistry + trope match</div>
+							</div>
+						</div>
+					</div>
+				<?php endif; ?>
+
+				<?php if ($show_private && $private_books) : ?>
+					<div class="sss-lib__shelfRow sss-lib__lockedPreviewBooks">
+						<?php foreach (array_slice($private_books, 0, 5) as $book) : ?>
+							<?php get_template_part('template-parts/library/book-card', null, array('post' => $book, 'mini' => true)); ?>
+						<?php endforeach; ?>
+					</div>
+				<?php endif; ?>
+			</div>
 			<div>
 				<p class="sss-lib__finderKicker">paid member access</p>
 				<h3 class="sss-lib__finderTitle"><?php echo esc_html($show_match ? 'book matchmaker' : 'the private shelf'); ?></h3>

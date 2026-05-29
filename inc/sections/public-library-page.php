@@ -14,7 +14,7 @@ $settings = array(
 			<h1 class="sss-lib__title"><?php echo esc_html((string) $settings['title']); ?></h1>
 			<p class="sss-lib__seoLine">made for romance readers by a romance reader.</p>
 			<p class="sss-lib__sub"><?php echo esc_html((string) $settings['subtext']); ?></p>
-			<a class="sss-lib__kuLink" href="https://amzn.to/4uZ8Y3a" target="_blank" rel="noopener">on a kindle kick? try kindle unlimited →</a>
+			<a class="sss-lib__kuLink" href="<?php echo esc_url(function_exists('bbb_page_url') ? bbb_page_url('what-to-read-next') : home_url('/what-to-read-next/')); ?>">not sure where to start? find your read →</a>
 		</header>
 		<div class="sss-lib__societyInviteCard">
 			<div class="sss-lib__societyInviteKicker">the private layer</div>
@@ -30,7 +30,7 @@ $settings = array(
 				<a href="<?php echo esc_url(bbb_resolve_page_url('series-reading-orders')); ?>">🔗 series</a>
 				<a href="#starter-pack">✨ start here</a>
 				<a href="#monthly">📅 books of the month</a>
-				<a href="#moods">🖤 trope shelves</a>
+				<a href="#moods">🖤 genre shelves</a>
 				<a href="#archive">🗂️ full library</a>
 			</div>
 		</nav>

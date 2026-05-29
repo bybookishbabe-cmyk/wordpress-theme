@@ -43,6 +43,22 @@
   text-transform: lowercase;
 }
 
+.blog-discovery__headerLink {
+  display: inline-flex;
+  margin-top: 1rem;
+  color: #ff8ac7;
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.blog-discovery__headerLink:hover,
+.blog-discovery__headerLink:focus-visible {
+  color: #ffb8e0;
+}
+
 .blog-discovery__grid {
   display: grid;
   gap: 1.6rem;
@@ -88,12 +104,8 @@
   padding: 2.2rem 1.8rem;
   border-radius: 1.4rem;
   text-align: center;
-  border-color: color-mix(in srgb, var(--trope-bg, rgba(255, 255, 255, 0.02)) 56%, rgba(255, 255, 255, 0.38) 44%);
-  background:
-    linear-gradient(180deg,
-      color-mix(in srgb, var(--trope-bg, rgba(255, 255, 255, 0.02)) 24%, rgba(255, 255, 255, 0.04) 76%),
-      color-mix(in srgb, var(--trope-bg, rgba(255, 255, 255, 0.02)) 14%, rgba(255, 255, 255, 0.02) 86%)
-    );
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.035);
   color: #f7f1f4;
   box-shadow: 0 0 0 rgba(0, 0, 0, 0);
 }
@@ -101,12 +113,8 @@
 .blog-discovery__card--trope:hover,
 .blog-discovery__card--trope:focus-visible {
   transform: translateY(-0.35rem);
-  border-color: color-mix(in srgb, var(--trope-bg, #ff8ac7) 60%, #ffffff 40%);
-  background:
-    linear-gradient(180deg,
-      color-mix(in srgb, var(--trope-bg, rgba(255, 255, 255, 0.02)) 34%, rgba(255, 255, 255, 0.05) 66%),
-      color-mix(in srgb, var(--trope-bg, rgba(255, 255, 255, 0.02)) 20%, rgba(255, 255, 255, 0.02) 80%)
-    );
+  border-color: rgba(255, 176, 216, 0.46);
+  background: rgba(255, 255, 255, 0.055);
   color: #fff8fb;
   box-shadow: 0 1.6rem 3.8rem rgba(0, 0, 0, 0.3);
 }
@@ -129,8 +137,15 @@
 }
 
 .blog-discovery__emoji {
-  font-size: 2rem;
+  font-size: 2.8rem;
   line-height: 1;
+}
+
+.blog-discovery__emoji .bbb-custom-emoji {
+  display: block;
+  height: 3rem;
+  object-fit: contain;
+  width: 3rem;
 }
 
 .blog-discovery__name {
@@ -141,6 +156,8 @@
 .blog-discovery__card--trope .blog-discovery__name {
   max-width: 16rem;
   color: inherit;
+  font-style: italic;
+  font-weight: 500;
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.18);
 }
 
@@ -150,8 +167,7 @@
 }
 
 .blog-discovery__card--trope .blog-discovery__emoji {
-  color: var(--trope-text, #ffb0d8);
-  text-shadow: 0 0 18px color-mix(in srgb, var(--trope-bg, #ff8ac7) 32%, transparent 68%);
+  text-shadow: 0 0 18px rgba(255, 138, 199, 0.28);
 }
 
 .blog-discovery__card--trope:hover .blog-discovery__emoji,
@@ -361,6 +377,7 @@
     font-weight:600;
     animation:blogObsessionWiggle 2.6s ease-in-out infinite;
     transform-origin:center bottom;
+    cursor:pointer;
   }
 
   .blog-obsession-banner__trope:nth-of-type(1){
@@ -377,6 +394,15 @@
     display:inline-block;
     margin-right:.22em;
     font-style:normal;
+  }
+
+  .blog-obsession-banner__tropeEmoji .bbb-custom-emoji{
+    width:1.05em;
+    height:1.05em;
+    max-width:1.05em;
+    object-fit:contain;
+    vertical-align:-.18em;
+    border-radius:3px;
   }
 
   .blog-obsession-banner__cta{

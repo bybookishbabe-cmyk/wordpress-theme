@@ -15,7 +15,7 @@ function sss_signoff_shortcode($atts = array()): string {
     <h3 class="bbb-signoff__title">join the smut &amp; sentiment society</h3>
     <p class="bbb-signoff__text">
       every sunday we send a carefully curated romance recommendation —
-      morally gray men delievered straight to you
+      morally gray men delivered straight to you
     </p>
     <div class="bbb-signoff__actions">
       <div class="bbb-signoff__embed">

@@ -209,12 +209,20 @@ if (!function_exists('bbb_society_landing_product_url')) {
 
 $reader_state = 'visitor';
 $is_paid_society_member = function_exists('bbb_reader_is_society') && bbb_reader_is_society();
+$reader_identity = function_exists('bbb_reader_current_identity') ? bbb_reader_current_identity() : null;
+$has_society_member_access = is_array($reader_identity) && '' !== trim((string) ($reader_identity['email'] ?? ''));
 if ($is_paid_society_member) {
 	$reader_state = 'paid member';
-} elseif (is_user_logged_in()) {
+	$has_society_member_access = true;
+} elseif ($has_society_member_access || is_user_logged_in()) {
 	$reader_state = 'free member';
 }
 $join_url = get_option('bbb_society_gate_member_url', 'https://thesmutandsentimentsociety.substack.com/subscribe');
+$society_discount_percent = function_exists('bbb_society_discount_percent') ? bbb_society_discount_percent() : 0;
+$society_discount_applied = function_exists('bbb_society_discount_is_applied_to_session') && bbb_society_discount_is_applied_to_session();
+$society_discount_used = function_exists('bbb_society_discount_has_used_this_month') && bbb_society_discount_has_used_this_month();
+$society_discount_access = function_exists('bbb_society_discount_member_has_access') && bbb_society_discount_member_has_access();
+$society_discount_status = isset($_GET['society_discount']) ? sanitize_key((string) wp_unslash($_GET['society_discount'])) : '';
 
 $monthly_theme = strtolower((string) date_i18n('F')) . ' theme';
 $monthly_hub = array(
@@ -297,7 +305,7 @@ $sections = array(
 			array('title' => 'about', 'copy' => 'what the society is, who it is for, and how the newsletter fits in.', 'url' => bbb_page_url('about-the-society'), 'badge' => 'start', 'emoji' => '💌'),
 			array('title' => 'recent', 'copy' => 'the latest newsletter issues and current dispatches.', 'url' => bbb_page_url('society-newsletter-recent'), 'badge' => 'latest', 'emoji' => '🗞️'),
 			array('title' => 'full archive', 'copy' => 'the complete newsletter shelf, wired to the imported issues.', 'url' => bbb_page_url('society-newsletter-archive'), 'badge' => 'archive', 'emoji' => '🗂️'),
-			array('title' => 'society submissions', 'copy' => 'send in your hot takes, quotes, recs, and reader-core thoughts for the newsletter.', 'url' => bbb_page_url('society-submissions'), 'badge' => 'submit', 'emoji' => '✍️'),
+			array('title' => 'society submissions', 'copy' => 'send in your hot takes, quotes, recs, and reader-core thoughts for the newsletter.', 'url' => bbb_page_url('society-submissions'), 'badge' => 'member', 'emoji' => '✍️'),
 		),
 	),
 	array(
@@ -319,8 +327,8 @@ $sections = array(
 	array(
 		'label' => 'shop perks',
 		'items' => array(
-			array('title' => 'monthly freebie', 'copy' => 'a rotating digital good for paid members.', 'url' => bbb_page_url('shop'), 'badge' => 'society', 'emoji' => '🎁'),
-			array('title' => 'shop discount', 'copy' => 'member savings on templates, printables, and extras.', 'url' => bbb_page_url('shop'), 'badge' => 'society', 'emoji' => '🏷️'),
+			array('title' => 'monthly freebie', 'copy' => 'this month: an 8x10 printable art piece for free and paid society members.', 'url' => bbb_page_url('monthly-freebie'), 'badge' => 'member', 'emoji' => '🎁'),
+			array('title' => 'shop discount', 'copy' => 'this month: ' . (string) $society_discount_percent . '% off one order for free and paid society members.', 'url' => bbb_page_url('society-shop-discount'), 'badge' => 'member', 'emoji' => '🏷️', 'type' => 'society_discount'),
 		),
 	),
 );
@@ -379,18 +387,73 @@ get_header();
 					<h2 id="<?php echo esc_attr(sanitize_title($section['label'])); ?>"><?php echo esc_html($section['label']); ?></h2>
 					<div class="bbb-society-link-grid">
 						<?php foreach ($section['items'] as $item) : ?>
-							<?php $is_locked_society_item = !$is_paid_society_member && 'society' === (string) ($item['badge'] ?? ''); ?>
-							<?php if ($is_locked_society_item) : ?>
-								<article class="bbb-society-link-card bbb-society-link-card--locked" aria-label="<?php echo esc_attr($item['title'] . ' locked preview'); ?>">
+							<?php
+							$item_badge = (string) ($item['badge'] ?? '');
+							$item_type = (string) ($item['type'] ?? '');
+							$is_locked_society_item = (!$is_paid_society_member && 'society' === $item_badge) || (!$has_society_member_access && 'member' === $item_badge);
+							$locked_label = 'member' === $item_badge ? 'member preview' : 'paid society preview';
+							$locked_cta = 'member' === $item_badge ? 'preview member page' : 'preview paid page';
+							?>
+							<?php if ('society_discount' === $item_type) : ?>
+								<?php
+								$discount_state = 'ready';
+								$discount_note = 'click apply, then use it once this month on one order.';
+								if (!$society_discount_access) {
+									$discount_state = 'locked';
+									$discount_note = 'join free or paid society first, then come back to unlock it.';
+								} elseif ($society_discount_used || 'used' === $society_discount_status) {
+									$discount_state = 'used';
+									$discount_note = 'you already used this month\'s society discount. a new one opens next month.';
+								} elseif ($society_discount_applied || 'applied' === $society_discount_status) {
+									$discount_state = 'applied';
+									$discount_note = 'applied: ' . (string) $society_discount_percent . '% off will show in your cart/checkout. thank you for being a society member.';
+								} elseif ('unavailable' === $society_discount_status) {
+									$discount_note = 'the shop cart is still loading. add an item to the cart, then try again.';
+								}
+								$discount_button_label = $society_discount_used ? 'used this month' : ($society_discount_applied || 'applied' === $society_discount_status ? 'applied' : 'apply society discount');
+								?>
+								<?php if (!$society_discount_access) : ?>
+									<a id="society-shop-discount" class="bbb-society-link-card bbb-society-link-card--discount bbb-society-link-card--locked is-<?php echo esc_attr($discount_state); ?>" href="<?php echo esc_url($item['url']); ?>" aria-label="society shop discount locked preview">
+										<span class="bbb-society-link-card__top">
+											<span class="bbb-society-link-card__emoji" aria-hidden="true"><?php echo esc_html($item['emoji'] ?? '♡'); ?></span>
+											<span class="bbb-society-link-card__title"><?php echo esc_html($item['title']); ?></span>
+											<span class="bbb-society-link-card__badge"><?php echo esc_html($society_discount_percent ? (string) $society_discount_percent . '% off' : 'member'); ?></span>
+										</span>
+										<span class="bbb-society-link-card__copy"><?php echo esc_html($item['copy']); ?></span>
+										<span class="bbb-society-link-card__discountStatus" aria-live="polite"><?php echo esc_html($discount_note); ?></span>
+										<span class="bbb-society-link-card__lock">member preview</span>
+										<span class="bbb-society-link-card__upgrade">preview member page</span>
+									</a>
+								<?php else : ?>
+								<article id="society-shop-discount" class="bbb-society-link-card bbb-society-link-card--discount is-<?php echo esc_attr($discount_state); ?>" aria-label="society shop discount">
+									<span class="bbb-society-link-card__top">
+										<span class="bbb-society-link-card__emoji" aria-hidden="true"><?php echo esc_html($item['emoji'] ?? '♡'); ?></span>
+										<span class="bbb-society-link-card__title"><?php echo esc_html($item['title']); ?></span>
+										<span class="bbb-society-link-card__badge"><?php echo esc_html($society_discount_percent ? (string) $society_discount_percent . '% off' : 'member'); ?></span>
+									</span>
+									<span class="bbb-society-link-card__copy"><?php echo esc_html($item['copy']); ?></span>
+									<span class="bbb-society-link-card__discountStatus" aria-live="polite"><?php echo esc_html($discount_note); ?></span>
+									<form class="bbb-society-link-card__discountForm" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+										<input type="hidden" name="action" value="bbb_apply_society_discount">
+										<?php wp_nonce_field('bbb_apply_society_discount'); ?>
+										<button class="bbb-society-link-card__discountButton" type="submit" <?php disabled($society_discount_used); ?>>
+											<?php echo esc_html($discount_button_label); ?>
+										</button>
+									</form>
+									<a class="bbb-society-link-card__shopLink" href="<?php echo esc_url(bbb_page_url('shop')); ?>">open the shop</a>
+								</article>
+								<?php endif; ?>
+							<?php elseif ($is_locked_society_item) : ?>
+								<a class="bbb-society-link-card bbb-society-link-card--locked" href="<?php echo esc_url($item['url']); ?>" aria-label="<?php echo esc_attr($item['title'] . ' locked preview'); ?>">
 									<span class="bbb-society-link-card__top">
 										<span class="bbb-society-link-card__emoji" aria-hidden="true"><?php echo esc_html($item['emoji'] ?? '♡'); ?></span>
 										<span class="bbb-society-link-card__title"><?php echo esc_html($item['title']); ?></span>
 										<span class="bbb-society-link-card__badge">locked</span>
 									</span>
 									<span class="bbb-society-link-card__copy"><?php echo esc_html($item['copy']); ?></span>
-									<span class="bbb-society-link-card__lock">paid society preview</span>
-									<a class="bbb-society-link-card__upgrade" href="<?php echo esc_url($join_url); ?>" target="_blank" rel="noopener">upgrade to paid society</a>
-								</article>
+									<span class="bbb-society-link-card__lock"><?php echo esc_html($locked_label); ?></span>
+									<span class="bbb-society-link-card__upgrade"><?php echo esc_html($locked_cta); ?></span>
+								</a>
 							<?php else : ?>
 								<a class="bbb-society-link-card" href="<?php echo esc_url($item['url']); ?>">
 									<span class="bbb-society-link-card__top">

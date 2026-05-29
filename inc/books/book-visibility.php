@@ -19,7 +19,7 @@ function bbb_is_book_visible(int $post_id, bool $allow_hidden_from_library = fal
 		return false;
 	}
 
-	if (apply_filters('bbb_show_all_imported_books', true, $post_id)) {
+	if (apply_filters('bbb_show_all_imported_books', false, $post_id)) {
 		return true;
 	}
 

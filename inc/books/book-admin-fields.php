@@ -14,9 +14,57 @@ function bbb_book_admin_fields(): array {
 		array('label' => 'Amazon Link', 'key' => '_bbb_amazon_url', 'type' => 'url'),
 		array('label' => 'Bookshop Link', 'key' => '_bbb_bookshop_url', 'type' => 'url'),
 		array('label' => 'Newsletter URL', 'key' => '_bbb_newsletter_url', 'type' => 'url'),
+		array(
+			'label'       => 'Moodboard Pin Embed',
+			'key'         => '_bbb_moodboard_pin_url',
+			'type'        => 'textarea',
+			'description' => 'Paste the full Pinterest iframe, the embed URL, or a pinterest.com/pin URL. The book saves the clean embed link automatically.',
+		),
 		array('label' => 'Featured in Newsletter Date', 'key' => '_bbb_newsletter_date', 'type' => 'date'),
 		array('label' => 'Mini Note', 'key' => '_bbb_mini_note', 'type' => 'textarea'),
 		array('label' => 'Why I Loved It', 'key' => '_bbb_why', 'type' => 'textarea'),
+		array(
+			'label'       => 'Verdict',
+			'key'         => '_bbb_verdict',
+			'type'        => 'textarea',
+			'description' => '2-3 sentence reader-facing verdict for the single book page.',
+		),
+		array(
+			'label'       => 'Vibe Description',
+			'key'         => '_bbb_vibe_description',
+			'type'        => 'textarea',
+			'description' => 'Short mood/trope description for the book page.',
+		),
+		array(
+			'label'       => 'Spice',
+			'key'         => '_bbb_spice_words',
+			'type'        => 'textarea',
+			'description' => 'Plain-English heat description for readers and search intent.',
+		),
+		array(
+			'label'       => 'Read This If',
+			'key'         => '_bbb_read_this_if',
+			'type'        => 'textarea',
+			'description' => 'Reader-fit line for who should pick this up.',
+		),
+		array(
+			'label'       => 'Skip This If',
+			'key'         => '_bbb_skip_this_if',
+			'type'        => 'textarea',
+			'description' => 'Reader-fit line for who should pass or wait.',
+		),
+		array(
+			'label'       => 'Content Warnings',
+			'key'         => '_bbb_content_warnings',
+			'type'        => 'textarea',
+			'description' => 'Content notes shown on the single book page.',
+		),
+		array(
+			'label'       => 'Standalone + HEA Line',
+			'key'         => '_bbb_standalone_hea',
+			'type'        => 'textarea',
+			'description' => 'Standalone, cliffhanger, and HEA status line.',
+		),
 		array('label' => 'Spice Level', 'key' => '_bbb_spice', 'type' => 'number', 'min' => 0, 'max' => 5),
 		array('label' => 'Tension Score', 'key' => '_bbb_tension', 'type' => 'number', 'min' => 0, 'max' => 5),
 		array('label' => 'Emotional Damage Score', 'key' => '_bbb_damage', 'type' => 'number', 'min' => 0, 'max' => 5),
@@ -35,6 +83,71 @@ function bbb_book_admin_fields(): array {
 		array('label' => 'Hide From Library', 'key' => '_bbb_hide_from_library', 'type' => 'checkbox'),
 		array('label' => 'Private Shelf', 'key' => '_bbb_private_shelf', 'type' => 'checkbox'),
 	);
+}
+
+function bbb_normalize_moodboard_pin_url(string $value): string {
+	$value = trim(html_entity_decode($value, ENT_QUOTES));
+	if ('' === $value) {
+		return '';
+	}
+
+	if (preg_match('/\bsrc=["\']([^"\']+)["\']/i', $value, $matches)) {
+		$value = trim(html_entity_decode((string) $matches[1], ENT_QUOTES));
+	}
+
+	if (preg_match('/\b(?:id|data-pin-id)=["\']?(\d+)["\']?/i', $value, $matches)) {
+		return esc_url_raw('https://assets.pinterest.com/ext/embed.html?id=' . (string) $matches[1]);
+	}
+
+	$parts = wp_parse_url($value);
+	if (
+		is_array($parts)
+		&& 'https' === strtolower((string) ($parts['scheme'] ?? ''))
+		&& 'assets.pinterest.com' === strtolower((string) ($parts['host'] ?? ''))
+		&& '/ext/embed.html' === (string) ($parts['path'] ?? '')
+	) {
+		parse_str((string) ($parts['query'] ?? ''), $query);
+		if (!empty($query['id']) && preg_match('/^\d+$/', (string) $query['id'])) {
+			return esc_url_raw('https://assets.pinterest.com/ext/embed.html?id=' . (string) $query['id']);
+		}
+	}
+
+	if (
+		is_array($parts)
+		&& 'https' === strtolower((string) ($parts['scheme'] ?? ''))
+		&& str_ends_with(strtolower((string) ($parts['host'] ?? '')), 'pinterest.com')
+		&& preg_match('#/pin/(\d+)#', (string) ($parts['path'] ?? ''), $matches)
+	) {
+		return esc_url_raw('https://assets.pinterest.com/ext/embed.html?id=' . (string) $matches[1]);
+	}
+
+	if (preg_match('/\b(\d{10,})\b/', $value, $matches)) {
+		return esc_url_raw('https://assets.pinterest.com/ext/embed.html?id=' . (string) $matches[1]);
+	}
+
+	return '';
+}
+
+function bbb_normalize_book_admin_url(string $value): string {
+	$value = trim(html_entity_decode($value, ENT_QUOTES));
+	if ('' === $value) {
+		return '';
+	}
+
+	if (
+		(strlen($value) >= 2)
+		&& (('"' === $value[0] && '"' === substr($value, -1)) || ("'" === $value[0] && "'" === substr($value, -1)))
+	) {
+		$value = trim(substr($value, 1, -1));
+	}
+
+	if (str_starts_with($value, '//')) {
+		$value = 'https:' . $value;
+	} elseif (!preg_match('#^[a-z][a-z0-9+.-]*://#i', $value)) {
+		$value = 'https://' . ltrim($value, '/');
+	}
+
+	return esc_url_raw($value);
 }
 
 function bbb_add_book_admin_fields_meta_box(): void {
@@ -62,6 +175,7 @@ function bbb_render_book_admin_fields_meta_box(WP_Post $post): void {
 		.bbb-book-fields__row input[type="number"],
 		.bbb-book-fields__row textarea { width: 100%; }
 		.bbb-book-fields__row textarea { min-height: 88px; }
+		.bbb-book-fields__help { color: #646970; font-size: 12px; margin: 6px 0 0; }
 		.bbb-book-fields__checks { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px 16px; }
 		.bbb-book-fields__check label { font-weight: 600; }
 	</style>
@@ -84,11 +198,15 @@ function bbb_render_book_admin_fields_meta_box(WP_Post $post): void {
 						<input
 							id="<?php echo esc_attr($key); ?>"
 							name="bbb_book_fields[<?php echo esc_attr($key); ?>]"
-							type="<?php echo esc_attr($type); ?>"
+							type="<?php echo esc_attr('url' === $type ? 'text' : $type); ?>"
 							value="<?php echo esc_attr((string) $value); ?>"
+							<?php if ('url' === $type) : ?>inputmode="url" autocomplete="url" placeholder="https://..."<?php endif; ?>
 							<?php if (isset($field['min'])) : ?>min="<?php echo esc_attr((string) $field['min']); ?>"<?php endif; ?>
 							<?php if (isset($field['max'])) : ?>max="<?php echo esc_attr((string) $field['max']); ?>"<?php endif; ?>
 						>
+					<?php endif; ?>
+					<?php if (!empty($field['description'])) : ?>
+						<p class="bbb-book-fields__help"><?php echo esc_html((string) $field['description']); ?></p>
 					<?php endif; ?>
 				</div>
 			</div>
@@ -147,8 +265,10 @@ function bbb_save_book_admin_fields(int $post_id): void {
 
 		$value = isset($raw_fields[$key]) && is_scalar($raw_fields[$key]) ? (string) $raw_fields[$key] : '';
 
-		if ('url' === $type) {
-			$value = esc_url_raw($value);
+		if ('_bbb_moodboard_pin_url' === $key) {
+			$value = bbb_normalize_moodboard_pin_url($value);
+		} elseif ('url' === $type) {
+			$value = bbb_normalize_book_admin_url($value);
 		} elseif ('textarea' === $type) {
 			$value = wp_kses_post($value);
 		} elseif ('number' === $type) {

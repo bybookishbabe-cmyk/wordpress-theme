@@ -990,6 +990,38 @@ color:rgba(255,255,255,.68);
   }
 }
 
+@media screen and (min-width: 750px) and (max-width: 989px){
+  .bbb-seriesOrders__grid{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:1.2rem;
+  }
+
+  .bbb-seriesOrders__cardLink{
+    padding:1.3rem;
+    gap:1rem;
+  }
+
+  .bbb-seriesOrders__cardTop{
+    grid-template-columns:8rem minmax(0, 1fr);
+    gap:1rem;
+  }
+
+  .bbb-seriesOrders__seriesName{
+    font-size:1.7rem;
+  }
+
+  .bbb-seriesOrders__seriesSub,
+  .bbb-seriesOrders__bookRow,
+  .bbb-seriesOrders__footer{
+    font-size:1.12rem;
+  }
+
+  .bbb-seriesOrders__genrePill{
+    align-self:flex-start;
+    font-size:1rem;
+  }
+}
+
 @media screen and (max-width: 749px){
   .bbb-seriesOrders{
     padding:2.8rem 0 4.6rem;

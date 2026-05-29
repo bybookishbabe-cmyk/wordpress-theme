@@ -131,6 +131,7 @@ $archive_trope_data = static function ($trope) use ($archive_get_field): array {
 		return array(
 			'name'  => $name,
 			'emoji' => (string) $emoji,
+			'slug'  => $trope->slug,
 		);
 	}
 
@@ -140,12 +141,14 @@ $archive_trope_data = static function ($trope) use ($archive_get_field): array {
 		return array(
 			'name'  => (string) ($archive_get_field('name', $trope_id, '') ?: get_the_title($trope_id)),
 			'emoji' => (string) $archive_get_field('emoji', $trope_id, ''),
+			'slug'  => get_post_field('post_name', $trope_id),
 		);
 	}
 
 	return array(
 		'name'  => '',
 		'emoji' => '',
+		'slug'  => '',
 	);
 };
 
@@ -155,6 +158,96 @@ $archive_fallback_emoji = static function (string $slug, string $name = ''): str
 	}
 
 	return '📚';
+};
+
+$archive_discovery_emoji = static function (string $slug, string $name = '', string $emoji = '', string $kind = 'trope') use ($archive_fallback_emoji): array {
+	$key      = sanitize_title($slug ?: $name);
+	$haystack = strtolower($key . ' ' . $name);
+	$emoji    = trim($emoji);
+
+	$emoji_map = array(
+		'bully-romance-books'          => '😈',
+		'bully-romance'                => '😈',
+		'captor-captive-romance-books' => '🔐',
+		'captor-x-captive'             => '🔐',
+		'dark-academia-romance-books'  => '📚',
+		'dark-academia'                => '📚',
+		'dark-romance'                 => '🥀',
+		'fake-dating-romance-books'    => '💍',
+		'fake-dating-romance'          => '💍',
+		'fated-mates-romance-books'    => '💜',
+		'fated-mates'                  => '💜',
+		'historical-romance'           => '🏰',
+	);
+
+	if (isset($emoji_map[$key])) {
+		$emoji = $emoji_map[$key];
+	} elseif (str_contains($haystack, 'captor') || str_contains($haystack, 'captive')) {
+		$emoji = '🔐';
+	} elseif (str_contains($haystack, 'fake dating')) {
+		$emoji = '💍';
+	} elseif (str_contains($haystack, 'fated mates')) {
+		$emoji = '💜';
+	} elseif (str_contains($haystack, 'dark romance')) {
+		$emoji = '🥀';
+	} elseif (str_contains($haystack, 'historical')) {
+		$emoji = '🏰';
+	} elseif ('' === $emoji) {
+		$emoji = 'shelf' === $kind ? $archive_fallback_emoji($key, $name) : '📚';
+	}
+
+	$custom_emoji_html = function_exists('bbb_custom_emoji_html') ? bbb_custom_emoji_html($name, $key, 'blog-discovery__emojiImage') : '';
+
+	return array(
+		'emoji'      => $emoji,
+		'emoji_html' => $custom_emoji_html,
+	);
+};
+
+$archive_trope_page_url = static function (array $trope_item): string {
+	$current_url = (string) ($trope_item['url'] ?? '');
+	if ('' !== $current_url && !str_contains($current_url, 'curated-romance-guides')) {
+		return $current_url;
+	}
+
+	$term = $trope_item['term'] ?? null;
+	if ($term instanceof WP_Term && function_exists('bbb_book_taxonomy_term_url')) {
+		return bbb_book_taxonomy_term_url($term);
+	}
+
+	$slug = sanitize_title((string) ($trope_item['slug'] ?? $trope_item['name'] ?? ''));
+	if ('' === $slug) {
+		return '#';
+	}
+
+	if (substr($slug, -6) !== '-books') {
+		$slug .= '-books';
+	}
+
+	return home_url('/' . $slug . '/');
+};
+
+$archive_shelf_page_url = static function (array $shelf_item): string {
+	$current_url = (string) ($shelf_item['url'] ?? '');
+	if ('' !== $current_url && !str_contains($current_url, 'curated-romance-guides') && !str_contains($current_url, '/blog/')) {
+		return $current_url;
+	}
+
+	$term = $shelf_item['term'] ?? null;
+	if ($term instanceof WP_Term && function_exists('bbb_book_taxonomy_term_url')) {
+		return bbb_book_taxonomy_term_url($term);
+	}
+
+	$slug = sanitize_title((string) ($shelf_item['slug'] ?? $shelf_item['name'] ?? ''));
+	if ('' === $slug) {
+		return '#';
+	}
+
+	if (substr($slug, -6) !== '-books') {
+		$slug .= '-books';
+	}
+
+	return home_url('/' . $slug . '/');
 };
 
 $current_issue = null;
@@ -176,7 +269,7 @@ if ($is_page_one) {
 		$tropes  = array_values(array_filter(array_map($archive_trope_data, $tropes), static fn(array $trope): bool => '' !== $trope['name']));
 		if (!$tropes && $book_id > 0 && function_exists('sss_article_tropes')) {
 			$tropes = array_values(array_filter(array_map(
-				static fn(array $trope): array => array('name' => $trope['name'] ?? '', 'emoji' => $trope['emoji'] ?? ''),
+				static fn(array $trope): array => array('name' => $trope['name'] ?? '', 'emoji' => $trope['emoji'] ?? '', 'slug' => $trope['slug'] ?? $trope['handle'] ?? ''),
 				sss_article_tropes($book_id)
 			), static fn(array $trope): bool => '' !== $trope['name']));
 		}
@@ -202,18 +295,25 @@ $trope_pages = $is_page_one ? get_posts(
 
 $trope_items = array();
 foreach ($trope_pages as $trope_page) {
+	$trope_name  = (string) $archive_get_field('trope_name', $trope_page->ID, get_the_title($trope_page->ID));
+	$trope_emoji = $archive_discovery_emoji($trope_page->post_name, $trope_name, (string) $archive_get_field('trope_emoji', $trope_page->ID, ''), 'trope');
 	$trope_items[$trope_page->post_name] = array(
-		'url'   => get_permalink($trope_page->ID),
-		'name'  => (string) $archive_get_field('trope_name', $trope_page->ID, get_the_title($trope_page->ID)),
-		'emoji' => (string) $archive_get_field('trope_emoji', $trope_page->ID, ''),
-		'bg'    => (string) $archive_get_field('trope_bg_color', $trope_page->ID, '#ff8ac7'),
-		'text'  => (string) $archive_get_field('trope_text_color', $trope_page->ID, '#ffb0d8'),
+		'url'        => get_permalink($trope_page->ID),
+		'name'       => $trope_name,
+		'slug'       => $trope_page->post_name,
+		'emoji'      => $trope_emoji['emoji'],
+		'emoji_html' => $trope_emoji['emoji_html'],
+		'bg'         => (string) $archive_get_field('trope_bg_color', $trope_page->ID, '#ff8ac7'),
+		'text'       => (string) $archive_get_field('trope_text_color', $trope_page->ID, '#ffb0d8'),
 	);
 }
 if ($is_page_one && function_exists('bbb_get_book_taxonomy_discovery_items')) {
 	foreach (bbb_get_book_taxonomy_discovery_items('trope') as $item) {
 		$key = sanitize_title((string) ($item['name'] ?? ''));
 		if ($key && !isset($trope_items[$key])) {
+			$trope_emoji = $archive_discovery_emoji($key, (string) ($item['name'] ?? ''), (string) ($item['emoji'] ?? ''), 'trope');
+			$item['emoji'] = $trope_emoji['emoji'];
+			$item['emoji_html'] = $trope_emoji['emoji_html'];
 			$trope_items[$key] = $item;
 		}
 	}
@@ -237,18 +337,23 @@ $shelf_pages = $is_page_one ? get_posts(
 $shelf_items = array();
 foreach ($shelf_pages as $shelf_page) {
 	$shelf_name  = (string) $archive_get_field('shelf_name', $shelf_page->ID, get_the_title($shelf_page->ID));
-	$shelf_emoji = (string) $archive_get_field('shelf_emoji', $shelf_page->ID, '');
+	$shelf_emoji = $archive_discovery_emoji($shelf_page->post_name, $shelf_name, (string) $archive_get_field('shelf_emoji', $shelf_page->ID, ''), 'shelf');
 	$shelf_items[$shelf_page->post_name] = array(
-		'url'         => get_permalink($shelf_page->ID),
-		'name'        => $shelf_name,
-		'emoji'       => $shelf_emoji ?: $archive_fallback_emoji($shelf_page->post_name, $shelf_name),
-		'description' => (string) $archive_get_field('shelf_description', $shelf_page->ID, ''),
+		'url'        => get_permalink($shelf_page->ID),
+		'name'       => $shelf_name,
+		'slug'       => $shelf_page->post_name,
+		'emoji'      => $shelf_emoji['emoji'],
+		'emoji_html' => $shelf_emoji['emoji_html'],
+		'description'=> (string) $archive_get_field('shelf_description', $shelf_page->ID, ''),
 	);
 }
 if ($is_page_one && function_exists('bbb_get_book_taxonomy_discovery_items')) {
 	foreach (bbb_get_book_taxonomy_discovery_items('shelf') as $item) {
 		$key = sanitize_title((string) ($item['name'] ?? ''));
 		if ($key && !isset($shelf_items[$key])) {
+			$shelf_emoji = $archive_discovery_emoji($key, (string) ($item['name'] ?? ''), (string) ($item['emoji'] ?? ''), 'shelf');
+			$item['emoji'] = $shelf_emoji['emoji'];
+			$item['emoji_html'] = $shelf_emoji['emoji_html'];
 			$shelf_items[$key] = $item;
 		}
 	}
@@ -303,32 +408,25 @@ if ('' === trim($rec_demo_cta)) {
 	$rec_demo_cta = 'open the matcher';
 }
 
-$featured_guides = array(
-	array(
-		'url'      => '/blogs/curated-romance-guides/the-ultimate-dark-romance-reading-guide',
-		'title'    => 'best dark romance books - the ultimate list',
-		'date'     => 'April 30, 2026',
-		'date_iso' => '2026-04-30',
-	),
-	array(
-		'url'      => '/blogs/curated-romance-guides/the-ultimate-romantasy-reading-guide',
-		'title'    => 'the ultimate romantasy reading guide',
-		'date'     => 'April 14, 2026',
-		'date_iso' => '2026-04-14',
-	),
-	array(
-		'url'      => '/blogs/curated-romance-guides/the-ultimate-sports-romance-reading-guide',
-		'title'    => 'the best sports romance books (the ultimate reading guide)',
-		'date'     => 'April 14, 2026',
-		'date_iso' => '2026-04-14',
-	),
-);
-
 $featured_slugs = array(
 	'the-ultimate-dark-romance-reading-guide',
 	'the-ultimate-romantasy-reading-guide',
 	'the-ultimate-sports-romance-reading-guide',
 );
+$featured_guides = array();
+foreach ($featured_slugs as $featured_slug) {
+	$featured_post = get_page_by_path($featured_slug, OBJECT, 'post');
+	if (!$featured_post instanceof WP_Post || 'publish' !== $featured_post->post_status) {
+		continue;
+	}
+
+	$featured_guides[] = array(
+		'url'      => get_permalink($featured_post),
+		'title'    => get_the_title($featured_post),
+		'date'     => get_the_date('F j, Y', $featured_post),
+		'date_iso' => get_the_date('Y-m-d', $featured_post),
+	);
+}
 
 get_header();
 ?>
@@ -346,23 +444,29 @@ get_header();
 
 	<?php if ($is_page_one) : ?>
 		<?php if ($current_issue && $trope_one) : ?>
+			<?php
+			$trope_one_emoji_html = function_exists('bbb_trope_emoji_html') ? bbb_trope_emoji_html((string) ($trope_one['name'] ?? ''), $trope_one['emoji'] ?? '', (string) ($trope_one['slug'] ?? '')) : '';
+			$trope_two_emoji_html = $trope_two && function_exists('bbb_trope_emoji_html') ? bbb_trope_emoji_html((string) ($trope_two['name'] ?? ''), $trope_two['emoji'] ?? '', (string) ($trope_two['slug'] ?? '')) : '';
+			$trope_one_url        = function_exists('bbb_trope_page_url') ? bbb_trope_page_url((string) ($trope_one['name'] ?? ''), (string) ($trope_one['slug'] ?? '')) : $archive_trope_page_url($trope_one);
+			$trope_two_url        = $trope_two ? (function_exists('bbb_trope_page_url') ? bbb_trope_page_url((string) ($trope_two['name'] ?? ''), (string) ($trope_two['slug'] ?? '')) : $archive_trope_page_url($trope_two)) : '';
+			?>
 			<a class="blog-obsession-banner" href="/pages/weekly-obsession"
 				aria-label="see this week's weekly obsession">
 				<p class="blog-obsession-banner__eyebrow">see the book everyone is talking about</p>
 				<p class="blog-obsession-banner__text">
 					what the society is obsessed with this week...
 					think
-					<span class="blog-obsession-banner__trope">
-						<?php if (!empty($trope_one['emoji'])) : ?>
-							<span class="blog-obsession-banner__tropeEmoji"><?php echo esc_html($trope_one['emoji']); ?></span>
+					<span class="blog-obsession-banner__trope" data-trope-url="<?php echo esc_url($trope_one_url); ?>" role="link" tabindex="0">
+						<?php if ('' !== $trope_one_emoji_html) : ?>
+							<span class="blog-obsession-banner__tropeEmoji"><?php echo wp_kses_post($trope_one_emoji_html); ?></span>
 						<?php endif; ?>
 						<?php echo esc_html($trope_one['name']); ?>
 					</span>
 					<?php if ($trope_two) : ?>
 						and
-						<span class="blog-obsession-banner__trope">
-							<?php if (!empty($trope_two['emoji'])) : ?>
-								<span class="blog-obsession-banner__tropeEmoji"><?php echo esc_html($trope_two['emoji']); ?></span>
+						<span class="blog-obsession-banner__trope" data-trope-url="<?php echo esc_url($trope_two_url); ?>" role="link" tabindex="0">
+							<?php if ('' !== $trope_two_emoji_html) : ?>
+								<span class="blog-obsession-banner__tropeEmoji"><?php echo wp_kses_post($trope_two_emoji_html); ?></span>
 							<?php endif; ?>
 							<?php echo esc_html($trope_two['name']); ?>
 						</span>
@@ -376,6 +480,7 @@ get_header();
 			<div class="blog-discovery__header">
 				<p class="blog-discovery__kicker">start small</p>
 				<h2 class="blog-discovery__title" id="blog-discovery-tropes">explore books by trope</h2>
+				<a class="blog-discovery__headerLink" href="<?php echo esc_url(home_url('/romance-trope-dictionary/')); ?>">see all tropes →</a>
 			</div>
 
 			<div class="blog-discovery__tropeStage" data-trope-rotator>
@@ -386,16 +491,15 @@ get_header();
 
 						<?php
 						foreach ($set as $trope_item) :
-							$trope_bg   = (string) ($trope_item['bg'] ?? '#ff8ac7');
-							$trope_text = (string) ($trope_item['text'] ?? '#ffb0d8');
 							$emoji      = (string) ($trope_item['emoji'] ?? '');
+							$emoji_html = (string) ($trope_item['emoji_html'] ?? '');
 							$name       = (string) ($trope_item['name'] ?? '');
+							$trope_url  = $archive_trope_page_url($trope_item);
 							?>
-							<a href="<?php echo esc_url((string) ($trope_item['url'] ?? '#')); ?>"
-								class="blog-discovery__card blog-discovery__card--trope"
-								style="--trope-bg: <?php echo esc_attr($trope_bg); ?>; --trope-text: <?php echo esc_attr($trope_text); ?>;">
-								<?php if ($emoji) : ?>
-									<span class="blog-discovery__emoji"><?php echo esc_html($emoji); ?></span>
+							<a href="<?php echo esc_url($trope_url); ?>"
+								class="blog-discovery__card blog-discovery__card--trope">
+								<?php if ($emoji || $emoji_html) : ?>
+									<span class="blog-discovery__emoji"><?php echo '' !== $emoji_html ? wp_kses_post($emoji_html) : esc_html($emoji); ?></span>
 								<?php endif; ?>
 								<span class="blog-discovery__name"><?php echo esc_html($name); ?></span>
 							</a>
@@ -417,17 +521,19 @@ get_header();
 				foreach ($shelf_items as $shelf_item) :
 					$name        = (string) ($shelf_item['name'] ?? '');
 					$emoji       = (string) ($shelf_item['emoji'] ?? '');
+					$emoji_html  = (string) ($shelf_item['emoji_html'] ?? '');
 					$description = (string) ($shelf_item['description'] ?? '');
+					$shelf_url   = $archive_shelf_page_url($shelf_item);
 					if (!$name) {
 						continue;
 					}
 					?>
-					<a href="<?php echo esc_url((string) ($shelf_item['url'] ?? '#')); ?>"
+					<a href="<?php echo esc_url($shelf_url); ?>"
 						class="blog-discovery__card blog-discovery__card--shelf">
 						<div class="blog-discovery__content">
 							<div class="blog-discovery__line">
-								<?php if ($emoji) : ?>
-									<span class="blog-discovery__emoji"><?php echo esc_html($emoji); ?></span>
+								<?php if ($emoji || $emoji_html) : ?>
+									<span class="blog-discovery__emoji"><?php echo '' !== $emoji_html ? wp_kses_post($emoji_html) : esc_html($emoji); ?></span>
 								<?php endif; ?>
 								<span class="blog-discovery__name"><?php echo esc_html($name); ?></span>
 							</div>

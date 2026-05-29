@@ -1,4 +1,30 @@
 document.addEventListener('DOMContentLoaded', function(){
+  document.addEventListener('click', function(event){
+    var target = event.target.closest('[data-trope-url]');
+    if (!target) return;
+
+    var url = target.getAttribute('data-trope-url');
+    if (!url || url === '#') return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    window.location.href = url;
+  });
+
+  document.addEventListener('keydown', function(event){
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+
+    var target = event.target.closest('[data-trope-url]');
+    if (!target) return;
+
+    var url = target.getAttribute('data-trope-url');
+    if (!url || url === '#') return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    window.location.href = url;
+  });
+
   var rotators = document.querySelectorAll('[data-trope-rotator]');
 
   rotators.forEach(function(stage){

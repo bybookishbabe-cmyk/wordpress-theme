@@ -194,18 +194,29 @@ function bbb_handle_footer_contact(): void {
 	$email   = isset($_POST['contact_email']) ? sanitize_email((string) wp_unslash($_POST['contact_email'])) : '';
 	$subject = isset($_POST['contact_subject']) ? sanitize_text_field((string) wp_unslash($_POST['contact_subject'])) : '';
 	$message = isset($_POST['contact_message']) ? sanitize_textarea_field((string) wp_unslash($_POST['contact_message'])) : '';
+	$source  = isset($_POST['contact_source']) ? sanitize_key((string) wp_unslash($_POST['contact_source'])) : '';
+	$brand   = isset($_POST['contact_brand']) ? sanitize_text_field((string) wp_unslash($_POST['contact_brand'])) : '';
 
 	$status = 'error';
 	if ('' !== $name && is_email($email) && '' !== $message) {
 		$to      = (string) get_option('admin_email', 'bybookishbabe@gmail.com');
 		$subject = '' !== $subject ? $subject : 'Footer note from bybookishbabe';
-		$body    = "Name: {$name}\nEmail: {$email}\n\n{$message}";
+		$body    = "Name: {$name}\nEmail: {$email}";
+		if ('' !== $brand) {
+			$body .= "\nBrand: {$brand}";
+		}
+		$body .= "\n\n{$message}";
 		$headers = array('Reply-To: ' . $name . ' <' . $email . '>');
 
 		$status = wp_mail($to, $subject, $body, $headers) ? 'sent' : 'error';
 	}
 
 	$referer = wp_get_referer() ?: home_url('/');
+	if ('sponsor' === $source) {
+		wp_safe_redirect(add_query_arg('bbb_sponsor', $status, remove_query_arg('bbb_sponsor', $referer)) . '#bbb-sponsor-header');
+		exit;
+	}
+
 	wp_safe_redirect(add_query_arg('bbb_note', $status, remove_query_arg('bbb_note', $referer)) . '#bbb-contact-footer');
 	exit;
 }

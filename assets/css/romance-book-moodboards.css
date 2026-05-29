@@ -1,0 +1,798 @@
+.bbb-moodboards {
+	background: #000;
+	color: #f7f1f4;
+	font-family: "Cormorant", "Cormorant Garamond", Georgia, serif;
+	min-height: 100vh;
+	overflow: hidden;
+	padding: clamp(22px, 4vw, 46px) 0 90px;
+	text-transform: lowercase;
+}
+
+.bbb-moodboards * {
+	box-sizing: border-box;
+}
+
+.bbb-moodboards [hidden] {
+	display: none !important;
+}
+
+.bbb-moodboards__hero,
+.bbb-moodboards__preview,
+.bbb-moodboards__wrap,
+.bbb-moodboards__filters,
+.bbb-moodboards__how,
+.bbb-moodboards__aesthetic,
+.bbb-moodboards__empty {
+	margin-inline: auto;
+	max-width: 1480px;
+	width: min(88vw, 1480px);
+}
+
+.bbb-moodboards__hero {
+	display: grid;
+	gap: 22px;
+	justify-items: center;
+	min-height: 0;
+	padding: 26px 0 34px;
+	text-align: center;
+}
+
+.bbb-moodboards__kicker,
+.bbb-moodboards__eyebrow {
+	color: #d98ab9;
+	font-family: "DM Sans", Arial, sans-serif;
+	font-size: 12px;
+	font-weight: 800;
+	letter-spacing: .18em;
+	margin: 0;
+	text-transform: lowercase;
+}
+
+.bbb-moodboards__hero h1 {
+	color: #fff;
+	font-size: clamp(70px, 10vw, 134px);
+	font-weight: 400;
+	line-height: .86;
+	margin: 0;
+}
+
+.bbb-moodboards__intro {
+	color: rgba(255,255,255,.74);
+	font-family: "DM Sans", Arial, sans-serif;
+	font-size: clamp(17px, 1.6vw, 24px);
+	font-weight: 700;
+	line-height: 1.55;
+	margin: 0;
+	max-width: 780px;
+}
+
+.bbb-moodboards__heroActions,
+.bbb-moodboards__filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	justify-content: center;
+}
+
+.bbb-moodboards__button,
+.bbb-moodboards__filter {
+	align-items: center;
+	appearance: none;
+	background: transparent;
+	border: 1px solid rgba(255,255,255,.72);
+	border-radius: 0;
+	color: #fff;
+	cursor: pointer;
+	display: inline-flex;
+	font-family: "DM Sans", Arial, sans-serif;
+	font-size: 12px;
+	font-weight: 900;
+	justify-content: center;
+	letter-spacing: .12em;
+	min-height: 54px;
+	padding: 0 28px;
+	text-decoration: none;
+	text-transform: lowercase;
+	transition: background .2s ease, border-color .2s ease, color .2s ease, transform .2s ease;
+}
+
+.bbb-moodboards__button:hover,
+.bbb-moodboards__filter:hover,
+.bbb-moodboards__filter.is-active {
+	background: #de86bb;
+	border-color: #de86bb;
+	color: #151015;
+	transform: translateY(-2px);
+}
+
+.bbb-moodboards__button--pink {
+	background: #de86bb;
+	border-color: #de86bb;
+	color: #151015;
+}
+
+.bbb-moodboards__preview {
+	align-items: stretch;
+	border-bottom: 1px solid rgba(255,255,255,.12);
+	border-top: 1px solid rgba(255,255,255,.12);
+	display: grid;
+	gap: 24px;
+	grid-template-columns: minmax(240px, .42fr) minmax(0, .58fr);
+	padding: clamp(28px, 4vw, 52px) 0;
+}
+
+.bbb-moodboards__previewIntro {
+	align-self: center;
+	display: grid;
+	gap: 14px;
+}
+
+.bbb-moodboards__previewIntro h2,
+.bbb-moodboards__aestheticHead h2 {
+	color: #fff;
+	font-size: clamp(42px, 6vw, 86px);
+	font-weight: 400;
+	line-height: .92;
+	margin: 0;
+}
+
+.bbb-moodboards__previewIntro p:not(.bbb-moodboards__eyebrow) {
+	color: rgba(255,255,255,.72);
+	font-family: "DM Sans", Arial, sans-serif;
+	font-size: 15px;
+	font-weight: 800;
+	line-height: 1.65;
+	margin: 0;
+	max-width: 420px;
+}
+
+.bbb-moodboards__previewCard {
+	align-items: center;
+	background: linear-gradient(135deg, rgba(222,134,187,.16), rgba(255,255,255,.03) 44%, rgba(0,0,0,.9));
+	border: 1px solid rgba(255,255,255,.16);
+	display: grid;
+	gap: 20px;
+	grid-template-columns: minmax(240px, 300px) minmax(140px, 180px);
+	justify-content: center;
+	padding: clamp(18px, 3vw, 32px);
+}
+
+.bbb-moodboards__previewCard .bbb-moodboards__copy {
+	display: none;
+}
+
+.bbb-moodboards__previewCard .bbb-moodboards__copy h2 {
+	font-size: clamp(30px, 3.4vw, 52px);
+}
+
+.bbb-moodboards__previewCard .bbb-moodboards__pinEmbed {
+	height: min(540px, 62vh);
+	width: min(285px, 100%);
+}
+
+.bbb-moodboards__previewCard .bbb-moodboards__books {
+	grid-template-columns: 1fr;
+}
+
+.bbb-moodboards__filters {
+	border-bottom: 1px solid rgba(255,255,255,.12);
+	border-top: 1px solid rgba(255,255,255,.12);
+	padding: 24px 0;
+}
+
+.bbb-moodboards__filter {
+	background: rgba(255,255,255,.04);
+	min-height: 44px;
+	padding-inline: 18px;
+}
+
+.bbb-moodboards__wrap {
+	display: grid;
+	gap: 48px;
+}
+
+.bbb-moodboards__group,
+.bbb-moodboards__slide {
+	align-items: stretch;
+	animation: bbbMoodRise .72s ease both;
+	background: linear-gradient(135deg, rgba(222,134,187,.16), rgba(255,255,255,.03) 44%, rgba(0,0,0,.9));
+	border: 1px solid rgba(255,255,255,.16);
+	display: grid;
+	gap: 28px;
+	grid-template-columns: minmax(240px, .9fr) minmax(280px, .8fr) minmax(320px, 1.2fr);
+	padding: clamp(24px, 4vw, 54px);
+}
+
+.bbb-moodboards__shelfGroup {
+	animation: bbbMoodRise .72s ease both;
+	background: linear-gradient(135deg, rgba(222,134,187,.12), rgba(0,0,0,.96));
+	border: 1px solid rgba(255,255,255,.16);
+	overflow: hidden;
+	padding: clamp(20px, 3vw, 38px);
+}
+
+.bbb-moodboards__shelfHeader {
+	align-items: center;
+	display: grid;
+	gap: 18px;
+	grid-template-columns: minmax(220px, .35fr) minmax(0, .65fr);
+	margin-bottom: 20px;
+}
+
+.bbb-moodboards__shelfHeader h2 {
+	color: #fff;
+	font-size: clamp(34px, 4.2vw, 62px);
+	font-weight: 400;
+	line-height: .92;
+	margin: 0;
+}
+
+.bbb-moodboards__shelfHeader h2 a,
+.bbb-moodboards__copy h2 a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.bbb-moodboards__shelfHeader h2 a:hover,
+.bbb-moodboards__copy h2 a:hover {
+	color: #de86bb;
+}
+
+.bbb-moodboards__shelfHeader p:not(.bbb-moodboards__eyebrow) {
+	color: rgba(255,255,255,.72);
+	font-family: "DM Sans", Arial, sans-serif;
+	font-size: 15px;
+	font-weight: 800;
+	line-height: 1.65;
+	margin: 0;
+}
+
+.bbb-moodboards__rail {
+	display: grid;
+	gap: 18px;
+	grid-auto-columns: minmax(520px, 54%);
+	grid-auto-flow: column;
+	overflow-x: auto;
+	overscroll-behavior-inline: contain;
+	padding: 0 0 18px;
+	scroll-snap-type: x mandatory;
+	scrollbar-color: #de86bb rgba(255,255,255,.08);
+	scrollbar-width: thin;
+}
+
+.bbb-moodboards__rail::-webkit-scrollbar {
+	height: 10px;
+}
+
+.bbb-moodboards__rail::-webkit-scrollbar-track {
+	background: rgba(255,255,255,.08);
+}
+
+.bbb-moodboards__rail::-webkit-scrollbar-thumb {
+	background: #de86bb;
+	border-radius: 0;
+}
+
+.bbb-moodboards__slide {
+	align-items: start;
+	grid-template-columns: minmax(250px, 315px) minmax(135px, 160px);
+	grid-template-rows: auto 1fr;
+	padding: clamp(16px, 2vw, 24px);
+	scroll-snap-align: start;
+}
+
+.bbb-moodboards__slide .bbb-moodboards__copy {
+	align-self: start;
+	grid-column: 1 / -1;
+	grid-template-columns: 1fr;
+}
+
+.bbb-moodboards__slide .bbb-moodboards__copy h2 {
+	font-family: "DM Sans", Arial, sans-serif;
+	font-size: 15px;
+	font-weight: 900;
+	letter-spacing: .08em;
+	line-height: 1.25;
+	max-width: none;
+	overflow-wrap: normal;
+	text-transform: lowercase;
+}
+
+.bbb-moodboards__slide .bbb-moodboards__copy p:not(.bbb-moodboards__eyebrow) {
+	display: none;
+}
+
+.bbb-moodboards__slide .bbb-moodboards__pinPanel {
+	align-items: start;
+	min-height: 0;
+}
+
+.bbb-moodboards__slide .bbb-moodboards__books {
+	align-content: start;
+}
+
+.bbb-moodboards__slide .bbb-moodboards__pinEmbed {
+	height: min(590px, 68vh);
+	width: min(300px, 100%);
+}
+
+.bbb-moodboards__slide .bbb-moodboards__books {
+	grid-template-columns: 1fr;
+}
+
+.bbb-moodboards__group:nth-child(2) {
+	animation-delay: .08s;
+}
+
+.bbb-moodboards__group:nth-child(3) {
+	animation-delay: .16s;
+}
+
+.bbb-moodboards__copy {
+	align-self: center;
+	display: grid;
+	gap: 16px;
+}
+
+.bbb-moodboards__copy h2,
+.bbb-moodboards__how h2 {
+	color: #fff;
+	font-size: clamp(40px, 5vw, 76px);
+	font-weight: 400;
+	line-height: .96;
+	margin: 0;
+}
+
+.bbb-moodboards__copy p:not(.bbb-moodboards__eyebrow),
+.bbb-moodboards__how p {
+	color: rgba(255,255,255,.72);
+	font-family: "DM Sans", Arial, sans-serif;
+	font-size: 15px;
+	font-weight: 700;
+	line-height: 1.65;
+	margin: 0;
+}
+
+.bbb-moodboards__pinPanel {
+	align-items: center;
+	display: flex;
+	min-height: 100%;
+}
+
+.bbb-moodboards__pinFrame {
+	aspect-ratio: 4 / 5;
+	background:
+		linear-gradient(rgba(255,255,255,.18) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(255,255,255,.18) 1px, transparent 1px),
+		linear-gradient(145deg, rgba(222,134,187,.28), rgba(0,0,0,.8));
+	background-size: 44px 44px, 44px 44px, auto;
+	border: 1px solid rgba(255,255,255,.24);
+	display: grid;
+	gap: 10px;
+	justify-items: center;
+	place-content: center;
+	text-align: center;
+	width: 100%;
+}
+
+.bbb-moodboards__pinEmbed {
+	aspect-ratio: 345 / 714;
+	background: #120d12;
+	border: 1px solid rgba(255,255,255,.24);
+	display: block;
+	height: min(714px, 74vh);
+	max-height: 714px;
+	max-width: 100%;
+	width: 345px;
+}
+
+.bbb-moodboards__pinFrame span {
+	color: #de86bb;
+	font-family: "DM Sans", Arial, sans-serif;
+	font-size: 11px;
+	font-weight: 900;
+	letter-spacing: .16em;
+	text-transform: lowercase;
+}
+
+.bbb-moodboards__pinFrame strong {
+	color: #fff;
+	font-size: clamp(28px, 3vw, 48px);
+	font-weight: 400;
+	line-height: 1;
+}
+
+.bbb-moodboards__pinFrame small {
+	color: rgba(255,255,255,.64);
+	font-family: "DM Sans", Arial, sans-serif;
+	font-size: 12px;
+	font-weight: 800;
+	line-height: 1.5;
+	max-width: 220px;
+}
+
+.bbb-moodboards__books {
+	align-content: center;
+	display: grid;
+	gap: 18px;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.bbb-moodboards__swipeCue {
+	color: #de86bb;
+	display: none;
+	font-family: "DM Sans", Arial, sans-serif;
+	font-size: 11px;
+	font-weight: 900;
+	letter-spacing: .16em;
+	margin: 0;
+	text-transform: lowercase;
+}
+
+.bbb-moodboards__swipeCue--rail {
+	margin-top: 4px;
+}
+
+.bbb-moodboards__bookShell {
+	min-width: 0;
+}
+
+.bbb-moodboards__bookShell > .sss-lib__book {
+	width: 100%;
+}
+
+.bbb-moodboards__manualCover {
+	aspect-ratio: 2 / 3;
+	background:
+		linear-gradient(rgba(255,255,255,.11) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(255,255,255,.11) 1px, transparent 1px),
+		linear-gradient(150deg, rgba(222,134,187,.32), rgba(0,0,0,.88));
+	background-size: 30px 30px, 30px 30px, auto;
+	color: #fff;
+	display: grid;
+	gap: 12px;
+	justify-items: center;
+	padding: 26px 18px;
+	place-content: center;
+	text-align: center;
+	width: 100%;
+}
+
+.bbb-moodboards__manualCover span {
+	color: #de86bb;
+	font-family: "DM Sans", Arial, sans-serif;
+	font-size: 10px;
+	font-weight: 900;
+	letter-spacing: .14em;
+}
+
+.bbb-moodboards__manualCover strong {
+	font-size: clamp(26px, 3vw, 42px);
+	font-weight: 400;
+	line-height: .92;
+}
+
+.bbb-moodboards__bookMeta {
+	display: grid;
+	gap: 10px;
+	margin-top: 10px;
+}
+
+.bbb-moodboards__bookTropes {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.bbb-moodboards__bookTropes span,
+.bbb-moodboards__reviewLink {
+	border: 1px solid rgba(255,255,255,.18);
+	color: rgba(255,255,255,.76);
+	font-family: "DM Sans", Arial, sans-serif;
+	font-size: 10px;
+	font-weight: 900;
+	letter-spacing: .08em;
+	line-height: 1.2;
+	padding: 7px 8px;
+	text-decoration: none;
+	text-transform: lowercase;
+}
+
+.bbb-moodboards__bookTropes .bbb-custom-emoji {
+	display: inline-block;
+	height: 26px;
+	margin-right: 5px;
+	max-width: 32px;
+	object-fit: contain;
+	vertical-align: -.38em;
+	width: auto;
+}
+
+.bbb-moodboards__reviewLink {
+	border-color: #de86bb;
+	color: #de86bb;
+	display: inline-flex;
+	justify-self: start;
+	transition: background .2s ease, color .2s ease;
+}
+
+.bbb-moodboards__reviewLink:hover,
+.bbb-moodboards__reviewLink:focus-visible {
+	background: #de86bb;
+	color: #130b10;
+}
+
+.bbb-moodboards__empty {
+	color: #de86bb;
+	font-family: "DM Sans", Arial, sans-serif;
+	font-weight: 900;
+	margin-top: 28px;
+	text-align: center;
+}
+
+.bbb-moodboards__how {
+	border-top: 1px solid rgba(255,255,255,.14);
+	margin-top: 0;
+	padding: clamp(44px, 6vw, 76px) 0;
+	text-align: center;
+}
+
+.bbb-moodboards__aesthetic {
+	padding-bottom: 42px;
+	text-align: center;
+}
+
+.bbb-moodboards__aestheticHead {
+	display: grid;
+	gap: 12px;
+	justify-items: center;
+	margin-bottom: 22px;
+}
+
+.bbb-moodboards__steps {
+	display: grid;
+	gap: 18px;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	margin-top: 28px;
+	text-align: left;
+}
+
+.bbb-moodboards__steps > div {
+	border: 1px solid rgba(255,255,255,.16);
+	padding: 24px;
+}
+
+.bbb-moodboards__steps span {
+	color: #de86bb;
+	display: block;
+	font-family: "DM Sans", Arial, sans-serif;
+	font-size: 12px;
+	font-weight: 900;
+	letter-spacing: .16em;
+	margin-bottom: 18px;
+}
+
+.bbb-moodboards__steps strong {
+	color: #fff;
+	display: block;
+	font-size: 28px;
+	font-weight: 400;
+	margin-bottom: 8px;
+}
+
+@keyframes bbbMoodRise {
+	from {
+		opacity: 0;
+		transform: translateY(24px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes bbbMoodSwipeHint {
+	0%,
+	100% {
+		transform: translateX(0);
+	}
+	45% {
+		transform: translateX(9px);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.bbb-moodboards__swipeCue {
+		animation: none !important;
+	}
+}
+
+@media (max-width: 1080px) {
+	.bbb-moodboards__preview,
+	.bbb-moodboards__previewCard {
+		grid-template-columns: 1fr;
+	}
+
+	.bbb-moodboards__group,
+	.bbb-moodboards__slide {
+		grid-template-columns: 1fr 1fr;
+	}
+
+	.bbb-moodboards__shelfHeader {
+		grid-template-columns: 1fr;
+	}
+
+	.bbb-moodboards__rail {
+		grid-auto-columns: minmax(520px, 86%);
+	}
+
+	.bbb-moodboards__books {
+		grid-column: 1 / -1;
+	}
+}
+
+@media (min-width: 721px) and (max-width: 1080px) {
+	.bbb-moodboards__hero,
+	.bbb-moodboards__preview,
+	.bbb-moodboards__wrap,
+	.bbb-moodboards__filters,
+	.bbb-moodboards__how,
+	.bbb-moodboards__aesthetic,
+	.bbb-moodboards__empty {
+		width: min(90vw, 920px);
+	}
+
+	.bbb-moodboards__hero h1 {
+		font-size: clamp(58px, 8.8vw, 92px);
+		line-height: .9;
+		max-width: 11ch;
+	}
+
+	.bbb-moodboards__previewCard,
+	.bbb-moodboards__group,
+	.bbb-moodboards__slide {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 20px;
+		padding: 24px;
+	}
+
+	.bbb-moodboards__shelfGroup {
+		padding: 24px;
+	}
+
+	.bbb-moodboards__rail {
+		grid-auto-columns: minmax(min(76vw, 620px), 76vw);
+	}
+
+	.bbb-moodboards__pinPanel,
+	.bbb-moodboards__slide .bbb-moodboards__pinPanel {
+		justify-content: center;
+		min-height: 0;
+	}
+
+	.bbb-moodboards__pinEmbed,
+	.bbb-moodboards__slide .bbb-moodboards__pinEmbed,
+	.bbb-moodboards__previewCard .bbb-moodboards__pinEmbed {
+		height: auto;
+		max-height: none;
+		width: min(52vw, 320px);
+	}
+
+	.bbb-moodboards__books,
+	.bbb-moodboards__slide .bbb-moodboards__books,
+	.bbb-moodboards__previewCard .bbb-moodboards__books {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		width: 100%;
+	}
+
+	.bbb-moodboards__bookShell {
+		min-width: 0;
+	}
+}
+
+@media (max-width: 720px) {
+	.bbb-moodboards {
+		padding-top: 28px;
+	}
+
+	.bbb-moodboards__hero {
+		min-height: auto;
+		padding: 36px 0;
+	}
+
+	.bbb-moodboards__hero h1 {
+		font-size: clamp(36px, 12vw, 54px);
+		line-height: .94;
+		max-width: 11ch;
+	}
+
+	.bbb-moodboards__button,
+	.bbb-moodboards__filter {
+		width: 100%;
+	}
+
+	.bbb-moodboards__group,
+	.bbb-moodboards__slide,
+	.bbb-moodboards__steps {
+		grid-template-columns: 1fr;
+	}
+
+	.bbb-moodboards__group,
+	.bbb-moodboards__slide {
+		gap: 16px;
+		overflow: hidden;
+		padding: 20px 16px 26px;
+	}
+
+	.bbb-moodboards__shelfGroup {
+		padding-inline: 18px;
+	}
+
+	.bbb-moodboards__rail {
+		grid-auto-columns: minmax(78vw, 86vw);
+	}
+
+	.bbb-moodboards__slide {
+		grid-template-columns: 1fr;
+	}
+
+	.bbb-moodboards__copy h2,
+	.bbb-moodboards__how h2 {
+		font-size: clamp(34px, 12vw, 52px);
+	}
+
+	.bbb-moodboards__pinPanel {
+		justify-content: center;
+		min-height: 0;
+		position: relative;
+		z-index: 1;
+	}
+
+	.bbb-moodboards__pinEmbed {
+		height: auto;
+		max-height: none;
+		width: min(76vw, 345px);
+	}
+
+	.bbb-moodboards__books {
+		align-items: end;
+		display: flex;
+		gap: 12px;
+		grid-column: 1;
+		justify-content: flex-end;
+		margin: -88px 0 0 auto;
+		max-width: min(72vw, 300px);
+		overflow-x: auto;
+		overflow-y: visible;
+		padding: 0 0 8px 12px;
+		position: relative;
+		scroll-snap-type: x mandatory;
+		z-index: 3;
+	}
+
+	.bbb-moodboards__bookShell {
+		flex: 0 0 min(42vw, 156px);
+		scroll-snap-align: end;
+	}
+
+	.bbb-moodboards__swipeCue {
+		align-self: end;
+		animation: bbbMoodSwipeHint 1.4s ease-in-out infinite;
+		background: #de86bb;
+		color: #130b10;
+		display: inline-flex;
+		flex: 0 0 auto;
+		margin-bottom: 74px;
+		padding: 7px 9px;
+		white-space: nowrap;
+	}
+
+	.bbb-moodboards__swipeCue--rail {
+		align-self: start;
+		margin: 8px 0 0;
+	}
+
+	.bbb-moodboards__bookMeta {
+		display: none;
+	}
+}

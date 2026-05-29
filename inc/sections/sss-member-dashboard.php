@@ -815,8 +815,6 @@ $hero_visual = (string) ($drop_visuals[0] ?? '');
 $hero_support_visuals = array_slice($drop_visuals, 1, 5);
 list($accent_r, $accent_g, $accent_b) = bbb_sss_drop_hex_to_rgb($accent);
 $accent_rgb = $accent_r . ', ' . $accent_g . ', ' . $accent_b;
-$is_paid_society_member = function_exists('bbb_reader_is_society') && bbb_reader_is_society();
-$join_url = get_option('bbb_society_gate_member_url', 'https://thesmutandsentimentsociety.substack.com/subscribe');
 $drop_nav = array_filter(
 	array(
 		array('href' => '#drop-atmosphere', 'label' => 'atmosphere', 'show' => '' !== $gram_image || '' !== $spotify_id),
@@ -855,26 +853,6 @@ $drop_nav = array_filter(
 			<?php endif; ?>
 		</header>
 
-		<?php if (!$is_paid_society_member) : ?>
-			<section class="sss-drop-theme__lockedPreview" aria-labelledby="sss-drop-theme-lock-title">
-				<div class="sss-drop-theme__lockCard">
-					<p class="sss-drop-theme__kicker">paid society preview</p>
-					<h2 id="sss-drop-theme-lock-title">unlock the full monthly theme</h2>
-					<p>you can peek at the mood, the art, and the shape of this month. the calendar, wallpapers, prompts, playlist, downloads, and drop products are tucked inside paid society.</p>
-					<div class="sss-drop-theme__lockActions">
-						<a href="<?php echo esc_url($join_url); ?>" target="_blank" rel="noopener">upgrade to paid society</a>
-						<a href="<?php echo esc_url(bbb_page_url('smut-sentiment-society')); ?>">back to the society</a>
-					</div>
-				</div>
-				<?php if ($drop_visuals) : ?>
-					<div class="sss-drop-theme__teaserGrid" aria-hidden="true">
-						<?php foreach (array_slice($drop_visuals, 0, 6) as $teaser_visual) : ?>
-							<span><img src="<?php echo esc_url($teaser_visual); ?>" alt="" loading="lazy"></span>
-						<?php endforeach; ?>
-					</div>
-				<?php endif; ?>
-			</section>
-		<?php else : ?>
 		<?php if ($drop_nav) : ?>
 			<nav class="sss-drop-theme__nav" aria-label="monthly theme sections">
 				<?php foreach ($drop_nav as $item) : ?>
@@ -998,7 +976,6 @@ $drop_nav = array_filter(
 		<?php bbb_sss_render_drop_products($physical_products, 'physical kindle inserts', 'current drop'); ?>
 		<?php bbb_sss_render_drop_products($bonus_products, 'bonus products', 'member bonus'); ?>
 		</div>
-		<?php endif; ?>
 	</div>
 </section>
 
@@ -1034,17 +1011,6 @@ $drop_nav = array_filter(
 .sss-drop-theme__miniRail img{width:100%;aspect-ratio:1;object-fit:cover;border:1px solid rgba(255,255,255,.15);border-radius:10px;background:#111;box-shadow:0 14px 34px rgba(0,0,0,.36)}
 .sss-drop-theme__miniRail img:nth-child(even){transform:translateY(12px) rotate(2deg)}
 .sss-drop-theme__miniRail img:nth-child(odd){transform:rotate(-1.5deg)}
-.sss-drop-theme__lockedPreview{display:grid;grid-template-columns:minmax(0,.86fr) minmax(280px,.72fr);gap:18px;align-items:stretch;margin-top:18px}
-.sss-drop-theme__lockCard{display:grid;align-content:center;min-height:330px;padding:clamp(22px,4vw,38px);border:1px solid rgba(var(--drop-accent-rgb),.34);border-radius:18px;background:linear-gradient(145deg,rgba(var(--drop-accent-rgb),.14),rgba(255,255,255,.045));box-shadow:0 24px 70px rgba(0,0,0,.42)}
-.sss-drop-theme__lockCard h2{max-width:11ch}
-.sss-drop-theme__lockCard p:not(.sss-drop-theme__kicker){max-width:58ch;margin:14px 0 0;color:rgba(246,246,246,.74);font-size:15px;line-height:1.65}
-.sss-drop-theme__lockActions{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
-.sss-drop-theme__lockActions a{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 15px;border:1px solid rgba(var(--drop-accent-rgb),.48);border-radius:999px;background:rgba(var(--drop-accent-rgb),.16);color:#fff;font-size:12px;font-weight:700;letter-spacing:.08em;text-decoration:none;text-transform:lowercase}
-.sss-drop-theme__lockActions a:hover,.sss-drop-theme__lockActions a:focus{border-color:var(--drop-accent);background:rgba(var(--drop-accent-rgb),.25);outline:none}
-.sss-drop-theme__teaserGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;overflow:hidden;padding:14px;border:1px solid rgba(255,255,255,.13);border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,.06),rgba(255,255,255,.025));box-shadow:0 20px 60px rgba(0,0,0,.34);max-height:430px}
-.sss-drop-theme__teaserGrid span{position:relative;display:block;overflow:hidden;min-height:120px;border-radius:8px;background:#111}
-.sss-drop-theme__teaserGrid span:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent,rgba(5,5,5,.72));pointer-events:none}
-.sss-drop-theme__teaserGrid img{display:block;width:100%;height:100%;object-fit:cover;filter:saturate(.9) blur(1.2px);transform:scale(1.03)}
 .sss-drop-theme__nav{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 0 24px;padding:10px;border:1px solid rgba(255,255,255,.14);border-radius:18px;background:rgba(5,5,5,.82);backdrop-filter:blur(16px);box-shadow:0 16px 40px rgba(0,0,0,.28)}
 .sss-drop-theme__nav a{display:inline-flex;align-items:center;min-height:38px;padding:0 14px;border:1px solid rgba(255,255,255,.13);border-radius:999px;background:linear-gradient(135deg,rgba(var(--drop-accent-rgb),.14),rgba(255,255,255,.045));color:rgba(246,246,246,.86);font-size:12px;letter-spacing:.08em;text-decoration:none}
 .sss-drop-theme__nav a:hover,.sss-drop-theme__nav a:focus{border-color:var(--drop-accent);color:#fff;outline:none}
@@ -1194,7 +1160,7 @@ $drop_nav = array_filter(
 [data-drop-reveal="products"].is-visible .sss-drop-theme__productCard:nth-child(2){transform:rotate(1.2deg)}
 [data-drop-reveal="products"].is-visible .sss-drop-theme__productCard:nth-child(3){transform:rotate(-.7deg)}
 [data-drop-reveal="products"].is-visible .sss-drop-theme__productCard:nth-child(4){transform:rotate(1deg)}
-@media (max-width:900px){.sss-drop-theme__hero,.sss-drop-theme__lockedPreview{grid-template-columns:1fr;min-height:0;padding:26px 18px}.sss-drop-theme__lockedPreview{padding:0}.sss-drop-theme__heroArt{max-width:520px;width:100%;margin:0 auto}.sss-drop-theme__heroFrame img{height:auto;aspect-ratio:4/5}.sss-drop-theme h1{max-width:9ch}.sss-drop-theme__nav{position:relative;justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap}.sss-drop-theme__nav a{white-space:nowrap}}
+@media (max-width:900px){.sss-drop-theme__hero{grid-template-columns:1fr;min-height:0;padding:26px 18px}.sss-drop-theme__heroArt{max-width:520px;width:100%;margin:0 auto}.sss-drop-theme__heroFrame img{height:auto;aspect-ratio:4/5}.sss-drop-theme h1{max-width:9ch}.sss-drop-theme__nav{position:relative;justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap}.sss-drop-theme__nav a{white-space:nowrap}}
 @media (max-width:800px){.sss-drop-theme__grid,.sss-drop-theme__productGrid,.sss-drop-theme__assetGrid{grid-template-columns:1fr}.sss-drop-theme__productGrid{gap:12px;padding:0}.sss-drop-theme__productCard:nth-child(n){margin:0;transform:none}.sss-drop-theme__productBody{margin:-10px 10px 10px}.sss-drop-theme__wallpaperGrid{display:flex;overflow-x:auto;padding-bottom:4px}.sss-drop-theme__wallpaperGrid a{min-width:46%}.sss-drop-theme__sectionHead{display:block}.sss-drop-theme__actions{justify-content:flex-start;margin-top:10px}.sss-drop-theme__promptTop{align-items:flex-start}}
 @media (max-width:800px){[data-drop-reveal="products"].is-visible .sss-drop-theme__productCard:nth-child(n){transform:none}}
 .sss-drop-theme:not(.sss-drop-theme--reveal-ready) [data-drop-reveal],

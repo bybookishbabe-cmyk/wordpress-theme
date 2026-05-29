@@ -90,7 +90,7 @@ function bbb_get_fallback_main_menu(): array {
 				),
 				array(
 					'title'    => 'reader quizzes',
-					'url'      => bbb_page_url( 'reader-quizes' ),
+					'url'      => bbb_page_url( 'reader-quizzes' ),
 					'children' => array(),
 				),
 			),

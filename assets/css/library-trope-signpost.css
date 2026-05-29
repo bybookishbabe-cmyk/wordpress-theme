@@ -1,0 +1,435 @@
+.sss-lib__tropeSignpost{
+  position:relative;
+  display:grid;
+  grid-template-columns:minmax(0, 340px) minmax(360px, 1fr);
+  gap:28px;
+  align-items:center;
+  margin:8px 0 28px;
+  padding:28px 0 54px;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  overflow:visible;
+}
+
+.sss-lib__tropeSignpostKicker{
+  margin:0 0 8px;
+  color:#ffb8e0;
+  font-size:10px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+
+.sss-lib__tropeSignpostTitle{
+  margin:0;
+  font-family:"Cormorant", Georgia, serif;
+  font-size:clamp(2rem, 3.4vw, 3.1rem);
+  line-height:1.03;
+  color:#f7f3ee;
+}
+
+.sss-lib__tropeSignpostSub{
+  max-width:34ch;
+  margin:12px 0 0;
+  color:rgba(246,246,246,.7);
+  font-size:13px;
+  line-height:1.7;
+}
+
+.sss-lib__tropeLamp{
+  position:relative;
+  min-height:610px;
+  isolation:isolate;
+}
+
+.sss-lib__tropeLampSvg{
+  position:absolute;
+  top:6px;
+  left:50%;
+  display:block;
+  width:min(18vw, 150px);
+  max-width:none;
+  height:auto;
+  filter:drop-shadow(0 0 10px rgba(255,138,199,.34)) drop-shadow(0 16px 28px rgba(0,0,0,.52));
+  transform:translateX(-50%);
+  pointer-events:none;
+  z-index:1;
+}
+
+.sss-lib__tropeLampGlow{
+  fill:none;
+  stroke:#ffb8e0;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  stroke-width:9;
+  opacity:.28;
+}
+
+.sss-lib__tropeLampLight{
+  fill:#ffd761;
+  filter:drop-shadow(0 0 10px rgba(255,215,97,.82)) drop-shadow(0 0 24px rgba(255,170,67,.42));
+  opacity:.62;
+  transform-box:fill-box;
+  transform-origin:center;
+  animation:sssTropeLampPulse 2.4s ease-in-out infinite;
+}
+
+.sss-lib__tropeLampInk{
+  fill:none;
+  stroke:#fff2f9;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  stroke-width:7;
+}
+
+@keyframes sssTropeLampPulse{
+  0%,
+  100%{
+    opacity:.42;
+    transform:scale(.92);
+  }
+
+  48%{
+    opacity:.9;
+    transform:scale(1.05);
+  }
+}
+
+@media (prefers-reduced-motion:reduce){
+  .sss-lib__tropeLampLight{
+    animation:none;
+    opacity:.72;
+  }
+}
+
+.sss-lib__tropeSigns{
+  position:absolute;
+  inset:205px 0 86px;
+  z-index:2;
+}
+
+.sss-lib__tropeSign{
+  --sign-top:calc(var(--sign-index) * 43px);
+  position:absolute;
+  top:var(--sign-top);
+  left:50%;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:38px;
+  width:min(42vw, 275px);
+  padding:8px 18px;
+  color:#181113;
+  text-decoration:none;
+  background:#f7f0e4;
+  border:2px solid #050505;
+  box-shadow:0 8px 0 rgba(0,0,0,.28);
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:.08em;
+  line-height:1.15;
+  text-transform:uppercase;
+  transition:transform .18s ease, background .18s ease, color .18s ease;
+}
+
+.sss-lib__tropeSign span{
+  position:relative;
+  z-index:1;
+}
+
+.sss-lib__tropeSignEmoji{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  width:25px;
+  height:25px;
+}
+
+.sss-lib__tropeSignEmoji .bbb-custom-emoji,
+.sss-lib__tropeSignEmoji .bbb-custom-emoji--text{
+  width:25px;
+  height:25px;
+  max-width:25px;
+  object-fit:contain;
+  font-size:22px;
+  line-height:1;
+}
+
+.sss-lib__tropeSignLabel{
+  display:block;
+  min-width:0;
+  overflow-wrap:break-word;
+}
+
+.sss-lib__tropeSign:before{
+  content:"";
+  position:absolute;
+  top:50%;
+  width:0;
+  height:0;
+  border-top:19px solid transparent;
+  border-bottom:19px solid transparent;
+  transform:translateY(-50%);
+}
+
+.sss-lib__tropeSign--left{
+  justify-content:flex-end;
+  padding-right:30px;
+  transform:translateX(calc(-100% - 7px)) rotate(-2deg);
+}
+
+.sss-lib__tropeSign--left:before{
+  left:-32px;
+  border-right:32px solid #050505;
+}
+
+.sss-lib__tropeSign--left:after{
+  content:"";
+  position:absolute;
+  top:50%;
+  left:-27px;
+  width:0;
+  height:0;
+  border-top:15px solid transparent;
+  border-bottom:15px solid transparent;
+  border-right:27px solid #f7f0e4;
+  transform:translateY(-50%);
+  transition:border-right-color .18s ease;
+}
+
+.sss-lib__tropeSign--right{
+  justify-content:flex-start;
+  padding-left:30px;
+  transform:translateX(7px) rotate(2deg);
+}
+
+.sss-lib__tropeSign--right:before{
+  right:-32px;
+  border-left:32px solid #050505;
+}
+
+.sss-lib__tropeSign--right:after{
+  content:"";
+  position:absolute;
+  top:50%;
+  right:-27px;
+  width:0;
+  height:0;
+  border-top:15px solid transparent;
+  border-bottom:15px solid transparent;
+  border-left:27px solid #f7f0e4;
+  transform:translateY(-50%);
+  transition:border-left-color .18s ease;
+}
+
+.sss-lib__tropeSign:hover,
+.sss-lib__tropeSign:focus-visible{
+  background:#ffb8e0;
+  color:#2a101b;
+}
+
+.sss-lib__tropeSign--left:hover,
+.sss-lib__tropeSign--left:focus-visible{
+  transform:translateX(calc(-100% - 7px)) rotate(-1deg) translateY(-2px);
+}
+
+.sss-lib__tropeSign--right:hover,
+.sss-lib__tropeSign--right:focus-visible{
+  transform:translateX(7px) rotate(1deg) translateY(-2px);
+}
+
+.sss-lib__tropeSign--left:hover:after,
+.sss-lib__tropeSign--left:focus-visible:after{
+  border-right-color:#ffb8e0;
+}
+
+.sss-lib__tropeSign--right:hover:after,
+.sss-lib__tropeSign--right:focus-visible:after{
+  border-left-color:#ffb8e0;
+}
+
+.sss-lib__tropeSignpostCta{
+  position:absolute;
+  right:28px;
+  bottom:20px;
+  z-index:5;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  color:#ff8ac7;
+  text-decoration:none;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+
+.sss-lib__tropeSignpostCta span{
+  font-size:18px;
+  line-height:1;
+  transition:transform .18s ease;
+}
+
+.sss-lib__tropeSignpostCta:hover,
+.sss-lib__tropeSignpostCta:focus-visible{
+  color:#ffb8e0;
+  outline:none;
+}
+
+.sss-lib__tropeSignpostCta:hover span,
+.sss-lib__tropeSignpostCta:focus-visible span{
+  transform:translateX(3px);
+}
+
+@media(max-width:840px){
+  .sss-lib__tropeSignpost{
+    grid-template-columns:1fr;
+    gap:18px;
+    padding:22px 0 56px;
+  }
+
+  .sss-lib__tropeSignpostSub{
+    max-width:42ch;
+  }
+
+  .sss-lib__tropeLamp{
+    min-height:575px;
+  }
+
+  .sss-lib__tropeLampSvg{
+    width:min(38vw, 138px);
+  }
+
+  .sss-lib__tropeSigns{
+    inset:194px 0 70px;
+  }
+
+  .sss-lib__tropeSign{
+    width:calc(50% - 14px);
+    min-height:36px;
+    padding-top:7px;
+    padding-bottom:7px;
+    font-size:11px;
+    letter-spacing:.06em;
+  }
+
+  .sss-lib__tropeSign--left{
+    padding-right:20px;
+  }
+
+  .sss-lib__tropeSign--right{
+    padding-left:20px;
+  }
+
+  .sss-lib__tropeSignEmoji{
+    width:22px;
+    height:22px;
+  }
+
+  .sss-lib__tropeSignEmoji .bbb-custom-emoji,
+  .sss-lib__tropeSignEmoji .bbb-custom-emoji--text{
+    width:22px;
+    height:22px;
+    max-width:22px;
+    font-size:20px;
+  }
+}
+
+@media(max-width:520px){
+  .sss-lib__tropeSignpost{
+    margin-top:0;
+  }
+
+  .sss-lib__tropeLamp{
+    min-height:560px;
+  }
+
+  .sss-lib__tropeLampSvg{
+    width:126px;
+  }
+
+  .sss-lib__tropeSigns{
+    inset:188px auto 62px 50%;
+    width:min(calc(100vw - 28px), 360px);
+    transform:translateX(-50%);
+  }
+
+  .sss-lib__tropeSign{
+    --sign-top:calc(var(--sign-index) * 38px);
+    width:124px;
+    min-height:32px;
+    gap:4px;
+    padding:6px 6px;
+    font-size:8px;
+    letter-spacing:.04em;
+  }
+
+  .sss-lib__tropeSignEmoji{
+    width:15px;
+    height:15px;
+  }
+
+  .sss-lib__tropeSignEmoji .bbb-custom-emoji,
+  .sss-lib__tropeSignEmoji .bbb-custom-emoji--text{
+    width:15px;
+    height:15px;
+    max-width:15px;
+    font-size:14px;
+  }
+
+  .sss-lib__tropeSignpostCta{
+    right:14px;
+    bottom:18px;
+    font-size:10px;
+  }
+
+  .sss-lib__tropeSign:before{
+    border-top-width:16px;
+    border-bottom-width:16px;
+  }
+
+  .sss-lib__tropeSign--left:before{
+    left:-14px;
+    border-right-width:14px;
+  }
+
+  .sss-lib__tropeSign--left:after{
+    left:-12px;
+    border-top-width:12px;
+    border-bottom-width:12px;
+    border-right-width:12px;
+  }
+
+  .sss-lib__tropeSign--right:before{
+    right:-14px;
+    border-left-width:14px;
+  }
+
+  .sss-lib__tropeSign--right:after{
+    right:-12px;
+    border-top-width:12px;
+    border-bottom-width:12px;
+    border-left-width:12px;
+  }
+
+  .sss-lib__tropeSign--left{
+    padding-right:12px;
+    transform:translateX(calc(-100% - 3px)) rotate(-2deg);
+  }
+
+  .sss-lib__tropeSign--right{
+    padding-left:12px;
+    transform:translateX(3px) rotate(2deg);
+  }
+
+  .sss-lib__tropeSign--left:hover,
+  .sss-lib__tropeSign--left:focus-visible{
+    transform:translateX(calc(-100% - 3px)) rotate(-1deg) translateY(-2px);
+  }
+
+  .sss-lib__tropeSign--right:hover,
+  .sss-lib__tropeSign--right:focus-visible{
+    transform:translateX(3px) rotate(1deg) translateY(-2px);
+  }
+}

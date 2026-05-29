@@ -74,7 +74,7 @@ function bbb_books_like_data_attrs(array $book): string {
 		$slug            = (string) ($trope['slug'] ?? sanitize_title($name));
 		$emoji           = (string) ($trope['emoji'] ?? '');
 		$trope_names[]   = $name;
-		$trope_display[] = trim(($emoji ? $emoji . ' ' : '') . $name);
+		$trope_display[] = function_exists('bbb_trope_label') ? bbb_trope_label($name, $emoji) : trim(($emoji ? $emoji : '🖤') . ' ' . $name);
 		$trope_urls[]    = home_url('/' . trim($slug, '/') . '-books/');
 	}
 
@@ -217,6 +217,75 @@ function bbb_books_like_source_title_candidates_from_slug(string $slug): array {
 	return bbb_books_like_source_title_candidates('books like ' . str_replace('-', ' ', $slug));
 }
 
+function bbb_books_like_featured_source_pages(): array {
+	return array(
+		'if-you-liked-haunting-adeline'     => 'Haunting Adeline',
+		'if-you-liked-fourth-wing'          => 'Fourth Wing',
+		'if-you-liked-shatter-me'           => 'Shatter Me',
+		'if-you-liked-twisted-pawn'         => 'Twisted Pawn',
+		'if-you-liked-lights-out'           => 'Lights Out',
+		'if-you-liked-my-dreadful-darling'  => 'My Dreadful Darling',
+		'if-you-liked-craving-venom'        => 'Craving Venom',
+		'if-you-liked-daggermouth'          => 'Daggermouth',
+		'if-you-liked-in-her-own-league'    => 'In Her Own League',
+		'if-you-liked-quicksilver'          => 'Quicksilver',
+		'if-you-liked-the-ever-king'        => 'The Ever King',
+		'if-you-liked-insatiable'           => 'Insatiable',
+		'if-you-liked-kings-of-blackwater'  => 'Kings of Blackwater',
+		'if-you-liked-the-predator'         => 'The Predator',
+		'if-you-liked-wrath-of-an-exile'    => 'Wrath of an Exile',
+	);
+}
+
+function bbb_books_like_source_for_slug(string $slug): ?WP_Post {
+	$source_aliases = array(
+		'books-like-kings-of-blackwater' => 'Alluring Darkness',
+		'if-you-liked-kings-of-blackwater' => 'Alluring Darkness',
+	);
+	if (isset($source_aliases[$slug])) {
+		$book = bbb_books_like_find_book($source_aliases[$slug]);
+		if ($book instanceof WP_Post) {
+			return $book;
+		}
+	}
+
+	foreach (bbb_books_like_source_title_candidates_from_slug($slug) as $candidate) {
+		$book = bbb_books_like_find_book($candidate);
+		if ($book instanceof WP_Post) {
+			return $book;
+		}
+	}
+
+	return null;
+}
+
+function bbb_books_like_featured_guide_posts(): array {
+	$guides = array();
+	foreach (bbb_books_like_featured_source_pages() as $slug => $title) {
+		$source = bbb_books_like_source_for_slug($slug);
+		if (!$source instanceof WP_Post) {
+			continue;
+		}
+
+		$guides[] = array(
+			'post'   => new WP_Post(
+				(object) array(
+						'ID'           => 0,
+						'post_title'   => 'if you liked ' . $title,
+						'post_name'    => $slug,
+					'post_type'    => 'page',
+					'post_status'  => 'publish',
+					'post_excerpt' => '',
+				)
+			),
+			'source' => $source,
+			'url'    => home_url('/if-you-liked-pages/' . $slug . '/'),
+		);
+	}
+
+	return $guides;
+}
+
 function bbb_books_like_source_for_guide(WP_Post $post): ?WP_Post {
 	if (function_exists('sss_article_post')) {
 		foreach (array('source_book', 'book', 'books') as $key) {
@@ -287,6 +356,20 @@ function bbb_books_like_guide_posts(): array {
 			'post'   => $page,
 			'source' => $source,
 		);
+	}
+
+	$existing_source_ids = array();
+	foreach ($guides as $guide) {
+		if ($guide['source'] instanceof WP_Post) {
+			$existing_source_ids[] = (int) $guide['source']->ID;
+		}
+	}
+
+	foreach (bbb_books_like_featured_guide_posts() as $guide) {
+		if ($guide['source'] instanceof WP_Post && in_array((int) $guide['source']->ID, $existing_source_ids, true)) {
+			continue;
+		}
+		$guides[] = $guide;
 	}
 
 	return $guides;
@@ -432,6 +515,22 @@ function bbb_books_like_shared_tropes(array $source, array $candidate): array {
 	return array_values(array_filter(array_unique($shared)));
 }
 
+function bbb_books_like_series_key(array $book): string {
+	$series_handle = trim((string) ($book['series_handle'] ?? ''));
+	if ('' !== $series_handle) {
+		return sanitize_title($series_handle);
+	}
+
+	return sanitize_title((string) ($book['series_name'] ?? ''));
+}
+
+function bbb_books_like_is_same_series(array $source, array $candidate): bool {
+	$source_series    = bbb_books_like_series_key($source);
+	$candidate_series = bbb_books_like_series_key($candidate);
+
+	return '' !== $source_series && $source_series === $candidate_series;
+}
+
 function bbb_books_like_score(array $source, array $candidate): float {
 	$score = 0.0;
 
@@ -474,6 +573,9 @@ function bbb_books_like_recommendations(int $source_id): array {
 		$data = bbb_books_like_book_data($book->ID);
 		$series_number = (int) ($data['series_number'] ?? 0);
 		if ($series_number > 1 && empty($data['standalone'])) {
+			continue;
+		}
+		if (bbb_books_like_is_same_series($source, $data)) {
 			continue;
 		}
 
@@ -532,11 +634,9 @@ function bbb_books_like_current_source_book(): ?WP_Post {
 
 	$request_path = isset($_SERVER['REQUEST_URI']) ? (string) wp_unslash($_SERVER['REQUEST_URI']) : '';
 	$request_slug = basename((string) wp_parse_url($request_path, PHP_URL_PATH));
-	foreach (bbb_books_like_source_title_candidates_from_slug($request_slug) as $candidate) {
-		$book = bbb_books_like_find_book($candidate);
-		if ($book instanceof WP_Post) {
-			return $book;
-		}
+	$book = bbb_books_like_source_for_slug($request_slug);
+	if ($book instanceof WP_Post) {
+		return $book;
 	}
 
 	return null;

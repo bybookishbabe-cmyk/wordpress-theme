@@ -1,0 +1,75 @@
+.bbb-society-link-card--discount {
+  border-color: rgba(255, 210, 122, .26);
+  background:
+    linear-gradient(135deg, rgba(255, 210, 122, .11), rgba(255, 138, 199, .05)),
+    rgba(255, 255, 255, .035);
+}
+
+.bbb-society-link-card--discount.is-applied {
+  border-color: rgba(128, 231, 182, .42);
+}
+
+.bbb-society-link-card--discount.is-used,
+.bbb-society-link-card--discount.is-locked {
+  border-color: rgba(255, 255, 255, .12);
+}
+
+.bbb-society-link-card__discountStatus {
+  display: block;
+  min-height: 34px;
+  color: rgba(246, 246, 246, .68);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.bbb-society-link-card__discountForm {
+  margin: 0;
+}
+
+.bbb-society-link-card__discountButton,
+.bbb-society-link-card__shopLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.bbb-society-link-card__discountButton {
+  border: 1px solid rgba(255, 210, 122, .54);
+  background: rgba(255, 210, 122, .12);
+  color: #fff2cd;
+  cursor: pointer;
+}
+
+.bbb-society-link-card__discountButton:hover,
+.bbb-society-link-card__discountButton:focus-visible {
+  border-color: rgba(255, 229, 167, .78);
+  background: rgba(255, 210, 122, .2);
+}
+
+.bbb-society-link-card__discountButton:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+.bbb-society-link-card__shopLink {
+  margin-top: -2px;
+  border: 1px solid rgba(255, 255, 255, .14);
+  color: rgba(246, 246, 246, .72);
+}
+
+.bbb-society-link-card__shopLink:hover,
+.bbb-society-link-card__shopLink:focus-visible {
+  border-color: rgba(255, 138, 199, .42);
+  color: #fff;
+}

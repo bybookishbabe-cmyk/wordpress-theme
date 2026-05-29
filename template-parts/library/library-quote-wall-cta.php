@@ -8,7 +8,7 @@
 declare(strict_types=1);
 
 $is_society = !empty($args['is_society']);
-$quote_url  = function_exists('bbb_page_url') ? bbb_page_url('quote-wall') : home_url('/quote-wall/');
+$quote_url  = home_url('/sss-quote-wall/');
 
 $tiles = array(
 	array(

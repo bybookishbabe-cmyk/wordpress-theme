@@ -257,10 +257,6 @@ function initMobileGridPagination(){
       card.classList.remove('is-mobile-hidden');
     });
 
-    function cardIsVisible(card){
-      return !card.hidden && card.style.display !== 'none';
-    }
-
     var isArchiveGrid = !!grid.closest('[data-archive-section]');
     var isBrowsePageGrid = grid.classList.contains('sss-lib__grid--browsePage');
     var desktopInitialCount = 36;
@@ -284,10 +280,12 @@ function initMobileGridPagination(){
     if (!shouldPaginate) return;
 
     function updateVisibleBooks(){
-      var matchingCards = cards.filter(cardIsVisible);
+      var matchingCards = cards.filter(function(card){
+        return card.style.display !== 'none';
+      });
 
       cards.forEach(function(card){
-        if (!cardIsVisible(card)){
+        if (card.style.display === 'none'){
           card.classList.remove('is-mobile-hidden');
         }
       });
@@ -316,7 +314,9 @@ function initMobileGridPagination(){
       visibleCount += increment;
       updateVisibleBooks();
 
-      var remainingVisibleCards = cards.filter(cardIsVisible);
+      var remainingVisibleCards = cards.filter(function(card){
+        return card.style.display !== 'none';
+      });
 
       if (visibleCount >= remainingVisibleCards.length){
         wrap.remove();
@@ -341,7 +341,6 @@ function refreshPaginatedGridVisibility(){
     }
   });
 }
-window.refreshPaginatedGridVisibility = refreshPaginatedGridVisibility;
 /* ======================
    PERSONAL SHELF STORAGE
 ====================== */
@@ -560,11 +559,31 @@ function ensureBookOnShelf(bookData){
 
   shelf.push({
     handle: bookData.handle || '',
+    url: bookData.url || '',
     title: bookData.title || '',
     author: bookData.author || '',
     cover: bookData.cover || '',
     amazon: bookData.amazon || '',
-    bookshop: bookData.bookshop || ''
+    bookshop: bookData.bookshop || '',
+    spice: bookData.spice || '',
+    darkness: bookData.darkness || '',
+    tropes: bookData.tropes || '',
+    tropesDisplay: bookData.tropesDisplay || bookData.tropes || '',
+    why: bookData.why || '',
+    newsletter: bookData.newsletter || '',
+    tension: bookData.tension || '',
+    damage: bookData.damage || '',
+    yearning: bookData.yearning || '',
+    boyfriend: bookData.boyfriend || '',
+    boyfriendName: bookData.boyfriendName || '',
+    reread: bookData.reread || '',
+    ku: bookData.ku || '',
+    mini: bookData.mini || '',
+    series: bookData.series || '',
+    seriesName: bookData.seriesName || '',
+    seriesNumber: bookData.seriesNumber || '',
+    standalone: bookData.standalone || '',
+    privateShelf: bookData.privateShelf || 'false'
   });
 
   setShelf(shelf);
@@ -815,6 +834,7 @@ function toggleSave(heartEl, bookBtn){
 
 var bookData = {
   handle: bookBtn.dataset.handle || '',
+  url: bookBtn.dataset.url || '',
   title: bookBtn.dataset.title || '',
   author: bookBtn.dataset.author || '',
   cover: bookBtn.dataset.cover || '',
@@ -830,12 +850,14 @@ var bookData = {
   damage: bookBtn.dataset.damage || '',
   yearning: bookBtn.dataset.yearning || '',
   boyfriend: bookBtn.dataset.boyfriend || '',
+  boyfriendName: bookBtn.dataset.boyfriendName || '',
   reread: bookBtn.dataset.reread || '',
   ku: bookBtn.dataset.ku || '',
   mini: bookBtn.dataset.mini || '',
   series: bookBtn.dataset.series || '',
   seriesName: bookBtn.dataset.seriesName || '',
   seriesNumber: bookBtn.dataset.seriesNumber || '',
+  standalone: bookBtn.dataset.standalone || '',
   privateShelf: bookBtn.dataset.privateShelf || 'false'
 };
 
@@ -936,8 +958,21 @@ function syncAllLibraryHearts(){
 }
 
 function stringifyBookDatasetValue(value){
-  if (Array.isArray(value)) return value.join(',');
   if (value === null || typeof value === 'undefined') return '';
+  if (Array.isArray(value)){
+    return value.map(function(item){
+      if (item === null || typeof item === 'undefined') return '';
+      if (typeof item === 'object'){
+        return item.name || item.label || item.title || item.slug || item.handle || '';
+      }
+      return item;
+    }).filter(function(item){
+      return String(item || '').trim() !== '';
+    }).join(',');
+  }
+  if (typeof value === 'object'){
+    return value.name || value.label || value.title || value.slug || value.handle || '';
+  }
   return String(value);
 }
 
@@ -1058,6 +1093,7 @@ function renderMyShelf(){
       <div 
         class="sss-lib__book sss-lib__book--mini"
         data-handle="${stringifyBookDatasetValue(hydratedBook.handle || book.handle)}"
+        data-url="${stringifyBookDatasetValue(hydratedBook.url || book.url || ((hydratedBook.handle || book.handle) ? '/books/' + encodeURIComponent(hydratedBook.handle || book.handle) + '/' : ''))}"
         data-title="${stringifyBookDatasetValue(hydratedBook.title || book.title)}"
         data-author="${stringifyBookDatasetValue(hydratedBook.author || book.author)}"
         data-cover="${stringifyBookDatasetValue(hydratedBook.cover || book.cover)}"
@@ -1135,6 +1171,7 @@ function renderMyShelf(){
       var shelf = getShelf();
       var bookData = {
         handle: bookBtn.dataset.handle || '',
+        url: bookBtn.dataset.url || '',
         title: bookBtn.dataset.title || '',
         author: bookBtn.dataset.author || '',
         cover: bookBtn.dataset.cover || '',
@@ -1150,12 +1187,14 @@ function renderMyShelf(){
         damage: bookBtn.dataset.damage || '',
         yearning: bookBtn.dataset.yearning || '',
         boyfriend: bookBtn.dataset.boyfriend || '',
+        boyfriendName: bookBtn.dataset.boyfriendName || '',
         reread: bookBtn.dataset.reread || '',
         ku: bookBtn.dataset.ku || '',
         mini: bookBtn.dataset.mini || '',
         series: bookBtn.dataset.series || '',
         seriesName: bookBtn.dataset.seriesName || '',
         seriesNumber: bookBtn.dataset.seriesNumber || '',
+        standalone: bookBtn.dataset.standalone || '',
         privateShelf: bookBtn.dataset.privateShelf || 'false'
       };
 
@@ -1395,12 +1434,12 @@ function init(){
     var titleEl = document.querySelector('[data-mtitle]');
     var authorEl = document.querySelector('[data-mauthor]');
     var coverEl = document.querySelector('[data-mcover]');
+    var kuBtn = document.querySelector('[data-ku-btn]');
     var amazonBtn = document.querySelector('[data-amazon-btn]');
     var bookshopBtn = document.querySelector('[data-bookshop-btn]');
     var tropesEl = document.querySelector('[data-mtropes]');
     var whyEl = document.querySelector('[data-mwhy]');
     var miniEl = document.querySelector('[data-mmini]');
-    var newsletterBtn = document.querySelector('[data-newsletter-btn]');
     var standaloneEl = document.querySelector('[data-mstandalone]');
     var tensionEl = document.querySelector('[data-mtension]');
     var damageEl = document.querySelector('[data-mdamage]');
@@ -1413,7 +1452,37 @@ function init(){
     var modalShareBtn = modal ? modal.querySelector('[data-modal-share-btn]') : null;
     var modalShareLabel = modal ? modal.querySelector('[data-modal-share-label]') : null;
     var modalShareIcon = modal ? modal.querySelector('.sss-lib__mshareIcon') : null;
+    var modalFullLink = modal ? modal.querySelector('[data-modal-full-link]') : null;
     var seriesOrderEl = modal ? modal.querySelector('[data-mseries-order]') : null;
+    var modalRestoreTarget = null;
+
+    function lockModalScroll(){
+      var y = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+      var lock = window.__sssBookModalScrollLock || {};
+      if (!lock.active){
+        lock = {
+          active: true,
+          y: y,
+          htmlOverflow: document.documentElement.style.overflow || '',
+          bodyOverflow: document.body.style.overflow || ''
+        };
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
+      } else {
+        lock.y = y || lock.y || 0;
+      }
+      window.__sssBookModalScrollLock = lock;
+      return lock.y || y || 0;
+    }
+
+    function unlockModalScroll(){
+      var lock = window.__sssBookModalScrollLock || {};
+      var y = Number(lock.y || 0);
+      document.documentElement.style.overflow = lock.htmlOverflow || '';
+      document.body.style.overflow = lock.bodyOverflow || '';
+      window.__sssBookModalScrollLock = { active: false, y: y };
+      return y;
+    }
 
     function ensureModalSpiceBadge(){
       if (spiceEl || !modal) return spiceEl;
@@ -1427,35 +1496,310 @@ function init(){
       return spiceEl;
     }
 
+    function findModalSourceCard(btn){
+      var handle = String(btn.dataset.handle || '').trim().toLowerCase();
+      var title = String(btn.dataset.title || '').trim().toLowerCase();
+      if (!handle && !title) return null;
+
+      return Array.from(document.querySelectorAll('.sss-lib__book[data-title]')).find(function(card){
+        if (card === btn) return false;
+        var cardHandle = String(card.dataset.handle || '').trim().toLowerCase();
+        var cardTitle = String(card.dataset.title || '').trim().toLowerCase();
+        var isMatch = (handle && cardHandle && cardHandle === handle) || (title && cardTitle && cardTitle === title);
+        return isMatch && (card.dataset.amazon || card.dataset.bookshop || card.dataset.ku);
+      }) || null;
+    }
+
+    function modalDatasetValue(btn, sourceCard, key){
+      return btn.dataset[key] || (sourceCard && sourceCard.dataset ? sourceCard.dataset[key] : '') || '';
+    }
+
     function getModalBookData(btn){
+      var sourceCard = findModalSourceCard(btn);
       return {
-        handle: btn.dataset.handle || '',
-        title: btn.dataset.title || '',
-        author: btn.dataset.author || '',
-        cover: btn.dataset.cover || '',
-        amazon: btn.dataset.amazon || '',
-        bookshop: btn.dataset.bookshop || '',
-        spice: btn.dataset.spice || '',
-        tropes: btn.dataset.tropes || '',
-        tropesDisplay: btn.dataset.tropesDisplay || '',
-        why: btn.dataset.why || '',
-        newsletter: btn.dataset.newsletter || '',
-        tension: btn.dataset.tension || '',
-        damage: btn.dataset.damage || '',
-        darkness: btn.dataset.darkness || '',
-        yearning: btn.dataset.yearning || '',
-        boyfriend: btn.dataset.boyfriend || '',
-        boyfriendName: btn.dataset.boyfriendName || '',
-        reread: btn.dataset.reread || '',
-        ku: btn.dataset.ku || '',
-        mini: btn.dataset.mini || '',
-        series: btn.dataset.series || '',
-        seriesName: btn.dataset.seriesName || '',
-        seriesNumber: btn.dataset.seriesNumber || '',
-        standalone: btn.dataset.standalone || '',
-        privateShelf: btn.dataset.privateShelf || 'false'
+        handle: modalDatasetValue(btn, sourceCard, 'handle'),
+        url: modalDatasetValue(btn, sourceCard, 'url'),
+        title: modalDatasetValue(btn, sourceCard, 'title'),
+        author: modalDatasetValue(btn, sourceCard, 'author'),
+        cover: modalDatasetValue(btn, sourceCard, 'cover'),
+        amazon: modalDatasetValue(btn, sourceCard, 'amazon'),
+        bookshop: modalDatasetValue(btn, sourceCard, 'bookshop'),
+        spice: modalDatasetValue(btn, sourceCard, 'spice'),
+        tropes: modalDatasetValue(btn, sourceCard, 'tropes'),
+        tropesDisplay: modalDatasetValue(btn, sourceCard, 'tropesDisplay'),
+        why: modalDatasetValue(btn, sourceCard, 'why'),
+        newsletter: modalDatasetValue(btn, sourceCard, 'newsletter'),
+        tension: modalDatasetValue(btn, sourceCard, 'tension'),
+        damage: modalDatasetValue(btn, sourceCard, 'damage'),
+        darkness: modalDatasetValue(btn, sourceCard, 'darkness'),
+        yearning: modalDatasetValue(btn, sourceCard, 'yearning'),
+        boyfriend: modalDatasetValue(btn, sourceCard, 'boyfriend'),
+        boyfriendName: modalDatasetValue(btn, sourceCard, 'boyfriendName'),
+        reread: modalDatasetValue(btn, sourceCard, 'reread'),
+        ku: modalDatasetValue(btn, sourceCard, 'ku'),
+        mini: modalDatasetValue(btn, sourceCard, 'mini'),
+        series: modalDatasetValue(btn, sourceCard, 'series'),
+        seriesName: modalDatasetValue(btn, sourceCard, 'seriesName'),
+        seriesNumber: modalDatasetValue(btn, sourceCard, 'seriesNumber'),
+        standalone: modalDatasetValue(btn, sourceCard, 'standalone'),
+        privateShelf: modalDatasetValue(btn, sourceCard, 'privateShelf') || 'false'
       };
     }
+
+    function modalEscape(value){
+      return String(value || '').replace(/[&<>"']/g, function(char){
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char];
+      });
+    }
+
+    function modalTropeEmoji(tropeName){
+      var trope = String(tropeName || '').toLowerCase();
+      if (trope.indexOf('slow burn') > -1 || trope.indexOf('yearning') > -1) return '🕯️';
+      if (trope.indexOf('enemies to lovers') > -1 || trope.indexOf('rivals') > -1 || trope.indexOf('banter') > -1) return '⚔️';
+      if (trope.indexOf('friends to lovers') > -1 || trope.indexOf('comfort') > -1 || trope.indexOf('healing') > -1 || trope.indexOf('found family') > -1) return '🤍';
+      if (trope.indexOf('forced proximity') > -1 || trope.indexOf('one bed') > -1) return '🛏️';
+      if (trope.indexOf('fake dating') > -1 || trope.indexOf('marriage of convenience') > -1) return '💍';
+      if (trope.indexOf('second chance') > -1 || trope.indexOf('emotional damage') > -1 || trope.indexOf('angst') > -1) return '💔';
+      if (trope.indexOf('dark') > -1 || trope.indexOf('morally gray') > -1 || trope.indexOf('villain') > -1) return '🥀';
+      if (trope.indexOf('obsession') > -1 || trope.indexOf('stalker') > -1 || trope.indexOf('possessive') > -1 || trope.indexOf('touch her') > -1) return '🖤';
+      if (trope.indexOf('sports') > -1 || trope.indexOf('hockey') > -1) return '🏒';
+      if (trope.indexOf('forbidden') > -1) return '🍒';
+      if (trope.indexOf('grumpy') > -1) return '☕';
+      if (trope.indexOf('small town') > -1) return '🍂';
+      if (trope.indexOf('romantasy') > -1 || trope.indexOf('fantasy') > -1 || trope.indexOf('fated mates') > -1 || trope.indexOf('paranormal') > -1) return '🌙';
+      if (trope.indexOf('workplace') > -1 || trope.indexOf('billionaire') > -1) return '💋';
+      return '📚';
+    }
+
+	    function modalTropeLabel(tropeName){
+	      var trope = String(tropeName || '').trim();
+	      if (!trope) return '';
+	      return /^[^a-z0-9]+ /i.test(trope) ? trope : modalTropeEmoji(trope) + ' ' + trope;
+	    }
+
+	    function modalTropeNameWithoutEmoji(tropeName){
+	      var raw = String(tropeName || '').trim();
+	      var lower = raw.toLowerCase();
+	      var knownTropes = [
+	        'touch her and die',
+	        'why choose',
+	        'who did this to you',
+	        'mafia romance',
+	        'slow burn',
+	        'enemies to lovers',
+	        'fated mates'
+	      ];
+	      for (var i = 0; i < knownTropes.length; i += 1) {
+	        if (lower.indexOf(knownTropes[i]) !== -1) return knownTropes[i];
+	      }
+	      return raw.replace(/^[^a-z0-9]+/i, '').trim();
+	    }
+
+	    function modalTropeCustomKey(tropeName){
+	      var name = modalTropeNameWithoutEmoji(tropeName);
+	      var key = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+	      var haystack = (key + ' ' + name.toLowerCase()).replace(/\s+/g, ' ');
+	      var aliases = [
+	        ['mafia-romance', ['mafia']],
+	        ['slow-burn', ['slow burn', 'slow-burn']],
+	        ['enemies-to-lovers', ['enemies to lovers', 'enemies-to-lovers']],
+	        ['friends-to-lovers', ['friends to lovers', 'friends-to-lovers']],
+	        ['he-falls-first', ['he falls first', 'he-falls-first', 'falls first']],
+	        ['billionaire-romance', ['billionaire romance', 'billionaire-romance', 'billionaire']],
+	        ['stalker-romance', ['stalker romance', 'stalker-romance', 'stalker']],
+	        ['dystopian-romance', ['dystopian romance', 'dystopian-romance']],
+	        ['sports-romance', ['sports romance', 'sports-romance', 'sports']],
+	        ['bully-romance', ['bully romance', 'bully-romance', 'bully']],
+	        ['forced-proximity', ['forced proximity', 'forced-proximity']],
+	        ['villain-gets-the-girl', ['villain gets the girl', 'villain-gets-the-girl', 'villain romance']],
+	        ['historical-romance', ['historical romance', 'historical-romance']],
+	        ['bodyguard-romance', ['bodyguard romance', 'bodyguard-romance', 'bodyguard']],
+	        ['opposites-attract', ['opposites attract', 'opposites-attract']],
+	        ['marriage-of-convenience', ['marriage of convenience', 'marriage-of-convenience']],
+	        ['found-family', ['found family', 'found-family']],
+	        ['dark-academia', ['dark academia', 'dark-academia']],
+	        ['captor-x-captive', ['captor x captive', 'captor-x-captive', 'captor captive', 'captor', 'captive']],
+	        ['boss-x-employee', ['boss x employee', 'boss-x-employee', 'boss employee']],
+	        ['age-gap', ['age gap', 'age-gap']],
+	        ['trauma-bonding', ['trauma bonding', 'trauma-bonding']],
+	        ['baseball-romance', ['baseball romance', 'baseball-romance', 'baseball']],
+	        ['hockey-romance', ['hockey romance', 'hockey-romance', 'hockey']],
+	        ['contemporary-romance', ['contemporary romance', 'contemporary-romance']],
+	        ['dark-romance', ['dark romance', 'dark-romance']],
+	        ['forbidden-love', ['forbidden love', 'forbidden-love', 'forbidden romance']],
+	        ['step-siblings', ['step siblings', 'step-siblings', 'stepsiblings']],
+	        ['nanny', ['nanny romance', 'nanny']],
+	        ['single-dad', ['single dad', 'single-dad']],
+	        ['small-town', ['small town', 'small-town']],
+	        ['grumpy-x-sunshine', ['grumpy x sunshine', 'grumpy-x-sunshine', 'grumpy sunshine']],
+	        ['one-bed', ['one bed', 'one-bed']],
+	        ['brothers-best-friend', ['brother best friend', 'brothers best friend', "brother's best friend", 'brothers-best-friend', 'brother-s-best-friend']],
+	        ['second-chance', ['second chance', 'second-chance']],
+	        ['fake-dating', ['fake dating', 'fake-dating']],
+	        ['fated-mates', ['fated mates', 'fated-mates']],
+	        ['who-did-this-to-you', ['who did this to you', 'who-did-this-to-you']],
+	        ['touch-her-and-die', ['touch her and die', 'touch-her-and-die']],
+	        ['why-choose', ['why choose', 'why-choose']],
+	        ['paranormal-romance', ['paranormal romance', 'paranormal-romance', 'paranormal']],
+	        ['romantasy', ['romantasy', 'fantasy romance']]
+	      ];
+	      for (var i = 0; i < aliases.length; i += 1) {
+	        for (var j = 0; j < aliases[i][1].length; j += 1) {
+	          if (haystack.indexOf(aliases[i][1][j]) !== -1) return aliases[i][0];
+	        }
+	      }
+	      return '';
+	    }
+
+	    function modalTropeCustomEmojiHtml(tropeName){
+	      var name = modalTropeNameWithoutEmoji(tropeName);
+	      var key = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+	      var customKey = modalTropeCustomKey(tropeName);
+	      if (customKey) {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/' + customKey + '.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name);
+	      }
+	      if (key === 'mafia' || key === 'mafia-romance') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/mafia-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'mafia romance');
+	      }
+	      if (key === 'slow-burn') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/slow-burn.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'slow burn');
+	      }
+	      if (key === 'enemies-to-lovers') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/enemies-to-lovers.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'enemies to lovers');
+	      }
+	      if (key === 'friends-to-lovers') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/friends-to-lovers.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'friends to lovers');
+	      }
+	      if (key === 'he-falls-first' || key === 'falls-first') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/he-falls-first.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'he falls first');
+	      }
+	      if (key === 'billionaire-romance' || key === 'billionaire') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/billionaire-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'billionaire romance');
+	      }
+	      if (key === 'stalker-romance' || key === 'stalker') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/stalker-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'stalker romance');
+	      }
+	      if (key === 'dystopian-romance') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/dystopian-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'dystopian romance');
+	      }
+	      if (key === 'sports-romance' || key === 'sports') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/sports-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'sports romance');
+	      }
+	      if (key === 'bully-romance' || key === 'bully') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/bully-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'bully romance');
+	      }
+	      if (key === 'forced-proximity') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/forced-proximity.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'forced proximity');
+	      }
+	      if (key === 'villain-gets-the-girl' || key === 'villain-romance') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/villain-gets-the-girl.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'villain gets the girl');
+	      }
+	      if (key === 'historical-romance') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/historical-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'historical romance');
+	      }
+	      if (key === 'bodyguard-romance' || key === 'bodyguard') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/bodyguard-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'bodyguard romance');
+	      }
+	      if (key === 'opposites-attract') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/opposites-attract.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'opposites attract');
+	      }
+	      if (key === 'marriage-of-convenience') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/marriage-of-convenience.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'marriage of convenience');
+	      }
+	      if (key === 'found-family') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/found-family.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'found family');
+	      }
+	      if (key === 'dark-academia' || key === 'dark-academia-romance') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/dark-academia.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'dark academia');
+	      }
+	      if (key === 'captor-x-captive' || key === 'captor-captive-romance') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/captor-x-captive.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'captor x captive');
+	      }
+	      if (key === 'boss-x-employee' || key === 'boss-employee') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/boss-x-employee.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'boss x employee');
+	      }
+	      if (key === 'age-gap') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/age-gap.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'age gap');
+	      }
+	      if (key === 'trauma-bonding') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/trauma-bonding.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'trauma bonding');
+	      }
+	      if (key === 'baseball-romance') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/baseball-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'baseball romance');
+	      }
+	      if (key === 'hockey-romance') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/hockey-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'hockey romance');
+	      }
+	      if (key === 'contemporary-romance') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/contemporary-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'contemporary romance');
+	      }
+	      if (key === 'dark-romance') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/dark-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'dark romance');
+	      }
+	      if (key === 'forbidden-love' || key === 'forbidden-romance') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/forbidden-love.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'forbidden love');
+	      }
+	      if (key === 'step-siblings' || key === 'stepsiblings') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/step-siblings.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'step siblings');
+	      }
+	      if (key === 'nanny' || key === 'nanny-romance') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/nanny.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'nanny');
+	      }
+	      if (key === 'single-dad' || key === 'single-dad-romance') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/single-dad.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'single dad');
+	      }
+	      if (key === 'small-town' || key === 'small-town-romance') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/small-town.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'small town');
+	      }
+	      if (key === 'grumpy-x-sunshine' || key === 'grumpy-sunshine') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/grumpy-x-sunshine.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape('grumpy x sunshine');
+	      }
+	      if (key === 'one-bed') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/one-bed.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'one bed');
+	      }
+	      if (key === 'brothers-best-friend' || key === 'brother-s-best-friend') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/brothers-best-friend.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || "brother's best friend");
+	      }
+	      if (key === 'second-chance') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/second-chance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'second chance');
+	      }
+	      if (key === 'fake-dating' || key === 'fake-dating-romance') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/fake-dating.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'fake dating');
+	      }
+	      if (key === 'fated-mates') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/fated-mates.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'fated mates');
+	      }
+	      if (key === 'who-did-this-to-you') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/who-did-this-to-you.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'who did this to you');
+	      }
+	      if (key === 'touch-her-and-die') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/touch-her-and-die.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'touch her and die');
+	      }
+	      if (key === 'why-choose') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/why-choose.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'why choose');
+	      }
+	      if (key === 'paranormal' || key === 'paranormal-romance') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/paranormal-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'paranormal romance');
+	      }
+	      if (key === 'romantasy' || key === 'fantasy-romance') {
+	        return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/romantasy.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + modalEscape(name || 'romantasy');
+	      }
+
+	      return '';
+	    }
+
+	    function modalTropesHtml(value){
+	      var tropeValue = Array.isArray(value) ? stringifyBookDatasetValue(value) : value;
+	      var tropes = String(tropeValue || '').split(',').map(function(trope){
+	        return String(trope || '').trim();
+	      }).filter(Boolean);
+
+	      if (!tropes.length) return '';
+
+	      return '<span>tropes: </span>' + tropes.map(function(trope){
+	        return '<em>' + (modalTropeCustomEmojiHtml(trope) || modalEscape(modalTropeLabel(trope))) + '</em>';
+	      }).join('<span>, </span>');
+	    }
 
     function openModal(data){
 
@@ -1476,6 +1820,16 @@ function init(){
 
       if (titleEl) titleEl.textContent = data.title || '';
       if (authorEl) authorEl.textContent = data.author ? ('by ' + data.author) : '';
+      if (modalFullLink){
+        var fullLinkUrl = data.url || (data.handle ? '/books/' + encodeURIComponent(data.handle) + '/' : '');
+        if (fullLinkUrl){
+          modalFullLink.href = fullLinkUrl;
+          modalFullLink.hidden = false;
+        } else {
+          modalFullLink.hidden = true;
+          modalFullLink.removeAttribute('href');
+        }
+      }
       renderModalBookStatus(modal, data);
 
 var modalHeart = modal.querySelector('[data-modal-heart]');
@@ -1494,12 +1848,31 @@ if(modalHeart){
         var fakeBtn = {
           dataset:{
             handle:data.handle,
+            url:data.url,
             title:data.title,
             author:data.author,
             cover:data.cover,
             amazon:data.amazon,
             bookshop:data.bookshop,
-            series:data.series
+            spice:data.spice,
+            darkness:data.darkness,
+            tropes:data.tropes,
+            tropesDisplay:data.tropesDisplay,
+            why:data.why,
+            newsletter:data.newsletter,
+            tension:data.tension,
+            damage:data.damage,
+            yearning:data.yearning,
+            boyfriend:data.boyfriend,
+            boyfriendName:data.boyfriendName,
+            reread:data.reread,
+            ku:data.ku,
+            mini:data.mini,
+            series:data.series,
+            seriesName:data.seriesName,
+            seriesNumber:data.seriesNumber,
+            standalone:data.standalone,
+            privateShelf:data.privateShelf
           }
         };
 
@@ -1588,7 +1961,8 @@ if(modalHeart){
       if (kuEl){
         var kuState = String(data.ku || '').toLowerCase().trim() === 'true';
         kuEl.className = 'sss-lib__mku ' + (kuState ? 'is-yes' : 'is-no');
-        kuEl.textContent = (kuState ? '✓' : '✕') + ' on kindle unlimited: ' + (kuState ? 'yes' : 'no');
+        kuEl.style.display = kuState ? '' : 'none';
+        kuEl.textContent = kuState ? 'included in your kindle unlimited subscription — no extra cost' : 'not currently included in kindle unlimited';
       }
 
 	      if (darknessEl) darknessEl.textContent = '';
@@ -1649,9 +2023,7 @@ if (seriesOrderEl){
 
 
       if (tropesEl){
-        tropesEl.textContent = (data.tropesDisplay || data.tropes)
-          ? "tropes: " + (data.tropesDisplay || data.tropes)
-          : '';
+        tropesEl.innerHTML = modalTropesHtml(data.tropesDisplay || data.tropes);
       }
 
       if (standaloneEl){
@@ -1668,9 +2040,28 @@ if (seriesOrderEl){
         whyEl.textContent = data.why || '';
       }
 
+      var modalKuState = String(data.ku || '').toLowerCase().trim() === 'true';
+      if (kuBtn){
+        kuBtn.style.display = data.amazon && modalKuState ? '' : 'none';
+        if (data.amazon) kuBtn.href = data.amazon;
+        kuBtn.onclick = data.amazon && modalKuState ? function(){
+          trackSiteEvent("book_link_clicked", {
+            bookHandle: data.handle || '',
+            bookTitle: data.title || '',
+            seriesHandle: data.series || '',
+            uiLocation: "book_modal",
+            metadata: {
+              destination: "kindle_unlimited"
+            }
+          });
+        } : null;
+      }
+
       if (amazonBtn){
         amazonBtn.style.display = data.amazon ? '' : 'none';
         if (data.amazon) amazonBtn.href = data.amazon;
+        amazonBtn.innerHTML = modalKuState ? 'buy on amazon <span>· own it forever</span>' : 'buy on amazon';
+        amazonBtn.classList.remove('sss-lib__mbtn--primary');
         amazonBtn.onclick = data.amazon ? function(){
           trackSiteEvent("book_link_clicked", {
             bookHandle: data.handle || '',
@@ -1687,6 +2078,7 @@ if (seriesOrderEl){
       if (bookshopBtn){
         bookshopBtn.style.display = data.bookshop ? '' : 'none';
         if (data.bookshop) bookshopBtn.href = data.bookshop;
+        bookshopBtn.innerHTML = 'prefer indie? bookshop.org →';
         bookshopBtn.onclick = data.bookshop ? function(){
           trackSiteEvent("book_link_clicked", {
             bookHandle: data.handle || '',
@@ -1695,23 +2087,6 @@ if (seriesOrderEl){
             uiLocation: "book_modal",
             metadata: {
               destination: "bookshop"
-            }
-          });
-        } : null;
-      }
-
-      if (newsletterBtn){
-        var showNewsletter = libraryType === 'society' && data.newsletter;
-        newsletterBtn.style.display = showNewsletter ? '' : 'none';
-        if (showNewsletter) newsletterBtn.href = data.newsletter;
-        newsletterBtn.onclick = showNewsletter ? function(){
-          trackSiteEvent("book_link_clicked", {
-            bookHandle: data.handle || '',
-            bookTitle: data.title || '',
-            seriesHandle: data.series || '',
-            uiLocation: "book_modal",
-            metadata: {
-              destination: "newsletter"
             }
           });
         } : null;
@@ -1791,13 +2166,29 @@ if (yearningEl){
 
       modal.hidden = false;
       modal.setAttribute('aria-hidden', 'false');
-      document.documentElement.style.overflow = 'hidden';
+      lockModalScroll();
     }
 
     function closeModal(){
+      if (!modal || modal.hidden) return;
       modal.hidden = true;
       modal.setAttribute('aria-hidden', 'true');
-      document.documentElement.style.overflow = '';
+      if (document.activeElement && typeof document.activeElement.blur === 'function'){
+        document.activeElement.blur();
+      }
+      unlockModalScroll();
+    }
+
+    if (!window.__sssBookModalCloseCaptureBound){
+      window.__sssBookModalCloseCaptureBound = true;
+      document.addEventListener('click', function(e){
+        var closeTrigger = e.target.closest('[data-close]');
+        var openBookModal = document.querySelector('.sss-lib__modal:not([hidden])');
+        if (!closeTrigger || !openBookModal || !openBookModal.contains(closeTrigger)) return;
+        e.preventDefault();
+        e.stopPropagation();
+        closeModal();
+      }, true);
     }
 /* ======================
    TOAST → SCROLL TO SHELF
@@ -1891,6 +2282,7 @@ root.addEventListener('click', function(e){
 
   if (btn.hasAttribute('disabled')) return;
 
+  modalRestoreTarget = btn;
   openModal(getModalBookData(btn));
 
 });
@@ -1907,6 +2299,7 @@ root.addEventListener('click', function(e){
 
         e.preventDefault();
         e.stopPropagation();
+        modalRestoreTarget = btn;
         openModal(getModalBookData(btn));
       }
 
@@ -2301,6 +2694,12 @@ syncBookStatusUI();
 
     window.requestAnimationFrame(function(){
       row.scrollLeft = 0;
+      window.setTimeout(function(){
+        row.scrollLeft = 0;
+      }, 80);
+      window.setTimeout(function(){
+        row.scrollLeft = 0;
+      }, 240);
     });
 
   } catch(err){
@@ -2727,6 +3126,76 @@ function getTropePillColors(name){
   return tropePillColors[handle] || { bg: "#f3bfd5", text: "#4b112d" };
 }
 
+function escapeTropePopupText(value){
+  return String(value || "").replace(/[&<>"']/g, function(char){
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char];
+  });
+}
+
+function getTropePopupCustomKey(value){
+  const label = String(value || "").toLowerCase();
+  const handle = normalizeTropeHandle(value);
+  const haystack = handle + " " + label;
+  const aliases = [
+    ["found-family", ["found family", "found-family"]],
+    ["friends-to-lovers", ["friends to lovers", "friends-to-lovers"]],
+    ["step-siblings", ["step siblings", "step-siblings", "stepsiblings"]],
+    ["mafia-romance", ["mafia"]],
+    ["slow-burn", ["slow burn", "slow-burn"]],
+    ["enemies-to-lovers", ["enemies to lovers", "enemies-to-lovers"]],
+    ["fated-mates", ["fated mates", "fated-mates"]],
+    ["why-choose", ["why choose", "why-choose"]],
+    ["touch-her-and-die", ["touch her and die", "touch-her-and-die"]],
+    ["who-did-this-to-you", ["who did this to you", "who-did-this-to-you"]],
+    ["dark-academia", ["dark academia", "dark-academia"]],
+    ["dark-romance", ["dark romance", "dark-romance"]],
+    ["romantasy", ["romantasy", "fantasy romance"]],
+    ["paranormal-romance", ["paranormal"]],
+    ["fake-dating", ["fake dating", "fake-dating"]],
+    ["captor-x-captive", ["captor x captive", "captor-x-captive", "captor captive", "captor", "captive"]],
+    ["boss-x-employee", ["boss x employee", "boss-x-employee", "boss employee"]],
+    ["age-gap", ["age gap", "age-gap"]],
+    ["trauma-bonding", ["trauma bonding", "trauma-bonding"]],
+    ["baseball-romance", ["baseball romance", "baseball-romance", "baseball"]],
+    ["hockey-romance", ["hockey romance", "hockey-romance", "hockey"]],
+    ["one-bed", ["one bed", "one-bed"]],
+    ["brothers-best-friend", ["brother best friend", "brothers best friend", "brother's best friend", "brothers-best-friend", "brother-s-best-friend"]],
+    ["second-chance", ["second chance", "second-chance"]],
+    ["contemporary-romance", ["contemporary romance", "contemporary-romance"]],
+    ["forbidden-love", ["forbidden love", "forbidden-love", "forbidden romance"]],
+    ["nanny", ["nanny"]],
+    ["single-dad", ["single dad", "single-dad"]],
+    ["small-town", ["small town", "small-town"]],
+    ["grumpy-x-sunshine", ["grumpy x sunshine", "grumpy-x-sunshine", "grumpy sunshine"]],
+    ["billionaire-romance", ["billionaire"]],
+    ["stalker-romance", ["stalker"]],
+    ["dystopian-romance", ["dystopian romance", "dystopian-romance"]],
+    ["sports-romance", ["sports romance", "sports-romance", "sports"]],
+    ["bully-romance", ["bully romance", "bully-romance", "bully"]],
+    ["forced-proximity", ["forced proximity", "forced-proximity"]],
+    ["villain-gets-the-girl", ["villain gets the girl", "villain-gets-the-girl", "villain romance"]],
+    ["historical-romance", ["historical romance", "historical-romance"]],
+    ["bodyguard-romance", ["bodyguard romance", "bodyguard"]],
+    ["opposites-attract", ["opposites attract", "opposites-attract"]],
+    ["marriage-of-convenience", ["marriage of convenience", "marriage-of-convenience"]]
+  ];
+  for (let i = 0; i < aliases.length; i += 1) {
+    for (let j = 0; j < aliases[i][1].length; j += 1) {
+      if (haystack.indexOf(aliases[i][1][j]) !== -1) return aliases[i][0];
+    }
+  }
+  return "";
+}
+
+function getTropePopupHtml(name, label){
+  const displayLabel = label || name;
+  const key = getTropePopupCustomKey(name + " " + displayLabel);
+  if (!key) return escapeTropePopupText(displayLabel);
+  const emojiMap = window.BBBSiteData && window.BBBSiteData.customTropeEmojis ? window.BBBSiteData.customTropeEmojis : {};
+  const src = emojiMap[key] || ("/wp-content/themes/wordpress-theme/assets/images/custom-emojis/" + key + ".png");
+  return '<img class="bbb-custom-emoji" src="' + escapeTropePopupText(src) + '" alt="" aria-hidden="true" loading="lazy" decoding="async"> <span>' + escapeTropePopupText(displayLabel) + '</span>';
+}
+
 /* ----------------------
 CHECK IF PAGE EXISTS
 ---------------------- */
@@ -2776,7 +3245,7 @@ const colors = getTropePillColors(name);
 
 a.href = url;
 a.className = "sss-tropePopup__pill";
-a.textContent = labelText;
+a.innerHTML = getTropePopupHtml(name, labelText);
 a.style.setProperty("--trope-bg", colors.bg);
 a.style.setProperty("--trope-text", colors.text);
 

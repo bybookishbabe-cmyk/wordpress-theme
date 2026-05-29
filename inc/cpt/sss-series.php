@@ -25,6 +25,84 @@ function bbb_series_meta_fields(): array {
 	);
 }
 
+function bbb_series_book_post_types(): array {
+	return array_values(
+		array_filter(
+			array('bbb_book', 'sss_book'),
+			static function (string $post_type): bool {
+				return post_type_exists($post_type);
+			}
+		)
+	);
+}
+
+function bbb_series_admin_books(): array {
+	$post_types = bbb_series_book_post_types();
+	if (!$post_types) {
+		return array();
+	}
+
+	return get_posts(
+		array(
+			'post_type'      => $post_types,
+			'post_status'    => array('publish', 'draft', 'pending', 'private'),
+			'posts_per_page' => -1,
+			'orderby'        => 'title',
+			'order'          => 'ASC',
+		)
+	);
+}
+
+function bbb_series_current_book_ids(WP_Post $post): array {
+	$ids = array_filter(array_map('absint', preg_split('/[\s,]+/', (string) get_post_meta($post->ID, '_bbb_series_book_ids', true)) ?: array()));
+	if ($ids) {
+		return array_values(array_unique($ids));
+	}
+
+	$handles = array_filter(array_map('sanitize_title', preg_split('/[\s,]+/', (string) get_post_meta($post->ID, '_bbb_series_book_handles', true)) ?: array()));
+	foreach ($handles as $handle) {
+		foreach (bbb_series_book_post_types() as $post_type) {
+			$book = get_page_by_path($handle, OBJECT, $post_type);
+			if ($book instanceof WP_Post) {
+				$ids[] = (int) $book->ID;
+				break;
+			}
+		}
+	}
+
+	if ($ids) {
+		return array_values(array_unique($ids));
+	}
+
+	$handle = bbb_series_handle_for_post($post);
+	if ('' === $handle) {
+		return array();
+	}
+
+	return get_posts(
+		array(
+			'post_type'      => bbb_series_book_post_types(),
+			'post_status'    => array('publish', 'draft', 'pending', 'private'),
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+			'meta_query'     => array(
+				array(
+					'key'   => '_bbb_series_handle',
+					'value' => $handle,
+				),
+			),
+			'orderby'        => 'meta_value_num',
+			'meta_key'       => '_bbb_series_number',
+			'order'          => 'ASC',
+		)
+	);
+}
+
+function bbb_series_handle_for_post(WP_Post $post): string {
+	$handle = sanitize_title((string) get_post_meta($post->ID, '_bbb_series_handle', true));
+	return '' !== $handle ? $handle : sanitize_title($post->post_name ?: $post->post_title);
+}
+
 add_action(
 	'init',
 	static function (): void {
@@ -62,6 +140,15 @@ add_action(
 
 function bbb_series_add_meta_box(): void {
 	add_meta_box(
+		'bbb_series_books',
+		__('Books in this series', 'bybookishbabe-shopify-port'),
+		'bbb_series_render_books_meta_box',
+		'sss_series',
+		'normal',
+		'high'
+	);
+
+	add_meta_box(
 		'bbb_series_metafields',
 		__('Series Metafields', 'bybookishbabe-shopify-port'),
 		'bbb_series_render_meta_box',
@@ -71,6 +158,42 @@ function bbb_series_add_meta_box(): void {
 	);
 }
 add_action('add_meta_boxes_sss_series', 'bbb_series_add_meta_box');
+
+function bbb_series_render_books_meta_box(WP_Post $post): void {
+	wp_nonce_field('bbb_save_series_books', 'bbb_series_books_nonce');
+	$books        = bbb_series_admin_books();
+	$current_ids  = bbb_series_current_book_ids($post);
+	$slot_count   = max(12, count($current_ids) + 3);
+	$current_ids += array_fill(count($current_ids), $slot_count, 0);
+	?>
+	<style>
+		.bbb-series-books { display: grid; gap: 10px; }
+		.bbb-series-books__row { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 10px; align-items: center; }
+		.bbb-series-books__number { font-weight: 700; color: #646970; }
+		.bbb-series-books select { width: 100%; max-width: 620px; }
+		.bbb-series-books__help { margin: 8px 0 0; color: #646970; font-size: 12px; }
+	</style>
+	<div class="bbb-series-books">
+		<?php for ($index = 0; $index < $slot_count; $index++) : ?>
+			<?php $selected_id = (int) ($current_ids[$index] ?? 0); ?>
+			<div class="bbb-series-books__row">
+				<div class="bbb-series-books__number"><?php echo esc_html('#' . (string) ($index + 1)); ?></div>
+				<select name="bbb_series_book_ids[]">
+					<option value="0"><?php esc_html_e('No book selected', 'bybookishbabe-shopify-port'); ?></option>
+					<?php foreach ($books as $book) : ?>
+						<?php if ($book instanceof WP_Post) : ?>
+							<option value="<?php echo esc_attr((string) $book->ID); ?>" <?php selected($selected_id, $book->ID); ?>>
+								<?php echo esc_html(get_the_title($book) . ' (' . $book->post_type . ')'); ?>
+							</option>
+						<?php endif; ?>
+					<?php endforeach; ?>
+				</select>
+			</div>
+		<?php endfor; ?>
+		<p class="bbb-series-books__help"><?php esc_html_e('Pick books in reading order. Saving updates the series record and each selected book’s series handle and number.', 'bybookishbabe-shopify-port'); ?></p>
+	</div>
+	<?php
+}
 
 function bbb_series_render_meta_box(WP_Post $post): void {
 	wp_nonce_field('bbb_save_series_metafields', 'bbb_series_metafields_nonce');
@@ -148,3 +271,77 @@ function bbb_series_save_meta_box(int $post_id): void {
 	}
 }
 add_action('save_post_sss_series', 'bbb_series_save_meta_box');
+
+function bbb_series_save_books_meta_box(int $post_id): void {
+	if (!isset($_POST['bbb_series_books_nonce']) || !wp_verify_nonce((string) wp_unslash($_POST['bbb_series_books_nonce']), 'bbb_save_series_books')) {
+		return;
+	}
+
+	if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+		return;
+	}
+
+	if (!current_user_can('edit_post', $post_id)) {
+		return;
+	}
+
+	$post = get_post($post_id);
+	if (!$post instanceof WP_Post || 'sss_series' !== $post->post_type) {
+		return;
+	}
+
+	$raw_ids = isset($_POST['bbb_series_book_ids']) && is_array($_POST['bbb_series_book_ids'])
+		? wp_unslash($_POST['bbb_series_book_ids'])
+		: array();
+
+	$book_ids = array();
+	foreach ($raw_ids as $raw_id) {
+		$book_id = absint($raw_id);
+		if ($book_id > 0 && in_array(get_post_type($book_id), bbb_series_book_post_types(), true) && !in_array($book_id, $book_ids, true)) {
+			$book_ids[] = $book_id;
+		}
+	}
+
+	$handle = bbb_series_handle_for_post($post);
+	$previous_ids = bbb_series_current_book_ids($post);
+
+	$handles = array();
+	foreach ($book_ids as $index => $book_id) {
+		$book = get_post($book_id);
+		if (!$book instanceof WP_Post) {
+			continue;
+		}
+
+		$handles[] = $book->post_name ?: sanitize_title(get_the_title($book));
+		update_post_meta($book_id, '_bbb_series_handle', $handle);
+		update_post_meta($book_id, '_bbb_series_number', (string) ($index + 1));
+
+		if (taxonomy_exists('bbb_series')) {
+			$term = get_term_by('slug', $handle, 'bbb_series');
+			if (!$term instanceof WP_Term) {
+				$inserted = wp_insert_term(get_the_title($post), 'bbb_series', array('slug' => $handle));
+				if (!is_wp_error($inserted)) {
+					$term = get_term((int) $inserted['term_id'], 'bbb_series');
+				}
+			}
+			if ($term instanceof WP_Term) {
+				wp_set_object_terms($book_id, (int) $term->term_id, 'bbb_series', false);
+			}
+		}
+	}
+
+	foreach (array_diff($previous_ids, $book_ids) as $removed_id) {
+		if ((string) get_post_meta((int) $removed_id, '_bbb_series_handle', true) === $handle) {
+			delete_post_meta((int) $removed_id, '_bbb_series_handle');
+			delete_post_meta((int) $removed_id, '_bbb_series_number');
+			if (taxonomy_exists('bbb_series')) {
+				wp_set_object_terms((int) $removed_id, array(), 'bbb_series', false);
+			}
+		}
+	}
+
+	update_post_meta($post_id, '_bbb_series_book_ids', implode("\n", $book_ids));
+	update_post_meta($post_id, '_bbb_series_book_handles', implode("\n", $handles));
+	update_post_meta($post_id, '_bbb_series_books_in_series', count($book_ids));
+}
+add_action('save_post_sss_series', 'bbb_series_save_books_meta_box');

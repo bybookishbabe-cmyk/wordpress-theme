@@ -7,6 +7,14 @@
 
 declare(strict_types=1);
 
+if (is_singular('post')) {
+	$single_post_template = locate_template('single-post.php');
+	if ('' !== $single_post_template) {
+		require $single_post_template;
+		return;
+	}
+}
+
 get_header();
 
 if (have_posts()) {

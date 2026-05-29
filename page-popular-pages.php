@@ -40,7 +40,14 @@ function bbb_popular_pages_path(string $url): string {
 	return '//' === $path ? '/' : $path;
 }
 
-function bbb_popular_pages_make_item(string $title, string $url, string $type, string $description, ?WP_Post $post = null, string $image = ''): array {
+function bbb_popular_pages_make_item(string $title, $url, string $type, string $description, ?WP_Post $post = null, string $image = ''): array {
+	if (!is_string($url) || '' === $url) {
+		$url = $post instanceof WP_Post ? get_permalink($post->ID) : '';
+	}
+	if (!is_string($url) || '' === $url) {
+		$url = home_url('/');
+	}
+
 	return array(
 		'title'       => $title,
 		'url'         => $url,
@@ -53,7 +60,7 @@ function bbb_popular_pages_make_item(string $title, string $url, string $type, s
 
 function bbb_popular_pages_candidates(): array {
 	$route_items = array(
-		array('Reader Quizzes', 'reader-quizes', 'quiz hub', 'personality quizzes, trope matches, and reader chaos in one place.'),
+		array('Reader Quizzes', 'reader-quizzes', 'quiz hub', 'personality quizzes, trope matches, and reader chaos in one place.'),
 		array('Reader Mood Quiz', 'reader-mood-quiz', 'quiz', 'pick the mood and let the site find the reading lane.'),
 		array('Fictional Boyfriend Quiz', 'fictional-boyfriend-quiz', 'quiz', 'for finding exactly which fictional man is your current problem.'),
 		array('Find Your Next Read', 'what-to-read-next', 'recommendation tool', 'a fast route into a book match by shelf, trope, and mood.'),
@@ -65,7 +72,7 @@ function bbb_popular_pages_candidates(): array {
 		array('Books Like X', 'books-like', 'reading guide', 'next-read guides based on books you already loved.'),
 		array('Series Reading Orders', 'series-reading-orders', 'reading order', 'start the series in the right place and avoid the chaos.'),
 		array('Weekly Obsession', 'weekly-obsession', 'weekly pick', 'the current book taking up too much space in the group chat.'),
-		array('Quote Wall', 'quote-wall', 'quote archive', 'reader-favorite lines, beautifully collected.'),
+		array('Quote Wall', 'sss-quote-wall', 'quote archive', 'reader-favorite lines, beautifully collected.'),
 		array('Library', 'library', 'book library', 'the full recommendation library by shelf, trope, and mood.'),
 	);
 
@@ -73,9 +80,13 @@ function bbb_popular_pages_candidates(): array {
 	foreach ($route_items as $item) {
 		[$title, $slug, $type, $description] = $item;
 		$post = get_page_by_path($slug);
+		$url  = bbb_page_url($slug);
+		if (!is_string($url) || '' === $url) {
+			$url = home_url('/' . trim($slug, '/') . '/');
+		}
 		$items[] = bbb_popular_pages_make_item(
 			$post instanceof WP_Post ? get_the_title($post) : $title,
-			bbb_page_url($slug),
+			$url,
 			$type,
 			$description,
 			$post instanceof WP_Post ? $post : null
@@ -166,12 +177,13 @@ get_header();
 			<div class="bbb-popular__feature" data-popular-feature>
 				<?php $feature = $fallback_items[0] ?? null; ?>
 				<?php if ($feature) : ?>
-					<a class="bbb-popular__featureLink" href="<?php echo esc_url((string) $feature['url']); ?>">
+					<a class="bbb-popular__featureLink" href="<?php echo esc_url((string) $feature['url']); ?>" aria-label="<?php echo esc_attr('Open ' . (string) $feature['title']); ?>">
 						<span class="bbb-popular__rank">01</span>
 						<span class="bbb-popular__featureCopy">
 							<span class="bbb-popular__type"><?php echo esc_html((string) $feature['type']); ?></span>
 							<strong><?php echo esc_html((string) $feature['title']); ?></strong>
 							<span><?php echo esc_html((string) $feature['description']); ?></span>
+							<span class="bbb-popular__featureCta">open page →</span>
 						</span>
 					</a>
 				<?php endif; ?>
@@ -179,14 +191,14 @@ get_header();
 
 			<div class="bbb-popular__grid" data-popular-list>
 				<?php foreach ($fallback_items as $index => $item) : ?>
-					<a class="bbb-popular__card" href="<?php echo esc_url((string) $item['url']); ?>">
+					<a class="bbb-popular__card" href="<?php echo esc_url((string) $item['url']); ?>" aria-label="<?php echo esc_attr('Open ' . (string) $item['title']); ?>">
 						<span class="bbb-popular__cardRank"><?php echo esc_html(str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT)); ?></span>
 						<span class="bbb-popular__cardBody">
 							<span class="bbb-popular__type"><?php echo esc_html((string) $item['type']); ?></span>
 							<strong><?php echo esc_html((string) $item['title']); ?></strong>
 							<span><?php echo esc_html((string) $item['description']); ?></span>
 						</span>
-						<span class="bbb-popular__open">open</span>
+						<span class="bbb-popular__open">open →</span>
 					</a>
 				<?php endforeach; ?>
 			</div>

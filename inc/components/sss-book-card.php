@@ -39,6 +39,10 @@ if (!function_exists('bbb_sss_card_bool')) {
 
 if (!function_exists('bbb_sss_card_cover_url')) {
 	function bbb_sss_card_cover_url(int $post_id): string {
+		if (function_exists('bbb_get_book_cover_url')) {
+			return bbb_get_book_cover_url($post_id);
+		}
+
 		$cover = bbb_sss_card_field('cover', $post_id, '');
 
 		if (is_array($cover)) {
@@ -58,11 +62,13 @@ if (!function_exists('bbb_sss_card_cover_url')) {
 			}
 		}
 
-		if ($cover) {
+		if ($cover && !(function_exists('bbb_is_site_logo_url') && bbb_is_site_logo_url((string) $cover))) {
 			return (string) $cover;
 		}
 
-		return get_the_post_thumbnail_url($post_id, 'large') ?: '';
+		$thumbnail = (string) (get_the_post_thumbnail_url($post_id, 'large') ?: '');
+
+		return function_exists('bbb_is_site_logo_url') && bbb_is_site_logo_url($thumbnail) ? '' : $thumbnail;
 	}
 }
 
@@ -73,7 +79,7 @@ if (!function_exists('bbb_sss_card_tropes')) {
 
 		if ($terms && !is_wp_error($terms)) {
 			foreach ($terms as $term) {
-				$emoji    = (string) get_term_meta($term->term_id, 'emoji', true);
+				$emoji    = function_exists('bbb_trope_emoji') ? bbb_trope_emoji(get_term_meta($term->term_id, 'emoji', true)) : (string) get_term_meta($term->term_id, 'emoji', true);
 				$tropes[] = array(
 					'name'  => $term->name,
 					'emoji' => $emoji,
@@ -93,13 +99,13 @@ if (!function_exists('bbb_sss_card_tropes')) {
 
 					$tropes[] = array(
 						'name'  => $name,
-						'emoji' => (string) ($trope['emoji'] ?? ''),
+						'emoji' => function_exists('bbb_trope_emoji') ? bbb_trope_emoji($trope['emoji'] ?? '') : (string) ($trope['emoji'] ?? '🖤'),
 						'slug'  => sanitize_title((string) ($trope['slug'] ?? $name)),
 					);
 				} elseif (is_string($trope) && '' !== trim($trope)) {
 					$tropes[] = array(
 						'name'  => trim($trope),
-						'emoji' => '',
+						'emoji' => function_exists('bbb_trope_emoji') ? bbb_trope_emoji() : '🖤',
 						'slug'  => sanitize_title($trope),
 					);
 				}
@@ -158,7 +164,7 @@ $tropes        = bbb_sss_card_tropes($book_id);
 $trope_names   = array_map(static fn(array $trope): string => $trope['name'], $tropes);
 $trope_display = array_map(
 	static function (array $trope): string {
-		return trim(($trope['emoji'] ? $trope['emoji'] . ' ' : '') . $trope['name']);
+		return function_exists('bbb_trope_label') ? bbb_trope_label($trope['name'], $trope['emoji'] ?? '') : trim(((string) ($trope['emoji'] ?? '') ?: '🖤') . ' ' . $trope['name']);
 	},
 	$tropes
 );
@@ -178,6 +184,7 @@ $standalone = bbb_sss_card_bool(bbb_sss_card_field('read_as_standalone', $book_i
 	type="button"
 	class="sss-lib__book<?php echo $mini ? ' sss-lib__book--mini' : ''; ?>"
 	data-handle="<?php echo esc_attr(get_post_field('post_name', $book_id)); ?>"
+	data-url="<?php echo esc_url(get_permalink($book_id)); ?>"
 	data-title="<?php echo esc_attr($title); ?>"
 	data-author="<?php echo esc_attr($author); ?>"
 	data-cover="<?php echo esc_attr($cover_url); ?>"

@@ -113,10 +113,6 @@ function bbb_is_sss_member(): bool {
 }
 
 function bbb_resolve_page_url(string $slug): string {
-	if (function_exists('bbb_page_url')) {
-		return bbb_page_url($slug);
-	}
-
 	$page = get_page_by_path($slug);
 
 	return $page ? get_permalink($page) : home_url('/' . trim($slug, '/') . '/');
@@ -131,24 +127,86 @@ function bbb_require_sss_member(): void {
 	exit;
 }
 
-function bbb_get_book_cover_url(int $post_id): string {
-	if ('bbb_book' === get_post_type($post_id)) {
-		$cover = (string) get_post_meta($post_id, '_bbb_cover_url', true);
-		if ('' !== $cover) {
-			return $cover;
+function bbb_book_cover_value_to_url($value, string $size = 'large'): string {
+	if (is_array($value)) {
+		foreach (array('url', 'src') as $key) {
+			if (!empty($value[$key]) && is_scalar($value[$key])) {
+				return trim((string) $value[$key]);
+			}
+		}
+
+		foreach (array('ID', 'id') as $key) {
+			if (!empty($value[$key])) {
+				$url = wp_get_attachment_image_url((int) $value[$key], $size);
+				if ($url) {
+					return (string) $url;
+				}
+			}
+		}
+
+		return '';
+	}
+
+	if (is_numeric($value)) {
+		$url = wp_get_attachment_image_url((int) $value, $size);
+		if ($url) {
+			return (string) $url;
 		}
 	}
 
-	$field = bbb_get_field('cover', $post_id, '');
-	if (is_array($field)) {
-		return (string) ($field['url'] ?? '');
+	return is_scalar($value) ? trim((string) $value) : '';
+}
+
+function bbb_is_site_logo_url(string $url): bool {
+	$url = trim($url);
+	if ('' === $url) {
+		return false;
 	}
 
-	if ($field) {
-		return (string) $field;
+	$logo_urls = array();
+	if (function_exists('bbb_logo_url')) {
+		$logo_urls[] = bbb_logo_url();
 	}
 
-	return get_the_post_thumbnail_url($post_id, 'large') ?: '';
+	$custom_logo_id = (int) get_theme_mod('custom_logo');
+	if ($custom_logo_id) {
+		$logo_urls[] = (string) wp_get_attachment_image_url($custom_logo_id, 'full');
+	}
+
+	foreach (array_filter($logo_urls) as $logo_url) {
+		if (untrailingslashit($url) === untrailingslashit((string) $logo_url)) {
+			return true;
+		}
+	}
+
+	$path = strtolower((string) wp_parse_url($url, PHP_URL_PATH));
+
+	return str_contains($path, '/bybookishbabe') && preg_match('/\.(?:png|jpe?g|webp|gif|svg)$/', $path);
+}
+
+function bbb_get_book_cover_url(int $post_id, string $size = 'large'): string {
+	$candidates = array(
+		get_post_meta($post_id, '_bbb_cover_url', true),
+		get_post_meta($post_id, 'sss_cover_url', true),
+		get_post_meta($post_id, 'cover', true),
+		get_post_meta($post_id, '_thumbnail_external_url', true),
+	);
+
+	if (function_exists('get_field')) {
+		$candidates[] = get_field('cover', $post_id);
+		$candidates[] = get_field('sss_cover_url', $post_id);
+	}
+
+	foreach ($candidates as $candidate) {
+		$url = bbb_book_cover_value_to_url($candidate, $size);
+		if ('' !== $url && !bbb_is_site_logo_url($url)) {
+			return $url;
+		}
+	}
+
+	$thumbnail = (string) (get_the_post_thumbnail_url($post_id, $size) ?: '');
+
+	return bbb_is_site_logo_url($thumbnail) ? '' : $thumbnail;
 }
 
 function bbb_get_book_author(int $post_id): string {
@@ -218,7 +276,7 @@ function bbb_book_newsletter_is_unlocked(int $post_id): bool {
 }
 
 function bbb_book_is_publicly_visible(int $post_id): bool {
-	if (apply_filters('bbb_show_all_imported_books', true, $post_id)) {
+	if (apply_filters('bbb_show_all_imported_books', false, $post_id)) {
 		return 'publish' === get_post_status($post_id);
 	}
 

@@ -7,6 +7,70 @@
 
 declare(strict_types=1);
 
+if (!function_exists('bbb_society_reader_has_member_access')) {
+	function bbb_society_reader_has_member_access(): bool {
+		$identity = function_exists('bbb_reader_current_identity') ? bbb_reader_current_identity() : null;
+		return is_array($identity) && '' !== trim((string) ($identity['email'] ?? ''));
+	}
+}
+
+if (!function_exists('bbb_society_render_locked_preview_page')) {
+	function bbb_society_render_locked_preview_page(array $args): void {
+		$access = (string) ($args['access'] ?? 'paid');
+		$join_url = get_option('bbb_society_gate_member_url', 'https://thesmutandsentimentsociety.substack.com/subscribe');
+		$kicker = (string) ($args['kicker'] ?? ('member' === $access ? 'member preview' : 'paid society preview'));
+		$title = (string) ($args['title'] ?? 'preview locked');
+		$intro = (string) ($args['intro'] ?? 'peek at what lives here, then join the society to unlock it.');
+		$panel_title = (string) ($args['panel_title'] ?? ('member' === $access ? 'join the society to unlock' : 'upgrade to unlock'));
+		$panel_copy = (string) ($args['panel_copy'] ?? ('member' === $access ? 'this page is open to free and paid society members.' : 'this page is reserved for paid society members.'));
+		$cta = (string) ($args['cta'] ?? ('member' === $access ? 'join the society' : 'upgrade to paid society'));
+		$items = array_values(array_filter((array) ($args['items'] ?? array()), 'is_string'));
+		?>
+		<section class="bbb-access-preview" aria-labelledby="bbb-access-preview-title">
+			<div class="bbb-access-preview__wrap page-width">
+				<header class="bbb-access-preview__hero">
+					<p class="bbb-access-preview__kicker"><?php echo esc_html($kicker); ?></p>
+					<h1 id="bbb-access-preview-title"><?php echo esc_html($title); ?></h1>
+					<p><?php echo esc_html($intro); ?></p>
+				</header>
+				<div class="bbb-access-preview__panel">
+					<div>
+						<p class="bbb-access-preview__eyebrow"><?php echo esc_html('member' === $access ? 'member access' : 'paid access'); ?></p>
+						<h2><?php echo esc_html($panel_title); ?></h2>
+						<p><?php echo esc_html($panel_copy); ?></p>
+					</div>
+					<?php if ($items) : ?>
+						<ul class="bbb-access-preview__list">
+							<?php foreach ($items as $item) : ?>
+								<li><?php echo esc_html($item); ?></li>
+							<?php endforeach; ?>
+						</ul>
+					<?php endif; ?>
+					<a class="bbb-access-preview__button" href="<?php echo esc_url($join_url); ?>" target="_blank" rel="noopener"><?php echo esc_html($cta); ?></a>
+					<a class="bbb-access-preview__back" href="<?php echo esc_url(bbb_page_url('smut-sentiment-society')); ?>">back to the society</a>
+				</div>
+			</div>
+		</section>
+		<style>
+			.bbb-access-preview{background:#090909;color:#f6f1ef;min-height:70vh;padding:clamp(42px,7vw,86px) 0 clamp(56px,8vw,104px);text-transform:lowercase}
+			.bbb-access-preview__wrap{max-width:112rem}
+			.bbb-access-preview__hero{max-width:88rem;margin:0 0 2.6rem}
+			.bbb-access-preview__kicker,.bbb-access-preview__eyebrow{margin:0;color:#f3bfd5;font-size:1.1rem;letter-spacing:.16em;text-transform:uppercase}
+			.bbb-access-preview h1,.bbb-access-preview h2{margin:0;color:#fff;font-family:Cormorant,"Cormorant Garamond",Georgia,serif;font-weight:400;line-height:.96}
+			.bbb-access-preview h1{margin-top:.8rem;font-size:clamp(4.2rem,7vw,8rem)}
+			.bbb-access-preview__hero p{max-width:78ch;margin:1.4rem 0 0;color:rgba(246,241,239,.76);font-size:1.7rem;line-height:1.65}
+			.bbb-access-preview__panel{display:grid;gap:1.6rem;max-width:82rem;padding:clamp(2rem,4vw,3rem);border:1px solid rgba(239,137,191,.28);border-radius:1rem;background:linear-gradient(180deg,rgba(44,39,41,.96),rgba(24,21,22,.98));box-shadow:0 2.4rem 6rem rgba(0,0,0,.24)}
+			.bbb-access-preview h2{margin-top:.4rem;font-size:clamp(3rem,5vw,5.6rem)}
+			.bbb-access-preview__panel p{max-width:70ch;margin:1rem 0 0;color:rgba(246,241,239,.76);font-size:1.55rem;line-height:1.62}
+			.bbb-access-preview__list{display:grid;gap:.8rem;margin:.4rem 0 0;padding:0;list-style:none}
+			.bbb-access-preview__list li{padding:1rem 1.2rem;border:1px solid rgba(255,255,255,.1);border-radius:.8rem;background:rgba(255,255,255,.035);color:rgba(246,241,239,.78);font-size:1.35rem;line-height:1.45}
+			.bbb-access-preview__button{display:inline-flex;align-items:center;justify-content:center;width:min(34rem,100%);min-height:4.6rem;margin-top:.6rem;padding:1rem 1.6rem;border:1px solid rgba(239,137,191,.5);border-radius:999px;background:rgba(239,137,191,.16);color:#fff;font-size:1.2rem;font-weight:800;letter-spacing:.08em;text-decoration:none;text-transform:uppercase}
+			.bbb-access-preview__back{display:inline-flex;color:#ff8ac7;font-size:1.25rem;text-decoration:underline;text-underline-offset:.4rem}
+		</style>
+		<?php
+	}
+}
+
 function bbb_society_newsletter_issue_url(WP_Post $issue): string {
 	$url = (string) get_post_meta($issue->ID, '_bbb_newsletter_url', true);
 	if ('' === $url) {
@@ -70,7 +134,7 @@ function bbb_society_newsletter_issue_image(WP_Post $issue): array {
 				$image_url = (string) sss_article_cover_url($book);
 			}
 			if ('' === $image_url) {
-				$image_url = (string) get_post_meta($book->ID, '_bbb_cover_url', true);
+				$image_url = function_exists('bbb_get_book_cover_url') ? bbb_get_book_cover_url($book->ID) : (string) get_post_meta($book->ID, '_bbb_cover_url', true);
 			}
 			if ('' === $image_url) {
 				$image_url = (string) get_post_meta($book->ID, 'cover', true);

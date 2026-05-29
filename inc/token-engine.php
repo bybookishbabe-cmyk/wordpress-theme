@@ -23,9 +23,14 @@ function sss_token_engine(string $content, int $post_id): string {
 	$books = is_array($books) ? array_values(array_filter($books)) : array();
 	$trope = function_exists('get_field') ? get_field('trope', $post_id) : null;
 
-	$block_tokens = '(?:book(?::\d+)?|bookcard|pillar|pillar\s*nav|pillar\s*bookcard|library|read\s*next|what\s+to\s+read\s+next|whattoreadnext|weekly\s+obsession|series|ku|quickstats(?::\d+)?|newsletter(?:\s+preview)?|newsletter:[^\]]+|specific|bigspecific)';
+	$block_tokens = '(?:book(?::[^\]]+)?|bookpage(?::[^\]]+)?|bookquote(?::[^\]]+)?|bookreview(?::[^\]]+)?|bookcard|pillar|pillar\s*nav|pillar\s*bookcard|library|read\s*next|what\s+to\s+read\s+next|whattoreadnext|weekly\s+obsession|series|ku|quickstats(?::\d+)?|newsletter(?:\s+preview)?|newsletter:[^\]]+|specific(?::[A-Za-z0-9_-]+)?|bigspecific)';
 	$block_token  = '\[' . $block_tokens . '\]';
 	$content = preg_replace('/<p\b[^>]*>\s*(' . $block_token . '(?:\s*(?:<br\s*\/?>)?\s*' . $block_token . ')*)\s*<\/p>/i', '$1', $content) ?? $content;
+	$content = preg_replace(
+		'/<div\b([^>]*\bclass=(["\'])(?=[^"\']*\bbbb-similar-vibes__books\b)[^"\']*\2[^>]*)>.*?\[book:[^\]]+\].*?<\/div>/is',
+		'<div$1>[sss_bookpage_suggestions post_id="' . $post_id . '"]</div>',
+		$content
+	) ?? $content;
 
 	$content = preg_replace_callback(
 		'/\[book:(\d+)\]/i',
@@ -38,9 +43,49 @@ function sss_token_engine(string $content, int $post_id): string {
 		$content
 	) ?? $content;
 
+	$content = preg_replace_callback(
+		'/\[book:([^\]\r\n]+)\]/i',
+		static function (array $matches) use ($post_id): string {
+			$name = trim(wp_strip_all_tags((string) $matches[1]));
+			if ('' === $name) {
+				return $matches[0];
+			}
+
+			return sprintf('[sss_book name="%s" post_id="%d"]', esc_attr($name), $post_id);
+		},
+		$content
+	) ?? $content;
+
+	$content = preg_replace_callback(
+		'/\[bookquote:([^\]\r\n]+)\]/i',
+		static function (array $matches): string {
+			$name = trim(wp_strip_all_tags((string) $matches[1]));
+			if ('' === $name) {
+				return $matches[0];
+			}
+
+			return sprintf('[bookquote name="%s"]', esc_attr($name));
+		},
+		$content
+	) ?? $content;
+
+	$content = preg_replace_callback(
+		'/\[bookreview:([^\]\r\n]+)\]/i',
+		static function (array $matches) use ($post_id): string {
+			$name = trim(wp_strip_all_tags((string) $matches[1]));
+			if ('' === $name) {
+				return $matches[0];
+			}
+
+			return sprintf('[bookreview name="%s" post_id="%d"]', esc_attr($name), $post_id);
+		},
+		$content
+	) ?? $content;
+
 	$map = array(
 		'/\[book\]/i'                  => '[sss_book index="1" post_id="' . $post_id . '"]',
 		'/\[bookcard\]/i'              => '[sss_bookcard post_id="' . $post_id . '"]',
+		'/\[bookpage:suggestions\]/i'  => '[sss_bookpage_suggestions post_id="' . $post_id . '"]',
 		'/\[pillar\s*bookcard\]/i'     => '[sss_pillar_bookcard post_id="' . $post_id . '"]',
 		'/\[library\]/i'               => '[sss_library post_id="' . $post_id . '"]',
 		'/\[signoff\]/i'               => '[sss_signoff]',
@@ -53,14 +98,11 @@ function sss_token_engine(string $content, int $post_id): string {
 		'/\[(?:pillar|pillar\s*nav)\]/i' => '[sss_pillar_nav post_id="' . $post_id . '"]',
 		'/\[newsletter(?:\s+preview)?\]/i' => '[sss_newsletter]',
 		'/\[ku\]/i'                    => '[sss_ku post_id="' . $post_id . '"]',
+		'/\[bookreview\]/i'            => '[bookreview post_id="' . $post_id . '"]',
 	);
 
 	foreach ($map as $pattern => $replacement) {
 		$content = preg_replace($pattern, $replacement, $content) ?? $content;
-	}
-
-	if (preg_match('/\[faq\]/i', $content)) {
-		$content = preg_replace('/<h[1-4]\b[^>]*>\s*frequently\s+asked\s+questions\s*<\/h[1-4]>\s*(?:<hr\s*\/?>\s*)?/i', '', $content) ?? $content;
 	}
 
 	$content = preg_replace('/<p\b[^>]*>\s*(\[faq\])/i', '$1', $content) ?? $content;
@@ -70,6 +112,12 @@ function sss_token_engine(string $content, int $post_id): string {
 	$content = preg_replace_callback(
 		'/\[newsletter:([a-z0-9_-]+)\]/i',
 		static fn(array $matches): string => '[sss_newsletter handle="' . esc_attr($matches[1]) . '"]',
+		$content
+	) ?? $content;
+
+	$content = preg_replace_callback(
+		'/\[specific:([A-Za-z0-9_-]+)\]/i',
+		static fn(array $matches): string => '[sss_specific_links post_id="' . $post_id . '" cluster="' . esc_attr($matches[1]) . '"]',
 		$content
 	) ?? $content;
 

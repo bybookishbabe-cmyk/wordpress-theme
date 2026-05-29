@@ -1176,6 +1176,20 @@ body {
 .article-template__content blockquote p{
   margin: 0;
 }
+
+.article-template__content .bbb-bookquote{
+  display:block;
+}
+
+.article-template__content .bbb-bookquote cite{
+  display:block;
+  margin-top:10px;
+  font-family:"Libre Baskerville",serif;
+  font-size:14px;
+  font-style:normal;
+  letter-spacing:0;
+  color:rgba(255,255,255,.72);
+}
 .article-template__content h2{
   font-size: 32px;
   font-weight: 600;

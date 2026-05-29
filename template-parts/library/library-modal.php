@@ -1,10 +1,10 @@
 <?php
 /**
- * Library modal bridge.
+ * Backward-compatible library modal template alias.
  *
  * @package ByBookishBabeShopifyPort
  */
 
 declare(strict_types=1);
 
-bbb_render_component('library-modal');
+bbb_render_component('sss-library-modal');

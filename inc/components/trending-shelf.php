@@ -15,4 +15,5 @@ $query = $args['query'] ?? bbb_get_public_books_query(array('posts_per_page' => 
 		wp_reset_postdata();
 		?>
 	</div>
+	<?php get_template_part('template-parts/sponsorship/trending-strip', null, array('variant' => 'kindle-unlimited')); ?>
 </section>

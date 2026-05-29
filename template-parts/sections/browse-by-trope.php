@@ -64,6 +64,8 @@ if (empty($trope_cards) || !is_array($trope_cards)) {
           <?php echo esc_html((string) $title); ?>
         </h2>
 
+        <a class="bbb-tropes__dictionaryLink" href="<?php echo esc_url(home_url('/romance-trope-dictionary/')); ?>">see all tropes →</a>
+
       </div>
 
       <div class="bbb-tropes__grid">
@@ -71,8 +73,14 @@ if (empty($trope_cards) || !is_array($trope_cards)) {
         <?php foreach ($trope_cards as $trope_card) : ?>
           <?php
 			$trope_title = (string) ($trope_card['title'] ?? '');
-			$trope_emoji = (string) ($trope_card['emoji'] ?? '');
+			$trope_emoji = function_exists('bbb_trope_emoji') ? bbb_trope_emoji($trope_card['emoji'] ?? '') : ((string) ($trope_card['emoji'] ?? '') ?: '🖤');
 			$trope_url   = (string) ($trope_card['url'] ?? '');
+			if (str_contains(sanitize_title($trope_title), 'dark-romance')) {
+				$trope_url = home_url('/dark-romance-books/');
+			}
+			if ('sports-romance' === sanitize_title($trope_title)) {
+				$trope_url = home_url('/sports-romance-books/');
+			}
 			?>
         <a href="<?php echo esc_url($trope_url); ?>"
            class="bbb-trope-card"

@@ -12,6 +12,8 @@ get_header();
 <div class="bbb-home bbb-home--shopify">
 	<?php
 	get_template_part('template-parts/hero-smut-sentiment');
+	get_template_part('template-parts/sponsorship/header-banner');
+	get_template_part('template-parts/home/personalized-shelf-week');
 	get_template_part('template-parts/homepage/weekly-obsession');
 	bbb_render_section('trending-romance-reads');
 	get_template_part('template-parts/sections/browse-by-trope');

@@ -8,6 +8,19 @@
     return String(value || '').toLowerCase().trim();
   }
 
+  function includesAny(value, needles) {
+    var text = normalizeText(value);
+    return (needles || []).some(function(needle) {
+      return text.indexOf(normalizeText(needle)) !== -1;
+    });
+  }
+
+  function escapeHtml(value) {
+    return String(value || '').replace(/[&<>"']/g, function(char) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char];
+    });
+  }
+
   function uniq(items) {
     var seen = {};
     return (items || []).filter(function(item) {
@@ -16,6 +29,153 @@
       seen[key] = true;
       return true;
     });
+  }
+
+  function customTropeKey(trope) {
+    var value = normalizeText(trope).replace(/^[^\w\s]+/i, '').replace(/\s+/g, ' ').trim();
+    var key = value.replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+    if (key === 'billionaire') return 'billionaire-romance';
+    if (key === 'bodyguard') return 'bodyguard-romance';
+    if (key === 'bully') return 'bully-romance';
+    if (key === 'brother-s-best-friend' || key === 'brother-best-friend' || value.indexOf("brother's best friend") !== -1) return 'brothers-best-friend';
+    if (key === 'captor-captive-romance' || value.indexOf('captor') !== -1 || value.indexOf('captive') !== -1) return 'captor-x-captive';
+    if (key === 'fake-dating-romance') return 'fake-dating';
+    if (key === 'forbidden-romance') return 'forbidden-love';
+    if (key === 'grumpy-sunshine') return 'grumpy-x-sunshine';
+    if (key === 'nanny-romance') return 'nanny';
+    if (key === 'paranormal') return 'paranormal-romance';
+    if (key === 'single-dad-romance') return 'single-dad';
+    if (key === 'small-town-romance') return 'small-town';
+    if (key === 'sports') return 'sports-romance';
+    if (key === 'stalker') return 'stalker-romance';
+    if (key === 'stepsiblings') return 'step-siblings';
+    if (key === 'villain-romance') return 'villain-gets-the-girl';
+    if (key === 'workplace') return 'boss-x-employee';
+
+    return key;
+  }
+
+  function customTropeEmojiHtml(trope) {
+    var map = window.BBBSiteData && window.BBBSiteData.customTropeEmojis ? window.BBBSiteData.customTropeEmojis : {};
+    var src = map[customTropeKey(trope)];
+    if (!src) return '';
+
+    return '<img class="bbb-custom-emoji" src="' + escapeHtml(src) + '" alt="" aria-hidden="true" loading="lazy" decoding="async">';
+  }
+
+  function tropeEmoji(trope) {
+    var value = normalizeText(trope);
+    if (includesAny(value, ['slow burn', 'yearning'])) return '\uD83D\uDD6F\uFE0F';
+    if (includesAny(value, ['enemies to lovers', 'rivals', 'banter', 'hate to love'])) return '\u2694\uFE0F';
+    if (includesAny(value, ['friends to lovers', 'comfort', 'healing', 'found family'])) return '\uD83E\uDD0D';
+    if (includesAny(value, ['forced proximity', 'one bed'])) return '\uD83D\uDECF\uFE0F';
+    if (includesAny(value, ['fake dating', 'marriage of convenience'])) return '\uD83D\uDC8D';
+    if (includesAny(value, ['second chance', 'emotional damage', 'angst'])) return '\uD83D\uDC94';
+    if (includesAny(value, ['dark', 'morally gray', 'villain', 'mafia'])) return '\uD83E\uDD40';
+    if (includesAny(value, ['obsession', 'stalker', 'possessive', 'touch her'])) return '\uD83D\uDDA4';
+    if (includesAny(value, ['sports', 'hockey'])) return '\uD83C\uDFD2';
+    if (includesAny(value, ['forbidden'])) return '\uD83C\uDF52';
+    if (includesAny(value, ['grumpy'])) return '\u2615';
+    if (includesAny(value, ['small town'])) return '\uD83C\uDF42';
+    if (includesAny(value, ['romantasy', 'fantasy', 'fated mates', 'paranormal'])) return '\uD83C\uDF19';
+    if (includesAny(value, ['workplace', 'billionaire'])) return '\uD83D\uDC8B';
+    return '\uD83D\uDCDA';
+  }
+
+  function tropeEmojiEntity(trope) {
+    var value = normalizeText(trope);
+    if (includesAny(value, ['slow burn', 'yearning'])) return '&#x1f56f;&#xfe0f;';
+    if (includesAny(value, ['enemies to lovers', 'rivals', 'banter', 'hate to love'])) return '&#x2694;&#xfe0f;';
+    if (includesAny(value, ['friends to lovers', 'comfort', 'healing', 'found family'])) return '&#x1f90d;';
+    if (includesAny(value, ['forced proximity', 'one bed'])) return '&#x1f6cf;&#xfe0f;';
+    if (includesAny(value, ['fake dating', 'marriage of convenience'])) return '&#x1f48d;';
+    if (includesAny(value, ['second chance', 'emotional damage', 'angst'])) return '&#x1f494;';
+    if (includesAny(value, ['dark', 'morally gray', 'villain', 'mafia'])) return '&#x1f940;';
+    if (includesAny(value, ['obsession', 'stalker', 'possessive', 'touch her'])) return '&#x1f5a4;';
+    if (includesAny(value, ['sports', 'hockey'])) return '&#x1f3d2;';
+    if (includesAny(value, ['forbidden'])) return '&#x1f352;';
+    if (includesAny(value, ['grumpy'])) return '&#x2615;';
+    if (includesAny(value, ['small town'])) return '&#x1f342;';
+    if (includesAny(value, ['romantasy', 'fantasy', 'fated mates', 'paranormal'])) return '&#x1f319;';
+    if (includesAny(value, ['workplace', 'billionaire'])) return '&#x1f48b;';
+    return '&#x1f4da;';
+  }
+
+  function tropeLabel(trope) {
+    var value = String(trope || '').trim().toLowerCase().replace(/^[^\w\s]+\s*/i, '').trim();
+    if (!value) return '';
+    return tropeEmoji(value) + ' ' + value;
+  }
+
+  function tropeLabelHtml(trope) {
+    var value = String(trope || '').trim().toLowerCase().replace(/^[^\w\s]+\s*/i, '').trim();
+    if (!value) return '';
+    var custom = customTropeEmojiHtml(value);
+    if (custom) return custom + ' <span class="bbb-custom-emoji-label">' + escapeHtml(value) + '</span>';
+    return tropeEmojiEntity(value) + ' ' + escapeHtml(value);
+  }
+
+  function tropeList(tropes, separator) {
+    return (tropes || []).map(tropeLabel).filter(Boolean).join(separator || ', ');
+  }
+
+  function tropeListHtml(tropes, separator) {
+    return (tropes || []).map(tropeLabelHtml).filter(Boolean).join(escapeHtml(separator || ', '));
+  }
+
+  var preferenceMap = {
+    vibe: {
+      emotional: { shelf: 'contemporary romance', tropes: ['second chance romance', 'slow burn', 'friends to lovers', 'trauma bonding'] },
+      danger: { shelf: 'dark romance', tropes: ['stalker romance', 'touch her and die', 'mafia romance', 'enemies to lovers'] },
+      fantasy: { shelf: 'romantasy', tropes: ['fated mates', 'enemies to lovers', 'slow burn', 'found family'] },
+      banter: { shelf: 'contemporary romance', tropes: ['fake dating romance', 'opposites attract', 'forced proximity', 'friends to lovers'] }
+    },
+    heat: {
+      soft: 1,
+      warm: 2,
+      spicy: 4,
+      feral: 5
+    },
+    darkness: {
+      soft: 0,
+      messy: 2,
+      dark: 4,
+      unhinged: 5
+    }
+  };
+
+  function answersFromForm(form) {
+    var data = new window.FormData(form);
+    return {
+      vibe: String(data.get('vibe') || ''),
+      heat: String(data.get('heat') || ''),
+      darkness: String(data.get('darkness') || ''),
+      access: String(data.get('access') || 'any')
+    };
+  }
+
+  function buildSeedBook(anchor, answers) {
+    var vibe = preferenceMap.vibe[answers.vibe] || {};
+    var seed = Object.assign({}, anchor || {});
+    var seedTropes = (anchor && anchor.tropes ? anchor.tropes : []).concat(vibe.tropes || []);
+
+    seed.handle = anchor && anchor.handle ? anchor.handle : '';
+    seed.title = anchor && anchor.title ? anchor.title : 'your custom reader mood';
+    seed.author = anchor && anchor.author ? anchor.author : '';
+    seed.shelf = anchor && anchor.shelf ? anchor.shelf : (vibe.shelf || '');
+    seed.tropes = uniq(seedTropes);
+    seed.spice = preferenceMap.heat[answers.heat] || anchor && anchor.spice || 0;
+    seed.darkness = preferenceMap.darkness[answers.darkness] != null ? preferenceMap.darkness[answers.darkness] : (anchor && anchor.darkness || 0);
+    seed.preferences = {
+      access: answers.access,
+      shelf: vibe.shelf || '',
+      tropes: vibe.tropes || [],
+      vibe: answers.vibe,
+      hasAnchor: Boolean(anchor && anchor.handle)
+    };
+
+    return seed;
   }
 
   function setHidden(el, hidden) {
@@ -101,7 +261,15 @@
     var darknessDiff = Math.abs(Number(baseBook.darkness || 0) - Number(candidate.darkness || 0));
     var relatedScore = relatedTropeScore(baseBook, candidate);
     var boyfriendScore = baseBook.boyfriend && normalizeText(baseBook.boyfriend) === normalizeText(candidate.boyfriend) ? 24 : 0;
-    var matchScore = (shared.length * 100) + (relatedScore * 28) + (sameShelf ? 150 : 0) + boyfriendScore - (spiceDiff * 10) - (darknessDiff * 8);
+    var preferences = baseBook.preferences || {};
+    var preferredTropes = (preferences.tropes || []).map(normalizeText);
+    var candidateTropes = (candidate.tropes || []).map(normalizeText);
+    var preferredOverlap = preferredTropes.filter(function(trope) {
+      return candidateTropes.indexOf(trope) !== -1;
+    }).length;
+    var preferredShelf = preferences.shelf && candidate.shelf && normalizeText(preferences.shelf) === normalizeText(candidate.shelf);
+    var kuScore = preferences.access === 'ku' ? (candidate.ku === 'true' ? 55 : -25) : 0;
+    var matchScore = (shared.length * 100) + (preferredOverlap * 42) + (relatedScore * 28) + (sameShelf ? 150 : 0) + (preferredShelf ? 70 : 0) + boyfriendScore + kuScore - (spiceDiff * 10) - (darknessDiff * 8);
     return { book: candidate, shared: shared, sameShelf: sameShelf, spiceDiff: spiceDiff, darknessDiff: darknessDiff, relatedScore: relatedScore, matchScore: matchScore };
   }
 
@@ -127,7 +295,7 @@
 
   function getMatches(books, selected, rotationStep) {
     var candidates = books.filter(function(book) {
-      return book.handle !== selected.handle;
+      return !selected.handle || book.handle !== selected.handle;
     }).map(function(book) {
       return scoreCandidate(selected, book);
     }).sort(sortByStrength);
@@ -158,31 +326,28 @@
     var second = pick(tropePool, used, rotationStep + 1);
     if (second) used.push(second.book.handle);
     var third = pick(spicePool, used, rotationStep + 2);
-    if (third) used.push(third.book.handle);
-    var fourth = pick(candidates, used, rotationStep + 3);
-    return [first, second, third, fourth].filter(Boolean);
+    return [first, second, third].filter(Boolean);
   }
 
   function metaText(book, shared) {
     var pieces = [];
     if (book.shelf) pieces.push(book.shelf);
     if (book.spice) pieces.push(book.spice + '/5 spice');
-    if (shared && shared.length) pieces.push(shared.slice(0, 2).join(' + '));
     return pieces.join(' · ');
   }
 
   function reasonText(match, index) {
     if (!match) return '';
-    if (index === 0 && match.sameShelf && match.shared.length) {
-      return 'same shelf, familiar trope chemistry, and close enough heat to keep the mood intact.';
-    }
-    if (index === 1 && match.shared.length) {
-      return 'this one follows the trope thread: ' + match.shared.slice(0, 3).join(', ') + '.';
-    }
-    if (match.spiceDiff <= 1) {
-      return 'a moodier wildcard with a similar spice level and enough shared texture to make sense.';
-    }
-    return 'a wildcard pick from the library that still has the strongest available overlap.';
+    var book = match.book || {};
+    var tropes = uniq((match.shared || []).concat(book.tropes || []));
+    return tropes.length ? 'tropes: ' + tropeList(tropes.slice(0, 5), ', ') : '';
+  }
+
+  function reasonHtml(match, index) {
+    if (!match) return '';
+    var book = match.book || {};
+    var tropes = uniq((match.shared || []).concat(book.tropes || [])).slice(0, 5);
+    return tropes.length ? '<span>tropes: </span>' + tropeListHtml(tropes, ', ') : '';
   }
 
   function readStatusStore() {
@@ -307,13 +472,22 @@
     var dataNode = section.querySelector('[data-next-books]');
     var pickerTrigger = section.querySelector('[data-next-picker-trigger]');
     var pickerLabel = section.querySelector('[data-next-picker-label]');
+    var modePanel = section.querySelector('[data-next-mode-panel]');
+    var libraryPanel = section.querySelector('[data-next-library-panel]');
+    var quizForm = section.querySelector('[data-next-quiz]');
+    var quizKicker = section.querySelector('[data-next-quiz-kicker]');
     var pickerInput = section.querySelector('[data-next-picker]');
     var searchModal = section.querySelector('[data-next-search-modal]');
     var searchResults = section.querySelector('[data-next-search-results]');
     var sourceWrap = section.querySelector('[data-next-source]');
     var resultsWrap = section.querySelector('[data-next-results]');
+    var actionsWrap = section.querySelector('[data-next-actions]');
     var clearButton = section.querySelector('[data-next-clear]');
     var refreshButton = section.querySelector('[data-next-refresh]');
+    var resetButton = section.querySelector('[data-next-reset]');
+    var takeAgainButton = section.querySelector('[data-next-take-again]');
+    var shareButton = section.querySelector('[data-next-share]');
+    var resultsSub = section.querySelector('[data-next-results-sub]');
     if (!dataNode || !pickerTrigger || !pickerInput || !searchModal || !searchResults || !sourceWrap || !resultsWrap) return;
 
     var books = [];
@@ -332,6 +506,9 @@
     var byHandle = {};
     var rotationStep = 0;
     var selected = null;
+    var selectedAnchor = null;
+    var currentAnswers = null;
+    var currentMode = '';
     books.forEach(function(book) {
       byHandle[book.handle] = book;
     });
@@ -380,22 +557,38 @@
       }
     }
 
+    function showQuiz(mode) {
+      currentMode = mode || currentMode || 'specific';
+      setHidden(quizForm, false);
+      setHidden(resultsWrap, true);
+      setHidden(actionsWrap, true);
+      if (quizKicker) {
+        quizKicker.textContent = currentMode === 'library' ? 'tune the match' : 'tiny reader interview';
+      }
+    }
+
     function renderCard(card, match, index) {
       if (!card || !match) {
         setHidden(card, true);
+        card.classList.remove('is-swipe-visible');
         return;
       }
       var book = match.book;
       setHidden(card, false);
+      card.classList.remove('is-swipe-visible');
+      card.style.setProperty('--bbb-next-card-delay', String(index * 140) + 'ms');
       var open = card.querySelector('[data-next-open]');
       var cover = card.querySelector('[data-next-cover]');
       var spice = card.querySelector('[data-next-spice]');
+      var amazonLink = card.querySelector('[data-next-amazon]');
+      var bookshopLink = card.querySelector('[data-next-bookshop]');
+      var grabLinks = card.querySelector('[data-next-grab-links]');
       setBookAttrs(open, book);
       card.querySelector('[data-next-mood]').textContent = match.shared.length ? match.shared.slice(0, 2).join(' + ') : (book.shelf || 'library match');
       card.querySelector('[data-next-title]').textContent = book.title || '';
       card.querySelector('[data-next-author]').textContent = book.author ? 'by ' + book.author : '';
       card.querySelector('[data-next-meta]').textContent = metaText(book, match.shared);
-      card.querySelector('[data-next-reason]').textContent = reasonText(match, index);
+      card.querySelector('[data-next-reason]').innerHTML = reasonHtml(match, index);
       if (cover) {
         cover.src = book.cover || '';
         cover.alt = book.title || '';
@@ -403,6 +596,17 @@
       if (spice) {
         spice.hidden = !book.spice;
         spice.textContent = book.spice ? '🌶'.repeat(Math.max(0, Math.min(5, Number(book.spice)))) : '';
+      }
+      if (amazonLink) {
+        amazonLink.hidden = !book.amazon;
+        amazonLink.href = book.amazon || '#';
+      }
+      if (bookshopLink) {
+        bookshopLink.hidden = !book.bookshop;
+        bookshopLink.href = book.bookshop || '#';
+      }
+      if (grabLinks) {
+        grabLinks.hidden = !book.amazon && !book.bookshop;
       }
       var link = card.querySelector('[data-next-link]');
       if (link) {
@@ -426,19 +630,108 @@
       }
     }
 
-    function renderResults(book) {
+    function renderResults(book, answers) {
       selected = book;
-      pickerLabel.textContent = book.label || book.title;
-      renderSource(book);
+      currentAnswers = answers || currentAnswers || {};
+      if (book.handle && pickerLabel) {
+        pickerLabel.textContent = book.label || book.title;
+      }
       setHidden(resultsWrap, false);
+      setHidden(actionsWrap, false);
+      if (resultsSub) {
+        resultsSub.textContent = 'start with the closest shelf twin, then move into the trope twin, then the spice-mood wildcard.';
+      }
       var matches = getMatches(books, book, rotationStep);
+      var renderedCards = [];
       Array.prototype.slice.call(section.querySelectorAll('[data-next-card]')).forEach(function(card, index) {
-        card.classList.remove('is-entering');
         renderCard(card, matches[index], index);
-        if (!card.hidden) {
-          card.style.setProperty('--next-card-index', String(index));
-          void card.offsetWidth;
-          card.classList.add('is-entering');
+        if (matches[index]) renderedCards.push(card);
+      });
+      window.setTimeout(function() {
+        renderedCards.forEach(function(card, index) {
+          window.setTimeout(function() {
+            card.classList.add('is-swipe-visible');
+          }, index * 140);
+        });
+      }, 30);
+    }
+
+    function collapsePrompt() {
+      setHidden(modePanel, true);
+      setHidden(libraryPanel, true);
+      setHidden(sourceWrap, true);
+      setHidden(quizForm, true);
+      section.classList.add('has-results');
+    }
+
+    function resetFlow() {
+      selected = null;
+      selectedAnchor = null;
+      currentAnswers = null;
+      currentMode = '';
+      pickerLabel.textContent = 'pick a book to start';
+      if (quizForm) quizForm.reset();
+      setHidden(modePanel, false);
+      setHidden(libraryPanel, true);
+      setHidden(quizForm, true);
+      setHidden(sourceWrap, true);
+      setHidden(resultsWrap, true);
+      setHidden(actionsWrap, true);
+      section.classList.remove('has-results');
+    }
+
+    function shareResults() {
+      var url = new URL(window.location.href);
+      if (selected && selected.handle) {
+        url.searchParams.set('book', selected.handle);
+      }
+      var shareData = {
+        title: 'what to read next',
+        text: 'here are my bybookishbabe next-read picks',
+        url: url.toString()
+      };
+      var shareLabel = shareButton ? shareButton.querySelector('[data-next-share-label]') : null;
+      var originalLabel = shareLabel ? shareLabel.textContent : (shareButton ? shareButton.textContent : '');
+      var markShared = function(label) {
+        if (!shareButton) return;
+        if (shareLabel) shareLabel.textContent = label;
+        else shareButton.textContent = label;
+        window.setTimeout(function() {
+          if (shareLabel) shareLabel.textContent = originalLabel || 'share result';
+          else shareButton.textContent = originalLabel || 'share result';
+        }, 1800);
+      };
+
+      if (navigator.share) {
+        navigator.share(shareData).catch(function() {});
+        return;
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareData.url).then(function() {
+          markShared('copied');
+        }).catch(function() {
+          markShared('copy failed');
+        });
+      }
+    }
+
+    if (modePanel) {
+      modePanel.addEventListener('click', function(event) {
+        var button = event.target.closest('[data-next-mode]');
+        if (!button) return;
+        currentMode = button.getAttribute('data-next-mode') || '';
+        setHidden(modePanel, true);
+        setHidden(resultsWrap, true);
+        setHidden(actionsWrap, true);
+        if (currentMode === 'library') {
+          setHidden(libraryPanel, false);
+          setHidden(quizForm, true);
+          setHidden(sourceWrap, true);
+        } else {
+          setHidden(libraryPanel, true);
+          setHidden(sourceWrap, true);
+          selectedAnchor = null;
+          showQuiz('specific');
         }
       });
     }
@@ -452,9 +745,26 @@
       var handle = decodeURIComponent(result.getAttribute('data-next-handle') || '');
       if (byHandle[handle]) {
         closeSearch();
-        renderResults(byHandle[handle]);
+        selectedAnchor = byHandle[handle];
+        pickerLabel.textContent = selectedAnchor.label || selectedAnchor.title;
+        currentAnswers = null;
+        rotationStep = 0;
+        renderResults(selectedAnchor);
+        collapsePrompt();
+        resultsWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     });
+    if (quizForm) {
+      quizForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        var answers = answersFromForm(quizForm);
+        currentAnswers = answers;
+        rotationStep = 0;
+        renderResults(buildSeedBook(selectedAnchor, answers), answers);
+        collapsePrompt();
+        resultsWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
     section.addEventListener('click', function(event) {
       var statusButton = event.target.closest('[data-next-status]');
       if (!statusButton) return;
@@ -475,7 +785,7 @@
       }
       writeStatus(handle, status);
       if (byHandle[handle]) {
-        renderResults(selected);
+        renderResults(selected, currentAnswers);
       }
     });
     document.addEventListener('keydown', function(event) {
@@ -484,23 +794,39 @@
     if (clearButton) {
       clearButton.addEventListener('click', function() {
         selected = null;
+        selectedAnchor = null;
         pickerLabel.textContent = 'pick a book to start';
         setHidden(sourceWrap, true);
         setHidden(resultsWrap, true);
+        setHidden(actionsWrap, true);
+        setHidden(quizForm, true);
       });
+    }
+    if (resetButton) {
+      resetButton.addEventListener('click', resetFlow);
+    }
+    if (takeAgainButton) {
+      takeAgainButton.addEventListener('click', resetFlow);
+    }
+    if (shareButton) {
+      shareButton.addEventListener('click', shareResults);
     }
     if (refreshButton) {
       refreshButton.addEventListener('click', function() {
         if (!selected) return;
         rotationStep += 1;
-        renderResults(selected);
+        renderResults(selected, currentAnswers);
       });
     }
 
     var url = new URL(window.location.href);
     var initial = url.searchParams.get('book') || url.searchParams.get('source') || '';
     if (initial && byHandle[initial]) {
-      renderResults(byHandle[initial]);
+      selectedAnchor = byHandle[initial];
+      pickerLabel.textContent = selectedAnchor.label || selectedAnchor.title;
+      currentAnswers = null;
+      renderResults(selectedAnchor);
+      collapsePrompt();
     }
   });
 })();

@@ -18,6 +18,36 @@ $reader_user_id  = $reader_identity ? (int) ($reader_identity['userId'] ?? 0) : 
 $has_reader_access = '' !== $reader_email;
 $is_society = function_exists('bbb_reader_is_society') ? bbb_reader_is_society() : false;
 $books      = function_exists('bbb_reader_quiz_books') ? bbb_reader_quiz_books() : array();
+$account_data = array();
+
+if ($has_reader_access && function_exists('bbb_reader_account_response_for_identity')) {
+	try {
+		$account_data = bbb_reader_account_response_for_identity((array) $reader_identity);
+	} catch (Throwable $error) {
+		error_log('BBB bookshelf page failed softly: ' . $error->getMessage());
+		$account_data = array(
+			'accessTier' => 'free',
+			'books'      => array(),
+			'readerType' => array(
+				'title'     => 'fresh shelf romantic',
+				'summary'   => 'your bookshelf opened, but the account sync needs a retry.',
+				'topTropes' => array(),
+				'counts'    => array('saved' => 0, 'read' => 0, 'reading' => 0, 'tbr' => 0),
+			),
+			'nextRead'   => null,
+		);
+	}
+}
+$reader_type = isset($account_data['readerType']) && is_array($account_data['readerType']) ? $account_data['readerType'] : array(
+	'title'     => 'fresh shelf romantic',
+	'summary'   => 'save or tag a few books and this will start calling your pattern.',
+	'topTropes' => array(),
+	'counts'    => array('saved' => 0, 'read' => 0, 'reading' => 0, 'tbr' => 0),
+);
+$reader_type_title = trim((string) ($reader_type['title'] ?? 'fresh shelf romantic'));
+$reader_type_summary = trim((string) ($reader_type['summary'] ?? 'save or tag a few books and this will start calling your pattern.'));
+$reader_type_counts = is_array($reader_type['counts'] ?? null) ? $reader_type['counts'] : array();
+$reader_type_tropes = is_array($reader_type['topTropes'] ?? null) ? array_values(array_filter($reader_type['topTropes'])) : array();
 
 if (!function_exists('bbb_my_bookshelf_quote_text')) {
 	function bbb_my_bookshelf_quote_text(WP_Post $quote): string {
@@ -127,6 +157,33 @@ get_header();
 				</div>
 			</div>
 
+			<?php if ($has_reader_access) : ?>
+				<section class="bbb-account-shelf__readerProfile bbb-account-shelf__readerProfile--bookshelf" aria-label="reader type">
+					<div class="bbb-account-shelf__readerType">
+						<p class="bbb-account-shelf__perkKicker">reader type</p>
+						<h2><?php echo esc_html($reader_type_title); ?></h2>
+						<p><?php echo esc_html($reader_type_summary); ?></p>
+					</div>
+					<div class="bbb-account-shelf__readerTypeSide">
+						<div class="bbb-account-shelf__readerStats" aria-label="bookshelf stats">
+							<span><?php echo esc_html((string) ($reader_type_counts['saved'] ?? 0)); ?> saved</span>
+							<span><?php echo esc_html((string) ($reader_type_counts['read'] ?? 0)); ?> read</span>
+							<span><?php echo esc_html((string) ($reader_type_counts['reading'] ?? 0)); ?> reading</span>
+							<span><?php echo esc_html((string) ($reader_type_counts['tbr'] ?? 0)); ?> tbr</span>
+						</div>
+						<?php if ($reader_type_tropes) : ?>
+							<div class="bbb-account-shelf__readerSignals" aria-label="top reader tropes">
+								<?php foreach (array_slice($reader_type_tropes, 0, 3) as $trope) : ?>
+									<span><?php echo esc_html((string) $trope); ?></span>
+								<?php endforeach; ?>
+							</div>
+						<?php else : ?>
+							<p class="bbb-account-shelf__readerHint">tag a few books and your top tropes will show here.</p>
+						<?php endif; ?>
+					</div>
+				</section>
+			<?php endif; ?>
+
 			<div class="bbb-account-shelf__feature" data-account-read-feature hidden>
 				<div class="bbb-account-shelf__readShelf">
 					<div class="bbb-account-shelf__featureHead">
@@ -185,6 +242,7 @@ get_header();
 			<script type="application/json" data-account-library-quotes><?php echo wp_json_encode($quotes, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?></script>
 		</div>
 	</section>
+	<?php bbb_render_component('library-modal'); ?>
 </main>
 
 <?php

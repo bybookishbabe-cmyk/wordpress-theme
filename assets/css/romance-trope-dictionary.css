@@ -1,0 +1,196 @@
+.bbb-trope-dictionary{
+  min-height:100vh;
+  padding:clamp(72px, 9vw, 128px) 20px;
+  background:#050505;
+  color:#f7f1f4;
+}
+
+.bbb-trope-dictionary__wrap{
+  width:min(1120px, 100%);
+  margin:0 auto;
+}
+
+.bbb-trope-dictionary__hero{
+  max-width:760px;
+  margin:0 0 clamp(34px, 5vw, 58px);
+}
+
+.bbb-trope-dictionary__kicker{
+  margin:0 0 14px;
+  color:#e98abb;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+}
+
+.bbb-trope-dictionary__hero h1{
+  margin:0;
+  color:#fff;
+  font-family:var(--font-heading-family, Georgia, serif);
+  font-size:clamp(42px, 7vw, 82px);
+  font-weight:500;
+  line-height:.95;
+}
+
+.bbb-trope-dictionary__hero p{
+  max-width:620px;
+  margin:18px 0 0;
+  color:rgba(247,241,244,.74);
+  font-size:18px;
+  line-height:1.6;
+}
+
+.bbb-trope-dictionary__list{
+  display:grid;
+  gap:10px;
+}
+
+.bbb-trope-dictionary__card{
+  display:grid;
+  grid-template-columns:58px minmax(0, 1fr) auto 34px;
+  gap:16px;
+  align-items:center;
+  min-height:96px;
+  padding:16px 18px;
+  color:inherit;
+  text-decoration:none;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:8px;
+  background:rgba(255,255,255,.035);
+  transition:transform .2s ease, border-color .2s ease, background-color .2s ease;
+}
+
+.bbb-trope-dictionary__card:hover,
+.bbb-trope-dictionary__card:focus-visible{
+  transform:translateY(-2px);
+  border-color:rgba(233,138,187,.6);
+  background:rgba(255,255,255,.055);
+  outline:0;
+}
+
+.bbb-trope-dictionary__card.needs-custom-emoji{
+  border-color:rgba(255,255,255,.11);
+}
+
+.bbb-trope-dictionary__emoji{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:58px;
+  height:58px;
+}
+
+.bbb-trope-dictionary__card.needs-custom-emoji .bbb-trope-dictionary__emoji{
+  color:rgba(247,241,244,.42);
+  font-size:28px;
+  font-style:normal;
+}
+
+.bbb-trope-dictionary__emojiImage{
+  display:block;
+  width:auto;
+  max-width:58px;
+  height:58px;
+  object-fit:contain;
+}
+
+.bbb-trope-dictionary__copy{
+  display:grid;
+  gap:7px;
+  min-width:0;
+}
+
+.bbb-trope-dictionary__copy strong{
+  color:#fff;
+  font-size:20px;
+  line-height:1.15;
+  text-transform:lowercase;
+}
+
+.bbb-trope-dictionary__copy span{
+  color:rgba(247,241,244,.72);
+  font-size:14px;
+  line-height:1.45;
+}
+
+.bbb-trope-dictionary__meta{
+  display:grid;
+  justify-items:end;
+  gap:5px;
+  white-space:nowrap;
+}
+
+.bbb-trope-dictionary__meta span,
+.bbb-trope-dictionary__meta small{
+  color:#e98abb;
+  font-size:11px;
+  font-style:normal;
+  font-weight:800;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+
+.bbb-trope-dictionary__meta small{
+  color:rgba(247,241,244,.46);
+  font-size:10px;
+}
+
+.bbb-trope-dictionary__card.needs-custom-emoji .bbb-trope-dictionary__meta span{
+  color:rgba(247,241,244,.5);
+}
+
+.bbb-trope-dictionary__arrow{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:34px;
+  height:34px;
+  color:#050505;
+  background:#e98abb;
+  border-radius:999px;
+  font-size:20px;
+  font-weight:800;
+  line-height:1;
+}
+
+@media (max-width:760px){
+  .bbb-trope-dictionary{
+    padding:56px 14px;
+  }
+
+  .bbb-trope-dictionary__card{
+    min-height:132px;
+    grid-template-columns:92px minmax(0, 1fr) 34px;
+    gap:14px;
+    padding:16px;
+  }
+
+  .bbb-trope-dictionary__emoji{
+    width:92px;
+    height:92px;
+  }
+
+  .bbb-trope-dictionary__card.needs-custom-emoji .bbb-trope-dictionary__emoji{
+    font-size:54px;
+  }
+
+  img.bbb-trope-dictionary__emojiImage,
+  .bbb-trope-dictionary__emojiImage{
+    width:92px;
+    max-width:92px;
+    height:92px;
+    max-height:92px;
+  }
+
+  .bbb-trope-dictionary__meta{
+    grid-column:2;
+    grid-row:2;
+    justify-items:start;
+  }
+
+  .bbb-trope-dictionary__arrow{
+    grid-column:3;
+    grid-row:1 / span 2;
+  }
+}

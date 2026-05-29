@@ -239,7 +239,7 @@
 .bbb-home-obsession__tropes {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px 14px;
   margin-top: 14px;
   justify-content: center;
 }
@@ -247,23 +247,36 @@
 .bbb-home-obsession__trope {
   display: inline-flex;
   align-items: center;
-  padding: 9px 13px;
-  border-radius: 999px;
-  background: var(--trope-bg, rgba(255,255,255,.04));
-  border: 1px solid color-mix(in srgb, var(--trope-bg, rgba(255,255,255,.04)) 78%, #ffffff 22%);
-  color: var(--trope-text, #f6f6f6);
+  gap: 5px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  color: rgba(246,246,246,.76);
   font-size: 12px;
-  letter-spacing: .03em;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0;
   text-decoration: none;
-  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease, background-color .22s ease;
+  transition: transform .22s ease, color .22s ease;
+}
+
+.bbb-home-obsession__trope .bbb-custom-emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.45em;
+  height: 1.45em;
+  object-fit: contain;
+  flex: 0 0 auto;
+  border-radius: 4px;
+  vertical-align: -.28em;
 }
 
 a.bbb-home-obsession__trope:hover,
 a.bbb-home-obsession__trope:focus-visible {
-  transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--trope-bg, rgba(255,255,255,.04)) 68%, #ffffff 32%);
-  background: color-mix(in srgb, var(--trope-bg, rgba(255,255,255,.04)) 88%, #ffffff 12%);
-  box-shadow: 0 10px 24px rgba(0,0,0,.18);
+  transform: translateY(-1px);
+  color: #ffb0d8;
 }
 
 /* ── Copy column ── */
@@ -294,12 +307,112 @@ a.bbb-home-obsession__trope:focus-visible {
   line-height: .98;
 }
 
+.bbb-home-obsession__memberLink,
+.sss-wo__memberLink {
+  display: inline-flex;
+  margin-top: 12px;
+  color: #ffb0d8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  line-height: 1.35;
+  text-decoration: none;
+  text-transform: uppercase;
+  text-underline-offset: 4px;
+}
+
+.bbb-home-obsession__memberLink:hover,
+.bbb-home-obsession__memberLink:focus-visible,
+.sss-wo__memberLink:hover,
+.sss-wo__memberLink:focus-visible {
+  text-decoration: underline;
+}
+
 .bbb-home-obsession__sub {
   margin: 12px 0 0;
   max-width: 33ch;
   font-size: 16px;
   line-height: 1.65;
   color: rgba(246,246,246,.72);
+}
+
+.bbb-home-obsession__ratings {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.bbb-home-obsession__ratings span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 7px 10px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.045);
+  color: rgba(246,246,246,.82);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.bbb-home-obsession__ratings strong {
+  color: #ffb0d8;
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.bbb-home-obsession__quote {
+  margin: 18px 0 0;
+  max-width: 38ch;
+  color: rgba(246,246,246,.84);
+  font-family: "Libre Baskerville", serif;
+  font-size: 16px;
+  font-style: italic;
+  line-height: 1.7;
+}
+
+.bbb-home-obsession__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.bbb-home-obsession__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid rgba(255,255,255,.14);
+  color: #f6f6f6;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background-color .2s ease;
+}
+
+.bbb-home-obsession__button:hover,
+.bbb-home-obsession__button:focus-visible {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 24px rgba(0,0,0,.24);
+}
+
+.bbb-home-obsession__button--primary {
+  background: #ff8ac7;
+  border-color: #ff8ac7;
+  color: #0b0b0b;
+}
+
+.bbb-home-obsession__button--ghost {
+  background: rgba(255,138,199,.08);
+  border-color: rgba(255,138,199,.42);
+  color: #ffb0d8;
 }
 
 /* ── Mobile (≤749px) ── */
@@ -359,6 +472,18 @@ a.bbb-home-obsession__trope:focus-visible {
   .bbb-home-obsession__sub {
     max-width: 24ch;
     font-size: 14px;
+  }
+
+  .bbb-home-obsession__actions {
+    width: 100%;
+  }
+
+  .bbb-home-obsession__button {
+    flex: 1 1 128px;
+    min-width: 0;
+    padding: 0 10px;
+    font-size: 9px;
+    letter-spacing: .1em;
   }
 
   .bbb-home-obsession__cover {
@@ -467,6 +592,10 @@ a.bbb-home-obsession__trope:focus-visible {
   box-shadow: 0 0 0 1px rgba(255,138,199,.14), 0 0 22px rgba(255,138,199,.28);
   transform: rotate(-1.35deg);
   transform-origin: right center;
+}
+
+.sss-wo__memberLink {
+  align-self: flex-end;
 }
 
 .sss-wo__hero {
@@ -647,62 +776,79 @@ a.bbb-home-obsession__trope:focus-visible {
 .sss-wo__chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px 14px;
   margin-top: 12px;
 }
 
 .sss-wo__chip {
   display: inline-flex;
   align-items: center;
-  padding: 10px 14px;
-  border-radius: 999px;
+  gap: 5px;
+  padding: 0;
+  border-radius: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(246,246,246,.78);
   font-size: 12px;
-  letter-spacing: .04em;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0;
   text-decoration: none;
-  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, filter .2s ease;
+  transition: transform .2s ease, color .2s ease;
+}
+
+.sss-wo__chip .bbb-custom-emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.45em;
+  height: 1.45em;
+  object-fit: contain;
+  flex: 0 0 auto;
+  border-radius: 4px;
+  vertical-align: -.28em;
 }
 
 .sss-wo__chip:hover,
 .sss-wo__chip:focus-visible {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 14px 26px rgba(0,0,0,.24);
-  filter: brightness(1.06);
+  transform: translateY(-1px);
+  color: #ffb0d8;
 }
 
 .sss-wo__chip--rose {
-  background: rgba(255,138,199,.16);
-  border: 1px solid rgba(255,138,199,.46);
-  color: #ffe1ef;
+  background: transparent;
+  border: 0;
+  color: rgba(246,246,246,.78);
 }
 
 .sss-wo__chip--berry {
-  background: rgba(176,78,122,.20);
-  border: 1px solid rgba(214,130,170,.42);
-  color: #fff0f6;
+  background: transparent;
+  border: 0;
+  color: rgba(246,246,246,.78);
 }
 
 .sss-wo__chip--plum {
-  background: rgba(102,74,124,.34);
-  border: 1px solid rgba(168,138,194,.34);
-  color: #f6edff;
+  background: transparent;
+  border: 0;
+  color: rgba(246,246,246,.78);
 }
 
 .sss-wo__chip--blush {
-  background: rgba(255,208,226,.18);
-  border: 1px solid rgba(255,208,226,.42);
-  color: #fff8fb;
+  background: transparent;
+  border: 0;
+  color: rgba(246,246,246,.78);
 }
 
 .sss-wo__chip--pearl {
-  background: rgba(255,255,255,.18);
-  border: 1px solid rgba(255,255,255,.34);
-  color: #ffffff;
+  background: transparent;
+  border: 0;
+  color: rgba(246,246,246,.78);
 }
 
 .sss-wo__chip--ink {
-  background: rgba(35,35,42,.82);
-  border: 1px solid rgba(126,126,146,.34);
-  color: #f6f6f6;
+  background: transparent;
+  border: 0;
+  color: rgba(246,246,246,.78);
 }
 
 .sss-wo__boyfriendName {
@@ -761,6 +907,77 @@ a.bbb-home-obsession__trope:focus-visible {
   background: rgba(255,255,255,.03);
   animation: sssWoFadeUp .8s ease-out both;
   animation-delay: .18s;
+}
+
+.sss-wo__nativeIssue {
+  margin-top: 26px;
+  padding: 28px 30px;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 22px;
+  background: rgba(255,255,255,.035);
+  animation: sssWoFadeUp .8s ease-out both;
+  animation-delay: .16s;
+}
+
+.sss-wo__nativeHead {
+  max-width: 68ch;
+  margin-bottom: 20px;
+}
+
+.sss-wo__nativeHead h2 {
+  margin: 8px 0 0;
+  font-size: clamp(30px, 4vw, 54px);
+  font-weight: 400;
+  line-height: 1;
+  text-transform: lowercase;
+}
+
+.sss-wo__nativeHead p:last-child {
+  margin: 12px 0 0;
+  color: rgba(246,246,246,.72);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.sss-wo__nativeBody {
+  max-width: 74ch;
+  color: rgba(246,246,246,.82);
+  font-size: 16px;
+  line-height: 1.85;
+}
+
+.sss-wo__nativeBody > *:first-child {
+  margin-top: 0;
+}
+
+.sss-wo__nativeBody a {
+  color: #ffb0d8;
+  text-underline-offset: 4px;
+}
+
+.sss-wo__nativeBody img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 20px 0;
+  border: 1px solid rgba(255,255,255,.10);
+}
+
+.sss-wo__nativeBody blockquote {
+  margin: 22px 0;
+  padding-left: 18px;
+  border-left: 3px solid #ff8ac7;
+  color: #fff;
+  font-family: "Libre Baskerville", serif;
+  font-size: 20px;
+  line-height: 1.65;
+}
+
+.sss-wo__nativeActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
 }
 
 .sss-wo__quote {
@@ -892,9 +1109,56 @@ a.bbb-home-obsession__trope:focus-visible {
   }
 }
 
+@media (min-width: 641px) and (max-width: 900px) {
+  .sss-wo__hero {
+    grid-template-columns: minmax(210px, 300px) minmax(0, 1fr);
+    gap: 22px;
+    padding: 22px;
+  }
+
+  .sss-wo__coverCol {
+    min-width: 0;
+  }
+
+  .sss-wo__coverFrame {
+    padding: 12px;
+  }
+
+  .sss-wo__copyCol {
+    align-self: start;
+  }
+
+  .sss-wo__bookMeta {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .sss-wo__bookLine {
+    padding: 10px 12px;
+  }
+
+  .sss-wo__editorial,
+  .sss-wo__detailBlock,
+  .sss-wo__boyfriend,
+  .sss-wo__actions {
+    margin-top: 16px;
+  }
+
+  .sss-wo__relatedRow {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    max-width: 100%;
+  }
+
+  .sss-wo__relatedItem .sss-lib__book {
+    width: min(100%, 148px);
+  }
+}
+
 @media (max-width: 640px) {
   .sss-wo {
-    padding: 20px 10px 32px;
+    margin-top: 0;
+    padding: 48px 10px 32px;
   }
 
   .sss-wo__masthead,
@@ -925,6 +1189,35 @@ a.bbb-home-obsession__trope:focus-visible {
   .sss-wo__heroBook {
     width: 190px;
     margin: 0 auto;
+  }
+
+  .sss-wo__actions {
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .sss-wo__nativeIssue {
+    padding: 22px 16px;
+  }
+
+  .sss-wo__nativeBody {
+    font-size: 15px;
+    line-height: 1.75;
+  }
+
+  .sss-wo__nativeActions {
+    gap: 8px;
+  }
+
+  .sss-wo__btn {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 44px;
+    padding: 0 8px;
+    font-size: 9px;
+    letter-spacing: .09em;
+    text-align: center;
+    white-space: nowrap;
   }
 
   .sss-wo__relatedRow {
@@ -958,6 +1251,7 @@ a.bbb-home-obsession__trope:focus-visible {
   .sss-wo__stamp,
   .sss-wo__hero,
   .sss-wo__copyCol,
+  .sss-wo__nativeIssue,
   .sss-wo__quoteBlock,
   .sss-wo__moreLikeThis {
     animation: none;

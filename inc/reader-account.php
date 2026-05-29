@@ -23,6 +23,10 @@ function bbb_reader_substack_sync_secret(): string {
 }
 
 function bbb_reader_email_session_cookie_name(): string {
+	return 'wordpress_bbb_reader_email_access';
+}
+
+function bbb_reader_legacy_email_session_cookie_name(): string {
 	return 'bbb_reader_email_access';
 }
 
@@ -84,10 +88,26 @@ function bbb_reader_clear_email_session(): void {
 		)
 	);
 	unset($_COOKIE[bbb_reader_email_session_cookie_name()]);
+	setcookie(
+		bbb_reader_legacy_email_session_cookie_name(),
+		'',
+		array(
+			'expires'  => time() - DAY_IN_SECONDS,
+			'path'     => COOKIEPATH ?: '/',
+			'domain'   => COOKIE_DOMAIN,
+			'secure'   => is_ssl(),
+			'httponly' => true,
+			'samesite' => 'Lax',
+		)
+	);
+	unset($_COOKIE[bbb_reader_legacy_email_session_cookie_name()]);
 }
 
 function bbb_reader_email_from_session(): string {
 	$raw = isset($_COOKIE[bbb_reader_email_session_cookie_name()]) ? (string) wp_unslash($_COOKIE[bbb_reader_email_session_cookie_name()]) : '';
+	if ('' === $raw && isset($_COOKIE[bbb_reader_legacy_email_session_cookie_name()])) {
+		$raw = (string) wp_unslash($_COOKIE[bbb_reader_legacy_email_session_cookie_name()]);
+	}
 	if ('' === $raw) {
 		return '';
 	}
@@ -476,6 +496,244 @@ function bbb_reader_fetch_account_books(WP_User $user): array {
 	return bbb_reader_fetch_account_books_for_identity((string) $user->user_email, (int) $user->ID);
 }
 
+function bbb_reader_fetch_account_book_statuses_for_identity(string $email, int $user_id = 0): array {
+	$email = bbb_reader_normalize_email($email);
+	$or    = $user_id
+		? sprintf('(wordpress_user_id.eq.%1$d,email_normalized.eq.%2$s,shopify_customer_id.eq.%1$d)', $user_id, $email)
+		: sprintf('(email_normalized.eq.%1$s,customer_email.eq.%1$s)', $email);
+
+	$rows = bbb_reader_supabase_request(
+		'GET',
+		'bookshelf_book_statuses',
+		array(
+			'select' => 'book_key,book_handle,book_title,status',
+			'or'     => $or,
+			'limit'  => 250,
+		)
+	);
+
+	return is_wp_error($rows) ? array() : (array) $rows;
+}
+
+function bbb_reader_book_status_key(array $book): string {
+	return strtolower(trim(sanitize_text_field((string) ($book['book_key'] ?? $book['book_handle'] ?? $book['handle'] ?? $book['book_title'] ?? $book['title'] ?? ''))));
+}
+
+function bbb_reader_enrich_books_with_statuses(array $books, array $statuses): array {
+	$status_by_key = array();
+	foreach ($statuses as $status_row) {
+		if (!is_array($status_row)) {
+			continue;
+		}
+
+		$key    = bbb_reader_book_status_key($status_row);
+		$status = sanitize_key((string) ($status_row['status'] ?? ''));
+		if ('' !== $key && '' !== $status) {
+			$status_by_key[$key] = $status;
+		}
+	}
+
+	foreach ($books as $index => $book) {
+		if (!is_array($book)) {
+			continue;
+		}
+
+		$key = bbb_reader_book_status_key($book);
+		if ('' !== $key && isset($status_by_key[$key])) {
+			$books[$index]['status'] = $status_by_key[$key];
+		}
+	}
+
+	return $books;
+}
+
+function bbb_reader_split_book_tropes($value): array {
+	if (is_array($value)) {
+		$tropes = $value;
+	} else {
+		$tropes = preg_split('/[,|]/', (string) $value) ?: array();
+	}
+
+	return array_values(
+		array_filter(
+			array_map(
+				static function ($trope): string {
+					if (is_array($trope)) {
+						$trope = $trope['name'] ?? $trope['label'] ?? $trope['title'] ?? $trope['slug'] ?? $trope['handle'] ?? '';
+					}
+
+					return strtolower(trim(sanitize_text_field((string) $trope)));
+				},
+				$tropes
+			)
+		)
+	);
+}
+
+function bbb_reader_account_status_counts(array $books, array $statuses): array {
+	$counts = array(
+		'saved'   => count($books),
+		'read'    => 0,
+		'reading' => 0,
+		'tbr'     => 0,
+		'dnf'     => 0,
+	);
+	$seen_status_keys = array();
+
+	foreach ($statuses as $status_row) {
+		if (!is_array($status_row)) {
+			continue;
+		}
+
+		$key = bbb_reader_book_status_key($status_row);
+		$status = sanitize_key((string) ($status_row['status'] ?? ''));
+		if (isset($counts[$status])) {
+			++$counts[$status];
+			if ('' !== $key) {
+				$seen_status_keys[$key] = true;
+			}
+		}
+	}
+
+	foreach ($books as $book) {
+		if (!is_array($book)) {
+			continue;
+		}
+
+		$key = bbb_reader_book_status_key($book);
+		if ('' !== $key && isset($seen_status_keys[$key])) {
+			continue;
+		}
+
+		$status = sanitize_key((string) ($book['status'] ?? ''));
+		if (isset($counts[$status])) {
+			++$counts[$status];
+		}
+	}
+
+	return $counts;
+}
+
+function bbb_reader_account_reader_type(array $books, array $statuses): array {
+	$counts       = bbb_reader_account_status_counts($books, $statuses);
+	$trope_counts = array();
+	$spice_total  = 0;
+	$dark_total   = 0;
+	$rated_count  = 0;
+
+	foreach ($books as $book) {
+		if (!is_array($book)) {
+			continue;
+		}
+
+		$status = sanitize_key((string) ($book['status'] ?? ''));
+		$weight = 'read' === $status ? 3 : ('reading' === $status ? 2 : 1);
+		foreach (bbb_reader_split_book_tropes($book['tropes'] ?? '') as $trope) {
+			$trope_counts[$trope] = ($trope_counts[$trope] ?? 0) + $weight;
+		}
+
+		$spice = (int) ($book['spice_level'] ?? $book['spice'] ?? 0);
+		$dark  = (int) ($book['darkness_level'] ?? $book['darkness'] ?? 0);
+		if ($spice > 0 || $dark > 0) {
+			$spice_total += $spice;
+			$dark_total  += $dark;
+			++$rated_count;
+		}
+	}
+
+	arsort($trope_counts);
+	$top_tropes = array_slice(array_keys($trope_counts), 0, 3);
+	$avg_spice  = $rated_count ? $spice_total / $rated_count : 0;
+	$avg_dark   = $rated_count ? $dark_total / $rated_count : 0;
+	$has_trope  = static function (array $needles) use ($trope_counts): bool {
+		foreach ($needles as $needle) {
+			if (!empty($trope_counts[strtolower($needle)])) {
+				return true;
+			}
+		}
+
+		return false;
+	};
+
+	$title = 'mood-led romance reader';
+	$body  = 'your shelf is giving a little bit of everything, with mood doing more steering than one fixed trope.';
+
+	if (0 === $counts['saved'] && 0 === count($statuses)) {
+		$title = 'fresh shelf romantic';
+		$body  = 'save or tag a few books and this will start calling your pattern.';
+	} elseif ($has_trope(array('dark romance', 'morally gray', 'obsession', 'stalker', 'villain gets the girl')) || ($avg_dark >= 2 && $avg_spice >= 2)) {
+		$title = 'dark devotion reader';
+		$body  = 'your shelf keeps circling obsession, risk, and love interests who come with warning labels.';
+	} elseif ($has_trope(array('slow burn', 'yearning', 'grumpy sunshine', 'forbidden romance'))) {
+		$title = 'slow-burn tension reader';
+		$body  = 'you keep saving the books that make restraint, longing, and delayed payoff do the heavy lifting.';
+	} elseif ($has_trope(array('angst', 'second chance', 'emotional devastation'))) {
+		$title = 'ache-before-payoff reader';
+		$body  = 'your pattern says the hurt matters as much as the happily-ever-after.';
+	} elseif ($has_trope(array('romantasy', 'fated mates', 'magic', 'fae', 'prince'))) {
+		$title = 'romantasy world-builder';
+		$body  = 'big stakes, mythic devotion, and dangerous worlds are showing up in your saves.';
+	} elseif ($avg_spice >= 3.4) {
+		$title = 'high-heat mood reader';
+		$body  = 'your saved stack is leaning spicy, intense, and very allergic to subtle chemistry.';
+	} elseif ($counts['tbr'] > ($counts['read'] + $counts['reading'])) {
+		$title = 'collector of future obsessions';
+		$body  = 'your tbr is doing what a good tbr does: making promises your calendar may not survive.';
+	} elseif ($counts['read'] >= 3) {
+		$title = 'pattern-locked romance reader';
+		$body  = 'your finished books are starting to show enough signal for sharper recommendations.';
+	}
+
+	return array(
+		'title'     => $title,
+		'summary'   => $body,
+		'topTropes' => $top_tropes,
+		'counts'    => $counts,
+	);
+}
+
+function bbb_reader_account_next_read(array $books): ?array {
+	if (!$books) {
+		return null;
+	}
+
+	$priority = array('tbr' => 0, 'reading' => 1, '' => 2, 'saved' => 2, 'read' => 8, 'dnf' => 9);
+	$candidates = array_values(
+		array_filter(
+			$books,
+			static fn($book): bool => is_array($book) && '' !== trim((string) ($book['book_title'] ?? $book['title'] ?? ''))
+		)
+	);
+
+	usort(
+		$candidates,
+		static function (array $a, array $b) use ($priority): int {
+			$a_status = sanitize_key((string) ($a['status'] ?? ''));
+			$b_status = sanitize_key((string) ($b['status'] ?? ''));
+			$a_rank   = $priority[$a_status] ?? 3;
+			$b_rank   = $priority[$b_status] ?? 3;
+			if ($a_rank === $b_rank) {
+				return strcmp((string) ($b['saved_at'] ?? ''), (string) ($a['saved_at'] ?? ''));
+			}
+
+			return $a_rank <=> $b_rank;
+		}
+	);
+
+	return $candidates[0] ?? null;
+}
+
+function bbb_reader_account_insights(array $books, array $statuses): array {
+	$books = bbb_reader_enrich_books_with_statuses($books, $statuses);
+
+	return array(
+		'books'        => $books,
+		'bookStatuses' => $statuses,
+		'readerType'   => bbb_reader_account_reader_type($books, $statuses),
+		'nextRead'     => bbb_reader_account_next_read($books),
+	);
+}
+
 if (!function_exists('bbb_reader_drop_field_value')) {
 	function bbb_reader_drop_field_map(array $fields): array {
 		if (!$fields) {
@@ -585,6 +843,10 @@ function bbb_reader_account_response(WP_User $user): array {
 	$sync = bbb_reader_sync_user_to_supabase((int) $user->ID, 'wordpress_account_api');
 	$synced_subscriber = !is_wp_error($sync) && isset($sync[0]) && is_array($sync[0]) ? $sync[0] : null;
 	$access_tier = bbb_reader_access_tier((int) $user->ID, $synced_subscriber);
+	$insights = bbb_reader_account_insights(
+		bbb_reader_fetch_account_books($user),
+		bbb_reader_fetch_account_book_statuses_for_identity((string) $user->user_email, (int) $user->ID)
+	);
 	$account_prompt = 'society' === $access_tier
 		? bbb_reader_active_society_daily_prompt(bbb_reader_active_society_drop())
 		: array(
@@ -610,7 +872,10 @@ function bbb_reader_account_response(WP_User $user): array {
 		'dailyJournalPrompt' => $account_prompt,
 		'supabaseReady' => !is_wp_error($sync),
 		'supabaseError' => $error,
-		'books'         => bbb_reader_fetch_account_books($user),
+		'books'         => $insights['books'],
+		'bookStatuses'  => $insights['bookStatuses'],
+		'readerType'    => $insights['readerType'],
+		'nextRead'      => $insights['nextRead'],
 	);
 }
 
@@ -646,6 +911,10 @@ function bbb_reader_account_response_for_identity(array $identity): array {
 		: null;
 	$subscriber = is_array($subscriber) ? $subscriber : null;
 	$access_tier = bbb_reader_access_tier_for_email($email, 0, $subscriber);
+	$insights = bbb_reader_account_insights(
+		bbb_reader_fetch_account_books_for_identity($email),
+		bbb_reader_fetch_account_book_statuses_for_identity($email)
+	);
 	$account_prompt = 'society' === $access_tier
 		? bbb_reader_active_society_daily_prompt(bbb_reader_active_society_drop())
 		: array(
@@ -661,7 +930,10 @@ function bbb_reader_account_response_for_identity(array $identity): array {
 		'dailyJournalPrompt' => $account_prompt,
 		'supabaseReady' => null === $error,
 		'supabaseError' => $error,
-		'books'         => bbb_reader_fetch_account_books_for_identity($email),
+		'books'         => $insights['books'],
+		'bookStatuses'  => $insights['bookStatuses'],
+		'readerType'    => $insights['readerType'],
+		'nextRead'      => $insights['nextRead'],
 	);
 }
 

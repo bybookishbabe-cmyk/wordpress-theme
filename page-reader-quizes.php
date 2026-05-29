@@ -62,6 +62,7 @@ wp_enqueue_style('bbb-reader-quizzes', get_theme_file_uri('assets/css/reader-qui
 
 $feature_covers = bbb_reader_quiz_cover_urls(0, 3);
 $mood_covers    = bbb_reader_quiz_cover_urls(3, 3);
+$trope_covers   = bbb_reader_quiz_cover_urls(6, 3);
 
 get_header();
 ?>
@@ -108,15 +109,21 @@ get_header();
 					<span class="bbb-quizdash__cta">take the mood quiz →</span>
 				</a>
 
-				<article class="bbb-quizdash__card bbb-quizdash__card--locked">
+				<a class="bbb-quizdash__card" href="<?php echo esc_url(home_url('/romance-trope-quiz/')); ?>">
 					<span class="bbb-quizdash__emojiRain" aria-hidden="true">
 						<span>💘</span><span>📖</span><span>🎭</span><span>💌</span><span>✨</span>
 					</span>
-					<span class="bbb-quizdash__issue">coming next</span>
-					<h2>what romance trope are you secretly living?</h2>
-					<p>for when your life starts acting a little too much like a third-act conflict.</p>
-					<span class="bbb-quizdash__cta">coming soon</span>
-				</article>
+					<span class="bbb-quizdash__badge">new</span>
+					<span class="bbb-quizdash__covers" aria-hidden="true">
+						<?php foreach ($trope_covers as $cover) : ?>
+							<img src="<?php echo esc_url($cover['url']); ?>" alt="" loading="lazy">
+						<?php endforeach; ?>
+					</span>
+					<span class="bbb-quizdash__issue">quiz 03</span>
+					<h2>what romance trope are you?</h2>
+					<p>seven questions, five romantic problems, and one trope currently telling on you.</p>
+					<span class="bbb-quizdash__cta">find your trope →</span>
+				</a>
 
 				<article class="bbb-quizdash__card bbb-quizdash__card--locked">
 					<span class="bbb-quizdash__emojiRain" aria-hidden="true">

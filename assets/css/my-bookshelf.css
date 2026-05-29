@@ -209,6 +209,7 @@
 .bbb-account-shelf__panel,
 .bbb-account-shelf__dropPrompt,
 .bbb-account-shelf__preview,
+.bbb-account-shelf__readerProfile,
 .bbb-account-shelf__feature,
 .bbb-account-shelf__lane,
 .bbb-account-shelf__sectionHead {
@@ -462,18 +463,6 @@
   font-size: clamp(1.8rem, 2.15vw, 2.7rem);
   line-height: 1.12;
   box-shadow: inset 0 0 42px rgba(0,0,0,.28);
-}
-
-.bbb-account-shelf__quoteCard blockquote::before {
-  content: "";
-  position: absolute;
-  inset: 18px 14px auto;
-  height: 52%;
-  pointer-events: none;
-  background: rgba(255,138,199,.18);
-  transform: rotate(-1deg);
-  filter: blur(.2px);
-  z-index: 0;
 }
 
 .bbb-account-shelf__quoteCard blockquote {
@@ -771,9 +760,34 @@
   gap: 22px;
 }
 
+.bbb-account-shelf__readerProfile {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, .92fr);
+  gap: 22px;
+  margin-bottom: 18px;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(255,138,199,.16), transparent 34rem),
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.025));
+}
+
+.bbb-account-shelf__readerType {
+  min-width: 0;
+}
+
+.bbb-account-shelf__readerProfile--bookshelf {
+  margin-bottom: 22px;
+}
+
+.bbb-account-shelf__readerTypeSide {
+  align-self: center;
+  min-width: 0;
+}
+
 .bbb-account-shelf__perk h2,
 .bbb-account-shelf__panel h2,
 .bbb-account-shelf__preview h2,
+.bbb-account-shelf__readerType h2,
 .bbb-account-shelf__journalPrompt h2 {
   margin: 0;
   color: #fff;
@@ -786,10 +800,207 @@
 .bbb-account-shelf__perk p:not(.bbb-account-shelf__perkKicker),
 .bbb-account-shelf__panel p,
 .bbb-account-shelf__preview p,
+.bbb-account-shelf__readerType p,
 .bbb-account-shelf__journalPrompt p {
   max-width: 680px;
   color: rgba(247,243,238,.7);
   line-height: 1.65;
+}
+
+.bbb-account-shelf__readerStats,
+.bbb-account-shelf__readerSignals,
+.bbb-account-shelf__nextReadTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bbb-account-shelf__readerStats {
+  margin-top: 18px;
+}
+
+.bbb-account-shelf__readerSignals {
+  margin-top: 10px;
+}
+
+.bbb-account-shelf__readerStats span,
+.bbb-account-shelf__readerSignals span,
+.bbb-account-shelf__nextReadTags span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 7px 10px;
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 999px;
+  background: rgba(0,0,0,.2);
+  color: rgba(247,243,238,.76);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  line-height: 1;
+  text-transform: lowercase;
+}
+
+.bbb-account-shelf__readerSignals span,
+.bbb-account-shelf__nextReadTags span {
+  border-color: rgba(255,138,199,.26);
+  background: rgba(255,138,199,.09);
+  color: #ffd2e9;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1.45rem;
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.bbb-account-shelf__readerSignals span::before,
+.bbb-account-shelf__nextReadTags span::before {
+  content: "✨";
+  margin-right: 6px;
+  font-family: system-ui, sans-serif;
+  font-size: 1.1rem;
+  font-style: normal;
+  line-height: 1;
+}
+
+.bbb-account-shelf__readerHint {
+  margin: 12px 0 0;
+  color: rgba(247,243,238,.62);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.bbb-account-shelf__nextRead {
+  min-width: 0;
+}
+
+.bbb-account-shelf__nextReadCard {
+  position: relative;
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  width: 100%;
+  gap: 16px;
+  min-height: 166px;
+  padding: 14px;
+  border: 1px solid rgba(255,138,199,.24);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(255,138,199,.13), rgba(255,255,255,.035)),
+    rgba(0,0,0,.2);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color .22s ease, transform .22s ease;
+}
+
+.bbb-account-shelf__nextReadCard:hover,
+.bbb-account-shelf__nextReadCard:focus-visible {
+  border-color: rgba(255,138,199,.52);
+  outline: none;
+  transform: translateY(-2px);
+}
+
+.bbb-account-shelf__nextReadCover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  aspect-ratio: 2 / 3;
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 6px;
+  background: rgba(0,0,0,.24);
+  overflow: hidden;
+}
+
+.bbb-account-shelf__nextReadCover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bbb-account-shelf__nextReadCover > span {
+  color: #ffd2e9;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 3rem;
+}
+
+.bbb-account-shelf__nextReadBody {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.bbb-account-shelf__nextReadTitle {
+  color: #fff;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(2rem, 3vw, 2.8rem);
+  line-height: 1;
+}
+
+.bbb-account-shelf__nextReadMeta {
+  margin-top: 8px;
+  color: rgba(247,243,238,.68);
+  line-height: 1.5;
+}
+
+.bbb-account-shelf__nextReadTags {
+  margin-top: 14px;
+}
+
+.bbb-account-shelf__nextReadCta {
+  margin-top: auto;
+  padding-top: 16px;
+  color: #ff8ac7;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: lowercase;
+}
+
+.bbb-account-shelf__nextRead--locked .bbb-account-shelf__nextReadCover,
+.bbb-account-shelf__nextRead--locked .bbb-account-shelf__nextReadTitle {
+  filter: blur(5px);
+  opacity: .55;
+}
+
+.bbb-account-shelf__nextRead--locked .bbb-account-shelf__nextReadCard::after {
+  content: "paid member preview";
+  position: absolute;
+  inset: 14px 14px auto auto;
+  padding: 7px 10px;
+  border: 1px solid rgba(255,138,199,.34);
+  border-radius: 999px;
+  background: rgba(5,5,5,.82);
+  color: #ffd2e9;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .1em;
+}
+
+.bbb-account-shelf__nextReadEmpty {
+  min-height: 136px;
+  padding: 16px;
+  border: 1px dashed rgba(255,255,255,.16);
+  border-radius: 8px;
+  background: rgba(0,0,0,.14);
+}
+
+.bbb-account-shelf__nextReadEmpty strong,
+.bbb-account-shelf__nextReadEmpty span {
+  display: block;
+}
+
+.bbb-account-shelf__nextReadEmpty strong {
+  color: #fff;
+}
+
+.bbb-account-shelf__nextReadEmpty span {
+  margin-top: 6px;
+  color: rgba(247,243,238,.64);
 }
 
 .bbb-account-shelf__journalPromptMeta {
@@ -971,11 +1182,35 @@
 }
 
 .bbb-account-shelf__preview {
+  position: relative;
   display: block;
   min-height: 260px;
   padding: 24px;
   overflow: hidden;
   transition: border-color .22s ease, transform .22s ease;
+}
+
+.bbb-account-shelf__preview--locked::after {
+  content: "paid member preview";
+  position: absolute;
+  inset: 14px 14px auto auto;
+  padding: 7px 10px;
+  border: 1px solid rgba(255,138,199,.34);
+  border-radius: 999px;
+  background: rgba(5,5,5,.82);
+  color: #ffd2e9;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .1em;
+  line-height: 1;
+  text-transform: lowercase;
+}
+
+.bbb-account-shelf__preview--locked {
+  border-color: rgba(255,138,199,.22);
+  background:
+    linear-gradient(135deg, rgba(255,138,199,.1), rgba(255,255,255,.025)),
+    rgba(0,0,0,.18);
 }
 
 .bbb-account-shelf__previewSplit {
@@ -1038,6 +1273,10 @@
     grid-template-columns: 1fr;
   }
 
+  .bbb-account-shelf__readerProfile {
+    grid-template-columns: 1fr;
+  }
+
   .bbb-account-shelf__dropPrompt {
     grid-template-columns: 1fr;
   }
@@ -1080,6 +1319,7 @@
   }
 
   .bbb-account-shelf__dropPrompt,
+  .bbb-account-shelf__readerProfile,
   .bbb-account-shelf__feature,
   .bbb-account-shelf__readShelf,
   .bbb-account-shelf__quoteCard,
@@ -1110,5 +1350,21 @@
 
   .bbb-account-shelf__sub {
     font-size: 1.18rem;
+  }
+
+  .bbb-account-shelf__nextReadCard {
+    grid-template-columns: 74px minmax(0, 1fr);
+    padding-top: 42px;
+  }
+
+  .bbb-account-shelf__nextReadCover {
+    width: 74px;
+  }
+
+  .bbb-account-shelf__nextRead--locked .bbb-account-shelf__nextReadCard::after,
+  .bbb-account-shelf__preview--locked::after {
+    inset: 10px 10px auto auto;
+    max-width: calc(100% - 20px);
+    white-space: nowrap;
   }
 }

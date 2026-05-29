@@ -173,37 +173,6 @@
 }
 
 @media (max-width: 760px) {
-  .sss-lib__grid--spicePage {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    justify-content: stretch !important;
-    gap: 14px 10px !important;
-    width: 100%;
-  }
-
-  .sss-lib__grid--spicePage .sss-lib__book {
-    min-width: 0;
-    width: 100%;
-  }
-
-  .sss-lib__grid--spicePage .sss-lib__coverWrap {
-    width: 100%;
-  }
-
-  .sss-lib__grid--spicePage .sss-lib__under {
-    margin-top: 7px;
-  }
-
-  .sss-lib__grid--spicePage .sss-lib__name {
-    font-size: 10px;
-    line-height: 1.25;
-  }
-
-  .sss-lib__grid--spicePage .sss-lib__author {
-    font-size: 9.5px;
-    line-height: 1.25;
-    margin-top: 2px;
-  }
-
   .sss-spiceNav {
     grid-template-columns: repeat(5, 128px);
     margin-top: 22px;
@@ -212,5 +181,31 @@
   .sss-spiceNav__pill {
     min-height: 42px;
     padding: 8px 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sss-lib--spicePage .sss-lib__grid--spicePage {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    justify-content: stretch;
+    gap: 14px 10px;
+    width: 100%;
+  }
+
+  .sss-lib--spicePage .sss-lib__grid--spicePage .sss-lib__book,
+  .sss-lib--spicePage .sss-lib__grid--spicePage .sss-lib__coverWrap {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .sss-lib--spicePage .sss-lib__grid--spicePage .sss-lib__name {
+    font-size: 10px;
+    line-height: 1.25;
+  }
+
+  .sss-lib--spicePage .sss-lib__grid--spicePage .sss-lib__author {
+    margin-top: 2px;
+    font-size: 9.5px;
+    line-height: 1.25;
   }
 }

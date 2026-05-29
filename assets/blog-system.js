@@ -237,15 +237,20 @@ if (signoff) {
 BOOK PREVIEW POPUP
 ====================== */
 const previewCards = document.querySelectorAll("[data-book-preview]");
-const preview = document.getElementById("bbbBookPreview") || document.querySelector(".sss-lib__modal");
-const previewClose = document.getElementById("bbbPreviewClose") || (preview ? preview.querySelector(".sss-lib__x[data-close]") : null);
-const previewShareButton = document.getElementById("bbbPreviewShare") || (preview ? preview.querySelector("[data-modal-share-btn]") : null);
+const preview = document.querySelector(".sss-lib__modal:not([data-quiz-modal])");
+const previewClose = preview ? preview.querySelector("[data-close].sss-lib__x") : null;
+const previewShareButton = preview ? preview.querySelector("[data-modal-share-btn]") : null;
 let currentPreviewShare = null;
 let currentPreviewBook = null;
 let previewScrollY = 0;
 
-function blogReaderIsSociety(){
-  return Boolean(window.BBBReaderAccount && window.BBBReaderAccount.isSociety);
+function setPreviewShareButton(icon, label){
+  if (!previewShareButton) return;
+  const iconEl = previewShareButton.querySelector("[data-modal-share-label]") ? previewShareButton.querySelector(".sss-lib__mshareIcon") : null;
+  const labelEl = previewShareButton.querySelector("[data-modal-share-label]");
+  if (iconEl) iconEl.textContent = icon;
+  if (labelEl) labelEl.textContent = label;
+  if (!iconEl && !labelEl) previewShareButton.textContent = icon;
 }
 
 function lockPreviewScroll(){
@@ -266,7 +271,7 @@ function unlockPreviewScroll(){
 
 function openBookPreview(){
   if (!preview) return;
-  preview.style.display = "";
+  preview.style.display = "flex";
   preview.hidden = false;
   preview.setAttribute("aria-hidden", "false");
   lockPreviewScroll();
@@ -351,9 +356,9 @@ card.addEventListener("click", function(){
 const title = card.dataset.title;
 const author = card.dataset.author;
 const cover = card.dataset.cover;
+const url = card.dataset.url || (card.dataset.handle ? "/books/" + encodeURIComponent(card.dataset.handle) + "/" : "");
 const amazon = card.dataset.amazon;
 const bookshop = card.dataset.bookshop;
-const newsletter = card.dataset.newsletter;
 const spice = card.dataset.spice;
 const tropes = card.dataset.tropes;
 const tropesDisplay = card.dataset.tropesDisplay;
@@ -366,12 +371,12 @@ const seriesNumber = card.dataset.seriesNumber;
 const shareUrl = window.location.origin + window.location.pathname + "?book=" + encodeURIComponent(title || "");
 currentPreviewBook = {
   handle: card.dataset.handle || "",
+  url: url || "",
   title: title || "",
   author: author || "",
   cover: cover || "",
   amazon: amazon || "",
   bookshop: bookshop || "",
-  newsletter: newsletter || "",
   spice: spice || "",
   tropes: tropes || "",
   tropesDisplay: tropesDisplay || "",
@@ -382,16 +387,15 @@ currentPreviewBook = {
   seriesName: seriesName || "",
   seriesNumber: seriesNumber || ""
 };
-const hasKu = String(ku || "").trim() !== "";
 const kuState = String(ku || "").toLowerCase().trim() === "true";
 if (!preview) return;
 
 const titleEl = preview.querySelector("[data-mtitle]");
 const authorEl = preview.querySelector("[data-mauthor]");
 const coverEl = preview.querySelector("[data-mcover]");
+const kuButtonEl = preview.querySelector("[data-ku-btn]");
 const amazonEl = preview.querySelector("[data-amazon-btn]");
 const shopEl = preview.querySelector("[data-bookshop-btn]");
-const newsletterEl = preview.querySelector("[data-newsletter-btn]");
 const miniEl = preview.querySelector("[data-mmini]");
 const tropesEl = preview.querySelector("[data-mtropes]");
 const whyEl = preview.querySelector("[data-mwhy]");
@@ -406,6 +410,111 @@ const boyfriendEl = preview.querySelector("[data-mboyfriend]");
 const rereadEl = preview.querySelector("[data-mreread]");
 let spiceEl = preview.querySelector("[data-mspice]");
 const modalHeart = preview.querySelector("[data-modal-heart]");
+const modalFullLink = preview.querySelector("[data-modal-full-link]");
+
+function previewEscape(value){
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function previewTropeNameWithoutEmoji(tropeName){
+  const raw = String(tropeName || "").trim();
+  const lower = raw.toLowerCase();
+  const knownTropes = [
+    "touch her and die",
+    "why choose",
+    "who did this to you",
+    "mafia romance",
+    "slow burn",
+    "enemies to lovers",
+    "fated mates"
+  ];
+  for (let i = 0; i < knownTropes.length; i += 1) {
+    if (lower.indexOf(knownTropes[i]) !== -1) return knownTropes[i];
+  }
+  return raw.replace(/^[^a-z0-9]+/i, "").trim();
+}
+
+function previewTropeCustomKey(tropeName){
+  const name = previewTropeNameWithoutEmoji(tropeName);
+  const key = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const haystack = (key + " " + name.toLowerCase()).replace(/\s+/g, " ");
+  const aliases = [
+    ["mafia-romance", ["mafia"]],
+    ["slow-burn", ["slow burn", "slow-burn"]],
+    ["enemies-to-lovers", ["enemies to lovers", "enemies-to-lovers"]],
+    ["friends-to-lovers", ["friends to lovers", "friends-to-lovers"]],
+    ["he-falls-first", ["he falls first", "he-falls-first", "falls first"]],
+    ["billionaire-romance", ["billionaire romance", "billionaire-romance", "billionaire"]],
+    ["stalker-romance", ["stalker romance", "stalker-romance", "stalker"]],
+    ["dystopian-romance", ["dystopian romance", "dystopian-romance"]],
+    ["sports-romance", ["sports romance", "sports-romance", "sports"]],
+    ["bully-romance", ["bully romance", "bully-romance", "bully"]],
+    ["forced-proximity", ["forced proximity", "forced-proximity"]],
+    ["villain-gets-the-girl", ["villain gets the girl", "villain-gets-the-girl", "villain romance"]],
+    ["historical-romance", ["historical romance", "historical-romance"]],
+    ["bodyguard-romance", ["bodyguard romance", "bodyguard-romance", "bodyguard"]],
+    ["opposites-attract", ["opposites attract", "opposites-attract"]],
+    ["marriage-of-convenience", ["marriage of convenience", "marriage-of-convenience"]],
+    ["found-family", ["found family", "found-family"]],
+    ["dark-academia", ["dark academia", "dark-academia"]],
+    ["captor-x-captive", ["captor x captive", "captor-x-captive", "captor captive", "captor", "captive"]],
+    ["boss-x-employee", ["boss x employee", "boss-x-employee", "boss employee"]],
+    ["age-gap", ["age gap", "age-gap"]],
+    ["trauma-bonding", ["trauma bonding", "trauma-bonding"]],
+    ["baseball-romance", ["baseball romance", "baseball-romance", "baseball"]],
+    ["hockey-romance", ["hockey romance", "hockey-romance", "hockey"]],
+    ["contemporary-romance", ["contemporary romance", "contemporary-romance"]],
+    ["dark-romance", ["dark romance", "dark-romance"]],
+    ["forbidden-love", ["forbidden love", "forbidden-love", "forbidden romance"]],
+    ["step-siblings", ["step siblings", "step-siblings", "stepsiblings"]],
+    ["nanny", ["nanny romance", "nanny"]],
+    ["single-dad", ["single dad", "single-dad"]],
+    ["small-town", ["small town", "small-town"]],
+    ["grumpy-x-sunshine", ["grumpy x sunshine", "grumpy-x-sunshine", "grumpy sunshine"]],
+    ["one-bed", ["one bed", "one-bed"]],
+    ["brothers-best-friend", ["brother best friend", "brothers best friend", "brother's best friend", "brothers-best-friend", "brother-s-best-friend"]],
+    ["second-chance", ["second chance", "second-chance"]],
+    ["fake-dating", ["fake dating", "fake-dating"]],
+    ["fated-mates", ["fated mates", "fated-mates"]],
+    ["who-did-this-to-you", ["who did this to you", "who-did-this-to-you"]],
+    ["touch-her-and-die", ["touch her and die", "touch-her-and-die"]],
+    ["why-choose", ["why choose", "why-choose"]],
+    ["paranormal-romance", ["paranormal romance", "paranormal-romance", "paranormal"]],
+    ["romantasy", ["romantasy", "fantasy romance"]]
+  ];
+  for (let i = 0; i < aliases.length; i += 1) {
+    for (let j = 0; j < aliases[i][1].length; j += 1) {
+      if (haystack.indexOf(aliases[i][1][j]) !== -1) return aliases[i][0];
+    }
+  }
+  return "";
+}
+
+function previewCustomTropeHtml(trope){
+  const name = previewTropeNameWithoutEmoji(trope);
+  const key = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const customKey = previewTropeCustomKey(trope);
+  if (customKey) {
+    return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/' + customKey + '.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + previewEscape(name);
+  }
+  if (key === "touch-her-and-die") {
+    return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/touch-her-and-die.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + previewEscape(name || "touch her and die");
+  }
+  if (key === "why-choose") {
+    return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/why-choose.png" alt="" aria-hidden="true" loading="lazy" decoding="async"> ' + previewEscape(name || "why choose");
+  }
+  return previewEscape(name || trope);
+}
+
+function previewTropesHtml(value){
+  const tropesList = String(value || "").split(",").map((trope) => trope.trim()).filter(Boolean);
+  return tropesList.length ? "tropes: " + tropesList.map(previewCustomTropeHtml).join(", ") : "";
+}
 
 function ensurePreviewSpiceBadge(){
   if (spiceEl || !preview) return spiceEl;
@@ -421,6 +530,15 @@ function ensurePreviewSpiceBadge(){
 
 if (titleEl) titleEl.textContent = title || "";
 if (authorEl) authorEl.textContent = author ? "by " + author : "";
+if (modalFullLink) {
+  if (url) {
+    modalFullLink.href = url;
+    modalFullLink.hidden = false;
+  } else {
+    modalFullLink.hidden = true;
+    modalFullLink.removeAttribute("href");
+  }
+}
 if (coverEl) {
   coverEl.src = cover || "";
   coverEl.alt = title || "";
@@ -428,7 +546,7 @@ if (coverEl) {
 if (miniEl) miniEl.textContent = mini ? "quick summary: " + mini : "";
 if (tropesEl) {
   const modalTropes = tropesDisplay || tropes || "";
-  tropesEl.textContent = modalTropes ? "tropes: " + modalTropes : "";
+  tropesEl.innerHTML = previewTropesHtml(modalTropes);
 }
 if (whyEl) whyEl.textContent = why || "";
 if (tensionEl) tensionEl.textContent = "";
@@ -465,28 +583,30 @@ if (standaloneEl) {
 if (amazonEl) {
   amazonEl.classList.add("sss-lib__mbtn--amazon");
   amazonEl.href = amazon || "#";
+  amazonEl.innerHTML = kuState ? "buy on amazon <span>· own it forever</span>" : "buy on amazon";
+  amazonEl.classList.remove("sss-lib__mbtn--primary");
   amazonEl.hidden = !amazon;
+}
+
+if (kuButtonEl) {
+  kuButtonEl.href = amazon || "#";
+  kuButtonEl.hidden = !amazon || !kuState;
 }
 
 if (shopEl) {
   shopEl.classList.remove("sss-lib__mbtn--ghost");
   shopEl.classList.add("sss-lib__mbtn--bookshop");
   shopEl.href = bookshop || "#";
+  shopEl.innerHTML = "prefer indie? bookshop.org →";
   shopEl.hidden = !bookshop;
 }
 
-if (newsletterEl) {
-  const showNewsletter = blogReaderIsSociety() && newsletter;
-  newsletterEl.href = showNewsletter ? newsletter : "#";
-  newsletterEl.hidden = !showNewsletter;
-}
-
 if (kuEl) {
-  if (hasKu) {
+  if (kuState) {
     kuEl.hidden = false;
-    kuEl.classList.toggle("is-yes", kuState);
-    kuEl.classList.toggle("is-no", !kuState);
-    kuEl.textContent = `${kuState ? "✓" : "✕"} on kindle unlimited: ${kuState ? "yes" : "no"}`;
+    kuEl.classList.add("is-yes");
+    kuEl.classList.remove("is-no");
+    kuEl.textContent = "included in your kindle unlimited subscription — no extra cost";
   } else {
     kuEl.hidden = true;
     kuEl.textContent = "";
@@ -507,7 +627,7 @@ currentPreviewShare = {
 };
 
 if (previewShareButton) {
-  previewShareButton.textContent = "📲";
+  setPreviewShareButton("📲", "share");
 }
 
 openBookPreview();
@@ -621,10 +741,10 @@ if (previewShareButton) {
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(shareUrl).then(function () {
-        previewShareButton.textContent = "✓";
+        setPreviewShareButton("✓", "copied");
 
         setTimeout(() => {
-          previewShareButton.textContent = "📲";
+          setPreviewShareButton("📲", "share");
         }, 1600);
       }).catch(function () {});
     }

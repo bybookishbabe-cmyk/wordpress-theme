@@ -34,6 +34,65 @@ function bbb_books_like_skulls(int $value): string {
 	$value = max(0, min(5, $value));
 	return $value > 0 ? str_repeat('💀', $value) : '';
 }
+
+function bbb_books_like_trope_display(array $trope): string {
+	$name  = trim((string) ($trope['name'] ?? ''));
+	$emoji = trim((string) ($trope['emoji'] ?? ''));
+	return function_exists('bbb_trope_label') ? bbb_trope_label($name, $emoji) : trim(($emoji !== '' ? $emoji : '🖤') . ' ' . $name);
+}
+
+function bbb_books_like_trope_display_html(array $trope): string {
+	$name  = trim((string) ($trope['name'] ?? ''));
+	$emoji = trim((string) ($trope['emoji'] ?? ''));
+	$slug  = trim((string) ($trope['slug'] ?? $trope['handle'] ?? ''));
+
+	return function_exists('bbb_trope_label_html') ? bbb_trope_label_html($name, $emoji, $slug) : esc_html(bbb_books_like_trope_display($trope));
+}
+
+function bbb_books_like_ensure_emoji_label(string $label): string {
+	$label = trim($label);
+	if ('' === $label) {
+		return '';
+	}
+
+	if (preg_match('/^[^\p{L}\p{N}]/u', $label)) {
+		return $label;
+	}
+
+	return function_exists('bbb_trope_label') ? bbb_trope_label($label, '') : '🖤 ' . $label;
+}
+
+function bbb_books_like_ensure_emoji_label_html(string $label): string {
+	$label = trim($label);
+	if ('' === $label) {
+		return '';
+	}
+
+	return function_exists('bbb_trope_label_html') ? bbb_trope_label_html($label) : esc_html(bbb_books_like_ensure_emoji_label($label));
+}
+
+function bbb_books_like_trope_display_values(array $book, array $names): array {
+	$by_slug = array();
+	foreach ((array) ($book['tropes'] ?? array()) as $trope) {
+		$name = trim((string) ($trope['name'] ?? ''));
+		if ($name === '') {
+			continue;
+		}
+		$by_slug[sanitize_title($name)] = bbb_books_like_trope_display_html($trope);
+	}
+
+	$display = array();
+	foreach ($names as $name) {
+		$key = sanitize_title((string) $name);
+		$display[] = $by_slug[$key] ?? bbb_books_like_ensure_emoji_label_html((string) $name);
+	}
+
+	return array_values(array_filter($display));
+}
+
+function bbb_books_like_trope_filter_value(array $trope): string {
+	return sanitize_title((string) ($trope['slug'] ?? $trope['name'] ?? ''));
+}
 ?>
 
 <main id="MainContent" class="content-for-layout focus-none" role="main" tabindex="-1">
@@ -50,14 +109,30 @@ function bbb_books_like_skulls(int $value): string {
 
 				<div class="bbb-like__chips" aria-label="matched energy">
 					<?php if (!empty($source['shelf']['name'])) : ?>
-						<span class="bbb-like__chip"><?php echo esc_html((string) $source['shelf']['name']); ?></span>
+						<span class="bbb-like__chip"><?php echo wp_kses_post(bbb_books_like_ensure_emoji_label_html((string) $source['shelf']['name'])); ?></span>
 					<?php endif; ?>
 					<?php foreach ($source_tropes as $index => $trope) : ?>
-						<span class="bbb-like__chip<?php echo $index > 1 ? ' is-locked-chip' : ''; ?>"><?php echo esc_html(trim(((string) ($trope['emoji'] ?? '')) . ' ' . ((string) ($trope['name'] ?? '')))); ?></span>
+						<?php $trope_filter = bbb_books_like_trope_filter_value($trope); ?>
+						<?php if ($trope_filter !== '') : ?>
+							<button class="bbb-like__chip bbb-like__filterChip<?php echo $index > 1 ? ' is-locked-chip' : ''; ?>" type="button" data-like-trope="<?php echo esc_attr($trope_filter); ?>" aria-pressed="false">
+								<?php echo wp_kses_post(bbb_books_like_trope_display_html($trope)); ?>
+							</button>
+						<?php else : ?>
+							<span class="bbb-like__chip<?php echo $index > 1 ? ' is-locked-chip' : ''; ?>"><?php echo wp_kses_post(bbb_books_like_trope_display_html($trope)); ?></span>
+						<?php endif; ?>
 					<?php endforeach; ?>
 					<?php if (!empty($source['boyfriend'])) : ?>
-						<span class="bbb-like__chip is-locked-chip"><?php echo esc_html((string) $source['boyfriend']); ?></span>
+						<span class="bbb-like__chip is-locked-chip"><?php echo wp_kses_post(bbb_books_like_ensure_emoji_label_html((string) $source['boyfriend'])); ?></span>
 					<?php endif; ?>
+				</div>
+
+				<div class="bbb-like__filters" data-like-filters>
+					<label class="bbb-like__spiceFilter">
+						<span>minimum spice</span>
+						<input type="range" min="0" max="5" step="1" value="0" data-like-spice>
+						<output data-like-spice-label>any heat</output>
+					</label>
+					<button class="bbb-like__clearFilters" type="button" data-like-clear hidden>clear filters</button>
 				</div>
 			</header>
 
@@ -107,7 +182,9 @@ function bbb_books_like_skulls(int $value): string {
 				</p>
 				<div class="bbb-like__list" data-like-list>
 					<?php foreach ($recommendations as $index => $book) :
-						$tags = $book['shared_tropes'] ?: array_filter(array($book['shelf']['name'] ?? '', $book['boyfriend'] ?? ''));
+						$tags = !empty($book['shared_tropes'])
+							? bbb_books_like_trope_display_values($book, $book['shared_tropes'])
+							: array_map('bbb_books_like_ensure_emoji_label_html', array_filter(array($book['shelf']['name'] ?? '', $book['boyfriend'] ?? '')));
 						$why  = (string) ($book['mini'] ?: $book['why']);
 					?>
 						<article class="bbb-like__match sss-lib__book" data-book-preview <?php echo bbb_books_like_data_attrs($book); ?>>
@@ -134,7 +211,7 @@ function bbb_books_like_skulls(int $value): string {
 								<?php if ($tags) : ?>
 									<div class="bbb-like__recTags">
 										<?php foreach (array_slice($tags, 0, 3) as $tag) : ?>
-											<span class="bbb-like__recTag"><?php echo esc_html((string) $tag); ?></span>
+											<span class="bbb-like__recTag"><?php echo wp_kses_post((string) $tag); ?></span>
 										<?php endforeach; ?>
 									</div>
 								<?php endif; ?>
@@ -151,19 +228,20 @@ function bbb_books_like_skulls(int $value): string {
 								<?php endif; ?>
 								<div class="bbb-like__matchActions">
 									<?php if (!empty($book['amazon'])) : ?>
-										<a class="bbb-like__cta" href="<?php echo esc_url((string) $book['amazon']); ?>" target="_blank" rel="noopener">get on amazon</a>
+										<a class="bbb-like__cta bbb-like__cta--amazon" href="<?php echo esc_url((string) $book['amazon']); ?>" target="_blank" rel="noopener">get on amazon</a>
 									<?php endif; ?>
 									<?php if (!empty($book['ku'])) : ?>
-										<a class="bbb-like__cta" href="<?php echo esc_url((string) ($book['amazon'] ?: $book['bookshop'] ?: '#')); ?>" target="_blank" rel="noopener">on kindle unlimited</a>
+										<a class="bbb-like__cta bbb-like__cta--ku" href="<?php echo esc_url((string) ($book['amazon'] ?: $book['bookshop'] ?: '#')); ?>" target="_blank" rel="noopener">on kindle unlimited</a>
 									<?php endif; ?>
 									<?php if (empty($book['amazon']) && !empty($book['bookshop'])) : ?>
-										<a class="bbb-like__cta" href="<?php echo esc_url((string) $book['bookshop']); ?>" target="_blank" rel="noopener">get on bookshop</a>
+										<a class="bbb-like__cta bbb-like__cta--bookshop" href="<?php echo esc_url((string) $book['bookshop']); ?>" target="_blank" rel="noopener">get on bookshop</a>
 									<?php endif; ?>
 								</div>
 							</div>
 						</article>
 					<?php endforeach; ?>
 				</div>
+				<p class="bbb-like__emptyMatches" data-like-empty hidden>no visible matches for those filters yet. clear one and the list comes back.</p>
 
 				<?php if (!$is_paid_society_member && $locked_count > 0) : ?>
 					<div class="bbb-like__unlock" data-like-lock>
@@ -217,6 +295,84 @@ document.addEventListener('click', function(event) {
 		});
 	}
 });
+
+(function() {
+	var root = document.querySelector('[data-books-like]');
+	if (!root) return;
+
+	var spice = root.querySelector('[data-like-spice]');
+	var spiceLabel = root.querySelector('[data-like-spice-label]');
+	var clear = root.querySelector('[data-like-clear]');
+	var empty = root.querySelector('[data-like-empty]');
+	var chips = Array.prototype.slice.call(root.querySelectorAll('[data-like-trope]'));
+	var matches = Array.prototype.slice.call(root.querySelectorAll('.bbb-like__match'));
+	var selected = [];
+	var labels = ['any heat', '1 pepper+', '2 peppers+', '3 peppers+', '4 peppers+', '5 peppers'];
+
+	function bookTropes(book) {
+		return String(book.getAttribute('data-tropes') || '')
+			.split(',')
+			.map(function(trope) { return trope.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); })
+			.filter(Boolean);
+	}
+
+	function applyFilters() {
+		var minSpice = spice ? Number(spice.value || 0) : 0;
+		var visible = 0;
+
+		if (spiceLabel) {
+			spiceLabel.textContent = labels[minSpice] || labels[0];
+		}
+
+		matches.forEach(function(book) {
+			var spiceValue = Number(book.getAttribute('data-spice') || 0);
+			var tropes = bookTropes(book);
+			var spiceMatch = !minSpice || spiceValue >= minSpice;
+			var tropeMatch = selected.length === 0 || selected.every(function(trope) { return tropes.indexOf(trope) !== -1; });
+			var show = spiceMatch && tropeMatch;
+			book.hidden = !show;
+			if (show) visible += 1;
+		});
+
+		if (empty) {
+			empty.hidden = visible !== 0;
+		}
+		if (clear) {
+			clear.hidden = minSpice === 0 && selected.length === 0;
+		}
+	}
+
+	chips.forEach(function(chip) {
+		chip.addEventListener('click', function() {
+			var value = chip.getAttribute('data-like-trope') || '';
+			var index = selected.indexOf(value);
+			if (index === -1) {
+				selected.push(value);
+				chip.setAttribute('aria-pressed', 'true');
+			} else {
+				selected.splice(index, 1);
+				chip.setAttribute('aria-pressed', 'false');
+			}
+			applyFilters();
+		});
+	});
+
+	if (spice) {
+		spice.addEventListener('input', applyFilters);
+	}
+	if (clear) {
+		clear.addEventListener('click', function() {
+			selected = [];
+			chips.forEach(function(chip) { chip.setAttribute('aria-pressed', 'false'); });
+			if (spice) {
+				spice.value = '0';
+			}
+			applyFilters();
+		});
+	}
+
+	applyFilters();
+}());
 </script>
 
 <?php

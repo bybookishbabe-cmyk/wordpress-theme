@@ -28,10 +28,20 @@ function bbb_reader_quiz_books(): array {
 		}
 
 		$tropes = array();
+		$trope_display = array();
+		$trope_urls = array();
 		foreach ((array) ($data['tropes'] ?? array()) as $trope) {
 			$name = (string) ($trope['name'] ?? '');
 			if ($name !== '') {
 				$tropes[] = $name;
+				$trope_display[] = function_exists('bbb_trope_label')
+					? bbb_trope_label($name, $trope['emoji'] ?? $trope['sss_trope_emoji'] ?? '')
+					: trim(((string) ($trope['emoji'] ?? $trope['sss_trope_emoji'] ?? '🖤')) . ' ' . $name);
+
+				$handle = sanitize_title((string) ($trope['handle'] ?? $trope['slug'] ?? $name));
+				if ($handle !== '') {
+					$trope_urls[] = home_url('/' . $handle . '-books/');
+				}
 			}
 		}
 
@@ -48,6 +58,8 @@ function bbb_reader_quiz_books(): array {
 			'shelf'         => (string) ($data['shelf']['name'] ?? ''),
 			'shelfSlug'     => (string) ($data['shelf']['slug'] ?? ''),
 			'tropes'        => $tropes,
+			'tropesDisplay' => $trope_display,
+			'tropeUrls'     => $trope_urls,
 			'spice'         => (int) ($data['spice'] ?? 0),
 			'darkness'      => (int) ($data['darkness'] ?? 0),
 			'tension'       => (int) ($data['tension'] ?? 0),

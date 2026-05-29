@@ -88,6 +88,14 @@ margin-bottom:6px;
 
 }
 
+.sss-you-might-like__emoji .bbb-custom-emoji{
+width:36px;
+height:36px;
+object-fit:contain;
+display:block;
+border-radius:4px;
+}
+
 .sss-you-might-like__name{
 
 font-size:13px;

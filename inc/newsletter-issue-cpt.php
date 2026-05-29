@@ -22,7 +22,7 @@ add_action(
 				'show_in_menu' => true,
 				'show_in_rest' => true,
 				'menu_icon'    => 'dashicons-email-alt2',
-				'supports'     => array('title', 'custom-fields'),
+				'supports'     => array('title', 'editor', 'excerpt', 'custom-fields'),
 			)
 		);
 
@@ -39,6 +39,9 @@ add_action(
 			'_issue_tropes'          => 'string',
 			'_issue_preview_url'     => 'string',
 			'_issue_preview_alt'     => 'string',
+			'_issue_pull_quote'      => 'string',
+			'_issue_import_source'   => 'string',
+			'_issue_imported_at'     => 'string',
 			'_bbb_newsletter_url'    => 'string',
 		);
 
@@ -172,6 +175,318 @@ function bbb_seed_newsletter_issues_from_theme(): void {
 	update_option('bbb_newsletter_seed_version', $seed_version, false);
 }
 add_action('init', 'bbb_seed_newsletter_issues_from_theme', 20);
+
+function bbb_newsletter_issue_admin_book_types(): array {
+	return array_values(
+		array_filter(
+			array('bbb_book', 'sss_book'),
+			static fn(string $post_type): bool => post_type_exists($post_type)
+		)
+	);
+}
+
+function bbb_newsletter_issue_admin_books(): array {
+	$post_types = bbb_newsletter_issue_admin_book_types();
+	if (empty($post_types)) {
+		return array();
+	}
+
+	return get_posts(
+		array(
+			'post_type'      => $post_types,
+			'post_status'    => array('publish', 'draft', 'pending', 'private', 'future'),
+			'posts_per_page' => -1,
+			'orderby'        => 'title',
+			'order'          => 'ASC',
+			'fields'         => 'all',
+		)
+	);
+}
+
+function bbb_newsletter_issue_admin_selected_book_id(int $issue_id): int {
+	foreach (array('_issue_book_id', '_issue_library_book_id', 'book_id', 'library_book_id') as $meta_key) {
+		$book_id = absint(get_post_meta($issue_id, $meta_key, true));
+		if ($book_id > 0) {
+			return $book_id;
+		}
+	}
+
+	$book_handle = sanitize_title((string) get_post_meta($issue_id, '_issue_book_handle', true));
+	if ('' !== $book_handle) {
+		$book = get_page_by_path($book_handle, OBJECT, bbb_newsletter_issue_admin_book_types());
+		if ($book instanceof WP_Post) {
+			return (int) $book->ID;
+		}
+	}
+
+	return 0;
+}
+
+function bbb_newsletter_issue_admin_date_value(int $issue_id): string {
+	$date = (string) get_post_meta($issue_id, '_issue_publish_date', true);
+	if ('' === $date) {
+		$date = (string) get_post_meta($issue_id, 'publish_date', true);
+	}
+
+	$date = trim($date);
+	if (preg_match('/^\d{8}$/', $date)) {
+		return substr($date, 0, 4) . '-' . substr($date, 4, 2) . '-' . substr($date, 6, 2);
+	}
+
+	return preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) ? $date : '';
+}
+
+function bbb_newsletter_issue_admin_url_value(int $issue_id): string {
+	foreach (array('_bbb_newsletter_url', 'issue_url', '_issue_url') as $meta_key) {
+		$url = trim((string) get_post_meta($issue_id, $meta_key, true));
+		if ('' !== $url) {
+			return $url;
+		}
+	}
+
+	return '';
+}
+
+function bbb_newsletter_issue_admin_render_details(WP_Post $post): void {
+	wp_nonce_field('bbb_newsletter_issue_details', 'bbb_newsletter_issue_details_nonce');
+
+	$selected_book_id = bbb_newsletter_issue_admin_selected_book_id((int) $post->ID);
+	$publish_date     = bbb_newsletter_issue_admin_date_value((int) $post->ID);
+	$issue_url        = bbb_newsletter_issue_admin_url_value((int) $post->ID);
+	$subtitle         = (string) get_post_meta($post->ID, '_issue_subtitle', true);
+	$excerpt          = (string) get_post_meta($post->ID, '_issue_excerpt', true);
+	$preview_url      = (string) get_post_meta($post->ID, '_issue_preview_url', true);
+	$preview_alt      = (string) get_post_meta($post->ID, '_issue_preview_alt', true);
+	$books            = bbb_newsletter_issue_admin_books();
+	?>
+	<style>
+		.bbb-newsletter-details {
+			display: grid;
+			gap: 16px;
+			max-width: 960px;
+		}
+		.bbb-newsletter-details label {
+			display: block;
+			font-weight: 600;
+			margin-bottom: 6px;
+		}
+		.bbb-newsletter-details input[type="text"],
+		.bbb-newsletter-details input[type="url"],
+		.bbb-newsletter-details input[type="date"],
+		.bbb-newsletter-details select,
+		.bbb-newsletter-details textarea {
+			max-width: 680px;
+			width: 100%;
+		}
+		.bbb-newsletter-details__hint {
+			color: #646970;
+			margin: 6px 0 0;
+		}
+		.bbb-newsletter-details__image {
+			align-items: flex-start;
+			display: flex;
+			flex-wrap: wrap;
+			gap: 14px;
+		}
+		.bbb-newsletter-details__preview {
+			background: #f6f7f7;
+			border: 1px solid #dcdcde;
+			border-radius: 3px;
+			max-height: 180px;
+			max-width: 280px;
+			object-fit: cover;
+		}
+	</style>
+	<div class="bbb-newsletter-details">
+		<p class="bbb-newsletter-details__hint">
+			<?php esc_html_e('Pick the featured book, set the issue date, and choose the image that appears on the Society/newsletter sections.', 'bybookishbabe-shopify-port'); ?>
+		</p>
+
+		<div>
+			<label for="bbb_issue_book_id"><?php esc_html_e('Featured book', 'bybookishbabe-shopify-port'); ?></label>
+			<select id="bbb_issue_book_id" name="bbb_issue_book_id">
+				<option value="0"><?php esc_html_e('No linked book yet', 'bybookishbabe-shopify-port'); ?></option>
+				<?php foreach ($books as $book) : ?>
+					<?php if (!$book instanceof WP_Post) { continue; } ?>
+					<option value="<?php echo esc_attr((string) $book->ID); ?>" <?php selected($selected_book_id, (int) $book->ID); ?>>
+						<?php echo esc_html(get_the_title($book) . ' (' . $book->post_type . ')'); ?>
+					</option>
+				<?php endforeach; ?>
+			</select>
+			<p class="bbb-newsletter-details__hint">
+				<?php esc_html_e('This powers the weekly obsession/book card and updates the book release gating when you save.', 'bybookishbabe-shopify-port'); ?>
+			</p>
+		</div>
+
+		<div>
+			<label for="bbb_issue_publish_date"><?php esc_html_e('Newsletter date', 'bybookishbabe-shopify-port'); ?></label>
+			<input id="bbb_issue_publish_date" name="bbb_issue_publish_date" type="date" value="<?php echo esc_attr($publish_date); ?>">
+			<p class="bbb-newsletter-details__hint">
+				<?php esc_html_e('Books linked here stay hidden until this date if they are newsletter-gated.', 'bybookishbabe-shopify-port'); ?>
+			</p>
+		</div>
+
+		<div>
+			<label for="bbb_issue_url"><?php esc_html_e('Newsletter URL', 'bybookishbabe-shopify-port'); ?></label>
+			<input id="bbb_issue_url" name="bbb_issue_url" type="url" value="<?php echo esc_attr($issue_url); ?>" placeholder="https://">
+		</div>
+
+		<div>
+			<label for="bbb_issue_subtitle"><?php esc_html_e('Subtitle', 'bybookishbabe-shopify-port'); ?></label>
+			<textarea id="bbb_issue_subtitle" name="bbb_issue_subtitle" rows="3"><?php echo esc_textarea($subtitle); ?></textarea>
+		</div>
+
+		<div>
+			<label for="bbb_issue_excerpt"><?php esc_html_e('Short summary', 'bybookishbabe-shopify-port'); ?></label>
+			<textarea id="bbb_issue_excerpt" name="bbb_issue_excerpt" rows="3"><?php echo esc_textarea($excerpt); ?></textarea>
+		</div>
+
+		<div>
+			<label for="bbb_issue_preview_url"><?php esc_html_e('Preview image', 'bybookishbabe-shopify-port'); ?></label>
+			<div class="bbb-newsletter-details__image">
+				<img
+					class="bbb-newsletter-details__preview"
+					src="<?php echo esc_url($preview_url); ?>"
+					alt=""
+					data-bbb-newsletter-image-preview
+					<?php echo '' === $preview_url ? 'hidden' : ''; ?>
+				>
+				<div>
+					<input id="bbb_issue_preview_url" name="bbb_issue_preview_url" type="url" value="<?php echo esc_attr($preview_url); ?>" placeholder="https://">
+					<p>
+						<button type="button" class="button" data-bbb-newsletter-image-pick><?php esc_html_e('Choose image', 'bybookishbabe-shopify-port'); ?></button>
+						<button type="button" class="button" data-bbb-newsletter-image-clear><?php esc_html_e('Clear image', 'bybookishbabe-shopify-port'); ?></button>
+					</p>
+					<label for="bbb_issue_preview_alt"><?php esc_html_e('Image alt text', 'bybookishbabe-shopify-port'); ?></label>
+					<input id="bbb_issue_preview_alt" name="bbb_issue_preview_alt" type="text" value="<?php echo esc_attr($preview_alt); ?>">
+				</div>
+			</div>
+		</div>
+	</div>
+	<?php
+}
+
+function bbb_newsletter_issue_admin_add_metabox(): void {
+	add_meta_box(
+		'bbb_newsletter_issue_details',
+		__('Newsletter issue details', 'bybookishbabe-shopify-port'),
+		'bbb_newsletter_issue_admin_render_details',
+		'newsletter_issue',
+		'normal',
+		'high'
+	);
+}
+add_action('add_meta_boxes_newsletter_issue', 'bbb_newsletter_issue_admin_add_metabox');
+
+function bbb_newsletter_issue_admin_assets(string $hook): void {
+	if (!in_array($hook, array('post.php', 'post-new.php'), true)) {
+		return;
+	}
+
+	$screen = get_current_screen();
+	if (!$screen || 'newsletter_issue' !== $screen->post_type) {
+		return;
+	}
+
+	wp_enqueue_media();
+	wp_add_inline_script(
+		'jquery-core',
+		"jQuery(function($){\n" .
+		"var frame;\n" .
+		"$(document).on('click','[data-bbb-newsletter-image-pick]',function(e){\n" .
+		"e.preventDefault();\n" .
+		"if(frame){frame.open();return;}\n" .
+		"frame=wp.media({title:'Choose newsletter preview image',button:{text:'Use this image'},multiple:false});\n" .
+		"frame.on('select',function(){var attachment=frame.state().get('selection').first().toJSON();$('#bbb_issue_preview_url').val(attachment.url || '');$('#bbb_issue_preview_alt').val(attachment.alt || attachment.title || '');$('[data-bbb-newsletter-image-preview]').attr('src',attachment.url || '').prop('hidden',!attachment.url);});\n" .
+		"frame.open();\n" .
+		"});\n" .
+		"$(document).on('click','[data-bbb-newsletter-image-clear]',function(e){e.preventDefault();$('#bbb_issue_preview_url,#bbb_issue_preview_alt').val('');$('[data-bbb-newsletter-image-preview]').attr('src','').prop('hidden',true);});\n" .
+		"});"
+	);
+}
+add_action('admin_enqueue_scripts', 'bbb_newsletter_issue_admin_assets');
+
+function bbb_newsletter_issue_admin_save(int $post_id): void {
+	if (
+		!isset($_POST['bbb_newsletter_issue_details_nonce'])
+		|| !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['bbb_newsletter_issue_details_nonce'])), 'bbb_newsletter_issue_details')
+	) {
+		return;
+	}
+
+	if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+		return;
+	}
+
+	if (!current_user_can('edit_post', $post_id)) {
+		return;
+	}
+
+	$publish_date = isset($_POST['bbb_issue_publish_date'])
+		? sanitize_text_field(wp_unslash($_POST['bbb_issue_publish_date']))
+		: '';
+	$publish_date = preg_match('/^\d{4}-\d{2}-\d{2}$/', $publish_date) ? $publish_date : '';
+
+	$issue_url = isset($_POST['bbb_issue_url'])
+		? esc_url_raw(wp_unslash($_POST['bbb_issue_url']))
+		: '';
+
+	$subtitle = isset($_POST['bbb_issue_subtitle'])
+		? sanitize_textarea_field(wp_unslash($_POST['bbb_issue_subtitle']))
+		: '';
+
+	$excerpt = isset($_POST['bbb_issue_excerpt'])
+		? sanitize_textarea_field(wp_unslash($_POST['bbb_issue_excerpt']))
+		: '';
+
+	$preview_url = isset($_POST['bbb_issue_preview_url'])
+		? esc_url_raw(wp_unslash($_POST['bbb_issue_preview_url']))
+		: '';
+
+	$preview_alt = isset($_POST['bbb_issue_preview_alt'])
+		? sanitize_text_field(wp_unslash($_POST['bbb_issue_preview_alt']))
+		: '';
+
+	foreach (array('_issue_publish_date', 'publish_date') as $meta_key) {
+		'' !== $publish_date ? update_post_meta($post_id, $meta_key, $publish_date) : delete_post_meta($post_id, $meta_key);
+	}
+
+	foreach (array('_bbb_newsletter_url', 'issue_url') as $meta_key) {
+		'' !== $issue_url ? update_post_meta($post_id, $meta_key, $issue_url) : delete_post_meta($post_id, $meta_key);
+	}
+
+	'' !== $subtitle ? update_post_meta($post_id, '_issue_subtitle', $subtitle) : delete_post_meta($post_id, '_issue_subtitle');
+	'' !== $excerpt ? update_post_meta($post_id, '_issue_excerpt', $excerpt) : delete_post_meta($post_id, '_issue_excerpt');
+	'' !== $preview_url ? update_post_meta($post_id, '_issue_preview_url', $preview_url) : delete_post_meta($post_id, '_issue_preview_url');
+	'' !== $preview_alt ? update_post_meta($post_id, '_issue_preview_alt', $preview_alt) : delete_post_meta($post_id, '_issue_preview_alt');
+
+	$book_id = isset($_POST['bbb_issue_book_id']) ? absint($_POST['bbb_issue_book_id']) : 0;
+	$book    = $book_id > 0 ? get_post($book_id) : null;
+	if ($book instanceof WP_Post && in_array($book->post_type, bbb_newsletter_issue_admin_book_types(), true)) {
+		$book_handle = $book->post_name ?: sanitize_title(get_the_title($book));
+		update_post_meta($post_id, '_issue_book_id', $book_id);
+		update_post_meta($post_id, '_issue_library_book_id', $book_id);
+		update_post_meta($post_id, 'book_id', $book_id);
+		update_post_meta($post_id, 'library_book_id', $book_id);
+		update_post_meta($post_id, '_issue_book_handle', $book_handle);
+		update_post_meta($post_id, 'book_handle', $book_handle);
+		update_post_meta($post_id, 'library_book_handle', $book_handle);
+
+		if ('' !== $publish_date) {
+			update_post_meta($book_id, '_bbb_newsletter_date', $publish_date);
+			update_post_meta($book_id, 'featured_in_newsletter_date', $publish_date);
+		}
+		if ('' !== $issue_url) {
+			update_post_meta($book_id, '_bbb_newsletter_url', $issue_url);
+			update_post_meta($book_id, 'newsletter_url', $issue_url);
+		}
+	} else {
+		foreach (array('_issue_book_id', '_issue_library_book_id', 'book_id', 'library_book_id', '_issue_book_handle', 'book_handle', 'library_book_handle') as $meta_key) {
+			delete_post_meta($post_id, $meta_key);
+		}
+	}
+}
+add_action('save_post_newsletter_issue', 'bbb_newsletter_issue_admin_save');
 
 add_action(
 	'acf/init',

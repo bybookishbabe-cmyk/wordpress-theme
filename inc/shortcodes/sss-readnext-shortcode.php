@@ -174,11 +174,54 @@ function sss_specific_manual_links(int $post_id): array {
 	return array_slice(array_values($deduped), 0, 3);
 }
 
+function sss_normalize_specific_cluster(string $cluster): string {
+	$cluster = strtolower(trim($cluster));
+	$cluster = str_replace(array('_', ' '), '-', $cluster);
+	$aliases = array(
+		'dark-obsession'        => 'darkobsession',
+		'darkromance'           => 'dark',
+		'dark-romance'          => 'dark',
+		'dark-romantasy'        => 'darkromantasy',
+		'morally-gray-fantasy'  => 'morallygrayfantasy',
+		'morally-gray-men'      => 'morallygraymen',
+		'morallygray'           => 'morallygraymen',
+		'morally-gray'          => 'morallygraymen',
+		'slow-burn'             => 'slowburn',
+	);
+
+	return $aliases[$cluster] ?? str_replace('-', '', $cluster);
+}
+
+function sss_specific_cluster_links(string $cluster): array {
+	$clusters = sss_specific_link_clusters();
+	$cluster  = sss_normalize_specific_cluster($cluster);
+	if (!isset($clusters[$cluster])) {
+		return array();
+	}
+
+	$links = array();
+	foreach ($clusters[$cluster] as $path) {
+		$link = sss_specific_link_from_value($path);
+		if ($link) {
+			$links[] = $link;
+		}
+	}
+
+	return array_slice($links, 0, 4);
+}
+
 function sss_specific_links_shortcode($atts): string {
-	$atts = shortcode_atts(array('post_id' => get_the_ID()), $atts, 'sss_specific_links');
+	$atts = shortcode_atts(array('post_id' => get_the_ID(), 'cluster' => ''), $atts, 'sss_specific_links');
 	$post_id = (int) $atts['post_id'];
 	$prompt = (string) sss_article_field('specific_prompt', $post_id, 'looking for something more specific?');
 	$links = sss_specific_manual_links($post_id);
+	if (!$links) {
+		$cluster = (string) $atts['cluster'];
+		if ('' === trim($cluster)) {
+			$cluster = sss_detect_cluster(sss_readnext_context($post_id));
+		}
+		$links = sss_specific_cluster_links($cluster);
+	}
 	if (!$links) {
 		return '';
 	}
@@ -274,6 +317,100 @@ function sss_what_to_read_next_shortcode($atts): string {
 }
 add_shortcode('sss_what_to_read_next', 'sss_what_to_read_next_shortcode');
 
+function sss_faq_book_title_patterns(): array {
+	static $patterns = null;
+	if (null !== $patterns) {
+		return $patterns;
+	}
+
+	$books = function_exists('sss_article_all_visible_books')
+		? sss_article_all_visible_books()
+		: get_posts(
+			array(
+				'post_type'      => array('bbb_book', 'sss_book'),
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+				'orderby'        => 'title',
+				'order'          => 'ASC',
+			)
+		);
+
+	$titles = array();
+	foreach ($books as $book) {
+		if (!$book instanceof WP_Post) {
+			continue;
+		}
+
+		$title = trim(wp_strip_all_tags(get_the_title($book)));
+		if ('' === $title) {
+			continue;
+		}
+
+		$normalized = function_exists('sss_article_match_text') ? sss_article_match_text($title) : strtolower($title);
+		$word_count = count(preg_split('/\s+/', $normalized) ?: array());
+		if ($word_count < 2 && strlen($normalized) < 10) {
+			continue;
+		}
+
+		$titles[$title] = $title;
+	}
+
+	$titles = array_values($titles);
+	usort(
+		$titles,
+		static function (string $first, string $second): int {
+			return strlen($second) <=> strlen($first);
+		}
+	);
+
+	$patterns = array_map(
+		static function (string $title): string {
+			$pattern = preg_quote($title, '/');
+			$pattern = str_replace(array("'", '’'), "[’']", $pattern);
+
+			return '/(?<![\p{L}\p{N}])(' . $pattern . ')(?![\p{L}\p{N}])/iu';
+		},
+		$titles
+	);
+
+	return $patterns;
+}
+
+function sss_faq_italicize_book_titles(string $html): string {
+	$patterns = sss_faq_book_title_patterns();
+	if (!$patterns || '' === trim($html)) {
+		return $html;
+	}
+
+	$chunks = function_exists('wp_html_split') ? wp_html_split($html) : preg_split('/(<[^>]+>)/', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
+	if (!is_array($chunks)) {
+		return $html;
+	}
+
+	$in_em = false;
+	foreach ($chunks as $index => $chunk) {
+		if (str_starts_with($chunk, '<')) {
+			if (preg_match('/^<\s*em\b/i', $chunk)) {
+				$in_em = true;
+			} elseif (preg_match('/^<\s*\/\s*em\s*>/i', $chunk)) {
+				$in_em = false;
+			}
+			continue;
+		}
+
+		if ($in_em || '' === trim($chunk)) {
+			continue;
+		}
+
+		foreach ($patterns as $pattern) {
+			$chunk = (string) preg_replace($pattern, '<em>$1</em>', $chunk);
+		}
+		$chunks[$index] = $chunk;
+	}
+
+	return implode('', $chunks);
+}
+
 function sss_faq_shortcode($atts, ?string $content = null): string {
 	if (null === $content || trim($content) === '') {
 		return '';
@@ -295,7 +432,8 @@ function sss_faq_shortcode($atts, ?string $content = null): string {
 			if ('a' !== $type || '' === $question || '' === $body) {
 				continue;
 			}
-			$items .= '<details class="blog-faq__item"><summary class="blog-faq__question"><span>' . esc_html($question) . '</span><span class="blog-faq__arrow" aria-hidden="true">⌄</span></summary><div class="blog-faq__answer">' . wp_kses_post(do_shortcode($body)) . '</div></details>';
+			$answer = sss_faq_italicize_book_titles(wp_kses_post(do_shortcode($body)));
+			$items .= '<details class="blog-faq__item"><summary class="blog-faq__question"><span>' . wp_kses_post(sss_faq_italicize_book_titles(esc_html($question))) . '</span><span class="blog-faq__arrow" aria-hidden="true">⌄</span></summary><div class="blog-faq__answer">' . wp_kses_post($answer) . '</div></details>';
 			$question = '';
 		}
 	}
@@ -309,7 +447,8 @@ function sss_faq_shortcode($atts, ?string $content = null): string {
 				if (!$question || !$answer) {
 					continue;
 				}
-				$items .= '<details class="blog-faq__item"><summary class="blog-faq__question"><span>' . esc_html($question) . '</span><span class="blog-faq__arrow" aria-hidden="true">⌄</span></summary><div class="blog-faq__answer">' . wp_kses_post($answer) . '</div></details>';
+				$answer = sss_faq_italicize_book_titles(wp_kses_post($answer));
+				$items .= '<details class="blog-faq__item"><summary class="blog-faq__question"><span>' . wp_kses_post(sss_faq_italicize_book_titles(esc_html($question))) . '</span><span class="blog-faq__arrow" aria-hidden="true">⌄</span></summary><div class="blog-faq__answer">' . wp_kses_post($answer) . '</div></details>';
 			}
 		}
 		if (!$items) {

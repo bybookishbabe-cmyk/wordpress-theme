@@ -1,6 +1,6 @@
 <?php
 /**
- * Manual "the society also recommends" links for blog posts.
+ * Manual "the society recommends" links for blog posts.
  *
  * @package ByBookishBabeShopifyPort
  */
@@ -21,6 +21,34 @@ function bbb_society_recommendation_options(string $post_type): array {
 			'order'          => 'ASC',
 		)
 	);
+}
+
+function bbb_society_recommendation_shortcut_options(): array {
+	$shortcuts = array(
+		array(
+			'label' => __('sports romance', 'bybookishbabe-shopify-port'),
+			'slug'  => 'sports-romance-books',
+		),
+		array(
+			'label' => __('hockey romance', 'bybookishbabe-shopify-port'),
+			'slug'  => 'the-best-hockey-romance-books',
+		),
+	);
+	$options   = array();
+
+	foreach ($shortcuts as $shortcut) {
+		$item = get_page_by_path((string) $shortcut['slug'], OBJECT, array('post', 'page'));
+		if (!$item instanceof WP_Post || !in_array(get_post_status($item), array('publish', 'draft', 'pending', 'private'), true)) {
+			continue;
+		}
+
+		$options[] = array(
+			'label' => (string) $shortcut['label'],
+			'post'  => $item,
+		);
+	}
+
+	return $options;
 }
 
 function bbb_society_recommendation_selected(int $post_id): array {
@@ -53,7 +81,7 @@ function bbb_society_recommendation_selected(int $post_id): array {
 function bbb_society_recommendations_add_meta_box(): void {
 	add_meta_box(
 		'bbb_society_recommendations',
-		__('The society also recommends', 'bybookishbabe-shopify-port'),
+		__('The society recommends', 'bybookishbabe-shopify-port'),
 		'bbb_society_recommendations_render_meta_box',
 		'post',
 		'side',
@@ -63,15 +91,34 @@ function bbb_society_recommendations_add_meta_box(): void {
 add_action('add_meta_boxes_post', 'bbb_society_recommendations_add_meta_box');
 
 function bbb_society_recommendations_render_meta_box(WP_Post $post): void {
-	$selected = bbb_society_recommendation_selected((int) $post->ID);
-	$posts    = bbb_society_recommendation_options('post');
-	$pages    = bbb_society_recommendation_options('page');
+	$selected        = bbb_society_recommendation_selected((int) $post->ID);
+	$shortcut_items  = bbb_society_recommendation_shortcut_options();
+	$shortcut_values = array();
+	$posts           = bbb_society_recommendation_options('post');
+	$pages           = bbb_society_recommendation_options('page');
 
 	wp_nonce_field('bbb_society_recommendations_save', 'bbb_society_recommendations_nonce');
 	?>
 	<p style="margin-top:0;">
 		<?php esc_html_e('Pick up to three posts or pages to link at the bottom of this blog post.', 'bybookishbabe-shopify-port'); ?>
 	</p>
+	<?php if ($shortcut_items) : ?>
+		<p style="margin:8px 0 12px;">
+			<span style="display:block;font-weight:600;margin-bottom:6px;"><?php esc_html_e('Quick picks', 'bybookishbabe-shopify-port'); ?></span>
+			<?php foreach ($shortcut_items as $shortcut_item) : ?>
+				<?php
+				$linked_item = $shortcut_item['post'];
+				if ((int) $linked_item->ID === (int) $post->ID) {
+					continue;
+				}
+				$value = get_post_type($linked_item) . ':' . $linked_item->ID;
+				?>
+				<button type="button" class="button button-small bbb-society-recommendation-quick-pick" data-bbb-recommendation-value="<?php echo esc_attr($value); ?>" style="margin:0 4px 4px 0;">
+					<?php echo esc_html((string) $shortcut_item['label']); ?>
+				</button>
+			<?php endforeach; ?>
+		</p>
+	<?php endif; ?>
 	<?php for ($index = 0; $index < 3; $index++) : ?>
 		<p>
 			<label for="bbb-society-recommendation-<?php echo esc_attr((string) $index); ?>" style="display:block;font-weight:600;margin-bottom:4px;">
@@ -79,13 +126,33 @@ function bbb_society_recommendations_render_meta_box(WP_Post $post): void {
 			</label>
 			<select id="bbb-society-recommendation-<?php echo esc_attr((string) $index); ?>" name="bbb_society_recommendations[]" style="width:100%;">
 				<option value=""><?php esc_html_e('None selected', 'bybookishbabe-shopify-port'); ?></option>
-				<optgroup label="<?php esc_attr_e('Posts', 'bybookishbabe-shopify-port'); ?>">
+				<?php if ($shortcut_items) : ?>
+					<optgroup label="<?php esc_attr_e('Popular guide shortcuts', 'bybookishbabe-shopify-port'); ?>">
+						<?php foreach ($shortcut_items as $shortcut_item) : ?>
+							<?php
+							$linked_item = $shortcut_item['post'];
+							if ((int) $linked_item->ID === (int) $post->ID) {
+								continue;
+							}
+							$value = get_post_type($linked_item) . ':' . $linked_item->ID;
+							$shortcut_values[$value] = true;
+							?>
+							<option value="<?php echo esc_attr($value); ?>" <?php selected(($selected[$index] ?? '') === $value); ?>>
+								<?php echo esc_html(sprintf('%s - %s', (string) $shortcut_item['label'], get_the_title($linked_item))); ?>
+							</option>
+						<?php endforeach; ?>
+					</optgroup>
+				<?php endif; ?>
+				<optgroup label="<?php esc_attr_e('Posts and guides', 'bybookishbabe-shopify-port'); ?>">
 					<?php foreach ($posts as $linked_post) : ?>
 						<?php
 						if ((int) $linked_post->ID === (int) $post->ID) {
 							continue;
 						}
 						$value = 'post:' . $linked_post->ID;
+						if (isset($shortcut_values[$value])) {
+							continue;
+						}
 						?>
 						<option value="<?php echo esc_attr($value); ?>" <?php selected(($selected[$index] ?? '') === $value); ?>>
 							<?php echo esc_html(get_the_title($linked_post)); ?>
@@ -104,8 +171,41 @@ function bbb_society_recommendations_render_meta_box(WP_Post $post): void {
 		</p>
 	<?php endfor; ?>
 	<p class="description">
-		<?php esc_html_e('These render in this order as "the society also recommends".', 'bybookishbabe-shopify-port'); ?>
+		<?php esc_html_e('These render in this order as "the society recommends".', 'bybookishbabe-shopify-port'); ?>
 	</p>
+	<script>
+		(function () {
+			var box = document.getElementById('bbb_society_recommendations');
+			if (!box) {
+				return;
+			}
+
+			box.addEventListener('click', function (event) {
+				var button = event.target.closest('.bbb-society-recommendation-quick-pick');
+				if (!button) {
+					return;
+				}
+
+				var value = button.getAttribute('data-bbb-recommendation-value');
+				var selects = Array.prototype.slice.call(box.querySelectorAll('select[name="bbb_society_recommendations[]"]'));
+				var selected = selects.some(function (select) {
+					return select.value === value;
+				});
+
+				if (selected) {
+					return;
+				}
+
+				var target = selects.find(function (select) {
+					return !select.value;
+				}) || selects[0];
+				if (target) {
+					target.value = value;
+					target.dispatchEvent(new Event('change', {bubbles: true}));
+				}
+			});
+		}());
+	</script>
 	<?php
 }
 
@@ -186,6 +286,25 @@ function bbb_society_recommendations_items(int $post_id): array {
 	return array_slice($items, 0, 3);
 }
 
+function bbb_society_recommendation_icon(WP_Post $item): string {
+	$slug  = sanitize_title((string) $item->post_name);
+	$title = sanitize_title(get_the_title($item));
+
+	if (str_contains($slug, 'what-to-read-next') || str_contains($title, 'what-to-read-next')) {
+		return '📖';
+	}
+
+	if ('library' === $slug || str_contains($slug, 'library') || 'library' === $title || str_contains($title, 'library')) {
+		return '📚';
+	}
+
+	if (str_contains($slug, 'spice') || str_contains($title, 'spice')) {
+		return '🌶';
+	}
+
+	return 'post' === $item->post_type ? '📖' : '↗';
+}
+
 function bbb_render_society_recommendations(int $post_id): string {
 	$items = bbb_society_recommendations_items($post_id);
 	if (!$items) {
@@ -197,16 +316,21 @@ function bbb_render_society_recommendations(int $post_id): string {
 	<section class="sss-you-might-like page-width page-width--narrow js-you-might-like" aria-labelledby="bbb-society-recommendations-title">
 		<p class="sss-you-might-like__kicker"><?php esc_html_e('continue exploring', 'bybookishbabe-shopify-port'); ?></p>
 		<h2 id="bbb-society-recommendations-title" class="sss-you-might-like__title">
-			<?php esc_html_e('the society also recommends', 'bybookishbabe-shopify-port'); ?>
+			<?php esc_html_e('the society recommends', 'bybookishbabe-shopify-port'); ?>
 		</h2>
-		<div class="sss-you-might-like__grid">
-			<?php foreach ($items as $item) : ?>
-				<a href="<?php echo esc_url(get_permalink($item)); ?>" class="sss-you-might-like__item<?php echo 'post' === $item->post_type ? ' sss-you-might-like__guide' : ''; ?>">
-					<span class="sss-you-might-like__emoji" aria-hidden="true"><?php echo 'post' === $item->post_type ? '📖' : '↗'; ?></span>
-					<span class="sss-you-might-like__name"><?php echo esc_html(get_the_title($item)); ?></span>
-				</a>
-			<?php endforeach; ?>
-		</div>
+			<div class="sss-you-might-like__grid">
+				<?php foreach ($items as $item) : ?>
+					<?php
+					$item_title        = get_the_title($item);
+					$custom_emoji_html = function_exists('bbb_custom_emoji_html') ? bbb_custom_emoji_html($item_title, $item->post_name, 'sss-you-might-like__customEmoji') : '';
+					$fallback_emoji    = bbb_society_recommendation_icon($item);
+					?>
+					<a href="<?php echo esc_url(get_permalink($item)); ?>" class="sss-you-might-like__item<?php echo 'post' === $item->post_type ? ' sss-you-might-like__guide' : ''; ?>">
+						<span class="sss-you-might-like__emoji" aria-hidden="true"><?php echo '' !== $custom_emoji_html ? $custom_emoji_html : esc_html($fallback_emoji); ?></span>
+						<span class="sss-you-might-like__name"><?php echo esc_html($item_title); ?></span>
+					</a>
+				<?php endforeach; ?>
+			</div>
 	</section>
 	<?php
 

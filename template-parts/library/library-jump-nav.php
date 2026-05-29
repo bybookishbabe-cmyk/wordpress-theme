@@ -36,7 +36,7 @@ foreach ($shelf_counts as $count) {
 		<?php endif; ?>
 		<a href="#monthly">📅 books of the month</a>
 		<?php if ($has_mood_shelves) : ?>
-			<a href="#moods">🖤 trope shelves</a>
+			<a href="#moods">🖤 genre shelves</a>
 		<?php endif; ?>
 		<a href="#archive">🗂️ full library</a>
 	</div>

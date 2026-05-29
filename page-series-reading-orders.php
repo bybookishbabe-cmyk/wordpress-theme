@@ -105,6 +105,17 @@ if (!function_exists('bbb_series_entity_title')) {
 	}
 }
 
+if (!function_exists('bbb_series_entity_key')) {
+	function bbb_series_entity_key($series): string {
+		$series_slug = sanitize_title(bbb_series_entity_slug($series));
+		if ('' !== $series_slug) {
+			return $series_slug;
+		}
+
+		return sanitize_title(bbb_series_entity_title($series));
+	}
+}
+
 if (!function_exists('bbb_series_entity_meta')) {
 	function bbb_series_entity_meta($series, string $key, $default = '') {
 		if ($series instanceof WP_Term) {
@@ -335,6 +346,13 @@ if (!function_exists('bbb_series_guide_url_for_series')) {
 	}
 }
 
+if (!function_exists('bbb_series_page_url_for_series')) {
+	function bbb_series_page_url_for_series($series): string {
+		$series_slug = sanitize_title(bbb_series_entity_slug($series));
+		return '' !== $series_slug ? home_url('/series/' . $series_slug . '/') : '';
+	}
+}
+
 if (!function_exists('bbb_series_title_matches_guide_post')) {
 	function bbb_series_title_matches_guide_post(WP_Post $post, $series): bool {
 		$series_slug = sanitize_title(bbb_series_entity_slug($series));
@@ -357,63 +375,93 @@ if (!function_exists('bbb_series_title_matches_guide_post')) {
 	}
 }
 
-$series_list  = bbb_series_terms();
-$books        = bbb_series_visible_books();
-$guide_posts  = bbb_series_guide_posts();
-$series_cards = array();
-$shelf_groups = array();
+$series_cache_key = 'bbb_series_reading_orders_data_v3';
+$series_data      = get_transient($series_cache_key);
 
-foreach ($series_list as $series) {
-	$series_slug  = bbb_series_entity_slug($series);
-	$series_title = bbb_series_entity_title($series);
+if (is_array($series_data) && isset($series_data['series_cards'], $series_data['shelf_groups'])) {
+	$series_cards = is_array($series_data['series_cards']) ? $series_data['series_cards'] : array();
+	$shelf_groups = is_array($series_data['shelf_groups']) ? $series_data['shelf_groups'] : array();
+} else {
+	$series_list  = bbb_series_terms();
+	$books        = bbb_series_visible_books();
+	$guide_posts  = bbb_series_guide_posts();
+	$series_cards = array();
+	$shelf_groups = array();
+	$seen_series_slugs  = array();
+	$seen_series_titles = array();
 
-	if ('' === $series_slug || '' === $series_title) {
-		continue;
-	}
+	foreach ($series_list as $series) {
+		$series_slug  = bbb_series_entity_slug($series);
+		$series_title = bbb_series_entity_title($series);
+		$series_key   = bbb_series_entity_key($series);
+		$title_key    = sanitize_title($series_title);
 
-	$series_books = bbb_series_books_for_series($series, $books);
-	$first_book   = bbb_series_lead_book($series, $books);
-
-	if (!$first_book || !$series_books) {
-		continue;
-	}
-
-	$first_data       = bbb_series_book_data($first_book);
-	$book_count       = count($series_books);
-	$preview_books    = array_slice($series_books, 0, 3);
-	$remaining_count  = max(0, $book_count - count($preview_books));
-	$standalone_title = '';
-	$max_spice        = 0;
-	$shelf_name       = '' !== $first_data['shelf'] ? $first_data['shelf'] : 'series';
-	$shelf_slug       = sanitize_title($shelf_name);
-
-	foreach ($series_books as $book) {
-		$book_data = bbb_series_book_data($book);
-		$max_spice = max($max_spice, (int) $book_data['spice']);
-
-		if ('' === $standalone_title && $book_data['standalone']) {
-			$standalone_title = $book_data['title'];
+		if (
+			'' === $series_slug
+			|| '' === $series_title
+			|| '' === $series_key
+			|| isset($seen_series_slugs[$series_key])
+			|| ('' !== $title_key && isset($seen_series_titles[$title_key]))
+		) {
+			continue;
 		}
+
+		$series_books = bbb_series_books_for_series($series, $books);
+		$first_book   = bbb_series_lead_book($series, $books);
+
+		if (!$first_book || !$series_books) {
+			continue;
+		}
+
+		$seen_series_slugs[$series_key] = true;
+		if ('' !== $title_key) {
+			$seen_series_titles[$title_key] = true;
+		}
+
+		$first_data       = bbb_series_book_data($first_book);
+		$book_count       = count($series_books);
+		$preview_books    = array_slice($series_books, 0, 3);
+		$remaining_count  = max(0, $book_count - count($preview_books));
+		$standalone_title = '';
+		$max_spice        = 0;
+		$shelf_name       = '' !== $first_data['shelf'] ? $first_data['shelf'] : 'series';
+		$shelf_slug       = sanitize_title($shelf_name);
+
+		foreach ($series_books as $book) {
+			$book_data = bbb_series_book_data($book);
+			$max_spice = max($max_spice, (int) $book_data['spice']);
+
+			if ('' === $standalone_title && $book_data['standalone']) {
+				$standalone_title = $book_data['title'];
+			}
+		}
+
+		$shelf_groups[$shelf_slug] = $shelf_name;
+
+		$destination  = bbb_series_page_url_for_series($series);
+
+		$series_cards[] = array(
+			'title'            => $series_title,
+			'destination'      => $destination,
+			'has_guide'        => '' !== $destination,
+			'first_data'       => $first_data,
+			'book_count'       => $book_count,
+			'preview_books'    => $preview_books,
+			'remaining_count'  => $remaining_count,
+			'standalone_title' => $standalone_title,
+			'shelf_name'       => $shelf_name,
+			'shelf_slug'       => $shelf_slug,
+			'max_spice'        => $max_spice,
+		);
 	}
 
-	$shelf_groups[$shelf_slug] = $shelf_name;
-
-	$guide_post   = bbb_series_guide_post_for_series($series, $guide_posts);
-	$destination  = bbb_series_guide_url_for_series($series, $guide_post);
-
-	$series_cards[] = array(
-		'series'           => $series,
-		'title'            => $series_title,
-		'destination'      => $destination,
-		'has_guide'        => '' !== $destination,
-		'first_data'       => $first_data,
-		'book_count'       => $book_count,
-		'preview_books'    => $preview_books,
-		'remaining_count'  => $remaining_count,
-		'standalone_title' => $standalone_title,
-		'shelf_name'       => $shelf_name,
-		'shelf_slug'       => $shelf_slug,
-		'max_spice'        => $max_spice,
+	set_transient(
+		$series_cache_key,
+		array(
+			'series_cards' => $series_cards,
+			'shelf_groups' => $shelf_groups,
+		),
+		6 * HOUR_IN_SECONDS
 	);
 }
 
@@ -495,7 +543,7 @@ get_header();
 				</div>
 			</section>
 
-			<p class="bbb-seriesOrders__note">cards open when a series has an imported Shopify guide link or a matching guide post · filtered by vibe · spice levels visible at a glance</p>
+			<p class="bbb-seriesOrders__note">cards open the series page · filtered by vibe · spice levels visible at a glance</p>
 		<?php else : ?>
 			<div class="bbb-seriesOrders__empty">No series are ready to show here yet.</div>
 		<?php endif; ?>

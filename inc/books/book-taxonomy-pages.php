@@ -34,8 +34,20 @@ function bbb_book_taxonomy_slug_candidates(string $slug): array {
 	return array_values(array_unique(array_filter($candidates)));
 }
 
+function bbb_book_taxonomy_match_key(string $value): string {
+	$tokens = preg_split('/[^a-z0-9]+/', strtolower(sanitize_title($value)));
+	$tokens = array_filter((array) $tokens, static function ($token): bool {
+		return !in_array($token, array('book', 'books', 'romance', 'x', 'and'), true);
+	});
+
+	return implode('', $tokens);
+}
+
 function bbb_find_book_taxonomy_term(string $slug, string $kind = ''): ?WP_Term {
 	$kinds = $kind ? array($kind) : array('shelf', 'trope');
+	$fallback_term = null;
+	$match_keys    = array_map('bbb_book_taxonomy_match_key', bbb_book_taxonomy_slug_candidates($slug));
+	$match_keys    = array_values(array_unique(array_filter($match_keys)));
 
 	foreach ($kinds as $candidate_kind) {
 		foreach (bbb_book_taxonomies_for_kind($candidate_kind) as $taxonomy) {
@@ -46,18 +58,54 @@ function bbb_find_book_taxonomy_term(string $slug, string $kind = ''): ?WP_Term 
 			foreach (bbb_book_taxonomy_slug_candidates($slug) as $candidate_slug) {
 				$term = get_term_by('slug', $candidate_slug, $taxonomy);
 				if ($term instanceof WP_Term) {
-					return $term;
+					if ((int) $term->count > 0) {
+						return $term;
+					}
+					$fallback_term = $fallback_term ?: $term;
+				}
+			}
+
+			if ($match_keys) {
+				$terms = get_terms(array(
+					'taxonomy'   => $taxonomy,
+					'hide_empty' => false,
+				));
+
+				if (is_wp_error($terms)) {
+					continue;
+				}
+
+				foreach ($terms as $term) {
+					if (!$term instanceof WP_Term) {
+						continue;
+					}
+
+					$term_keys = array_unique(array_filter(array(
+						bbb_book_taxonomy_match_key($term->slug),
+						bbb_book_taxonomy_match_key($term->name),
+					)));
+
+					if (!array_intersect($match_keys, $term_keys)) {
+						continue;
+					}
+
+					if ((int) $term->count > 0) {
+						return $term;
+					}
+
+					$fallback_term = $fallback_term ?: $term;
 				}
 			}
 		}
 	}
 
-	return null;
+	return $fallback_term;
 }
 
 function bbb_get_page_taxonomy_term(string $kind): ?WP_Term {
 	$route_term = $GLOBALS['bbb_book_taxonomy_route_term'] ?? null;
-	if ($route_term instanceof WP_Term && bbb_book_taxonomy_kind_for_taxonomy($route_term->taxonomy) === $kind) {
+	$route_kind_override = (string) ($GLOBALS['bbb_book_taxonomy_route_kind_override'] ?? '');
+	if ($route_term instanceof WP_Term && (bbb_book_taxonomy_kind_for_taxonomy($route_term->taxonomy) === $kind || $route_kind_override === $kind)) {
 		return $route_term;
 	}
 
@@ -262,9 +310,98 @@ function bbb_get_book_taxonomy_discovery_items(string $kind): array {
 	return array_values($items);
 }
 
+function bbb_book_taxonomy_related_terms(WP_Term $current_term, array $book_ids, int $limit = 6): array {
+	$related           = array();
+	$current_match_key = bbb_book_taxonomy_match_key($current_term->slug ?: $current_term->name);
+
+	foreach ($book_ids as $book_id) {
+		$book_id = (int) $book_id;
+		if (!$book_id) {
+			continue;
+		}
+
+		foreach (array('bbb_trope', 'sss_trope', 'bbb_shelf', 'sss_shelf') as $taxonomy) {
+			if (!taxonomy_exists($taxonomy)) {
+				continue;
+			}
+
+			$terms = wp_get_post_terms($book_id, $taxonomy);
+			if (is_wp_error($terms)) {
+				continue;
+			}
+
+			foreach ($terms as $term) {
+				if (!$term instanceof WP_Term) {
+					continue;
+				}
+
+				$match_key = bbb_book_taxonomy_match_key($term->slug ?: $term->name);
+				if (!$match_key || $match_key === $current_match_key || (int) $term->term_id === (int) $current_term->term_id) {
+					continue;
+				}
+
+				$key = bbb_book_taxonomy_kind_for_taxonomy($term->taxonomy) . ':' . $match_key;
+				if (!isset($related[$key])) {
+					$related[$key] = array(
+						'term'  => $term,
+						'count' => 0,
+					);
+				}
+
+				$related[$key]['count']++;
+			}
+		}
+	}
+
+	usort(
+		$related,
+		static function (array $first, array $second): int {
+			if ((int) $first['count'] !== (int) $second['count']) {
+				return (int) $second['count'] <=> (int) $first['count'];
+			}
+
+			return strcasecmp($first['term']->name, $second['term']->name);
+		}
+	);
+
+	return array_slice(array_column($related, 'term'), 0, $limit);
+}
+
+function bbb_render_book_taxonomy_related_terms(WP_Term $term, array $book_ids): string {
+	$related_terms = bbb_book_taxonomy_related_terms($term, $book_ids);
+	if (!$related_terms) {
+		return '';
+	}
+
+	ob_start();
+	?>
+	<div class="sss-trope__related" aria-labelledby="bbb-book-taxonomy-recommendations-title">
+		<div class="sss-trope__relatedTitle" id="bbb-book-taxonomy-recommendations-title">
+			<?php esc_html_e('the society also recommends', 'bybookishbabe-shopify-port'); ?>
+		</div>
+		<div class="sss-trope__relatedGrid">
+			<?php foreach ($related_terms as $related_term) : ?>
+				<?php
+				$emoji      = bbb_book_taxonomy_term_emoji($related_term);
+				$emoji_html = function_exists('bbb_trope_emoji_html') ? bbb_trope_emoji_html($related_term->name, $emoji, $related_term->slug) : esc_html($emoji);
+				?>
+				<a class="sss-trope__relatedItem" href="<?php echo esc_url(bbb_book_taxonomy_term_url($related_term)); ?>">
+					<span aria-hidden="true"><?php echo $emoji_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
+					<span><?php echo esc_html(strtolower($related_term->name)); ?></span>
+				</a>
+			<?php endforeach; ?>
+		</div>
+	</div>
+	<?php
+
+	return (string) ob_get_clean();
+}
+
 function bbb_render_book_taxonomy_page(WP_Term $term): void {
-	$kind        = bbb_book_taxonomy_kind_for_taxonomy($term->taxonomy);
+	$route_kind_override = (string) ($GLOBALS['bbb_book_taxonomy_route_kind_override'] ?? '');
+	$kind        = in_array($route_kind_override, array('shelf', 'trope'), true) ? $route_kind_override : bbb_book_taxonomy_kind_for_taxonomy($term->taxonomy);
 	$emoji       = bbb_book_taxonomy_term_emoji($term);
+	$emoji_html  = function_exists('bbb_trope_emoji_html') ? bbb_trope_emoji_html($term->name, $emoji, $term->slug) : esc_html($emoji);
 	$description = bbb_book_taxonomy_term_description($term);
 	$book_ids    = bbb_get_book_ids_for_taxonomy_term($term);
 	$eyebrow     = 'shelf' === $kind ? 'the society shelves' : 'the trope archive';
@@ -277,10 +414,10 @@ function bbb_render_book_taxonomy_page(WP_Term $term): void {
 			<div class="sss-tropeTop">
 				<div class="sss-tropeTop__left">
 					<div class="sss-trope__header">
-						<div class="sss-trope__eyebrow"><?php echo esc_html($eyebrow); ?></div>
-						<h1 class="sss-trope__title">
-							<?php echo esc_html($term->name); ?> books <?php echo esc_html($emoji); ?>
-						</h1>
+							<div class="sss-trope__eyebrow"><?php echo esc_html($eyebrow); ?></div>
+							<h1 class="sss-trope__title">
+								<?php echo esc_html($term->name); ?> books <?php echo $emoji_html; ?>
+							</h1>
 						<?php if ('' !== $description) : ?>
 							<p class="sss-trope__desc"><?php echo esc_html($description); ?></p>
 						<?php endif; ?>
@@ -315,8 +452,11 @@ function bbb_render_book_taxonomy_page(WP_Term $term): void {
 
 			<div class="sss-trope__actions">
 				<a href="<?php echo esc_url(home_url('/library/')); ?>" class="sss-trope__actionLink">see the full romance library →</a>
-				<a href="<?php echo esc_url(home_url('/reader-quizes/')); ?>" class="sss-trope__actionLink">find your fictional boyfriend →</a>
+				<a href="<?php echo esc_url(home_url('/romance-trope-dictionary/')); ?>" class="sss-trope__actionLink">see all tropes →</a>
+				<a href="<?php echo esc_url(home_url('/reader-quizzes/')); ?>" class="sss-trope__actionLink">find your fictional boyfriend →</a>
 			</div>
+
+			<?php echo bbb_render_book_taxonomy_related_terms($term, $book_ids); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 		</div>
 
 		<div id="sssTropePopup" class="sss-tropePopup" hidden>
@@ -334,5 +474,6 @@ function bbb_render_book_taxonomy_page(WP_Term $term): void {
 		<span>added to your society shelf 🖤</span>
 		<a href="#" id="sssToastShelfLink" target="_blank" rel="noopener" class="sss-saveToast__link">view your shelf →</a>
 	</div>
+	<?php get_template_part('template-parts/library/library-modal'); ?>
 	<?php
 }

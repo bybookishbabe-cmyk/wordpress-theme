@@ -42,6 +42,7 @@
   grid-template-columns: 1.15fr .85fr;
   gap: 0;
   align-items: stretch;
+  perspective: 1200px;
 }
 
 .bbb-nc {
@@ -188,6 +189,9 @@
   padding: 0;
   border-top-right-radius: 22px;
   border-bottom-right-radius: 22px;
+  transform-origin: left center;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
 }
 .bbb-nc__societyInner {
   padding: 18px;
@@ -206,6 +210,35 @@
   border-top-left-radius: 22px;
   border-bottom-left-radius: 22px;
   border-right-width: 0;
+}
+
+.bbb-home-animate-ready .bbb-nc--society {
+  opacity: 0;
+  transform: rotateY(-72deg) translateX(-10px);
+}
+
+.bbb-home-animate-ready .bbb-newsletter-cta.is-bbb-revealed .bbb-nc--society {
+  animation: bbbSocietyBookFlip .95s cubic-bezier(.2, .8, .2, 1) .12s forwards;
+}
+
+.bbb-nc--society:hover,
+.bbb-nc--society:focus-within {
+  transform: rotateY(-5deg) translateY(-2px);
+}
+
+@keyframes bbbSocietyBookFlip {
+  0% {
+    opacity: 0;
+    transform: rotateY(-72deg) translateX(-10px);
+  }
+  64% {
+    opacity: 1;
+    transform: rotateY(7deg) translateX(0);
+  }
+  100% {
+    opacity: 1;
+    transform: rotateY(0deg) translateX(0);
+  }
 }
 
 /* Emoji rain */
@@ -244,4 +277,35 @@
   }
   .bbb-nc--society { border-radius: 0 0 22px 22px; }
   .bbb-nc__img { width: min(100%, 260px); }
+}
+
+@media (min-width: 750px) and (max-width: 860px) {
+  .bbb-newsletter-cta__grid {
+    grid-template-columns: 1.15fr .85fr;
+  }
+
+  .bbb-nc--latest {
+    border-top-left-radius: 22px;
+    border-bottom-left-radius: 22px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right-width: 0;
+    border-bottom-width: 1px;
+  }
+
+  .bbb-nc--society {
+    border-top-right-radius: 22px;
+    border-bottom-right-radius: 22px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bbb-home-animate-ready .bbb-nc--society,
+  .bbb-home-animate-ready .bbb-newsletter-cta.is-bbb-revealed .bbb-nc--society {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
 }

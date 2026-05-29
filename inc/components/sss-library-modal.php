@@ -21,6 +21,7 @@ $GLOBALS['bbb_sss_library_modal_rendered'] = true;
 			<span class="sss-lib__mshareIcon" aria-hidden="true">📲</span>
 			<span class="sss-lib__mshareLabel" data-modal-share-label>share</span>
 		</button>
+		<a class="sss-lib__mfull" href="#" data-modal-full-link>📖 full breakdown + vibes →</a>
 		<button class="sss-lib__x" type="button" data-close aria-label="Close">×</button>
 
 		<div class="sss-lib__mhead">
@@ -47,14 +48,12 @@ $GLOBALS['bbb_sss_library_modal_rendered'] = true;
 
 			<div class="sss-lib__mcontent">
 				<div class="sss-lib__mmini" data-mmini></div>
-
-				<div class="sss-lib__mcta">
-					<a class="sss-lib__mbtn sss-lib__mbtn--amazon" href="#" target="_blank" rel="noopener" data-amazon-btn>ku/amazon</a>
-					<a class="sss-lib__mbtn sss-lib__mbtn--bookshop" href="#" target="_blank" rel="noopener" data-bookshop-btn>support indie bookstore</a>
-					<a class="sss-lib__mbtn sss-lib__mbtn--newsletter" href="#" target="_blank" rel="noopener" data-newsletter-btn>read the newsletter</a>
-				</div>
-
 				<div class="sss-lib__mku" data-mku></div>
+				<div class="sss-lib__mcta">
+					<a class="sss-lib__mbtn sss-lib__mbtn--ku" href="#" target="_blank" rel="noopener" data-ku-btn>read free on kindle unlimited</a>
+					<a class="sss-lib__mbtn sss-lib__mbtn--amazon" href="#" target="_blank" rel="noopener" data-amazon-btn>buy on amazon <span>· own it forever</span></a>
+					<a class="sss-lib__mbtn sss-lib__mbtn--bookshop" href="#" target="_blank" rel="noopener" data-bookshop-btn>prefer indie? bookshop.org →</a>
+				</div>
 			</div>
 
 			<div class="sss-lib__mbelow">

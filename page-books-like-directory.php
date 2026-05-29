@@ -19,7 +19,7 @@ $groups = function_exists('bbb_books_like_grouped_blog_guides') ? bbb_books_like
 		<div class="bbb-books-like-directory__wrap">
 			<header class="bbb-books-like-directory__hero">
 				<p class="bbb-books-like-directory__kicker">reading guides</p>
-				<h1 class="bbb-books-like-directory__title">books like x</h1>
+				<h1 class="bbb-books-like-directory__title">books like</h1>
 				<p class="bbb-books-like-directory__subtext">finished something that wrecked you and have no idea what to read next? start here. every list has been read, curated, and personally recommended.</p>
 			</header>
 
@@ -36,15 +36,17 @@ $groups = function_exists('bbb_books_like_grouped_blog_guides') ? bbb_books_like
 									$cover  = (string) ($book['cover'] ?? get_the_post_thumbnail_url($post->ID, 'large'));
 									$tropes = array_slice((array) ($book['tropes'] ?? array()), 0, 3);
 									$subtitle = $tropes ? implode(' · ', wp_list_pluck($tropes, 'name')) : wp_strip_all_tags(get_the_excerpt($post));
+									$url = (string) ($item['url'] ?? get_permalink($post));
+									$title = get_the_title($post) ?: (string) $post->post_title;
 								?>
-									<a class="bbb-books-like-directory__card" href="<?php echo esc_url(get_permalink($post)); ?>">
+									<a class="bbb-books-like-directory__card" href="<?php echo esc_url($url); ?>">
 										<div class="bbb-books-like-directory__cardMedia">
 											<?php if ($cover) : ?>
-												<img src="<?php echo esc_url($cover); ?>" alt="<?php echo esc_attr(get_the_title($post)); ?>" loading="lazy">
+												<img src="<?php echo esc_url($cover); ?>" alt="<?php echo esc_attr($title); ?>" loading="lazy">
 											<?php endif; ?>
 										</div>
 										<div class="bbb-books-like-directory__cardCopy">
-											<h3><?php echo esc_html(get_the_title($post)); ?></h3>
+											<h3><?php echo esc_html($title); ?></h3>
 											<p><?php echo esc_html(wp_trim_words($subtitle, 18, '')); ?></p>
 										</div>
 										<span class="bbb-books-like-directory__arrow" aria-hidden="true">→</span>

@@ -22,7 +22,7 @@ if ('bbb_book' === $post->post_type && function_exists('bbb_render_library_book_
 $data          = sss_book_data($post);
 $trope_names   = array_column($data['tropes'], 'name');
 $trope_display = array_map(
-	static fn(array $trope): string => trim(($trope['emoji'] ? $trope['emoji'] . ' ' : '') . $trope['name']),
+	static fn(array $trope): string => function_exists('bbb_trope_label') ? bbb_trope_label($trope['name'], $trope['emoji'] ?? '') : trim(((string) ($trope['emoji'] ?? '') ?: '🖤') . ' ' . $trope['name']),
 	$data['tropes']
 );
 $trope_urls    = array_map(
@@ -38,6 +38,7 @@ $trope_urls    = array_map(
 	type="button"
 	class="sss-lib__book<?php echo $mini ? ' sss-lib__book--mini' : ''; ?>"
 	data-handle="<?php echo esc_attr($data['handle']); ?>"
+	data-url="<?php echo esc_url($data['url'] ?? get_permalink($post)); ?>"
 	data-title="<?php echo esc_attr($data['title']); ?>"
 	data-author="<?php echo esc_attr($data['author']); ?>"
 	data-cover="<?php echo esc_url($data['cover']); ?>"

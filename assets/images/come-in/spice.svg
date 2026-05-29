@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Spicy book flame">
+  <rect width="96" height="96" rx="16" fill="#111"/>
+  <path d="M52 15c6 17-11 21-2 36 4-12 16-16 21-27 10 17 5 48-23 48-21 0-31-21-19-38 4 10 11 13 17 15-8-16-2-24 6-34Z" fill="#d985b1"/>
+  <path d="M46 69c-7-7-1-16 7-23 1 10 12 12 5 23-3 5-9 6-12 0Z" fill="#fff"/>
+  <path d="M27 78h42" stroke="#f7f7f7" stroke-width="4" stroke-linecap="round"/>
+</svg>

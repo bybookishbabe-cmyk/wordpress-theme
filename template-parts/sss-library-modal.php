@@ -1,14 +1,10 @@
 <?php
 /**
- * Blog library modal bridge.
+ * Global book modal template alias.
  *
  * @package ByBookishBabeShopifyPort
  */
 
 declare(strict_types=1);
 
-if (!is_singular('post')) {
-	return;
-}
-
-bbb_render_component('library-modal');
+bbb_render_component('sss-library-modal');

@@ -11,7 +11,7 @@ function bbb_get_book_data_attrs(int $post_id): string {
 	$slug       = get_post_field('post_name', $post_id);
 	$title      = get_the_title($post_id);
 	$author     = get_post_meta($post_id, '_bbb_author', true);
-	$cover      = get_post_meta($post_id, '_bbb_cover_url', true);
+	$cover      = function_exists('bbb_get_book_cover_url') ? bbb_get_book_cover_url($post_id) : get_post_meta($post_id, '_bbb_cover_url', true);
 	$amazon     = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($post_id, '_bbb_amazon_url', true)) : get_post_meta($post_id, '_bbb_amazon_url', true);
 	$bookshop   = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($post_id, '_bbb_bookshop_url', true)) : get_post_meta($post_id, '_bbb_bookshop_url', true);
 	$mini       = get_post_meta($post_id, '_bbb_mini_note', true);
@@ -54,13 +54,14 @@ function bbb_get_book_data_attrs(int $post_id): string {
 			$emoji           = get_term_meta($trope->term_id, 'trope_emoji', true);
 			$trope_link      = function_exists('bbb_book_taxonomy_term_url') ? bbb_book_taxonomy_term_url($trope) : get_term_link($trope);
 			$trope_names[]   = $trope->name;
-			$trope_display[] = trim(($emoji ? $emoji . ' ' : '') . $trope->name);
+			$trope_display[] = function_exists('bbb_trope_label') ? bbb_trope_label($trope->name, $emoji) : trim(($emoji ? $emoji : '🖤') . ' ' . $trope->name);
 			$trope_urls[]    = is_wp_error($trope_link) ? '' : $trope_link;
 		}
 	}
 
 	$attrs = array(
 		'data-handle'         => $slug,
+		'data-url'            => get_permalink($post_id) ?: home_url('/books/' . $slug . '/'),
 		'data-title'          => $title,
 		'data-author'         => $author,
 		'data-cover'          => $cover,
@@ -102,7 +103,7 @@ function bbb_render_library_book_card(int $post_id, bool $mini = false): string 
 		return '';
 	}
 
-	$cover           = get_post_meta($post_id, '_bbb_cover_url', true);
+	$cover           = function_exists('bbb_get_book_cover_url') ? bbb_get_book_cover_url($post_id) : get_post_meta($post_id, '_bbb_cover_url', true);
 	$title           = get_the_title($post_id);
 	$author          = get_post_meta($post_id, '_bbb_author', true);
 	$spice           = (int) get_post_meta($post_id, '_bbb_spice', true);
@@ -163,7 +164,7 @@ function bbb_render_library_book_card(int $post_id, bool $mini = false): string 
 }
 
 function bbb_render_article_book_card(int $post_id, bool $show_why = false): string {
-	$cover         = get_post_meta($post_id, '_bbb_cover_url', true);
+	$cover         = function_exists('bbb_get_book_cover_url') ? bbb_get_book_cover_url($post_id) : get_post_meta($post_id, '_bbb_cover_url', true);
 	$title         = get_the_title($post_id);
 	$author        = get_post_meta($post_id, '_bbb_author', true);
 	$spice         = (int) get_post_meta($post_id, '_bbb_spice', true);
@@ -237,8 +238,11 @@ function bbb_render_article_book_card(int $post_id, bool $show_why = false): str
     <?php if ($trope_terms && !is_wp_error($trope_terms)) : ?>
     <div class="article-book-card__tropes">
       <?php foreach ($trope_terms as $trope) : ?>
-        <?php list($bg, $fg) = bbb_get_trope_colors($trope->slug); ?>
-      <span class="article-book-card__trope" style="--trope-bg: <?php echo esc_attr($bg); ?>; --trope-text: <?php echo esc_attr($fg); ?>;"><?php echo esc_html($trope->name); ?></span>
+        <?php
+        $trope_emoji = (string) get_term_meta($trope->term_id, 'trope_emoji', true);
+        $trope_url   = function_exists('bbb_book_taxonomy_term_url') ? bbb_book_taxonomy_term_url($trope) : get_term_link($trope);
+        ?>
+      <a class="article-book-card__trope" href="<?php echo esc_url(is_wp_error($trope_url) ? '#' : $trope_url); ?>"><?php echo function_exists('bbb_trope_label_html') ? bbb_trope_label_html($trope->name, $trope_emoji, $trope->slug) : esc_html(trim(($trope_emoji ? $trope_emoji : '🖤') . ' ' . $trope->name)); ?></a>
       <?php endforeach; ?>
     </div>
     <?php endif; ?>
@@ -250,14 +254,14 @@ function bbb_render_article_book_card(int $post_id, bool $show_why = false): str
       <?php endif; ?>
     </div>
     <div class="article-book-card__buttons">
+      <?php if ($amazon && $ku_raw === '1') : ?>
+      <a class="article-book-card__button article-book-card__button--ku" href="<?php echo esc_url((string) $amazon); ?>" target="_blank" rel="noopener">read free on kindle unlimited</a>
+      <?php endif; ?>
       <?php if ($amazon) : ?>
-      <a class="article-book-card__button article-book-card__button--amazon" href="<?php echo esc_url((string) $amazon); ?>" target="_blank" rel="noopener">amazon</a>
+      <a class="article-book-card__button article-book-card__button--amazon" href="<?php echo esc_url((string) $amazon); ?>" target="_blank" rel="noopener">buy on amazon <span>· own it forever</span></a>
       <?php endif; ?>
       <?php if ($bookshop) : ?>
-      <a class="article-book-card__button article-book-card__button--bookshop" href="<?php echo esc_url((string) $bookshop); ?>" target="_blank" rel="noopener">
-        <span class="article-book-card__buttonText article-book-card__buttonText--full">support local bookshop</span>
-        <span class="article-book-card__buttonText article-book-card__buttonText--short">bookshop</span>
-      </a>
+      <a class="article-book-card__button article-book-card__button--bookshop" href="<?php echo esc_url((string) $bookshop); ?>" target="_blank" rel="noopener">prefer indie? bookshop.org →</a>
       <?php endif; ?>
     </div>
   </div>

@@ -165,16 +165,18 @@ function bbb_page_url( string $slug ): string {
 
 	$clean_slugs = array(
 		'sss-library'                  => 'member-library',
-		'sss-library-page'             => 'member-library',
+		'sss-library-page'             => 'library',
 		'sss-made-for-you'             => 'made-for-you',
 		'sss-printable-kindle'         => 'kindle-inserts',
-		'sss-printable-kindle-inserts' => 'kindle-inserts',
-		'sss-canva-templates'          => 'canva-templates',
-		'sss-freebies'                 => 'freebies',
-		'sss-private-shelf'            => 'private-shelf',
-		'sss-quote-wall'               => 'quote-wall',
+		'sss-printable-kindle-inserts' => 'monthly-theme',
+		'sss-canva-templates'          => 'smut-sentiment-society',
+		'sss-freebies'                 => 'smut-sentiment-society',
+		'sss-private-shelf'            => 'library',
+		'sss-quote-wall'               => 'quote-library',
+		'quote-wall'                   => 'quote-library',
 		'sss-series'                   => 'series',
 		'sss-series-page'              => 'series',
+		'reader-quizes'                => 'reader-quizzes',
 	);
 	$slug = $clean_slugs[ $slug ] ?? $slug;
 
@@ -237,11 +239,15 @@ function bbb_normalize_internal_url( string $url ): string {
 
 	$path_only = trim( $path, '/' );
 
-	if ( 'romance-books-by-spice-level' === $path_only && isset( $query['spice'] ) ) {
+	if ( ( '' === $path_only || 'romance-books-by-spice-level' === $path_only ) && isset( $query['spice'] ) ) {
 		$spice = absint( $query['spice'] );
 		if ( $spice >= 1 && $spice <= 5 ) {
 			return home_url( '/romance-books-by-spice-level/spice-' . $spice . '/' );
 		}
+	}
+
+	if ( 'reader-quizes' === $path_only || 'pages/reader-quizes' === $path_only ) {
+		return bbb_page_url( 'reader-quizzes' );
 	}
 
 	if ( ( 'series' === $path_only || 'pages/series' === $path_only ) && isset( $query['series'] ) ) {

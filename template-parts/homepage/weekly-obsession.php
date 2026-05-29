@@ -64,7 +64,28 @@ $issue_subtitle = (string) ($obsession_context['subtitle'] ?? '');
 if ('' === trim($issue_subtitle)) {
 	$issue_subtitle = $current_issue ? get_post_meta($current_issue->ID, '_issue_subtitle', true) : get_post_meta($book_id, '_bbb_mini_note', true);
 }
-$cover_url      = 'bbb_book' === $featured_book->post_type ? (string) get_post_meta($book_id, '_bbb_cover_url', true) : '';
+$issue_excerpt = trim((string) ($obsession_context['excerpt'] ?? ''));
+if ('' === $issue_excerpt && $current_issue instanceof WP_Post) {
+	$issue_excerpt = (string) get_post_meta($current_issue->ID, '_issue_excerpt', true);
+}
+if ('' === $issue_excerpt) {
+	$issue_excerpt = $issue_subtitle;
+}
+$issue_quote = trim((string) ($obsession_context['pull_quote'] ?? ''));
+$issue_url   = trim((string) ($obsession_context['url'] ?? ''));
+$issue_url   = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value($issue_url) : $issue_url;
+$secret_url  = trim((string) ($obsession_context['secret_url'] ?? ''));
+$secret_url  = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value($secret_url) : $secret_url;
+$weekly_url  = function_exists('bbb_page_url') ? bbb_page_url('weekly-obsession') : $obsession_url;
+$book_url    = get_permalink($featured_book);
+$subscribe_url = function_exists('bbb_substack_subscribe_url') ? bbb_substack_subscribe_url() : 'https://thesmutandsentimentsociety.substack.com/subscribe';
+$cover_url      = function_exists('bbb_get_book_cover_url') ? bbb_get_book_cover_url($book_id) : ('bbb_book' === $featured_book->post_type ? (string) get_post_meta($book_id, '_bbb_cover_url', true) : '');
+$darkness_level = (int) get_post_meta($book_id, '_bbb_darkness', true);
+$damage_level   = (int) get_post_meta($book_id, '_bbb_damage', true);
+if (function_exists('sss_article_field')) {
+	$darkness_level = (int) sss_article_field('darkness_score', $book_id, $darkness_level);
+	$damage_level   = (int) sss_article_field('emotional_damage_score', $book_id, $damage_level);
+}
 ?>
 
 <section class="bbb-home-obsession">
@@ -143,8 +164,8 @@ $cover_url      = 'bbb_book' === $featured_book->post_type ? (string) get_post_m
 						<div class="bbb-home-obsession__tropes">
 							<?php foreach ($tropes as $trope) : ?>
 								<?php
-								$colors    = function_exists('bbb_get_trope_colors') ? bbb_get_trope_colors($trope->slug) : sss_get_trope_colors($trope->slug);
-								$trope_url = '';
+								$emoji     = function_exists('bbb_trope_emoji') ? bbb_trope_emoji(get_term_meta($trope->term_id, 'trope_emoji', true)) : (string) get_term_meta($trope->term_id, 'trope_emoji', true);
+								$trope_url = function_exists('bbb_trope_page_url') ? bbb_trope_page_url($trope->name, $trope->slug) : '';
 								$page_a    = get_page_by_path($trope->slug . '-books');
 								if (!$page_a) {
 									$page_a = get_page_by_path($trope->slug);
@@ -153,18 +174,12 @@ $cover_url      = 'bbb_book' === $featured_book->post_type ? (string) get_post_m
 									$trope_url = get_permalink($page_a);
 								}
 								?>
-								<?php if ($trope_url) : ?>
-									<a class="bbb-home-obsession__trope"
-										href="<?php echo esc_url($trope_url); ?>"
-										style="--trope-bg: <?php echo esc_attr($colors[0]); ?>; --trope-text: <?php echo esc_attr($colors[1]); ?>;">
-										<?php echo esc_html($trope->name); ?>
-									</a>
-								<?php else : ?>
-									<span class="bbb-home-obsession__trope"
-										style="--trope-bg: <?php echo esc_attr($colors[0]); ?>; --trope-text: <?php echo esc_attr($colors[1]); ?>;">
-										<?php echo esc_html($trope->name); ?>
-									</span>
-								<?php endif; ?>
+									<?php if ($trope_url) : ?>
+										<a class="bbb-home-obsession__trope"
+											href="<?php echo esc_url($trope_url); ?>">
+											<?php echo function_exists('bbb_trope_label_html') ? bbb_trope_label_html($trope->name, $emoji, $trope->slug) : esc_html(trim(($emoji ? $emoji : '🖤') . ' ' . $trope->name)); ?>
+										</a>
+									<?php endif; ?>
 							<?php endforeach; ?>
 						</div><!-- /.bbb-home-obsession__tropes -->
 					<?php endif; ?>
@@ -176,6 +191,27 @@ $cover_url      = 'bbb_book' === $featured_book->post_type ? (string) get_post_m
 			<div class="bbb-home-obsession__copy">
 				<p class="bbb-home-obsession__kicker"><?php echo esc_html($kicker); ?></p>
 				<h2 class="bbb-home-obsession__title"><?php echo esc_html($issue_title); ?></h2>
+				<?php if ($secret_url && $secret_url !== $issue_url) : ?>
+					<a class="bbb-home-obsession__memberLink" href="<?php echo esc_url($secret_url); ?>" target="_blank" rel="noopener">secret society members only →</a>
+				<?php endif; ?>
+				<?php if ($issue_excerpt) : ?>
+					<p class="bbb-home-obsession__sub"><?php echo esc_html(wp_trim_words($issue_excerpt, 22, '')); ?></p>
+				<?php endif; ?>
+				<div class="bbb-home-obsession__ratings" aria-label="newsletter ratings">
+					<?php if ($spice_level > 0) : ?>
+						<span><strong>smut</strong><?php echo esc_html((string) $spice_level); ?>/5</span>
+					<?php endif; ?>
+					<?php if ($damage_level > 0) : ?>
+						<span><strong>sentiment</strong><?php echo esc_html((string) $damage_level); ?>/5</span>
+					<?php endif; ?>
+				</div>
+				<?php if ($issue_quote) : ?>
+					<blockquote class="bbb-home-obsession__quote"><?php echo esc_html(wp_trim_words($issue_quote, 24, '')); ?></blockquote>
+				<?php endif; ?>
+				<div class="bbb-home-obsession__actions">
+					<a class="bbb-home-obsession__button bbb-home-obsession__button--primary" href="<?php echo esc_url($book_url ?: $weekly_url); ?>">ruin my tbr</a>
+					<a class="bbb-home-obsession__button bbb-home-obsession__button--ghost" href="<?php echo esc_url($issue_url ?: $subscribe_url); ?>" target="_blank" rel="noopener"><?php echo $issue_url ? esc_html('read the full take →') : esc_html('subscribe'); ?></a>
+				</div>
 			</div><!-- /.bbb-home-obsession__copy -->
 
 		</div><!-- /.bbb-home-obsession__row -->

@@ -18,8 +18,8 @@ if ($wp_query instanceof WP_Query) {
 }
 status_header(200);
 
-$bbb_guides_title       = 'curated romance guides - bybookishbabe';
-$bbb_guides_description = 'curated romance reading guides for readers looking for their next obsession, from trope deep dives to booktok favorite series.';
+$bbb_guides_title       = 'curated romance reading guides by trope & mood | bybookishbabe';
+$bbb_guides_description = "curated romance reading guides organized by trope, mood, and series. find exactly what to read next with bybookishbabe's handpicked lists.";
 add_filter('pre_get_document_title', static fn(): string => $bbb_guides_title, 99);
 add_filter('rank_math/frontend/title', static fn(): string => $bbb_guides_title, 99);
 add_filter('rank_math/frontend/description', static fn(): string => $bbb_guides_description, 99);

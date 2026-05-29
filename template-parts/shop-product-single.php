@@ -208,7 +208,7 @@ if (!function_exists('bbb_single_product_purchase_form')) {
 						'text'        => 'add to cart',
 						'checkout'    => 'checkout',
 						'price'       => false,
-						'class'       => 'bbb-shop-card__button',
+						'class'       => 'bbb-shop-card__button bbb-product__addToCart',
 						'style'       => 'button',
 					)
 				);
@@ -217,19 +217,16 @@ if (!function_exists('bbb_single_product_purchase_form')) {
 					remove_action('edd_purchase_link_top', 'bbb_single_product_size_select', 10);
 					add_action('edd_purchase_link_top', 'edd_purchase_variable_pricing', 10, 2);
 				}
+				?>
+				<a class="bbb-shop-card__button bbb-product__keepShopping" href="<?php echo esc_url(home_url('/shop/')); ?>">keep shopping</a>
+				<?php
 				return;
 			}
 		}
 
-		if ('product' === get_post_type($post_id) && function_exists('woocommerce_template_single_add_to_cart')) {
-			if (function_exists('wc_get_product')) {
-				$GLOBALS['product'] = wc_get_product($post_id);
-			}
-			woocommerce_template_single_add_to_cart();
-			return;
-		}
+		$checkout_url = function_exists('wc_get_checkout_url') ? wc_get_checkout_url() : home_url('/checkout/');
 		?>
-		<a class="bbb-shop-card__button" href="<?php echo esc_url(function_exists('wc_get_cart_url') ? wc_get_cart_url() : home_url('/cart/')); ?>">open cart</a>
+		<a class="bbb-shop-card__button" href="<?php echo esc_url($checkout_url); ?>">checkout</a>
 		<?php
 	}
 }
@@ -238,7 +235,8 @@ $post_id       = get_the_ID();
 $image_url     = bbb_single_product_image($post_id);
 $price         = bbb_single_product_price($post_id);
 $file_count    = bbb_single_product_file_count($post_id);
-$missing_files = 'yes' === get_post_meta($post_id, '_bbb_missing_download_url', true);
+$missing_files = 'yes' === get_post_meta($post_id, '_bbb_missing_download_url', true) && 0 === $file_count;
+$can_purchase  = 0 < $file_count && !$missing_files;
 $is_free       = 'yes' === get_post_meta($post_id, '_bbb_society_free_download', true);
 $kind          = strtolower((string) get_post_meta($post_id, '_bbb_shopify_product_type', true));
 $kind          = '' !== $kind ? $kind : ('download' === get_post_type($post_id) ? 'digital download' : 'product');
@@ -274,8 +272,10 @@ $edit_url      = get_edit_post_link($post_id);
 			<div class="bbb-product__actions">
 				<?php if ($missing_files && current_user_can('edit_posts') && $edit_url) : ?>
 					<a class="bbb-shop-card__button bbb-shop-card__button--ghost" href="<?php echo esc_url($edit_url); ?>">finish setup</a>
-				<?php else : ?>
+				<?php elseif ($can_purchase) : ?>
 					<?php bbb_single_product_purchase_form($post_id); ?>
+				<?php else : ?>
+					<span class="bbb-shop-card__button bbb-shop-card__button--disabled" aria-disabled="true">coming soon</span>
 				<?php endif; ?>
 			</div>
 			<?php if ($is_free) : ?>
@@ -288,7 +288,14 @@ $edit_url      = get_edit_post_link($post_id);
 		<section class="bbb-product__details" aria-label="product details">
 			<p class="bbb-shop__kicker">details</p>
 			<div class="bbb-product__content">
-				<?php the_content(); ?>
+				<?php
+				$content = get_the_content(null, false, $post_id);
+				if (function_exists('do_blocks')) {
+					$content = do_blocks($content);
+				}
+				$content = do_shortcode(shortcode_unautop(wpautop($content)));
+				echo wp_kses_post($content);
+				?>
 			</div>
 		</section>
 	<?php endif; ?>
