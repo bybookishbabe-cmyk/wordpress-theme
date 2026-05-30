@@ -13,15 +13,43 @@ function sss_quickstats_series_books(WP_Post $series): array {
 		$books = sss_article_posts(sss_article_field('books_in_series', $series->ID, array()));
 	}
 	if (!$books) {
+		$book_ids = preg_split('/[\s,]+/', (string) get_post_meta($series->ID, '_bbb_series_book_ids', true)) ?: array();
+		$books    = array_values(
+			array_filter(
+				array_map(
+					static function (string $book_id): ?WP_Post {
+						$post = get_post(absint($book_id));
+						return $post instanceof WP_Post ? $post : null;
+					},
+					$book_ids
+				)
+			)
+		);
+	}
+	if (!$books) {
+		$handles = preg_split('/[\s,]+/', (string) get_post_meta($series->ID, '_bbb_series_book_handles', true)) ?: array();
+		foreach ($handles as $handle) {
+			$book = sss_article_book_from_slug($handle);
+			if ($book instanceof WP_Post) {
+				$books[$book->ID] = $book;
+			}
+		}
+		$books = array_values($books);
+	}
+	if (!$books) {
+		$series_handle = (string) get_post_meta($series->ID, '_bbb_series_handle', true);
+		if ('' === $series_handle) {
+			$series_handle = $series->post_name;
+		}
 		$books = array_filter(
 			sss_article_all_visible_books(),
-			static function (WP_Post $book) use ($series): bool {
+			static function (WP_Post $book) use ($series, $series_handle): bool {
 				$linked_series = sss_article_post(sss_article_field('series', $book->ID, null));
 				if ($linked_series instanceof WP_Post && (int) $linked_series->ID === (int) $series->ID) {
 					return true;
 				}
 
-				return 'bbb_book' === $book->post_type && (string) get_post_meta($book->ID, '_bbb_series_handle', true) === $series->post_name;
+				return 'bbb_book' === $book->post_type && '' !== $series_handle && (string) get_post_meta($book->ID, '_bbb_series_handle', true) === $series_handle;
 			}
 		);
 	}
@@ -50,7 +78,22 @@ function sss_quickstats_shortcode($atts): string {
 	$first_book = $series_books[0] ?? null;
 	$trope_names = wp_list_pluck($data['tropes'], 'name');
 	$has_series = $data['series'] instanceof WP_Post || '' !== trim((string) ($data['series_handle'] ?? '')) || '' !== trim((string) ($data['series_name'] ?? ''));
-	$is_standalone = !$has_series || $data['standalone'];
+	$can_read_standalone = (bool) $data['standalone'];
+	$series_label = 'standalone';
+	if ($has_series) {
+		$series_label = trim((string) ($data['series_name'] ?? ''));
+		if ('' === $series_label) {
+			$series_label = trim((string) ($data['series_handle'] ?? ''));
+			if ('' !== $series_label) {
+				$series_label = ucwords(str_replace(array('-', '_'), ' ', $series_label));
+			}
+		}
+		if ('' === $series_label) {
+			$series_label = 'series';
+		} elseif (!preg_match('/\b(?:series|duet|trilogy|saga)\b$/i', $series_label)) {
+			$series_label .= ' series';
+		}
+	}
 
 	ob_start();
 	?>
@@ -83,17 +126,17 @@ function sss_quickstats_shortcode($atts): string {
 
     <div class="blog-quickstats__row">
       <dt>standalone or series</dt>
-      <dd><?php echo esc_html($is_standalone ? 'standalone' : $data['series_name'] . ' series'); ?></dd>
+      <dd><?php echo esc_html($series_label); ?></dd>
     </div>
 
     <?php if ($series_books) : ?>
     <div class="blog-quickstats__row">
       <dt>books in series</dt>
-      <dd><?php echo esc_html(count($series_books) . ' books'); ?></dd>
+      <dd><?php echo esc_html(count($series_books) . ' ' . (1 === count($series_books) ? 'book' : 'books')); ?></dd>
     </div>
     <?php endif; ?>
 
-    <?php if (!$is_standalone && $first_book instanceof WP_Post) : ?>
+    <?php if ($has_series && !$can_read_standalone && $first_book instanceof WP_Post) : ?>
     <div class="blog-quickstats__row">
       <dt>start with</dt>
       <dd><?php echo esc_html(get_the_title($first_book)); ?></dd>
@@ -102,7 +145,7 @@ function sss_quickstats_shortcode($atts): string {
 
     <div class="blog-quickstats__row">
       <dt>read in order?</dt>
-      <dd><?php echo esc_html($is_standalone ? 'no, can be read as a standalone' : ($first_book ? 'yes, start with ' . get_the_title($first_book) : 'yes, read in series order')); ?></dd>
+      <dd><?php echo esc_html($can_read_standalone || !$has_series ? 'no, can be read as a standalone' : ($first_book ? 'yes, start with ' . get_the_title($first_book) : 'yes, read in series order')); ?></dd>
     </div>
 
     <div class="blog-quickstats__row">

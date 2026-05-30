@@ -157,6 +157,7 @@
 /* ── Cover wrap ── */
 .bbb-home-obsession__coverWrap {
   position: relative;
+  aspect-ratio: 2 / 3;
   border-radius: 22px;
   overflow: hidden;
   background: rgba(255,255,255,.04);
@@ -184,7 +185,8 @@
 .bbb-home-obsession__cover {
   display: block;
   width: 100%;
-  aspect-ratio: 2 / 3;
+  height: 100%;
+  aspect-ratio: auto;
   object-fit: cover;
   filter: none;
   transform: none;

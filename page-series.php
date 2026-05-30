@@ -45,30 +45,62 @@ if (!function_exists('bbb_series_visible_books')) {
 
 if (!function_exists('bbb_series_terms')) {
 	function bbb_series_terms(): array {
-		if (taxonomy_exists('sss_series')) {
+		$series_by_slug = array();
+
+		foreach (array('bbb_series', 'sss_series') as $taxonomy) {
+			if (!taxonomy_exists($taxonomy)) {
+				continue;
+			}
+
 			$terms = get_terms(
 				array(
-					'taxonomy'   => 'sss_series',
+					'taxonomy'   => $taxonomy,
 					'hide_empty' => false,
+					'orderby'    => 'name',
+					'order'      => 'ASC',
 				)
 			);
 
-			return ($terms && !is_wp_error($terms)) ? array_values($terms) : array();
+			if (!$terms || is_wp_error($terms)) {
+				continue;
+			}
+
+			foreach ($terms as $term) {
+				if (!$term instanceof WP_Term) {
+					continue;
+				}
+
+				$slug = sanitize_title($term->slug);
+				if ('' !== $slug && !isset($series_by_slug[$slug])) {
+					$series_by_slug[$slug] = $term;
+				}
+			}
 		}
 
-		if (!post_type_exists('sss_series')) {
-			return array();
+		if (post_type_exists('sss_series')) {
+			$series_posts = get_posts(
+				array(
+					'post_type'      => 'sss_series',
+					'post_status'    => 'publish',
+					'posts_per_page' => -1,
+					'orderby'        => 'title',
+					'order'          => 'ASC',
+				)
+			);
+
+			foreach ($series_posts as $series_post) {
+				if (!$series_post instanceof WP_Post) {
+					continue;
+				}
+
+				$slug = sanitize_title($series_post->post_name);
+				if ('' !== $slug && !isset($series_by_slug[$slug])) {
+					$series_by_slug[$slug] = $series_post;
+				}
+			}
 		}
 
-		return get_posts(
-			array(
-				'post_type'      => 'sss_series',
-				'post_status'    => 'publish',
-				'posts_per_page' => -1,
-				'orderby'        => 'title',
-				'order'          => 'ASC',
-			)
-		);
+		return array_values($series_by_slug);
 	}
 }
 
@@ -150,7 +182,7 @@ if (!function_exists('bbb_series_book_matches')) {
 		$slug = bbb_series_entity_slug($series);
 		$name = bbb_series_entity_title($series);
 
-		if ($series instanceof WP_Term && has_term($series->term_id, 'sss_series', $book)) {
+		if ($series instanceof WP_Term && has_term($series->term_id, $series->taxonomy, $book)) {
 			return true;
 		}
 

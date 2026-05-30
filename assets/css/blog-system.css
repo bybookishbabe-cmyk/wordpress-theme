@@ -350,6 +350,57 @@ border-bottom:1px solid rgba(255,255,255,.25);
 opacity:1;
 border-color:#fff;
 }
+
+.article-book-card__secondaryLinks{
+margin-top:10px;
+padding-top:14px;
+border-top:1px solid rgba(255,255,255,.12);
+display:grid;
+gap:0;
+}
+
+.article-book-card__secondaryRow{
+display:grid;
+grid-template-columns:minmax(120px, 1fr) auto;
+align-items:center;
+gap:16px;
+min-height:31px;
+padding:7px 0;
+border-bottom:1px solid rgba(255,255,255,.08);
+font-size:13px;
+line-height:1.25;
+}
+
+.article-book-card__secondaryRow:last-child{
+border-bottom:0;
+}
+
+.article-book-card__secondaryLabel{
+color:rgba(255,255,255,.58);
+font-weight:500;
+}
+
+.article-template__content .article-book-card__secondaryLink,
+.article-book-card__secondaryLink{
+justify-self:end;
+color:#d895ff !important;
+border-bottom:0 !important;
+text-decoration:none !important;
+font-size:13px;
+font-weight:700;
+line-height:1.25;
+text-align:right;
+transition:color .18s ease, opacity .18s ease;
+}
+
+.article-template__content .article-book-card__secondaryLink:hover,
+.article-template__content .article-book-card__secondaryLink:focus-visible,
+.article-book-card__secondaryLink:hover,
+.article-book-card__secondaryLink:focus-visible{
+color:#f0c5ff !important;
+opacity:1;
+outline:none;
+}
 .book-pitch{
 margin-top:10px;
 max-width:520px;
@@ -1986,19 +2037,22 @@ z-index:2;
 }
 
 .guide-bookcard__list{
-
 display:flex;
-
 flex-direction:column;
-
-gap:24px;
-
+gap:0;
 }
 
 .guide-bookcard__item,
 .guide-bookcard__item.js-scroll-reveal{
 opacity:1;
 transform:none;
+}
+
+.guide-bookcard__list > .guide-bookcard__item + .guide-bookcard__item,
+.guide-bookcard__grid > .guide-bookcard__item + .guide-bookcard__item{
+margin-top:24px;
+padding-top:24px;
+border-top:1px solid rgba(255,255,255,.12);
 }
 
 .guide-bookcard__item .article-book-card{
@@ -2018,7 +2072,13 @@ margin:0 0 16px;
 }
 
 .guide-bookcard__list{
-gap:30px;
+gap:0;
+}
+
+.guide-bookcard__list > .guide-bookcard__item + .guide-bookcard__item,
+.guide-bookcard__grid > .guide-bookcard__item + .guide-bookcard__item{
+margin-top:22px;
+padding-top:22px;
 }
 
 }
@@ -4037,6 +4097,19 @@ body.single-post .article-template{
 
   .article-template__content .article-book-card__buttonText--short {
     display:inline !important;
+  }
+
+  .article-book-card__secondaryRow{
+    grid-template-columns:1fr;
+    gap:5px;
+    align-items:start;
+    padding:9px 0;
+  }
+
+  .article-template__content .article-book-card__secondaryLink,
+  .article-book-card__secondaryLink{
+    justify-self:start;
+    text-align:left;
   }
 }
 

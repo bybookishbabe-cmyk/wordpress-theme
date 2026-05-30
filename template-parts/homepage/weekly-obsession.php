@@ -199,10 +199,10 @@ if (function_exists('sss_article_field')) {
 				<?php endif; ?>
 				<div class="bbb-home-obsession__ratings" aria-label="newsletter ratings">
 					<?php if ($spice_level > 0) : ?>
-						<span><strong>smut</strong><?php echo esc_html((string) $spice_level); ?>/5</span>
+						<span><strong>smut</strong> ?</span>
 					<?php endif; ?>
 					<?php if ($damage_level > 0) : ?>
-						<span><strong>sentiment</strong><?php echo esc_html((string) $damage_level); ?>/5</span>
+						<span><strong>sentiment</strong> ??</span>
 					<?php endif; ?>
 				</div>
 				<?php if ($issue_quote) : ?>

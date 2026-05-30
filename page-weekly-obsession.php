@@ -247,10 +247,6 @@ $issue_excerpt = bbb_weekly_issue_meta($current_issue, array('_issue_excerpt', '
 if ('' === $issue_excerpt && $current_issue instanceof WP_Post) {
 	$issue_excerpt = $current_issue->post_excerpt ?: wp_trim_words(wp_strip_all_tags($current_issue->post_content), 42, '');
 }
-$issue_content = (string) ($obsession_context['content'] ?? '');
-if ('' === trim($issue_content) && $current_issue instanceof WP_Post) {
-	$issue_content = (string) $current_issue->post_content;
-}
 $issue_pull_quote = trim((string) ($obsession_context['pull_quote'] ?? ''));
 if ('' === $issue_pull_quote) {
 	$issue_pull_quote = bbb_weekly_issue_meta($current_issue, array('_issue_pull_quote'), '');
@@ -271,7 +267,6 @@ if ('' === $boyfriend_name) {
 }
 $featured_quote = $featured_book instanceof WP_Post ? bbb_weekly_featured_quote($featured_book) : array();
 $related_books = $featured_book instanceof WP_Post ? bbb_weekly_related_books($featured_book, $book_data, 3) : array();
-$native_issue_html = '' !== trim($issue_content) ? apply_filters('the_content', $issue_content) : '';
 $subscribe_url = function_exists('bbb_substack_subscribe_url') ? bbb_substack_subscribe_url() : 'https://thesmutandsentimentsociety.substack.com/subscribe';
 $featured_book_url = $featured_book instanceof WP_Post ? get_permalink($featured_book) : home_url('/library/');
 $secret_url = trim((string) ($obsession_context['secret_url'] ?? ''));
@@ -405,25 +400,6 @@ get_header();
 						</div>
 					</div>
 				</div>
-
-				<?php if ($native_issue_html) : ?>
-					<article class="sss-wo__nativeIssue" aria-labelledby="sss-wo-native-title">
-						<div class="sss-wo__nativeHead">
-							<p class="sss-wo__sectionKicker">latest issue</p>
-							<h2 id="sss-wo-native-title">read it here first</h2>
-							<p>the newsletter is stored here too, so the society archive has a home you own.</p>
-						</div>
-						<div class="sss-wo__nativeBody">
-							<?php echo $native_issue_html; ?>
-						</div>
-						<div class="sss-wo__nativeActions">
-							<a class="sss-wo__btn sss-wo__btn--primary" href="<?php echo esc_url($subscribe_url); ?>" target="_blank" rel="noopener">subscribe on substack</a>
-							<?php if ($issue_link_url) : ?>
-								<a class="sss-wo__btn sss-wo__btn--ghost" href="<?php echo $issue_link_url; ?>" target="_blank" rel="noopener">read the full take →</a>
-							<?php endif; ?>
-						</div>
-					</article>
-				<?php endif; ?>
 
 				<?php if ($issue_pull_quote || !empty($featured_quote['text'])) : ?>
 					<div class="sss-wo__quoteBlock">

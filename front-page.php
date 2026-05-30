@@ -16,6 +16,7 @@ get_header();
 	get_template_part('template-parts/home/personalized-shelf-week');
 	get_template_part('template-parts/homepage/weekly-obsession');
 	bbb_render_section('trending-romance-reads');
+	get_template_part('template-parts/home/monthly-theme-teaser');
 	get_template_part('template-parts/sections/browse-by-trope');
 	get_template_part('template-parts/home/featured-romance-lists');
 	get_template_part('template-parts/home/library-preview');

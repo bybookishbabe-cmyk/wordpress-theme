@@ -15,7 +15,7 @@ $configs = array(
 		'presented'  => 'presented by future bookish favorites',
 		'headline'   => 'something my bookish heart is currently obsessed with',
 		'sub'        => 'brand notes · reader-loved finds · soft-sell only',
-		'cta'        => 'work with me →',
+		'cta'        => 'work with bybookishbabe →',
 		'disclosure' => 'sponsored',
 		'href'       => '',
 	),

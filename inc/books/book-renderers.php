@@ -173,14 +173,17 @@ function bbb_render_article_book_card(int $post_id, bool $show_why = false): str
 	$ku_raw        = get_post_meta($post_id, '_bbb_ku', true);
 	$amazon        = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($post_id, '_bbb_amazon_url', true)) : get_post_meta($post_id, '_bbb_amazon_url', true);
 	$bookshop      = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($post_id, '_bbb_bookshop_url', true)) : get_post_meta($post_id, '_bbb_bookshop_url', true);
+	$book_url      = get_permalink($post_id) ?: home_url('/books/' . get_post_field('post_name', $post_id) . '/');
 	$series_handle = get_post_meta($post_id, '_bbb_series_handle', true);
 	$series_number = get_post_meta($post_id, '_bbb_series_number', true);
 	$series_name   = '';
+	$series_url    = '';
 	if ($series_handle) {
 		$term = get_term_by('slug', $series_handle, 'bbb_series');
 		if ($term) {
 			$series_name = $term->name;
 		}
+		$series_url = home_url('/series/' . sanitize_title((string) $series_handle) . '/');
 	}
 
 	$shelf_terms = get_the_terms($post_id, 'bbb_shelf');
@@ -263,6 +266,18 @@ function bbb_render_article_book_card(int $post_id, bool $show_why = false): str
       <?php if ($bookshop) : ?>
       <a class="article-book-card__button article-book-card__button--bookshop" href="<?php echo esc_url((string) $bookshop); ?>" target="_blank" rel="noopener">prefer indie? bookshop.org →</a>
       <?php endif; ?>
+    </div>
+    <div class="article-book-card__secondaryLinks" aria-label="more book links">
+      <?php if ($series_url && $series_name) : ?>
+      <div class="article-book-card__secondaryRow">
+        <span class="article-book-card__secondaryLabel">part of a series?</span>
+        <a class="article-book-card__secondaryLink" href="<?php echo esc_url($series_url); ?>"><?php echo esc_html(strtolower($series_name)); ?> reading order →</a>
+      </div>
+      <?php endif; ?>
+      <div class="article-book-card__secondaryRow">
+        <span class="article-book-card__secondaryLabel">save it to your shelf</span>
+        <a class="article-book-card__secondaryLink" href="<?php echo esc_url((string) $book_url); ?>">view in library →</a>
+      </div>
     </div>
   </div>
 

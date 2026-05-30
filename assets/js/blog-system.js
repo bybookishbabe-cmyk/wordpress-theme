@@ -270,6 +270,55 @@ let currentPreviewShare = null;
 let currentPreviewBook = null;
 let previewScrollY = 0;
 
+function ensureArticleBookSecondaryLinks(){
+  document.querySelectorAll(".article-book-card__secondaryLinks").forEach(function(links){
+    if (!links.closest(".guide-bookcard") && links.closest(".bbb-similar-vibes__books, .sss-book-page__relatedGrid")) {
+      links.remove();
+    }
+  });
+
+  document.querySelectorAll(".article-book-card[data-book-preview]").forEach(function(card){
+    if (card.closest(".bbb-similar-vibes__books, .sss-book-page__relatedGrid")) return;
+    if (card.querySelector(".article-book-card__secondaryLinks")) return;
+
+    const content = card.querySelector(".article-book-card__content");
+    if (!content) return;
+
+    const links = document.createElement("div");
+    links.className = "article-book-card__secondaryLinks";
+    links.setAttribute("aria-label", "more book links");
+
+    const addRow = function(label, href, text){
+      const row = document.createElement("div");
+      row.className = "article-book-card__secondaryRow";
+
+      const labelEl = document.createElement("span");
+      labelEl.className = "article-book-card__secondaryLabel";
+      labelEl.textContent = label;
+
+      const linkEl = document.createElement("a");
+      linkEl.className = "article-book-card__secondaryLink";
+      linkEl.href = href;
+      linkEl.textContent = text;
+
+      row.append(labelEl, linkEl);
+      links.appendChild(row);
+    };
+
+    const series = String(card.dataset.series || "").trim();
+    const seriesName = String(card.dataset.seriesName || "").trim();
+    if (series && seriesName) {
+      addRow("part of a series?", "/series/" + encodeURIComponent(series) + "/", seriesName.toLowerCase() + " reading order →");
+    }
+
+    const bookUrl = String(card.dataset.url || "").trim() || (card.dataset.handle ? "/books/" + encodeURIComponent(card.dataset.handle) + "/" : "/library/");
+    addRow("save it to your shelf", bookUrl, "view in library →");
+    content.appendChild(links);
+  });
+}
+
+ensureArticleBookSecondaryLinks();
+
 function setPreviewShareButton(icon, label){
   if (!previewShareButton) return;
   const iconEl = previewShareButton.querySelector("[data-modal-share-label]") ? previewShareButton.querySelector(".sss-lib__mshareIcon") : null;
@@ -374,7 +423,8 @@ function syncPreviewModalHeart(){
 
 previewCards.forEach(card => {
 
-card.addEventListener("click", function(){
+card.addEventListener("click", function(event){
+if (event.target.closest("a, button")) return;
 
 const title = card.dataset.title;
 const author = card.dataset.author;

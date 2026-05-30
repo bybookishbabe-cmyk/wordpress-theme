@@ -38,7 +38,7 @@ $modal_id    = 'bbb-sponsor-work-with-me';
 			<div class="bbb-sponsor-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="bbb-sponsor-modal-title">
 				<button class="bbb-sponsor-modal__close" type="button" aria-label="<?php esc_attr_e('close sponsorship form', 'bybookishbabe-shopify-port'); ?>" data-bbb-sponsor-close>&times;</button>
 
-				<p class="bbb-sponsor-modal__kicker">work with me</p>
+				<p class="bbb-sponsor-modal__kicker">work with bybookishbabe</p>
 				<h2 id="bbb-sponsor-modal-title" class="bbb-sponsor-modal__title">sponsorship inquiry</h2>
 				<p class="bbb-sponsor-modal__intro">tell me a little about your brand, the campaign, and why it belongs in this reader space.</p>
 

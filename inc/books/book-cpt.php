@@ -37,6 +37,7 @@ function bbb_register_book_taxonomies(): void {
 			array(
 				'label'        => $label,
 				'hierarchical' => false,
+				'meta_box_cb'  => false,
 				'rewrite'      => array('slug' => str_replace('bbb_', '', $tax)),
 				'show_in_rest' => true,
 			)

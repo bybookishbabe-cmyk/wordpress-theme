@@ -133,14 +133,13 @@
   border: 1px solid rgba(255,255,255,.16);
   overflow: hidden;
   background: rgba(255,255,255,.02);
+  line-height: 0;
 }
 .bbb-nc__img img {
   width: 100%;
   height: auto;
-  aspect-ratio: 4/5;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
-  transform: scale(1.01);
 }
 
 .bbb-nc__title {

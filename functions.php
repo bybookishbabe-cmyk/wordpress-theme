@@ -205,6 +205,8 @@ add_action(
 			'sss-quote-wall',
 			'quote-wall',
 			'weekly-obsession',
+			'june-2026-monthly-theme',
+			'burn-bright',
 		);
 		$bbb_book_taxonomy_term = function_exists('bbb_find_book_taxonomy_term') && $bbb_route_slug
 			? bbb_find_book_taxonomy_term($bbb_route_slug)
@@ -221,6 +223,7 @@ add_action(
 			|| 'page-shelf.php' === (string) (bbb_page_route_registry()[$bbb_route_slug] ?? '')
 			|| 'page-trope.php' === (string) (bbb_page_route_registry()[$bbb_route_slug] ?? '');
 		$bbb_needs_library_scripts = is_front_page()
+			|| is_singular('bbb_book')
 			|| in_array($bbb_route_slug, $bbb_library_routes, true)
 			|| $bbb_book_taxonomy_term instanceof WP_Term
 			|| $bbb_is_books_like_route

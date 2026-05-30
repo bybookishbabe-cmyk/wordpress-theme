@@ -174,7 +174,29 @@ if (function_exists('bbb_books_like_recommendations')) {
 					<p class="sss-book-page__bookNumber">standalone</p>
 				<?php endif; ?>
 
-				<h1 class="sss-book-page__title"><?php echo esc_html(strtolower($title)); ?></h1>
+				<div
+					class="sss-book-page__titleRow sss-lib__book"
+					data-handle="<?php echo esc_attr((string) ($data['handle'] ?? $book->post_name)); ?>"
+					data-title="<?php echo esc_attr($title); ?>"
+					data-author="<?php echo esc_attr($author); ?>"
+					data-cover="<?php echo esc_url((string) ($data['cover'] ?? '')); ?>"
+					data-amazon="<?php echo esc_url((string) ($data['amazon'] ?? '')); ?>"
+					data-bookshop="<?php echo esc_url((string) ($data['bookshop'] ?? '')); ?>"
+					data-spice="<?php echo esc_attr((string) $spice_count); ?>"
+					data-shelf="<?php echo esc_attr((string) ($data['shelf'] ?? '')); ?>"
+					data-tropes="<?php echo esc_attr(implode(', ', array_map(static fn(array $trope): string => (string) ($trope['name'] ?? ''), (array) ($data['tropes'] ?? array())))); ?>"
+					data-mini="<?php echo esc_attr($mini); ?>"
+					data-series="<?php echo esc_attr($series_handle); ?>"
+					data-series-name="<?php echo esc_attr($series_name); ?>"
+					data-series-number="<?php echo esc_attr($series_number); ?>"
+					data-ku="<?php echo $ku ? 'true' : 'false'; ?>"
+				>
+					<h1 class="sss-book-page__title"><?php echo esc_html(strtolower($title)); ?></h1>
+					<span class="sss-lib__heart sss-book-page__addTbr" data-heart role="button" tabindex="0" aria-label="add to tbr">
+						<span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♡</span>
+						<span class="sss-lib__heartLabel" data-heart-label>add to tbr</span>
+					</span>
+				</div>
 				<?php if ($author) : ?>
 					<p class="sss-book-page__author">by <span><?php echo esc_html($author); ?></span></p>
 				<?php endif; ?>
@@ -197,7 +219,7 @@ if (function_exists('bbb_books_like_recommendations')) {
 						data-series-number="<?php echo esc_attr($series_number); ?>"
 						data-ku="<?php echo $ku ? 'true' : 'false'; ?>"
 					>
-						<span class="sss-lib__heart" data-heart role="button" aria-label="save to your bookshelf">
+						<span class="sss-lib__heart" data-heart role="button" tabindex="0" aria-label="save to your bookshelf">
 							<span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♡</span>
 							<span class="sss-lib__heartLabel" data-heart-label>save</span>
 						</span>
@@ -378,10 +400,12 @@ if (function_exists('bbb_books_like_recommendations')) {
 											<?php if ($related_book['spice'] > 0) : ?>
 												<span class="sss-lib__floatSpice"><?php echo esc_html(str_repeat('🌶', $related_book['spice'])); ?></span>
 											<?php endif; ?>
-											<img class="sss-book-page__relatedCover" src="<?php echo esc_url($related_book['cover']); ?>" alt="<?php echo esc_attr($related_book['title'] . ($related_book['author'] ? ' by ' . $related_book['author'] : '') . ' book cover'); ?>" loading="lazy">
+											<a class="sss-book-page__relatedCoverLink" href="<?php echo esc_url($related_book['url']); ?>" data-book-page-link aria-label="<?php echo esc_attr('open ' . strtolower($related_book['title'])); ?>">
+												<img class="sss-book-page__relatedCover" src="<?php echo esc_url($related_book['cover']); ?>" alt="<?php echo esc_attr($related_book['title'] . ($related_book['author'] ? ' by ' . $related_book['author'] : '') . ' book cover'); ?>" loading="lazy">
+											</a>
 										</span>
 									<?php endif; ?>
-									<a class="sss-book-page__relatedTitle" href="<?php echo esc_url($related_book['url']); ?>"><?php echo esc_html(strtolower($related_book['title'])); ?></a>
+									<a class="sss-book-page__relatedTitle" href="<?php echo esc_url($related_book['url']); ?>" data-book-page-link><?php echo esc_html(strtolower($related_book['title'])); ?></a>
 									<?php if ($related_book['author']) : ?>
 										<span class="sss-book-page__relatedAuthor"><?php echo esc_html($related_book['author']); ?></span>
 									<?php endif; ?>

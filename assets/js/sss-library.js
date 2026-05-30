@@ -937,10 +937,14 @@ function applyHeartSavedState(heartEl, isSaved){
   }
 
   if (label){
-    label.textContent = isSaved ? 'saved' : 'save';
+    label.textContent = heartEl.classList.contains('sss-book-page__addTbr')
+      ? (isSaved ? 'in tbr' : 'add to tbr')
+      : (isSaved ? 'saved' : 'save');
   }
 
-  heartEl.setAttribute('aria-label', isSaved ? 'remove from your bookshelf' : 'save to your bookshelf');
+  heartEl.setAttribute('aria-label', heartEl.classList.contains('sss-book-page__addTbr')
+    ? (isSaved ? 'remove from tbr' : 'add to tbr')
+    : (isSaved ? 'remove from your bookshelf' : 'save to your bookshelf'));
 }
 
 function syncAllLibraryHearts(){
@@ -954,6 +958,33 @@ function syncAllLibraryHearts(){
     });
 
     applyHeartSavedState(heart, !!saved);
+  });
+}
+
+function bindStandaloneBookPageSaveControls(){
+  document.querySelectorAll('.sss-book-page .sss-lib__book [data-heart]').forEach(function(heart){
+    if (heart.__sssStandaloneSaveBound) return;
+
+    var bookBtn = heart.closest('.sss-lib__book');
+    if (!bookBtn) return;
+
+    heart.__sssStandaloneSaveBound = true;
+    applyHeartSavedState(heart, !!getShelf().find(function(b){
+      return b.title === bookBtn.dataset.title;
+    }));
+
+    function handleSave(e){
+      e.preventDefault();
+      e.stopPropagation();
+      toggleSave(heart, bookBtn);
+      syncAllLibraryHearts();
+    }
+
+    heart.addEventListener('click', handleSave);
+    heart.addEventListener('keydown', function(e){
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      handleSave(e);
+    });
   });
 }
 
@@ -2275,6 +2306,7 @@ root.addEventListener('click', function(e){
   if(!btn) return;
 
   if (e.target.closest('[data-heart]')) return;
+  if (e.target.closest('[data-book-page-link]')) return;
   if (e.target.closest('.sss-lib__seriesBadge')) return;
   if (window.getSelection && String(window.getSelection()).trim()) return;
 
@@ -2293,6 +2325,7 @@ root.addEventListener('click', function(e){
 
       function handleOpen(e){
         if (e.target.closest('[data-heart]')) return;
+        if (e.target.closest('[data-book-page-link]')) return;
         if (e.target.closest('.sss-lib__seriesBadge')) return;
         if (btn.hasAttribute('disabled')) return;
         if (window.getSelection && String(window.getSelection()).trim()) return;
@@ -2715,6 +2748,7 @@ syncBookStatusUI();
 document.addEventListener("DOMContentLoaded", function(){
 
   init();
+  bindStandaloneBookPageSaveControls();
   initMadeForYou();
   initArchiveFilters();
   syncBookStatusUI();

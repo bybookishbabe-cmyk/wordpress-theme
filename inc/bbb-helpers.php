@@ -12,6 +12,13 @@ function bbb_get_field(string $key, $post_id = null, $default = null) {
 	$is_url_field = str_contains($key, 'url') || str_contains($key, 'link');
 
 	if ('bbb_book' === get_post_type($post_id)) {
+		if ('cover' === $key && function_exists('bbb_get_book_cover_url')) {
+			$cover_url = bbb_get_book_cover_url($post_id);
+			if ('' !== $cover_url) {
+				return $cover_url;
+			}
+		}
+
 		$bbb_map = array(
 			'author'                      => '_bbb_author',
 			'cover'                       => '_bbb_cover_url',
@@ -186,6 +193,8 @@ function bbb_is_site_logo_url(string $url): bool {
 
 function bbb_get_book_cover_url(int $post_id, string $size = 'large'): string {
 	$candidates = array(
+		get_post_meta($post_id, '_bbb_cover_attachment_id', true),
+		get_post_meta($post_id, '_thumbnail_id', true),
 		get_post_meta($post_id, '_bbb_cover_url', true),
 		get_post_meta($post_id, 'sss_cover_url', true),
 		get_post_meta($post_id, 'cover', true),

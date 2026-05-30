@@ -395,7 +395,8 @@
 
 .article-template__content .bbb-similar-vibes__books .book-pitch,
 .article-template__content .bbb-similar-vibes__books .article-book-card__ratings,
-.article-template__content .bbb-similar-vibes__books .article-book-card__buttons{
+.article-template__content .bbb-similar-vibes__books .article-book-card__buttons,
+.article-template__content .bbb-similar-vibes__books .article-book-card__secondaryLinks{
   display:none !important;
 }
 

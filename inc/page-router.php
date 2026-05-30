@@ -8,6 +8,10 @@
 declare(strict_types=1);
 
 function bbb_page_route_registry(): array {
+	$monthly_theme_template = current_time('Y-m-d H:i:s') >= '2026-06-01 00:00:00'
+		? 'page-june-2026-monthly-theme.php'
+		: 'page-societylibrary.php';
+
 	return array(
 		'artprints'                      => '',
 		'about'                          => 'page-about.php',
@@ -29,12 +33,14 @@ function bbb_page_route_registry(): array {
 		'for-readers'                    => '',
 		'historical-romance-books'       => 'page-shelf.php',
 		'if-you-liked-pages'             => 'page-if-you-liked-pages.php',
+		'june-2026-monthly-theme'        => 'page-june-2026-monthly-theme.php',
+		'burn-bright'                    => 'page-june-2026-monthly-theme.php',
 		'kindle-insert-vault'            => '',
 		'kindle-inserts'                 => '',
 		'library'                        => 'page-library.php',
 		'work-with-me'                   => 'page-media-kit.php',
 		'monthly-freebie'                => 'page-monthly-freebie.php',
-		'monthly-theme'                  => 'page-societylibrary.php',
+		'monthly-theme'                  => $monthly_theme_template,
 		'my-bookshelf'                   => 'page-my-bookshelf.php',
 		'my-vault'                       => '',
 		'our-story'                      => 'page-our-story.php',
