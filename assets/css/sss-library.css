@@ -28,7 +28,7 @@
 .bbb-homeRecDemo--library .bbb-homeRecDemo__kicker{
   font-size:10px;
   letter-spacing:.18em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:#ffb8e0;
   margin-bottom:10px;
 }
@@ -52,7 +52,7 @@
   margin-top:10px;
   font-size:.78rem;
   letter-spacing:.16em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(247,243,238,.5);
 }
 
@@ -61,7 +61,7 @@
   color:#78194d;
   font-size:12px;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   font-weight:700;
   transition:transform .2s ease, background .2s ease, color .2s ease, box-shadow .2s ease;
 }
@@ -118,7 +118,7 @@
   grid-column:1 / -1;
   font-size:9px;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:#ffb8e0;
 }
 
@@ -210,7 +210,7 @@ text-align:left;
 .bbb-homeRecDemo__kicker{
 font-size:12px;
 letter-spacing:.18em;
-text-transform:uppercase;
+text-transform: lowercase;
 color:#ffb8e0;
 margin-bottom:12px;
 }
@@ -243,7 +243,7 @@ color:#1b1016;
 text-decoration:none;
 font-size:12px;
 letter-spacing:.14em;
-text-transform:uppercase;
+text-transform: lowercase;
 font-weight:700;
 }
 
@@ -291,7 +291,7 @@ display:block;
 grid-column:1 / -1;
 font-size:10px;
 letter-spacing:.14em;
-text-transform:uppercase;
+text-transform: lowercase;
 color:#ffb8e0;
 }
 
@@ -397,7 +397,7 @@ text-align:center;
 .sss-lib__previewLink a{
 font-size:12px;
 letter-spacing:.14em;
-text-transform:uppercase;
+text-transform: lowercase;
 text-decoration:none;
 color:#ff8ac7;
 border-bottom:1px solid rgba(255,138,199,.6);
@@ -407,7 +407,7 @@ padding-bottom:4px;
 .sss-lib--preview .sss-lib__archiveKicker{
 font-size:13px;
 letter-spacing:.25em;
-text-transform:uppercase;
+text-transform: lowercase;
 opacity:.7;
 margin-bottom:16px;
 }
@@ -585,7 +585,7 @@ margin-bottom:32px;
 .bbb-trending__kicker{
 font-size:11px;
 letter-spacing:.16em;
-text-transform:uppercase;
+text-transform: lowercase;
 opacity:.6;
 }
 
@@ -707,7 +707,7 @@ background-position:-200% 0;
 .bbb-trending__placeholderIssue{
 font-size:10px;
 letter-spacing:.18em;
-text-transform:uppercase;
+text-transform: lowercase;
 margin-bottom:6px;
 opacity:.6;
 }
@@ -884,12 +884,12 @@ transform:translateY(0);
 .sss-lib__topshelfKicker{
   font-size:11px;
   letter-spacing:.25em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(255,255,255,.6);
 
   font-size: 10px;
   letter-spacing: .25em;
-  text-transform: uppercase;
+  text-transform: lowercase;
 
   background: #0b0b0b; /* same as section background */
   padding: 4px 10px;
@@ -975,7 +975,7 @@ overflow:visible;
   margin:0;
   font-size:12px;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:#c8c8c8;
 }
 .sss-lib__title{
@@ -1064,7 +1064,7 @@ overflow:visible;
   top:-16px;
   font-size:10px;
   letter-spacing:.16em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(255,184,224,.98);
   max-width:calc(100% - 20px);
   white-space:nowrap;
@@ -1133,7 +1133,7 @@ background:#0e0e0e;
   padding:7px 20px 6px;
   font-size:10px;
   letter-spacing:.18em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   text-align:center;
   color:#fff;
   box-shadow:0 10px 24px rgba(0,0,0,.35);
@@ -1236,7 +1236,7 @@ background:#0e0e0e;
 .sss-lib__finderKicker{
   font-size:11px;
   letter-spacing:.18em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(246,246,246,.58);
 }
 
@@ -1342,7 +1342,7 @@ background:#0e0e0e;
   cursor:pointer;
   font-size:11px;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   text-decoration:none;
   transition:transform .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease, border-color .2s ease;
   box-shadow:0 14px 30px rgba(0,0,0,.22);
@@ -1449,7 +1449,7 @@ background:#0e0e0e;
 .sss-lib__finderResultLabel{
   font-size:10px;
   letter-spacing:.18em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(246,246,246,.6);
 }
 
@@ -1853,7 +1853,7 @@ background:#0e0e0e;
   color:#f6f6f6;
   font-size:11px;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   cursor:pointer;
   transition:transform .2s ease, border-color .2s ease, background .2s ease;
 }
@@ -1959,7 +1959,7 @@ background:#0e0e0e;
 .sss-lib__mkicker{
   font-size:10px;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(246,246,246,.68);
 }
 .sss-lib__mtitle{
@@ -2022,7 +2022,7 @@ object-position: center top;
   padding:9px 12px;
   font-size:10px;
   letter-spacing:.1em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   text-decoration:none;
   background:#f6f6f6;
   color:#0b0b0b;
@@ -2235,7 +2235,7 @@ object-position: center top;
   margin-top:25px;
   font-size:11px;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(246,246,246,.65);
 }
 
@@ -2322,7 +2322,7 @@ object-position: center top;
 .sss-lib__archiveKicker{
   font-size:11px;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(246,246,246,.65);
 }
 
@@ -2500,7 +2500,7 @@ object-position: center top;
 .sss-mfy__cardKicker{
   font-size:10px;
   letter-spacing:.18em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(246,246,246,.58);
 }
 
@@ -2548,7 +2548,7 @@ object-position: center top;
   gap:16px;
   font-size:11px;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(246,246,246,.62);
 }
 
@@ -2578,7 +2578,7 @@ object-position: center top;
   color:var(--mfy-accent);
   font:inherit;
   letter-spacing:.12em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   cursor:pointer;
 }
 
@@ -2836,7 +2836,7 @@ object-position: center top;
 .sss-mfy__resultsMeta{
   font-size:11px;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(246,246,246,.62);
 }
 
@@ -3366,7 +3366,7 @@ object-position: center top;
 .sss-mfy__addonText small{
   font-size:11px;
   letter-spacing:.08em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(246,246,246,.58);
 }
 
@@ -3477,7 +3477,7 @@ object-position: center top;
   background:rgba(255,255,255,.04);
   font-size:10px;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:#f6f6f6;
 }
 
@@ -3585,7 +3585,7 @@ object-position: center top;
   margin:10px 0 0;
   font-size:11px;
   letter-spacing:.08em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:#ff8ac7;
 }
 
@@ -3651,7 +3651,7 @@ object-position: center top;
   background:rgba(255,255,255,.05);
   font-size:10px;
   letter-spacing:.12em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:#f6f6f6;
 }
 
@@ -3738,7 +3738,7 @@ object-position: center top;
 .sss-mfy__genreLabel{
   font-size:10px;
   letter-spacing:.12em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(246,246,246,.62);
 }
 
@@ -3782,7 +3782,7 @@ object-position: center top;
   background:none;
   color:var(--mfy-accent);
   letter-spacing:.1em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   font:inherit;
   cursor:pointer;
   padding:0;
@@ -4789,7 +4789,7 @@ object-position: center top;
 .sss-lib__mstatusLabel{
   font-size:10px;
   letter-spacing:.18em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(246,246,246,.58);
   margin-bottom:10px;
 }
@@ -4819,7 +4819,7 @@ object-position: center top;
   padding:8px 12px;
   font-size:10px;
   letter-spacing:.16em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   cursor:pointer;
   transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
 }
@@ -4974,7 +4974,7 @@ object-position: center top;
   font-size:12px;
   line-height:1.5;
   letter-spacing:.04em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:#ff8ac7;
 }
 
@@ -5163,7 +5163,7 @@ object-position: center top;
 .sss-lib__rankGroup label{
   font-size:12px;
   letter-spacing:.08em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(246,246,246,.6);
 }
 
@@ -5393,7 +5393,7 @@ object-position: center top;
   font-size:11px;
   line-height:1;
   letter-spacing:.12em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   font-weight:800;
   transition:transform .2s ease, background .2s ease, color .2s ease, border-color .2s ease;
 }
@@ -5613,7 +5613,7 @@ object-position: center top;
 .sss-lib__societyTeaseTitle{
   font-size:11px;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(246,246,246,.6);
   margin-bottom:8px;
 }
@@ -5631,7 +5631,7 @@ object-position: center top;
   border-radius:999px;
   font-size:11px;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   text-decoration:none;
   background:#e85a9b;
   color:#fff;
@@ -5655,7 +5655,7 @@ object-position: center top;
 .sss-lib__societyInviteKicker{
   font-size:11px;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(246,246,246,.6);
   margin-bottom:6px;
 }
@@ -5681,7 +5681,7 @@ object-position: center top;
   text-decoration:none;
   font-size:12px;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   border:1px solid #e85a9b;
   transition:all .2s ease;
 }
@@ -5739,7 +5739,7 @@ object-position: center top;
 .sss-lib__societyInviteKicker{
   font-size:10px;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(246,246,246,.6);
   margin-bottom:6px;
 }
@@ -5766,7 +5766,7 @@ object-position: center top;
   text-decoration:none;
   font-size:11px;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   border:1px solid #e85a9b;
   transition:all .2s ease;
 }
@@ -6003,7 +6003,7 @@ object-position: center top;
   transform:translate(-50%, -50%);
   font-size:11px;
   letter-spacing:.18em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(255,255,255,.7);
   white-space:nowrap;
 }
@@ -6080,7 +6080,7 @@ object-position: center top;
 .sss-lib__placeholderIssue{
 font-size:10px;
 letter-spacing:.18em;
-text-transform:uppercase;
+text-transform: lowercase;
 margin-bottom:6px;
 opacity:.6;
 }
@@ -6129,7 +6129,7 @@ opacity:.6;
 .sss-lib__jumpTitle{
   font-size:11px;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(255,255,255,.6);
   margin-bottom:12px;
 }
@@ -6183,7 +6183,7 @@ opacity:.6;
   margin-bottom:6px;
   font-size:10px;
   letter-spacing:.16em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(246,246,246,.62);
   position:relative;
   z-index:1;
@@ -6495,7 +6495,7 @@ html{
   margin-top:6px;
   font-size:11px;
   letter-spacing:.08em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:#ff8ac7;
 }
 /* ======================
@@ -6553,7 +6553,7 @@ TRENDING — SHELF ROW
 
   font-size:12px;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   text-decoration:none;
 
   display:flex;
@@ -6611,7 +6611,7 @@ TRENDING — SHELF ROW
 .sss-lib__societyTeaseTitle{
   font-size:10px;
   letter-spacing:.18em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(246,246,246,.5);
 
   margin-bottom:6px;
@@ -6634,7 +6634,7 @@ TRENDING — SHELF ROW
 
   font-size:11px;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  text-transform: lowercase;
 
   text-decoration:none;
 
@@ -6915,7 +6915,7 @@ MODAL EDITORIAL LINKS
   margin-top:12px;
   font-size:11px;
   letter-spacing:.12em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(246,246,246,.78);
   transition:color .18s ease, opacity .18s ease;
 }
@@ -7108,7 +7108,7 @@ PRIVATE SHELF
 
   letter-spacing:.18em;
 
-  text-transform:uppercase;
+  text-transform: lowercase;
 
   color:rgba(255,255,255,.45);
 
@@ -7120,7 +7120,7 @@ PRIVATE SHELF
   margin-top:10px;
   font-size:11px;
   letter-spacing:.16em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:#ff8ac7;
   text-shadow:0 0 10px rgba(255,138,199,.28);
   animation:sssSwipeCuePulse 1.8s ease-in-out infinite;
@@ -7143,7 +7143,7 @@ PRIVATE SHELF
   letter-spacing:.14em;
   line-height:1;
   text-decoration:none;
-  text-transform:uppercase;
+  text-transform: lowercase;
   transition:background .2s ease, color .2s ease, border-color .2s ease, transform .2s ease;
 }
 
@@ -7315,7 +7315,7 @@ BOYFRIEND OF THE MONTH POLL
 .sss-bom__kicker{
   font-size:11px;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(246,246,246,.6);
 }
 
@@ -7390,7 +7390,7 @@ BOYFRIEND OF THE MONTH POLL
 .sss-bom__eyebrow{
   font-size:10px;
   letter-spacing:.18em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(246,246,246,.54);
 }
 
@@ -7464,7 +7464,7 @@ BOYFRIEND OF THE MONTH POLL
 .sss-bom__rankNum{
   font-size:11px;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(246,246,246,.55);
 }
 
@@ -7520,7 +7520,7 @@ CENTER TRENDING SHELF (SOCIETY)
 .sss-trope__eyebrow {
   font-size: 11px;
   letter-spacing: .25em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   color: #8c8c8c;
   margin-bottom: 18px;
 }
@@ -7563,7 +7563,7 @@ CENTER TRENDING SHELF (SOCIETY)
   text-align: center;
   font-size: 12px;
   letter-spacing: .18em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   color: #7d7d7d;
 
   margin-top: 40px;
@@ -7587,7 +7587,7 @@ CENTER TRENDING SHELF (SOCIETY)
 .sss-trope__relatedTitle{
   font-size:13px;
   letter-spacing:.18em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(255,255,255,.6);
   margin-bottom:28px;
 }
@@ -7688,7 +7688,7 @@ text-decoration:underline;
 .sss-trope__relatedTitle{
   font-size:12px;
   letter-spacing:.18em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(255,255,255,.6);
   margin-bottom:26px;
 }
@@ -7725,7 +7725,7 @@ text-decoration:underline;
 .sss-trope__ctaBtn{
   font-size:14px;
   letter-spacing:.12em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   text-decoration:none;
   border-bottom:1px solid rgba(255,255,255,.4);
 }
@@ -7740,7 +7740,7 @@ text-decoration:underline;
 .sss-trope__quizTitle{
   font-size:12px;
   letter-spacing:.15em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   margin-bottom:12px;
   color:rgba(255,255,255,.6);
 }
@@ -7770,7 +7770,7 @@ text-decoration:underline;
 
   font-size:13px;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  text-transform: lowercase;
 
   border-bottom:1px solid rgba(255,79,163,.4);
 
@@ -7844,7 +7844,7 @@ background:rgba(255,255,255,.02);
 
 font-size:11px;
 letter-spacing:.18em;
-text-transform:uppercase;
+text-transform: lowercase;
 
 color:rgba(255,255,255,.5);
 
@@ -7878,7 +7878,7 @@ text-decoration:none;
 
 font-size:13px;
 letter-spacing:.14em;
-text-transform:uppercase;
+text-transform: lowercase;
 
 border-bottom:1px solid rgba(255,79,163,.4);
 
@@ -8100,7 +8100,7 @@ font-size:10px;
 
 letter-spacing:.18em;
 
-text-transform:uppercase;
+text-transform: lowercase;
 
 opacity:.6;
 
@@ -8189,7 +8189,7 @@ transform:translateY(0);
 
 font-size:11px;
 letter-spacing:.14em;
-text-transform:uppercase;
+text-transform: lowercase;
 
 opacity:.6;
 
@@ -8339,7 +8339,7 @@ font-size:13px;
   .sss-trope__actionLink{
     font-size:13px;
     letter-spacing:.06em;
-    text-transform:uppercase;
+    text-transform: lowercase;
   }
 
 }
@@ -8795,4 +8795,36 @@ font-size:13px;
     font-size:9.5px;
     line-height:1.25;
   }
+}
+
+/* Book and author names should keep their proper capitalization. */
+.sss-lib__name,
+.sss-lib__author,
+.sss-lib__mtitle,
+.sss-lib__mauthor,
+.sss-lib__modal .sss-lib__mtitle,
+.sss-lib__modal .sss-lib__mauthor,
+.sss-lib__modal .sss-lib__mcover[alt],
+.sss-lib__modal [data-mtitle],
+.sss-lib__modal [data-mauthor],
+.bbb-trending .sss-lib__name,
+.bbb-trending .sss-lib__author,
+#sssTrendingRow .sss-lib__name,
+#sssTrendingRow .sss-lib__author,
+.sss-lib__archiveSection .sss-lib__name,
+.sss-lib__archiveSection .sss-lib__author,
+.sss-lib__grid .sss-lib__name,
+.sss-lib__grid .sss-lib__author {
+  text-transform:none !important;
+}
+
+/* Quote snippets should keep their saved capitalization. */
+.sss-mfy__quoteCard,
+.sss-mfy__quoteCard p,
+.sss-mfy__quoteCard footer,
+#sssMfyQuoteText,
+#sssMfyQuoteSource,
+.bbb-account-shelf__quoteCard blockquote,
+.bbb-account-shelf__quoteCard [data-account-quote-source]{
+  text-transform:none !important;
 }

@@ -159,7 +159,7 @@
 	min-height: 62px;
 	min-width: 270px;
 	padding: 0 38px;
-	text-transform: uppercase;
+	text-transform: lowercase;
 	transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
 }
 

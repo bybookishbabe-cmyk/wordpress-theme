@@ -4,14 +4,14 @@
 	border-radius: 8px;
 	box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
 	color: #f8edf4;
-	max-width: min(360px, calc(100vw - 28px));
+	max-width: min(390px, calc(100vw - 32px));
 	position: fixed;
-	right: 22px;
-	top: 30vh;
-	transform: translate3d(24px, 18px, 0);
+	right: 18px;
+	bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+	transform: translate3d(0, 18px, 0);
 	transition: opacity 220ms ease, transform 260ms ease, visibility 220ms ease;
 	visibility: hidden;
-	width: 360px;
+	width: 390px;
 	z-index: 80;
 }
 
@@ -31,31 +31,33 @@
 .bbb-sunday-drop__link {
 	color: inherit;
 	display: grid;
-	gap: 6px;
-	padding: 18px 44px 18px 18px;
+	gap: 7px;
+	padding: 18px 46px 18px 18px;
 	text-decoration: none;
 }
 
 .bbb-sunday-drop__kicker {
 	color: #f08bc1;
 	font-family: var(--font-body-family, Inter, system-ui, sans-serif);
-	font-size: 0.72rem;
+	font-size: 0.75rem;
 	font-weight: 900;
-	letter-spacing: 0.14em;
+	letter-spacing: 0;
+	text-transform: uppercase;
 }
 
 .bbb-sunday-drop__message {
 	font-family: "Libre Baskerville", Georgia, serif;
-	font-size: 1.02rem;
-	line-height: 1.42;
+	font-size: 1.04rem;
+	line-height: 1.5;
 }
 
 .bbb-sunday-drop__cta {
 	color: #ffb7dc;
 	font-family: var(--font-body-family, Inter, system-ui, sans-serif);
-	font-size: 0.78rem;
+	font-size: 0.82rem;
 	font-weight: 900;
-	letter-spacing: 0.08em;
+	letter-spacing: 0;
+	text-transform: uppercase;
 }
 
 .bbb-sunday-drop__close {
@@ -87,18 +89,25 @@
 
 @media (max-width: 640px) {
 	.bbb-sunday-drop {
-		left: 12px;
+		bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+		left: 10px;
 		max-width: none;
-		right: 12px;
-		top: 24vh;
+		right: 10px;
 		width: auto;
 	}
 
 	.bbb-sunday-drop__link {
-		padding: 15px 42px 15px 15px;
+		gap: 8px;
+		padding: 16px 46px 16px 16px;
+	}
+
+	.bbb-sunday-drop__kicker,
+	.bbb-sunday-drop__cta {
+		font-size: 0.78rem;
 	}
 
 	.bbb-sunday-drop__message {
-		font-size: 0.92rem;
+		font-size: 1rem;
+		line-height: 1.5;
 	}
 }

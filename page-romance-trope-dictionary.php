@@ -268,7 +268,7 @@ $bbb_trope_dictionary_known = array(
 	array(
 		'name'        => 'enemies to lovers',
 		'slug'        => 'enemies-to-lovers',
-		'url_slug'    => 'enemies-to-lovers',
+		'url_slug'    => 'enemies-to-lovers-books',
 		'description' => 'sharp edges, real conflict, and chemistry that turns into devotion.',
 	),
 	array(

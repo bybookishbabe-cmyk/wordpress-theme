@@ -142,7 +142,7 @@ $section_id = 'NewsletterSubmissions-' . ($page_id > 0 ? (string) $page_id : 'ro
 		margin:0 0 1rem;
 		font-size:1.15rem;
 		letter-spacing:.16em;
-		text-transform:uppercase;
+		text-transform: lowercase;
 		color:rgba(255,255,255,.58);
 	}
 	.bbb-submission-page__title{

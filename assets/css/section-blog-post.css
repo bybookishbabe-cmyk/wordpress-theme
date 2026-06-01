@@ -73,6 +73,33 @@
   margin-bottom: 1rem;
 }
 
+.article-template__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .6rem;
+  margin-top: 1.2rem;
+  color: rgba(var(--color-foreground), .72);
+  font-size: 1.3rem;
+  line-height: 1.4;
+}
+
+.article-template__meta-label {
+  color: rgba(var(--color-foreground), .9);
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: lowercase;
+}
+
+.article-template__meta time {
+  color: rgb(var(--color-foreground));
+  font-weight: 600;
+}
+
+.article-template__meta-separator {
+  color: rgba(var(--color-foreground), .38);
+}
+
 .article-template__link {
   font-size: 1.8rem;
   display: flex;
@@ -192,7 +219,7 @@
   font-weight:800;
   letter-spacing:.14em;
   line-height:1.2;
-  text-transform:uppercase;
+  text-transform: lowercase;
 }
 
 .article-template__content .bbb-review-snapshot__title{
@@ -233,7 +260,7 @@
   font-weight:800;
   letter-spacing:.14em;
   line-height:1.2;
-  text-transform:uppercase;
+  text-transform: lowercase;
 }
 
 .article-template__content .bbb-review-snapshot p{
@@ -561,7 +588,7 @@
 .article-book-card__genre {
   font-size: 12px;
   letter-spacing: 0.12em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   color: rgba(0, 0, 0, 0.52);
   line-height: 1;
   text-align: right;
@@ -637,7 +664,7 @@
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   color: #0b0b0b;
   text-decoration: none;
   transition: 0.25s ease;

@@ -41,7 +41,7 @@
   line-height: 1.2;
   text-align: center;
   text-decoration: none;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-society-link-card__discountButton {

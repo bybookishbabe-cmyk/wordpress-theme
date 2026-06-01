@@ -55,7 +55,7 @@ if (!function_exists('bbb_society_render_locked_preview_page')) {
 			.bbb-access-preview{background:#090909;color:#f6f1ef;min-height:70vh;padding:clamp(42px,7vw,86px) 0 clamp(56px,8vw,104px);text-transform:lowercase}
 			.bbb-access-preview__wrap{max-width:112rem}
 			.bbb-access-preview__hero{max-width:88rem;margin:0 0 2.6rem}
-			.bbb-access-preview__kicker,.bbb-access-preview__eyebrow{margin:0;color:#f3bfd5;font-size:1.1rem;letter-spacing:.16em;text-transform:uppercase}
+			.bbb-access-preview__kicker,.bbb-access-preview__eyebrow{margin:0;color:#f3bfd5;font-size:1.1rem;letter-spacing:.16em;text-transform: lowercase}
 			.bbb-access-preview h1,.bbb-access-preview h2{margin:0;color:#fff;font-family:Cormorant,"Cormorant Garamond",Georgia,serif;font-weight:400;line-height:.96}
 			.bbb-access-preview h1{margin-top:.8rem;font-size:clamp(4.2rem,7vw,8rem)}
 			.bbb-access-preview__hero p{max-width:78ch;margin:1.4rem 0 0;color:rgba(246,241,239,.76);font-size:1.7rem;line-height:1.65}
@@ -64,7 +64,7 @@ if (!function_exists('bbb_society_render_locked_preview_page')) {
 			.bbb-access-preview__panel p{max-width:70ch;margin:1rem 0 0;color:rgba(246,241,239,.76);font-size:1.55rem;line-height:1.62}
 			.bbb-access-preview__list{display:grid;gap:.8rem;margin:.4rem 0 0;padding:0;list-style:none}
 			.bbb-access-preview__list li{padding:1rem 1.2rem;border:1px solid rgba(255,255,255,.1);border-radius:.8rem;background:rgba(255,255,255,.035);color:rgba(246,241,239,.78);font-size:1.35rem;line-height:1.45}
-			.bbb-access-preview__button{display:inline-flex;align-items:center;justify-content:center;width:min(34rem,100%);min-height:4.6rem;margin-top:.6rem;padding:1rem 1.6rem;border:1px solid rgba(239,137,191,.5);border-radius:999px;background:rgba(239,137,191,.16);color:#fff;font-size:1.2rem;font-weight:800;letter-spacing:.08em;text-decoration:none;text-transform:uppercase}
+			.bbb-access-preview__button{display:inline-flex;align-items:center;justify-content:center;width:min(34rem,100%);min-height:4.6rem;margin-top:.6rem;padding:1rem 1.6rem;border:1px solid rgba(239,137,191,.5);border-radius:999px;background:rgba(239,137,191,.16);color:#fff;font-size:1.2rem;font-weight:800;letter-spacing:.08em;text-decoration:none;text-transform: lowercase}
 			.bbb-access-preview__back{display:inline-flex;color:#ff8ac7;font-size:1.25rem;text-decoration:underline;text-underline-offset:.4rem}
 		</style>
 		<?php

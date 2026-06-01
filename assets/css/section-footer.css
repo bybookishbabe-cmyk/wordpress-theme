@@ -1,5 +1,6 @@
 .footer {
   border-top: 0.1rem solid rgba(var(--color-foreground), 0.08);
+  text-transform: lowercase;
 }
 
 .footer:not(.color-scheme-1) {
@@ -564,7 +565,7 @@
   align-items: center;
   font-size: 1.2rem;
   letter-spacing: 0.12em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   color: rgba(var(--color-foreground), 0.78);
   text-decoration: none;
 }
@@ -573,6 +574,80 @@
   color: rgb(var(--color-foreground));
   text-decoration: underline;
   text-underline-offset: 0.3rem;
+}
+
+.bbb-pwa-notification-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.6rem;
+  pointer-events: none;
+}
+
+.bbb-pwa-notification-panel__inner {
+  width: min(100%, 38rem);
+  padding: 1.8rem;
+  border: 0.1rem solid rgba(var(--color-foreground), 0.12);
+  border-radius: 1.6rem;
+  background: rgb(var(--color-background));
+  box-shadow: 0 1.6rem 4rem rgba(0, 0, 0, 0.18);
+  color: rgb(var(--color-foreground));
+  pointer-events: auto;
+}
+
+.bbb-pwa-notification-panel__eyebrow {
+  margin: 0 0 0.6rem;
+  color: rgba(var(--color-foreground), 0.62);
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.bbb-pwa-notification-panel h2 {
+  margin: 0 0 0.8rem;
+  font-size: 2rem;
+  line-height: 1.2;
+}
+
+.bbb-pwa-notification-panel p {
+  margin: 0;
+  color: rgba(var(--color-foreground), 0.72);
+  font-size: 1.4rem;
+  line-height: 1.45;
+}
+
+.bbb-pwa-notification-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 1.4rem;
+}
+
+.bbb-pwa-notification-panel__primary,
+.bbb-pwa-notification-panel__secondary {
+  appearance: none;
+  min-height: 4rem;
+  padding: 1rem 1.4rem;
+  border-radius: 999px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.bbb-pwa-notification-panel__primary {
+  border: 0.1rem solid rgb(var(--color-foreground));
+  background: rgb(var(--color-foreground));
+  color: rgb(var(--color-background));
+}
+
+.bbb-pwa-notification-panel__secondary {
+  border: 0.1rem solid rgba(var(--color-foreground), 0.18);
+  background: transparent;
+  color: rgba(var(--color-foreground), 0.72);
 }
 
 .section-footer-padding {

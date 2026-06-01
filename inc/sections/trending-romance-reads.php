@@ -73,6 +73,20 @@ if (!function_exists('bbb_trending_get_sunday_dates')) {
 	}
 }
 
+if (!function_exists('bbb_trending_active_month')) {
+	function bbb_trending_active_month(DateTimeImmutable $today): string {
+		$current_month = $today->format('Y-m');
+		$sundays       = bbb_trending_get_sunday_dates($current_month);
+		$first_sunday  = $sundays[0] ?? null;
+
+		if ($first_sunday instanceof DateTimeImmutable && $today->format('Y-m-d') <= $first_sunday->format('Y-m-d')) {
+			return $today->modify('first day of previous month')->format('Y-m');
+		}
+
+		return $current_month;
+	}
+}
+
 if (!function_exists('bbb_trending_sunday_index_for_date')) {
 	function bbb_trending_sunday_index_for_date(DateTimeImmutable $featured_date, array $sundays): int {
 		$index = 0;
@@ -146,9 +160,10 @@ $settings = wp_parse_args(
 );
 $settings['cta_link'] = function_exists('bbb_resolve_shopify_url') ? bbb_resolve_shopify_url((string) $settings['cta_link']) : (string) $settings['cta_link'];
 
-$current_month = wp_date('Y-m');
-$today         = wp_date('Y-m-d');
 $timezone      = wp_timezone();
+$today_date    = new DateTimeImmutable('today', $timezone);
+$current_month = bbb_trending_active_month($today_date);
+$today         = $today_date->format('Y-m-d');
 $sundays       = bbb_trending_get_sunday_dates($current_month);
 $issue_types   = count($sundays) >= 5
 	? array('smutty', 'sentimental', 'trope report', 'extra extra', "chapter's end")

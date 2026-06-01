@@ -9,8 +9,8 @@ declare(strict_types=1);
 
 function bbb_get_book_data_attrs(int $post_id): string {
 	$slug       = get_post_field('post_name', $post_id);
-	$title      = get_the_title($post_id);
-	$author     = get_post_meta($post_id, '_bbb_author', true);
+	$title      = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title(get_the_title($post_id)) : get_the_title($post_id);
+	$author     = function_exists('bbb_get_book_author') ? bbb_get_book_author($post_id) : get_post_meta($post_id, '_bbb_author', true);
 	$cover      = function_exists('bbb_get_book_cover_url') ? bbb_get_book_cover_url($post_id) : get_post_meta($post_id, '_bbb_cover_url', true);
 	$amazon     = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($post_id, '_bbb_amazon_url', true)) : get_post_meta($post_id, '_bbb_amazon_url', true);
 	$bookshop   = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($post_id, '_bbb_bookshop_url', true)) : get_post_meta($post_id, '_bbb_bookshop_url', true);
@@ -104,8 +104,8 @@ function bbb_render_library_book_card(int $post_id, bool $mini = false): string 
 	}
 
 	$cover           = function_exists('bbb_get_book_cover_url') ? bbb_get_book_cover_url($post_id) : get_post_meta($post_id, '_bbb_cover_url', true);
-	$title           = get_the_title($post_id);
-	$author          = get_post_meta($post_id, '_bbb_author', true);
+	$title           = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title(get_the_title($post_id)) : get_the_title($post_id);
+	$author          = function_exists('bbb_get_book_author') ? bbb_get_book_author($post_id) : get_post_meta($post_id, '_bbb_author', true);
 	$spice           = (int) get_post_meta($post_id, '_bbb_spice', true);
 	$series_handle   = get_post_meta($post_id, '_bbb_series_handle', true);
 	$series_number   = get_post_meta($post_id, '_bbb_series_number', true);
@@ -155,8 +155,8 @@ function bbb_render_library_book_card(int $post_id, bool $mini = false): string 
     <?php endif; ?>
   </div>
   <div class="sss-lib__under">
-    <div class="sss-lib__name"><?php echo esc_html($title); ?></div>
-    <div class="sss-lib__author"><?php echo esc_html((string) $author); ?></div>
+    <div class="sss-lib__name" style="text-transform:none !important;"><?php echo esc_html($title); ?></div>
+    <div class="sss-lib__author" style="text-transform:none !important;"><?php echo esc_html((string) $author); ?></div>
   </div>
 </button>
 	<?php
@@ -165,8 +165,8 @@ function bbb_render_library_book_card(int $post_id, bool $mini = false): string 
 
 function bbb_render_article_book_card(int $post_id, bool $show_why = false): string {
 	$cover         = function_exists('bbb_get_book_cover_url') ? bbb_get_book_cover_url($post_id) : get_post_meta($post_id, '_bbb_cover_url', true);
-	$title         = get_the_title($post_id);
-	$author        = get_post_meta($post_id, '_bbb_author', true);
+	$title         = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title(get_the_title($post_id)) : get_the_title($post_id);
+	$author        = function_exists('bbb_get_book_author') ? bbb_get_book_author($post_id) : get_post_meta($post_id, '_bbb_author', true);
 	$spice         = (int) get_post_meta($post_id, '_bbb_spice', true);
 	$mini          = get_post_meta($post_id, '_bbb_mini_note', true);
 	$why           = get_post_meta($post_id, '_bbb_why', true);

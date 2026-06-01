@@ -7,10 +7,8 @@ create or replace view public.book_saves_all_time_rollup as
 with normalized as (
   select
     coalesce(
-      nullif(lower(trim(book_handle)), ''),
       nullif(lower(trim(book_title)), '')
     ) as book_key,
-    nullif(trim(book_handle), '') as book_handle,
     nullif(trim(book_title), '') as book_title,
     created_at
   from public.book_saves
@@ -19,7 +17,6 @@ select
   book_key,
   coalesce(
     max(book_title) filter (where book_title is not null),
-    max(book_handle) filter (where book_handle is not null),
     book_key
   ) as book_title,
   count(*) as total_saves,

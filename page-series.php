@@ -251,6 +251,8 @@ if (!function_exists('bbb_series_normalized_book_data')) {
 				$data[$url_key] = bbb_normalize_url_value($data[$url_key]);
 			}
 		}
+		$data['title']  = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title((string) ($data['title'] ?? get_the_title($book))) : (string) ($data['title'] ?? get_the_title($book));
+		$data['author'] = function_exists('bbb_bookish_proper_name') ? bbb_bookish_proper_name((string) ($data['author'] ?? '')) : (string) ($data['author'] ?? '');
 
 		return $data;
 	}
@@ -343,6 +345,7 @@ if (!function_exists('bbb_render_series_order_detail_page')) {
 		if ('' === $author) {
 			$author = (string) ($first_data['author'] ?? '');
 		}
+		$author = function_exists('bbb_bookish_proper_name') ? bbb_bookish_proper_name($author) : $author;
 
 		$all_ku     = true;
 		$max_spice  = 0;
@@ -459,6 +462,8 @@ if (!function_exists('bbb_render_series_order_detail_page')) {
 						$book_url      = get_permalink($book);
 						$book_num      = (string) ($data['series_number'] ?: ($index + 1));
 						$book_title    = (string) ($data['title'] ?? get_the_title($book));
+						$book_title    = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title($book_title) : $book_title;
+						$book_author   = function_exists('bbb_bookish_proper_name') ? bbb_bookish_proper_name((string) ($data['author'] ?? '')) : (string) ($data['author'] ?? '');
 						$is_standalone = !empty($data['standalone']);
 						$tropes        = array_slice((array) ($data['tropes'] ?? array()), 0, 4);
 						$trope_names   = array_map(static fn(array $trope): string => (string) ($trope['name'] ?? ''), (array) ($data['tropes'] ?? array()));
@@ -473,7 +478,7 @@ if (!function_exists('bbb_render_series_order_detail_page')) {
 							role="listitem"
 							data-handle="<?php echo esc_attr($book->post_name); ?>"
 							data-title="<?php echo esc_attr($book_title); ?>"
-							data-author="<?php echo esc_attr((string) ($data['author'] ?? '')); ?>"
+							data-author="<?php echo esc_attr($book_author); ?>"
 							data-cover="<?php echo esc_url((string) ($data['cover'] ?? '')); ?>"
 							data-amazon="<?php echo esc_url((string) ($data['amazon'] ?? '')); ?>"
 							data-bookshop="<?php echo esc_url((string) ($data['bookshop'] ?? '')); ?>"
@@ -503,12 +508,12 @@ if (!function_exists('bbb_render_series_order_detail_page')) {
 									<?php if (!empty($data['cover'])) : ?>
 										<img class="bbb-seriesOrderPage__cover" src="<?php echo esc_url((string) $data['cover']); ?>" alt="<?php echo esc_attr($book_title . ' book cover'); ?>" loading="lazy">
 									<?php else : ?>
-										<span class="bbb-seriesOrderPage__coverPlaceholder"><?php echo esc_html(strtolower($book_title)); ?></span>
+										<span class="bbb-seriesOrderPage__coverPlaceholder"><?php echo esc_html($book_title); ?></span>
 									<?php endif; ?>
 								</a>
 							</span>
 							<div class="bbb-seriesOrderPage__bookInfo">
-								<h3><a href="<?php echo esc_url($book_url); ?>"><?php echo esc_html(strtolower($book_title)); ?></a></h3>
+								<h3><a href="<?php echo esc_url($book_url); ?>"><?php echo esc_html($book_title); ?></a></h3>
 								<?php if ((int) ($data['spice'] ?? 0) > 0 || !empty($data['ku'])) : ?>
 									<p class="bbb-seriesOrderPage__bookSpice">
 										<?php echo (int) ($data['spice'] ?? 0) > 0 ? esc_html(str_repeat('🌶', (int) $data['spice'])) : ''; ?>
@@ -549,7 +554,7 @@ if (!function_exists('bbb_render_series_order_detail_page')) {
 					<p class="bbb-seriesOrderPage__sectionLabel">frequently asked questions</p>
 					<div class="bbb-seriesOrderPage__faqItem">
 						<h2>what order should i read <?php echo esc_html(strtolower($series_title)); ?>?</h2>
-						<p><?php echo esc_html(implode(' → ', array_map(static fn(WP_Post $book): string => strtolower(get_the_title($book)), $series_books))); ?>.</p>
+						<p><?php echo esc_html(implode(' → ', array_map(static fn(WP_Post $book): string => function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title(get_the_title($book)) : get_the_title($book), $series_books))); ?>.</p>
 					</div>
 					<div class="bbb-seriesOrderPage__faqItem">
 						<h2>do i have to read this series in order?</h2>
@@ -594,7 +599,7 @@ if (!function_exists('bbb_render_series_order_detail_page')) {
 											</a>
 										</span>
 									<?php endif; ?>
-									<a class="bbb-seriesOrderPage__alsoTitle" href="<?php echo esc_url($related_card['url']); ?>"><?php echo esc_html(strtolower($related_card['title'])); ?></a>
+									<a class="bbb-seriesOrderPage__alsoTitle" href="<?php echo esc_url($related_card['url']); ?>"><?php echo esc_html(function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title((string) $related_card['title']) : (string) $related_card['title']); ?></a>
 									<small><?php echo esc_html($related_card['sub']); ?></small>
 								</article>
 							<?php endforeach; ?>
@@ -612,7 +617,7 @@ if (!function_exists('bbb_render_series_order_detail_page')) {
 							<a href="<?php echo esc_url(bbb_series_trope_url($trope)); ?>">→ <?php echo bbb_series_trope_label_html($trope); ?> books</a>
 						<?php endforeach; ?>
 						<?php if (!empty($first_data['title'])) : ?>
-							<a href="<?php echo esc_url(home_url('/books-like-' . sanitize_title((string) $first_data['title']) . '/')); ?>">→ books like <?php echo esc_html(strtolower((string) $first_data['title'])); ?></a>
+							<a href="<?php echo esc_url(home_url('/books-like-' . sanitize_title((string) $first_data['title']) . '/')); ?>">→ books like <?php echo esc_html(function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title((string) $first_data['title']) : (string) $first_data['title']); ?></a>
 						<?php endif; ?>
 						<a href="<?php echo esc_url(home_url('/series-reading-orders/')); ?>">→ all series reading orders</a>
 					</div>

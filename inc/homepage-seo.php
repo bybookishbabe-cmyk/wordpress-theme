@@ -17,6 +17,33 @@ function bbb_route_seo_slug(): string {
 	return sanitize_title(trim($path, '/'));
 }
 
+function bbb_book_list_seo_slugs(): array {
+	return array_values(array_unique(array_merge(array_keys(bbb_book_list_seo_route_data()), array('kindle-inserts'))));
+}
+
+function bbb_book_list_seo_route_data(): array {
+	if (!function_exists('bbb_trope_page_seo_rows')) {
+		return array();
+	}
+
+	$route_data = array();
+	foreach (bbb_trope_page_seo_rows() as $row) {
+		$slug        = sanitize_title(trim((string) ($row['page'] ?? ''), '/'));
+		$title       = (string) ($row['seo_title'] ?? '');
+		$description = (string) ($row['description'] ?? '');
+		if ('' === $slug || '' === $title || '' === $description) {
+			continue;
+		}
+
+		$route_data[$slug] = array(
+			'title'       => $title,
+			'description' => $description,
+		);
+	}
+
+	return $route_data;
+}
+
 function bbb_route_seo_data(): array {
 	$path = trim((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
 	if (preg_match('#^series/([^/]+)/?$#', $path, $matches)) {
@@ -29,11 +56,11 @@ function bbb_route_seo_data(): array {
 
 	$map = array(
 		'library'                   => array(
-			'title'       => 'romance book library — browse by trope & spice level | bybookishbabe',
-			'description' => 'browse the full bybookishbabe romance library organized by trope, spice level, and mood. from dark romance to romantasy — find your next obsession.',
+			'title'       => 'romance book library — curated by trope & spice level',
+			'description' => 'a hand-curated romance library with spice ratings, darkness scores, tension indexes, and trope filters. every book personally read and recommended — no filler.',
 		),
 		'book-reviews'              => array(
-			'title'       => 'romance book reviews with tropes & spice ratings | bybookishbabe',
+			'title'       => 'romance book reviews — tropes, spice & honest takes',
 			'description' => 'honest romance book reviews with full trope breakdowns, spice ratings, and who should read it. no spoilers — just the details you actually need.',
 		),
 		'come-in'                   => array(
@@ -81,20 +108,20 @@ function bbb_route_seo_data(): array {
 			'description' => 'a dark romance reading challenge with 10 curated prompts, real site picks, and a free tracker for readers who want their next ten books chosen with intent.',
 		),
 		'dark-romance-books'        => array(
-			'title'       => 'best dark romance books with morally gray men | bybookishbabe',
-			'description' => 'the best dark romance books featuring morally gray men, obsessive love interests, and stories that will ruin you in the best way.',
+			'title'       => 'dark romance books — curated library by trope & spice',
+			'description' => 'browse a curated dark romance book library, sorted by trope, spice level, and series. every book is hand-picked and rated.',
 		),
 		'sports-romance-books'      => array(
 			'title'       => 'the best sports romance books: ultimate guide (2026)',
 			'description' => 'the best sports romance books ranked by spice — hockey romance, football romance, booktok favorites and underrated reads you need on your list.',
 		),
-		'enemies-to-lovers'        => array(
-			'title'       => 'best enemies to lovers romance books | bybookishbabe',
-			'description' => 'the best enemies to lovers romance books — slow burn tension, hate-to-love chemistry, and the trope that never gets old.',
+		'enemies-to-lovers-books'   => array(
+			'title'       => 'enemies to lovers books — curated library by spice',
+			'description' => "a curated enemies-to-lovers book library sorted by spice level and trope. every book that made us fall for someone we shouldn't.",
 		),
 		'romantasy-books'           => array(
-			'title'       => 'best romantasy books — dragons magic & romance | bybookishbabe',
-			'description' => 'the best romantasy books featuring magic, dragons, fated mates, and men who would burn kingdoms for her. curated by bybookishbabe.',
+			'title'       => 'romantasy books — curated library by trope & spice',
+			'description' => 'a hand-curated romantasy book library sorted by trope, spice level, and series. find your next fantasy romance obsession.',
 		),
 		'contemporary-romance-books' => array(
 			'title'       => 'best contemporary romance books — modern love stories | bybookishbabe',
@@ -113,8 +140,12 @@ function bbb_route_seo_data(): array {
 			'description' => 'the best dystopian romance books — love stories set in broken worlds with tension, survival, and men who would destroy systems for her.',
 		),
 		'slow-burn-books'           => array(
-			'title'       => 'best slow burn romance books — worth every agonizing page | bybookishbabe',
-			'description' => 'the best slow burn romance books where the tension builds for hundreds of pages and the payoff is absolutely worth it.',
+			'title'       => 'slow burn romance books — curated library by spice',
+			'description' => 'browse a curated slow burn romance library. every book sorted by spice level and trope — all the tension, all worth the wait.',
+		),
+		'mafia-romance-books'       => array(
+			'title'       => 'mafia romance books — curated library by trope & spice',
+			'description' => 'browse a curated mafia romance book library, filtered by spice level, trope, and series order. no filler — only the best.',
 		),
 		'morally-gray-men-romance-books' => array(
 			'title'       => 'best morally gray men romance books — dark romance that will ruin you | bybookishbabe',
@@ -124,7 +155,15 @@ function bbb_route_seo_data(): array {
 			'title'       => 'romance book digital downloads & guides | bybookishbabe shop',
 			'description' => "shop bybookishbabe's digital romance reading guides, book lists, and downloads. everything a romance reader needs in one place.",
 		),
+		'kindle-inserts'            => array(
+			'title'       => 'printable kindle inserts for romance books | bybookishbabe',
+			'description' => 'browse printable kindle inserts for romance readers. find aesthetic Kindle case inserts, open each design page, and download the size that fits your Kindle.',
+		),
 	);
+
+	foreach (bbb_book_list_seo_route_data() as $slug => $seo) {
+		$map[$slug] = $seo;
+	}
 
 	return $map[bbb_route_seo_slug()] ?? array();
 }
@@ -156,9 +195,23 @@ add_filter('rank_math/opengraph/twitter/title', 'bbb_homepage_seo_title', 99);
 add_filter('rank_math/opengraph/twitter/description', 'bbb_homepage_seo_description', 99);
 
 add_filter(
+	'rank_math/frontend/canonical',
+	static function (string $canonical): string {
+		$slug = bbb_route_seo_slug();
+		if (!in_array($slug, bbb_book_list_seo_slugs(), true)) {
+			return $canonical;
+		}
+
+		return home_url('/' . $slug . '/');
+	},
+	99
+);
+
+add_filter(
 	'rank_math/frontend/robots',
 	static function (array $robots): array {
-		if ('come-in' !== bbb_route_seo_slug()) {
+		$slug = bbb_route_seo_slug();
+		if ('come-in' !== $slug && !in_array($slug, bbb_book_list_seo_slugs(), true)) {
 			return $robots;
 		}
 
@@ -173,7 +226,8 @@ add_filter(
 add_filter(
 	'wp_robots',
 	static function (array $robots): array {
-		if ('come-in' !== bbb_route_seo_slug()) {
+		$slug = bbb_route_seo_slug();
+		if ('come-in' !== $slug && !in_array($slug, bbb_book_list_seo_slugs(), true)) {
 			return $robots;
 		}
 
@@ -637,6 +691,7 @@ add_filter(
 		$review = bbb_schema_book_review_entity($post_id);
 		if ($review) {
 			$data['bbb-book-review'] = $review;
+			$GLOBALS['bbb_book_review_schema_added'] = true;
 		} else {
 			$list = bbb_schema_book_list_entity();
 			if ($list) {
@@ -653,3 +708,27 @@ add_filter(
 	},
 	110
 );
+
+function bbb_schema_output_book_review_json_ld(): void {
+	if (!empty($GLOBALS['bbb_book_review_schema_added'])) {
+		return;
+	}
+
+	$post_id = bbb_schema_current_post_id();
+	if ($post_id <= 0) {
+		return;
+	}
+
+	$review = bbb_schema_book_review_entity($post_id);
+	if (!$review) {
+		return;
+	}
+
+	$payload = array(
+		'@context' => 'https://schema.org',
+		'@graph'   => array($review),
+	);
+
+	echo "\n" . '<script type="application/ld+json" class="bbb-book-review-schema">' . wp_json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . '</script>' . "\n";
+}
+add_action('wp_head', 'bbb_schema_output_book_review_json_ld', 99);

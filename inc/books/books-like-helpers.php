@@ -10,7 +10,7 @@ declare(strict_types=1);
 function bbb_books_like_post_types(): array {
 	return array_values(
 		array_filter(
-			array('sss_book', 'bbb_book'),
+			array('bbb_book', 'sss_book'),
 			static fn(string $post_type): bool => post_type_exists($post_type)
 		)
 	);
@@ -23,7 +23,7 @@ function bbb_books_like_book_data(int $book_id): array {
 		$data = array(
 			'id'            => $book_id,
 			'handle'        => get_post_field('post_name', $book_id),
-			'title'         => get_the_title($book_id),
+			'title'         => function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title(get_the_title($book_id)) : get_the_title($book_id),
 			'author'        => function_exists('bbb_get_book_author') ? bbb_get_book_author($book_id) : '',
 			'cover'         => function_exists('bbb_get_book_cover_url') ? bbb_get_book_cover_url($book_id) : '',
 			'amazon'        => function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($book_id, '_bbb_amazon_url', true)) : (string) get_post_meta($book_id, '_bbb_amazon_url', true),
@@ -50,6 +50,8 @@ function bbb_books_like_book_data(int $book_id): array {
 	$data['boyfriend_name'] = (string) (function_exists('sss_article_field') ? sss_article_field('boyfriend_name', $book_id, get_post_meta($book_id, '_bbb_boyfriend_name', true)) : get_post_meta($book_id, '_bbb_boyfriend_name', true));
 	$data['reread'] = (string) (function_exists('sss_article_field') ? sss_article_field('reread_badge', $book_id, get_post_meta($book_id, '_bbb_reread', true)) : get_post_meta($book_id, '_bbb_reread', true));
 	$data['private'] = function_exists('bbb_book_is_private') ? bbb_book_is_private($book_id) : false;
+	$data['title'] = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title((string) ($data['title'] ?? '')) : (string) ($data['title'] ?? '');
+	$data['author'] = function_exists('bbb_bookish_proper_name') ? bbb_bookish_proper_name((string) ($data['author'] ?? '')) : (string) ($data['author'] ?? '');
 
 	if (!isset($data['shelf']) || !is_array($data['shelf'])) {
 		$data['shelf'] = array('name' => '', 'slug' => '');
@@ -144,11 +146,28 @@ function bbb_books_like_find_book($needle): ?WP_Post {
 	}
 
 	$slug = sanitize_title($value);
+	$exact_fallback = null;
 	foreach (bbb_books_like_post_types() as $post_type) {
 		$post = get_page_by_path($slug, OBJECT, $post_type);
 		if ($post instanceof WP_Post) {
-			return $post;
+			if ('bbb_book' === $post->post_type) {
+				return $post;
+			}
+
+			$exact_fallback = $exact_fallback ?: $post;
 		}
+	}
+
+	$compact = str_replace('-', '', $slug);
+	if ('' !== $compact) {
+		$compact_match = bbb_books_like_find_compact_book($compact);
+		if ($compact_match instanceof WP_Post) {
+			return $compact_match;
+		}
+	}
+
+	if ($exact_fallback instanceof WP_Post) {
+		return $exact_fallback;
 	}
 
 	$matches = get_posts(
@@ -166,6 +185,37 @@ function bbb_books_like_find_book($needle): ?WP_Post {
 	}
 
 	return $matches[0] ?? null;
+}
+
+function bbb_books_like_find_compact_book(string $compact_slug): ?WP_Post {
+	$compact_slug = preg_replace('/[^a-z0-9]/', '', strtolower($compact_slug)) ?: '';
+	if ('' === $compact_slug) {
+		return null;
+	}
+
+	$books = get_posts(
+		array(
+			'post_type'      => bbb_books_like_post_types(),
+			'post_status'    => 'publish',
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+			'no_found_rows'  => true,
+		)
+	);
+
+	foreach ($books as $book_id) {
+		$post_slug    = (string) get_post_field('post_name', (int) $book_id);
+		$title_slug   = sanitize_title(get_the_title((int) $book_id));
+		$post_compact = preg_replace('/[^a-z0-9]/', '', strtolower($post_slug)) ?: '';
+		$title_compact = preg_replace('/[^a-z0-9]/', '', strtolower($title_slug)) ?: '';
+
+		if ($compact_slug === $post_compact || $compact_slug === $title_compact) {
+			$post = get_post((int) $book_id);
+			return $post instanceof WP_Post ? $post : null;
+		}
+	}
+
+	return null;
 }
 
 function bbb_books_like_infer_source_title(string $title): string {

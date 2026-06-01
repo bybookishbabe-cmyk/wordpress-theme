@@ -1,0 +1,26 @@
+{
+  "name": "bybookishbabe",
+  "short_name": "bybookishbabe",
+  "description": "romance book recommendations for soft hearts with sinful taste",
+  "id": "https://bybookishbabe.com/?app=bybookishbabe-20260601",
+  "start_url": "https://bybookishbabe.com/bybookishbabe-app/?source=pwa-bybookishbabe-20260601",
+  "scope": "https://bybookishbabe.com/",
+  "display": "standalone",
+  "display_override": ["standalone", "browser"],
+  "orientation": "portrait",
+  "background_color": "#fff7fa",
+  "theme_color": "#f6d7df",
+  "categories": ["books", "lifestyle", "shopping"],
+  "icons": [
+    {
+      "src": "https://bybookishbabe.com/wp-content/themes/wordpress-theme/assets/pwa/bybookishbabe-icon-192.png?v=bybookishbabe-20260601-2",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://bybookishbabe.com/wp-content/themes/wordpress-theme/assets/pwa/bybookishbabe-icon-512.png?v=bybookishbabe-20260601-2",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

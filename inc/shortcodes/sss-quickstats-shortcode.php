@@ -99,7 +99,7 @@ function sss_quickstats_shortcode($atts): string {
 	?>
 <aside class="blog-quickstats" aria-label="quick stats for <?php echo esc_attr($data['title']); ?>">
   <div class="blog-quickstats__head">
-    <h3 class="blog-quickstats__kicker"><?php echo esc_html(strtolower($data['title'])); ?> book stats</h3>
+    <h3 class="blog-quickstats__kicker"><?php echo esc_html(function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title((string) $data['title']) : (string) $data['title']); ?> book stats</h3>
   </div>
   <dl class="blog-quickstats__list">
 

@@ -322,12 +322,13 @@ function bbb_render_society_recommendations(int $post_id): string {
 				<?php foreach ($items as $item) : ?>
 					<?php
 					$item_title        = get_the_title($item);
+					$item_label        = function_exists('mb_strtolower') ? mb_strtolower($item_title, 'UTF-8') : strtolower($item_title);
 					$custom_emoji_html = function_exists('bbb_custom_emoji_html') ? bbb_custom_emoji_html($item_title, $item->post_name, 'sss-you-might-like__customEmoji') : '';
 					$fallback_emoji    = bbb_society_recommendation_icon($item);
 					?>
 					<a href="<?php echo esc_url(get_permalink($item)); ?>" class="sss-you-might-like__item<?php echo 'post' === $item->post_type ? ' sss-you-might-like__guide' : ''; ?>">
 						<span class="sss-you-might-like__emoji" aria-hidden="true"><?php echo '' !== $custom_emoji_html ? $custom_emoji_html : esc_html($fallback_emoji); ?></span>
-						<span class="sss-you-might-like__name"><?php echo esc_html($item_title); ?></span>
+						<span class="sss-you-might-like__name"><?php echo esc_html($item_label); ?></span>
 					</a>
 				<?php endforeach; ?>
 			</div>

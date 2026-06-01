@@ -414,3 +414,13 @@
     transition: none !important;
   }
 }
+
+/* Quotes should render with the capitalization saved on the quote itself. */
+.sss-qw .qw-quote,
+.sss-qw .qw-quote *,
+.sss-qw .qw-book,
+.sss-qw [data-qw-quote],
+.sss-qw [data-qw-book],
+.sss-qw [data-qw-author] {
+  text-transform: none !important;
+}

@@ -5,6 +5,13 @@
   text-transform: lowercase;
 }
 
+/* Account shelf quote text and source should keep their saved capitalization. */
+.bbb-account-shelf__quoteCard blockquote,
+.bbb-account-shelf__quoteCard blockquote *,
+.bbb-account-shelf__quoteCard [data-account-quote-source] {
+  text-transform: none !important;
+}
+
 .bbb-account-shelf__wrap {
   max-width: 1060px;
   margin: 0 auto;

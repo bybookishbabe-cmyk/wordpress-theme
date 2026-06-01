@@ -220,8 +220,8 @@ function sss_book_data(WP_Post $post): array {
 		return array(
 			'handle'         => $post->post_name,
 			'url'            => get_permalink($post) ?: home_url('/books/' . $post->post_name . '/'),
-			'title'          => $post->post_title,
-			'author'         => (string) get_post_meta($post->ID, '_bbb_author', true),
+			'title'          => function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title((string) $post->post_title) : $post->post_title,
+			'author'         => function_exists('bbb_get_book_author') ? bbb_get_book_author($post->ID) : (string) get_post_meta($post->ID, '_bbb_author', true),
 			'cover'          => function_exists('bbb_get_book_cover_url') ? bbb_get_book_cover_url($post->ID) : (string) get_post_meta($post->ID, '_bbb_cover_url', true),
 			'amazon'         => (string) get_post_meta($post->ID, '_bbb_amazon_url', true),
 			'bookshop'       => (string) get_post_meta($post->ID, '_bbb_bookshop_url', true),
@@ -255,8 +255,8 @@ function sss_book_data(WP_Post $post): array {
 	return array(
 		'handle'         => $post->post_name,
 		'url'            => get_permalink($post) ?: home_url('/books/' . $post->post_name . '/'),
-		'title'          => $post->post_title,
-		'author'         => (string) sss_meta($post->ID, 'sss_author', ''),
+		'title'          => function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title((string) $post->post_title) : $post->post_title,
+		'author'         => function_exists('bbb_bookish_proper_name') ? bbb_bookish_proper_name((string) sss_meta($post->ID, 'sss_author', '')) : (string) sss_meta($post->ID, 'sss_author', ''),
 		'cover'          => sss_get_book_cover_url($post->ID),
 		'amazon'         => (string) sss_meta($post->ID, 'sss_amazon', ''),
 		'bookshop'       => (string) sss_meta($post->ID, 'sss_bookshop', ''),

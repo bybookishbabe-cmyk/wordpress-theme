@@ -10,7 +10,7 @@ declare(strict_types=1);
 function bbb_books_like_post_types(): array {
 	return array_values(
 		array_filter(
-			array('sss_book', 'bbb_book'),
+			array('bbb_book', 'sss_book'),
 			static fn(string $post_type): bool => post_type_exists($post_type)
 		)
 	);
@@ -144,11 +144,28 @@ function bbb_books_like_find_book($needle): ?WP_Post {
 	}
 
 	$slug = sanitize_title($value);
+	$exact_fallback = null;
 	foreach (bbb_books_like_post_types() as $post_type) {
 		$post = get_page_by_path($slug, OBJECT, $post_type);
 		if ($post instanceof WP_Post) {
-			return $post;
+			if ('bbb_book' === $post->post_type) {
+				return $post;
+			}
+
+			$exact_fallback = $exact_fallback ?: $post;
 		}
+	}
+
+	$compact = str_replace('-', '', $slug);
+	if ('' !== $compact) {
+		$compact_match = bbb_books_like_find_compact_book($compact);
+		if ($compact_match instanceof WP_Post) {
+			return $compact_match;
+		}
+	}
+
+	if ($exact_fallback instanceof WP_Post) {
+		return $exact_fallback;
 	}
 
 	$matches = get_posts(
@@ -166,6 +183,37 @@ function bbb_books_like_find_book($needle): ?WP_Post {
 	}
 
 	return $matches[0] ?? null;
+}
+
+function bbb_books_like_find_compact_book(string $compact_slug): ?WP_Post {
+	$compact_slug = preg_replace('/[^a-z0-9]/', '', strtolower($compact_slug)) ?: '';
+	if ('' === $compact_slug) {
+		return null;
+	}
+
+	$books = get_posts(
+		array(
+			'post_type'      => bbb_books_like_post_types(),
+			'post_status'    => 'publish',
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+			'no_found_rows'  => true,
+		)
+	);
+
+	foreach ($books as $book_id) {
+		$post_slug     = (string) get_post_field('post_name', (int) $book_id);
+		$title_slug    = sanitize_title(get_the_title((int) $book_id));
+		$post_compact  = preg_replace('/[^a-z0-9]/', '', strtolower($post_slug)) ?: '';
+		$title_compact = preg_replace('/[^a-z0-9]/', '', strtolower($title_slug)) ?: '';
+
+		if ($compact_slug === $post_compact || $compact_slug === $title_compact) {
+			$post = get_post((int) $book_id);
+			return $post instanceof WP_Post ? $post : null;
+		}
+	}
+
+	return null;
 }
 
 function bbb_books_like_infer_source_title(string $title): string {

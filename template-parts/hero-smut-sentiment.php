@@ -31,13 +31,13 @@ $hero_secondary_link  = get_theme_mod('hero_secondary_link', 'https://thesmutand
 
 		<div class="hero-buttons">
 			<?php if (!empty($hero_primary_link)) : ?>
-				<a href="<?php echo esc_url($hero_primary_link); ?>" class="btn-primary">
+					<a href="<?php echo esc_url($hero_primary_link); ?>" class="btn-primary hero-cta">
 					<?php echo esc_html($hero_primary_label); ?>
 				</a>
 			<?php endif; ?>
 
 			<?php if (!empty($hero_secondary_link)) : ?>
-				<a href="<?php echo esc_url($hero_secondary_link); ?>" class="btn-secondary">
+					<a href="<?php echo esc_url($hero_secondary_link); ?>" class="btn-secondary hero-cta">
 					<?php echo esc_html($hero_secondary_label); ?>
 				</a>
 			<?php endif; ?>

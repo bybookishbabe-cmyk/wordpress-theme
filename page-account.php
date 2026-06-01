@@ -64,6 +64,7 @@ $daily_prompt_text = isset($daily_prompt['text']) ? trim((string) $daily_prompt[
 $daily_prompt_day = isset($daily_prompt['day']) ? (int) $daily_prompt['day'] : 0;
 $daily_prompt_total = isset($daily_prompt['total']) ? (int) $daily_prompt['total'] : 0;
 $show_daily_prompt = $is_society && '' !== $daily_prompt_text;
+$reader_logged_out = isset($_GET['bbb_reader_logged_out']);
 $daily_prompt_meta = ($daily_prompt_day > 0 && $daily_prompt_total > 0)
 	? sprintf('day %s of %s', (string) $daily_prompt_day, (string) $daily_prompt_total)
 	: 'daily journal prompt';
@@ -83,7 +84,9 @@ $reader_type_summary = trim((string) ($reader_type['summary'] ?? 'save or tag a 
 $reader_type_counts = is_array($reader_type['counts'] ?? null) ? $reader_type['counts'] : array();
 $reader_type_tropes = is_array($reader_type['topTropes'] ?? null) ? array_values(array_filter($reader_type['topTropes'])) : array();
 $next_read_title = $next_read ? trim((string) ($next_read['book_title'] ?? $next_read['title'] ?? '')) : '';
+$next_read_title = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title($next_read_title) : $next_read_title;
 $next_read_author = $next_read ? trim((string) ($next_read['author'] ?? '')) : '';
+$next_read_author = function_exists('bbb_bookish_proper_name') ? bbb_bookish_proper_name($next_read_author) : $next_read_author;
 $next_read_cover = $next_read ? trim((string) ($next_read['cover'] ?? '')) : '';
 $next_read_handle = $next_read ? sanitize_title((string) ($next_read['book_handle'] ?? $next_read['handle'] ?? '')) : '';
 $next_read_amazon = $next_read ? trim((string) ($next_read['amazon'] ?? '')) : '';
@@ -186,7 +189,7 @@ get_header();
 					<?php if ($has_reader_access) : ?>
 						<?php if ($user instanceof WP_User && $user->ID) : ?>
 							<a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="<?php echo esc_url(get_edit_user_link((int) $user->ID)); ?>">edit profile</a>
-							<a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="<?php echo esc_url(wp_logout_url(home_url('/'))); ?>">log out</a>
+							<a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="<?php echo esc_url(add_query_arg('bbb_reader_logout', '1', $account_url)); ?>">use a different email</a>
 						<?php else : ?>
 							<a class="bbb-account-shelf__button bbb-account-shelf__button--ghost" href="<?php echo esc_url(add_query_arg('bbb_reader_logout', '1', $account_url)); ?>">use a different email</a>
 						<?php endif; ?>
@@ -365,6 +368,7 @@ get_header();
 									<?php
 									$cover = (string) ($book['cover'] ?? '');
 									$title = (string) ($book['book_title'] ?? $book['title'] ?? 'book');
+									$title = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title($title) : $title;
 									?>
 									<?php if ('' !== $cover) : ?>
 										<img style="--i: <?php echo esc_attr((string) $index); ?>;" src="<?php echo esc_url($cover); ?>" alt="">
@@ -391,7 +395,7 @@ get_header();
 						<label class="screen-reader-text" for="bbb-reader-email">reader email</label>
 						<input id="bbb-reader-email" type="email" name="email" autocomplete="email" placeholder="you@example.com" required>
 						<button type="submit">open account</button>
-						<p class="bbb-account-shelf__formStatus" data-reader-email-access-status hidden></p>
+						<p class="bbb-account-shelf__formStatus" data-reader-email-access-status data-tone="<?php echo $reader_logged_out ? esc_attr('success') : ''; ?>"<?php echo $reader_logged_out ? '' : ' hidden'; ?>><?php echo $reader_logged_out ? esc_html('you are logged out. enter the email you want to use next.') : ''; ?></p>
 					</form>
 				</div>
 			<?php endif; ?>

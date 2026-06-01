@@ -12,6 +12,10 @@ function bbb_lowercase_seo_text($text) {
 		return $text;
 	}
 
+	if (is_singular('bbb_book')) {
+		return $text;
+	}
+
 	$text = (string) $text;
 
 	if (function_exists('mb_strtolower')) {
@@ -20,6 +24,39 @@ function bbb_lowercase_seo_text($text) {
 
 	return strtolower($text);
 }
+
+function bbb_lowercase_public_page_title($title, $post_id = 0) {
+	if (is_admin() || !is_scalar($title)) {
+		return $title;
+	}
+
+	$post = $post_id ? get_post((int) $post_id) : null;
+	if (!$post instanceof WP_Post || 'page' !== $post->post_type) {
+		return $title;
+	}
+
+	$legal_slugs = array(
+		'accessibility-statement',
+		'cookie-policy',
+		'data-sharing-opt-out',
+		'privacy-policy',
+		'privacy-policy-2',
+		'refund-policy',
+		'return-policy',
+		'returns-policy',
+		'shipping-policy',
+		'terms-and-conditions',
+		'terms-of-service',
+	);
+
+	if (in_array((string) $post->post_name, $legal_slugs, true)) {
+		return $title;
+	}
+
+	return bbb_lowercase_seo_text($title);
+}
+add_filter('the_title', 'bbb_lowercase_public_page_title', PHP_INT_MAX, 2);
+add_filter('single_post_title', 'bbb_lowercase_public_page_title', PHP_INT_MAX, 2);
 
 foreach (
 	array(

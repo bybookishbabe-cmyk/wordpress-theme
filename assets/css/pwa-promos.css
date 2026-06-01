@@ -1,0 +1,236 @@
+.bbb-pwa-browser-only {
+  display: flex;
+}
+
+.bbb-is-pwa-app .bbb-pwa-browser-only {
+  display: none !important;
+}
+
+@media (display-mode: standalone) {
+  .bbb-pwa-browser-only {
+    display: none !important;
+  }
+}
+
+.bbb-pwa-promo {
+  align-items: center;
+  gap: 0.9rem;
+  max-width: min(100% - 3.2rem, 72rem);
+  margin: 1.4rem auto;
+  padding: 1rem 1.2rem;
+  border: 0.1rem solid #dedad6;
+  border-radius: 8px;
+  background: #f3f2ef;
+  color: #171417;
+  text-align: left;
+}
+
+.bbb-pwa-promo__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 999px;
+  background: #fff;
+  border: 0.1rem solid #dedad6;
+  flex: 0 0 auto;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.bbb-pwa-promo__text {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.bbb-pwa-promo__text strong {
+  display: block;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-transform: lowercase;
+}
+
+.bbb-pwa-promo__text span {
+  display: block;
+  margin-top: 0.2rem;
+  color: #6a6460;
+  font-size: 1.2rem;
+  line-height: 1.3;
+  text-transform: lowercase;
+}
+
+.bbb-pwa-promo__button,
+.bbb-pwa-promo__close {
+  appearance: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.bbb-pwa-promo__button {
+  border: 0.1rem solid #d95f91;
+  background: #d95f91;
+  color: #fff;
+  padding: 0.7rem 1rem;
+}
+
+.bbb-pwa-promo__close {
+  width: 3rem;
+  height: 3rem;
+  border: 0.1rem solid currentColor;
+  background: transparent;
+  color: inherit;
+  opacity: 0.62;
+}
+
+.bbb-pwa-promo--society {
+  background: #f3f2ef;
+  border-color: #dedad6;
+  color: #171417;
+  max-width: none;
+  margin: 0 0 1.4rem;
+}
+
+.bbb-pwa-promo--society .bbb-pwa-promo__text span {
+  color: #6a6460;
+}
+
+.bbb-pwa-promo--footer {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  margin: 1.3rem 0 0;
+  padding: 0.8rem 1rem;
+  background: #f3f2ef;
+  border-color: #dedad6;
+  color: #171417;
+}
+
+.bbb-pwa-promo--footer .bbb-pwa-promo__icon {
+  display: none;
+}
+
+.bbb-pwa-promo--footer .bbb-pwa-promo__button {
+  border-color: #d95f91;
+  background: #d95f91;
+  color: #fff;
+}
+
+.bbb-pwa-promo--footer .bbb-pwa-promo__text strong {
+  font-size: 1.2rem;
+}
+
+.bbb-pwa-promo--footer .bbb-pwa-promo__text span {
+  color: #6a6460;
+}
+
+.bbb-pwa-promo--header {
+  position: sticky;
+  top: 0;
+  z-index: 2147482500;
+  justify-content: center;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0.7rem 1.6rem;
+  border-width: 0 0 0.1rem;
+  border-radius: 0;
+  background: #f3f2ef;
+  border-color: #dedad6;
+  color: #171417;
+  box-shadow: 0 0.5rem 1.8rem rgba(23, 20, 23, 0.08);
+}
+
+.bbb-pwa-promo--header .bbb-pwa-promo__text {
+  flex: 0 1 auto;
+}
+
+.bbb-pwa-promo--header .bbb-pwa-promo__text strong,
+.bbb-pwa-promo--header .bbb-pwa-promo__text span {
+  display: inline;
+}
+
+.bbb-pwa-promo--header .bbb-pwa-promo__text strong {
+  font-size: 1.25rem;
+}
+
+.bbb-pwa-promo--header .bbb-pwa-promo__text span {
+  margin-left: 0.45rem;
+  font-size: 1.1rem;
+}
+
+.bbb-pwa-promo--header.is-hidden {
+  display: none !important;
+}
+
+.bbb-pwa-promo--sticky {
+  position: fixed;
+  right: 1.4rem;
+  bottom: 1.4rem;
+  left: 1.4rem;
+  z-index: 2147482500;
+  display: none;
+  max-width: none;
+  margin: 0;
+  background: #f3f2ef;
+  border-color: #dedad6;
+  color: #171417;
+  box-shadow: 0 1.2rem 3rem rgba(23, 20, 23, 0.12);
+}
+
+.bbb-pwa-promo--sticky.is-hidden {
+  display: none !important;
+}
+
+@media screen and (max-width: 749px) {
+  .bbb-pwa-promo {
+    max-width: calc(100% - 2rem);
+  }
+
+  .bbb-pwa-promo--society {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .bbb-pwa-promo--society .bbb-pwa-promo__button {
+    margin-left: 3.5rem;
+  }
+
+  .bbb-pwa-promo--header {
+    align-items: center;
+    gap: 0.65rem;
+    max-width: none;
+    padding: 0.65rem 0.8rem;
+  }
+
+  .bbb-pwa-promo--header .bbb-pwa-promo__text strong,
+  .bbb-pwa-promo--header .bbb-pwa-promo__text span {
+    display: block;
+  }
+
+  .bbb-pwa-promo--header .bbb-pwa-promo__text strong {
+    font-size: 1.1rem;
+  }
+
+  .bbb-pwa-promo--header .bbb-pwa-promo__text span {
+    margin: 0.1rem 0 0;
+    font-size: 1rem;
+  }
+
+  .bbb-pwa-promo--header .bbb-pwa-promo__button {
+    padding: 0.65rem 0.8rem;
+  }
+
+  .bbb-pwa-promo--header .bbb-pwa-promo__close {
+    width: 2.6rem;
+    height: 2.6rem;
+  }
+}

@@ -132,6 +132,59 @@ if (!function_exists('bbb_weekly_featured_quote')) {
 	}
 }
 
+if (!function_exists('bbb_weekly_clean_quote_text')) {
+	function bbb_weekly_clean_quote_text(string $text): string {
+		$text = html_entity_decode(trim($text), ENT_QUOTES | ENT_HTML5, get_bloginfo('charset') ?: 'UTF-8');
+
+		return trim($text, " \t\n\r\0\x0B\"'“”‘’");
+	}
+}
+
+if (!function_exists('bbb_weekly_seo_clean_text')) {
+	function bbb_weekly_seo_clean_text(string $text): string {
+		$text = html_entity_decode(wp_strip_all_tags($text), ENT_QUOTES | ENT_HTML5, get_bloginfo('charset') ?: 'UTF-8');
+		$text = preg_replace('/\s+/', ' ', $text);
+
+		return trim((string) $text);
+	}
+}
+
+if (!function_exists('bbb_weekly_seo_trope_label')) {
+	function bbb_weekly_seo_trope_label(array $trope): string {
+		$name = strtolower(bbb_weekly_seo_clean_text((string) ($trope['name'] ?? '')));
+		$name = preg_replace('/\s+books?$/', '', $name);
+		$name = preg_replace('/\s+romance$/', '', (string) $name);
+
+		return trim((string) $name);
+	}
+}
+
+if (!function_exists('bbb_weekly_seo_description')) {
+	function bbb_weekly_seo_description(array $book_data, string $hook): string {
+		$title  = bbb_weekly_seo_clean_text((string) ($book_data['title'] ?? 'this week’s romance pick'));
+		$author = bbb_weekly_seo_clean_text((string) ($book_data['author'] ?? ''));
+		$spice  = max(0, min(5, (int) ($book_data['spice'] ?? 0)));
+		$tropes = array_values(
+			array_filter(
+				array_map('bbb_weekly_seo_trope_label', array_slice((array) ($book_data['tropes'] ?? array()), 0, 2))
+			)
+		);
+		$trope_text = $tropes ? implode(' ', $tropes) . ' romance' : 'curated romance';
+		$book_text  = $author ? $title . ' by ' . $author : $title;
+		$hook       = bbb_weekly_seo_clean_text($hook);
+		$hook       = '' !== $hook ? wp_trim_words($hook, 16, '') : 'a curated romance pick worth losing sleep over';
+		$hook       = rtrim($hook, ".! \t\n\r\0\x0B") . '.';
+
+		return sprintf(
+			'this week\'s obsession: %1$s — %2$s with spice %3$d/5. %4$s updated every sunday.',
+			$book_text,
+			$trope_text,
+			$spice,
+			$hook
+		);
+	}
+}
+
 if (!function_exists('bbb_weekly_related_books')) {
 	function bbb_weekly_related_books(WP_Post $book, array $source, int $limit = 3): array {
 		if (!function_exists('bbb_books_like_all_visible_books') || !function_exists('bbb_books_like_book_data')) {
@@ -266,11 +319,51 @@ if ('' === $boyfriend_name) {
 	$boyfriend_name = trim((string) ($book_data['boyfriend'] ?? ''));
 }
 $featured_quote = $featured_book instanceof WP_Post ? bbb_weekly_featured_quote($featured_book) : array();
+$featured_quote_text = bbb_weekly_clean_quote_text($issue_pull_quote ?: (string) ($featured_quote['text'] ?? ''));
 $related_books = $featured_book instanceof WP_Post ? bbb_weekly_related_books($featured_book, $book_data, 3) : array();
 $subscribe_url = function_exists('bbb_substack_subscribe_url') ? bbb_substack_subscribe_url() : 'https://thesmutandsentimentsociety.substack.com/subscribe';
 $featured_book_url = $featured_book instanceof WP_Post ? get_permalink($featured_book) : home_url('/library/');
 $secret_url = trim((string) ($obsession_context['secret_url'] ?? ''));
 $secret_url = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value($secret_url) : $secret_url;
+$weekly_seo_title = 'weekly obsession — bybookishbabe romance picks';
+$weekly_seo_description = bbb_weekly_seo_description(
+	$book_data,
+	$issue_excerpt ?: ($issue_subtitle ?: $featured_quote_text)
+);
+$weekly_seo_canonical = home_url('/weekly-obsession/');
+
+add_filter('pre_get_document_title', static fn(): string => $weekly_seo_title, 99);
+add_filter('rank_math/frontend/title', static fn(): string => $weekly_seo_title, 99);
+add_filter('rank_math/opengraph/facebook/title', static fn(): string => $weekly_seo_title, 99);
+add_filter('rank_math/opengraph/twitter/title', static fn(): string => $weekly_seo_title, 99);
+add_filter('rank_math/frontend/description', static fn(): string => $weekly_seo_description, 99);
+add_filter('rank_math/opengraph/facebook/description', static fn(): string => $weekly_seo_description, 99);
+add_filter('rank_math/opengraph/twitter/description', static fn(): string => $weekly_seo_description, 99);
+add_filter('rank_math/frontend/canonical', static fn(): string => $weekly_seo_canonical, 99);
+add_filter('rank_math/opengraph/facebook/url', static fn(): string => $weekly_seo_canonical, 99);
+add_filter('rank_math/opengraph/twitter/url', static fn(): string => $weekly_seo_canonical, 99);
+add_filter(
+	'rank_math/frontend/robots',
+	static function (array $robots): array {
+		unset($robots['noindex'], $robots['nofollow']);
+		$robots['index']  = 'index';
+		$robots['follow'] = 'follow';
+
+		return $robots;
+	},
+	99
+);
+add_filter(
+	'wp_robots',
+	static function (array $robots): array {
+		unset($robots['noindex'], $robots['nofollow']);
+		$robots['index']  = true;
+		$robots['follow'] = true;
+
+		return $robots;
+	},
+	99
+);
 
 get_header();
 ?>
@@ -401,10 +494,10 @@ get_header();
 					</div>
 				</div>
 
-				<?php if ($issue_pull_quote || !empty($featured_quote['text'])) : ?>
+				<?php if ('' !== $featured_quote_text) : ?>
 					<div class="sss-wo__quoteBlock">
 						<div class="sss-wo__quoteKicker">a line that ruined us</div>
-						<blockquote class="sss-wo__quote">“<?php echo esc_html($issue_pull_quote ?: (string) $featured_quote['text']); ?>”</blockquote>
+						<blockquote class="sss-wo__quote"><?php echo esc_html($featured_quote_text); ?></blockquote>
 						<div class="sss-wo__quoteMeta">
 							<?php echo esc_html($issue_pull_quote ? ($issue_title ?: 'the latest issue') : (string) ($book_data['title'] ?? get_the_title($featured_book))); ?><?php echo (!$issue_pull_quote && !empty($book_data['author'])) ? ' by ' . esc_html((string) $book_data['author']) : ''; ?>
 						</div>

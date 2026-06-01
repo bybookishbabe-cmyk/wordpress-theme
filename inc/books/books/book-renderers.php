@@ -154,8 +154,8 @@ function bbb_render_library_book_card(int $post_id, bool $mini = false): string 
     <?php endif; ?>
   </div>
   <div class="sss-lib__under">
-    <div class="sss-lib__name"><?php echo esc_html($title); ?></div>
-    <div class="sss-lib__author"><?php echo esc_html((string) $author); ?></div>
+    <div class="sss-lib__name" style="text-transform:none !important;"><?php echo esc_html($title); ?></div>
+    <div class="sss-lib__author" style="text-transform:none !important;"><?php echo esc_html((string) $author); ?></div>
   </div>
 </button>
 	<?php

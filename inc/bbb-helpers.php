@@ -220,11 +220,137 @@ function bbb_get_book_cover_url(int $post_id, string $size = 'large'): string {
 
 function bbb_get_book_author(int $post_id): string {
 	if ('bbb_book' === get_post_type($post_id)) {
-		return (string) get_post_meta($post_id, '_bbb_author', true);
+		return bbb_bookish_proper_name((string) get_post_meta($post_id, '_bbb_author', true));
 	}
 
-	return (string) bbb_get_field('author', $post_id, '');
+	return bbb_bookish_proper_name((string) bbb_get_field('author', $post_id, ''));
 }
+
+function bbb_bookish_proper_name(string $value): string {
+	$value = trim(wp_strip_all_tags($value));
+	if ('' === $value) {
+		return '';
+	}
+
+	if (preg_match('/[A-Z]/', $value) && !preg_match('/^[A-Z\s[:punct:]\d]+$/', $value)) {
+		return bbb_bookish_normalize_name_initials($value);
+	}
+
+	return bbb_bookish_normalize_name_initials(bbb_bookish_title_case($value, false));
+}
+
+function bbb_bookish_book_title(string $value): string {
+	$value = trim(wp_strip_all_tags($value));
+	if ('' === $value) {
+		return '';
+	}
+
+	if (preg_match('/[A-Z]/', $value) && !preg_match('/^[A-Z\s[:punct:]\d]+$/', $value)) {
+		return $value;
+	}
+
+	return bbb_bookish_title_case($value, true);
+}
+
+function bbb_bookish_title_case(string $value, bool $lower_small_words = true): string {
+	$small_words = array('a', 'an', 'and', 'as', 'at', 'but', 'by', 'for', 'from', 'in', 'nor', 'of', 'on', 'or', 'the', 'to', 'up', 'via', 'with');
+	$parts       = preg_split('/(\s+)/u', $value, -1, PREG_SPLIT_DELIM_CAPTURE);
+	if (!is_array($parts)) {
+		return $value;
+	}
+
+	$word_indexes = array();
+	foreach ($parts as $index => $part) {
+		if ('' !== trim($part)) {
+			$word_indexes[] = $index;
+		}
+	}
+
+	$last_word_index = $word_indexes ? end($word_indexes) : -1;
+	foreach ($parts as $index => $part) {
+		if ('' === trim($part)) {
+			continue;
+		}
+
+		$leading  = '';
+		$trailing = '';
+		$core     = $part;
+
+		if (preg_match('/^([\'"“‘(\[{]*)(.*?)([\'"”’)\]},.!?:;]*)$/u', $part, $matches)) {
+			$leading  = $matches[1];
+			$core     = $matches[2];
+			$trailing = $matches[3];
+		}
+
+		$core_lower = function_exists('mb_strtolower') ? mb_strtolower($core, 'UTF-8') : strtolower($core);
+		if ($lower_small_words && $index !== $word_indexes[0] && $index !== $last_word_index && in_array($core_lower, $small_words, true)) {
+			$core = $core_lower;
+		} elseif ('.' === $trailing && preg_match('/^(?:[a-z]\.)+[a-z]$/i', $core)) {
+			$core = strtoupper($core);
+		} elseif (preg_match('/^(?:[a-z]\.)+$/i', $core)) {
+			$core = strtoupper($core);
+		} else {
+			$core = preg_replace_callback(
+				'/(^|[-’\'])([[:alpha:]])/u',
+				static function (array $matches): string {
+					$letter = function_exists('mb_strtoupper') ? mb_strtoupper($matches[2], 'UTF-8') : strtoupper($matches[2]);
+					return $matches[1] . $letter;
+				},
+				$core_lower
+			) ?: $core;
+
+			$core = preg_replace_callback("/([’'])(D|Ll|M|Re|S|T|Ve)\b/u", static function (array $matches): string {
+				return $matches[1] . strtolower($matches[2]);
+			}, $core) ?: $core;
+		}
+
+		$parts[$index] = $leading . $core . $trailing;
+	}
+
+	return implode('', $parts);
+}
+
+function bbb_bookish_normalize_name_initials(string $value): string {
+	$value = preg_replace_callback(
+		'/\b([A-Z]{2,3}|[A-Z](?=\s+[A-Z][[:alpha:]]))\b/u',
+		static function (array $matches): string {
+			return implode('.', str_split($matches[1])) . '.';
+		},
+		$value
+	) ?: $value;
+
+	$known_initials = array(
+		'Hd' => 'H.D.',
+		'Hm' => 'H.M.',
+		'Jd' => 'J.D.',
+		'Jt' => 'J.T.',
+		'Lj' => 'L.J.',
+		'Sc' => 'S.C.',
+	);
+
+	return preg_replace_callback(
+		'/\b(' . implode('|', array_keys($known_initials)) . ')(?=\s+[A-Z][[:alpha:]])/u',
+		static function (array $matches) use ($known_initials): string {
+			return $known_initials[$matches[1]] ?? $matches[1];
+		},
+		$value
+	) ?: $value;
+}
+
+function bbb_bookish_public_book_title($title, $post_id = 0) {
+	if (is_admin() || !is_scalar($title)) {
+		return $title;
+	}
+
+	$post = $post_id ? get_post((int) $post_id) : null;
+	if (!$post instanceof WP_Post || !in_array($post->post_type, array('bbb_book', 'sss_book'), true)) {
+		return $title;
+	}
+
+	return bbb_bookish_book_title((string) $title);
+}
+add_filter('the_title', 'bbb_bookish_public_book_title', 20, 2);
+add_filter('single_post_title', 'bbb_bookish_public_book_title', 20, 2);
 
 function bbb_book_is_hidden(int $post_id): bool {
 	if ('bbb_book' === get_post_type($post_id)) {
@@ -329,7 +455,7 @@ function bbb_get_all_books_json(bool $include_private = true): array {
 
 		$out[] = array(
 			'id'           => $book->ID,
-			'title'        => $book->post_title,
+			'title'        => bbb_bookish_book_title((string) $book->post_title),
 			'slug'         => $book->post_name,
 			'author'       => bbb_get_book_author($book->ID),
 			'cover_url'    => bbb_get_book_cover_url($book->ID),

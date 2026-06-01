@@ -14,6 +14,7 @@ require_once get_theme_file_path('inc/header-functions.php');
 require_once get_theme_file_path('inc/urgency-banner.php');
 require_once get_theme_file_path('inc/bbb-helpers.php');
 require_once get_theme_file_path('inc/footer.php');
+require_once get_theme_file_path('inc/pwa.php');
 require_once get_theme_file_path('inc/customizer/hero-smut-sentiment.php');
 require_once get_theme_file_path('inc/customizer/society-landing.php');
 require_once get_theme_file_path('inc/weekly-obsession-query.php');
@@ -56,6 +57,7 @@ require_once get_theme_file_path('inc/shortcodes/sss-library-shortcode.php');
 require_once get_theme_file_path('inc/shortcodes/sss-signoff-shortcode.php');
 require_once get_theme_file_path('inc/shortcodes/sss-readnext-shortcode.php');
 require_once get_theme_file_path('inc/shortcodes/sss-series-shortcode.php');
+require_once get_theme_file_path('inc/series-seo.php');
 require_once get_theme_file_path('inc/shortcodes/sss-pillar-shortcode.php');
 require_once get_theme_file_path('inc/shortcodes/sss-newsletter-shortcode.php');
 require_once get_theme_file_path('inc/shortcodes/sss-bookquote-shortcode.php');
@@ -64,8 +66,14 @@ require_once get_theme_file_path('inc/admin/society-members.php');
 require_once get_theme_file_path('inc/admin/society-drop-importer.php');
 require_once get_theme_file_path('inc/admin/society-product-importer.php');
 require_once get_theme_file_path('inc/admin/seo-inventory.php');
+require_once get_theme_file_path('inc/admin/noindex-pages.php');
+require_once get_theme_file_path('inc/admin/blog-post-seo.php');
+require_once get_theme_file_path('inc/admin/book-series-seo.php');
+require_once get_theme_file_path('inc/admin/trope-page-seo.php');
+require_once get_theme_file_path('inc/admin/page-tags.php');
 require_once get_theme_file_path('inc/site-stability.php');
 require_once get_theme_file_path('inc/homepage-seo.php');
+require_once get_theme_file_path('inc/social-share-images.php');
 require_once get_theme_file_path('inc/seo-lowercase.php');
 
 function bbb_reader_is_society(): bool {
@@ -95,6 +103,43 @@ add_filter(
 add_filter(
 	'acf/settings/save_json',
 	static fn(): string => get_theme_file_path('acf-groups')
+);
+
+function bbb_is_legal_policy_page(): bool {
+	if (!is_page()) {
+		return false;
+	}
+
+	$legal_slugs = array(
+		'accessibility-statement',
+		'cookie-policy',
+		'data-sharing-opt-out',
+		'privacy-policy',
+		'privacy-policy-2',
+		'refund-policy',
+		'return-policy',
+		'returns-policy',
+		'shipping-policy',
+		'terms-and-conditions',
+		'terms-of-service',
+	);
+
+	if (function_exists('get_privacy_policy_url') && function_exists('is_privacy_policy') && get_privacy_policy_url() && is_privacy_policy()) {
+		return true;
+	}
+
+	return is_page($legal_slugs);
+}
+
+add_filter(
+	'body_class',
+	static function (array $classes): array {
+		if (bbb_is_legal_policy_page()) {
+			$classes[] = 'bbb-legal-page';
+		}
+
+		return $classes;
+	}
 );
 
 add_action(
@@ -553,7 +598,6 @@ function bbb_society_gate_check(): void {
 	$society_slugs = array(
 		'canva-templates',
 		'freebies',
-		'kindle-inserts',
 		'private-shelf',
 		'sss-canva-templates',
 		'sss-freebies',

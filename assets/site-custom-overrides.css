@@ -1,3 +1,54 @@
+body.bbb-lowercase-site:not(.bbb-legal-page) input,
+body.bbb-lowercase-site:not(.bbb-legal-page) textarea {
+  text-transform: none;
+}
+
+body.bbb-lowercase-site:not(.bbb-legal-page) .sss-lib__name,
+body.bbb-lowercase-site:not(.bbb-legal-page) .sss-lib__author,
+body.bbb-lowercase-site:not(.bbb-legal-page) .sss-lib__mtitle,
+body.bbb-lowercase-site:not(.bbb-legal-page) .sss-lib__mauthor,
+body.bbb-lowercase-site:not(.bbb-legal-page) .article-book-card h3,
+body.bbb-lowercase-site:not(.bbb-legal-page) .article-book-card__author,
+body.bbb-lowercase-site:not(.bbb-legal-page) .guide-bookcard__title,
+body.bbb-lowercase-site:not(.bbb-legal-page) .guide-bookcard__author,
+body.bbb-lowercase-site:not(.bbb-legal-page) .guide-bookcard__seriesTitle,
+body.bbb-lowercase-site:not(.bbb-legal-page) .guide-bookcard__seriesMeta,
+body.bbb-lowercase-site:not(.bbb-legal-page) .blog-next-read__bookLabel,
+body.bbb-lowercase-site:not(.bbb-legal-page) .preview-title,
+body.bbb-lowercase-site:not(.bbb-legal-page) .preview-author,
+body.bbb-lowercase-site:not(.bbb-legal-page) .bbb-review-card__title,
+body.bbb-lowercase-site:not(.bbb-legal-page) .blog-quickstats__kicker,
+body.bbb-lowercase-site:not(.bbb-legal-page) .bbb-bookquote cite,
+body.bbb-lowercase-site:not(.bbb-legal-page) .sss-book-page__title,
+body.bbb-lowercase-site:not(.bbb-legal-page) .sss-book-page__author span,
+body.bbb-lowercase-site:not(.bbb-legal-page) .sss-book-page__relatedTitle,
+body.bbb-lowercase-site:not(.bbb-legal-page) .sss-book-page__relatedAuthor,
+body.bbb-lowercase-site:not(.bbb-legal-page) .bbb-seriesOrderPage__bookInfo h3,
+body.bbb-lowercase-site:not(.bbb-legal-page) .bbb-seriesOrderPage__alsoTitle,
+body.bbb-lowercase-site:not(.bbb-legal-page) .bbb-burn-book__body h3,
+body.bbb-lowercase-site:not(.bbb-legal-page) .bbb-burn-book__body p,
+body.bbb-lowercase-site:not(.bbb-legal-page) .header__account-dot,
+body.bbb-lowercase-site:not(.bbb-legal-page) .hero-cta,
+body.bbb-lowercase-site:not(.bbb-legal-page) [data-book-title],
+body.bbb-lowercase-site:not(.bbb-legal-page) [data-book-author] {
+  text-transform: none !important;
+}
+
+body.bbb-lowercase-site:not(.bbb-legal-page) .hero-cta {
+  text-transform: uppercase !important;
+}
+
+body.bbb-lowercase-site:not(.bbb-legal-page) .sss-lib__book [data-title],
+body.bbb-lowercase-site:not(.bbb-legal-page) .sss-lib__book [data-author],
+body.bbb-lowercase-site:not(.bbb-legal-page) .bbb-trending .sss-lib__under,
+body.bbb-lowercase-site:not(.bbb-legal-page) .bbb-trending .sss-lib__name,
+body.bbb-lowercase-site:not(.bbb-legal-page) .bbb-trending .sss-lib__author,
+body.bbb-lowercase-site:not(.bbb-legal-page) #sssTrendingRow .sss-lib__under,
+body.bbb-lowercase-site:not(.bbb-legal-page) #sssTrendingRow .sss-lib__name,
+body.bbb-lowercase-site:not(.bbb-legal-page) #sssTrendingRow .sss-lib__author {
+  text-transform: none !important;
+}
+
 button[name="checkout"],
 .cart__checkout-button,
 .checkout-button,
@@ -241,7 +292,7 @@ a.button--secondary {
   color: #f4efe8;
   font-size: 1.2rem;
   letter-spacing: 0.12em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   margin-bottom: 0.8rem;
   cursor: default;
 }

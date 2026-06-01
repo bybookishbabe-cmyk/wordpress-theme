@@ -228,7 +228,7 @@ $monthly_theme = strtolower((string) date_i18n('F')) . ' theme';
 $monthly_hub = array(
 	'kicker' => strtolower((string) get_theme_mod('bbb_society_month_kicker', 'monthly theme')),
 	'title'  => strtolower((string) get_theme_mod('bbb_society_month_title', 'burn for me')),
-	'text'   => strtolower((string) get_theme_mod('bbb_society_month_text', 'dark romance month with mafia, obsession, enemies to lovers, and the member tools that keep the whole reading life in one place.')),
+	'text'   => (string) get_theme_mod('bbb_society_month_text', 'dark romance month with mafia, obsession, enemies to lovers, and the member tools that keep the whole reading life in one place.'),
 	'image'  => '',
 );
 if ('this month inside the society' === $monthly_hub['kicker']) {
@@ -239,12 +239,30 @@ $active_drop = bbb_society_landing_active_drop();
 $active_fields = $active_drop ? bbb_society_landing_field_map($active_drop) : array();
 $drop_products = array();
 $fallback_images = array();
+$monthly_countdown = array();
 
 if ($active_fields) {
 	$monthly_hub['kicker'] = 'monthly theme';
 	$monthly_hub['title'] = strtolower(bbb_society_landing_field_value($active_fields, 'name', $monthly_hub['title']));
-	$monthly_hub['text'] = strtolower(bbb_society_landing_field_value($active_fields, 'quote_text', $monthly_hub['text']));
+	$monthly_hub['text'] = bbb_society_landing_field_value($active_fields, 'quote_text', $monthly_hub['text']);
 	$monthly_hub['image'] = (string) ($active_fields['calendar_image']['reference']['image']['url'] ?? $active_fields['gram_image']['reference']['image']['url'] ?? '');
+
+	$active_end_date = bbb_society_landing_field_value($active_fields, 'end_date');
+	if ('' !== $active_end_date) {
+		try {
+			$theme_timezone = new DateTimeZone('America/Los_Angeles');
+			$next_theme_start = (new DateTimeImmutable($active_end_date . ' 23:59:59', $theme_timezone))->modify('+1 second');
+			if ($next_theme_start->getTimestamp() > time()) {
+				$monthly_countdown = array(
+					'current' => $monthly_hub['title'],
+					'next'    => 'burn bright',
+					'target'  => $next_theme_start->format(DateTimeInterface::ATOM),
+				);
+			}
+		} catch (Exception $exception) {
+			$monthly_countdown = array();
+		}
+	}
 
 	$fallback_nodes = bbb_society_landing_ref_nodes($active_fields, array('wallpaper_images', 'mood_images', 'era_images'));
 	foreach ($fallback_nodes as $node) {
@@ -356,6 +374,25 @@ get_header();
 					<p class="bbb-society-theme__eyebrow"><?php echo esc_html($monthly_hub['kicker']); ?></p>
 					<h2><?php echo esc_html($monthly_hub['title']); ?></h2>
 					<p><?php echo esc_html($monthly_hub['text']); ?></p>
+					<?php if ($monthly_countdown) : ?>
+						<span
+							class="bbb-society-theme__countdown"
+							data-society-countdown
+							data-countdown-target="<?php echo esc_attr($monthly_countdown['target']); ?>"
+							data-countdown-complete="<?php echo esc_attr($monthly_countdown['next'] . ' is open now'); ?>"
+						>
+							<span class="bbb-society-theme__countdownLabel">
+								<?php echo esc_html($monthly_countdown['current'] . ' ends + ' . $monthly_countdown['next'] . ' begins in'); ?>
+							</span>
+							<span class="bbb-society-theme__timer" aria-live="polite">
+								<span><strong data-countdown-days>00</strong><em>days</em></span>
+								<span><strong data-countdown-hours>00</strong><em>hours</em></span>
+								<span><strong data-countdown-minutes>00</strong><em>min</em></span>
+								<span><strong data-countdown-seconds>00</strong><em>sec</em></span>
+							</span>
+							<span class="bbb-society-theme__countdownNote">switches at midnight pacific.</span>
+						</span>
+					<?php endif; ?>
 					<span class="bbb-society-theme__cta">open monthly theme</span>
 				</span>
 				<?php if ($monthly_hub['image'] || $drop_products) : ?>
@@ -381,10 +418,64 @@ get_header();
 			</a>
 		</aside>
 
+		<script>
+		(function(){
+			var countdowns = document.querySelectorAll('[data-society-countdown]');
+			if (!countdowns.length) return;
+
+			function pad(value){
+				return String(value).padStart(2, '0');
+			}
+
+			function updateCountdown(countdown){
+				var target = new Date(countdown.getAttribute('data-countdown-target') || '');
+				if (Number.isNaN(target.getTime())) return;
+
+				var remaining = target.getTime() - Date.now();
+				if (remaining <= 0){
+					var label = countdown.querySelector('.bbb-society-theme__countdownLabel');
+					if (label){
+						label.textContent = countdown.getAttribute('data-countdown-complete') || 'new theme is open now';
+					}
+					countdown.querySelectorAll('[data-countdown-days], [data-countdown-hours], [data-countdown-minutes], [data-countdown-seconds]').forEach(function(unit){
+						unit.textContent = '00';
+					});
+					return;
+				}
+
+				var totalSeconds = Math.floor(remaining / 1000);
+				var days = Math.floor(totalSeconds / 86400);
+				var hours = Math.floor((totalSeconds % 86400) / 3600);
+				var minutes = Math.floor((totalSeconds % 3600) / 60);
+				var seconds = totalSeconds % 60;
+
+				var dayNode = countdown.querySelector('[data-countdown-days]');
+				var hourNode = countdown.querySelector('[data-countdown-hours]');
+				var minuteNode = countdown.querySelector('[data-countdown-minutes]');
+				var secondNode = countdown.querySelector('[data-countdown-seconds]');
+
+				if (dayNode) dayNode.textContent = pad(days);
+				if (hourNode) hourNode.textContent = pad(hours);
+				if (minuteNode) minuteNode.textContent = pad(minutes);
+				if (secondNode) secondNode.textContent = pad(seconds);
+			}
+
+			countdowns.forEach(function(countdown){
+				updateCountdown(countdown);
+				window.setInterval(function(){
+					updateCountdown(countdown);
+				}, 1000);
+			});
+		})();
+		</script>
+
 		<div class="bbb-society-sections">
 			<?php foreach ($sections as $section) : ?>
 				<section class="bbb-society-section" aria-labelledby="<?php echo esc_attr(sanitize_title($section['label'])); ?>">
 					<h2 id="<?php echo esc_attr(sanitize_title($section['label'])); ?>"><?php echo esc_html($section['label']); ?></h2>
+					<?php if ('member tools' === $section['label'] && function_exists('bbb_render_pwa_promo')) : ?>
+						<?php bbb_render_pwa_promo('society'); ?>
+					<?php endif; ?>
 					<div class="bbb-society-link-grid">
 						<?php foreach ($section['items'] as $item) : ?>
 							<?php

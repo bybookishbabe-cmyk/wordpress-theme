@@ -32,6 +32,20 @@ if (!function_exists('bbb_library_issue_slot')) {
 	}
 }
 
+if (!function_exists('bbb_library_active_month')) {
+	function bbb_library_active_month(DateTimeImmutable $today): string {
+		$current_month = $today->format('Y-m');
+		$sundays       = bbb_library_month_sundays($current_month);
+		$first_sunday  = $sundays[0] ?? null;
+
+		if ($first_sunday instanceof DateTimeImmutable && $today->format('Y-m-d') <= $first_sunday->format('Y-m-d')) {
+			return $today->modify('first day of previous month')->format('Y-m');
+		}
+
+		return $current_month;
+	}
+}
+
 if (!function_exists('bbb_library_issue_date')) {
 	function bbb_library_issue_date(WP_Post $issue, DateTimeZone $timezone): ?DateTimeImmutable {
 		$raw = function_exists('get_field') ? get_field('publish_date', $issue->ID) : get_post_meta($issue->ID, 'publish_date', true);
@@ -54,9 +68,10 @@ if (!function_exists('bbb_library_issue_date')) {
 }
 
 $books         = array_values(array_filter($args['books'] ?? array(), static fn($book): bool => $book instanceof WP_Post));
-$current_month = wp_date('Y-m');
-$today         = wp_date('Y-m-d');
 $timezone      = wp_timezone();
+$today_date    = new DateTimeImmutable('today', $timezone);
+$current_month = bbb_library_active_month($today_date);
+$today         = $today_date->format('Y-m-d');
 $sundays       = bbb_library_month_sundays($current_month);
 $issue_types   = count($sundays) >= 5
 	? array('smutty', 'sentimental', 'trope report', 'extra extra', "chapter's end")
@@ -142,7 +157,7 @@ foreach ($books as $book) {
 <div id="monthly" class="sss-lib__monthlyIntro">
 	<div class="sss-lib__divider"></div>
 	<div class="sss-lib__monthlyTitle">books of the month</div>
-	<div class="sss-lib__monthlySub">what we're obsessed with in <?php echo esc_html(wp_date('F Y')); ?></div>
+	<div class="sss-lib__monthlySub">what we're obsessed with in <?php echo esc_html(wp_date('F Y', (new DateTimeImmutable($current_month . '-01', $timezone))->getTimestamp())); ?></div>
 </div>
 
 <div id="topshelf" class="sss-lib__topshelf">

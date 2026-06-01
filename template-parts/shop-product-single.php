@@ -231,6 +231,27 @@ if (!function_exists('bbb_single_product_purchase_form')) {
 	}
 }
 
+if (!function_exists('bbb_single_product_is_kindle_insert')) {
+	function bbb_single_product_is_kindle_insert(int $post_id): bool {
+		$term_names = '';
+		if (taxonomy_exists('download_category')) {
+			$terms = get_the_terms($post_id, 'download_category');
+			$term_names = is_array($terms) ? implode(' ', wp_list_pluck($terms, 'name')) : '';
+		}
+
+		$haystack = strtolower(
+			get_the_title($post_id) . ' ' .
+			(string) get_post_meta($post_id, '_bbb_shopify_product_type', true) . ' ' .
+			$term_names
+		);
+
+		return str_contains($haystack, 'kindle insert')
+			&& !str_contains($haystack, 'vault')
+			&& !str_contains($haystack, 'canva')
+			&& !str_contains($haystack, 'template');
+	}
+}
+
 $post_id       = get_the_ID();
 $image_url     = bbb_single_product_image($post_id);
 $price         = bbb_single_product_price($post_id);
@@ -241,6 +262,7 @@ $is_free       = 'yes' === get_post_meta($post_id, '_bbb_society_free_download',
 $kind          = strtolower((string) get_post_meta($post_id, '_bbb_shopify_product_type', true));
 $kind          = '' !== $kind ? $kind : ('download' === get_post_type($post_id) ? 'digital download' : 'product');
 $edit_url      = get_edit_post_link($post_id);
+$is_kindle_insert = bbb_single_product_is_kindle_insert($post_id);
 ?>
 
 <main class="bbb-product" id="main">
@@ -255,11 +277,14 @@ $edit_url      = get_edit_post_link($post_id);
 
 		<div class="bbb-product__summary">
 			<p class="bbb-shop__kicker">digital shop</p>
+			<?php if ($is_kindle_insert) : ?>
+				<a class="bbb-shop-card__details bbb-product__hubLink" href="<?php echo esc_url(home_url('/kindle-inserts/')); ?>">browse all kindle inserts</a>
+			<?php endif; ?>
 			<h1><?php the_title(); ?></h1>
 			<div class="bbb-shop-card__badges">
 				<span><?php echo esc_html($kind); ?></span>
 				<?php if ($is_free) : ?>
-					<span>member free</span>
+					<span>member access</span>
 				<?php endif; ?>
 				<?php if ($missing_files) : ?>
 					<span>needs file</span>
@@ -279,7 +304,7 @@ $edit_url      = get_edit_post_link($post_id);
 				<?php endif; ?>
 			</div>
 			<?php if ($is_free) : ?>
-				<p class="bbb-product__note">paid society members can download this for free.</p>
+				<p class="bbb-product__note">paid society members can access this through their membership.</p>
 			<?php endif; ?>
 		</div>
 	</section>

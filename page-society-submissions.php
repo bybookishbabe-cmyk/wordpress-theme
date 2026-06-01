@@ -54,7 +54,7 @@ if (!$has_society_member_access) {
 			margin:0 0 1rem;
 			font-size:1.15rem;
 			letter-spacing:.16em;
-			text-transform:uppercase;
+			text-transform: lowercase;
 			color:rgba(255,255,255,.58);
 		}
 		.bbb-submission-page--locked .bbb-submission-page__title{
@@ -103,7 +103,7 @@ if (!$has_society_member_access) {
 			color:rgba(255,255,255,.64);
 			font-size:1.15rem;
 			letter-spacing:.16em;
-			text-transform:uppercase;
+			text-transform: lowercase;
 		}
 		.bbb-submission-lock h2{
 			margin:0;
@@ -137,7 +137,7 @@ if (!$has_society_member_access) {
 			letter-spacing:.08em;
 			line-height:1.2;
 			text-decoration:none;
-			text-transform:uppercase;
+			text-transform: lowercase;
 		}
 		@media screen and (max-width: 749px){
 			.bbb-submission-page--locked{padding:2.8rem 0 4.6rem;}

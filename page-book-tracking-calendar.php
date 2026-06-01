@@ -50,8 +50,8 @@ foreach (sss_get_all_books() as $book_post) {
 
 	$books[] = array(
 		'handle' => (string) ($book['handle'] ?? $book_post->post_name),
-		'title'  => strtolower((string) $book['title']),
-		'author' => strtolower((string) ($book['author'] ?? '')),
+		'title'  => function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title((string) $book['title']) : (string) $book['title'],
+		'author' => function_exists('bbb_bookish_proper_name') ? bbb_bookish_proper_name((string) ($book['author'] ?? '')) : (string) ($book['author'] ?? ''),
 		'cover'  => (string) ($book['cover'] ?? ''),
 	);
 }
@@ -161,7 +161,7 @@ get_header();
 	margin:0 0 8px;
 	font-size:11px;
 	letter-spacing:.16em;
-	text-transform:uppercase;
+	text-transform: lowercase;
 	color:rgba(246,241,235,.58);
 }
 .sss-readcal__month{
@@ -202,7 +202,7 @@ get_header();
 	margin:0;
 	font-size:10px;
 	letter-spacing:.16em;
-	text-transform:uppercase;
+	text-transform: lowercase;
 	color:rgba(246,241,235,.54);
 }
 .sss-readcal__goalText{
@@ -218,7 +218,7 @@ get_header();
 	min-width:72px;
 	font-size:10px;
 	letter-spacing:.12em;
-	text-transform:uppercase;
+	text-transform: lowercase;
 	color:rgba(246,241,235,.54);
 }
 .sss-readcal__goalField input{
@@ -285,7 +285,7 @@ get_header();
 .sss-readcal__weekdays span{
 	font-size:10px;
 	letter-spacing:.16em;
-	text-transform:uppercase;
+	text-transform: lowercase;
 	color:rgba(246,241,235,.44);
 	text-align:center;
 }
@@ -384,7 +384,7 @@ get_header();
 	margin:0 0 8px;
 	font-size:11px;
 	letter-spacing:.16em;
-	text-transform:uppercase;
+	text-transform: lowercase;
 	color:rgba(246,241,235,.58);
 }
 .sss-readcal__modalTitle{

@@ -240,7 +240,7 @@ if (!$slides) {
 	.bbb-boyfriends__kicker{
 		font-size:11px;
 		letter-spacing:.18em;
-		text-transform:uppercase;
+		text-transform: lowercase;
 		color:rgba(246,246,246,.56);
 	}
 	.bbb-boyfriends__title{
@@ -289,7 +289,7 @@ if (!$slides) {
 		margin-bottom:18px;
 		font-size:13px;
 		letter-spacing:.08em;
-		text-transform:uppercase;
+		text-transform: lowercase;
 		color:rgba(246,246,246,.56);
 	}
 	.bbb-boyfriends__row{

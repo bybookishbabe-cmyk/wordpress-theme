@@ -42,10 +42,10 @@ function bbb_urgency_banner_enqueue(): void {
 	if (bbb_urgency_banner_is_active() && function_exists('bbb_enqueue_js')) {
 		bbb_enqueue_js('bbb-urgency-banner', 'assets/js/urgency-banner.js', array('bbb-global'));
 	}
-	if (function_exists('bbb_enqueue_css')) {
+	if (bbb_sunday_drop_toast_enabled() && function_exists('bbb_enqueue_css')) {
 		bbb_enqueue_css('bbb-sunday-drop-toast', 'assets/css/sunday-drop-toast.css', array('bbb-bookshelf-signup'));
 	}
-	if (function_exists('bbb_enqueue_js')) {
+	if (bbb_sunday_drop_toast_enabled() && function_exists('bbb_enqueue_js')) {
 		bbb_enqueue_js('bbb-sunday-drop-toast', 'assets/js/sunday-drop-toast.js', array('bbb-global'));
 	}
 }
@@ -93,7 +93,18 @@ function bbb_urgency_banner_render(): void {
 }
 add_action('wp_body_open', 'bbb_urgency_banner_render', 8);
 
+function bbb_sunday_drop_toast_enabled(): bool {
+	return (bool) apply_filters('bbb_sunday_drop_toast_enabled', false);
+}
+
 function bbb_sunday_drop_toast_config(): array {
+	if (!bbb_sunday_drop_toast_enabled()) {
+		return array(
+			'id'      => 'sunday-drop',
+			'enabled' => false,
+		);
+	}
+
 	$issue = bbb_sunday_drop_latest_issue();
 	$substack = $issue instanceof WP_Post ? array() : bbb_sunday_drop_latest_substack_post();
 	$title = '';

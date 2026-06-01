@@ -183,7 +183,7 @@ opacity:.7;
 margin-top:4px;
 font-size:12px;
 letter-spacing:.06em;
-text-transform:uppercase;
+text-transform: lowercase;
 color:#e58ab8;
 }
 
@@ -205,7 +205,7 @@ flex:0 0 auto;
 .article-book-card__genre{
 font-size:12px;
 letter-spacing:.12em;
-text-transform:uppercase;
+text-transform: lowercase;
 color:rgba(255,255,255,.62);
 line-height:1;
 text-align:right;
@@ -267,7 +267,7 @@ flex-wrap:wrap;
 gap:10px;
 font-size:12px;
 letter-spacing:.06em;
-text-transform:uppercase;
+text-transform: lowercase;
 color:rgba(255,255,255,.72);
 }
 
@@ -299,7 +299,7 @@ box-sizing:border-box;
 font-size:12px;
 font-weight:700;
 letter-spacing:.08em;
-text-transform:uppercase;
+text-transform: lowercase;
 color:#0b0b0b;
 text-decoration:none;
 transition:.25s ease;
@@ -422,7 +422,7 @@ color:var(--bbb-pink, #e85a9b);
 font-size:11px;
 font-weight:800;
 letter-spacing:.12em;
-text-transform:uppercase;
+text-transform: lowercase;
 }
 
 @media (max-width:700px){
@@ -865,6 +865,35 @@ font-weight:400;
 letter-spacing:.01em;
 text-transform:lowercase;
 }
+
+.article-template__meta{
+display:flex;
+flex-wrap:wrap;
+align-items:center;
+gap:6px 9px;
+max-width:720px;
+margin:0 auto 28px;
+color:rgba(246,246,246,.72);
+font-size:13px;
+line-height:1.4;
+}
+
+.article-template__meta-label{
+color:#ff8ac7;
+font-weight:800;
+letter-spacing:.08em;
+text-transform: lowercase;
+}
+
+.article-template__meta time{
+color:#fff;
+font-weight:700;
+}
+
+.article-template__meta-separator{
+color:rgba(246,246,246,.38);
+}
+
 .article-template__content,
 .article-template header{
 max-width:720px;
@@ -902,7 +931,7 @@ color:#ff9ccc;
 font-size:12px;
 line-height:1.2;
 letter-spacing:.22em;
-text-transform:uppercase;
+text-transform: lowercase;
 font-weight:800;
 }
 
@@ -966,7 +995,7 @@ border-bottom:1px solid rgba(255,255,255,.13) !important;
 font-size:11px;
 line-height:1.12;
 letter-spacing:.12em;
-text-transform:uppercase;
+text-transform: lowercase;
 font-weight:800;
 transition:transform .22s ease, background .22s ease, border-color .22s ease, box-shadow .22s ease;
 }
@@ -1034,7 +1063,7 @@ font-size:clamp(1.35rem, 2.6vw, 2.1rem);
 font-weight:800;
 letter-spacing:.08em;
 line-height:1;
-text-transform:uppercase;
+text-transform: lowercase;
 }
 
 .article-template__content .blog-pillar-spice__title{
@@ -1136,7 +1165,7 @@ color:rgba(246,246,246,.7);
 font-size:11px;
 letter-spacing:.12em;
 text-align:center;
-text-transform:uppercase;
+text-transform: lowercase;
 white-space:nowrap;
 }
 
@@ -1331,7 +1360,7 @@ margin-top:20px;
 font-size:12px;
 line-height:1.2;
 letter-spacing:.24em;
-text-transform:uppercase;
+text-transform: lowercase;
 font-weight:700;
 color:#ffc1dd;
 white-space:nowrap;
@@ -1368,7 +1397,7 @@ font-size:.82rem;
 font-weight:800;
 letter-spacing:.09em;
 line-height:1.2;
-text-transform:uppercase;
+text-transform: lowercase;
 color:#86efac;
 }
 
@@ -1655,7 +1684,7 @@ z-index:6;
 .book-series-number{
 font-size:11px;
 letter-spacing:.18em;
-text-transform:uppercase;
+text-transform: lowercase;
 opacity:.6;
 margin-bottom:6px;
 }
@@ -1682,7 +1711,7 @@ animation:popupFade .35s ease;
 #bbbGuidePopup .bbbGuideSuggest__label{
 font-size:11px;
 letter-spacing:.16em;
-text-transform:uppercase;
+text-transform: lowercase;
 color:#e85a9b;
 margin-bottom:8px;
 
@@ -1819,7 +1848,7 @@ box-sizing:border-box;
 font-size:12px;
 font-weight:700;
 letter-spacing:.08em;
-text-transform:uppercase;
+text-transform: lowercase;
 text-decoration:none;
 color:#0b0b0b;
 transition:.25s ease;
@@ -1879,7 +1908,7 @@ font-size:12px;
 
 letter-spacing:.18em;
 
-text-transform:uppercase;
+text-transform: lowercase;
 
 color:#e85a9b;
 
@@ -1968,7 +1997,7 @@ font-size:12px;
 
 letter-spacing:.18em;
 
-text-transform:uppercase;
+text-transform: lowercase;
 
 color:#e85a9b;
 
@@ -2000,7 +2029,7 @@ flex:0 0 auto;
 font-family:"Libre Baskerville", Georgia, serif;
 font-size:12px;
 letter-spacing:.14em;
-text-transform:uppercase;
+text-transform: lowercase;
 padding:10px 16px;
 border-radius:999px;
 border:1px solid rgba(232,90,155,.8);
@@ -2168,7 +2197,7 @@ font-size:11px;
 
 letter-spacing:.18em;
 
-text-transform:uppercase;
+text-transform: lowercase;
 
 color:#e85a9b;
 
@@ -2251,7 +2280,7 @@ font-size:11px;
 
 letter-spacing:.18em;
 
-text-transform:uppercase;
+text-transform: lowercase;
 
 color:#e85a9b;
 
@@ -2291,7 +2320,7 @@ font-size:11px;
 
 letter-spacing:.16em;
 
-text-transform:uppercase;
+text-transform: lowercase;
 
 opacity:.6;
 
@@ -2985,7 +3014,7 @@ gap:6px;
 .preview-kicker{
 font-size:11px;
 letter-spacing:.14em;
-text-transform:uppercase;
+text-transform: lowercase;
 color:rgba(255,255,255,.58);
 }
 
@@ -3118,7 +3147,7 @@ margin-bottom:16px;
 
 .preview-actions a{
 font-size:12px;
-text-transform:uppercase;
+text-transform: lowercase;
 letter-spacing:.08em;
 color:#e85a9b;
 border-bottom:1px solid #e85a9b;
@@ -3807,7 +3836,7 @@ body.single-post .article-template{
   font-size:.72rem;
   font-weight:800;
   letter-spacing:.18em;
-  text-transform:uppercase;
+  text-transform: lowercase;
 }
 
 .blog-specific-links__prompt{
@@ -3856,7 +3885,7 @@ body.single-post .article-template{
   font-size:.72rem;
   font-weight:900;
   letter-spacing:.16em;
-  text-transform:uppercase;
+  text-transform: lowercase;
 }
 
 .blog-specific-links__title{
@@ -3896,7 +3925,7 @@ body.single-post .article-template{
   color:#ff8ac7;
   font-size:.72rem;
   letter-spacing:.16em;
-  text-transform:uppercase;
+  text-transform: lowercase;
 }
 
 .blog-faq__title{
@@ -3971,7 +4000,7 @@ body.single-post .article-template{
   color:#ff8ac7;
   font-size:.7rem;
   letter-spacing:.16em;
-  text-transform:uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-bigspecific__title{

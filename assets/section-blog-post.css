@@ -223,7 +223,7 @@
 .article-book-card__genre {
   font-size: 12px;
   letter-spacing: 0.12em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   color: rgba(0, 0, 0, 0.52);
   line-height: 1;
   text-align: right;
@@ -300,7 +300,7 @@
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   color: #0b0b0b;
   text-decoration: none;
   transition: 0.25s ease;
@@ -409,7 +409,7 @@
   font-size:12px !important;
   font-weight:700 !important;
   letter-spacing:.08em !important;
-  text-transform:uppercase !important;
+  text-transform: lowercase !important;
   text-decoration:none !important;
   transition:.25s ease !important;
 }

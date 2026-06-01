@@ -65,7 +65,7 @@ function bbb_reader_set_email_session(string $email): bool {
 		$value,
 		array(
 			'expires'  => $expires,
-			'path'     => COOKIEPATH ?: '/',
+			'path'     => '/',
 			'domain'   => COOKIE_DOMAIN,
 			'secure'   => is_ssl(),
 			'httponly' => true,
@@ -75,31 +75,38 @@ function bbb_reader_set_email_session(string $email): bool {
 }
 
 function bbb_reader_clear_email_session(): void {
-	setcookie(
+	$cookie_names = array(
 		bbb_reader_email_session_cookie_name(),
-		'',
-		array(
-			'expires'  => time() - DAY_IN_SECONDS,
-			'path'     => COOKIEPATH ?: '/',
-			'domain'   => COOKIE_DOMAIN,
-			'secure'   => is_ssl(),
-			'httponly' => true,
-			'samesite' => 'Lax',
-		)
-	);
-	unset($_COOKIE[bbb_reader_email_session_cookie_name()]);
-	setcookie(
 		bbb_reader_legacy_email_session_cookie_name(),
-		'',
-		array(
-			'expires'  => time() - DAY_IN_SECONDS,
-			'path'     => COOKIEPATH ?: '/',
-			'domain'   => COOKIE_DOMAIN,
-			'secure'   => is_ssl(),
-			'httponly' => true,
-			'samesite' => 'Lax',
+	);
+	$cookie_paths = array_unique(
+		array_filter(
+			array(
+				'/',
+				COOKIEPATH ?: '',
+				SITECOOKIEPATH ?: '',
+			)
 		)
 	);
+
+	foreach ($cookie_names as $cookie_name) {
+		foreach ($cookie_paths as $cookie_path) {
+			setcookie(
+				$cookie_name,
+				'',
+				array(
+					'expires'  => time() - DAY_IN_SECONDS,
+					'path'     => $cookie_path,
+					'domain'   => COOKIE_DOMAIN,
+					'secure'   => is_ssl(),
+					'httponly' => true,
+					'samesite' => 'Lax',
+				)
+			);
+		}
+	}
+
+	unset($_COOKIE[bbb_reader_email_session_cookie_name()]);
 	unset($_COOKIE[bbb_reader_legacy_email_session_cookie_name()]);
 }
 
@@ -1035,9 +1042,19 @@ add_action(
 		}
 
 		bbb_reader_clear_email_session();
-		wp_safe_redirect(remove_query_arg('bbb_reader_logout'));
+		if (is_user_logged_in()) {
+			wp_logout();
+		}
+
+		$redirect_url = add_query_arg(
+			'bbb_reader_logged_out',
+			'1',
+			remove_query_arg('bbb_reader_logout')
+		);
+		wp_safe_redirect($redirect_url . '#reader-email-access');
 		exit;
-	}
+	},
+	-10
 );
 
 add_action('user_register', static fn(int $user_id) => bbb_reader_sync_user_to_supabase($user_id, 'wordpress_register'));

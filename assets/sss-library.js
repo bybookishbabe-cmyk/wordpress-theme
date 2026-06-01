@@ -1104,8 +1104,8 @@ function renderMyShelf(){
         </div>
         
         <div class="sss-lib__under">
-          <div class="sss-lib__name">${stringifyBookDatasetValue(hydratedBook.title || book.title)}</div>
-          <div class="sss-lib__author">${stringifyBookDatasetValue(hydratedBook.author || book.author)}</div>
+          <div class="sss-lib__name" style="text-transform:none !important;">${stringifyBookDatasetValue(hydratedBook.title || book.title)}</div>
+          <div class="sss-lib__author" style="text-transform:none !important;">${stringifyBookDatasetValue(hydratedBook.author || book.author)}</div>
         </div>
 
       </div>
@@ -2346,7 +2346,18 @@ if(sorted.length < 5){
     sorted = normalizeAggregateTrending(allTimeRollupResponse.data, 'total_saves');
   } else {
     console.log(allTimeRollupResponse.error);
-    sorted = normalizeAggregateTrending(recentResponse.data, 'saves_last_30_days');
+    const allTimeRawResponse = await supabaseClient
+      .from('book_saves')
+      .select('book_title,created_at')
+      .order('created_at', { ascending: false })
+      .limit(5000);
+
+    if(!allTimeRawResponse.error){
+      sorted = normalizeAllTimeTrending(allTimeRawResponse.data);
+    } else {
+      console.log(allTimeRawResponse.error);
+      sorted = normalizeAggregateTrending(recentResponse.data, 'saves_last_30_days');
+    }
   }
 
 }
@@ -2464,10 +2475,12 @@ if(!clone.querySelector('.sss-lib__under')){
 
   const name = document.createElement("div");
   name.className = "sss-lib__name";
+  name.style.setProperty("text-transform", "none", "important");
   name.textContent = card.dataset.title || "";
 
   const author = document.createElement("div");
   author.className = "sss-lib__author";
+  author.style.setProperty("text-transform", "none", "important");
   author.textContent = card.dataset.author || "";
 
   under.appendChild(name);

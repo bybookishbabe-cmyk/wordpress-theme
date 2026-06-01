@@ -21,6 +21,8 @@ function bbb_page_route_registry(): array {
 		'books-like'                     => 'page-books-like.php',
 		'books-like-directory'           => 'page-books-like-directory.php',
 		'bookshelf-weekly-preview'       => '',
+		'bybookishbabe-app'              => 'page-bybookishbabe-app.php',
+		'bybookishbabe-app-preview'      => 'page-bybookishbabe-app.php',
 		'account'                        => 'page-account.php',
 		'about-the-society'              => 'page-about-the-society.php',
 		'cart'                           => '',
@@ -36,7 +38,7 @@ function bbb_page_route_registry(): array {
 		'june-2026-monthly-theme'        => 'page-june-2026-monthly-theme.php',
 		'burn-bright'                    => 'page-june-2026-monthly-theme.php',
 		'kindle-insert-vault'            => '',
-		'kindle-inserts'                 => '',
+		'kindle-inserts'                 => 'page-kindle-inserts.php',
 		'library'                        => 'page-library.php',
 		'work-with-me'                   => 'page-media-kit.php',
 		'monthly-freebie'                => 'page-monthly-freebie.php',
@@ -46,7 +48,6 @@ function bbb_page_route_registry(): array {
 		'our-story'                      => 'page-our-story.php',
 		'popular-pages'                  => 'page-popular-pages.php',
 		'paranormal-romance-books'       => 'page-shelf.php',
-		'privacy-policy'                 => '',
 		'reader-mood-quiz'               => 'page-reader-mood-quiz.php',
 		'reader-quizes'                  => 'page-reader-quizes.php',
 		'reader-quizzes'                 => 'page-reader-quizes.php',
@@ -75,7 +76,7 @@ function bbb_page_route_registry(): array {
 		'sports-romance-books'           => 'page-shelf.php',
 		'canva-templates'                => '',
 		'freebies'                       => '',
-		'kindle-inserts'                 => '',
+		'kindle-inserts'                 => 'page-kindle-inserts.php',
 		'member-library'                 => 'page-sss-library-page.php',
 		'private-shelf'                  => '',
 		'sss-canva-templates'            => '',
@@ -255,6 +256,39 @@ function bbb_virtual_book_taxonomy_meta_description(WP_Term $term): string {
 		: 'browse ' . $name . ' romance books in the bybookishbabe library.';
 }
 
+function bbb_is_burn_bright_route(): bool {
+	return 'burn-bright' === bbb_current_route_slug();
+}
+
+function bbb_burn_bright_seo_data(): array {
+	return array(
+		'title'        => 'Burn Bright — June 2026 Kindle Inserts & Monthly Drop',
+		'social_title' => 'Burn Bright — June 2026 Monthly Drop · bybookishbabe',
+		'description'  => 'The June 2026 Smut & Sentiment Society monthly drop — 4 printable Kindle inserts, phone wallpapers, a reading calendar, and book recs for the Burn Bright theme.',
+		'social_description' => '4 printable Kindle inserts, phone wallpapers, a reading calendar, and book recs — the June 2026 Smut & Sentiment Society drop is here.',
+		'canonical'    => home_url('/burn-bright/'),
+		'image'        => get_theme_file_uri('assets/monthly-themes/june-2026/previews/burn-bright-og.png'),
+		'image_alt'    => 'Burn Bright June 2026 monthly drop with four printable Kindle insert mockups',
+	);
+}
+
+add_filter(
+	'pre_handle_404',
+	static function ($preempt, WP_Query $query) {
+		if (!bbb_is_burn_bright_route()) {
+			return $preempt;
+		}
+
+		$query->is_404      = false;
+		$query->is_page     = true;
+		$query->is_singular = true;
+		status_header(200);
+		return true;
+	},
+	10,
+	2
+);
+
 add_filter(
 	'document_title_parts',
 	static function (array $title): array {
@@ -271,6 +305,10 @@ add_filter(
 add_filter(
 	'pre_get_document_title',
 	static function (string $title): string {
+		if (bbb_is_burn_bright_route()) {
+			return bbb_burn_bright_seo_data()['title'] . ' - ' . get_bloginfo('name');
+		}
+
 		$slug = bbb_current_route_slug();
 		if (!bbb_is_nested_books_like_route() && '' === bbb_route_template_for_slug($slug)) {
 			return $title;
@@ -284,6 +322,10 @@ add_filter(
 add_filter(
 	'rank_math/frontend/title',
 	static function (string $title): string {
+		if (bbb_is_burn_bright_route()) {
+			return bbb_burn_bright_seo_data()['title'];
+		}
+
 		$term = bbb_current_virtual_book_taxonomy_term();
 		if ($term instanceof WP_Term) {
 			return bbb_virtual_book_taxonomy_meta_title($term);
@@ -297,6 +339,10 @@ add_filter(
 add_filter(
 	'rank_math/opengraph/facebook/title',
 	static function (string $title): string {
+		if (bbb_is_burn_bright_route()) {
+			return bbb_burn_bright_seo_data()['social_title'];
+		}
+
 		$term = bbb_current_virtual_book_taxonomy_term();
 		if ($term instanceof WP_Term) {
 			return bbb_virtual_book_taxonomy_meta_title($term);
@@ -310,6 +356,10 @@ add_filter(
 add_filter(
 	'rank_math/opengraph/twitter/title',
 	static function (string $title): string {
+		if (bbb_is_burn_bright_route()) {
+			return bbb_burn_bright_seo_data()['social_title'];
+		}
+
 		$term = bbb_current_virtual_book_taxonomy_term();
 		if ($term instanceof WP_Term) {
 			return bbb_virtual_book_taxonomy_meta_title($term);
@@ -323,6 +373,10 @@ add_filter(
 add_filter(
 	'rank_math/frontend/description',
 	static function (string $description): string {
+		if (bbb_is_burn_bright_route()) {
+			return bbb_burn_bright_seo_data()['description'];
+		}
+
 		$term = bbb_current_virtual_book_taxonomy_term();
 		return $term instanceof WP_Term ? bbb_virtual_book_taxonomy_meta_description($term) : $description;
 	},
@@ -332,6 +386,10 @@ add_filter(
 add_filter(
 	'rank_math/opengraph/facebook/description',
 	static function (string $description): string {
+		if (bbb_is_burn_bright_route()) {
+			return bbb_burn_bright_seo_data()['social_description'];
+		}
+
 		$term = bbb_current_virtual_book_taxonomy_term();
 		return $term instanceof WP_Term ? bbb_virtual_book_taxonomy_meta_description($term) : $description;
 	},
@@ -341,6 +399,10 @@ add_filter(
 add_filter(
 	'rank_math/opengraph/twitter/description',
 	static function (string $description): string {
+		if (bbb_is_burn_bright_route()) {
+			return bbb_burn_bright_seo_data()['social_description'];
+		}
+
 		$term = bbb_current_virtual_book_taxonomy_term();
 		return $term instanceof WP_Term ? bbb_virtual_book_taxonomy_meta_description($term) : $description;
 	},
@@ -350,6 +412,10 @@ add_filter(
 add_filter(
 	'rank_math/frontend/canonical',
 	static function (string $canonical): string {
+		if (bbb_is_burn_bright_route()) {
+			return bbb_burn_bright_seo_data()['canonical'];
+		}
+
 		$term = bbb_current_virtual_book_taxonomy_term();
 		if (!$term instanceof WP_Term || !function_exists('bbb_book_taxonomy_term_url')) {
 			return $canonical;
@@ -363,6 +429,13 @@ add_filter(
 add_filter(
 	'rank_math/frontend/robots',
 	static function (array $robots): array {
+		if (bbb_is_burn_bright_route()) {
+			unset($robots['noindex'], $robots['nofollow']);
+			$robots['index']  = 'index';
+			$robots['follow'] = 'follow';
+			return $robots;
+		}
+
 		$term = bbb_current_virtual_book_taxonomy_term();
 		if (!$term instanceof WP_Term) {
 			return $robots;
@@ -379,6 +452,13 @@ add_filter(
 add_filter(
 	'wp_robots',
 	static function (array $robots): array {
+		if (bbb_is_burn_bright_route()) {
+			unset($robots['noindex'], $robots['nofollow']);
+			$robots['index']  = true;
+			$robots['follow'] = true;
+			return $robots;
+		}
+
 		$term = bbb_current_virtual_book_taxonomy_term();
 		if (!$term instanceof WP_Term) {
 			return $robots;
@@ -388,6 +468,115 @@ add_filter(
 		$robots['index']  = true;
 		$robots['follow'] = true;
 		return $robots;
+	},
+	99
+);
+
+add_filter('rank_math/opengraph/type', static fn(string $type): string => bbb_is_burn_bright_route() ? 'website' : $type, 99);
+add_filter('rank_math/opengraph/facebook/url', static fn(string $url): string => bbb_is_burn_bright_route() ? bbb_burn_bright_seo_data()['canonical'] : $url, 99);
+add_filter('rank_math/opengraph/twitter/url', static fn(string $url): string => bbb_is_burn_bright_route() ? bbb_burn_bright_seo_data()['canonical'] : $url, 99);
+add_filter('rank_math/opengraph/facebook/image', static fn(string $image): string => bbb_is_burn_bright_route() ? bbb_burn_bright_seo_data()['image'] : $image, 99);
+add_filter('rank_math/opengraph/twitter/image', static fn(string $image): string => bbb_is_burn_bright_route() ? bbb_burn_bright_seo_data()['image'] : $image, 99);
+
+function bbb_burn_bright_remove_rank_math_social_defaults(): void {
+	if (!bbb_is_burn_bright_route()) {
+		return;
+	}
+
+	remove_all_actions('rank_math/opengraph/facebook', 10);
+	remove_all_actions('rank_math/opengraph/facebook', 11);
+	remove_all_actions('rank_math/opengraph/facebook', 12);
+	remove_all_actions('rank_math/opengraph/twitter', 10);
+	remove_all_actions('rank_math/opengraph/twitter', 11);
+}
+add_action('rank_math/opengraph/facebook', 'bbb_burn_bright_remove_rank_math_social_defaults', 0);
+add_action('rank_math/opengraph/twitter', 'bbb_burn_bright_remove_rank_math_social_defaults', 0);
+
+function bbb_burn_bright_print_facebook_social_meta(): void {
+	if (!bbb_is_burn_bright_route()) {
+		return;
+	}
+
+	$seo = bbb_burn_bright_seo_data();
+	printf('<meta property="og:title" content="%s">%s', esc_attr($seo['social_title']), "\n");
+	printf('<meta property="og:description" content="%s">%s', esc_attr($seo['social_description']), "\n");
+	printf('<meta property="og:url" content="%s">%s', esc_url($seo['canonical']), "\n");
+}
+add_action('rank_math/opengraph/facebook', 'bbb_burn_bright_print_facebook_social_meta', 9);
+
+function bbb_burn_bright_print_twitter_social_meta(): void {
+	if (!bbb_is_burn_bright_route()) {
+		return;
+	}
+
+	$seo = bbb_burn_bright_seo_data();
+	printf('<meta name="twitter:title" content="%s">%s', esc_attr($seo['social_title']), "\n");
+	printf('<meta name="twitter:description" content="%s">%s', esc_attr($seo['social_description']), "\n");
+}
+add_action('rank_math/opengraph/twitter', 'bbb_burn_bright_print_twitter_social_meta', 9);
+
+function bbb_burn_bright_add_rank_math_image($opengraph_image): void {
+	if (!bbb_is_burn_bright_route() || !is_object($opengraph_image) || !method_exists($opengraph_image, 'add_image')) {
+		return;
+	}
+
+	$opengraph_image->add_image(bbb_burn_bright_seo_data()['image']);
+}
+add_action('rank_math/opengraph/facebook/add_additional_images', 'bbb_burn_bright_add_rank_math_image', 5);
+add_action('rank_math/opengraph/twitter/add_additional_images', 'bbb_burn_bright_add_rank_math_image', 5);
+
+add_action(
+	'wp_head',
+	static function (): void {
+		if (!bbb_is_burn_bright_route()) {
+			return;
+		}
+
+		$seo = bbb_burn_bright_seo_data();
+		printf('<meta property="og:image:alt" content="%s">%s', esc_attr($seo['image_alt']), "\n");
+		printf('<meta name="twitter:image:alt" content="%s">%s', esc_attr($seo['image_alt']), "\n");
+	},
+	20
+);
+
+add_filter(
+	'rank_math/json_ld',
+	static function (array $data): array {
+		if (!bbb_is_burn_bright_route()) {
+			return $data;
+		}
+
+		$seo = bbb_burn_bright_seo_data();
+		$graph = isset($data['@graph']) && is_array($data['@graph']) ? $data['@graph'] : $data;
+		foreach ($graph as &$item) {
+			if (!is_array($item)) {
+				continue;
+			}
+
+			if (isset($item['@type']) && 'ImageObject' === $item['@type']) {
+				$item['@id']    = $seo['image'];
+				$item['url']    = $seo['image'];
+				$item['width']  = 1200;
+				$item['height'] = 630;
+			}
+
+			if (isset($item['@type']) && in_array($item['@type'], array('WebPage', 'Article'), true)) {
+				$item['name']        = $seo['title'];
+				$item['description'] = $seo['description'];
+				$item['url']         = $seo['canonical'];
+				$item['image']       = $seo['image'];
+				$item['primaryImageOfPage'] = array('@id' => $seo['image']);
+			}
+		}
+		unset($item);
+
+		if (isset($data['@graph']) && is_array($data['@graph'])) {
+			$data['@graph'] = $graph;
+		} else {
+			$data = $graph;
+		}
+
+		return $data;
 	},
 	99
 );
@@ -502,6 +691,7 @@ add_action(
 		$request_path   = trim((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
 		$empty_post_redirects = array(
 			'media-kit'                    => 'work-with-me',
+			'enemies-to-lovers'            => 'enemies-to-lovers-books',
 			'pages/media-kit'              => 'work-with-me',
 			'the-best-hockey-romance-books' => 'hockey-romance-books',
 			'the-best-mafia-romance-books'  => 'mafia-romance-books',

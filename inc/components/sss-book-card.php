@@ -137,7 +137,9 @@ if (!function_exists('bbb_sss_card_series_post')) {
 
 $title         = (string) bbb_sss_card_field('title', $book_id, get_the_title($book_id));
 $title         = '' !== $title ? $title : get_the_title($book_id);
-$author        = (string) bbb_sss_card_field('author', $book_id, '');
+$title         = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title($title) : $title;
+$author        = function_exists('bbb_get_book_author') ? bbb_get_book_author($book_id) : (string) bbb_sss_card_field('author', $book_id, '');
+$author        = function_exists('bbb_bookish_proper_name') ? bbb_bookish_proper_name((string) $author) : $author;
 $cover_url     = bbb_sss_card_cover_url($book_id);
 $amazon_link   = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(bbb_sss_card_field('amazon_link', $book_id, '')) : (string) bbb_sss_card_field('amazon_link', $book_id, '');
 $bookshop_link = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(bbb_sss_card_field('bookshop_link', $book_id, '')) : (string) bbb_sss_card_field('bookshop_link', $book_id, '');
@@ -238,7 +240,7 @@ $standalone = bbb_sss_card_bool(bbb_sss_card_field('read_as_standalone', $book_i
 	</div>
 
 	<div class="sss-lib__under">
-		<div class="sss-lib__name"><?php echo esc_html($title); ?></div>
-		<div class="sss-lib__author"><?php echo esc_html($author); ?></div>
+		<div class="sss-lib__name" style="text-transform:none !important;"><?php echo esc_html($title); ?></div>
+		<div class="sss-lib__author" style="text-transform:none !important;"><?php echo esc_html($author); ?></div>
 	</div>
 </button>

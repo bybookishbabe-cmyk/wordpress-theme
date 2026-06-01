@@ -41,8 +41,11 @@ $has_social_icons = bbb_footer_has_social_links();
 			<?php if ($has_social_icons) : ?>
 				<div class="footer__social-with-substack">
 					<?php bbb_render_social_icons('footer__list-social'); ?>
-					<a class="footer__substack-link" href="https://thesmutandsentimentsociety.substack.com" target="_blank" rel="noopener">Substack</a>
+					<a class="footer__substack-link" href="https://thesmutandsentimentsociety.substack.com" target="_blank" rel="noopener">substack</a>
 				</div>
+				<?php if (function_exists('bbb_render_pwa_promo')) : ?>
+					<?php bbb_render_pwa_promo('footer'); ?>
+				<?php endif; ?>
 			<?php endif; ?>
 		</div>
 	</div>

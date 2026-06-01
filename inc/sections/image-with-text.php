@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 $image   = $args['image'] ?? bbb_get_field('image_with_text_image', get_the_ID(), '');
-$heading = $args['heading'] ?? bbb_get_field('image_with_text_heading', get_the_ID(), 'Smut CEO');
+$heading = $args['heading'] ?? bbb_get_field('image_with_text_heading', get_the_ID(), 'smut ceo');
 $body    = $args['body'] ?? bbb_get_field('image_with_text_body', get_the_ID(), '');
 $layout  = $args['layout'] ?? bbb_get_field('image_with_text_layout', get_the_ID(), 'image_first');
 $url     = is_array($image) ? (string) ($image['url'] ?? '') : (string) $image;

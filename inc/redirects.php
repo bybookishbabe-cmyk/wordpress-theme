@@ -153,7 +153,6 @@ add_action(
 		$direct_page_redirects = array(
 			'canva-templates'              => '/smut-sentiment-society/',
 			'freebies'                     => '/smut-sentiment-society/',
-			'kindle-inserts'               => '/monthly-theme/',
 			'member-library'               => '/library/',
 			'private-shelf'                => '/library/',
 			'products'                     => '/shop/',

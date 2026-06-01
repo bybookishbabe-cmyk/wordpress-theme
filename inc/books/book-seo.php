@@ -52,6 +52,114 @@ function bbb_book_seo_trope_names(int $post_id, int $limit = 3): array {
 	return array_slice(array_values(array_unique($names)), 0, $limit);
 }
 
+function bbb_book_seo_author(int $post_id): string {
+	if (function_exists('bbb_get_book_author')) {
+		return bbb_book_seo_clean_text(bbb_get_book_author($post_id));
+	}
+
+	return bbb_book_seo_clean_text((string) get_post_meta($post_id, '_bbb_author', true));
+}
+
+function bbb_book_seo_book_data(int $post_id): array {
+	if (function_exists('bbb_books_like_book_data')) {
+		return bbb_books_like_book_data($post_id);
+	}
+
+	return array(
+		'title'    => get_the_title($post_id),
+		'author'   => bbb_book_seo_author($post_id),
+		'spice'    => (int) get_post_meta($post_id, '_bbb_spice', true),
+		'tension'  => (int) get_post_meta($post_id, '_bbb_tension', true),
+		'damage'   => (int) get_post_meta($post_id, '_bbb_damage', true),
+		'darkness' => (int) get_post_meta($post_id, '_bbb_darkness', true),
+		'tropes'   => array_map(
+			static fn(string $name): array => array('name' => $name),
+			bbb_book_seo_trope_names($post_id, 8)
+		),
+	);
+}
+
+function bbb_book_seo_data_trope_names(array $data, int $limit = 8): array {
+	$names = array();
+	foreach ((array) ($data['tropes'] ?? array()) as $trope) {
+		$name = strtolower(trim((string) ($trope['name'] ?? '')));
+		if ('' !== $name) {
+			$names[] = $name;
+		}
+	}
+
+	return array_slice(array_values(array_unique($names)), 0, $limit);
+}
+
+function bbb_book_seo_primary_trope_text(array $trope_names): string {
+	$primary = array_slice($trope_names, 0, 2);
+	if (!$primary) {
+		return 'romance';
+	}
+
+	$primary = array_map(
+		static function (string $trope): string {
+			$trope = preg_replace('/\s+romance$/', '', $trope);
+
+			return trim((string) $trope);
+		},
+		$primary
+	);
+
+	return trim(implode(' ', array_filter($primary)) . ' romance');
+}
+
+function bbb_book_seo_indefinite_article(string $phrase): string {
+	$phrase = strtolower(trim($phrase));
+	if ('' === $phrase) {
+		return 'a';
+	}
+
+	return preg_match('/^[aeiou]/', $phrase) ? 'an' : 'a';
+}
+
+function bbb_book_seo_highest_vibe(array $data): array {
+	$vibes = array(
+		'tension'          => (int) ($data['tension'] ?? 0),
+		'emotional damage' => (int) ($data['damage'] ?? 0),
+		'darkness'         => (int) ($data['darkness'] ?? 0),
+	);
+
+	arsort($vibes, SORT_NUMERIC);
+	$label = (string) array_key_first($vibes);
+
+	return array('label' => $label, 'score' => (int) $vibes[$label]);
+}
+
+function bbb_book_seo_kindle_unlimited_text(int $post_id): string {
+	$raw = get_post_meta($post_id, '_bbb_ku', true);
+	if ('1' === (string) $raw) {
+		return 'on kindle unlimited';
+	}
+	if ('0' === (string) $raw) {
+		return 'not on kindle unlimited';
+	}
+
+	return '';
+}
+
+function bbb_book_seo_verdict(array $data, array $trope_names): string {
+	$top_shelf = !empty($data['top_shelf']) || '1' === (string) get_post_meta((int) ($data['id'] ?? 0), '_bbb_top_shelf', true);
+	$reread    = !empty($data['reread']) && 'false' !== strtolower((string) $data['reread']);
+	if ($top_shelf || $reread) {
+		return 'yes';
+	}
+
+	$high_intensity = array('bully romance', 'captor x captive', 'dark romance', 'stalker romance', 'trauma bonding');
+	foreach ($trope_names as $trope) {
+		if (in_array($trope, $high_intensity, true)) {
+			return 'only if you like ' . $trope;
+		}
+	}
+
+	return 'depends';
+}
+
 function bbb_book_seo_lead_sentence(string $text, int $limit): string {
 	$text = bbb_book_seo_clean_text($text);
 	if ('' === $text) {
@@ -70,35 +178,65 @@ function bbb_book_seo_lead_sentence(string $text, int $limit): string {
 
 function bbb_book_seo_title(int $post_id): string {
 	$title  = bbb_book_seo_clean_text(get_the_title($post_id));
-	$author = function_exists('bbb_get_book_author') ? bbb_book_seo_clean_text(bbb_get_book_author($post_id)) : '';
+	$author = bbb_book_seo_author($post_id);
 
 	if ('' === $title) {
 		return '';
 	}
 
-	$book_label = '' !== $author ? sprintf('%s — %s', $title, $author) : $title;
+	$book_label = '' !== $author ? sprintf('%s by %s', $title, $author) : $title;
 
-	return strtolower($book_label . ' | spice level, tropes & kindle unlimited');
+	return $book_label . ' — spice, tropes & verdict';
 }
 
 function bbb_book_seo_description(int $post_id): string {
-	$title  = bbb_book_seo_clean_text(get_the_title($post_id));
-	$author = function_exists('bbb_get_book_author') ? bbb_book_seo_clean_text(bbb_get_book_author($post_id)) : '';
-	$tropes = bbb_book_seo_trope_names($post_id, 3);
-	$spice  = bbb_book_seo_clean_text((string) get_post_meta($post_id, '_bbb_spice', true));
-	$ku_raw = strtolower(bbb_book_seo_clean_text((string) get_post_meta($post_id, '_bbb_ku', true)));
+	$data        = bbb_book_seo_book_data($post_id);
+	$title       = bbb_book_seo_clean_text((string) ($data['title'] ?? get_the_title($post_id)));
+	$trope_names = bbb_book_seo_data_trope_names($data, 4);
+	$spice       = max(0, min(5, (int) ($data['spice'] ?? get_post_meta($post_id, '_bbb_spice', true))));
+	$vibe        = bbb_book_seo_highest_vibe($data);
+	$ku_text     = bbb_book_seo_kindle_unlimited_text($post_id);
+	$verdict     = bbb_book_seo_verdict(array_merge($data, array('id' => $post_id)), $trope_names);
+	$primary_set = array(
+		bbb_book_seo_primary_trope_text($trope_names),
+		bbb_book_seo_primary_trope_text(array_slice($trope_names, 0, 1)),
+		'romance',
+	);
+	$primary_set = array_values(array_unique(array_filter($primary_set)));
 
-	if ('' === $spice) {
-		$spice = bbb_book_seo_clean_text((string) get_post_meta($post_id, 'spice', true));
+	foreach ($primary_set as $primary) {
+		foreach (array(3, 2, 1, 0) as $tag_count) {
+			$tags = $tag_count > 0 && $trope_names ? implode(', ', array_slice($trope_names, 0, $tag_count)) : '';
+			$text = sprintf(
+				'%s is %s %s with spice %d/5 and %s %d/5.%s%s is it worth it? %s.',
+				$title,
+				bbb_book_seo_indefinite_article($primary),
+				$primary,
+				$spice,
+				$vibe['label'],
+				$vibe['score'],
+				'' !== $tags ? ' ' . $tags . '.' : '',
+				'' !== $ku_text ? ' ' . $ku_text . '.' : '',
+				$verdict
+			);
+
+			if (strlen($text) <= 155) {
+				return $text;
+			}
+		}
 	}
 
-	$book_label = trim($title . ('' !== $author ? ' by ' . $author : ''));
-	$spice_text = '' !== $spice ? 'spice level ' . $spice : 'spice level not listed';
-	$trope_text = $tropes ? 'tropes include ' . implode(', ', $tropes) : 'tropes not listed';
-	$ku_text    = in_array($ku_raw, array('1', 'yes', 'true'), true) ? 'kindle unlimited: yes' : (in_array($ku_raw, array('0', 'no', 'false'), true) ? 'kindle unlimited: no' : 'kindle unlimited status not listed');
-	$text       = sprintf('%s quick reference: %s, %s, %s.', $book_label, $spice_text, $trope_text, $ku_text);
-
-	return strtolower(bbb_book_seo_trim($text, 155));
+	return bbb_book_seo_trim(
+		sprintf(
+			'%s: spice %d/5, %s %d/5. is it worth it? %s.',
+			$title,
+			$spice,
+			$vibe['label'],
+			$vibe['score'],
+			$verdict
+		),
+		155
+	);
 }
 
 function bbb_book_seo_cover_url(int $post_id): string {
@@ -111,7 +249,7 @@ function bbb_book_seo_cover_url(int $post_id): string {
 
 function bbb_book_seo_focus_keyword(int $post_id): string {
 	$title  = bbb_book_seo_clean_text(get_the_title($post_id));
-	$author = function_exists('bbb_get_book_author') ? bbb_book_seo_clean_text(bbb_get_book_author($post_id)) : '';
+	$author = bbb_book_seo_author($post_id);
 	$keyword = trim($title . ' ' . $author);
 
 	return '' !== $keyword ? strtolower($keyword) : '';

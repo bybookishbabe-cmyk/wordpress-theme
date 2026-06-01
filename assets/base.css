@@ -395,7 +395,7 @@ blockquote {
   font-size: 1rem;
   letter-spacing: 0.13rem;
   line-height: calc(1 + 0.2 / var(--font-body-scale));
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .caption-with-letter-spacing--medium {
@@ -469,7 +469,7 @@ table:not([class]) th {
 }
 
 .uppercase {
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .light {
@@ -3612,7 +3612,7 @@ p.announcement-bar__message.h5 {
 /* Search page – tweak quick add button */
 .template-search .quick-add__submit {
   border-radius: 999px;
-  text-transform: uppercase;
+  text-transform: lowercase;
   letter-spacing: 0.08em;
   font-size: 0.8rem;
 }
@@ -3628,7 +3628,7 @@ p.announcement-bar__message.h5 {
   border-radius: 999px;
   font-size: 0.7rem;
   letter-spacing: 0.06em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   border: 1px solid #000;
 }
 
@@ -3725,7 +3725,7 @@ p.announcement-bar__message.h5 {
   font-family: "Cormorant Garamond", serif;
   font-size: 1.15rem; /* increased */
   letter-spacing: 0.14em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   padding: 16px 38px;
   border-radius: 0;
   border: 1px solid #ffffff;
@@ -3871,7 +3871,7 @@ p.announcement-bar__message.h5 {
   justify-content: space-between;
   font-family: "Cormorant Garamond", serif;
   font-size: 0.8rem;
-  text-transform: uppercase;
+  text-transform: lowercase;
   letter-spacing: 0.16em;
   color: #555;
   pointer-events: none;
@@ -3946,7 +3946,7 @@ p.announcement-bar__message.h5 {
   color: #f6f2ea;
   padding: 10px 22px;
   border: 1px solid #111;
-  text-transform: uppercase;
+  text-transform: lowercase;
   font-family: "Cormorant Garamond", serif;
   font-size: 0.95rem;
   letter-spacing: 0.15em;
@@ -4167,7 +4167,7 @@ p.announcement-bar__message.h5 {
   font-family: "Cormorant Garamond", Georgia, serif;
   font-size: 2.4rem;
   font-weight: 400;
-  text-transform: uppercase;
+  text-transform: lowercase;
   letter-spacing: 0.16em;
   margin-bottom: 4px;
 }
@@ -4238,7 +4238,7 @@ p.announcement-bar__message.h5 {
   font-family: "Cormorant Garamond", serif;
   font-size: 0.85rem;
   letter-spacing: 0.18em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   margin-bottom: 6px;
 }
 
@@ -4289,7 +4289,7 @@ p.announcement-bar__message.h5 {
   font-family: "Cormorant Garamond", serif;
   font-size: 0.95rem;
   letter-spacing: 0.16em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   padding: 8px 10px;
   cursor: pointer;
   display: inline-block;
@@ -4651,7 +4651,7 @@ p.announcement-bar__message.h5 {
   gap: 12px;
   font-family: "Cormorant Garamond", serif;
   font-size: 0.85rem;
-  text-transform: uppercase;
+  text-transform: lowercase;
   letter-spacing: 0.16em;
   color: #666;
   margin-bottom: 14px;
@@ -4673,7 +4673,7 @@ p.announcement-bar__message.h5 {
   font-family: "Cormorant Garamond", serif;
   font-size: 1.1rem;
   letter-spacing: 0.22em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   margin: 0 0 6px;
 }
 
@@ -4724,7 +4724,7 @@ p.announcement-bar__message.h5 {
 }
 
 .society-status {
-  text-transform: uppercase;
+  text-transform: lowercase;
   letter-spacing: 0.2em;
   font-size: 0.9rem;
 }
@@ -4750,7 +4750,7 @@ p.announcement-bar__message.h5 {
   font-family: "Cormorant Garamond", serif;
   font-size: 0.95rem;
   letter-spacing: 0.18em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   text-decoration: none;
   transition: background .2s ease, color .2s ease, transform .2s ease;
 }
@@ -4905,7 +4905,7 @@ p.announcement-bar__message.h5 {
   font-family: "Cormorant Garamond", serif;
   font-size: 1.3rem;
   letter-spacing: 0.18em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   margin-bottom: 4px;
   color: #d6d0c7;
 }

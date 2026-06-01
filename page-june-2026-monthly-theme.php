@@ -338,14 +338,18 @@ get_header();
 		</div>
 		<div class="bbb-burn-books__grid">
 			<?php foreach ($book_picks as $index => $book) : ?>
+				<?php
+				$book_title  = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title((string) $book['title']) : (string) $book['title'];
+				$book_author = function_exists('bbb_bookish_proper_name') ? bbb_bookish_proper_name((string) $book['author']) : (string) $book['author'];
+				?>
 				<article
 					class="sss-lib__book bbb-burn-book<?php echo esc_attr(!$has_theme_access && $index >= 2 ? ' bbb-burn-preview-veil' : ''); ?>"
 					role="button"
 					tabindex="0"
 					data-handle="<?php echo esc_attr($book['handle']); ?>"
 					data-url="<?php echo esc_url(home_url('/library/?book=' . rawurlencode($book['handle']))); ?>"
-					data-title="<?php echo esc_attr($book['title']); ?>"
-					data-author="<?php echo esc_attr($book['author']); ?>"
+					data-title="<?php echo esc_attr($book_title); ?>"
+					data-author="<?php echo esc_attr($book_author); ?>"
 					data-cover="<?php echo esc_url($book['cover']); ?>"
 					data-spice="<?php echo esc_attr((string) $book['spice']); ?>"
 					data-tropes="<?php echo esc_attr(implode(', ', $book['tropes'])); ?>"
@@ -371,12 +375,12 @@ get_header();
 						<span class="sss-lib__floatSpice bbb-burn-book__spice" aria-label="<?php echo esc_attr((string) $book['spice'] . ' spice level'); ?>">
 							<?php echo esc_html(str_repeat('🌶', (int) $book['spice'])); ?>
 						</span>
-						<img class="sss-lib__cover bbb-burn-book__cover" src="<?php echo esc_url($book['cover']); ?>" alt="<?php echo esc_attr($book['title']); ?> book cover" loading="lazy">
+						<img class="sss-lib__cover bbb-burn-book__cover" src="<?php echo esc_url($book['cover']); ?>" alt="<?php echo esc_attr($book_title); ?> book cover" loading="lazy">
 					</span>
 					<div class="bbb-burn-book__body">
-						<h3><?php echo esc_html($book['title']); ?></h3>
-						<p><?php echo esc_html($book['author']); ?></p>
-						<ul aria-label="<?php echo esc_attr($book['title']); ?> tropes">
+						<h3><?php echo esc_html($book_title); ?></h3>
+						<p><?php echo esc_html($book_author); ?></p>
+						<ul aria-label="<?php echo esc_attr($book_title); ?> tropes">
 							<?php foreach (array_slice($book['tropes'], 0, 2) as $trope) : ?>
 								<li><?php echo esc_html($trope); ?></li>
 							<?php endforeach; ?>

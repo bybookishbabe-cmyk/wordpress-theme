@@ -42,7 +42,7 @@ border-bottom:none;
 margin:0 0 6px;
 font-size:11px;
 letter-spacing:.18em;
-text-transform:uppercase;
+text-transform: lowercase;
 color:rgba(246,246,246,.55);
 }
 
@@ -144,7 +144,7 @@ color:rgba(246,246,246,.75);
 .series-archive-cta{
 font-size:10px;
 letter-spacing:.14em;
-text-transform:uppercase;
+text-transform: lowercase;
 color:#ff9ccb;
 }
 
@@ -286,7 +286,7 @@ justify-content:center;
 border-radius:999px;
 padding:10px 16px;
 font-size:12px;
-text-transform:uppercase;
+text-transform: lowercase;
 text-decoration:none;
 background:#f6f6f6;
 color:#0b0b0b;
@@ -663,7 +663,7 @@ margin-top:12px;
 margin-bottom:6px;
 font-size:12px;
 letter-spacing:.06em;
-text-transform:uppercase;
+text-transform: lowercase;
 padding:6px 12px;
 border-radius:999px;
 display:inline-block;
@@ -688,7 +688,7 @@ margin-top:12px;
 margin-bottom:14px;
 font-size:12px;
 letter-spacing:.08em;
-text-transform:uppercase;
+text-transform: lowercase;
 color:rgba(255,255,255,.7);
 text-decoration:none;
 transition:.2s ease;
@@ -714,7 +714,7 @@ margin-bottom:2.8rem;
 margin:0 0 .8rem;
 font-size:1.1rem;
 letter-spacing:.16em;
-text-transform:uppercase;
+text-transform: lowercase;
 color:rgba(255,255,255,.62);
 }
 

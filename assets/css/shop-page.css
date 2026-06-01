@@ -794,6 +794,13 @@
   font: 700 14px/1.6 Assistant, system-ui, sans-serif;
 }
 
+.bbb-product__hubLink {
+  justify-content: flex-start;
+  width: fit-content;
+  margin: 0;
+  color: var(--shop-pink);
+}
+
 .bbb-product__details {
   padding: 38px 0 76px;
   border-top: 1px solid var(--shop-line);

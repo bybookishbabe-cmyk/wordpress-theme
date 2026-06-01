@@ -283,9 +283,10 @@ function sss_what_to_read_next_shortcode($atts): string {
 		$label = strtolower(get_the_title($trope));
 	}
 	$label = $label ?: 'romance';
-	$copy = 'find your next read after ' . strtolower((string) $first_data['title']) . ' →';
+	$first_title = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title((string) $first_data['title']) : (string) $first_data['title'];
+	$copy = 'find your next read after ' . $first_title . ' →';
 	if ($label && 'romance' !== $label) {
-		$copy = 'find your next ' . $label . ' read after ' . strtolower((string) $first_data['title']) . ' →';
+		$copy = 'find your next ' . $label . ' read after ' . $first_title . ' →';
 	}
 
 	ob_start();
@@ -632,7 +633,7 @@ function sss_readnext_shortcode($atts): string {
         <img src="<?php echo esc_url($rec_data['cover']); ?>" alt="<?php echo esc_attr($rec_data['title']); ?>" loading="lazy">
       </span>
       <span class="blog-readnext__body">
-        <span class="blog-readnext__label"><?php echo esc_html(strtolower($rec_data['title'])); ?></span>
+        <span class="blog-readnext__label"><?php echo esc_html(function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title((string) $rec_data['title']) : (string) $rec_data['title']); ?></span>
         <span class="blog-readnext__meta"><?php echo esc_html($copy['rec_blurb']); ?></span>
       </span>
     </a>

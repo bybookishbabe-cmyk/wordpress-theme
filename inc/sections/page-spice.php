@@ -15,6 +15,38 @@ $books = function_exists('bbb_books_like_all_visible_books')
 
 $spice_books  = array();
 $spice_counts = array_fill(1, 5, 0);
+$spice_levels = array(
+	1 => array(
+		'peppers' => '🌶',
+		'label'   => 'soft',
+		'title'   => 'soft spice',
+		'copy'    => 'low heat, soft tension, mostly fade to black',
+	),
+	2 => array(
+		'peppers' => '🌶🌶',
+		'label'   => 'some heat',
+		'title'   => 'some heat',
+		'copy'    => 'a little steam, a lot of yearning, still easy to breathe',
+	),
+	3 => array(
+		'peppers' => '🌶🌶🌶',
+		'label'   => 'balanced',
+		'title'   => 'balanced spice',
+		'copy'    => 'clear heat, emotional payoff, romance-forward pacing',
+	),
+	4 => array(
+		'peppers' => '🌶🌶🌶🌶',
+		'label'   => 'high',
+		'title'   => 'high spice',
+		'copy'    => 'explicit scenes, dominant energy, tension that pays off',
+	),
+	5 => array(
+		'peppers' => '🌶🌶🌶🌶🌶',
+		'label'   => 'wreck me',
+		'title'   => 'wreck me spice',
+		'copy'    => 'maximum heat, high intensity, no delicate little fade out',
+	),
+);
 foreach ($books as $book) {
 	if (!$book instanceof WP_Post) {
 		continue;
@@ -52,14 +84,38 @@ foreach ($books as $book) {
 				</div>
 			</div>
 		</header>
-		<nav class="sss-spiceNav">
-			<button class="sss-spiceNav__pill" type="button" data-spice-filter="1">🌶 1 <span>soft open door</span><span class="sss-spiceNav__count"><?php echo esc_html((string) $spice_counts[1]); ?></span></button>
-			<button class="sss-spiceNav__pill" type="button" data-spice-filter="2">🌶🌶 2 <span>some heat</span><span class="sss-spiceNav__count"><?php echo esc_html((string) $spice_counts[2]); ?></span></button>
-			<button class="sss-spiceNav__pill" type="button" data-spice-filter="3">🌶🌶🌶 3 <span>balanced</span><span class="sss-spiceNav__count"><?php echo esc_html((string) $spice_counts[3]); ?></span></button>
-			<button class="sss-spiceNav__pill" type="button" data-spice-filter="4">🌶🌶🌶🌶 4 <span>high spice</span><span class="sss-spiceNav__count"><?php echo esc_html((string) $spice_counts[4]); ?></span></button>
-			<button class="sss-spiceNav__pill" type="button" data-spice-filter="5">🌶🌶🌶🌶🌶 5 <span>wreck me</span><span class="sss-spiceNav__count"><?php echo esc_html((string) $spice_counts[5]); ?></span></button>
-		</nav>
-		<p class="sss-lib__spiceCount">showing <span id="sssSpiceCount">0</span> books</p>
+		<div class="sss-spiceDial" data-spice-dial>
+			<div class="sss-spiceDial__top">
+				<p class="sss-spiceDial__selected">
+					<span data-spice-peppers><?php echo esc_html($spice_levels[4]['peppers']); ?></span>
+					<span data-spice-title><?php echo esc_html($spice_levels[4]['title']); ?></span>
+				</p>
+				<p class="sss-lib__spiceCount">showing <span id="sssSpiceCount">0</span> books</p>
+			</div>
+			<input class="sss-spiceDial__range" type="range" min="1" max="5" step="1" value="4" aria-label="choose spice level" data-spice-range>
+			<nav class="sss-spiceDial__labels" aria-label="spice levels">
+				<?php foreach ($spice_levels as $level => $meta) : ?>
+					<button
+						class="sss-spiceDial__label"
+						type="button"
+						data-spice-filter="<?php echo esc_attr((string) $level); ?>"
+						aria-label="<?php echo esc_attr($meta['title'] . ', ' . $spice_counts[$level] . ' books'); ?>"
+					>
+						<?php echo esc_html($meta['label']); ?>
+					</button>
+				<?php endforeach; ?>
+			</nav>
+			<div class="sss-spiceDial__summary" aria-live="polite">
+				<div class="sss-spiceDial__summaryMain">
+					<span class="sss-spiceDial__summaryPeppers" data-spice-card-peppers><?php echo esc_html($spice_levels[4]['peppers']); ?></span>
+					<div>
+						<h2 data-spice-card-title><?php echo esc_html($spice_levels[4]['title']); ?></h2>
+						<p data-spice-card-copy><?php echo esc_html($spice_levels[4]['copy']); ?></p>
+					</div>
+				</div>
+				<span class="sss-spiceDial__badge"><span data-spice-card-count>0</span><span>books</span></span>
+			</div>
+		</div>
 		<div class="sss-lib__grid sss-lib__grid--spicePage" id="sssSpiceGrid">
 			<?php
 			foreach ($spice_books as $book) {

@@ -41,8 +41,11 @@ foreach (array('cover', 'amazon', 'bookshop', 'newsletter') as $url_key) {
 }
 
 $title         = (string) ($data['title'] ?? get_the_title());
+$title         = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title($title) : $title;
 $author        = (string) ($data['author'] ?? '');
+$author        = function_exists('bbb_bookish_proper_name') ? bbb_bookish_proper_name($author) : $author;
 $series_name   = (string) ($data['series_name'] ?? '');
+$series_name   = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title($series_name) : $series_name;
 $series_handle = (string) ($data['series_handle'] ?? '');
 $series_number = (string) ($data['series_number'] ?? '');
 $mini          = (string) ($data['mini'] ?? '');
@@ -141,6 +144,59 @@ if (function_exists('bbb_books_like_recommendations')) {
 		);
 	}
 }
+
+$book_quotes = array();
+if (function_exists('bbb_quote_post_types') && function_exists('bbb_bookquote_quote_text') && function_exists('bbb_bookquote_quote_book_matches')) {
+	$quote_types = bbb_quote_post_types();
+	if ($quote_types) {
+		$book_handle = sanitize_title((string) get_post_field('post_name', $book_id));
+		$direct_quotes = get_posts(
+			array(
+				'post_type'      => $quote_types,
+				'post_status'    => 'publish',
+				'posts_per_page' => 6,
+				'orderby'        => 'menu_order date',
+				'order'          => 'ASC',
+				'meta_query'     => array(
+					'relation' => 'OR',
+					array('key' => '_quote_book_id', 'value' => (string) $book_id),
+					array('key' => '_quote_library_book_id', 'value' => (string) $book_id),
+					array('key' => 'book_id', 'value' => (string) $book_id),
+					array('key' => 'library_book_id', 'value' => (string) $book_id),
+					array('key' => '_quote_book_handle', 'value' => $book_handle),
+					array('key' => 'book_handle', 'value' => $book_handle),
+					array('key' => '_bbb_book_handle', 'value' => $book_handle),
+				),
+			)
+		);
+
+		foreach ($direct_quotes as $quote) {
+			if ($quote instanceof WP_Post) {
+				$book_quotes[$quote->ID] = $quote;
+			}
+		}
+
+		if (count($book_quotes) < 6) {
+			$maybe_quotes = get_posts(
+				array(
+					'post_type'      => $quote_types,
+					'post_status'    => 'publish',
+					'posts_per_page' => -1,
+					'orderby'        => 'menu_order date',
+					'order'          => 'ASC',
+				)
+			);
+			foreach ($maybe_quotes as $quote) {
+				if (count($book_quotes) >= 6) {
+					break;
+				}
+				if ($quote instanceof WP_Post && !isset($book_quotes[$quote->ID]) && bbb_bookquote_quote_book_matches($quote, $book)) {
+					$book_quotes[$quote->ID] = $quote;
+				}
+			}
+		}
+	}
+}
 ?>
 
 <main class="sss-book-page">
@@ -151,10 +207,10 @@ if (function_exists('bbb_books_like_recommendations')) {
 			<a href="<?php echo esc_url(home_url('/library/')); ?>">library</a>
 			<?php if ($series_name && $series_handle) : ?>
 				<span>›</span>
-				<a href="<?php echo esc_url(home_url('/series/' . sanitize_title($series_handle) . '/')); ?>"><?php echo esc_html($series_name); ?> series</a>
+				<a style="text-transform:none !important;" href="<?php echo esc_url(home_url('/series/' . sanitize_title($series_handle) . '/')); ?>"><?php echo esc_html($series_name); ?> series</a>
 			<?php endif; ?>
 			<span>›</span>
-			<span><?php echo esc_html(strtolower($title)); ?></span>
+			<span style="text-transform:none !important;"><?php echo esc_html($title); ?></span>
 		</nav>
 
 		<?php if ($is_locked) : ?>
@@ -167,7 +223,7 @@ if (function_exists('bbb_books_like_recommendations')) {
 		<?php else : ?>
 			<article class="sss-book-page__content">
 				<?php if ($series_name) : ?>
-					<a class="sss-book-page__seriesTag" href="<?php echo esc_url(home_url('/series/' . sanitize_title($series_handle) . '/')); ?>">
+					<a class="sss-book-page__seriesTag" style="text-transform:none !important;" href="<?php echo esc_url(home_url('/series/' . sanitize_title($series_handle) . '/')); ?>">
 						<?php echo esc_html($series_name); ?> series<?php echo $series_number ? ' · book ' . esc_html($series_number) : ''; ?>
 					</a>
 				<?php elseif (!empty($data['standalone'])) : ?>
@@ -191,14 +247,14 @@ if (function_exists('bbb_books_like_recommendations')) {
 					data-series-number="<?php echo esc_attr($series_number); ?>"
 					data-ku="<?php echo $ku ? 'true' : 'false'; ?>"
 				>
-					<h1 class="sss-book-page__title"><?php echo esc_html(strtolower($title)); ?></h1>
+					<h1 class="sss-book-page__title" style="text-transform:none !important;"><?php echo esc_html($title); ?></h1>
 					<span class="sss-lib__heart sss-book-page__addTbr" data-heart role="button" tabindex="0" aria-label="add to tbr">
 						<span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♡</span>
 						<span class="sss-lib__heartLabel" data-heart-label>add to tbr</span>
 					</span>
 				</div>
 				<?php if ($author) : ?>
-					<p class="sss-book-page__author">by <span><?php echo esc_html($author); ?></span></p>
+					<p class="sss-book-page__author">by <span style="text-transform:none !important;"><?php echo esc_html($author); ?></span></p>
 				<?php endif; ?>
 
 				<section class="sss-book-page__hero" aria-label="book overview">
@@ -372,9 +428,41 @@ if (function_exists('bbb_books_like_recommendations')) {
 					<div class="sss-book-page__quote"><?php echo wp_kses_post($why); ?></div>
 				<?php endif; ?>
 
+				<?php if ($book_quotes) : ?>
+					<section class="sss-book-page__quotes" aria-label="quotes from <?php echo esc_attr($title); ?>">
+						<div class="sss-book-page__quoteList">
+							<?php foreach ($book_quotes as $quote) : ?>
+								<?php $quote_text = bbb_bookquote_quote_text($quote); ?>
+								<?php if ('' === $quote_text) : ?>
+									<?php continue; ?>
+								<?php endif; ?>
+								<blockquote class="sss-book-page__bookQuote">
+									<a class="sss-book-page__quoteWallLink" href="<?php echo esc_url(home_url('/sss-quote-wall/')); ?>">‹ all quotes</a>
+									<p>&ldquo;<?php echo esc_html($quote_text); ?>&rdquo;</p>
+									<button class="sss-book-page__quoteCopy" type="button" data-bbb-copy-quote="<?php echo esc_attr($quote_text); ?>" aria-label="copy quote">copy</button>
+								</blockquote>
+							<?php endforeach; ?>
+						</div>
+					</section>
+					<script>
+						document.addEventListener('click', function(event) {
+							var button = event.target.closest('[data-bbb-copy-quote]');
+							if (!button || !navigator.clipboard) {
+								return;
+							}
+							navigator.clipboard.writeText(button.getAttribute('data-bbb-copy-quote') || '').then(function() {
+								button.textContent = 'copied';
+								window.setTimeout(function() {
+									button.textContent = 'copy';
+								}, 1400);
+							});
+						});
+					</script>
+				<?php endif; ?>
+
 				<?php if ($related_books) : ?>
 					<section class="sss-book-page__related" aria-label="related books">
-						<p class="sss-book-page__relatedLabel">if you liked <?php echo esc_html(strtolower($title)); ?>, try these →</p>
+						<p class="sss-book-page__relatedLabel">if you liked <?php echo esc_html($title); ?>, try these →</p>
 						<div class="sss-book-page__relatedGrid">
 							<?php foreach ($related_books as $related_book) : ?>
 								<article
@@ -400,12 +488,12 @@ if (function_exists('bbb_books_like_recommendations')) {
 											<?php if ($related_book['spice'] > 0) : ?>
 												<span class="sss-lib__floatSpice"><?php echo esc_html(str_repeat('🌶', $related_book['spice'])); ?></span>
 											<?php endif; ?>
-											<a class="sss-book-page__relatedCoverLink" href="<?php echo esc_url($related_book['url']); ?>" data-book-page-link aria-label="<?php echo esc_attr('open ' . strtolower($related_book['title'])); ?>">
+											<a class="sss-book-page__relatedCoverLink" href="<?php echo esc_url($related_book['url']); ?>" data-book-page-link aria-label="<?php echo esc_attr('open ' . $related_book['title']); ?>">
 												<img class="sss-book-page__relatedCover" src="<?php echo esc_url($related_book['cover']); ?>" alt="<?php echo esc_attr($related_book['title'] . ($related_book['author'] ? ' by ' . $related_book['author'] : '') . ' book cover'); ?>" loading="lazy">
 											</a>
 										</span>
 									<?php endif; ?>
-									<a class="sss-book-page__relatedTitle" href="<?php echo esc_url($related_book['url']); ?>" data-book-page-link><?php echo esc_html(strtolower($related_book['title'])); ?></a>
+									<a class="sss-book-page__relatedTitle" href="<?php echo esc_url($related_book['url']); ?>" data-book-page-link><?php echo esc_html($related_book['title']); ?></a>
 									<?php if ($related_book['author']) : ?>
 										<span class="sss-book-page__relatedAuthor"><?php echo esc_html($related_book['author']); ?></span>
 									<?php endif; ?>
@@ -427,7 +515,7 @@ if (function_exists('bbb_books_like_recommendations')) {
 						<?php if ($author) : ?>
 							<a class="sss-book-page__seoLink" href="<?php echo esc_url(home_url('/?s=' . rawurlencode($author))); ?>">→ all <?php echo esc_html($author); ?> books</a>
 						<?php endif; ?>
-						<a class="sss-book-page__seoLink" href="<?php echo esc_url(home_url('/books-like-' . sanitize_title($title) . '/')); ?>">→ books like <?php echo esc_html(strtolower($title)); ?></a>
+						<a class="sss-book-page__seoLink" href="<?php echo esc_url(home_url('/books-like-' . sanitize_title($title) . '/')); ?>">→ books like <?php echo esc_html($title); ?></a>
 						<?php if ($series_name && $series_handle) : ?>
 							<a class="sss-book-page__seoLink" href="<?php echo esc_url(home_url('/series/' . sanitize_title($series_handle) . '/')); ?>">→ <?php echo esc_html(strtolower($series_name)); ?> reading order</a>
 						<?php endif; ?>

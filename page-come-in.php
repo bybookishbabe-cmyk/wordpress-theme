@@ -87,6 +87,15 @@ get_header();
 			</a>
 		</div>
 
+		<div class="bbb-come-in__pwa bbb-pwa-browser-only">
+			<span class="bbb-come-in__pwaAccent" aria-hidden="true"></span>
+			<span class="bbb-come-in__pwaText">
+				<strong>not an app — just built like one</strong>
+				<span>save bybookishbabe to your home screen and open us like pinterest</span>
+			</span>
+			<button class="bbb-come-in__pwaButton" type="button" data-bbb-pwa-install>how to</button>
+		</div>
+
 		<div class="bbb-come-in__divider"><span>or dive straight in</span></div>
 
 		<nav class="bbb-come-in__links" aria-label="ByBookishBabe social landing links">

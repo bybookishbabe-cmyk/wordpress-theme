@@ -46,7 +46,7 @@
   color: var(--checkout-pink);
   font: 700 13px/1.25 var(--checkout-body-font);
   letter-spacing: 0.06em;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-checkout h1,
@@ -221,7 +221,7 @@
   color: var(--checkout-muted);
   font: 700 13px/1.25 var(--checkout-body-font);
   letter-spacing: 0.06em;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-checkout #edd_checkout_form_wrap,
@@ -417,7 +417,7 @@
   color: #ffffff;
   font: 700 13px/1.25 var(--checkout-body-font);
   letter-spacing: 0.06em;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-checkout #edd_checkout_form_wrap p,
@@ -566,7 +566,7 @@
   color: var(--checkout-pink);
   font: 700 13px/1.25 var(--checkout-body-font);
   letter-spacing: 0.06em;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-checkout__sample strong {

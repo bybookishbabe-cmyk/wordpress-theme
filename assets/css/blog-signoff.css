@@ -104,7 +104,7 @@ font-size:11px;
 
 letter-spacing:.22em;
 
-text-transform:uppercase;
+text-transform: lowercase;
 
 color:#e85a9b;
 
@@ -183,7 +183,7 @@ font-size:12px;
 
 letter-spacing:.12em;
 
-text-transform:uppercase;
+text-transform: lowercase;
 
 text-decoration:none;
 text-decoration-line:none;

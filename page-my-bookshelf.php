@@ -89,6 +89,7 @@ if (!function_exists('bbb_my_bookshelf_quote_entries')) {
 
 			$book_title  = (string) get_post_meta($quote->ID, '_quote_book_title', true);
 			$book_title  = '' !== $book_title ? $book_title : (string) get_post_meta($quote->ID, 'book_title', true);
+			$book_title  = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title($book_title) : $book_title;
 			$book_handle = (string) get_post_meta($quote->ID, '_quote_book_handle', true);
 			$book_handle = '' !== $book_handle ? $book_handle : (string) get_post_meta($quote->ID, 'book_handle', true);
 			$book_handle = '' !== $book_handle ? $book_handle : (string) get_post_meta($quote->ID, '_bbb_book_handle', true);

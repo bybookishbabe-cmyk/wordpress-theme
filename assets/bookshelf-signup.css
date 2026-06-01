@@ -86,7 +86,7 @@ body.bbb-shelf-signup-open{
   margin-bottom:.7rem;
   font-size:1.1rem;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  text-transform: lowercase;
   color:rgba(246,246,246,.62);
 }
 

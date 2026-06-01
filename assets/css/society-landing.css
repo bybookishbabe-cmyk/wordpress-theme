@@ -132,6 +132,67 @@
   text-decoration: none;
 }
 
+.bbb-society-theme__countdown {
+  display: block;
+  width: min(100%, 520px);
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid rgba(255, 138, 199, .28);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .045);
+}
+
+.bbb-society-theme__countdownLabel,
+.bbb-society-theme__countdownNote {
+  display: block;
+  color: rgba(246, 246, 246, .68);
+  font-size: 11px;
+  line-height: 1.35;
+  text-transform: lowercase;
+}
+
+.bbb-society-theme__countdownLabel {
+  color: #f3bfd5;
+  letter-spacing: .08em;
+}
+
+.bbb-society-theme__timer {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.bbb-society-theme__timer span {
+  display: grid;
+  min-height: 58px;
+  place-items: center;
+  padding: 8px 6px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, .22);
+}
+
+.bbb-society-theme__timer strong {
+  color: #fff;
+  font-family: Cormorant, "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 400;
+  line-height: .9;
+}
+
+.bbb-society-theme__timer em {
+  margin-top: 4px;
+  color: rgba(246, 246, 246, .62);
+  font-size: 10px;
+  font-style: normal;
+  letter-spacing: .08em;
+}
+
+.bbb-society-theme__countdownNote {
+  margin-top: 8px;
+}
+
 .bbb-society-theme__featureLink:hover .bbb-society-theme__cta,
 .bbb-society-theme__featureLink:focus-visible .bbb-society-theme__cta {
   background: rgba(255, 138, 199, .1);
@@ -455,7 +516,7 @@
   font-size: 10px;
   letter-spacing: .14em;
   line-height: 1.3;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-society-link-card__upgrade {
@@ -475,7 +536,7 @@
   line-height: 1.2;
   text-align: center;
   text-decoration: none;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-society-link-card__upgrade:hover,
@@ -655,7 +716,7 @@
   color: rgba(246, 246, 246, .56);
   font-size: 11px;
   letter-spacing: .14em;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-monthly-freebie__facts strong {
@@ -685,7 +746,7 @@
   background: rgba(255, 138, 199, .16);
   color: #fff;
   letter-spacing: .08em;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-monthly-freebie__button:hover,

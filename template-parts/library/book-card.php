@@ -94,7 +94,7 @@ $trope_urls    = array_map(
 	</div>
 
 	<div class="sss-lib__under">
-		<div class="sss-lib__name"><?php echo esc_html($data['title']); ?></div>
-		<div class="sss-lib__author"><?php echo esc_html($data['author']); ?></div>
+		<div class="sss-lib__name" style="text-transform:none !important;"><?php echo esc_html($data['title']); ?></div>
+		<div class="sss-lib__author" style="text-transform:none !important;"><?php echo esc_html($data['author']); ?></div>
 	</div>
 </button>

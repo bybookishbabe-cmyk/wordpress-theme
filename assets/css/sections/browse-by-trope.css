@@ -36,7 +36,7 @@ display:block;
 margin-bottom:6px;
 font-size:10px;
 letter-spacing:.16em;
-text-transform:uppercase;
+text-transform: lowercase;
 color:rgba(246,246,246,.62);
 position:relative;
 z-index:1;
@@ -122,7 +122,7 @@ text-align:right;
 .bbb-tropes__kicker{
 font-size:11px;
 letter-spacing:.18em;
-text-transform:uppercase;
+text-transform: lowercase;
 color:#f6f6f6;
 opacity:.55;
 margin-bottom:6px;
@@ -139,7 +139,7 @@ display:inline-block;
 margin-top:14px;
 font-size:12px;
 letter-spacing:.08em;
-text-transform:uppercase;
+text-transform: lowercase;
 color:#ff8ac7;
 text-decoration:none;
 }
@@ -176,7 +176,7 @@ box-shadow:0 16px 40px rgba(0,0,0,.6);
 .bbb-trope-card__label{
 font-size:9px;
 letter-spacing:.18em;
-text-transform:uppercase;
+text-transform: lowercase;
 opacity:.55;
 }
 

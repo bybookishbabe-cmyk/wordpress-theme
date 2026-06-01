@@ -269,6 +269,12 @@ get_header();
 			if ('' === $text) {
 				continue;
 			}
+			if (function_exists('bbb_bookish_book_title')) {
+				$book_meta['title'] = bbb_bookish_book_title((string) $book_meta['title']);
+			}
+			if (function_exists('bbb_bookish_proper_name')) {
+				$book_meta['author'] = bbb_bookish_proper_name((string) $book_meta['author']);
+			}
 			$theme = bbb_quote_wall_theme((string) $book_meta['shelf'], (int) $index);
 			$align = 0 === ((int) $index % 2) ? 'is-left' : 'is-right';
 			$modal = (array) ($book_meta['modal'] ?? array());

@@ -12,7 +12,7 @@
   margin: 0 0 0.8rem;
   font-size: 1.1rem;
   letter-spacing: 0.16em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   color: rgba(255, 255, 255, 0.62);
 }
 
@@ -221,7 +221,7 @@
 .article-card__info--list {
   font-size: 1.1rem;
   letter-spacing: 0.12em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   color: rgba(255, 255, 255, 0.58);
 }
 

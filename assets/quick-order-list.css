@@ -368,7 +368,7 @@ quick-order-list .pagination-wrapper {
 }
 
 .quick-order-list__table thead th {
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .variant-item__image-container--no-img {

@@ -111,8 +111,8 @@ function bbb_bookquote_render(WP_Post $quote, WP_Post $book): string {
 	}
 
 	$author = function_exists('sss_article_field') ? (string) sss_article_field('author', $book->ID, '') : '';
-	$title  = function_exists('mb_strtolower') ? mb_strtolower(get_the_title($book), 'UTF-8') : strtolower(get_the_title($book));
-	$author = function_exists('mb_strtolower') ? mb_strtolower($author, 'UTF-8') : strtolower($author);
+	$title  = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title(get_the_title($book)) : get_the_title($book);
+	$author = function_exists('bbb_bookish_proper_name') ? bbb_bookish_proper_name($author) : $author;
 
 	ob_start();
 	?>

@@ -13,7 +13,7 @@ add_action(
 		if (!get_role('sss_member')) {
 			add_role(
 				'sss_member',
-				__('SSS Member', 'bybookishbabe-shopify-port'),
+				__('sss member', 'bybookishbabe-shopify-port'),
 				array(
 					'read'           => true,
 					'sss_member'     => true,

@@ -31,7 +31,7 @@
 .bbb-popular__featureCta,
 .bbb-popular__open{
   font-family:Assistant, system-ui, sans-serif;
-  text-transform:uppercase;
+  text-transform: lowercase;
   letter-spacing:.16em;
   font-weight:800;
 }

@@ -202,7 +202,7 @@
 	font-size: 9px;
 	font-weight: 700;
 	letter-spacing: 0.08em;
-	text-transform: uppercase;
+	text-transform: lowercase;
 }
 
 .bbb-burn-bright.is-preview-locked .bbb-burn-preview-veil {
@@ -1061,6 +1061,7 @@
 	font-size: clamp(18px, 2vw, 28px);
 	font-style: italic;
 	line-height: 1.35;
+	text-transform: none;
 }
 
 .bbb-burn-swatches {

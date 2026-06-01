@@ -58,13 +58,13 @@ get_header();
 				<p class="bbb-society-landing__eyebrow">may society file</p>
 				<h2>in every book</h2>
 				<p>
-					a 2400 by 3000 pixel PNG designed at 8x10 inches. download it, print it, and let it look
+					a 2400 by 3000 pixel png designed at 8x10 inches. download it, print it, and let it look
 					like it was always meant to live beside your shelf.
 				</p>
 
 				<ul class="bbb-monthly-freebie__facts" aria-label="print details">
 					<li><span>size</span><strong>8x10 inches</strong></li>
-					<li><span>file</span><strong>PNG</strong></li>
+					<li><span>file</span><strong>png</strong></li>
 					<li><span>resolution</span><strong>2400x3000</strong></li>
 				</ul>
 

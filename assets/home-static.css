@@ -124,7 +124,7 @@
   padding: 0 3px;
   color: rgba(247, 243, 238, 0.68);
   font-family: var(--font-body-family, Inter, system-ui, sans-serif);
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-monthly-teaser__timer {
@@ -173,7 +173,7 @@
   font-family: var(--font-body-family, Inter, system-ui, sans-serif);
   font-size: 0.67rem;
   font-weight: 800;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-monthly-teaser__eyebrow {
@@ -924,7 +924,7 @@
 .bbb-romance-lists__kicker {
   font-size: 11px;
   letter-spacing: 0.16em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   opacity: 0.6;
 }
 
@@ -1129,7 +1129,7 @@
 .bbb-quiz-nudge__kicker {
   font-size: 10px;
   letter-spacing: 0.14em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   color: rgba(246, 246, 246, 0.6);
   margin: 0;
 }
@@ -1177,7 +1177,7 @@
   padding: 11px 14px;
   font-size: 11px;
   letter-spacing: 0.16em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   text-decoration: none;
   background: #ff8ac7;
   color: #0b0b0b;

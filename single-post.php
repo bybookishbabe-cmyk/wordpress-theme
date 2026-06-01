@@ -22,13 +22,23 @@ while (have_posts()) :
 	$guide_cat      = sss_article_post($guide_cat);
 	$has_pillar     = sss_content_has_pillar((string) get_the_content(null, false, $post_id));
 	$show_hero      = sss_article_bool(get_post_meta($post_id, '_sss_show_hero', true));
+	$published_iso  = get_post_time('c', false, $post_id);
+	$published_text = get_the_date('F j, Y', $post_id);
+	$modified_iso   = get_post_modified_time('c', false, $post_id);
+	$modified_text  = get_the_modified_date('F j, Y', $post_id);
+	$show_modified  = $published_text !== $modified_text;
 	if (!$show_hero && function_exists('get_field')) {
 		$show_hero = sss_article_bool(get_field('_sss_show_hero', $post_id));
 	}
 	$GLOBALS['sss_article_has_pillar'] = $has_pillar;
 	?>
 
-<article class="article-template<?php echo $show_hero ? ' has-hero' : ''; ?>">
+<article class="article-template<?php echo $show_hero ? ' has-hero' : ''; ?>" itemscope itemtype="https://schema.org/Article">
+  <meta itemprop="mainEntityOfPage" content="<?php echo esc_url(get_permalink($post_id)); ?>">
+  <meta itemprop="author" content="<?php echo esc_attr(get_the_author_meta('display_name', (int) get_post_field('post_author', $post_id))); ?>">
+  <?php if (!$show_modified) : ?>
+    <meta itemprop="dateModified" content="<?php echo esc_attr($modified_iso); ?>">
+  <?php endif; ?>
 
   <?php if ($show_hero) : ?>
   <div class="article-template__hero-container">
@@ -62,10 +72,16 @@ while (have_posts()) :
   <?php endif; ?>
 
   <header class="page-width page-width--narrow scroll-trigger animate--fade-in">
-    <h1 class="article-template__title"><?php the_title(); ?></h1>
-    <span class="circle-divider caption-with-letter-spacing">
-      <?php echo esc_html(get_the_date()); ?>
-    </span>
+    <h1 class="article-template__title" itemprop="headline"><?php the_title(); ?></h1>
+    <div class="article-template__meta" aria-label="article dates">
+      <span class="article-template__meta-label">Published</span>
+      <time class="entry-date published" itemprop="datePublished" datetime="<?php echo esc_attr($published_iso); ?>"><?php echo esc_html($published_text); ?></time>
+      <?php if ($show_modified) : ?>
+        <span class="article-template__meta-separator" aria-hidden="true">/</span>
+        <span class="article-template__meta-label">Updated</span>
+        <time class="updated" itemprop="dateModified" datetime="<?php echo esc_attr($modified_iso); ?>"><?php echo esc_html($modified_text); ?></time>
+      <?php endif; ?>
+    </div>
   </header>
 
   <div class="article-template__content page-width page-width--narrow rte">

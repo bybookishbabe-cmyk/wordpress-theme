@@ -367,7 +367,7 @@
     ctx.textAlign = cover ? 'left' : 'center';
     ctx.fillStyle = '#ff8ac7';
     ctx.font = '800 22px Georgia, serif';
-    ctx.fillText('BEST MATCH', cover ? 558 : width / 2, bookTop + 94);
+    ctx.fillText('best match', cover ? 558 : width / 2, bookTop + 94);
     ctx.fillStyle = '#fff';
     ctx.font = '40px Georgia, serif';
     wrapCanvasText(ctx, bookTitle || 'your next read is waiting', cover ? 558 : width / 2, bookTop + 154, cover ? 220 : 420, 48, 3);

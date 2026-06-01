@@ -23,7 +23,7 @@
   color: #ff8ac7;
   font-size: .72rem;
   letter-spacing: .18em;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-quizdash__title {
@@ -98,7 +98,7 @@
   font-size: .68rem;
   font-weight: 800;
   letter-spacing: .12em;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-quizdash__emojiRain {
@@ -208,7 +208,7 @@
   font-size: .78rem;
   font-weight: 800;
   letter-spacing: .12em;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 @media (max-width: 840px) {
@@ -362,7 +362,7 @@
   color: #ff8ac7;
   font-size: .72rem;
   letter-spacing: .18em;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-livequiz__count {
@@ -428,7 +428,7 @@
   font-size: 14px;
   font-weight: 800;
   letter-spacing: .12em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   box-shadow: none;
 }
 
@@ -513,7 +513,7 @@
   font-size: .78rem;
   font-weight: 800;
   letter-spacing: .11em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   cursor: pointer;
   text-decoration: none;
   transition: transform .2s ease, background .2s ease, color .2s ease, border-color .2s ease;
@@ -599,7 +599,7 @@
   font-size: .72rem;
   font-weight: 800;
   letter-spacing: .16em;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-livequiz__progress span {
@@ -893,7 +893,7 @@
   font-size: 13px;
   font-weight: 800;
   letter-spacing: .12em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   cursor: pointer;
   transition: transform .18s ease, background .18s ease, border-color .18s ease, color .18s ease;
 }
@@ -1034,7 +1034,7 @@
   font-size: .82rem;
   font-weight: 800;
   letter-spacing: .12em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   transition: transform .18s ease, background .18s ease, color .18s ease;
 }
 
@@ -1111,7 +1111,7 @@
   font-size: .8rem;
   font-weight: 800;
   letter-spacing: .15em;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-livequiz__shareCard {
@@ -1300,7 +1300,7 @@
   font-weight: 800;
   letter-spacing: .1em;
   text-decoration: none;
-  text-transform: uppercase;
+  text-transform: lowercase;
   transition: background .18s ease, color .18s ease, transform .18s ease;
 }
 

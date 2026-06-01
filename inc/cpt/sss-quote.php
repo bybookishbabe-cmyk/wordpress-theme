@@ -274,6 +274,74 @@ if (!function_exists('bbb_quote_wall_book')) {
 	}
 }
 
+if (!function_exists('bbb_quote_permalink_target')) {
+	function bbb_quote_permalink_target(WP_Post $quote): string {
+		$book = bbb_quote_wall_book($quote);
+		if (!$book instanceof WP_Post || !in_array(get_post_type($book), bbb_quote_book_post_types(), true)) {
+			return '';
+		}
+
+		$permalink = get_permalink($book);
+
+		return $permalink ? (string) $permalink : '';
+	}
+}
+
+add_action(
+	'template_redirect',
+	static function (): void {
+		if (!is_singular(bbb_quote_post_types())) {
+			return;
+		}
+
+		$quote = get_queried_object();
+		if (!$quote instanceof WP_Post) {
+			return;
+		}
+
+		$target = bbb_quote_permalink_target($quote);
+		if ('' === $target) {
+			return;
+		}
+
+		wp_safe_redirect($target, 301);
+		exit;
+	},
+	-1000
+);
+
+add_filter(
+	'rank_math/frontend/robots',
+	static function (array $robots): array {
+		if (!is_singular(bbb_quote_post_types())) {
+			return $robots;
+		}
+
+		unset($robots['index'], $robots['follow']);
+		$robots['noindex']  = 'noindex';
+		$robots['nofollow'] = 'nofollow';
+
+		return $robots;
+	},
+	999
+);
+
+add_filter(
+	'wp_robots',
+	static function (array $robots): array {
+		if (!is_singular(bbb_quote_post_types())) {
+			return $robots;
+		}
+
+		unset($robots['index'], $robots['follow']);
+		$robots['noindex']  = true;
+		$robots['nofollow'] = true;
+
+		return $robots;
+	},
+	999
+);
+
 if (!function_exists('bbb_quote_export_entries')) {
 	function bbb_quote_export_entries(int $limit = -1): array {
 		$path = get_theme_file_path('firstpass/migration/exports/metaobjects/sss_quote.json');

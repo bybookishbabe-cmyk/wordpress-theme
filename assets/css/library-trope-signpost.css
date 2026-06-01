@@ -17,7 +17,7 @@
   color:#ffb8e0;
   font-size:10px;
   letter-spacing:.16em;
-  text-transform:uppercase;
+  text-transform: lowercase;
 }
 
 .sss-lib__tropeSignpostTitle{
@@ -128,7 +128,7 @@
   font-weight:700;
   letter-spacing:.08em;
   line-height:1.15;
-  text-transform:uppercase;
+  text-transform: lowercase;
   transition:transform .18s ease, background .18s ease, color .18s ease;
 }
 
@@ -262,7 +262,7 @@
   font-size:12px;
   font-weight:800;
   letter-spacing:.1em;
-  text-transform:uppercase;
+  text-transform: lowercase;
 }
 
 .sss-lib__tropeSignpostCta span{
@@ -307,10 +307,10 @@
 
   .sss-lib__tropeSign{
     width:calc(50% - 14px);
-    min-height:36px;
-    padding-top:7px;
-    padding-bottom:7px;
-    font-size:11px;
+    min-height:40px;
+    padding-top:8px;
+    padding-bottom:8px;
+    font-size:12px;
     letter-spacing:.06em;
   }
 
@@ -320,6 +320,49 @@
 
   .sss-lib__tropeSign--right{
     padding-left:20px;
+  }
+
+  .sss-lib__tropeSignEmoji{
+    width:24px;
+    height:24px;
+  }
+
+  .sss-lib__tropeSignEmoji .bbb-custom-emoji,
+  .sss-lib__tropeSignEmoji .bbb-custom-emoji--text{
+    width:24px;
+    height:24px;
+    max-width:24px;
+    font-size:22px;
+  }
+}
+
+@media(max-width:520px){
+  .sss-lib__tropeSignpost{
+    margin-top:0;
+  }
+
+  .sss-lib__tropeLamp{
+    min-height:640px;
+  }
+
+  .sss-lib__tropeLampSvg{
+    width:146px;
+  }
+
+  .sss-lib__tropeSigns{
+    inset:212px auto 64px 50%;
+    width:min(calc(100vw - 18px), 398px);
+    transform:translateX(-50%);
+  }
+
+  .sss-lib__tropeSign{
+    --sign-top:calc(var(--sign-index) * 50px);
+    width:152px;
+    min-height:42px;
+    gap:7px;
+    padding:8px 8px;
+    font-size:11px;
+    letter-spacing:.04em;
   }
 
   .sss-lib__tropeSignEmoji{
@@ -333,49 +376,6 @@
     height:22px;
     max-width:22px;
     font-size:20px;
-  }
-}
-
-@media(max-width:520px){
-  .sss-lib__tropeSignpost{
-    margin-top:0;
-  }
-
-  .sss-lib__tropeLamp{
-    min-height:560px;
-  }
-
-  .sss-lib__tropeLampSvg{
-    width:126px;
-  }
-
-  .sss-lib__tropeSigns{
-    inset:188px auto 62px 50%;
-    width:min(calc(100vw - 28px), 360px);
-    transform:translateX(-50%);
-  }
-
-  .sss-lib__tropeSign{
-    --sign-top:calc(var(--sign-index) * 38px);
-    width:124px;
-    min-height:32px;
-    gap:4px;
-    padding:6px 6px;
-    font-size:8px;
-    letter-spacing:.04em;
-  }
-
-  .sss-lib__tropeSignEmoji{
-    width:15px;
-    height:15px;
-  }
-
-  .sss-lib__tropeSignEmoji .bbb-custom-emoji,
-  .sss-lib__tropeSignEmoji .bbb-custom-emoji--text{
-    width:15px;
-    height:15px;
-    max-width:15px;
-    font-size:14px;
   }
 
   .sss-lib__tropeSignpostCta{

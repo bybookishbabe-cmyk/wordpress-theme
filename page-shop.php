@@ -590,7 +590,7 @@ if (function_exists('edd_purchase_variable_pricing')) {
 								<div class="bbb-shop-card__badges">
 									<span><?php echo esc_html($kind === 'templates' ? 'template' : ($kind === 'tools' ? 'reader tool' : 'printable')); ?></span>
 									<?php if ($is_free) : ?>
-										<span>member free</span>
+										<span>member access</span>
 									<?php endif; ?>
 									<?php if (!$is_seed_product && 'publish' !== get_post_status($download)) : ?>
 										<span><?php echo esc_html(get_post_status($download)); ?></span>

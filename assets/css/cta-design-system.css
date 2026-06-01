@@ -259,7 +259,7 @@
   font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-seriesOrders__filter.is-active,
@@ -425,7 +425,7 @@
   font-weight: 900;
   letter-spacing: 0.08em;
   line-height: 1;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-next__refreshBtn:hover,
@@ -467,7 +467,7 @@
   font-weight: 900;
   letter-spacing: 0.08em;
   line-height: 1;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-next__clearBtn:hover,
@@ -570,7 +570,7 @@
   font-weight: 900;
   letter-spacing: 0.06em;
   line-height: 1;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .bbb-next__shareResultBtn:hover,

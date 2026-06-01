@@ -19,7 +19,8 @@ $about_title = 'about | bybookishbabe — real romance reviews, ratings & the sm
 $about_description = 'real romance book reviews and ratings from a reader who actually read them. no paid promos. plus: the smut & sentiment society — your sunday book obsession.';
 $about_social_title = 'about bybookishbabe — real romance reviews & the smut & sentiment society';
 $about_social_description = "built by a romance reader, for romance readers. honest ratings, real recs, zero paid promotions. plus a sunday book obsession you don't want to miss.";
-$about_image = 'https://bybookishbabe.com/wp-content/uploads/2026/05/bybookishbabe.png';
+$about_fallback_image = function_exists('bbb_social_share_card_url') ? bbb_social_share_card_url() : '';
+$about_image = '' !== $about_fallback_image ? $about_fallback_image : 'https://bybookishbabe.com/wp-content/uploads/2026/05/bybookishbabe.png';
 $about_canonical = 'https://bybookishbabe.com/about/';
 
 add_filter(
