@@ -316,6 +316,42 @@ if ($active_fields) {
 	}
 }
 
+$burn_bright_release_time = strtotime('2026-06-01T00:00:00-07:00');
+if ($burn_bright_release_time && current_time('timestamp') >= $burn_bright_release_time) {
+	$monthly_theme_url = bbb_page_url('burn-bright');
+	$monthly_hub['kicker'] = 'monthly theme';
+	$monthly_hub['title'] = 'burn bright';
+	$monthly_hub['text'] = 'printable kindle inserts, wallpapers, a calendar, playlist vibes, and the whole orange-lit mood.';
+	$monthly_hub['image'] = get_theme_file_uri('assets/monthly-themes/june-2026/previews/burn-bright-og.png');
+	$monthly_countdown = array();
+	$drop_products = array(
+		array(
+			'title' => 'alive in the night',
+			'handle' => 'alive-in-the-night',
+			'image' => get_theme_file_uri('assets/monthly-themes/june-2026/previews/alive-in-the-night-mockup.png'),
+			'url' => $monthly_theme_url,
+		),
+		array(
+			'title' => 'golden and unbothered',
+			'handle' => 'golden-and-unbothered',
+			'image' => get_theme_file_uri('assets/monthly-themes/june-2026/previews/golden-and-unbothered-mockup.png'),
+			'url' => $monthly_theme_url,
+		),
+		array(
+			'title' => 'you glow different',
+			'handle' => 'you-glow-different',
+			'image' => get_theme_file_uri('assets/monthly-themes/june-2026/previews/you-glow-different-mockup.png'),
+			'url' => $monthly_theme_url,
+		),
+		array(
+			'title' => 'the light finds you first',
+			'handle' => 'the-light-finds-you-first',
+			'image' => get_theme_file_uri('assets/monthly-themes/june-2026/previews/the-light-finds-you-first-mockup.png'),
+			'url' => $monthly_theme_url,
+		),
+	);
+}
+
 $sections = array(
 	array(
 		'label' => 'the newsletter',
