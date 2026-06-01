@@ -18,55 +18,6 @@ function bbb_substack_subscribe_url(): string {
 	return (string) apply_filters('bbb_substack_subscribe_url', 'https://thesmutandsentimentsociety.substack.com/subscribe');
 }
 
-function bbb_substack_home_url(): string {
-	return 'https://thesmutandsentimentsociety.substack.com/';
-}
-
-function bbb_member_should_open_newsletter(): bool {
-	return function_exists('bbb_reader_is_society') && bbb_reader_is_society();
-}
-
-add_filter(
-	'bbb_substack_subscribe_url',
-	static function (string $url): string {
-		return bbb_member_should_open_newsletter() ? bbb_substack_home_url() : $url;
-	}
-);
-
-add_action(
-	'template_redirect',
-	static function (): void {
-		if (is_admin() || wp_doing_ajax() || wp_is_json_request() || !bbb_member_should_open_newsletter()) {
-			return;
-		}
-
-		ob_start(
-			static function (string $html): string {
-				$substack_home = bbb_substack_home_url();
-				$html = preg_replace(
-					'#(href=(["\']))https://thesmutandsentimentsociety\.substack\.com/subscribe/?(?:\?[^"\']*)?\2#i',
-					'$1' . $substack_home . '$2',
-					$html
-				);
-
-				if (!is_string($html)) {
-					return '';
-				}
-
-				$html = preg_replace_callback(
-					'#<a\b([^>]*href=(["\'])https://thesmutandsentimentsociety\.substack\.com/?\2[^>]*)>([^<]*(?:subscribe|join|enter|unlock)[^<]*)</a>#i',
-					static function (array $match): string {
-						return '<a' . $match[1] . '>open the newsletter</a>';
-					},
-					$html
-				);
-
-				return is_string($html) ? $html : '';
-			}
-		);
-	}
-);
-
 function bbb_substack_issue_slug_from_url(string $url, string $title): string {
 	$path = (string) wp_parse_url($url, PHP_URL_PATH);
 	$slug = $path ? basename(untrailingslashit($path)) : '';
