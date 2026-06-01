@@ -3725,7 +3725,7 @@ p.announcement-bar__message.h5 {
   font-family: "Cormorant Garamond", serif;
   font-size: 1.15rem; /* increased */
   letter-spacing: 0.14em;
-  text-transform: lowercase;
+  text-transform: uppercase;
   padding: 16px 38px;
   border-radius: 0;
   border: 1px solid #ffffff;
