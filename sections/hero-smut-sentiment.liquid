@@ -1,3 +1,20 @@
+{%- liquid
+  assign bbb_hero_is_society = false
+  if customer
+    if customer.tags contains 'society' or customer.tags contains 'Society' or customer.tags contains 'paid' or customer.tags contains 'Paid'
+      assign bbb_hero_is_society = true
+    endif
+  endif
+
+  assign bbb_hero_secondary_label = section.settings.secondary_label
+  assign bbb_hero_secondary_link = section.settings.secondary_link
+
+  if bbb_hero_is_society
+    assign bbb_hero_secondary_label = 'the society'
+    assign bbb_hero_secondary_link = '/pages/smut-sentiment-society'
+  endif
+-%}
+
 <section class="hero-custom">
   <div class="hero-overlay"></div>
 
@@ -19,9 +36,9 @@
         </a>
       {% endif %}
 
-      {% if section.settings.secondary_link != blank %}
-        <a href="{{ section.settings.secondary_link }}" class="btn-secondary">
-          {{ section.settings.secondary_label }}
+      {% if bbb_hero_secondary_link != blank %}
+        <a href="{{ bbb_hero_secondary_link }}" class="btn-secondary">
+          {{ bbb_hero_secondary_label }}
         </a>
       {% endif %}
     </div>
