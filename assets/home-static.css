@@ -162,6 +162,10 @@
   background: #b79cff;
 }
 
+.bbb-monthly-teaser__timerUnit--wide {
+  min-width: min(100%, 190px);
+}
+
 .bbb-monthly-teaser__timerUnit strong {
   color: #080507;
   font-size: 0.95rem;
