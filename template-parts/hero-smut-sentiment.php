@@ -15,8 +15,8 @@ $hero_secondary_label = get_theme_mod('hero_secondary_label', 'join the society'
 $hero_secondary_link  = get_theme_mod('hero_secondary_link', 'https://thesmutandsentimentsociety.substack.com/subscribe');
 
 if (function_exists('bbb_reader_is_society') && bbb_reader_is_society()) {
-	$hero_secondary_label = 'the society';
-	$hero_secondary_link  = function_exists('bbb_page_url') ? bbb_page_url('smut-sentiment-society') : home_url('/smut-sentiment-society/');
+	$hero_secondary_label = 'open the newsletter';
+	$hero_secondary_link  = function_exists('bbb_substack_home_url') ? bbb_substack_home_url() : 'https://thesmutandsentimentsociety.substack.com/';
 }
 ?>
 
