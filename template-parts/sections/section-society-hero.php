@@ -74,10 +74,10 @@ if ($latest_ts) {
 $kicker        = $society_hero_option('sh_kicker', 'for the bookaholics who love romance');
 $title         = $society_hero_option('sh_title', 'the smut & sentiment society');
 $subtitle      = $society_hero_option('sh_subtitle', "weekly letters, obsessive recs, and reader-core you pretend you're not addicted to.");
-$society_title = $society_hero_option('sh_society_title', 'inside the society');
-$society_text  = $society_hero_option('sh_society_text', 'the archive. reading lists. the fictional men problem. a tasteful amount of chaos.');
-$society_url   = $society_hero_option('sh_society_url', '/pages/smut-sentiment-society');
-$society_url   = function_exists('bbb_resolve_shopify_url') ? bbb_resolve_shopify_url($society_url) : $society_url;
+$society_title = 'morally gray men delivered every sunday';
+$society_url   = 'https://thesmutandsentimentsociety.substack.com/subscribe';
+$subscriber_count = function_exists('bbb_society_cached_subscriber_count') ? bbb_society_cached_subscriber_count() : 'thousands of subscribers';
+$subscriber_count_is_numeric = (bool) preg_match('/^[0-9]/', $subscriber_count);
 ?>
 
 <section class="bbb-newsletter-cta" id="bbb-newsletter-cta-society-hero">
@@ -93,6 +93,22 @@ $society_url   = function_exists('bbb_resolve_shopify_url') ? bbb_resolve_shopif
 		</header>
 
 		<div class="bbb-newsletter-cta__grid">
+
+			<article class="bbb-nc bbb-nc--society">
+				<div class="bbb-nc__societyInner">
+					<p class="bbb-nc__kicker">the society ♡</p>
+					<h3 class="bbb-nc__title"><?php echo esc_html($society_title); ?></h3>
+					<p class="bbb-nc__desc">
+						once you join, you get access to the full bybookishbabe site.
+						<?php if ($subscriber_count_is_numeric) : ?>
+							all <span class="bbb-nc__subscriberCount"><?php echo esc_html($subscriber_count); ?></span> of us are waiting on you.
+						<?php else : ?>
+							<span class="bbb-nc__subscriberCount"><?php echo esc_html($subscriber_count); ?></span> are waiting on you.
+						<?php endif; ?>
+					</p>
+					<a class="bbb-nc__button" href="<?php echo esc_url($society_url); ?>" target="_blank" rel="noopener">join the society</a>
+				</div>
+			</article>
 
 			<?php if ($latest_issue || $latest_book instanceof WP_Post) : ?>
 				<?php
@@ -183,18 +199,6 @@ $society_url   = function_exists('bbb_resolve_shopify_url') ? bbb_resolve_shopif
 					</a>
 				</article>
 			<?php endif; ?>
-
-			<article class="bbb-nc bbb-nc--society">
-				<a class="bbb-nc__societyLink" href="<?php echo esc_url($society_url); ?>">
-					<div class="bbb-nc__societyInner">
-						<p class="bbb-nc__kicker">the society ♡</p>
-						<h3 class="bbb-nc__title"><?php echo esc_html($society_title); ?></h3>
-						<p class="bbb-nc__desc"><?php echo esc_html($society_text); ?></p>
-						<div class="bbb-nc__link">learn more →</div>
-						<p class="bbb-nc__fineprint">🖤 includes the archive, reading lists, and fictional-men problems (organized).</p>
-					</div>
-				</a>
-			</article>
 
 		</div>
 	</div>

@@ -24,9 +24,9 @@ if (function_exists('bbb_reader_is_society') && bbb_reader_is_society()) {
 	<div class="hero-overlay"></div>
 
 	<div class="hero-frame">
-		<h1 class="hero-heading">
+		<div class="hero-heading">
 			<span class="hero-cursive"><?php echo esc_html($hero_heading); ?></span>
-		</h1>
+		</div>
 
 		<p class="hero-mini"><?php echo esc_html($hero_mini_text); ?></p>
 

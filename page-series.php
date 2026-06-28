@@ -32,12 +32,40 @@ if (!function_exists('bbb_series_visible_books')) {
 			array_filter(
 				$books,
 				static function (WP_Post $book): bool {
-					if ('bbb_book' === $book->post_type && function_exists('bbb_book_is_publicly_visible')) {
-						return bbb_book_is_publicly_visible($book->ID);
+					if (function_exists('sss_book_is_series_visible')) {
+						return sss_book_is_series_visible($book->ID);
 					}
 
 					return function_exists('sss_book_is_visible') ? sss_book_is_visible($book->ID) : true;
 				}
+			)
+		);
+	}
+}
+
+if (!function_exists('bbb_series_direct_link_books')) {
+	function bbb_series_direct_link_books(): array {
+		$post_types = array_values(
+			array_filter(
+				array('sss_book', 'bbb_book'),
+				static fn(string $post_type): bool => post_type_exists($post_type)
+			)
+		);
+
+		$books = get_posts(
+			array(
+				'post_type'      => $post_types ?: 'sss_book',
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+				'orderby'        => 'title',
+				'order'          => 'ASC',
+			)
+		);
+
+		return array_values(
+			array_filter(
+				$books,
+				static fn($book): bool => $book instanceof WP_Post
 			)
 		);
 	}
@@ -215,6 +243,69 @@ if (!function_exists('bbb_series_books_for_series')) {
 	}
 }
 
+if (!function_exists('bbb_series_books_index')) {
+	function bbb_series_books_index(array $books): array {
+		$index = array();
+
+		foreach ($books as $book) {
+			if (!$book instanceof WP_Post) {
+				continue;
+			}
+
+			$data = bbb_series_book_data($book);
+			$keys = array_filter(
+				array_unique(
+					array(
+						sanitize_title((string) ($data['series_handle'] ?? '')),
+						sanitize_title((string) ($data['series_name'] ?? '')),
+					)
+				)
+			);
+
+			foreach ($keys as $key) {
+				$index[$key][$book->ID] = $book;
+			}
+		}
+
+		foreach ($index as $key => $series_books) {
+			$series_books = array_values($series_books);
+			usort(
+				$series_books,
+				static function (WP_Post $a, WP_Post $b): int {
+					$a_number = (int) bbb_series_book_data($a)['series_number'];
+					$b_number = (int) bbb_series_book_data($b)['series_number'];
+
+					return $a_number <=> $b_number;
+				}
+			);
+			$index[$key] = $series_books;
+		}
+
+		return $index;
+	}
+}
+
+if (!function_exists('bbb_series_books_from_index')) {
+	function bbb_series_books_from_index($series, array $index): array {
+		$keys = array_filter(
+			array_unique(
+				array(
+					sanitize_title(bbb_series_entity_slug($series)),
+					sanitize_title(bbb_series_entity_title($series)),
+				)
+			)
+		);
+
+		foreach ($keys as $key) {
+			if (isset($index[$key])) {
+				return $index[$key];
+			}
+		}
+
+		return array();
+	}
+}
+
 if (!function_exists('bbb_series_lead_book')) {
 	function bbb_series_lead_book($series, array $books, bool $require_one = false): ?WP_Post {
 		$series_books = bbb_series_books_for_series($series, $books);
@@ -233,6 +324,26 @@ if (!function_exists('bbb_series_lead_book')) {
 if (!function_exists('bbb_series_find_entity_by_slug')) {
 	function bbb_series_find_entity_by_slug(string $slug, array $series_list) {
 		$slug = sanitize_title($slug);
+		if (post_type_exists('sss_series')) {
+			$series_post = get_page_by_path($slug, OBJECT, 'sss_series');
+			if ($series_post instanceof WP_Post) {
+				return $series_post;
+			}
+
+			$matches = get_posts(
+				array(
+					'post_type'      => 'sss_series',
+					'post_status'    => array('publish', 'draft', 'pending', 'private'),
+					'posts_per_page' => 1,
+					'meta_key'       => '_bbb_series_handle',
+					'meta_value'     => $slug,
+				)
+			);
+			if (!empty($matches[0]) && $matches[0] instanceof WP_Post) {
+				return $matches[0];
+			}
+		}
+
 		foreach ($series_list as $series) {
 			if (sanitize_title(bbb_series_entity_slug($series)) === $slug) {
 				return $series;
@@ -335,10 +446,140 @@ if (!function_exists('bbb_series_shelf_label_html')) {
 	}
 }
 
+if (!function_exists('bbb_series_extract_faq_shortcode')) {
+	function bbb_series_extract_faq_shortcode(string $content, ?string &$faq_shortcode = null): string {
+		$faq_shortcode = '';
+		$content       = (string) preg_replace('/<p\b[^>]*>\s*(\[\/?(?:faq|q|a)\])\s*<\/p>/i', '$1', $content);
+		$content       = str_ireplace(array('[FAQ]', '[/FAQ]', '[Q]', '[/Q]', '[A]', '[/A]'), array('[faq]', '[/faq]', '[q]', '[/q]', '[a]', '[/a]'), $content);
+
+		$content = (string) preg_replace_callback(
+			'/\[faq\b[^\]]*\](.*?)\[\/faq\]/is',
+			static function (array $matches) use (&$faq_shortcode): string {
+				if ('' === $faq_shortcode) {
+					$faq_shortcode = $matches[0];
+				}
+
+				return '';
+			},
+			$content,
+			1
+		);
+
+		$content = (string) preg_replace(
+			'/<!--\s+wp:heading\b[^>]*-->\s*<h[2-4]\b[^>]*>\s*frequently\s+asked\s+questions\s*<\/h[2-4]>\s*<!--\s+\/wp:heading\s+-->/i',
+			'',
+			$content
+		);
+		$content = (string) preg_replace('/<h[2-4]\b[^>]*>\s*frequently\s+asked\s+questions\s*<\/h[2-4]>/i', '', $content);
+
+		return trim($content);
+	}
+}
+
+if (!function_exists('bbb_series_book_section')) {
+	function bbb_series_book_section(array $data): string {
+		$section = sanitize_key((string) ($data['series_section'] ?? 'main'));
+
+		return in_array($section, array('main', 'spinoff'), true) ? $section : 'main';
+	}
+}
+
+if (!function_exists('bbb_series_recommendation_profile')) {
+	function bbb_series_recommendation_profile(array $books): array {
+		$shelves      = array();
+		$tropes       = array();
+		$spice_total  = 0;
+		$spice_count  = 0;
+		$ku_count     = 0;
+		$primary_shelf = '';
+
+		foreach ($books as $book) {
+			if (!$book instanceof WP_Post) {
+				continue;
+			}
+
+			$data  = bbb_series_normalized_book_data($book);
+			$shelf = sanitize_title((string) ($data['shelf'] ?? ''));
+			if ('' !== $shelf) {
+				$shelves[$shelf] = ($shelves[$shelf] ?? 0) + 1;
+				if ('' === $primary_shelf) {
+					$primary_shelf = $shelf;
+				}
+			}
+
+			foreach ((array) ($data['tropes'] ?? array()) as $trope) {
+				$name = sanitize_title((string) ($trope['name'] ?? ''));
+				if ('' !== $name) {
+					$tropes[$name] = ($tropes[$name] ?? 0) + 1;
+				}
+			}
+
+			$spice = (int) ($data['spice'] ?? 0);
+			if ($spice > 0) {
+				$spice_total += $spice;
+				$spice_count++;
+			}
+
+			if (!empty($data['ku'])) {
+				$ku_count++;
+			}
+		}
+
+		arsort($shelves);
+		arsort($tropes);
+		$top_shelves = array_keys($shelves);
+		$top_tropes  = array_keys($tropes);
+
+		return array(
+			'primary_shelf' => $top_shelves[0] ?? $primary_shelf,
+			'shelves'       => $shelves,
+			'tropes'        => $tropes,
+			'top_tropes'    => array_slice($top_tropes, 0, 6),
+			'avg_spice'     => $spice_count > 0 ? $spice_total / $spice_count : 0,
+			'ku_ratio'      => count($books) > 0 ? $ku_count / count($books) : 0,
+		);
+	}
+}
+
+if (!function_exists('bbb_series_recommendation_score')) {
+	function bbb_series_recommendation_score(array $source, array $candidate): int {
+		$score = 0;
+
+		if ('' !== (string) ($source['primary_shelf'] ?? '') && $source['primary_shelf'] === ($candidate['primary_shelf'] ?? '')) {
+			$score += 45;
+		}
+
+		$shared_shelves = array_intersect(array_keys((array) ($source['shelves'] ?? array())), array_keys((array) ($candidate['shelves'] ?? array())));
+		$score         += count($shared_shelves) * 35;
+
+		$source_tropes    = array_keys((array) ($source['tropes'] ?? array()));
+		$candidate_tropes = array_keys((array) ($candidate['tropes'] ?? array()));
+		$shared_tropes    = array_intersect($source_tropes, $candidate_tropes);
+		$score           += count($shared_tropes) * 38;
+
+		$shared_top_tropes = array_intersect((array) ($source['top_tropes'] ?? array()), (array) ($candidate['top_tropes'] ?? array()));
+		$score            += count($shared_top_tropes) * 14;
+
+		$spice_diff = abs((float) ($source['avg_spice'] ?? 0) - (float) ($candidate['avg_spice'] ?? 0));
+		if ((float) ($source['avg_spice'] ?? 0) > 0 && (float) ($candidate['avg_spice'] ?? 0) > 0) {
+			$score += max(0, (int) round(28 - ($spice_diff * 8)));
+		}
+
+		$ku_diff = abs((float) ($source['ku_ratio'] ?? 0) - (float) ($candidate['ku_ratio'] ?? 0));
+		$score  += max(0, (int) round(10 - ($ku_diff * 10)));
+
+		return $score;
+	}
+}
+
 if (!function_exists('bbb_render_series_order_detail_page')) {
-	function bbb_render_series_order_detail_page($series, array $series_books, array $series_list, array $all_books): void {
+	function bbb_render_series_order_detail_page($series, array $series_books, array $series_list, array $all_books, array $series_book_index = array()): void {
 		$series_slug  = bbb_series_entity_slug($series);
 		$series_title = bbb_series_entity_title($series);
+		$editor_content = $series instanceof WP_Post ? trim((string) $series->post_content) : '';
+		$editor_faq_shortcode = '';
+		$editor_content = bbb_series_extract_faq_shortcode($editor_content, $editor_faq_shortcode);
+		$meta_faq_shortcode = $series instanceof WP_Post ? trim((string) get_post_meta($series->ID, '_bbb_series_faq_shortcode', true)) : '';
 		$first_book   = $series_books[0] ?? null;
 		$first_data   = $first_book instanceof WP_Post ? bbb_series_normalized_book_data($first_book) : array();
 		$author       = (string) bbb_series_entity_meta($series, '_bbb_series_author', '');
@@ -347,6 +588,10 @@ if (!function_exists('bbb_render_series_order_detail_page')) {
 		}
 		$author = function_exists('bbb_bookish_proper_name') ? bbb_bookish_proper_name($author) : $author;
 
+		$sectioned_books = array(
+			'main'    => array(),
+			'spinoff' => array(),
+		);
 		$all_ku     = true;
 		$max_spice  = 0;
 		$all_tropes = array();
@@ -354,6 +599,7 @@ if (!function_exists('bbb_render_series_order_detail_page')) {
 
 		foreach ($series_books as $book) {
 			$data      = bbb_series_normalized_book_data($book);
+			$sectioned_books[bbb_series_book_section($data)][] = $book;
 			$all_ku    = $all_ku && !empty($data['ku']);
 			$max_spice = max($max_spice, (int) ($data['spice'] ?? 0));
 			foreach ((array) ($data['tropes'] ?? array()) as $trope) {
@@ -365,7 +611,7 @@ if (!function_exists('bbb_render_series_order_detail_page')) {
 		}
 
 		$genre_tropes = array_slice(array_values($all_tropes), 0, 2);
-		$blurb        = $series instanceof WP_Post ? trim(wp_strip_all_tags((string) $series->post_content)) : '';
+		$blurb        = $series instanceof WP_Post ? trim(wp_strip_all_tags((string) $series->post_excerpt)) : '';
 		if ('' === $blurb) {
 			$blurb = sprintf(
 				'%s follows interconnected romance chaos across %d %s. Each book has its own couple, but the character connections land harder when read in order.',
@@ -375,19 +621,26 @@ if (!function_exists('bbb_render_series_order_detail_page')) {
 			);
 		}
 
-		$related = array();
+		$current_profile   = bbb_series_recommendation_profile($series_books);
+		$series_book_index = $series_book_index ?: bbb_series_books_index($all_books);
+		$related_pool      = array();
 		foreach ($series_list as $other_series) {
-			if (count($related) >= 3 || bbb_series_entity_slug($other_series) === $series_slug) {
+			if (bbb_series_entity_slug($other_series) === $series_slug) {
 				continue;
 			}
 
-			$related_book = bbb_series_lead_book($other_series, $all_books, true);
+			$candidate_books = bbb_series_books_from_index($other_series, $series_book_index);
+			if (!$candidate_books) {
+				continue;
+			}
+
+			$related_book = bbb_series_lead_book($other_series, $candidate_books);
 			if (!$related_book instanceof WP_Post) {
 				continue;
 			}
 
-			$related_data = bbb_series_normalized_book_data($related_book);
-			$related_cover = (string) ($related_data['cover'] ?? '');
+			$related_data      = bbb_series_normalized_book_data($related_book);
+			$related_cover     = (string) ($related_data['cover'] ?? '');
 			$related_sub_parts = array_filter(
 				array(
 					bbb_series_entity_title($other_series),
@@ -396,23 +649,55 @@ if (!function_exists('bbb_render_series_order_detail_page')) {
 				)
 			);
 			$related_book_url = get_permalink($related_book);
-			$related[]    = array(
-				'handle'  => (string) ($related_data['handle'] ?? $related_book->post_name),
-				'title'   => (string) ($related_data['title'] ?? get_the_title($related_book)),
-				'sub'     => implode(' · ', $related_sub_parts),
-				'cover'   => $related_cover,
-				'book'    => (string) ($related_data['title'] ?? get_the_title($related_book)),
-				'author'  => (string) ($related_data['author'] ?? ''),
-				'amazon'  => (string) ($related_data['amazon'] ?? ''),
+			$related_pool[]    = array(
+				'score'    => bbb_series_recommendation_score($current_profile, bbb_series_recommendation_profile($candidate_books)),
+				'series'   => strtolower(bbb_series_entity_title($other_series)),
+				'handle'   => (string) ($related_data['handle'] ?? $related_book->post_name),
+				'title'    => (string) ($related_data['title'] ?? get_the_title($related_book)),
+				'sub'      => implode(' · ', $related_sub_parts),
+				'cover'    => $related_cover,
+				'book'     => (string) ($related_data['title'] ?? get_the_title($related_book)),
+				'author'   => (string) ($related_data['author'] ?? ''),
+				'amazon'   => (string) ($related_data['amazon'] ?? ''),
 				'bookshop' => (string) ($related_data['bookshop'] ?? ''),
-				'spice'   => (int) ($related_data['spice'] ?? 0),
-				'shelf'   => (string) ($related_data['shelf'] ?? ''),
-				'mini'    => (string) ($related_data['mini'] ?? ''),
-				'ku'      => !empty($related_data['ku']),
-				'url'     => $related_book_url ?: home_url('/library/?book=' . rawurlencode((string) ($related_data['handle'] ?? $related_book->post_name))),
+				'spice'    => (int) ($related_data['spice'] ?? 0),
+				'shelf'    => (string) ($related_data['shelf'] ?? ''),
+				'mini'     => (string) ($related_data['mini'] ?? ''),
+				'ku'       => !empty($related_data['ku']),
+				'url'      => $related_book_url ?: home_url('/library/?book=' . rawurlencode((string) ($related_data['handle'] ?? $related_book->post_name))),
 			);
 		}
+		usort(
+			$related_pool,
+			static function (array $a, array $b): int {
+				if ((int) $b['score'] !== (int) $a['score']) {
+					return (int) $b['score'] <=> (int) $a['score'];
+				}
 
+				return strcmp((string) $a['series'], (string) $b['series']);
+			}
+		);
+		$related = array_slice($related_pool, 0, 3);
+
+		$fallback_faq_shortcode = sprintf(
+			'[faq][q]what order should i read %1$s?[/q][a]%2$s.[/a][q]do i have to read this series in order?[/q][a]yes, this guide is arranged in the recommended reading order so the timeline, character connections, and series payoff stay clear.[/a][q]is %1$s on kindle unlimited?[/q][a]%3$s[/a][/faq]',
+			strtolower($series_title),
+			esc_html(implode(' → ', array_map(static fn(WP_Post $book): string => function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title(get_the_title($book)) : get_the_title($book), $series_books))),
+			$all_ku ? 'yes, the listed books are marked as kindle unlimited.' : 'some books may be on kindle unlimited; check each book link for the current retailer status.'
+		);
+		$faq_shortcode = '' !== $meta_faq_shortcode ? $meta_faq_shortcode : ('' !== trim($editor_faq_shortcode) ? $editor_faq_shortcode : $fallback_faq_shortcode);
+		$section_labels = array(
+			'main'    => array(
+				'title' => 'reading order',
+				'note'  => 'read in order recommended',
+			),
+			'spinoff' => array(
+				'title' => 'spinoff',
+				'note'  => 'connected-world standalone',
+			),
+		);
+
+		bbb_enqueue_css('bbb-society-content-cta', 'assets/css/society-content-cta.css', array('bbb-series-order-page'));
 		get_header();
 		?>
 		<main class="bbb-seriesOrderPage">
@@ -450,13 +735,16 @@ if (!function_exists('bbb_render_series_order_detail_page')) {
 
 				<p class="bbb-seriesOrderPage__blurb"><?php echo esc_html($blurb); ?></p>
 
-				<div class="bbb-seriesOrderPage__orderHead">
-					<h2>reading order</h2>
-					<span>read in order recommended</span>
-				</div>
-
 				<div class="bbb-seriesOrderPage__bookList" role="list">
-					<?php foreach ($series_books as $index => $book) : ?>
+					<?php foreach ($sectioned_books as $section_key => $section_books) : ?>
+						<?php if (!$section_books) : ?>
+							<?php continue; ?>
+						<?php endif; ?>
+						<div class="bbb-seriesOrderPage__orderHead<?php echo 'spinoff' === $section_key ? ' is-sectionBreak' : ''; ?>">
+							<h2><?php echo esc_html($section_labels[$section_key]['title']); ?></h2>
+							<span><?php echo esc_html($section_labels[$section_key]['note']); ?></span>
+						</div>
+						<?php foreach ($section_books as $index => $book) : ?>
 						<?php
 						$data          = bbb_series_normalized_book_data($book);
 						$book_url      = get_permalink($book);
@@ -464,6 +752,7 @@ if (!function_exists('bbb_render_series_order_detail_page')) {
 						$book_title    = (string) ($data['title'] ?? get_the_title($book));
 						$book_title    = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title($book_title) : $book_title;
 						$book_author   = function_exists('bbb_bookish_proper_name') ? bbb_bookish_proper_name((string) ($data['author'] ?? '')) : (string) ($data['author'] ?? '');
+						$cover_alt     = function_exists('bbb_book_cover_alt') ? bbb_book_cover_alt($book_title, $book_author, (string) ($data['shelf'] ?? '')) : $book_title . ' book cover';
 						$is_standalone = !empty($data['standalone']);
 						$tropes        = array_slice((array) ($data['tropes'] ?? array()), 0, 4);
 						$trope_names   = array_map(static fn(array $trope): string => (string) ($trope['name'] ?? ''), (array) ($data['tropes'] ?? array()));
@@ -491,22 +780,22 @@ if (!function_exists('bbb_render_series_order_detail_page')) {
 							data-series="<?php echo esc_attr((string) ($data['series_handle'] ?? $series_slug)); ?>"
 							data-series-name="<?php echo esc_attr((string) ($data['series_name'] ?? $series_title)); ?>"
 							data-series-number="<?php echo esc_attr($book_num); ?>"
+							data-series-section="<?php echo esc_attr(bbb_series_book_section($data)); ?>"
 							data-standalone="<?php echo $is_standalone ? 'true' : 'false'; ?>"
 							data-ku="<?php echo !empty($data['ku']) ? 'true' : 'false'; ?>"
 						>
-							<span class="bbb-seriesOrderPage__bookNum"><?php echo esc_html($book_num); ?></span>
+							<span class="bbb-seriesOrderPage__bookNum" aria-label="<?php echo esc_attr('book ' . $book_num); ?>"><?php echo esc_html($book_num); ?></span>
 							<span class="bbb-seriesOrderPage__coverWrap sss-lib__coverWrap">
 								<span class="sss-lib__heart" data-heart role="button" aria-label="save to your bookshelf">
 									<span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♡</span>
 									<span class="sss-lib__heartLabel" data-heart-label>save</span>
 								</span>
-								<span class="sss-lib__seriesBadge<?php echo $is_standalone ? ' sss-lib__seriesBadge--standalone' : ''; ?>" aria-label="book <?php echo esc_attr($book_num); ?>"><?php echo esc_html($book_num); ?></span>
 								<?php if ((int) ($data['spice'] ?? 0) > 0) : ?>
 									<span class="sss-lib__floatSpice"><?php echo esc_html(str_repeat('🌶', (int) $data['spice'])); ?></span>
 								<?php endif; ?>
 								<a class="bbb-seriesOrderPage__coverLink" href="<?php echo esc_url($book_url); ?>">
 									<?php if (!empty($data['cover'])) : ?>
-										<img class="bbb-seriesOrderPage__cover" src="<?php echo esc_url((string) $data['cover']); ?>" alt="<?php echo esc_attr($book_title . ' book cover'); ?>" loading="lazy">
+										<img class="bbb-seriesOrderPage__cover" src="<?php echo esc_url((string) $data['cover']); ?>" alt="<?php echo esc_attr($cover_alt); ?>" loading="lazy">
 									<?php else : ?>
 										<span class="bbb-seriesOrderPage__coverPlaceholder"><?php echo esc_html($book_title); ?></span>
 									<?php endif; ?>
@@ -543,28 +832,13 @@ if (!function_exists('bbb_render_series_order_detail_page')) {
 								<?php endif; ?>
 							</div>
 						</article>
+						<?php endforeach; ?>
 					<?php endforeach; ?>
 				</div>
 
 				<div class="bbb-seriesOrderPage__note">
 					<span>follow the books in order for the cleanest timeline, character connections, and series payoff.</span>
 				</div>
-
-				<section class="bbb-seriesOrderPage__faq" aria-label="frequently asked questions">
-					<p class="bbb-seriesOrderPage__sectionLabel">frequently asked questions</p>
-					<div class="bbb-seriesOrderPage__faqItem">
-						<h2>what order should i read <?php echo esc_html(strtolower($series_title)); ?>?</h2>
-						<p><?php echo esc_html(implode(' → ', array_map(static fn(WP_Post $book): string => function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title(get_the_title($book)) : get_the_title($book), $series_books))); ?>.</p>
-					</div>
-					<div class="bbb-seriesOrderPage__faqItem">
-						<h2>do i have to read this series in order?</h2>
-						<p>yes, this guide is arranged in the recommended reading order so the timeline, character connections, and series payoff stay clear.</p>
-					</div>
-					<div class="bbb-seriesOrderPage__faqItem">
-						<h2>is <?php echo esc_html(strtolower($series_title)); ?> on kindle unlimited?</h2>
-						<p><?php echo $all_ku ? 'yes, the listed books are marked as kindle unlimited.' : 'some books may be on kindle unlimited; check each book link for the current retailer status.'; ?></p>
-					</div>
-				</section>
 
 				<?php if ($related) : ?>
 					<section class="bbb-seriesOrderPage__also" aria-label="read these next">
@@ -595,7 +869,7 @@ if (!function_exists('bbb_render_series_order_detail_page')) {
 												<span class="sss-lib__floatSpice"><?php echo esc_html(str_repeat('🌶', $related_card['spice'])); ?></span>
 											<?php endif; ?>
 											<a href="<?php echo esc_url($related_card['url']); ?>" aria-label="<?php echo esc_attr('open ' . $related_card['book']); ?>">
-												<img class="bbb-seriesOrderPage__alsoCover" src="<?php echo esc_url($related_card['cover']); ?>" alt="<?php echo esc_attr($related_card['book'] . ' book cover'); ?>" loading="lazy">
+												<img class="bbb-seriesOrderPage__alsoCover" src="<?php echo esc_url($related_card['cover']); ?>" alt="<?php echo esc_attr(function_exists('bbb_book_cover_alt') ? bbb_book_cover_alt((string) $related_card['book'], (string) $related_card['author'], (string) $related_card['shelf']) : (string) $related_card['book'] . ' book cover'); ?>" loading="lazy">
 											</a>
 										</span>
 									<?php endif; ?>
@@ -607,12 +881,41 @@ if (!function_exists('bbb_render_series_order_detail_page')) {
 					</section>
 				<?php endif; ?>
 
+				<?php if ('' !== $editor_content) : ?>
+					<section class="bbb-seriesOrderPage__content">
+						<?php echo apply_filters('the_content', $editor_content); ?>
+					</section>
+				<?php endif; ?>
+
+				<?php if ('' !== trim($faq_shortcode)) : ?>
+					<section class="bbb-seriesOrderPage__faq" aria-label="frequently asked questions">
+						<p class="bbb-seriesOrderPage__sectionLabel">frequently asked questions</p>
+						<?php echo do_shortcode($faq_shortcode); ?>
+					</section>
+				<?php endif; ?>
+
+				<?php
+				if (function_exists('bbb_render_society_content_cta')) {
+					bbb_render_society_content_cta(
+						array(
+							'variant'    => 'series',
+							'title'      => 'the fun keeps going...',
+							'copy'       => 'Join the Society, log into your account, and keep the whole series path close: saved books, reading status, quotes, notes, and the next fictional man waiting in the wings.',
+							'play_label' => 'open series hub',
+							'play_url'   => home_url('/series-reading-orders/'),
+							'features'   => array(
+								array('title' => 'join the society', 'text' => 'start here so your series binges have a home.'),
+								array('title' => 'log into account', 'text' => 'come back to your shelf, notes, quotes, and reading status.'),
+								array('title' => 'have fun', 'text' => 'save the order and track the next book.', 'url' => home_url('/series-reading-orders/')),
+							),
+						)
+					);
+				}
+				?>
+
 				<section class="bbb-seriesOrderPage__seo" aria-label="explore more">
 					<p class="bbb-seriesOrderPage__sectionLabel">explore more</p>
 					<div class="bbb-seriesOrderPage__seoLinks">
-						<?php if ($author) : ?>
-							<a href="<?php echo esc_url(home_url('/?s=' . rawurlencode($author))); ?>">→ all <?php echo esc_html($author); ?> books</a>
-						<?php endif; ?>
 						<?php foreach (array_slice(array_values($all_tropes), 0, 4) as $trope) : ?>
 							<a href="<?php echo esc_url(bbb_series_trope_url($trope)); ?>">→ <?php echo bbb_series_trope_label_html($trope); ?> books</a>
 						<?php endforeach; ?>
@@ -629,22 +932,37 @@ if (!function_exists('bbb_render_series_order_detail_page')) {
 	}
 }
 
-$series_list = bbb_series_terms();
-$books       = bbb_series_visible_books();
-$archive     = array();
+$all_series_list = bbb_series_terms();
+$books           = bbb_series_visible_books();
+$book_index      = bbb_series_books_index($books);
+$series_list     = array_values(
+	array_filter(
+		$all_series_list,
+		static fn($series): bool => !$series instanceof WP_Post
+			|| !function_exists('bbb_content_is_publicly_discoverable')
+			|| bbb_content_is_publicly_discoverable((int) $series->ID)
+	)
+);
+$archive         = array();
 
 $requested_series_handle = sanitize_title((string) get_query_var('bbb_series_handle'));
 if ('' !== $requested_series_handle) {
-	$requested_series = bbb_series_find_entity_by_slug($requested_series_handle, $series_list);
+	$requested_series = bbb_series_find_entity_by_slug($requested_series_handle, $all_series_list);
 	if ($requested_series) {
+		$requested_series_books = $requested_series instanceof WP_Post
+			&& function_exists('bbb_content_is_publicly_discoverable')
+			&& !bbb_content_is_publicly_discoverable((int) $requested_series->ID)
+			? bbb_series_books_for_series($requested_series, bbb_series_direct_link_books())
+			: bbb_series_books_from_index($requested_series, $book_index);
 		bbb_enqueue_css('bbb-series-order-page', 'assets/css/series-order-page.css', array('bbb-bookshelf-signup'));
-		bbb_render_series_order_detail_page($requested_series, bbb_series_books_for_series($requested_series, $books), $series_list, $books);
+		bbb_render_series_order_detail_page($requested_series, $requested_series_books, $series_list, $books, $book_index);
 		return;
 	}
 }
 
 foreach ($series_list as $series) {
-	$lead_book = bbb_series_lead_book($series, $books);
+	$series_books = bbb_series_books_from_index($series, $book_index);
+	$lead_book    = bbb_series_lead_book($series, $series_books);
 	if (!$lead_book) {
 		continue;
 	}
@@ -659,6 +977,7 @@ foreach ($series_list as $series) {
 	);
 }
 
+bbb_enqueue_css('bbb-society-content-cta', 'assets/css/society-content-cta.css', array('bbb-bookshelf-signup'));
 get_header();
 ?>
 
@@ -669,6 +988,25 @@ get_header();
 			<h1>every series worth keeping together</h1>
 			<div class="series-archive-intro">browse the full series archive by shelf, then open the individual series file when you’re ready to binge.</div>
 		</div>
+
+		<?php
+		if (function_exists('bbb_render_society_content_cta')) {
+			bbb_render_society_content_cta(
+				array(
+					'variant'    => 'series',
+					'title'      => 'the fun keeps going...',
+					'copy'       => 'Keep reading orders, bookshelf saves, favorite quotes, and fictional boyfriend rabbit holes in one account so you can wander off and come right back.',
+					'play_label' => 'browse series',
+					'play_url'   => home_url('/series-reading-orders/'),
+					'features'   => array(
+						array('title' => 'join the society', 'text' => 'start here so your series binges have a home.'),
+						array('title' => 'log into account', 'text' => 'come back to your shelf, notes, quotes, and reading status.'),
+						array('title' => 'have fun', 'text' => 'browse series, save books, and keep going.', 'url' => home_url('/series-reading-orders/')),
+					),
+				)
+			);
+		}
+		?>
 
 		<?php foreach ($archive as $shelf_name => $cards) : ?>
 			<section class="series-archive-shelfGroup">

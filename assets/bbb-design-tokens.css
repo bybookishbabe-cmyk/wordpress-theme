@@ -98,6 +98,49 @@ body,
 }
 
 :root {
+  /* bybookishbabe color system - source of truth */
+  --bbb-obsidian: #0D0D0D;
+  --bbb-parchment: #FAFAF8;
+  --bbb-blush-rose: #F4C2D0;
+  --bbb-dusty-rose: #E8A0B5;
+  --bbb-crimson: #B5476A;
+  --bbb-antique-cream: #F5EDE0;
+  --bbb-aged-gold: #C9A87C;
+  --bbb-dark-plum: #3D2B2B;
+  --bbb-obsidian-rgb: 13, 13, 13;
+  --bbb-parchment-rgb: 250, 250, 248;
+  --bbb-blush-rose-rgb: 244, 194, 208;
+  --bbb-dusty-rose-rgb: 232, 160, 181;
+  --bbb-crimson-rgb: 181, 71, 106;
+  --bbb-antique-cream-rgb: 245, 237, 224;
+  --bbb-aged-gold-rgb: 201, 168, 124;
+  --bbb-dark-plum-rgb: 61, 43, 43;
+  --bbb-color-bg: var(--bbb-obsidian);
+  --bbb-color-surface: var(--bbb-antique-cream);
+  --bbb-color-ink: var(--bbb-dark-plum);
+  --bbb-color-ink-inverse: var(--bbb-parchment);
+  --bbb-color-accent: var(--bbb-blush-rose);
+  --bbb-color-accent-soft: var(--bbb-dusty-rose);
+  --bbb-color-cta: var(--bbb-crimson);
+  --bbb-color-rule: var(--bbb-aged-gold);
+  --bbb-pink: var(--bbb-blush-rose);
+  --bbb-soft-pink: var(--bbb-blush-rose);
+  --bbb-paper: var(--bbb-parchment);
+  --bbb-ink: var(--bbb-obsidian);
+  /* bybookishbabe font system - source of truth */
+  --bbb-font-editorial-heading: "Playfair Display", Georgia, serif;
+  --bbb-font-editorial-body: "Lato", Arial, sans-serif;
+  --bbb-font-dark-heading: "Cormorant Garamond", Cormorant, Georgia, serif;
+  --bbb-font-dark-body: "Source Sans 3", Arial, sans-serif;
+  --bbb-font-bookish-heading: "DM Serif Display", Georgia, serif;
+  --bbb-font-bookish-body: "DM Sans", Arial, sans-serif;
+  --bbb-font-ui: var(--bbb-font-bookish-body);
+  --bbb-font-body: var(--bbb-font-bookish-body);
+  --bbb-font-heading: var(--bbb-font-editorial-heading);
+  --bbb-font-romance-heading: var(--bbb-font-editorial-heading);
+  --bbb-font-romance-body: var(--bbb-font-editorial-body);
+  --bbb-font-moody-heading: var(--bbb-font-dark-heading);
+  --bbb-font-moody-body: var(--bbb-font-dark-body);
   --font-body-family: "Assistant", sans-serif;
   --font-body-style: normal;
   --font-body-weight: 400;
@@ -202,8 +245,6 @@ body,
   --variant-pills-shadow-horizontal-offset: 0px;
   --variant-pills-shadow-vertical-offset: 4px;
   --variant-pills-shadow-blur-radius: 5px;
-  --bbb-paper: #ffffff;
-  --bbb-ink: #111111;
 }
 
 *, *::before, *::after { box-sizing: inherit; }

@@ -15,6 +15,7 @@
     {"key": "field_bbb_book_month", "label": "Month Featured", "name": "month_featured", "type": "date_picker", "display_format": "Y-m", "return_format": "Y-m"},
     {"key": "field_bbb_book_series", "label": "Series", "name": "series", "type": "post_object", "post_type": ["sss_series"]},
     {"key": "field_bbb_book_series_number", "label": "Series Number", "name": "series_number", "type": "number"},
+    {"key": "field_bbb_book_series_section", "label": "Series Section", "name": "series_section", "type": "select", "choices": {"main": "Main reading order", "spinoff": "Spinoff"}, "default_value": "main", "allow_null": 0, "ui": 1},
     {"key": "field_bbb_book_standalone", "label": "Standalone", "name": "standalone", "type": "true_false"},
     {"key": "field_bbb_book_boyfriend_name", "label": "Boyfriend Name", "name": "boyfriend_name", "type": "text"},
     {"key": "field_bbb_book_boyfriend_type", "label": "Boyfriend Type", "name": "boyfriend_type", "type": "text"},

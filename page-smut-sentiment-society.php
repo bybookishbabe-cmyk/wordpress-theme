@@ -359,13 +359,16 @@ $sections = array(
 			array('title' => 'about', 'copy' => 'what the society is, who it is for, and how the newsletter fits in.', 'url' => bbb_page_url('about-the-society'), 'badge' => 'start', 'emoji' => '💌'),
 			array('title' => 'recent', 'copy' => 'the latest newsletter issues and current dispatches.', 'url' => bbb_page_url('society-newsletter-recent'), 'badge' => 'latest', 'emoji' => '🗞️'),
 			array('title' => 'full archive', 'copy' => 'the complete newsletter shelf, wired to the imported issues.', 'url' => bbb_page_url('society-newsletter-archive'), 'badge' => 'archive', 'emoji' => '🗂️'),
+			array('title' => 'book moodboards', 'copy' => 'pinterest-style romance book moodboards by trope, aesthetic, and reading mood.', 'url' => bbb_page_url('romance-book-moodboards'), 'badge' => 'pinterest', 'emoji' => '🖼️'),
 			array('title' => 'society submissions', 'copy' => 'send in your hot takes, quotes, recs, and reader-core thoughts for the newsletter.', 'url' => bbb_page_url('society-submissions'), 'badge' => 'member', 'emoji' => '✍️'),
 		),
 	),
 	array(
 		'label' => 'society exclusives',
 		'items' => array(
+			array('title' => 'romance awards', 'copy' => 'reader votes, editorial picks, category reveals, and the books that owned the year.', 'url' => bbb_page_url('awards'), 'badge' => 'new', 'emoji' => '🏆'),
 			array('title' => 'reader favorites', 'copy' => 'the 10 most-visited quizzes, trope pages, guides, and blog reads.', 'url' => bbb_page_url('popular-pages'), 'badge' => 'popular', 'emoji' => '📖'),
+			array('title' => 'reader types', 'copy' => 'find the dashboard badge that matches your tropes, moods, spice comfort zone, and fictional men.', 'url' => bbb_page_url('reader-types'), 'badge' => 'made for you', 'emoji' => '✨'),
 			array('title' => 'exclusive rec lists', 'copy' => 'if you liked pages built from the books-like template.', 'url' => bbb_page_url('if-you-liked-pages'), 'badge' => 'society', 'emoji' => '🌹'),
 			array('title' => 'early access', 'copy' => 'posts and picks before they go public.', 'url' => bbb_page_url('society-newsletter-recent'), 'badge' => 'preview', 'emoji' => '🔐'),
 		),
@@ -398,10 +401,6 @@ get_header();
 			<p class="bbb-society-landing__intro">
 				a central page for the newsletter, the archive, and the society pieces that live around each issue.
 			</p>
-			<div class="bbb-society-landing__status">
-				<span class="bbb-society-landing__statusLabel">current view</span>
-				<strong><?php echo esc_html($reader_state); ?></strong>
-			</div>
 		</div>
 
 		<aside class="bbb-society-theme bbb-society-theme--main" aria-label="<?php echo esc_attr($monthly_theme); ?>">
@@ -542,7 +541,11 @@ get_header();
 								<?php if (!$society_discount_access) : ?>
 									<a id="society-shop-discount" class="bbb-society-link-card bbb-society-link-card--discount bbb-society-link-card--locked is-<?php echo esc_attr($discount_state); ?>" href="<?php echo esc_url($item['url']); ?>" aria-label="society shop discount locked preview">
 										<span class="bbb-society-link-card__top">
-											<span class="bbb-society-link-card__emoji" aria-hidden="true"><?php echo esc_html($item['emoji'] ?? '♡'); ?></span>
+											<?php if ('pinterest' === ($item['icon'] ?? '')) : ?>
+												<span class="bbb-society-link-card__emoji bbb-society-link-card__emoji--pinterest" aria-hidden="true"></span>
+											<?php else : ?>
+												<span class="bbb-society-link-card__emoji" aria-hidden="true"><?php echo esc_html($item['emoji'] ?? '♡'); ?></span>
+											<?php endif; ?>
 											<span class="bbb-society-link-card__title"><?php echo esc_html($item['title']); ?></span>
 											<span class="bbb-society-link-card__badge"><?php echo esc_html($society_discount_percent ? (string) $society_discount_percent . '% off' : 'member'); ?></span>
 										</span>
@@ -554,7 +557,11 @@ get_header();
 								<?php else : ?>
 								<article id="society-shop-discount" class="bbb-society-link-card bbb-society-link-card--discount is-<?php echo esc_attr($discount_state); ?>" aria-label="society shop discount">
 									<span class="bbb-society-link-card__top">
-										<span class="bbb-society-link-card__emoji" aria-hidden="true"><?php echo esc_html($item['emoji'] ?? '♡'); ?></span>
+										<?php if ('pinterest' === ($item['icon'] ?? '')) : ?>
+											<span class="bbb-society-link-card__emoji bbb-society-link-card__emoji--pinterest" aria-hidden="true"></span>
+										<?php else : ?>
+											<span class="bbb-society-link-card__emoji" aria-hidden="true"><?php echo esc_html($item['emoji'] ?? '♡'); ?></span>
+										<?php endif; ?>
 										<span class="bbb-society-link-card__title"><?php echo esc_html($item['title']); ?></span>
 										<span class="bbb-society-link-card__badge"><?php echo esc_html($society_discount_percent ? (string) $society_discount_percent . '% off' : 'member'); ?></span>
 									</span>
@@ -573,7 +580,11 @@ get_header();
 							<?php elseif ($is_locked_society_item) : ?>
 								<a class="bbb-society-link-card bbb-society-link-card--locked" href="<?php echo esc_url($item['url']); ?>" aria-label="<?php echo esc_attr($item['title'] . ' locked preview'); ?>">
 									<span class="bbb-society-link-card__top">
-										<span class="bbb-society-link-card__emoji" aria-hidden="true"><?php echo esc_html($item['emoji'] ?? '♡'); ?></span>
+										<?php if ('pinterest' === ($item['icon'] ?? '')) : ?>
+											<span class="bbb-society-link-card__emoji bbb-society-link-card__emoji--pinterest" aria-hidden="true"></span>
+										<?php else : ?>
+											<span class="bbb-society-link-card__emoji" aria-hidden="true"><?php echo esc_html($item['emoji'] ?? '♡'); ?></span>
+										<?php endif; ?>
 										<span class="bbb-society-link-card__title"><?php echo esc_html($item['title']); ?></span>
 										<span class="bbb-society-link-card__badge">locked</span>
 									</span>
@@ -584,7 +595,11 @@ get_header();
 							<?php else : ?>
 								<a class="bbb-society-link-card" href="<?php echo esc_url($item['url']); ?>">
 									<span class="bbb-society-link-card__top">
-										<span class="bbb-society-link-card__emoji" aria-hidden="true"><?php echo esc_html($item['emoji'] ?? '♡'); ?></span>
+										<?php if ('pinterest' === ($item['icon'] ?? '')) : ?>
+											<span class="bbb-society-link-card__emoji bbb-society-link-card__emoji--pinterest" aria-hidden="true"></span>
+										<?php else : ?>
+											<span class="bbb-society-link-card__emoji" aria-hidden="true"><?php echo esc_html($item['emoji'] ?? '♡'); ?></span>
+										<?php endif; ?>
 										<span class="bbb-society-link-card__title"><?php echo esc_html($item['title']); ?></span>
 										<span class="bbb-society-link-card__badge"><?php echo esc_html($item['badge']); ?></span>
 									</span>

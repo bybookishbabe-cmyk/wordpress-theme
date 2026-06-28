@@ -9,6 +9,12 @@ Handles:
 
 document.addEventListener("DOMContentLoaded", function () {
 
+function bbbSeriesDisplayLabel(name) {
+  const value = String(name || "").trim();
+  if (!value) return "";
+  return /\b(series|duet|trilogy|saga)\s*$/i.test(value) ? value : value + " series";
+}
+
 document.addEventListener("click", function (event) {
   const target = event.target.closest("[data-trope-url]");
   if (!target) return;
@@ -319,6 +325,112 @@ function ensureArticleBookSecondaryLinks(){
 
 ensureArticleBookSecondaryLinks();
 
+function initGuideBookcardFilters(){
+  document.querySelectorAll("[data-filter-bookcard]").forEach(function(card){
+    const items = Array.from(card.querySelectorAll("[data-filter-bookcard-item]"));
+    const spiceButtons = Array.from(card.querySelectorAll("button[data-filter-spice]"));
+    const genreSelect = card.querySelector("[data-filter-genre]");
+    const reset = card.querySelector("[data-filter-reset]");
+    const extras = Array.from(card.querySelectorAll("[data-filter-bookcard-extra]"));
+
+    function hasMatch(testSpice, testGenre){
+      return items.some(function(item){
+        const matchesSpice = !testSpice || String(item.dataset.filterSpice || "") === testSpice;
+        const matchesGenre = !testGenre || String(item.dataset.filterGenre || "") === testGenre;
+        return matchesSpice && matchesGenre;
+      });
+    }
+
+    function selectedSpice(){
+      const active = spiceButtons.find(function(button){
+        return button.classList.contains("is-active");
+      });
+      return active ? String(active.dataset.filterSpice || "") : "";
+    }
+
+    function updateAvailability(spice, genre){
+      spiceButtons.forEach(function(button){
+        const value = String(button.dataset.filterSpice || "");
+        const available = !value || hasMatch(value, genre);
+        button.disabled = !available;
+        button.classList.toggle("is-unavailable", !available);
+        button.setAttribute("aria-disabled", available ? "false" : "true");
+      });
+
+      if (!genreSelect) return;
+      Array.from(genreSelect.options).forEach(function(option){
+        const value = String(option.value || "");
+        const available = !value || hasMatch(spice, value);
+        option.disabled = !available;
+        option.classList.toggle("is-unavailable", !available);
+      });
+    }
+
+    function applyFilters(){
+      const spice = selectedSpice();
+      const genre = genreSelect ? String(genreSelect.value || "") : "";
+      let visible = 0;
+
+      items.forEach(function(item){
+        const matchesSpice = !spice || String(item.dataset.filterSpice || "") === spice;
+        const matchesGenre = !genre || String(item.dataset.filterGenre || "") === genre;
+        const show = matchesSpice && matchesGenre;
+        item.hidden = !show;
+        item.classList.toggle("is-filtered-out", !show);
+        if (show) visible += 1;
+      });
+
+      extras.forEach(function(extra){
+        extra.hidden = visible !== items.length;
+      });
+
+      updateAvailability(spice, genre);
+    }
+
+    spiceButtons.forEach(function(button){
+      button.addEventListener("click", function(){
+        if (button.disabled) return;
+
+        const wasActive = button.classList.contains("is-active");
+        spiceButtons.forEach(function(option){
+          option.classList.remove("is-active");
+          option.setAttribute("aria-pressed", "false");
+        });
+
+        const allButton = spiceButtons.find(function(option){
+          return !option.dataset.filterSpice;
+        });
+        const next = wasActive && button.dataset.filterSpice ? allButton : button;
+        if (next) {
+          next.classList.add("is-active");
+          next.setAttribute("aria-pressed", "true");
+        }
+        applyFilters();
+      });
+    });
+
+    if (genreSelect) {
+      genreSelect.addEventListener("change", applyFilters);
+    }
+
+    if (reset) {
+      reset.addEventListener("click", function(){
+        spiceButtons.forEach(function(option){
+          const isAll = !option.dataset.filterSpice;
+          option.classList.toggle("is-active", isAll);
+          option.setAttribute("aria-pressed", isAll ? "true" : "false");
+        });
+        if (genreSelect) genreSelect.value = "";
+        applyFilters();
+      });
+    }
+
+    applyFilters();
+  });
+}
+
+initGuideBookcardFilters();
+
 function setPreviewShareButton(icon, label){
   if (!previewShareButton) return;
   const iconEl = previewShareButton.querySelector("[data-modal-share-label]") ? previewShareButton.querySelector(".sss-lib__mshareIcon") : null;
@@ -424,15 +536,22 @@ function syncPreviewModalHeart(){
 previewCards.forEach(card => {
 
 card.addEventListener("click", function(event){
-if (event.target.closest("a, button")) return;
+const control = event.target.closest("a, button");
+if (control && control !== card) return;
+
+const url = card.dataset.url || (card.dataset.handle ? "/books/" + encodeURIComponent(card.dataset.handle) + "/" : "");
+if (url) {
+  window.location.href = url;
+  return;
+}
 
 const title = card.dataset.title;
 const author = card.dataset.author;
 const cover = card.dataset.cover;
-const url = card.dataset.url || (card.dataset.handle ? "/books/" + encodeURIComponent(card.dataset.handle) + "/" : "");
 const amazon = card.dataset.amazon;
 const bookshop = card.dataset.bookshop;
 const spice = card.dataset.spice;
+const shelf = card.dataset.shelf;
 const tropes = card.dataset.tropes;
 const tropesDisplay = card.dataset.tropesDisplay;
 const mini = card.dataset.mini;
@@ -451,6 +570,7 @@ currentPreviewBook = {
   amazon: amazon || "",
   bookshop: bookshop || "",
   spice: spice || "",
+  shelf: shelf || "",
   tropes: tropes || "",
   tropesDisplay: tropesDisplay || "",
   mini: mini || "",
@@ -504,6 +624,17 @@ function previewEscape(value){
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+function previewBookCoverAlt(title, author, shelf){
+  let alt = String(title || "").trim();
+  const byline = String(author || "").trim();
+  const shelfName = String(shelf || "").trim();
+
+  if (!alt) return "book cover";
+  if (byline) alt += " by " + byline;
+  if (shelfName) alt += " – " + shelfName;
+  return alt + " book cover";
 }
 
 function previewTropeNameWithoutEmoji(tropeName){
@@ -734,7 +865,7 @@ if (modalFullLink) {
 }
 if (coverEl) {
   coverEl.src = cover || "";
-  coverEl.alt = title || "";
+  coverEl.alt = previewBookCoverAlt(title, author, shelf);
 }
 if (miniEl) miniEl.textContent = mini ? "quick summary: " + mini : "";
 if (tropesEl) {
@@ -758,7 +889,7 @@ if (seriesEl) {
   if (seriesName) {
     const seriesHref = series ? `/series/${encodeURIComponent(series || "")}/` : "#";
     seriesEl.hidden = false;
-    seriesEl.innerHTML = `<a href="${seriesHref}" class="sss-lib__seriesLink">${seriesName} series →</a>`;
+    seriesEl.innerHTML = `<a href="${seriesHref}" class="sss-lib__seriesLink">${bbbSeriesDisplayLabel(seriesName)} →</a>`;
   } else {
     seriesEl.hidden = true;
     seriesEl.innerHTML = "";

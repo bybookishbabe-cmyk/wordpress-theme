@@ -442,8 +442,8 @@ get_header();
 		</p>
 	</div>
 
-	<?php if ($is_page_one) : ?>
-		<?php if ($current_issue && $trope_one) : ?>
+		<?php if ($is_page_one) : ?>
+			<?php if ($current_issue && $trope_one) : ?>
 			<?php
 			$trope_one_emoji_html = function_exists('bbb_trope_emoji_html') ? bbb_trope_emoji_html((string) ($trope_one['name'] ?? ''), $trope_one['emoji'] ?? '', (string) ($trope_one['slug'] ?? '')) : '';
 			$trope_two_emoji_html = $trope_two && function_exists('bbb_trope_emoji_html') ? bbb_trope_emoji_html((string) ($trope_two['name'] ?? ''), $trope_two['emoji'] ?? '', (string) ($trope_two['slug'] ?? '')) : '';

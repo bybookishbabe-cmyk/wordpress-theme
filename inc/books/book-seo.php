@@ -185,8 +185,26 @@ function bbb_book_seo_title(int $post_id): string {
 	}
 
 	$book_label = '' !== $author ? sprintf('%s by %s', $title, $author) : $title;
+	$has_spicy_chapters = function_exists('bbb_book_spicy_chapters') && bbb_book_spicy_chapters($post_id);
 
-	return $book_label . ' — spice, tropes & verdict';
+	return $book_label . ($has_spicy_chapters ? ' — spice & spicy chapters' : ' — spice, tropes & verdict');
+}
+
+function bbb_book_spicy_chapters(int $post_id): array {
+	$raw = get_post_meta($post_id, '_bbb_spicy_chapters', true);
+	if (!is_scalar($raw)) {
+		return array();
+	}
+
+	return array_values(
+		array_filter(
+			array_map(
+				static fn(string $chapter): string => trim(wp_strip_all_tags($chapter)),
+				preg_split('/\r\n|\r|\n/', (string) $raw) ?: array()
+			),
+			static fn(string $chapter): bool => '' !== $chapter
+		)
+	);
 }
 
 function bbb_book_seo_description(int $post_id): string {
@@ -197,6 +215,11 @@ function bbb_book_seo_description(int $post_id): string {
 	$vibe        = bbb_book_seo_highest_vibe($data);
 	$ku_text     = bbb_book_seo_kindle_unlimited_text($post_id);
 	$verdict     = bbb_book_seo_verdict(array_merge($data, array('id' => $post_id)), $trope_names);
+	$chapter_text = '';
+	$spicy_chapters = bbb_book_spicy_chapters($post_id);
+	if ($spicy_chapters) {
+		$chapter_text = sprintf(' Spicy chapters: %s.', implode(', ', array_slice($spicy_chapters, 0, 4)));
+	}
 	$primary_set = array(
 		bbb_book_seo_primary_trope_text($trope_names),
 		bbb_book_seo_primary_trope_text(array_slice($trope_names, 0, 1)),
@@ -208,7 +231,7 @@ function bbb_book_seo_description(int $post_id): string {
 		foreach (array(3, 2, 1, 0) as $tag_count) {
 			$tags = $tag_count > 0 && $trope_names ? implode(', ', array_slice($trope_names, 0, $tag_count)) : '';
 			$text = sprintf(
-				'%s is %s %s with spice %d/5 and %s %d/5.%s%s is it worth it? %s.',
+				'%s is %s %s with spice %d/5 and %s %d/5.%s%s%s is it worth it? %s.',
 				$title,
 				bbb_book_seo_indefinite_article($primary),
 				$primary,
@@ -217,6 +240,7 @@ function bbb_book_seo_description(int $post_id): string {
 				$vibe['score'],
 				'' !== $tags ? ' ' . $tags . '.' : '',
 				'' !== $ku_text ? ' ' . $ku_text . '.' : '',
+				$chapter_text,
 				$verdict
 			);
 

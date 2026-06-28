@@ -14,3 +14,4 @@ function sss_newsletter_shortcode($atts): string {
 	return '<div class="bbb-signoff__embed sss-newsletter" data-newsletter-handle="' . esc_attr($handle) . '"><iframe src="https://thesmutandsentimentsociety.substack.com/embed" title="subscribe to the smut &amp; sentiment society" loading="lazy" scrolling="no"></iframe></div>';
 }
 add_shortcode('sss_newsletter', 'sss_newsletter_shortcode');
+add_shortcode('newsletter', 'sss_newsletter_shortcode');

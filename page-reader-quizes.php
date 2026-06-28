@@ -135,6 +135,25 @@ get_header();
 					<span class="bbb-quizdash__cta">coming soon</span>
 				</article>
 			</div>
+
+			<a class="bbb-quizdash__bingoCta" href="<?php echo esc_url(home_url('/romance-reading-bingo/')); ?>">
+				<span class="bbb-quizdash__bingoCtaBoard" aria-hidden="true">
+					<span class="bbb-quizdash__bingoCtaLetters">
+						<span>b</span><span>i</span><span>n</span><span>g</span><span>o</span>
+					</span>
+					<span class="bbb-quizdash__bingoCtaGrid">
+						<?php for ($bbb_quizdash_bingo_cell = 1; $bbb_quizdash_bingo_cell <= 25; $bbb_quizdash_bingo_cell++) : ?>
+							<span><?php echo 13 === $bbb_quizdash_bingo_cell ? esc_html('free') : ''; ?></span>
+						<?php endfor; ?>
+					</span>
+				</span>
+				<span class="bbb-quizdash__bingoCtaCopy">
+					<span class="bbb-quizdash__bingoCtaPill">summer edition</span>
+					<span class="bbb-quizdash__bingoCtaTitle">romance reading bingo</span>
+					<span class="bbb-quizdash__bingoCtaText">mark your tropes, book boyfriends, and new releases. get a bingo and find your reader type.</span>
+				</span>
+				<span class="bbb-quizdash__bingoCtaAction">play the board →</span>
+			</a>
 		</div>
 	</section>
 </main>

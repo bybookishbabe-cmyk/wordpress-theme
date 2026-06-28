@@ -6,6 +6,8 @@ $settings = array(
 	'title' => bbb_get_field('title', get_the_ID(), 'the romance library'),
 	'subtext' => bbb_get_field('subtext', get_the_ID(), 'the official collection of romance books curated and catalogued by the smut and sentiment society.'),
 );
+$society_layer = function_exists('bbb_society_private_layer_state') ? bbb_society_private_layer_state() : array('label' => 'the private layer', 'class' => 'private', 'url' => 'https://thesmutandsentimentsociety.substack.com/subscribe', 'cta' => 'enter the society');
+$notes_url = function_exists('bbb_page_url') ? bbb_page_url('my-notes') : home_url('/my-notes/');
 ?>
 <section class="sss-lib sss-lib--public" data-sss-lib="public">
 	<div class="sss-lib__wrap">
@@ -17,15 +19,16 @@ $settings = array(
 			<a class="sss-lib__kuLink" href="<?php echo esc_url(function_exists('bbb_page_url') ? bbb_page_url('what-to-read-next') : home_url('/what-to-read-next/')); ?>">not sure where to start? find your read →</a>
 		</header>
 		<div class="sss-lib__societyInviteCard">
-			<div class="sss-lib__societyInviteKicker">the private layer</div>
+			<div class="sss-lib__societyInviteKicker sss-lib__societyInviteKicker--<?php echo esc_attr((string) $society_layer['class']); ?>"><?php echo esc_html((string) $society_layer['label']); ?></div>
 			<div class="sss-lib__societyInviteTitle">join the society for the weekly recommendation</div>
-			<a href="https://thesmutandsentimentsociety.substack.com/subscribe" class="sss-lib__societyInviteBtn">enter the society</a>
+			<a href="<?php echo esc_url((string) $society_layer['url']); ?>" class="sss-lib__societyInviteBtn"><?php echo esc_html((string) $society_layer['cta']); ?></a>
 		</div>
 		<?php bbb_render_component('trending-shelf'); ?>
 		<nav class="sss-lib__jumpNav">
 			<div class="sss-lib__jumpTitle">choose where to begin</div>
 			<div class="sss-lib__jumpLinks">
 				<a href="#sssMyShelfSection">📚 your bookshelf</a>
+				<a href="<?php echo esc_url($notes_url); ?>">✎ reading journal</a>
 				<a href="#society-classics">👑 classics</a>
 				<a href="<?php echo esc_url(bbb_resolve_page_url('series-reading-orders')); ?>">🔗 series</a>
 				<a href="#starter-pack">✨ start here</a>
@@ -39,6 +42,7 @@ $settings = array(
 			<div class="sss-lib__myshelfActions">
 				<button id="sssExportNotes" type="button">copy list</button>
 				<button id="sssEmailShelf" type="button">email to self</button>
+				<a class="sss-lib__myshelfActionLink" href="<?php echo esc_url($notes_url); ?>">open reading journal</a>
 			</div>
 			<div class="sss-lib__grid" id="sssMyShelfGrid"></div>
 		</div>

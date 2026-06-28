@@ -7,15 +7,136 @@
 
 declare(strict_types=1);
 
+function bbb_urgency_banner_next_target(): DateTimeImmutable {
+	$timezone = new DateTimeZone('America/Los_Angeles');
+	$now      = new DateTimeImmutable('now', $timezone);
+	$today    = $now->setTime(10, 0, 0);
+
+	if ('7' === $now->format('N') && $now < $today) {
+		return $today;
+	}
+
+	return $now->modify('next sunday')->setTime(10, 0, 0);
+}
+
+function bbb_urgency_banner_live_read_url(DateTimeImmutable $now): string {
+	if (function_exists('bbb_sunday_drop_latest_substack_post')) {
+		$substack = bbb_sunday_drop_latest_substack_post();
+		if (!empty($substack['url'])) {
+			return (string) $substack['url'];
+		}
+	}
+
+	if (function_exists('bbb_sunday_drop_latest_issue')) {
+		$issue = bbb_sunday_drop_latest_issue();
+		if ($issue instanceof WP_Post && function_exists('bbb_sunday_drop_issue_url')) {
+			return bbb_sunday_drop_issue_url($issue);
+		}
+	}
+
+	return 'https://thesmutandsentimentsociety.substack.com/';
+}
+
+function bbb_urgency_banner_newsletter_types(): array {
+	return array(
+		'chapters-end' => array(
+			'label'   => "chapter's end",
+			'message' => 'the next society letter closes the chapter soon',
+		),
+		'smutty'       => array(
+			'label'   => 'smutty sunday',
+			'message' => 'the next spicy society rec is almost here',
+		),
+		'sentimental'  => array(
+			'label'   => 'sentimental sunday',
+			'message' => 'the next soft-hearted society rec is almost here',
+		),
+		'trope-report' => array(
+			'label'   => 'trope report',
+			'message' => 'the next trope deep dive is almost here',
+		),
+		'extra-extra'  => array(
+			'label'   => 'extra extra',
+			'message' => 'the next society dispatch is almost here',
+		),
+	);
+}
+
+function bbb_urgency_banner_type_for_target(DateTimeImmutable $target): string {
+	$timezone = new DateTimeZone('America/Los_Angeles');
+	$month    = $target->format('Y-m');
+	$sundays  = array();
+	$cursor   = new DateTimeImmutable('first sunday of ' . $target->format('F Y'), $timezone);
+
+	while ($cursor->format('Y-m') === $month) {
+		$sundays[] = $cursor->setTime(10, 0, 0);
+		$cursor    = $cursor->modify('+1 week');
+	}
+
+	$types = count($sundays) >= 5
+		? array('smutty', 'sentimental', 'trope-report', 'extra-extra', 'chapters-end')
+		: array('smutty', 'sentimental', 'trope-report', 'chapters-end');
+
+	foreach ($sundays as $index => $sunday) {
+		if ($sunday->format('Y-m-d') === $target->setTimezone($timezone)->format('Y-m-d')) {
+			return (string) ($types[$index] ?? 'chapters-end');
+		}
+	}
+
+	return 'chapters-end';
+}
+
 function bbb_urgency_banner_config(): array {
+	$timezone = new DateTimeZone('America/Los_Angeles');
+	$now      = new DateTimeImmutable('now', $timezone);
+	$weekday  = (int) $now->format('N');
+	$today_10 = $now->setTime(10, 0, 0);
+	$target   = bbb_urgency_banner_next_target();
+	$type   = bbb_urgency_banner_type_for_target($target);
+	$types  = bbb_urgency_banner_newsletter_types();
+	$copy   = $types[$type] ?? $types['chapters-end'];
+
+	if (7 === $weekday && $now >= $today_10) {
+		$type = bbb_urgency_banner_type_for_target($today_10);
+		$copy = $types[$type] ?? $types['chapters-end'];
+
+		return apply_filters(
+			'bbb_urgency_banner_config',
+			array(
+				'id'              => 'newsletter-live-' . $today_10->format('Y-m-d') . '-' . $type,
+				'enabled'         => true,
+				'mode'            => 'live',
+				'newsletter_type' => $type,
+				'label'           => $copy['label'],
+				'message'         => "it's here",
+				'cta_label'       => 'read the newsletter',
+				'cta_url'         => bbb_urgency_banner_live_read_url($now),
+				'target_time'     => $now->modify('tomorrow')->setTime(0, 0, 0)->format(DateTimeInterface::ATOM),
+				'show_timer'      => false,
+			)
+		);
+	}
+
+	if ($weekday < 3) {
+		return apply_filters(
+			'bbb_urgency_banner_config',
+			array(
+				'id'      => 'next-newsletter-paused-' . $now->format('Y-m-d'),
+				'enabled' => false,
+			)
+		);
+	}
+
 	$config = array(
-		'id'          => 'chapters-end-reveal-2026-05-31',
-		'enabled'     => true,
-		'label'       => "chapter's end reveal",
-		'message'     => 'the next society reveal is almost here',
-		'cta_label'   => 'join the society',
-		'cta_url'     => 'https://thesmutandsentimentsociety.substack.com/subscribe',
-		'target_time' => '2026-05-31T10:00:00-07:00',
+		'id'              => 'next-newsletter-' . $target->format('Y-m-d') . '-' . $type,
+		'enabled'         => true,
+		'mode'            => 'countdown',
+		'newsletter_type' => $type,
+		'label'           => $copy['label'],
+		'message'         => $copy['message'],
+		'cta_label'       => 'join the society',
+		'cta_url'         => 'https://thesmutandsentimentsociety.substack.com/subscribe',
+		'target_time'     => $target->format(DateTimeInterface::ATOM),
 	);
 
 	return apply_filters('bbb_urgency_banner_config', $config);
@@ -52,22 +173,44 @@ function bbb_urgency_banner_enqueue(): void {
 add_action('wp_enqueue_scripts', 'bbb_urgency_banner_enqueue', 30);
 
 function bbb_urgency_banner_render(): void {
+	global $bbb_urgency_banner_rendered;
+
+	if (!empty($bbb_urgency_banner_rendered)) {
+		return;
+	}
+
 	if (!bbb_urgency_banner_is_active()) {
 		return;
 	}
 
+	$bbb_urgency_banner_rendered = true;
 	$config = bbb_urgency_banner_config();
 	$id     = sanitize_key((string) ($config['id'] ?? 'bbb-urgency-banner'));
 	$target = (string) ($config['target_time'] ?? '');
 	$url    = esc_url((string) ($config['cta_url'] ?? home_url('/smut-sentiment-society/')));
+	$type   = sanitize_html_class((string) ($config['newsletter_type'] ?? 'chapters-end'));
+	$mode   = sanitize_key((string) ($config['mode'] ?? 'countdown'));
+	$show_timer = !isset($config['show_timer']) || (bool) $config['show_timer'];
+	$show_cta = 'live' === $mode || !function_exists('bbb_reader_is_society') || !bbb_reader_is_society();
+	$classes = array(
+		'bbb-urgency-banner',
+		'bbb-urgency-banner--' . $type,
+		'bbb-urgency-banner--' . $mode,
+	);
+	if (!$show_cta) {
+		$classes[] = 'bbb-urgency-banner--no-cta';
+	}
 	?>
 	<div
-		class="bbb-urgency-banner"
+		class="<?php echo esc_attr(implode(' ', $classes)); ?>"
 		data-bbb-urgency-banner
 		data-banner-id="<?php echo esc_attr($id); ?>"
+		data-newsletter-type="<?php echo esc_attr($type); ?>"
+		data-banner-mode="<?php echo esc_attr($mode); ?>"
 		data-target-time="<?php echo esc_attr($target); ?>"
+		data-society-url="<?php echo esc_attr(home_url('/smut-sentiment-society/')); ?>"
 		role="region"
-		aria-label="<?php esc_attr_e('Limited time announcement', 'bybookishbabe-shopify-port'); ?>"
+		aria-label="<?php esc_attr_e('Next newsletter countdown', 'bybookishbabe-shopify-port'); ?>"
 		hidden
 	>
 		<div class="bbb-urgency-banner__inner">
@@ -75,15 +218,19 @@ function bbb_urgency_banner_render(): void {
 				<span class="bbb-urgency-banner__label"><?php echo esc_html((string) ($config['label'] ?? 'limited time')); ?></span>
 				<span class="bbb-urgency-banner__message"><?php echo esc_html((string) ($config['message'] ?? 'join before the reveal')); ?></span>
 			</div>
-			<div class="bbb-urgency-banner__timer" data-bbb-urgency-timer aria-live="polite">
-				<span class="bbb-urgency-banner__timerUnit"><strong data-bbb-days>00</strong><span>days</span></span>
-				<span class="bbb-urgency-banner__timerUnit"><strong data-bbb-hours>00</strong><span>hrs</span></span>
-				<span class="bbb-urgency-banner__timerUnit"><strong data-bbb-minutes>00</strong><span>min</span></span>
-				<span class="bbb-urgency-banner__timerUnit"><strong data-bbb-seconds>00</strong><span>sec</span></span>
-			</div>
-			<a class="bbb-urgency-banner__cta" href="<?php echo $url; ?>" target="_blank" rel="noopener">
-				<?php echo esc_html((string) ($config['cta_label'] ?? 'join now')); ?>
-			</a>
+			<?php if ($show_timer) : ?>
+				<div class="bbb-urgency-banner__timer" data-bbb-urgency-timer aria-live="polite">
+					<span class="bbb-urgency-banner__timerUnit"><strong data-bbb-days>00</strong><span>days</span></span>
+					<span class="bbb-urgency-banner__timerUnit"><strong data-bbb-hours>00</strong><span>hrs</span></span>
+					<span class="bbb-urgency-banner__timerUnit"><strong data-bbb-minutes>00</strong><span>min</span></span>
+					<span class="bbb-urgency-banner__timerUnit"><strong data-bbb-seconds>00</strong><span>sec</span></span>
+				</div>
+			<?php endif; ?>
+			<?php if ($show_cta) : ?>
+				<a class="bbb-urgency-banner__cta" href="<?php echo $url; ?>" target="_blank" rel="noopener">
+					<?php echo esc_html((string) ($config['cta_label'] ?? 'join now')); ?>
+				</a>
+			<?php endif; ?>
 			<button class="bbb-urgency-banner__dismiss" type="button" data-bbb-urgency-dismiss aria-label="<?php esc_attr_e('Dismiss announcement', 'bybookishbabe-shopify-port'); ?>">
 				<span aria-hidden="true">&times;</span>
 			</button>

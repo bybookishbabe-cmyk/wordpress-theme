@@ -75,3 +75,65 @@ document.addEventListener("sssPreviewReady", function(){
 });
 
 loadPreviewTrending();
+
+function revealHomepageTrendingBooks(){
+  const books = Array.from(document.querySelectorAll(".bbb-trending__book"));
+  if(!books.length) return;
+
+  function revealAll(){
+    books.forEach(function(book){
+      book.classList.add("is-visible");
+    });
+  }
+
+  if(!("IntersectionObserver" in window)){
+    revealAll();
+    return;
+  }
+
+  const observer = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(!entry.isIntersecting) return;
+
+      const index = books.indexOf(entry.target);
+      window.setTimeout(function(){
+        entry.target.classList.add("is-visible");
+      }, Math.max(index, 0) * 120);
+      observer.unobserve(entry.target);
+    });
+  }, { threshold: 0.1 });
+
+  books.forEach(function(book){
+    observer.observe(book);
+  });
+
+  window.setTimeout(revealAll, 1200);
+}
+
+if(document.readyState === "loading"){
+  document.addEventListener("DOMContentLoaded", revealHomepageTrendingBooks);
+} else {
+  revealHomepageTrendingBooks();
+}
+
+document.addEventListener("click", function(event){
+  const target = event.target;
+  if(!(target instanceof Element)) return;
+
+  const home = target.closest(".bbb-home");
+  if(!home) return;
+
+  const seriesBadge = target.closest(".sss-lib__seriesBadge[data-series-url]");
+  if(seriesBadge){
+    event.preventDefault();
+    event.stopPropagation();
+    window.location.href = seriesBadge.getAttribute("data-series-url");
+    return;
+  }
+
+  const card = target.closest(".sss-lib__book[data-url]");
+  if(!card) return;
+
+  event.preventDefault();
+  window.location.href = card.getAttribute("data-url");
+});

@@ -41,6 +41,29 @@ window.sssAnalytics.include = function(){
 };
 window.sssAnalytics.isExcluded = isAnalyticsExcluded;
 
+function bbbSeriesDisplayLabel(name){
+  var value = String(name || '').trim();
+  if (!value) return '';
+  return /\b(series|duet|trilogy|saga)\s*$/i.test(value) ? value : value + ' series';
+}
+
+function bookCoverAlt(title, author, shelf){
+  var cleanTitle = String(title || '').trim();
+  var cleanAuthor = String(author || '').trim();
+  var cleanShelf = String(shelf || '').trim();
+
+  if (!cleanTitle) return 'book cover';
+
+  var alt = cleanTitle;
+  if (cleanAuthor) alt += ' by ' + cleanAuthor;
+  if (cleanShelf) alt += ' – ' + cleanShelf;
+  return alt + ' book cover';
+}
+
+function closestFromTarget(target, selector){
+  return target && typeof target.closest === 'function' ? target.closest(selector) : null;
+}
+
 function getAnalyticsSessionId(){
 
   try {
@@ -259,10 +282,11 @@ function initMobileGridPagination(){
 
     var isArchiveGrid = !!grid.closest('[data-archive-section]');
     var isBrowsePageGrid = grid.classList.contains('sss-lib__grid--browsePage');
+    var isSpicePageGrid = grid.classList.contains('sss-lib__grid--spicePage');
     var desktopInitialCount = 36;
     var desktopIncrement = 20;
-    var mobileInitialCount = isBrowsePageGrid ? 12 : 10;
-    var mobileIncrement = isBrowsePageGrid ? 12 : 10;
+    var mobileInitialCount = (isBrowsePageGrid || isSpicePageGrid) ? 12 : 10;
+    var mobileIncrement = isSpicePageGrid ? 6 : (isBrowsePageGrid ? 12 : 10);
     var shouldPaginate = false;
     var visibleCount = cards.length;
     var increment = cards.length;
@@ -281,7 +305,7 @@ function initMobileGridPagination(){
 
     function updateVisibleBooks(){
       var matchingCards = cards.filter(function(card){
-        return card.style.display !== 'none';
+        return !card.hidden && card.style.display !== 'none';
       });
 
       cards.forEach(function(card){
@@ -345,11 +369,101 @@ function refreshPaginatedGridVisibility(){
    PERSONAL SHELF STORAGE
 ====================== */
 
+function getAccountSnapshot(){
+  var el = document.getElementById('sssMadeForYouAccountData');
+  if (!el) return {};
+  try {
+    return JSON.parse(el.textContent || '{}') || {};
+  } catch(e){
+    return {};
+  }
+}
+
+function normalizeAccountBook(book){
+  if (!book) return null;
+  var handle = book.handle || book.book_handle || '';
+  var title = book.title || book.book_title || '';
+  if (!handle && !title) return null;
+
+  return {
+    handle: handle,
+    title: title,
+    author: book.author || '',
+    cover: book.cover || '',
+    amazon: book.amazon || '',
+    bookshop: book.bookshop || '',
+    spice: book.spice || book.spice_level || '',
+    darkness: book.darkness || book.darkness_level || '',
+    tropes: Array.isArray(book.tropes) ? book.tropes : [],
+    status: book.status || ''
+  };
+}
+
+function mergeAccountBooks(localBooks){
+  var account = getAccountSnapshot();
+  var remoteBooks = Array.isArray(account.books) ? account.books : [];
+  if (!remoteBooks.length) return Array.isArray(localBooks) ? localBooks : [];
+
+  var seen = {};
+  var merged = [];
+  (Array.isArray(localBooks) ? localBooks : []).forEach(function(book){
+    var key = getBookStatusKey(book);
+    if (!key || seen[key]) return;
+    seen[key] = true;
+    merged.push(book);
+  });
+
+  remoteBooks.forEach(function(book){
+    var normalized = normalizeAccountBook(book);
+    var key = getBookStatusKey(normalized);
+    if (!key || seen[key]) return;
+    seen[key] = true;
+    merged.push(normalized);
+  });
+
+  return merged;
+}
+
+function getAccountStatuses(){
+  var account = getAccountSnapshot();
+  var rows = Array.isArray(account.bookStatuses) ? account.bookStatuses : [];
+  var statuses = {};
+  rows.forEach(function(row){
+    var key = getBookStatusKey(row);
+    var status = row && row.status ? String(row.status).trim().toLowerCase() : '';
+    if (key && status) {
+      statuses[key] = status;
+    }
+  });
+  return statuses;
+}
+
+function getAccountRatings(){
+  var account = getAccountSnapshot();
+  var rows = Array.isArray(account.bookStatuses) ? account.bookStatuses : [];
+  var ratings = {};
+  rows.forEach(function(row){
+    var key = getBookStatusKey(row);
+    var metadata = row && row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
+    var rating = parseInt(row && row.rating ? row.rating : (metadata.rating || 0), 10);
+    if (key && rating >= 1 && rating <= 5) {
+      ratings[key] = rating;
+    }
+  });
+  return ratings;
+}
+
 function getShelf(){
   try {
-    return JSON.parse(localStorage.getItem('sssMyShelf')) || [];
+    var params = new URLSearchParams(window.location.search || '');
+    if ((window.location.hostname === 'localhost' || window.location.hostname.indexOf('.local') > -1) && params.get('mfy_empty_shelf') === '1'){
+      return [];
+    }
+  } catch(e){}
+  try {
+    return mergeAccountBooks(JSON.parse(localStorage.getItem('sssMyShelf')) || []);
   } catch(e){
-    return [];
+    return mergeAccountBooks([]);
   }
 }
 
@@ -368,6 +482,34 @@ function getSavedQuotes(){
   }
 }
 
+function decodeHtmlText(value){
+  var text = String(value || '');
+  if (!text) return '';
+  var textarea = document.createElement('textarea');
+  var decoded = text;
+  for (var i = 0; i < 3; i += 1){
+    textarea.innerHTML = decoded;
+    if (textarea.value === decoded) break;
+    decoded = textarea.value;
+  }
+  return decoded;
+}
+
+function normalizeQuoteData(quoteData){
+  quoteData = quoteData || {};
+  return {
+    handle: String(quoteData.handle || '').trim(),
+    title: decodeHtmlText(quoteData.title || quoteData.bookTitle || ''),
+    author: decodeHtmlText(quoteData.author || ''),
+    text: decodeHtmlText(quoteData.text || quoteData.quote || ''),
+    shelf: decodeHtmlText(quoteData.shelf || ''),
+    tropes: Array.isArray(quoteData.tropes)
+      ? quoteData.tropes.map(decodeHtmlText).filter(Boolean)
+      : String(quoteData.tropes || '').split(',').map(function(item){ return decodeHtmlText(item.trim()); }).filter(Boolean),
+    saved_at: quoteData.saved_at || Date.now()
+  };
+}
+
 function setSavedQuotes(data){
   localStorage.setItem('sssSavedQuotes', JSON.stringify(data));
   document.dispatchEvent(new CustomEvent('sss:quote-saves-updated', {
@@ -377,8 +519,9 @@ function setSavedQuotes(data){
 
 function getSavedQuoteKey(quoteData){
   if (!quoteData) return '';
-  var title = quoteData.title || quoteData.bookTitle || '';
-  var text = quoteData.text || quoteData.quote || '';
+  quoteData = normalizeQuoteData(quoteData);
+  var title = quoteData.title || '';
+  var text = quoteData.text || '';
   return (String(title).trim().toLowerCase() + '::' + String(text).trim().toLowerCase()).trim();
 }
 
@@ -403,17 +546,7 @@ function toggleSavedQuote(quoteData){
   });
 
   if (!exists){
-    next.unshift({
-      handle: quoteData.handle || '',
-      title: quoteData.title || quoteData.bookTitle || '',
-      author: quoteData.author || '',
-      text: quoteData.text || quoteData.quote || '',
-      shelf: quoteData.shelf || '',
-      tropes: Array.isArray(quoteData.tropes)
-        ? quoteData.tropes
-        : String(quoteData.tropes || '').split(',').map(function(item){ return item.trim(); }).filter(Boolean),
-      saved_at: Date.now()
-    });
+    next.unshift(normalizeQuoteData(quoteData));
   }
 
   setSavedQuotes(next);
@@ -422,10 +555,11 @@ function toggleSavedQuote(quoteData){
 
 function addQuoteNote(quoteData){
   if (!quoteData) return '';
+  quoteData = normalizeQuoteData(quoteData);
 
   var formatted = [
-    '"' + String(quoteData.text || quoteData.quote || '').trim() + '"',
-    [quoteData.title || quoteData.bookTitle || '', quoteData.author || ''].filter(Boolean).join(' by ')
+    '"' + String(quoteData.text || '').trim() + '"',
+    [quoteData.title || '', quoteData.author || ''].filter(Boolean).join(' by ')
   ].filter(Boolean).join('\n');
 
   try {
@@ -455,11 +589,47 @@ function getBookStatusKey(bookData){
   return String(rawKey).trim().toLowerCase();
 }
 
+function getBookStatusKeys(bookData){
+  if (!bookData) return [];
+
+  var seen = {};
+  return [
+    bookData.handle,
+    bookData.bookHandle,
+    bookData.book_handle,
+    bookData.title,
+    bookData.bookTitle,
+    bookData.book_title
+  ].map(function(value){
+    return String(value || '').trim().toLowerCase();
+  }).filter(function(key){
+    if (!key || seen[key]) return false;
+    seen[key] = true;
+    return true;
+  });
+}
+
+function getBookMapValue(bookData, map){
+  var keys = getBookStatusKeys(bookData);
+  for (var i = 0; i < keys.length; i += 1){
+    if (Object.prototype.hasOwnProperty.call(map || {}, keys[i])){
+      return map[keys[i]];
+    }
+  }
+  return undefined;
+}
+
 function getBookStatuses(){
   try {
-    return JSON.parse(localStorage.getItem('sssBookStatuses')) || {};
+    var params = new URLSearchParams(window.location.search || '');
+    if ((window.location.hostname === 'localhost' || window.location.hostname.indexOf('.local') > -1) && params.get('mfy_empty_shelf') === '1'){
+      return {};
+    }
+  } catch(e){}
+  try {
+    return Object.assign(getAccountStatuses(), JSON.parse(localStorage.getItem('sssBookStatuses')) || {});
   } catch(e){
-    return {};
+    return getAccountStatuses();
   }
 }
 
@@ -473,6 +643,23 @@ function getBookReactions(){
 
 function setBookReactions(data){
   localStorage.setItem('sssBookReactions', JSON.stringify(data));
+}
+
+function getBookRatings(){
+  try {
+    return Object.assign(getAccountRatings(), JSON.parse(localStorage.getItem('sssBookRatings')) || {});
+  } catch(e){
+    return getAccountRatings();
+  }
+}
+
+function setBookRatings(data){
+  localStorage.setItem('sssBookRatings', JSON.stringify(data || {}));
+  document.dispatchEvent(new CustomEvent('bbb:book-ratings-updated', {
+    detail: {
+      ratings: data || {}
+    }
+  }));
 }
 
 function setBookStatuses(data){
@@ -489,26 +676,99 @@ function getBookStatus(bookData){
   if (!key) return '';
 
   var statuses = getBookStatuses();
-  return statuses[key] || '';
+  return getBookMapValue(bookData, statuses) || '';
 }
 
 function setBookStatus(bookData, status){
-  var key = getBookStatusKey(bookData);
+  var keys = getBookStatusKeys(bookData);
+  var key = keys[0] || '';
   if (!key) return;
 
   var statuses = getBookStatuses();
 
-  if (status){
-    statuses[key] = status;
-  } else {
-    delete statuses[key];
-  }
+  keys.forEach(function(statusKey){
+    if (status){
+      statuses[statusKey] = status;
+    } else {
+      delete statuses[statusKey];
+    }
+  });
 
   setBookStatuses(statuses);
   document.dispatchEvent(new CustomEvent('bbb:book-status-changed', {
     detail: {
       key: key,
       status: status || '',
+      book: {
+        handle: bookData.handle || bookData.bookHandle || '',
+        title: bookData.title || bookData.bookTitle || '',
+        author: bookData.author || '',
+        cover: bookData.cover || '',
+        amazon: bookData.amazon || '',
+        bookshop: bookData.bookshop || ''
+      },
+      source: document.body.dataset.template || 'library'
+    }
+  }));
+}
+
+function getBookRating(bookData){
+  var key = getBookStatusKey(bookData);
+  if (!key && !bookData) return 0;
+
+  var ratings = getBookRatings();
+  var rating = parseInt(getBookMapValue(bookData, ratings) || bookData.rating || 0, 10);
+  return rating >= 1 && rating <= 5 ? rating : 0;
+}
+
+function updateBookRatingOnShelf(bookData, rating){
+  var keys = getBookStatusKeys(bookData);
+  if (!keys.length) return;
+
+  var shelf = getShelf();
+  var changed = false;
+  shelf = shelf.map(function(item){
+    var itemKeys = getBookStatusKeys(item);
+    var matches = itemKeys.some(function(itemKey){
+      return keys.indexOf(itemKey) > -1;
+    });
+    if (!matches) return item;
+    changed = true;
+    return Object.assign({}, item, { rating: rating || '' });
+  });
+
+  if (changed){
+    setShelf(shelf);
+    renderMyShelf();
+  }
+}
+
+function setBookRating(bookData, rating){
+  var keys = getBookStatusKeys(bookData);
+  var key = keys[0] || '';
+  if (!key) return;
+
+  var normalizedRating = parseInt(rating || 0, 10);
+  if (!(normalizedRating >= 1 && normalizedRating <= 5)){
+    normalizedRating = 0;
+  }
+
+  var ratings = getBookRatings();
+  keys.forEach(function(ratingKey){
+    if (normalizedRating){
+      ratings[ratingKey] = normalizedRating;
+    } else {
+      delete ratings[ratingKey];
+    }
+  });
+
+  setBookRatings(ratings);
+  updateBookRatingOnShelf(bookData, normalizedRating);
+  document.dispatchEvent(new CustomEvent('bbb:book-rating-changed', {
+    detail: {
+      key: key,
+      rating: normalizedRating,
+      status: getBookStatus(bookData),
       book: {
         handle: bookData.handle || bookData.bookHandle || '',
         title: bookData.title || bookData.bookTitle || '',
@@ -553,6 +813,12 @@ function ensureBookOnShelf(bookData){
   });
 
   if (exists){
+    var existingRating = getBookRating(bookData);
+    if (existingRating && String(exists.rating || '') !== String(existingRating)){
+      exists.rating = existingRating;
+      setShelf(shelf);
+      renderMyShelf();
+    }
     syncAllLibraryHearts();
     return;
   }
@@ -583,6 +849,7 @@ function ensureBookOnShelf(bookData){
     seriesName: bookData.seriesName || '',
     seriesNumber: bookData.seriesNumber || '',
     standalone: bookData.standalone || '',
+    rating: getBookRating(bookData) || bookData.rating || '',
     privateShelf: bookData.privateShelf || 'false'
   });
 
@@ -644,18 +911,58 @@ function ensureStatusRibbon(target){
   return ribbon;
 }
 
+function ratingStampText(rating){
+  rating = parseInt(rating || 0, 10);
+  if (!(rating >= 1 && rating <= 5)) return '';
+  return Array(rating + 1).join('★');
+}
+
+function ensureRatingStamp(target){
+  if (!target) return null;
+
+  var stamp = target.querySelector('[data-book-rating-stamp]');
+
+  if (!stamp){
+    stamp = document.createElement('div');
+    stamp.className = 'sss-lib__ratingStamp';
+    stamp.setAttribute('data-book-rating-stamp', '');
+    target.appendChild(stamp);
+  }
+
+  return stamp;
+}
+
+function applyRatingStamp(target, rating){
+  if (!target) return;
+
+  var stamp = target.querySelector('[data-book-rating-stamp]');
+  var stampText = ratingStampText(rating);
+
+  if (!stampText){
+    if (stamp) stamp.remove();
+    return;
+  }
+
+  stamp = ensureRatingStamp(target);
+  stamp.textContent = stampText;
+  stamp.setAttribute('aria-label', rating + ' out of 5 stars');
+}
+
 function applyBookStatusToCard(card){
   if (!card || card.classList.contains('sss-lib__book--placeholder')) return;
 
   var coverWrap = card.querySelector('.sss-lib__coverWrap');
   if (!coverWrap) return;
 
-  var status = getBookStatus({
+  var bookData = {
     handle: card.dataset.handle,
     title: card.dataset.title
-  });
+  };
+  var status = getBookStatus(bookData);
+  var rating = getBookRating(bookData);
 
   var ribbon = coverWrap.querySelector('[data-book-status-ribbon]');
+  applyRatingStamp(coverWrap, rating);
 
   if (!status){
     if (ribbon) ribbon.remove();
@@ -668,6 +975,152 @@ function applyBookStatusToCard(card){
   ribbon = ensureStatusRibbon(coverWrap);
   ribbon.className = 'sss-lib__statusRibbon ' + meta.className;
   ribbon.textContent = meta.label;
+}
+
+function applyBookRatingToCover(cover){
+  if (!cover) return;
+
+  var rating = getBookRating({
+    handle: cover.dataset.handle || cover.dataset.bookHandle || '',
+    title: cover.dataset.title || cover.dataset.bookTitle || '',
+    rating: cover.dataset.rating || ''
+  });
+
+  applyRatingStamp(cover, rating);
+}
+
+function bookDataFromElement(bookBtn){
+  if (!bookBtn || !bookBtn.dataset) return null;
+
+  return {
+    handle: bookBtn.dataset.handle || '',
+    url: bookBtn.dataset.url || '',
+    title: bookBtn.dataset.title || '',
+    author: bookBtn.dataset.author || '',
+    cover: bookBtn.dataset.cover || '',
+    amazon: bookBtn.dataset.amazon || '',
+    bookshop: bookBtn.dataset.bookshop || '',
+    spice: bookBtn.dataset.spice || '',
+    darkness: bookBtn.dataset.darkness || '',
+    tropes: bookBtn.dataset.tropes || '',
+    tropesDisplay: bookBtn.dataset.tropesDisplay || bookBtn.dataset.tropes || '',
+    why: bookBtn.dataset.why || '',
+    newsletter: bookBtn.dataset.newsletter || '',
+    tension: bookBtn.dataset.tension || '',
+    damage: bookBtn.dataset.damage || '',
+    yearning: bookBtn.dataset.yearning || '',
+    boyfriend: bookBtn.dataset.boyfriend || '',
+    boyfriendName: bookBtn.dataset.boyfriendName || '',
+    reread: bookBtn.dataset.reread || '',
+    ku: bookBtn.dataset.ku || '',
+    mini: bookBtn.dataset.mini || '',
+    series: bookBtn.dataset.series || '',
+    seriesName: bookBtn.dataset.seriesName || '',
+    seriesNumber: bookBtn.dataset.seriesNumber || '',
+    standalone: bookBtn.dataset.standalone || '',
+    rating: bookBtn.dataset.rating || '',
+    privateShelf: bookBtn.dataset.privateShelf || 'false'
+  };
+}
+
+function findBookPageSource(root){
+  var page = root ? root.closest('.sss-book-page') : document.querySelector('.sss-book-page');
+  var hero = root ? root.closest('.sss-book-page__hero') : null;
+
+  if (hero){
+    return hero.querySelector('.sss-book-page__coverWrap.sss-lib__book');
+  }
+
+  if (page){
+    return page.querySelector('.sss-book-page__coverWrap.sss-lib__book')
+      || page.querySelector('.sss-book-page__titleRow.sss-lib__book');
+  }
+
+  return null;
+}
+
+function renderBookPageRatingControls(root){
+  if (!root) return;
+
+  var source = findBookPageSource(root);
+  var bookData = bookDataFromElement(source);
+  if (!bookData || !bookData.title) return;
+
+  var rating = getBookRating(bookData);
+  var status = getBookStatus(bookData);
+  var meta = getBookStatusMeta(status);
+  var coverWrap = source && source.classList.contains('sss-book-page__coverWrap') ? source : null;
+  var ribbon = coverWrap ? coverWrap.querySelector('[data-book-status-ribbon]') : null;
+
+  if (coverWrap){
+    applyRatingStamp(coverWrap, rating);
+
+    if (!status){
+      if (ribbon) ribbon.remove();
+    } else if (meta){
+      ribbon = ensureStatusRibbon(coverWrap);
+      ribbon.className = 'sss-lib__statusRibbon ' + meta.className;
+      ribbon.textContent = meta.label;
+    }
+  }
+
+  root.querySelectorAll('[data-book-page-rating-option]').forEach(function(button){
+    var buttonRating = parseInt(button.getAttribute('data-book-page-rating-option') || '0', 10);
+    var active = rating >= buttonRating;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-checked', rating === buttonRating ? 'true' : 'false');
+  });
+
+  var summary = root.querySelector('[data-book-page-rating-summary]');
+  if (summary){
+    summary.textContent = rating
+      ? rating + '/5 saved. this book is marked read.'
+      : 'rating marks it read and saves it to your bookshelf.';
+  }
+}
+
+function bindBookPageRatingControls(){
+  var controls = document.querySelectorAll('[data-book-page-rating-controls]');
+  if (!controls.length) return;
+
+  if (!document.__sssBookPageRatingSyncBound){
+    document.__sssBookPageRatingSyncBound = true;
+    ['bbb:book-rating-changed', 'bbb:book-ratings-updated', 'bbb:book-status-changed', 'bbb:book-statuses-updated'].forEach(function(eventName){
+      document.addEventListener(eventName, function(){
+        document.querySelectorAll('[data-book-page-rating-controls]').forEach(renderBookPageRatingControls);
+      });
+    });
+  }
+
+  controls.forEach(function(root){
+    if (root.__sssBookPageRatingBound) return;
+    root.__sssBookPageRatingBound = true;
+
+    root.querySelectorAll('[data-book-page-rating-option]').forEach(function(button){
+      button.addEventListener('click', function(){
+        var source = findBookPageSource(root);
+        var bookData = bookDataFromElement(source);
+        var nextRating = parseInt(button.getAttribute('data-book-page-rating-option') || '0', 10);
+
+        if (!bookData || !bookData.title || !(nextRating >= 1 && nextRating <= 5)) return;
+
+        setBookStatus(bookData, 'read');
+        setBookRating(bookData, nextRating);
+        ensureBookOnShelf(bookData);
+        syncBookStatusUI();
+        syncAllLibraryHearts();
+        renderBookPageRatingControls(root);
+
+        document.querySelectorAll('.sss-lib__madeForYou').forEach(function(mfyRoot){
+          if (typeof mfyRoot.__refreshMadeForYou === 'function'){
+            mfyRoot.__refreshMadeForYou();
+          }
+        });
+      });
+    });
+
+    renderBookPageRatingControls(root);
+  });
 }
 
 function ensureModalStatusControls(modal){
@@ -703,6 +1156,18 @@ function ensureModalStatusControls(modal){
     '<button type="button" class="sss-lib__mstatusBtn is-obsessed" data-reaction-option="obsessed">obsessed</button>',
     '<button type="button" class="sss-lib__mstatusBtn is-liked" data-reaction-option="liked_it">liked it</button>',
     '<button type="button" class="sss-lib__mstatusBtn is-notforme" data-reaction-option="not_for_me">not for me</button>',
+    '</div>',
+    '</div>',
+    '<div class="sss-lib__mreaderRating" data-modal-rating-controls>',
+    '<div class="sss-lib__mstatusLabel">your rating</div>',
+    '<div class="sss-lib__mstarButtons" role="radiogroup" aria-label="rate this book">',
+    '<button type="button" class="sss-lib__mstarBtn" data-rating-option="1" aria-label="rate 1 star" aria-checked="false" role="radio">★</button>',
+    '<button type="button" class="sss-lib__mstarBtn" data-rating-option="2" aria-label="rate 2 stars" aria-checked="false" role="radio">★</button>',
+    '<button type="button" class="sss-lib__mstarBtn" data-rating-option="3" aria-label="rate 3 stars" aria-checked="false" role="radio">★</button>',
+    '<button type="button" class="sss-lib__mstarBtn" data-rating-option="4" aria-label="rate 4 stars" aria-checked="false" role="radio">★</button>',
+    '<button type="button" class="sss-lib__mstarBtn" data-rating-option="5" aria-label="rate 5 stars" aria-checked="false" role="radio">★</button>',
+    '</div>',
+    '<div class="sss-lib__mratingNote" data-modal-rating-note>rating marks it read and saves it to your bookshelf.</div>',
     '</div>'
   ].join('');
 
@@ -729,6 +1194,9 @@ function ensureModalStatusControls(modal){
       }
       if (resolvedStatus === 'tbr'){
         ensureBookOnShelf(modalBook);
+      }
+      if (resolvedStatus !== 'read'){
+        setBookRating(modalBook, 0);
       }
       syncBookStatusUI();
       document.querySelectorAll('.sss-lib__madeForYou').forEach(function(mfyRoot){
@@ -758,6 +1226,26 @@ function ensureModalStatusControls(modal){
     });
   });
 
+  controls.querySelectorAll('[data-rating-option]').forEach(function(button){
+    button.addEventListener('click', function(){
+      var modalBook = modal.__currentBook;
+      if (!modalBook) return;
+
+      var nextRating = parseInt(button.getAttribute('data-rating-option') || '0', 10);
+      if (!(nextRating >= 1 && nextRating <= 5)) return;
+
+      setBookStatus(modalBook, 'read');
+      setBookRating(modalBook, nextRating);
+      ensureBookOnShelf(modalBook);
+      syncBookStatusUI();
+      document.querySelectorAll('.sss-lib__madeForYou').forEach(function(mfyRoot){
+        if (typeof mfyRoot.__refreshMadeForYou === 'function'){
+          mfyRoot.__refreshMadeForYou();
+        }
+      });
+    });
+  });
+
   return controls;
 }
 
@@ -773,6 +1261,8 @@ function renderModalBookStatus(modal, bookData){
     : (coverWrap ? coverWrap.querySelector('[data-book-status-ribbon]') : null);
   var status = getBookStatus(bookData);
   var meta = getBookStatusMeta(status);
+  var rating = getBookRating(bookData);
+  applyRatingStamp(coverFrame || coverWrap, rating);
 
   if (!status){
     if (ribbon) ribbon.remove();
@@ -800,10 +1290,25 @@ function renderModalBookStatus(modal, bookData){
     var buttonReaction = button.getAttribute('data-reaction-option');
     button.classList.toggle('is-active', buttonReaction === reaction);
   });
+
+  controls.querySelectorAll('[data-rating-option]').forEach(function(button){
+    var buttonRating = parseInt(button.getAttribute('data-rating-option') || '0', 10);
+    var active = rating >= buttonRating;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-checked', rating === buttonRating ? 'true' : 'false');
+  });
+
+  var ratingNote = controls.querySelector('[data-modal-rating-note]');
+  if (ratingNote){
+    ratingNote.textContent = rating
+      ? rating + '/5 saved. this book is marked read.'
+      : 'rating marks it read and saves it to your bookshelf.';
+  }
 }
 
 function syncBookStatusUI(){
   document.querySelectorAll('.sss-lib__book').forEach(applyBookStatusToCard);
+  document.querySelectorAll('[data-book-rating-cover]').forEach(applyBookRatingToCover);
 
   document.querySelectorAll('.sss-lib__modal').forEach(function(modal){
     if (modal.__currentBook){
@@ -832,34 +1337,7 @@ function toggleSave(heartEl, bookBtn){
 
   var shelf = getShelf();
 
-var bookData = {
-  handle: bookBtn.dataset.handle || '',
-  url: bookBtn.dataset.url || '',
-  title: bookBtn.dataset.title || '',
-  author: bookBtn.dataset.author || '',
-  cover: bookBtn.dataset.cover || '',
-  amazon: bookBtn.dataset.amazon || '',
-  bookshop: bookBtn.dataset.bookshop || '',
-  spice: bookBtn.dataset.spice || '',
-  darkness: bookBtn.dataset.darkness || '',
-  tropes: bookBtn.dataset.tropes || '',
-  tropesDisplay: bookBtn.dataset.tropesDisplay || bookBtn.dataset.tropes || '',
-  why: bookBtn.dataset.why || '',
-  newsletter: bookBtn.dataset.newsletter || '',
-  tension: bookBtn.dataset.tension || '',
-  damage: bookBtn.dataset.damage || '',
-  yearning: bookBtn.dataset.yearning || '',
-  boyfriend: bookBtn.dataset.boyfriend || '',
-  boyfriendName: bookBtn.dataset.boyfriendName || '',
-  reread: bookBtn.dataset.reread || '',
-  ku: bookBtn.dataset.ku || '',
-  mini: bookBtn.dataset.mini || '',
-  series: bookBtn.dataset.series || '',
-  seriesName: bookBtn.dataset.seriesName || '',
-  seriesNumber: bookBtn.dataset.seriesNumber || '',
-  standalone: bookBtn.dataset.standalone || '',
-  privateShelf: bookBtn.dataset.privateShelf || 'false'
-};
+var bookData = bookDataFromElement(bookBtn);
 
 if (!bookData.title) return; // prevent broken saves
 
@@ -1047,6 +1525,7 @@ function hydrateShelfBook(book){
       series: sourceCard.dataset.series || '',
       seriesName: sourceCard.dataset.seriesName || '',
       seriesNumber: sourceCard.dataset.seriesNumber || '',
+      rating: sourceCard.dataset.rating || book.rating || '',
       privateShelf: sourceCard.dataset.privateShelf || 'false'
     };
   }
@@ -1085,6 +1564,7 @@ function hydrateShelfBook(book){
     series: match.series || '',
     seriesName: match.seriesName || '',
     seriesNumber: match.seriesNumber || '',
+    rating: book.rating || '',
     privateShelf: match.privateShelf || 'false'
   };
 }
@@ -1145,6 +1625,7 @@ function renderMyShelf(){
         data-series="${stringifyBookDatasetValue(hydratedBook.series)}"
         data-series-name="${stringifyBookDatasetValue(hydratedBook.seriesName)}"
         data-series-number="${stringifyBookDatasetValue(hydratedBook.seriesNumber)}"
+        data-rating="${stringifyBookDatasetValue(hydratedBook.rating || book.rating)}"
         data-private-shelf="${stringifyBookDatasetValue(hydratedBook.privateShelf)}"
       >
 
@@ -1163,7 +1644,7 @@ function renderMyShelf(){
           <img 
             class="sss-lib__cover"
             src="${stringifyBookDatasetValue(hydratedBook.cover || book.cover)}"
-            alt="${stringifyBookDatasetValue(hydratedBook.title || book.title)}"
+            alt="${stringifyBookDatasetValue(bookCoverAlt(hydratedBook.title || book.title, hydratedBook.author || book.author, hydratedBook.shelf || book.shelf))}"
           >
 
         </div>
@@ -1863,6 +2344,35 @@ function init(){
       }
       renderModalBookStatus(modal, data);
 
+      var modalNoteToggles = modal.querySelectorAll('[data-modal-note-toggle]');
+      modalNoteToggles.forEach(function(modalNoteToggle){
+        [
+          'handle',
+          'url',
+          'title',
+          'author',
+          'cover',
+          'amazon',
+          'bookshop',
+          'spice',
+          'tropes',
+          'mini',
+          'series',
+          'seriesName',
+          'seriesNumber',
+          'ku'
+        ].forEach(function(key){
+          if (data[key] !== undefined && data[key] !== null && String(data[key]).trim() !== ''){
+            modalNoteToggle.dataset[key] = String(data[key]);
+          } else {
+            delete modalNoteToggle.dataset[key];
+          }
+        });
+        modalNoteToggle.setAttribute('aria-label', 'add your private note for ' + (data.title || 'this book'));
+      });
+
+      if (window.bbbReaderNotesRefresh) window.bbbReaderNotesRefresh();
+
 var modalHeart = modal.querySelector('[data-modal-heart]');
 
 if(modalHeart){
@@ -1979,7 +2489,7 @@ if(modalHeart){
           coverEl.removeAttribute('src');
           coverEl.style.display = 'none';
         }
-        coverEl.alt = data.title || '';
+        coverEl.alt = bookCoverAlt(data.title, data.author, data.shelf);
       }
 
       var modalSpiceEl = ensureModalSpiceBadge();
@@ -2007,7 +2517,7 @@ if (seriesEl){
 var slug = (data.series || '').toLowerCase().trim();
     var url = slug ? "/series/" + encodeURIComponent(slug) + "/" : "#";
 
-    var name = data.seriesName ? data.seriesName + " series →" : "";
+    var name = data.seriesName ? bbbSeriesDisplayLabel(data.seriesName) + " →" : "";
 
     if (name){
       if (seriesEl.tagName && seriesEl.tagName.toLowerCase() === 'a') {
@@ -2197,13 +2707,22 @@ if (yearningEl){
 
       modal.hidden = false;
       modal.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('bbb-book-modal-open');
       lockModalScroll();
     }
+
+    window.sssOpenBookModal = function(bookData, restoreTarget){
+      if (!modal || !bookData) return false;
+      modalRestoreTarget = restoreTarget || null;
+      openModal(bookData);
+      return true;
+    };
 
     function closeModal(){
       if (!modal || modal.hidden) return;
       modal.hidden = true;
       modal.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('bbb-book-modal-open');
       if (document.activeElement && typeof document.activeElement.blur === 'function'){
         document.activeElement.blur();
       }
@@ -2213,7 +2732,7 @@ if (yearningEl){
     if (!window.__sssBookModalCloseCaptureBound){
       window.__sssBookModalCloseCaptureBound = true;
       document.addEventListener('click', function(e){
-        var closeTrigger = e.target.closest('[data-close]');
+        var closeTrigger = closestFromTarget(e.target, '[data-close]');
         var openBookModal = document.querySelector('.sss-lib__modal:not([hidden])');
         if (!closeTrigger || !openBookModal || !openBookModal.contains(closeTrigger)) return;
         e.preventDefault();
@@ -2302,15 +2821,17 @@ if (shareBtn){
 
 root.addEventListener('click', function(e){
 
-  const btn = e.target.closest('[data-title]');
+  const btn = closestFromTarget(e.target, '[data-title]');
   if(!btn) return;
 
-  if (e.target.closest('[data-heart]')) return;
-  if (e.target.closest('[data-book-page-link]')) return;
-  if (e.target.closest('.sss-lib__seriesBadge')) return;
+  if (closestFromTarget(e.target, '[data-heart]')) return;
+  if (closestFromTarget(e.target, '[data-reader-note-toggle]')) return;
+  if (closestFromTarget(e.target, '[data-book-page-link]')) return;
+  if (closestFromTarget(e.target, '.sss-lib__seriesBadge')) return;
   if (window.getSelection && String(window.getSelection()).trim()) return;
 
   e.preventDefault();
+  e.stopPropagation();
 
   if (btn.hasAttribute('disabled')) return;
 
@@ -2324,9 +2845,10 @@ root.addEventListener('click', function(e){
       btn.__sssModalBound = true;
 
       function handleOpen(e){
-        if (e.target.closest('[data-heart]')) return;
-        if (e.target.closest('[data-book-page-link]')) return;
-        if (e.target.closest('.sss-lib__seriesBadge')) return;
+        if (closestFromTarget(e.target, '[data-heart]')) return;
+        if (closestFromTarget(e.target, '[data-reader-note-toggle]')) return;
+        if (closestFromTarget(e.target, '[data-book-page-link]')) return;
+        if (closestFromTarget(e.target, '.sss-lib__seriesBadge')) return;
         if (btn.hasAttribute('disabled')) return;
         if (window.getSelection && String(window.getSelection()).trim()) return;
 
@@ -2728,7 +3250,8 @@ if(heart){
 /* bind modal click */
 clone.addEventListener('click', function(e){
 
-  if(e.target.closest('[data-heart]')) return;
+  if(closestFromTarget(e.target, '[data-heart]')) return;
+  if(closestFromTarget(e.target, '[data-reader-note-toggle]')) return;
 
   card.click();
 
@@ -2760,11 +3283,12 @@ syncBookStatusUI();
 
 document.addEventListener("DOMContentLoaded", function(){
 
-  init();
-  bindStandaloneBookPageSaveControls();
-  initMadeForYou();
-  initArchiveFilters();
-  syncBookStatusUI();
+	  init();
+	  bindStandaloneBookPageSaveControls();
+	  bindBookPageRatingControls();
+	  initMadeForYou();
+	  initArchiveFilters();
+	  syncBookStatusUI();
   loadTrending();
   openSharedBookFromUrl(0);
 
@@ -3428,18 +3952,25 @@ function initMadeForYou(){
   var dataEl = document.getElementById('sssMadeForYouData');
   var root = document.getElementById('sssMadeForYou');
   if (!dataEl || !root) return;
+  if (root.__bbbMadeForYouInitialized) return;
+  root.__bbbMadeForYouInitialized = true;
 
-  var storageKey = 'sssMadeForYouProfile';
-  var questionsOrder = ['name', 'craving', 'payoff', 'boyfriend_hook', 'boyfriend_dynamic', 'theme'];
+  var profileVersion = getMfyProfileVersion();
+  var accountScopedKey = getMfyAccountKey();
+  var storageKey = scopedMfyStorageKey('sssMadeForYouProfile');
+  var questionsOrder = ['name', 'heat_lane', 'group_chat_text', 'love_interest', 'wall_line'];
   var row = document.getElementById('sssMadeForYouRow');
+  var nextOpinionEl = document.getElementById('sssMfyNextOpinion');
   var matchBookEl = document.getElementById('sssMfyMatchBook');
   var boyfriendKicker = document.getElementById('sssMfyBoyfriendKicker');
   var backBtn = document.getElementById('sssMadeForYouBack');
+  var finishBtn = document.getElementById('sssMadeForYouFinish');
   var resetBtn = document.getElementById('sssMadeForYouReset');
   var nameInput = document.getElementById('sssMfyNameInput');
   var nameContinueBtn = document.getElementById('sssMfyNameContinue');
   var stepCount = document.getElementById('sssMfyStepCount');
   var progressFill = document.getElementById('sssMfyProgressFill');
+  var continueNote = root.querySelector('.sss-mfy__continueNote');
   var resultsEl = document.getElementById('sssMadeForYouResults');
   var resultPanels = Array.prototype.slice.call(root.querySelectorAll('[data-mfy-panel]'));
   var resultsRail = root.querySelector('.sss-mfy__resultsRail');
@@ -3448,8 +3979,13 @@ function initMadeForYou(){
   var resultsMeta = document.getElementById('sssMfyResultsMeta');
   var dashboardTitle = document.getElementById('sssMfyDashboardTitle');
   var dashboardKicker = document.getElementById('sssMfyDashboardKicker');
+  var newsletterDataEl = document.getElementById('sssMadeForYouNewsletters');
+  var blogPostsDataEl = document.getElementById('sssMadeForYouBlogPosts');
+  var boyfriendDataEl = document.getElementById('sssMadeForYouBoyfriends');
+  var readerTypesDataEl = document.getElementById('sssReaderTypesData');
   var resetResultsBtn = document.getElementById('sssMadeForYouResetResults');
   var customizeEl = document.getElementById('sssMfyCustomize');
+  var seeFullBreakdownBtn = document.getElementById('sssMfySeeFullBreakdown');
   var quoteSpotlightEl = document.getElementById('sssMfyQuoteSpotlight');
   var savedQuotesEl = document.getElementById('sssMfySavedQuotes');
   var readShelfEl = document.getElementById('sssMfyReadShelf');
@@ -3464,6 +4000,45 @@ function initMadeForYou(){
   var coreBody = document.getElementById('sssMfyCoreBody');
   var heroRain = document.getElementById('sssMfyHeroRain');
   var themeTokens = document.getElementById('sssMfyThemeTokens');
+  var dashboardSpice = document.getElementById('sssMfyDashboardSpice');
+  var dashboardSpiceLabel = document.getElementById('sssMfyDashboardSpiceLabel');
+  var dashboardReaderType = document.getElementById('sssMfyDashboardReaderType');
+  var dashboardReaderSignal = document.getElementById('sssMfyDashboardReaderSignal');
+  var dashboardTrope = document.getElementById('sssMfyDashboardTrope');
+  var dashboardTheme = document.getElementById('sssMfyDashboardTheme');
+  var dashboardThemeSignal = document.getElementById('sssMfyDashboardThemeSignal');
+  var visibleReaderType = document.getElementById('sssMfyVisibleReaderType');
+  var visibleReaderSignal = document.getElementById('sssMfyVisibleReaderSignal');
+  var visibleSpice = document.getElementById('sssMfyVisibleSpice');
+  var visibleSpiceLabel = document.getElementById('sssMfyVisibleSpiceLabel');
+  var visibleTrope = document.getElementById('sssMfyVisibleTrope');
+  var visibleTheme = document.getElementById('sssMfyVisibleTheme');
+  var personaBadge = document.getElementById('sssMfyPersonaBadge');
+  var refreshRecsBtn = document.getElementById('sssMfyRefreshRecs');
+  var dashboardBookshelf = document.getElementById('sssMfyDashboardBookshelf');
+  var bookshelfTabButtons = Array.prototype.slice.call(root.querySelectorAll('[data-mfy-bookshelf-tab]'));
+  var fictionalBfCard = document.getElementById('sssMfyFictionalBfCard');
+  var fictionalBfLabel = document.getElementById('sssMfyFictionalBfLabel');
+  var quickLinksGrid = document.getElementById('sssMfyQuickLinks');
+  var featureLinksGrid = document.getElementById('sssMfyFeatureLinks');
+  var societyDashboard = root.querySelector('[data-society-dashboard]');
+  var societyReaderBadge = root.querySelector('[data-society-reader-badge]');
+  var societyReaderBio = root.querySelector('[data-society-reader-bio]');
+  var societyReaderFootnote = root.querySelector('[data-society-reader-footnote]');
+  var societyHeatBar = root.querySelector('[data-society-heat-bar]');
+  var societyShelfPreview = root.querySelector('[data-society-shelf-preview]');
+  var societySaveCount = root.querySelector('[data-society-save-count]');
+  var societyReadCount = root.querySelector('[data-society-read-count]');
+  var societyTopTrope = root.querySelector('[data-society-top-trope]');
+  var societyBfName = root.querySelector('[data-society-bf-name]');
+  var societyBfCard = root.querySelector('[data-society-bf-card]');
+  var societyTropeDna = root.querySelector('[data-society-trope-dna]');
+  var societyPerks = root.querySelector('[data-society-perks]');
+  var societyDashboardTitle = root.querySelector('[data-society-dashboard-title]');
+  var societyThemeButton = root.querySelector('[data-society-theme-button]');
+  var noteInput = document.getElementById('sssMfyNoteInput');
+  var saveNoteBtn = document.getElementById('sssMfySaveNote');
+  var notesList = document.getElementById('sssMfyNotesList');
   var typeTitle = document.getElementById('sssMfyTypeTitle');
   var typeBody = document.getElementById('sssMfyTypeBody');
   var boyfriendEmojiBadge = document.getElementById('sssMfyBoyfriendEmojiBadge');
@@ -3495,6 +4070,9 @@ function initMadeForYou(){
   var manDialChoices = Array.prototype.slice.call(root.querySelectorAll('[data-mfy-dial-choice]'));
   var saveManDialBtn = document.getElementById('sssMfySaveManDial');
   var manDialSummary = document.getElementById('sssMfyManDialSummary');
+  var favoriteTropeButtons = Array.prototype.slice.call(root.querySelectorAll('[data-mfy-favorite-trope]'));
+  var saveFavoriteTropeBtn = document.getElementById('sssMfySaveFavoriteTrope');
+  var favoriteTropeSummary = document.getElementById('sssMfyFavoriteTropeSummary');
   var favoriteBookSearchInput = document.getElementById('sssMfyFavoriteBookSearch');
   var favoriteBookResults = document.getElementById('sssMfyFavoriteBookResults');
   var saveFavoriteBookBtn = document.getElementById('sssMfySaveFavoriteBook');
@@ -3513,9 +4091,54 @@ function initMadeForYou(){
   var currentStep = 0;
   var currentResultStep = 0;
   var isDashboardView = false;
+  var isPersonalLayerView = false;
   var draftHardNos = [];
   var draftManDial = '';
+  var draftFavoriteTrope = '';
   var draftFavoriteBook = '';
+  var dashboardBookshelfTab = 'reading';
+  var fallbackStorage = {};
+
+  function storageGet(key){
+    try {
+      if (window.localStorage){
+        var stored = window.localStorage.getItem(key);
+        if (stored !== null){
+          fallbackStorage[key] = stored;
+        }
+        return stored;
+      }
+    } catch(e) {}
+    return Object.prototype.hasOwnProperty.call(fallbackStorage, key) ? fallbackStorage[key] : null;
+  }
+
+  function storageSet(key, value){
+    fallbackStorage[key] = String(value);
+    try {
+      if (window.localStorage){
+        window.localStorage.setItem(key, String(value));
+      }
+    } catch(e) {}
+  }
+
+  function storageRemove(key){
+    delete fallbackStorage[key];
+    try {
+      if (window.localStorage){
+        window.localStorage.removeItem(key);
+      }
+    } catch(e) {}
+  }
+
+  function scopedMfyStorageKey(key){
+    return accountScopedKey ? key + '::' + accountScopedKey : key;
+  }
+
+  function cleanupLegacyMfyStorage(key){
+    if (!accountScopedKey) return;
+    if (key === 'bbbReaderSpiceProfile') return;
+    storageRemove(key);
+  }
 
   try {
     books = JSON.parse(dataEl.textContent) || [];
@@ -3530,11 +4153,43 @@ function initMadeForYou(){
     quoteLibrary = [];
   }
 
+  var newsletterLibrary = [];
+  try {
+    newsletterLibrary = newsletterDataEl ? (JSON.parse(newsletterDataEl.textContent) || []) : [];
+  } catch(e) {
+    newsletterLibrary = [];
+  }
+
+  var blogPostLibrary = [];
+  try {
+    blogPostLibrary = blogPostsDataEl ? (JSON.parse(blogPostsDataEl.textContent) || []) : [];
+  } catch(e) {
+    blogPostLibrary = [];
+  }
+
+  var boyfriendLibrary = [];
+  try {
+    boyfriendLibrary = boyfriendDataEl ? (JSON.parse(boyfriendDataEl.textContent) || []) : [];
+  } catch(e) {
+    boyfriendLibrary = [];
+  }
+
+  var readerTypeRegistry = [];
+  try {
+    readerTypeRegistry = readerTypesDataEl ? (JSON.parse(readerTypesDataEl.textContent) || []) : [];
+  } catch(e) {
+    readerTypeRegistry = [];
+  }
+
   var answerGroups = {
+    heat_lane: {},
+    group_chat_text: {},
+    love_interest: {},
+    wall_line: {},
     craving: {},
-    payoff: {},
-    boyfriend_hook: {},
-    boyfriend_dynamic: {},
+    favorite_trope: {},
+    reader_type_prior: {},
+    spice_dial: {},
     theme: {}
   };
 
@@ -3648,6 +4303,13 @@ function initMadeForYou(){
   };
 
   var spiceDialValues = ['soft_open_door', 'some_heat', 'balanced', 'high_spice', 'wreck_me'];
+  var storedSpiceProfileMap = {
+    1: 'soft_open_door',
+    2: 'some_heat',
+    3: 'balanced',
+    4: 'high_spice',
+    5: 'wreck_me'
+  };
   var legacySpiceDialMap = {
     safer: 'soft_open_door',
     broodier: 'balanced',
@@ -3657,7 +4319,23 @@ function initMadeForYou(){
   };
 
   var profile = loadProfile();
+  var accountSnapshot = getAccountSnapshot();
+  var sharedTasteProfile = loadSharedTasteProfile();
   var shouldPersistProfileMigration = false;
+  if (sharedTasteProfile.favorite_trope && !profile.favorite_trope){
+    profile.favorite_trope = sharedTasteProfile.favorite_trope;
+    shouldPersistProfileMigration = true;
+  }
+  if (sharedTasteProfile.dashboard_theme && !profile.theme){
+    profile.theme = sharedTasteProfile.dashboard_theme;
+    shouldPersistProfileMigration = true;
+  }
+  var storedSpiceProfileLevel = getStoredSpiceProfileLevel();
+  if (storedSpiceProfileLevel && profile.spice_profile !== storedSpiceProfileLevel){
+    profile.spice_profile = storedSpiceProfileLevel;
+    profile.spice_dial = storedSpiceProfileMap[storedSpiceProfileLevel] || profile.spice_dial || 'balanced';
+    shouldPersistProfileMigration = true;
+  }
   if (legacyThemeMap[profile.color] && !profile.theme){
     profile.theme = legacyThemeMap[profile.color];
     shouldPersistProfileMigration = true;
@@ -3690,6 +4368,29 @@ function initMadeForYou(){
       shouldPersistProfileMigration = true;
     }
   }
+  if (!profile.fictional_boyfriend){
+    var savedQuizBoyfriend = getSavedFictionalBoyfriend(profile);
+    if (savedQuizBoyfriend){
+      profile.fictional_boyfriend = savedQuizBoyfriend;
+      if (savedQuizBoyfriend.result_type && !profile.fictional_man){
+        profile.fictional_man = savedQuizBoyfriend.result_type;
+      }
+      shouldPersistProfileMigration = true;
+    }
+  } else if (profile.fictional_boyfriend && profile.fictional_boyfriend.result_type && !profile.fictional_man){
+    profile.fictional_man = profile.fictional_boyfriend.result_type;
+    shouldPersistProfileMigration = true;
+  }
+  if (profile.dashboard_built && profile.heat_lane && profile.group_chat_text && profile.love_interest && profile.wall_line){
+    var repairedReaderType = getQuizResolvedReaderTypeKey();
+    if (repairedReaderType && repairedReaderType !== profile.reader_type_prior){
+      profile.reader_type_prior = repairedReaderType;
+      if (readerTypePrimaryTrope[repairedReaderType]){
+        profile.favorite_trope = readerTypePrimaryTrope[repairedReaderType];
+      }
+      shouldPersistProfileMigration = true;
+    }
+  }
   if (!profile.spice_dial && profile.man_dial && legacySpiceDialMap[profile.man_dial]){
     profile.spice_dial = legacySpiceDialMap[profile.man_dial];
     delete profile.man_dial;
@@ -3697,6 +4398,14 @@ function initMadeForYou(){
   }
   if (profile.spice_dial && spiceDialValues.indexOf(profile.spice_dial) === -1){
     profile.spice_dial = 'balanced';
+    shouldPersistProfileMigration = true;
+  }
+  if (Array.isArray(profile.favorite_tropes) && profile.favorite_tropes.length && !profile.favorite_trope){
+    profile.favorite_trope = String(profile.favorite_tropes[0] || '').trim();
+    shouldPersistProfileMigration = true;
+  }
+  if (profile.favorite_trope){
+    profile.favorite_trope = normalize(profile.favorite_trope);
     shouldPersistProfileMigration = true;
   }
   if (profile.theme){
@@ -3715,9 +4424,14 @@ function initMadeForYou(){
     });
     shouldPersistProfileMigration = true;
   }
-  if (shouldPersistProfileMigration){
-    saveProfile(profile);
-  }
+	  if (shouldPersistProfileMigration){
+	    saveProfile(profile);
+	  } else if (
+	    profile && Object.keys(profile).length &&
+	    (!accountSnapshot.madeForYouProfile || !Object.keys(accountSnapshot.madeForYouProfile).length || isNewerProfile(profile, accountSnapshot.madeForYouProfile))
+	  ){
+	    saveProfile(profile);
+	  }
   syncAddonDrafts();
   currentStep = getInitialStep();
 
@@ -3728,6 +4442,13 @@ function initMadeForYou(){
       saveProfile(profile);
       syncStepUI();
       renderMadeForYou();
+    });
+    nameInput.addEventListener('keydown', function(event){
+      if (event.key !== 'Enter' || !nameContinueBtn || nameContinueBtn.disabled){
+        return;
+      }
+      event.preventDefault();
+      nameContinueBtn.click();
     });
   }
 
@@ -3747,6 +4468,46 @@ function initMadeForYou(){
   }
 
   var cravingProfiles = {
+    cozy: {
+      title: 'you are in your soft landing era',
+      body: 'you want comfort, sweetness, and romance that feels warm without going flat.',
+      tropeBoosts: ['friends to lovers', 'small town romance', 'grumpy sunshine', 'healing', 'comfort'],
+      shelfBoosts: ['contemporary romance', 'small town romance'],
+      boyfriendBoosts: ['sweetheart', 'athlete with heart', 'cold grump'],
+      stats: { yearning: 1, damage: 1 }
+    },
+    spicy: {
+      title: 'you want chaos with heat on it',
+      body: 'you are here for banter, bad decisions, sharp chemistry, and the kind of page-turning that feels a little reckless.',
+      tropeBoosts: ['enemies to lovers', 'forced proximity', 'forbidden romance', 'workplace romance'],
+      shelfBoosts: ['sports romance', 'dark romance', 'contemporary romance'],
+      boyfriendBoosts: ['arrogant asshole', 'bully', 'athlete with heart', 'mafia boss'],
+      stats: { tension: 2, spice: 2 }
+    },
+    dark: {
+      title: 'you are choosing the pretty bad idea',
+      body: 'you want intensity, obsession, and romance with enough danger to make the devotion feel impossible to ignore.',
+      tropeBoosts: ['dark romance', 'morally gray', 'touch her and die', 'obsession', 'forbidden romance'],
+      shelfBoosts: ['dark romance', 'gothic romance', 'romantasy'],
+      boyfriendBoosts: ['morally gray villain', 'mafia boss', 'stalker', 'obsessive protector'],
+      stats: { darkness: 2, tension: 2 }
+    },
+    slowburn: {
+      title: 'you want the almost-touch to do damage',
+      body: 'you like glances, restraint, tension that stretches, and payoff that earns every single page.',
+      tropeBoosts: ['slow burn', 'yearning', 'forced proximity', 'grumpy sunshine', 'second chance'],
+      shelfBoosts: ['sports romance', 'contemporary romance', 'romantasy'],
+      boyfriendBoosts: ['cold grump', 'emotionally unavailable man', 'academic rival', 'tortured prince'],
+      stats: { tension: 2, yearning: 2 }
+    },
+    surprise: {
+      title: 'you are letting the shelf choose violence',
+      body: 'you want the dashboard to read the room and hand you whatever feels most likely to hook you next.',
+      tropeBoosts: ['enemies to lovers', 'slow burn', 'forced proximity', 'second chance', 'forbidden romance'],
+      shelfBoosts: ['sports romance', 'contemporary romance', 'romantasy', 'dark romance'],
+      boyfriendBoosts: ['academic rival', 'athlete with heart', 'cold grump', 'morally gray villain'],
+      stats: { tension: 1, yearning: 1, spice: 1 }
+    },
     slow_ache: {
       title: 'you are here for yearning that ruins your peace',
       body: 'you like tension that stretches, glances that linger, and romance that takes its sweet time before it wrecks you.',
@@ -3796,6 +4557,50 @@ function initMadeForYou(){
     plot_addiction: { shelfBoosts: ['romantasy', 'sports romance'], stats: { tension: 1, darkness: 1 } },
     illegal_chemistry: { tropeBoosts: ['forbidden romance', 'enemies to lovers'], stats: { spice: 2 } }
   };
+
+	  var favoriteTropeProfiles = {
+	    'enemies to lovers': { tropeBoosts: ['enemies to lovers', 'rivals to lovers', 'banter'], boyfriendBoosts: ['academic rival', 'arrogant asshole'], stats: { tension: 1 } },
+	    'friends to lovers': { tropeBoosts: ['friends to lovers', 'childhood friends', 'best friends to lovers', 'teammates', 'small town romance', 'found family', 'healing'], shelfBoosts: ['contemporary romance', 'small town romance', 'sports romance'], boyfriendBoosts: ['sweetheart', 'athlete with heart'], stats: { yearning: 1, damage: 1 } },
+	    'second chance': { tropeBoosts: ['second chance', 'angst', 'yearning'], boyfriendBoosts: ['emotionally unavailable man', 'tortured prince'], stats: { damage: 1, yearning: 1 } },
+    'forced proximity': { tropeBoosts: ['forced proximity', 'one bed', 'only one bed'], boyfriendBoosts: ['cold grump', 'academic rival'], stats: { tension: 1 } },
+    'fake dating': { tropeBoosts: ['fake dating', 'fake relationship', 'marriage of convenience'], boyfriendBoosts: ['sweetheart', 'arrogant asshole'], stats: { yearning: 1 } },
+    'grumpy sunshine': { tropeBoosts: ['grumpy sunshine', 'slow burn', 'forced proximity'], boyfriendBoosts: ['cold grump', 'sweetheart'], stats: { yearning: 1 } },
+    'sports romance': { tropeBoosts: ['sports romance', 'teammates', 'friends to lovers'], shelfBoosts: ['sports romance'], boyfriendBoosts: ['athlete with heart'], stats: { tension: 1 } },
+    'dark romance': { tropeBoosts: ['dark romance', 'morally gray', 'touch her and die', 'obsession'], shelfBoosts: ['dark romance'], boyfriendBoosts: ['morally gray villain', 'mafia boss', 'stalker'], stats: { darkness: 2 } },
+    romantasy: { tropeBoosts: ['fantasy romance', 'romantasy', 'magic', 'fated mates'], shelfBoosts: ['romantasy', 'fantasy romance'], boyfriendBoosts: ['tortured prince', 'morally gray villain'], stats: { yearning: 1 } },
+    'age gap': { tropeBoosts: ['age gap', 'forbidden romance'], boyfriendBoosts: ['emotionally unavailable man', 'mafia boss'], stats: { tension: 1 } },
+    'forbidden romance': { tropeBoosts: ['forbidden romance', 'forbidden love', 'angst'], boyfriendBoosts: ['morally gray villain', 'mafia boss', 'arrogant asshole'], stats: { tension: 1, spice: 1 } },
+    'workplace romance': { tropeBoosts: ['workplace romance', 'office romance', 'enemies to lovers'], boyfriendBoosts: ['arrogant asshole', 'academic rival'], stats: { tension: 1 } },
+	    'small town romance': { tropeBoosts: ['small town romance', 'friends to lovers', 'healing'], shelfBoosts: ['small town romance'], boyfriendBoosts: ['sweetheart', 'athlete with heart'], stats: { yearning: 1 } }
+	  };
+
+	  var readerTypePrimaryTrope = {
+	    slow_burn_girlie: 'slow burn',
+	    tension_addict: 'enemies to lovers',
+	    fake_dating_fanatic: 'fake dating',
+	    dark_romance_girlie: 'dark romance',
+	    fantasy_girlie: 'romantasy',
+	    jersey_chaser: 'sports romance',
+	    sweet_romance_devotee: 'friends to lovers',
+	    chaos_reader: 'why choose',
+	    romance_reader: 'found family'
+	  };
+
+	  var tropeLaneAliases = {
+	    'friends to lovers': ['friends to lovers', 'best friends to lovers', 'childhood friends', 'friends-to-lovers', 'teammates', 'small town romance', 'found family', 'healing', 'comfort', 'single dad romance'],
+	    'enemies to lovers': ['enemies to lovers', 'rivals to lovers', 'hate to love', 'banter'],
+	    'slow burn': ['slow burn', 'yearning', 'he falls first'],
+	    'fake dating': ['fake dating', 'fake relationship', 'marriage of convenience'],
+	    'dark romance': ['dark romance', 'morally gray', 'touch her and die', 'obsession', 'stalker', 'villain gets the girl'],
+	    romantasy: ['romantasy', 'fantasy romance', 'fantasy', 'fated mates', 'paranormal romance'],
+	    'sports romance': ['sports romance', 'hockey romance', 'baseball romance', 'football romance', 'teammates'],
+	    'why choose': ['why choose', 'reverse harem', 'poly romance'],
+	    'found family': ['found family', 'healing', 'comfort', 'small town romance']
+	  };
+
+	  var tropeLaneConflicts = {
+	    'friends to lovers': ['dark romance', 'mafia romance', 'touch her and die', 'stalker', 'obsession', 'bully romance', 'morally gray', 'villain gets the girl', 'captor x captive']
+	  };
 
   var fictionalManProfiles = {
     academic_rival: {
@@ -3886,6 +4691,11 @@ function initMadeForYou(){
   };
 
   var fallingEmotions = {
+    cozy: 'reader breakdown: cozy, curated, and only a little emotionally unsafe.',
+    spicy: 'reader breakdown: chemistry first, consequences eventually.',
+    dark: 'reader breakdown: danger, devotion, and one questionable choice.',
+    slowburn: 'reader breakdown: yearning at a simmer until it finally ruins you.',
+    surprise: 'reader breakdown: letting the shelf choose the plot today.',
     slow_ache: 'reader breakdown: stomach-drop longing and slow-motion devastation.',
     messy_obsession: 'reader breakdown: pulse-up obsession and one very bad decision.',
     comfort_devotion: 'reader breakdown: safety first, then the ache sneaks in.',
@@ -3896,13 +4706,18 @@ function initMadeForYou(){
   var tokenLabels = {
     theme: {
       dark_hearts: 'annotated in black tabs',
-      obsession_red: 'dog-eared after midnight',
-      rose_ribbon: 'pressed petals in chapter ten',
-      stormy_blue: 'margin notes in the rain',
-      pearl_white: 'cream dust jacket energy',
+      obsession_red: 'golden hour',
+      rose_ribbon: 'rose garden',
+      stormy_blue: 'midnight library',
+      pearl_white: 'sage & honey',
       royal_violet: 'underlined in velvet ink'
     },
     craving: {
+      cozy: 'cozy & sweet',
+      spicy: 'spicy chaos',
+      dark: 'dark & intense',
+      slowburn: 'slow burn only',
+      surprise: 'surprise me',
       slow_ache: 'slow burn',
       messy_obsession: 'obsession / stalker',
       comfort_devotion: 'friends to lovers',
@@ -3915,6 +4730,27 @@ function initMadeForYou(){
       soft_after_storm: 'softness after the storm',
       plot_addiction: 'plot that eats your brain',
       illegal_chemistry: 'chemistry so sharp it hurts'
+    },
+    favorite_trope: {
+      'enemies to lovers': 'enemies to lovers',
+      'second chance': 'second chance',
+      'forced proximity': 'forced proximity',
+      'fake dating': 'fake dating',
+      'grumpy sunshine': 'grumpy x sunshine',
+      'sports romance': 'sports romance',
+      'dark romance': 'dark romance',
+      romantasy: 'fantasy romance',
+      'age gap': 'age gap',
+      'forbidden romance': 'forbidden love',
+      'workplace romance': 'workplace romance',
+      'small town romance': 'small town romance'
+    },
+    spice_dial: {
+      soft_open_door: '🌶 • barely sweet',
+      some_heat: '🌶🌶 • warm',
+      balanced: '🌶🌶🌶 • medium',
+      high_spice: '🌶🌶🌶🌶 • hot',
+      wreck_me: '🌶🌶🌶🌶🌶 • burn it'
     },
     fictional_man: {
       academic_rival: 'academic rival',
@@ -3934,9 +4770,16 @@ function initMadeForYou(){
 
   var favoriteBookMap = {};
   var favoriteBookQuotes = {};
+  var quoteLibraryHandles = {};
+  var quoteLibraryKeys = {};
 
   quoteLibrary.forEach(function(entry){
+    entry = normalizeQuoteData(entry);
     var handle = String(entry && entry.handle || '').trim();
+    if (handle){
+      quoteLibraryHandles[handle] = true;
+    }
+    quoteLibraryKeys[getSavedQuoteKey(entry)] = true;
     if (!handle) return;
     if (!favoriteBookQuotes[handle]){
       favoriteBookQuotes[handle] = [];
@@ -3947,33 +4790,30 @@ function initMadeForYou(){
   answerButtons.forEach(function(button){
     var question = button.getAttribute('data-mfy-answer');
     var value = button.getAttribute('data-value');
+    if (!answerGroups[question]){
+      answerGroups[question] = {};
+    }
     answerGroups[question][value] = button;
 
     button.addEventListener('click', function(){
-      var isChangingAnswer = profile[question] === value;
-      profile[question] = value;
+      var nextStep = Math.min(findNextStepIndex(question) + 1, questionsOrder.length - 1);
+      profile[question] = question === 'favorite_trope' ? normalize(value) : value;
+      if (question === 'spice_dial'){
+        saveSharedSpiceProfile(Math.max(spiceDialValues.indexOf(value) + 1, 1), 'made-for-you-answer');
+      }
+      syncQuizDerivedProfile();
       syncDerivedBoyfriendType();
       saveProfile(profile);
+      syncAddonDrafts();
       syncAnswerUI();
-      renderMadeForYou();
-
-      if (isChangingAnswer && currentStep !== questionsOrder.length - 1){
-        currentStep = Math.min(findNextStepIndex(question) + 1, questionsOrder.length - 1);
-        syncStepUI();
-        return;
-      }
-
       if (isProfileComplete()){
-        delete profile.dashboard_built;
-        saveProfile(profile);
-        currentStep = questionsOrder.length - 1;
-        syncStepUI();
-        showResults();
+        finishQuiz();
         return;
       }
 
-      currentStep = Math.min(findNextStepIndex(question) + 1, questionsOrder.length - 1);
+      currentStep = nextStep;
       syncStepUI();
+      renderMadeForYou();
     });
   });
 
@@ -3986,6 +4826,30 @@ function initMadeForYou(){
       syncStepUI();
     });
   }
+
+  if (finishBtn){
+    finishBtn.addEventListener('click', finishQuiz);
+  }
+
+  document.addEventListener('click', function(event){
+    var target = event.target && event.target.closest ? event.target.closest('#sssMadeForYouFinish') : null;
+    if (!target || !root.contains(target)){
+      return;
+    }
+
+    event.preventDefault();
+    finishQuiz();
+  }, true);
+
+  root.addEventListener('click', function(event){
+    var target = event.target && event.target.closest ? event.target.closest('#sssMadeForYouFinish') : null;
+    if (!target || !root.contains(target)){
+      return;
+    }
+
+    event.preventDefault();
+    finishQuiz();
+  });
 
   if (resetBtn){
     resetBtn.addEventListener('click', function(){
@@ -4016,6 +4880,47 @@ function initMadeForYou(){
     });
   }
 
+  if (refreshRecsBtn){
+    refreshRecsBtn.addEventListener('click', function(){
+      renderRecommendations(Object.keys(profile).filter(function(key){ return !!profile[key]; }).length);
+      renderFictionalBfCard();
+    });
+  }
+
+  bookshelfTabButtons.forEach(function(button){
+    button.addEventListener('click', function(){
+      dashboardBookshelfTab = button.getAttribute('data-mfy-bookshelf-tab') || 'reading';
+      renderDashboardBookshelf();
+    });
+  });
+
+  if (saveNoteBtn && noteInput && notesList){
+    saveNoteBtn.addEventListener('click', function(){
+      var note = String(noteInput.value || '').trim();
+      if (!note) return;
+      var item = document.createElement('div');
+      item.className = 'sss-mfy__noteItem';
+      item.innerHTML = '<p></p><span>general · just now</span>';
+      item.querySelector('p').textContent = note;
+      notesList.prepend(item);
+      noteInput.value = '';
+    });
+  }
+
+  if (seeFullBreakdownBtn){
+    seeFullBreakdownBtn.addEventListener('click', function(){
+      syncProfileFromQuizUI();
+      syncDerivedBoyfriendType();
+      if (!isProfileComplete() || !hasRequiredPersonalLayers()){
+        syncStepUI();
+        syncAddonUI();
+        return;
+      }
+      renderMadeForYou();
+      showFullBreakdown();
+    });
+  }
+
   addonButtons.forEach(function(button){
     button.addEventListener('click', function(){
       var key = button.getAttribute('data-mfy-addon');
@@ -4041,7 +4946,10 @@ function initMadeForYou(){
       } else {
         draftHardNos.push(value);
       }
+      profile.hard_nos = draftHardNos.slice();
+      saveProfile(profile);
       syncAddonUI();
+      renderMadeForYou();
     });
   });
 
@@ -4060,22 +4968,34 @@ function initMadeForYou(){
       draftManDial = spiceDialValues[Number(manDialInput.value || 0)] || 'soft_open_door';
       syncAddonUI();
     });
+    manDialInput.addEventListener('change', function(){
+      saveManDialLayer(true);
+    });
   }
 
   manDialChoices.forEach(function(button){
     button.addEventListener('click', function(){
       draftManDial = button.getAttribute('data-mfy-dial-choice') || 'soft_open_door';
-      syncAddonUI();
+      saveManDialLayer(true);
+    });
+  });
+
+  favoriteTropeButtons.forEach(function(button){
+    button.addEventListener('click', function(){
+      draftFavoriteTrope = normalize(button.getAttribute('data-mfy-favorite-trope') || '');
+      saveFavoriteTropeLayer(true);
     });
   });
 
   if (saveManDialBtn){
     saveManDialBtn.addEventListener('click', function(){
-      profile.spice_dial = draftManDial || 'soft_open_door';
-      saveProfile(profile);
-      syncAddonUI();
-      renderMadeForYou();
-      closeAddon('spice_dial');
+      saveManDialLayer(true);
+    });
+  }
+
+  if (saveFavoriteTropeBtn){
+    saveFavoriteTropeBtn.addEventListener('click', function(){
+      saveFavoriteTropeLayer(true);
     });
   }
 
@@ -4088,12 +5008,7 @@ function initMadeForYou(){
 
   if (saveFavoriteBookBtn){
     saveFavoriteBookBtn.addEventListener('click', function(){
-      profile.favorite_book = draftFavoriteBook || '';
-      saveProfile(profile);
-      syncAddonUI();
-      renderMadeForYou();
-      syncResultStepUI();
-      closeAddon('favorite_book');
+      saveFavoriteBookLayer(true);
     });
   }
 
@@ -4101,6 +5016,56 @@ function initMadeForYou(){
     syncAddonUI();
     renderMadeForYou();
   };
+
+  function findMadeForYouBookFromCard(card){
+    if (!card) return null;
+    var handle = normalize(card.dataset.handle || '');
+    var title = normalize(card.dataset.title || '');
+
+    return books.find(function(book){
+      return (handle && normalize(book.handle || book.book_handle) === handle) ||
+        (title && normalize(book.title || book.book_title) === title);
+    }) || null;
+  }
+
+  function openMadeForYouDashboardBook(card){
+    var book = findMadeForYouBookFromCard(card);
+    if (!book) return false;
+
+    if (typeof window.sssOpenBookModal === 'function' && window.sssOpenBookModal(book, card)){
+      return true;
+    }
+
+    var source = Array.from(root.querySelectorAll('.sss-mfy__sourceGrid .sss-lib__book[data-title]')).find(function(sourceCard){
+      return getBookStatusKey(sourceCard.dataset || {}) === getBookStatusKey(book);
+    }) || null;
+
+    if (source){
+      source.click();
+      return true;
+    }
+
+    return false;
+  }
+
+  root.addEventListener('click', function(event){
+    var card = closestFromTarget(event.target, '[data-mfy-dashboard-book]');
+    if (!card || !root.contains(card)) return;
+    if (openMadeForYouDashboardBook(card)){
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  });
+
+  root.addEventListener('keydown', function(event){
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    var card = closestFromTarget(event.target, '[data-mfy-dashboard-book]');
+    if (!card || !root.contains(card)) return;
+    if (openMadeForYouDashboardBook(card)){
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  });
 
   document.addEventListener('sss:quote-saves-updated', function(){
     if (!root || !root.isConnected) return;
@@ -4110,25 +5075,242 @@ function initMadeForYou(){
 
   syncAnswerUI();
   syncStepUI();
-  populateFavoriteBookSelect();
-  syncAddonUI();
-  renderMadeForYou();
+	  populateFavoriteBookSelect();
+	  syncAddonUI();
+	  renderMadeForYou();
+	  refreshRemoteProfile();
 
-  if (isProfileComplete() && profile.dashboard_built){
-    showResults(true);
-  }
+	  var shouldOpenResultsFromUrl = window.location.search.indexOf('mfy_results=1') > -1;
+	  if (isProfileComplete()){
+	    showResults(!!profile.dashboard_built && !shouldOpenResultsFromUrl);
+	    saveProfile(profile);
+	  }
 
-  function loadProfile(){
+	  function loadProfile(){
+	    var accountProfile = getSnapshotProfile();
+	    var localProfile = {};
+	    try {
+	      localProfile = JSON.parse(storageGet(storageKey)) || {};
+	    } catch(e) {
+	      localProfile = {};
+	    }
+	    if (!isCurrentMfyProfile(localProfile)){
+	      localProfile = {};
+	      storageRemove(storageKey);
+	    }
+	    cleanupLegacyMfyStorage('sssMadeForYouProfile');
+	    if (!isCurrentMfyProfile(accountProfile)){
+	      accountProfile = {};
+	    }
+
+	    if (isNewerProfile(accountProfile, localProfile)){
+	      storageSet(storageKey, JSON.stringify(accountProfile));
+	      return accountProfile;
+	    }
+
+	    return localProfile;
+	  }
+
+	  function saveProfile(nextProfile){
+	    var savedProfile = nextProfile || {};
+	    if (Object.keys(savedProfile).length){
+	      savedProfile.mfy_profile_version = profileVersion;
+	    }
+	    savedProfile.updatedAt = new Date().toISOString();
+	    storageSet(storageKey, JSON.stringify(savedProfile));
+	    cleanupLegacyMfyStorage('sssMadeForYouProfile');
+	    saveSharedTasteProfile(savedProfile);
+	    queueRemoteProfileSave(savedProfile);
+	  }
+
+	  function getReaderAccountApi(){
+	    var directApi = typeof BBBReaderAccountApi !== 'undefined' ? BBBReaderAccountApi : window.BBBReaderAccountApi;
+	    var siteData = typeof BBBSiteData !== 'undefined' ? BBBSiteData : window.BBBSiteData;
+	    var api = directApi || (siteData && siteData.readerAccount) || {};
+	    return api && api.profileEndpoint && api.nonce ? api : null;
+	  }
+
+	  function getMfyProfileVersion(){
+	    var directApi = typeof BBBReaderAccountApi !== 'undefined' ? BBBReaderAccountApi : window.BBBReaderAccountApi;
+	    var siteData = typeof BBBSiteData !== 'undefined' ? BBBSiteData : window.BBBSiteData;
+	    var api = directApi || (siteData && siteData.readerAccount) || {};
+	    return String((api && api.profileVersion) || 'mfy-2026-06-11-reader-types');
+	  }
+
+	  function getMfyAccountKey(){
+	    var directApi = typeof BBBReaderAccountApi !== 'undefined' ? BBBReaderAccountApi : window.BBBReaderAccountApi;
+	    var siteData = typeof BBBSiteData !== 'undefined' ? BBBSiteData : window.BBBSiteData;
+	    var api = directApi || (siteData && siteData.readerAccount) || {};
+	    var snapshot = getAccountSnapshot();
+	    var rootKey = root && root.dataset ? root.dataset.mfyAccountKey : '';
+	    return String(rootKey || api.accountKey || snapshot.accountKey || '').trim();
+	  }
+
+	  function isCurrentMfyProfile(candidate){
+	    if (!candidate || typeof candidate !== 'object' || !Object.keys(candidate).length) return false;
+	    return String(candidate.mfy_profile_version || candidate.profile_version || '') === profileVersion;
+	  }
+
+	  function getSnapshotProfile(){
+	    var snapshot = getAccountSnapshot();
+	    var snapshotProfile = snapshot && snapshot.madeForYouProfile && typeof snapshot.madeForYouProfile === 'object'
+	      ? snapshot.madeForYouProfile
+	      : {};
+	    return isCurrentMfyProfile(snapshotProfile) ? snapshotProfile : {};
+	  }
+
+	  function profileTime(profile){
+	    var raw = profile && (profile.updatedAt || profile.updated_at || '');
+	    var time = raw ? Date.parse(String(raw)) : 0;
+	    return Number.isFinite(time) ? time : 0;
+	  }
+
+	  function isNewerProfile(candidate, current){
+	    if (!candidate || typeof candidate !== 'object' || !Object.keys(candidate).length) return false;
+	    if (!current || typeof current !== 'object' || !Object.keys(current).length) return true;
+	    return profileTime(candidate) > profileTime(current);
+	  }
+
+	  var remoteProfileSaveTimer = null;
+	  function queueRemoteProfileSave(nextProfile){
+	    var api = getReaderAccountApi();
+	    if (!api) return;
+	    window.clearTimeout(remoteProfileSaveTimer);
+	    remoteProfileSaveTimer = window.setTimeout(function(){
+	      window.fetch(api.profileEndpoint, {
+	        method: 'POST',
+	        credentials: 'same-origin',
+	        headers: {
+	          'Content-Type': 'application/json',
+	          'X-WP-Nonce': api.nonce
+	        },
+	        body: JSON.stringify({ profile: nextProfile || {} })
+	      }).catch(function(error){
+	        console.log('Made For You profile sync failed', error);
+	      });
+	    }, 450);
+	  }
+
+	  function refreshRemoteProfile(){
+	    var api = getReaderAccountApi();
+	    if (!api) return;
+	    window.fetch(api.profileEndpoint, {
+	      method: 'GET',
+	      credentials: 'same-origin',
+	      headers: { 'X-WP-Nonce': api.nonce }
+	    }).then(function(response){
+	      if (!response.ok) throw new Error('profile fetch failed');
+	      return response.json();
+	    }).then(function(payload){
+	      var remoteProfile = payload && payload.profile && typeof payload.profile === 'object' ? payload.profile : {};
+	      if (!isCurrentMfyProfile(remoteProfile)) return;
+	      if (!isNewerProfile(remoteProfile, profile)) return;
+	      profile = remoteProfile;
+	      storageSet(storageKey, JSON.stringify(profile));
+	      syncAnswerUI();
+	      syncStepUI();
+	      syncAddonDrafts();
+	      syncAddonUI();
+	      renderMadeForYou();
+	      if (isProfileComplete()){
+	        showResults(!!profile.dashboard_built);
+	        saveProfile(profile);
+	      }
+	    }).catch(function(error){
+	      console.log('Made For You profile fetch failed', error);
+	    });
+	  }
+
+	  function loadSharedTasteProfile(){
     try {
-      return JSON.parse(localStorage.getItem(storageKey)) || {};
+      return JSON.parse(storageGet(scopedMfyStorageKey('bbbReaderTasteProfile'))) || {};
     } catch(e) {
       return {};
     }
   }
 
-  function saveProfile(nextProfile){
-    localStorage.setItem(storageKey, JSON.stringify(nextProfile || {}));
+  function saveSharedTasteProfile(nextProfile){
+    try {
+      var existing = loadSharedTasteProfile();
+      var persona = getPersonaProfile();
+      var sharedProfile = Object.assign({}, existing, {
+        favorite_trope: normalize(nextProfile.favorite_trope || existing.favorite_trope || ''),
+        dashboard_theme: persona && persona.theme ? persona.theme.name : existing.dashboard_theme || '',
+        reader_type: persona && persona.key ? persona.key : existing.reader_type || '',
+        reader_type_prior: nextProfile.reader_type_prior || existing.reader_type_prior || '',
+        spice_profile: Number(nextProfile.spice_profile || existing.spice_profile || 0),
+        spice_dial: nextProfile.spice_dial || existing.spice_dial || '',
+        fictional_boyfriend: nextProfile.fictional_boyfriend || existing.fictional_boyfriend || null
+      });
+      storageSet(scopedMfyStorageKey('bbbReaderTasteProfile'), JSON.stringify(sharedProfile));
+      cleanupLegacyMfyStorage('bbbReaderTasteProfile');
+    } catch(e) {}
   }
+
+  function getStoredSpiceProfileLevel(){
+    var level = Number(storageGet(scopedMfyStorageKey('bbbReaderSpiceProfile')) || (!accountScopedKey ? storageGet('bbbReaderSpiceProfile') : '') || 0);
+    return level >= 1 && level <= 5 ? level : 0;
+  }
+
+  function saveSharedSpiceProfile(level, source){
+    level = Number(level || 0);
+    if (!(level >= 1 && level <= 5)) return;
+
+    storageSet(scopedMfyStorageKey('bbbReaderSpiceProfile'), String(level));
+    storageSet('bbbReaderSpiceProfile', String(level));
+    profile.spice_profile = level;
+    profile.spice_dial = storedSpiceProfileMap[level] || profile.spice_dial || 'balanced';
+
+    try {
+      var existing = loadSharedTasteProfile();
+      existing.spice_profile = level;
+      existing.spice_dial = profile.spice_dial;
+      storageSet(scopedMfyStorageKey('bbbReaderTasteProfile'), JSON.stringify(existing));
+      storageSet('bbbReaderTasteProfile', JSON.stringify(existing));
+    } catch(e) {}
+
+    window.dispatchEvent(new CustomEvent('bbb:spice-profile-changed', {
+      detail: { level: level, source: source || 'made-for-you' }
+    }));
+
+    var api = window.BBBReaderAccountApi || (window.BBBSiteData && window.BBBSiteData.readerAccount) || {};
+    if (api && api.spiceEndpoint && api.nonce) {
+      window.fetch(api.spiceEndpoint, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-WP-Nonce': api.nonce
+        },
+        body: JSON.stringify({ level: level })
+      }).catch(function(error){
+        console.log('Reader spice profile sync failed', error);
+      });
+    }
+  }
+
+  function syncStoredSpiceProfile(){
+    var level = getStoredSpiceProfileLevel();
+    if (!level || profile.spice_profile === level) return false;
+    if (!profile.dashboard_built && !profile.spice_dial) return false;
+
+    profile.spice_profile = level;
+    profile.spice_dial = storedSpiceProfileMap[level] || profile.spice_dial || 'balanced';
+    saveProfile(profile);
+    return true;
+  }
+
+  window.addEventListener('bbb:spice-profile-changed', function(event){
+    var level = Number(event.detail && event.detail.level || 0);
+    if (!(level >= 1 && level <= 5) || profile.spice_profile === level) return;
+    profile.spice_profile = level;
+    profile.spice_dial = storedSpiceProfileMap[level] || profile.spice_dial || 'balanced';
+    saveProfile(profile);
+    syncAnswerUI();
+    syncAddonDrafts();
+    syncAddonUI();
+    renderMadeForYou();
+  });
 
   function syncDerivedBoyfriendType(){
     var nextType = deriveBoyfriendTypeFromQuiz(profile);
@@ -4154,9 +5336,48 @@ function initMadeForYou(){
   }
 
   function isProfileComplete(){
+    syncProfileFromQuizUI();
     return questionsOrder.every(function(question){
+      if (question === 'name' && nameInput && String(nameInput.value || '').trim()){
+        return true;
+      }
+      if (root.querySelector('[data-mfy-answer="' + question + '"].is-active')){
+        return true;
+      }
       return !!String(profile[question] || '').trim();
     });
+  }
+
+  function syncProfileFromQuizUI(){
+    if (nameInput && String(nameInput.value || '').trim()){
+      profile.name = String(nameInput.value || '').trim();
+    }
+
+    root.querySelectorAll('[data-mfy-answer].is-active').forEach(function(button){
+      var question = button.getAttribute('data-mfy-answer');
+      var value = button.getAttribute('data-value');
+      if (question && value){
+        profile[question] = question === 'favorite_trope' ? normalize(value) : value;
+      }
+    });
+    syncQuizDerivedProfile();
+  }
+
+  function finishQuiz(){
+    syncProfileFromQuizUI();
+    syncQuizDerivedProfile();
+    syncDerivedBoyfriendType();
+    if (!isProfileComplete()){
+      syncStepUI();
+      return;
+    }
+
+    delete profile.dashboard_built;
+    saveProfile(profile);
+    currentStep = questionsOrder.length - 1;
+    syncStepUI();
+    showFullBreakdown();
+    renderMadeForYou();
   }
 
   function findNextStepIndex(question){
@@ -4164,9 +5385,12 @@ function initMadeForYou(){
   }
 
   function syncStepUI(){
+    root.classList.toggle('is-first-step', currentStep === 0);
+
     questionEls.forEach(function(questionEl, index){
       var questionKey = questionEl.getAttribute('data-mfy-question');
       questionEl.classList.toggle('is-answered', !!profile[questionKey]);
+      questionEl.classList.toggle('is-active', index === currentStep);
     });
 
     if (stepCount){
@@ -4179,22 +5403,65 @@ function initMadeForYou(){
 
     if (backBtn){
       backBtn.disabled = currentStep === 0;
+      backBtn.hidden = currentStep === 0;
+    }
+
+    if (finishBtn){
+      finishBtn.hidden = true;
     }
 
     if (nameContinueBtn){
       nameContinueBtn.disabled = !String(profile.name || '').trim();
     }
 
+    if (continueNote){
+      continueNote.textContent = questionsOrder[currentStep] === 'name' ? 'enter your name to keep going' : 'tap an answer to keep going';
+    }
+
     if (trackEl){
       trackEl.style.transform = 'translateX(-' + (currentStep * 100) + '%)';
     }
 
-    if (!isProfileComplete()){
+    if (isProfileComplete() && currentStep === questionsOrder.length - 1 && !root.classList.contains('is-complete') && !isPersonalLayerView){
+      window.setTimeout(function(){
+        if (isProfileComplete() && currentStep === questionsOrder.length - 1 && !root.classList.contains('is-complete') && !isPersonalLayerView){
+          finishQuiz();
+        }
+      }, 0);
+    } else if (!isProfileComplete()){
       hideResults();
     }
   }
 
+  function showPersonalLayers(){
+    isPersonalLayerView = true;
+    isDashboardView = false;
+    root.classList.add('is-complete', 'is-layering');
+    if (resultsEl){
+      resultsEl.hidden = false;
+      resultsEl.classList.remove('is-visible', 'is-dashboard');
+    }
+    if (customizeEl){
+      customizeEl.hidden = false;
+      window.requestAnimationFrame(function(){
+        customizeEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+    syncAddonUI();
+    syncResultStepUI();
+  }
+
+  function showFullBreakdown(){
+    isPersonalLayerView = false;
+    root.classList.remove('is-layering');
+    profile.dashboard_built = true;
+    saveProfile(profile);
+    showResults(true);
+  }
+
   function showResults(preserveDashboard){
+    isPersonalLayerView = false;
+    root.classList.remove('is-layering');
     root.classList.add('is-complete');
     if (resultsEl){
       currentResultStep = preserveDashboard ? (resultPanels.length - 1) : 0;
@@ -4212,7 +5479,8 @@ function initMadeForYou(){
   }
 
   function hideResults(){
-    root.classList.remove('is-complete');
+    isPersonalLayerView = false;
+    root.classList.remove('is-complete', 'is-layering');
     if (resultsEl){
       resultsEl.hidden = true;
       resultsEl.classList.remove('is-visible');
@@ -4222,9 +5490,10 @@ function initMadeForYou(){
 
   function syncResultStepUI(){
     var canShowDashboardExtras = isDashboardView && !!profile.dashboard_built;
-    var canShowReadShelf = canShowDashboardExtras && !!profile.favorite_book;
+    var canShowPersonalLayers = isPersonalLayerView;
+    var canShowReadShelf = canShowDashboardExtras;
 
-    if (!canShowDashboardExtras && Array.isArray(profile.open_addons) && profile.open_addons.length){
+    if (!canShowPersonalLayers && Array.isArray(profile.open_addons) && profile.open_addons.length){
       profile.open_addons = [];
       saveProfile(profile);
     }
@@ -4233,13 +5502,13 @@ function initMadeForYou(){
       resultsEl.classList.toggle('is-dashboard', isDashboardView);
     }
     if (customizeEl){
-      customizeEl.hidden = !canShowDashboardExtras;
+      customizeEl.hidden = !canShowPersonalLayers;
     }
     if (quoteSpotlightEl){
-      quoteSpotlightEl.hidden = !canShowDashboardExtras || !Boolean(getFavoriteBookQuote());
+      quoteSpotlightEl.hidden = true;
     }
     if (savedQuotesEl){
-      setSlowRevealState(savedQuotesEl, canShowDashboardExtras && getSavedQuotes().length > 0);
+      setSlowRevealState(savedQuotesEl, canShowDashboardExtras && getVisibleSavedQuotes().length > 0);
     }
     if (readShelfEl){
       setSlowRevealState(readShelfEl, canShowReadShelf);
@@ -4266,13 +5535,26 @@ function initMadeForYou(){
 
   function resetMadeForYou(){
     profile = {};
-    localStorage.removeItem(storageKey);
+    storageRemove(storageKey);
+    storageRemove(scopedMfyStorageKey('bbbReaderTasteProfile'));
+    storageRemove(scopedMfyStorageKey('bbbReaderTypeState'));
+    cleanupLegacyMfyStorage('bbbReaderTasteProfile');
+    cleanupLegacyMfyStorage('bbbReaderTypeState');
     if (nameInput){
       nameInput.value = '';
     }
     currentStep = 0;
     currentResultStep = 0;
     isDashboardView = false;
+    isPersonalLayerView = false;
+    root.classList.remove('is-complete', 'is-layering');
+    if (resultsEl){
+      resultsEl.hidden = true;
+      resultsEl.classList.remove('is-visible', 'is-dashboard');
+    }
+    if (customizeEl){
+      customizeEl.hidden = true;
+    }
     syncAnswerUI();
     syncStepUI();
     syncResultStepUI();
@@ -4283,11 +5565,29 @@ function initMadeForYou(){
     }
   }
 
+  function manualVibeScore(book, sourceHandle){
+    if (!book || !book.handle || !sourceHandle) return 0;
+
+    var targetHandle = normalize(book.handle);
+    var sourceKey = normalize(sourceHandle);
+    var related = (book.most_like || book.mostLike || []).map(normalize);
+    var sourceBook = books.find(function(item){
+      return normalize(item && item.handle) === sourceKey;
+    });
+    var sourceRelated = sourceBook ? (sourceBook.most_like || sourceBook.mostLike || []).map(normalize) : [];
+
+    if (sourceRelated.indexOf(targetHandle) > -1) return 18;
+    if (related.indexOf(sourceKey) > -1) return 15;
+
+    return 0;
+  }
+
   function scoreBook(book){
     var score = 0;
     var theme = getThemeProfile();
     var craving = cravingProfiles[profile.craving];
     var payoff = payoffProfiles[profile.payoff];
+    var favoriteTrope = favoriteTropeProfiles[profile.favorite_trope];
     var man = fictionalManProfiles[profile.fictional_man];
     var bookTropes = (book.tropes || []).map(normalize);
     var shelfName = normalize(book.shelf);
@@ -4299,6 +5599,7 @@ function initMadeForYou(){
     });
 
     if (status === 'read' || status === 'dnf') return -999;
+    if (isSoftProfileIncompatibleBook(book)) return -999;
 
     if (craving){
       craving.tropeBoosts.forEach(function(trope){
@@ -4321,6 +5622,19 @@ function initMadeForYou(){
         if (shelfName === normalize(shelf)) score += 2;
       });
       score += statScore(book, payoff.stats);
+    }
+
+    if (favoriteTrope){
+      (favoriteTrope.tropeBoosts || []).forEach(function(trope){
+        if (bookTropes.indexOf(normalize(trope)) > -1) score += 4;
+      });
+      (favoriteTrope.shelfBoosts || []).forEach(function(shelf){
+        if (shelfName === normalize(shelf)) score += 3;
+      });
+      (favoriteTrope.boyfriendBoosts || []).forEach(function(type){
+        if (boyfriendType === canonicalBoyfriendType(type)) score += 2;
+      });
+      score += statScore(book, favoriteTrope.stats);
     }
 
     if (man){
@@ -4350,6 +5664,21 @@ function initMadeForYou(){
     if (theme.emojiGroup === 'stormy_broody' && (boyfriendType === 'cold_grump' || boyfriendType === 'emotionally_unavailable_man' || boyfriendType === 'tortured_prince')) score += 1;
     if (theme.emojiGroup === 'soft_romantic' && bookTropes.indexOf('slow burn') > -1) score += 1;
 
+    if (profile.spice_dial){
+      if (getSpiceDialReason(book)){
+        score += 7;
+      } else {
+        var preferredSpice = spiceDialValues.indexOf(profile.spice_dial) + 1;
+        var spiceDistance = Math.abs(Number(book.spice || 0) - preferredSpice);
+        if (spiceDistance === 1) score += 2;
+        if (spiceDistance >= 3) score -= 4;
+      }
+    }
+
+    if (profile.favorite_trope && bookTropes.indexOf(normalize(profile.favorite_trope)) > -1){
+      score += 8;
+    }
+
     if (saved) score += 1;
     if (status === 'reading') score += 4;
     if (status === 'tbr') score += 2;
@@ -4362,9 +5691,11 @@ function initMadeForYou(){
       if (profile.hard_nos.indexOf('secret baby') > -1 && bookTropes.indexOf('secret baby') > -1) score -= 20;
       if (profile.hard_nos.indexOf('why choose') > -1 && bookTropes.indexOf('why choose') > -1) score -= 20;
       if (profile.hard_nos.indexOf('friends with benefits') > -1 && bookTropes.indexOf('friends with benefits') > -1) score -= 20;
+      if (profile.hard_nos.indexOf('cliffhanger') > -1 && bookTropes.indexOf('cliffhanger') > -1) score -= 20;
+      if (profile.hard_nos.indexOf('dark romance') > -1 && (bookTropes.indexOf('dark romance') > -1 || shelfName === 'dark romance')) score -= 20;
+      if (profile.hard_nos.indexOf('instalove') > -1 && (bookTropes.indexOf('instalove') > -1 || bookTropes.indexOf('insta love') > -1)) score -= 20;
+      if (profile.hard_nos.indexOf('long series') > -1 && bookTropes.indexOf('long series') > -1) score -= 20;
     }
-
-    if (profile.favorite_book && profile.favorite_book === book.handle) score += 8;
 
     if (saved && status !== 'tbr' && status !== 'reading') score -= 1;
 
@@ -4388,19 +5719,24 @@ function initMadeForYou(){
         score += sharedTropeCount * 3;
         if (sameShelf) score += 3;
         if (sameBoyfriend) score += 2;
+        score += manualVibeScore(book, reactedBook.handle);
       }
 
       if (reaction === 'liked_it'){
         score += sharedTropeCount * 1.5;
         if (sameShelf) score += 1;
+        score += manualVibeScore(book, reactedBook.handle) / 2;
       }
 
       if (reaction === 'not_for_me'){
         score -= sharedTropeCount * 3;
         if (sameShelf) score -= 4;
         if (sameBoyfriend) score -= 2;
+        score -= manualVibeScore(book, reactedBook.handle) / 2;
       }
     });
+
+    score += getBookReaderTypeScore(book, getPersonaProfile());
 
     return score;
   }
@@ -4410,6 +5746,7 @@ function initMadeForYou(){
     var theme = getThemeProfile();
     var craving = cravingProfiles[profile.craving];
     var payoff = payoffProfiles[profile.payoff];
+    var favoriteTrope = favoriteTropeProfiles[profile.favorite_trope];
     var man = fictionalManProfiles[profile.fictional_man];
     var bookTropes = (book.tropes || []).map(normalize);
     var shelfName = normalize(book.shelf);
@@ -4417,6 +5754,7 @@ function initMadeForYou(){
     var status = getBookStatus({ handle: book.handle, title: book.title });
 
     if (status === 'read' || status === 'dnf') return -999;
+    if (isSoftProfileIncompatibleBook(book)) return -999;
 
     if (craving){
       craving.tropeBoosts.forEach(function(trope){
@@ -4441,6 +5779,19 @@ function initMadeForYou(){
       score += statScore(book, payoff.stats);
     }
 
+    if (favoriteTrope){
+      (favoriteTrope.tropeBoosts || []).forEach(function(trope){
+        if (bookTropes.indexOf(normalize(trope)) > -1) score += 4;
+      });
+      (favoriteTrope.shelfBoosts || []).forEach(function(shelf){
+        if (shelfName === normalize(shelf)) score += 3;
+      });
+      (favoriteTrope.boyfriendBoosts || []).forEach(function(type){
+        if (boyfriendType === canonicalBoyfriendType(type)) score += 2;
+      });
+      score += statScore(book, favoriteTrope.stats);
+    }
+
     if (man){
       (man.boyfriendBoosts || []).forEach(function(type){
         if (boyfriendType === canonicalBoyfriendType(type)) score += 4;
@@ -4462,11 +5813,28 @@ function initMadeForYou(){
     if (theme.key === 'pearl_white' && (bookTropes.indexOf('friends to lovers') > -1 || bookTropes.indexOf('healing') > -1 || bookTropes.indexOf('protective hero') > -1)) score += 1;
     if (theme.key === 'royal_violet' && (shelfName.indexOf('romantasy') > -1 || shelfName.indexOf('fantasy') > -1 || bookTropes.indexOf('villain gets the girl') > -1 || bookTropes.indexOf('magic') > -1)) score += 1;
 
+    if (profile.spice_dial){
+      if (getSpiceDialReason(book)){
+        score += 6;
+      } else {
+        var preferredSpice = spiceDialValues.indexOf(profile.spice_dial) + 1;
+        var spiceDistance = Math.abs(Number(book.spice || 0) - preferredSpice);
+        if (spiceDistance === 1) score += 1;
+        if (spiceDistance >= 3) score -= 3;
+      }
+    }
+
+    if (profile.favorite_trope && bookTropes.indexOf(normalize(profile.favorite_trope)) > -1){
+      score += 7;
+    }
+
+    score += getBookReaderTypeScore(book, getPersonaProfile());
+
     return score;
   }
 
-  function statScore(book, targets){
-    if (!targets) return 0;
+	  function statScore(book, targets){
+	    if (!targets) return 0;
 
     var score = 0;
     if (targets.spice && (book.spice || 0) >= targets.spice) score += 1;
@@ -4477,11 +5845,57 @@ function initMadeForYou(){
     return score;
   }
 
-  function normalize(value){
-    return String(value || '').trim().toLowerCase();
-  }
+	  function normalize(value){
+	    return String(value || '').trim().toLowerCase();
+	  }
 
-  function canonicalBoyfriendType(value){
+	  function getActiveTropeLane(){
+	    var explicitTrope = normalize(profile.favorite_trope || '');
+	    if (explicitTrope) return explicitTrope;
+
+	    var readerTypeKey = profile.reader_type_prior || getQuizResolvedReaderTypeKey() || '';
+	    return normalize(readerTypePrimaryTrope[readerTypeKey] || '');
+	  }
+
+	  function getTropeLaneAliases(lane){
+	    var normalizedLane = normalize(lane);
+	    return [normalizedLane].concat(tropeLaneAliases[normalizedLane] || []).map(normalize).filter(Boolean);
+	  }
+
+	  function bookMatchesTropeLane(book, lane){
+	    if (!book || !lane) return false;
+	    var aliases = getTropeLaneAliases(lane);
+	    var values = (book.tropes || []).concat([book.shelf || '']).map(normalize).filter(Boolean);
+
+	    return values.some(function(value){
+	      return aliases.some(function(alias){
+	        return value === alias || value.indexOf(alias) > -1 || alias.indexOf(value) > -1;
+	      });
+	    });
+	  }
+
+	  function bookConflictsWithTropeLane(book, lane){
+	    var conflicts = (tropeLaneConflicts[normalize(lane)] || []).map(normalize);
+	    if (!book || !conflicts.length) return false;
+	    var values = (book.tropes || []).concat([book.shelf || '']).map(normalize).filter(Boolean);
+
+	    return values.some(function(value){
+	      return conflicts.some(function(conflict){
+	        return value === conflict || value.indexOf(conflict) > -1 || conflict.indexOf(value) > -1;
+	      });
+	    });
+	  }
+
+	  function filterRankedByTropeLane(entries, lane){
+	    if (!lane) return entries;
+
+	    return entries.filter(function(entry){
+	      var book = entry && entry.book;
+	      return bookMatchesTropeLane(book, lane) && !bookConflictsWithTropeLane(book, lane);
+	    });
+	  }
+
+	  function canonicalBoyfriendType(value){
     var raw = normalize(value);
     if (!raw) return '';
 
@@ -4515,14 +5929,19 @@ function initMadeForYou(){
     var dynamic = nextProfile.boyfriend_dynamic;
     var scores = {};
 
-    if (!hook || !dynamic){
-      return canonicalBoyfriendType(nextProfile.fictional_man);
+    if (hook && boyfriendQuestionWeights.boyfriend_hook[hook]){
+      applyTypeWeights(scores, boyfriendQuestionWeights.boyfriend_hook[hook], 1.2);
+    }
+    if (dynamic && boyfriendQuestionWeights.boyfriend_dynamic[dynamic]){
+      applyTypeWeights(scores, boyfriendQuestionWeights.boyfriend_dynamic[dynamic], 1.1);
     }
 
-    applyTypeWeights(scores, boyfriendQuestionWeights.boyfriend_hook[hook], 1.2);
-    applyTypeWeights(scores, boyfriendQuestionWeights.boyfriend_dynamic[dynamic], 1.1);
-
     applyTypeWeights(scores, {
+      cozy: { sweetheart: 3, athlete_with_heart: 2, cold_grump: 1 },
+      spicy: { arrogant_asshole: 3, bully: 2, athlete_with_heart: 2, mafia_boss: 1 },
+      dark: { morally_gray_villain: 3, mafia_boss: 3, stalker: 2, obsessive_protector: 2 },
+      slowburn: { cold_grump: 3, emotionally_unavailable_man: 2, academic_rival: 2, tortured_prince: 2 },
+      surprise: { academic_rival: 1, athlete_with_heart: 1, cold_grump: 1, morally_gray_villain: 1 },
       slow_ache: { cold_grump: 2, emotionally_unavailable_man: 2, tortured_prince: 2, academic_rival: 1 },
       messy_obsession: { stalker: 3, obsessive_protector: 2, morally_gray_villain: 2, mafia_boss: 2 },
       comfort_devotion: { sweetheart: 3, athlete_with_heart: 2, obsessive_protector: 1 },
@@ -4538,9 +5957,25 @@ function initMadeForYou(){
       illegal_chemistry: { arrogant_asshole: 2, morally_gray_villain: 2, mafia_boss: 2, stalker: 1 }
     }[nextProfile.payoff], 1);
 
-    return Object.keys(boyfriendTypeAliases).sort(function(a, b){
+    applyTypeWeights(scores, {
+      'enemies to lovers': { academic_rival: 3, arrogant_asshole: 2, bully: 1 },
+      'second chance': { emotionally_unavailable_man: 3, tortured_prince: 2, sweetheart: 1 },
+      'forced proximity': { cold_grump: 3, academic_rival: 2, obsessive_protector: 1 },
+      'fake dating': { sweetheart: 2, arrogant_asshole: 2, athlete_with_heart: 1 },
+      'grumpy sunshine': { cold_grump: 3, sweetheart: 1 },
+      'sports romance': { athlete_with_heart: 4 },
+      'dark romance': { morally_gray_villain: 3, mafia_boss: 3, stalker: 2 },
+      romantasy: { tortured_prince: 3, morally_gray_villain: 2 },
+      'age gap': { emotionally_unavailable_man: 2, mafia_boss: 2 },
+      'forbidden romance': { morally_gray_villain: 3, mafia_boss: 2, arrogant_asshole: 1 },
+      'workplace romance': { arrogant_asshole: 3, academic_rival: 2 },
+      'small town romance': { sweetheart: 3, athlete_with_heart: 2 }
+    }[nextProfile.favorite_trope], 1.2);
+
+    var sortedTypes = Object.keys(boyfriendTypeAliases).sort(function(a, b){
       return (scores[b] || 0) - (scores[a] || 0);
-    })[0] || '';
+    });
+    return scores[sortedTypes[0]] ? sortedTypes[0] : canonicalBoyfriendType(nextProfile.fictional_man);
   }
 
   function getBookByHandle(handle){
@@ -4552,30 +5987,27 @@ function initMadeForYou(){
 
   function buildReaderCore(){
     var craving = cravingProfiles[profile.craving];
-    var payoff = payoffProfiles[profile.payoff];
     var man = fictionalManProfiles[profile.fictional_man];
     var theme = getThemeProfile();
     var titleParts = [];
-    var payoffLine = '';
+    var favoriteTropeLabel = tokenLabels.favorite_trope[profile.favorite_trope] || profile.favorite_trope || '';
+    var spiceLabel = tokenLabels.spice_dial[profile.spice_dial] || '';
 
-    if (profile.craving === 'slow_ache') titleParts.push('slow ache');
+    if (profile.craving === 'cozy' || profile.craving === 'comfort_devotion') titleParts.push('soft devotion');
+    if (profile.craving === 'spicy' || profile.craving === 'chaos_chemistry') titleParts.push('sharp chemistry');
+    if (profile.craving === 'dark' || profile.craving === 'dark_dangerous') titleParts.push('dangerous devotion');
+    if (profile.craving === 'slowburn' || profile.craving === 'slow_ache') titleParts.push('slow ache');
+    if (profile.craving === 'surprise') titleParts.push('curated chaos');
     if (profile.craving === 'messy_obsession') titleParts.push('messy obsession');
-    if (profile.craving === 'comfort_devotion') titleParts.push('soft devotion');
-    if (profile.craving === 'chaos_chemistry') titleParts.push('sharp chemistry');
-    if (profile.craving === 'dark_dangerous') titleParts.push('danger');
-
-    if (profile.payoff === 'long_tension') payoffLine = 'you want the tension stretched out.';
-    if (profile.payoff === 'emotional_devastation') payoffLine = 'you want it to hurt before it heals.';
-    if (profile.payoff === 'soft_after_storm') payoffLine = 'you want the softness after the wreckage.';
-    if (profile.payoff === 'plot_addiction') payoffLine = 'you need plot and chemistry pulling at the same time.';
-    if (profile.payoff === 'illegal_chemistry') payoffLine = 'you want chemistry with bite.';
+    if (favoriteTropeLabel) titleParts.push(favoriteTropeLabel);
 
     return {
       title: titleParts.length ? ('you are built for ' + titleParts.join(' + ')) : 'waiting on your answers',
       emotion: fallingEmotions[profile.craving] || 'reader breakdown: loading',
       body: [
         craving ? craving.body : '',
-        payoffLine,
+        favoriteTropeLabel ? ('your top trope lane is ' + favoriteTropeLabel + '.') : '',
+        spiceLabel ? ('your spice setting is ' + spiceLabel + '.') : '',
         man ? ('your weakness is still ' + tokenLabels.fictional_man[profile.fictional_man] + '.') : '',
         theme.key && tokenLabels.theme[theme.key] ? ('the whole thing is wrapped in ' + tokenLabels.theme[theme.key] + ' energy.') : ''
       ].filter(Boolean).slice(0, 2).join(' '),
@@ -4587,15 +6019,59 @@ function initMadeForYou(){
     var score = 0;
     var craving = cravingProfiles[profile.craving];
     var payoff = payoffProfiles[profile.payoff];
+    var favoriteTrope = favoriteTropeProfiles[profile.favorite_trope];
     var man = fictionalManProfiles[profile.fictional_man];
     var boyfriendType = canonicalBoyfriendType(book && book.boyfriend_type);
     var bookTropes = (book && book.tropes || []).map(normalize);
+    var shelfName = normalize(book && book.shelf);
+    var persona = getPersonaProfile();
+    var personaKey = persona && persona.key ? persona.key : '';
+    var readerTypeBoyfriendBoosts = {
+      chaos_reader: ['stalker', 'morally_gray_villain', 'mafia_boss', 'bully'],
+      dark_romance_girlie: ['morally_gray_villain', 'stalker', 'mafia_boss', 'obsessive_protector'],
+      tension_addict: ['academic_rival', 'cold_grump', 'arrogant_asshole', 'obsessive_protector'],
+      fantasy_girlie: ['tortured_prince', 'morally_gray_villain', 'cold_grump'],
+      jersey_chaser: ['athlete_with_heart'],
+      fake_dating_fanatic: ['sweetheart', 'arrogant_asshole', 'athlete_with_heart'],
+      slow_burn_girlie: ['cold_grump', 'emotionally_unavailable_man', 'academic_rival', 'tortured_prince'],
+      sweet_romance_devotee: ['sweetheart', 'athlete_with_heart', 'obsessive_protector'],
+      romance_reader: []
+    };
+    var readerTypeTropeBoosts = {
+      chaos_reader: ['why choose', 'dark romance', 'touch her and die', 'stalker romance', 'obsession', 'bully romance'],
+      dark_romance_girlie: ['dark romance', 'touch her and die', 'stalker romance', 'morally gray', 'forbidden romance'],
+      tension_addict: ['enemies to lovers', 'forced proximity', 'slow burn', 'banter'],
+      fantasy_girlie: ['romantasy', 'fantasy romance', 'fated mates', 'villain gets the girl'],
+      jersey_chaser: ['sports romance', 'hockey romance', 'baseball romance'],
+      fake_dating_fanatic: ['fake dating', 'marriage of convenience', 'only one bed', 'one bed'],
+      slow_burn_girlie: ['slow burn', 'yearning', 'he falls first', 'second chance'],
+      sweet_romance_devotee: ['friends to lovers', 'small town romance', 'found family', 'grumpy sunshine']
+    };
+    var personaTypes = readerTypeBoyfriendBoosts[personaKey] || [];
+    var personaTropes = readerTypeTropeBoosts[personaKey] || [];
     var allowedTypes = man ? (man.boyfriendBoosts || []).map(canonicalBoyfriendType) : [];
     var isAllowedType = !allowedTypes.length || allowedTypes.some(function(type){
       return boyfriendType === type;
     });
 
     if (!isAllowedType) return -999;
+
+    personaTypes.forEach(function(type, index){
+      if (boyfriendType === canonicalBoyfriendType(type)){
+        score += Math.max(18 - (index * 3), 8);
+      }
+    });
+
+    personaTropes.forEach(function(trope){
+      var normalizedTrope = normalize(trope);
+      if (bookTropes.indexOf(normalizedTrope) > -1) score += 5;
+      if (shelfName && (shelfName === normalizedTrope || shelfName.indexOf(normalizedTrope) > -1 || normalizedTrope.indexOf(shelfName) > -1)) score += 3;
+    });
+
+    if (personaKey === 'dark_romance_girlie' && (Number(book.darkness || 0) >= 4 || shelfName.indexOf('dark') > -1)) score += 8;
+    if (personaKey === 'chaos_reader' && Number(book.spice || 0) >= 4) score += 7;
+    if (personaKey === 'sweet_romance_devotee' && Number(book.spice || 0) <= 2) score += 5;
+    if (personaKey === 'jersey_chaser' && shelfName.indexOf('sports') > -1) score += 7;
 
     if (man){
       (man.boyfriendBoosts || []).forEach(function(type){
@@ -4621,10 +6097,22 @@ function initMadeForYou(){
       });
     }
 
+    if (favoriteTrope){
+      (favoriteTrope.boyfriendBoosts || []).forEach(function(type){
+        if (boyfriendType === canonicalBoyfriendType(type)) score += 7;
+      });
+      (favoriteTrope.tropeBoosts || []).forEach(function(trope){
+        if (bookTropes.indexOf(normalize(trope)) > -1) score += 2;
+      });
+    }
+
     return score;
   }
 
   function renderMadeForYou(){
+    if (syncStoredSpiceProfile()){
+      syncAddonDrafts();
+    }
     var answeredCount = Object.keys(profile).filter(function(key){ return !!profile[key]; }).length;
     var readerCore = buildReaderCore();
     var man = fictionalManProfiles[profile.fictional_man];
@@ -4638,9 +6126,7 @@ function initMadeForYou(){
     if (dashboardKicker){
       dashboardKicker.textContent = firstName ? ('curated for ' + firstName) : 'curated for you';
     }
-    if (heroKicker){
-      heroKicker.textContent = (emojiMap[getThemeProfile().emojiGroup] || '🖤') + ' your reader core';
-    }
+    renderHeroReaderTypeSymbol();
     coreTitle.textContent = readerCore.title;
     if (coreEmotion){
       coreEmotion.textContent = readerCore.emotion;
@@ -4651,7 +6137,19 @@ function initMadeForYou(){
 
     if (themeTokens){
       themeTokens.innerHTML = '';
+      [
+        profile.craving && tokenLabels.craving[profile.craving],
+        profile.payoff && tokenLabels.payoff[profile.payoff],
+        profile.favorite_trope && ('trope: ' + profile.favorite_trope),
+        profile.spice_dial && ('spice ' + getSpiceLevel(profile.spice_dial) + '/5')
+      ].filter(Boolean).forEach(function(label){
+        var token = document.createElement('span');
+        token.textContent = label;
+        themeTokens.appendChild(token);
+      });
     }
+
+    renderDashboardProfile(readerCore, man);
 
     applyModuleCopy();
 
@@ -4659,7 +6157,12 @@ function initMadeForYou(){
     typeBody.textContent = man ? man.body : 'this is where i’ll lovingly explain what your taste in fictional men says about you.';
 
     renderShelfInsight();
+    renderNextOpinion();
+    renderDashboardBookshelf();
     renderRecommendations(answeredCount);
+    renderFictionalBfCard();
+    renderQuickLinks();
+    renderFeatureLinks();
     renderReadShelf();
     renderFavoriteBookEcho();
     renderQuote();
@@ -4668,15 +6171,73 @@ function initMadeForYou(){
     renderEmojiRain();
   }
 
+  function renderDashboardProfile(readerCore, man){
+    var theme = getThemeProfile();
+    var persona = getPersonaProfile();
+    var leadTrope = getLeadTropeName();
+    syncDisplaySpiceDial(persona.key);
+    var displaySpiceDial = getDisplaySpiceDial(persona.key);
+    var spiceLabel = getDialDisplayText(displaySpiceDial);
+    var spiceLevel = getSpiceLevel(displaySpiceDial);
+    var readerType = readerCore && readerCore.title
+      ? readerCore.title.replace(/^you are built for\s+/i, '')
+      : 'unread';
+
+    if (dashboardSpice){
+      dashboardSpice.textContent = spiceLabel;
+    }
+    if (dashboardSpiceLabel){
+      dashboardSpiceLabel.textContent = 'level ' + spiceLevel + ' of 5';
+    }
+    if (dashboardReaderType){
+      dashboardReaderType.textContent = readerType || 'unread';
+    }
+    if (dashboardReaderSignal){
+      dashboardReaderSignal.textContent = getReaderSignalText();
+    }
+    if (dashboardTrope){
+      dashboardTrope.textContent = profile.favorite_trope || 'waiting';
+    }
+    if (dashboardTheme){
+      dashboardTheme.textContent = getThemeDisplayText(theme.key);
+    }
+    if (dashboardThemeSignal){
+      dashboardThemeSignal.textContent = man && profile.fictional_man
+        ? ('paired with ' + tokenLabels.fictional_man[profile.fictional_man])
+        : 'pick your colors';
+    }
+    if (visibleReaderType){
+      visibleReaderType.innerHTML = getPersonaBadgeMarkup();
+    }
+    if (visibleReaderSignal){
+      visibleReaderSignal.textContent = getReaderTypeVsTropeText(persona, leadTrope);
+    }
+    if (visibleSpice){
+      visibleSpice.innerHTML = [1,2,3,4,5].map(function(n){
+        return '<i class="' + (n <= spiceLevel ? 'is-on' : '') + '" aria-hidden="true"></i>';
+      }).join('');
+      visibleSpice.setAttribute('aria-label', spiceLevel + ' out of 5 spice');
+    }
+    if (visibleSpiceLabel){
+      visibleSpiceLabel.textContent = spiceLabel.replace(/\s*•\s*/, ' · ');
+    }
+    if (visibleTrope){
+      visibleTrope.textContent = leadTrope || profile.favorite_trope || 'pick a trope';
+    }
+    if (visibleTheme){
+      visibleTheme.textContent = (persona.theme && persona.theme.name) || getThemeDisplayText(theme.key);
+    }
+    applyReaderTheme(persona);
+    renderSocietyDashboard();
+  }
+
   function applyModuleCopy(){
     var emojis = moduleEmojiMap[getThemeProfile().emojiGroup] || ['🖤', '✨', '📚', '💌'];
 
     if (coreEmojiBadge){
       coreEmojiBadge.textContent = emojis[0];
     }
-    if (heroKicker){
-      heroKicker.textContent = emojis[0] + ' your reader core';
-    }
+    renderHeroReaderTypeSymbol();
     if (boyfriendEmojiBadge){
       boyfriendEmojiBadge.textContent = emojis[1];
     }
@@ -4765,29 +6326,155 @@ function initMadeForYou(){
     return ordered;
   }
 
+  var readerTypeRules = {
+    'slow burn': {
+      title: 'the patient one',
+      body: 'patient in fiction. chaotic in real life. lives for the almost-moment. deep down just wants to be perceived that carefully by someone.',
+      flag: 'has cried at a forehead touch before. no notes.',
+      aliases: ['slow burn', 'yearning']
+    },
+    'forced proximity': {
+      title: 'the one-bed truther',
+      body: 'loves the idea that love finds you, not the other way around. probably romanticises being stuck somewhere with someone.',
+      flag: 'has thought "if only we were snowed in" about someone who did not deserve it.',
+      aliases: ['forced proximity', 'one bed', 'only one bed']
+    },
+    'fake dating': {
+      title: 'the plausible deniability fan',
+      body: 'comes for the fake intimacy that accidentally becomes real. that is the only kind of love story that makes sense to them and they know it.',
+      flag: 'has entertained a fake-dating plan. has not acted on it. yet.',
+      aliases: ['fake dating', 'fake relationship', 'marriage of convenience']
+    },
+    'second chance': {
+      title: 'the door-holder',
+      body: 'believes in people maybe a little too much. reads this trope for permission to try again, or to feel okay about not.',
+      flag: 'definitely has an unsent message somewhere.',
+      aliases: ['second chance', 'exes to lovers']
+    },
+    'sports romance': {
+      title: 'here for the man, not the sport',
+      body: 'cannot name a single real player. is here because athletes are written with a very specific kind of devotion: the dedication, the discipline, the biceps.',
+      flag: 'has very strong opinions about ryan shay.',
+      aliases: ['sports romance', 'sports', 'hockey romance', 'football romance', 'baseball romance']
+    },
+    'grumpy sunshine': {
+      title: 'secretly both',
+      body: 'either brings light into difficult spaces and gets called too much, or is the grumpy one who needs someone to soften them and will not admit it.',
+      flag: 'they are grumpy about being assigned sunshine.',
+      aliases: ['grumpy sunshine', 'grumpy / sunshine', 'grumpy/sunshine', 'grumpy x sunshine']
+    },
+    'enemies to lovers': {
+      title: 'loves the problem',
+      body: 'does not want easy. wants someone who challenges them and then loves them so hard it breaks the whole thing open. the argument is the intimacy.',
+      flag: 'has confused conflict with chemistry at least once. this trope did not help.',
+      aliases: ['enemies to lovers', 'rivals to lovers', 'hate to love']
+    },
+    'forbidden romance': {
+      title: 'the rule is the problem, not them',
+      body: 'not here for easy love. wants the kind that costs something. boss/employee, rival families, that is the only love that feels real to them.',
+      flag: 'deeply committed to the idea that circumstance is the only obstacle here.',
+      aliases: ['forbidden romance', 'forbidden love', 'forbidden']
+    },
+    'dark romance': {
+      title: 'the villain is the love interest',
+      body: 'wants to feel something, not be told what they are allowed to feel. they are not advocating. they are escaping. and they do not need to explain that to anyone.',
+      flag: 'has a type in fiction they would absolutely never date in real life.',
+      aliases: ['dark romance', 'dark', 'stalker romance', 'stalker', 'touch her and die', 'villain gets the girl']
+    },
+    'mafia romance': {
+      title: 'the suit is doing something to them',
+      body: 'not about crime. it is about devotion without limit. someone who would destroy the world for this one person. the protection. the contradiction.',
+      flag: 'has a ranked list of fictional dons. it is detailed.',
+      aliases: ['mafia romance', 'mafia', 'bratva', 'cartel romance']
+    },
+    'bully romance': {
+      title: 'obsession decoder',
+      body: 'does not want to be bullied. wants to be the person someone hates so specifically it reads as obsession. that is not cruelty. that is being perceived. completely.',
+      flag: 'would describe their ideal relationship as "he hates me in a way that feels personal."',
+      aliases: ['bully romance', 'bully', 'bully romance books']
+    },
+    'morally gray mmc': {
+      title: 'the problem is the point',
+      body: 'tired of being told who to root for. wants a man who does the wrong thing for the right reason, or the wrong reason with extremely good hair.',
+      flag: 'their book boyfriend list reads like a restraining order waiting to happen. they are fine.',
+      aliases: ['morally gray mmc', 'morally gray', 'morally grey', 'morally grey mmc', 'antihero']
+    },
+    'age gap': {
+      title: 'experience is a vibe',
+      body: 'here for the dynamic. the knowing. someone who has done something with their life loving someone still becoming. experience reading as devotion.',
+      flag: 'googles age gaps in fictional couples. then googles it again.',
+      aliases: ['age gap', 'age-gap']
+    },
+    'reverse harem': {
+      title: 'why choose is not a question',
+      body: 'less about the fantasy of many, more about the fantasy of being completely loved by multiple people who just accept all of you. the logistics are not the point.',
+      flag: 'finds monogamy limitations in fiction genuinely boring at this point.',
+      aliases: ['reverse harem', 'why choose', 'poly romance']
+    },
+    'instalove': {
+      title: 'vibes over evidence',
+      body: 'when it is right it is right. that is the whole philosophy. refuses to feel bad about wanting to skip to the good part.',
+      flag: 'has said "i just knew" about someone they knew for four days.',
+      aliases: ['instalove', 'insta love', 'love at first sight']
+    },
+    'paranormal monster romance': {
+      title: 'not here to explain herself',
+      body: 'has simply decided that fictional men available in reality are not meeting the brief. the spec: dangerous, ancient, non-human, completely devoted to one woman specifically.',
+      flag: 'claws are negotiable. the obsession is not.',
+      aliases: ['paranormal / monster romance', 'paranormal romance', 'monster romance', 'monster', 'vampire romance', 'shifter romance']
+    },
+    'bodyguard protector': {
+      title: 'safety is the love language',
+      body: 'wants to feel safe in a specific, consuming, slightly-overwhelming way. someone who would rearrange the world so nothing bad reaches her. that is it.',
+      flag: 'has asked "but would he keep me safe" as a genuine compatibility metric.',
+      aliases: ['bodyguard / protector', 'bodyguard', 'protector', 'protector romance', 'bodyguard romance']
+    },
+    'he falls first': {
+      title: 'watching him spiral is the plot',
+      body: 'needs the man to be completely undone before she knows it. wants to watch the exact moment it shifts, when she becomes the whole thing for him and she is still just getting there.',
+      flag: 'has a list of scenes where the man realises first. it is long.',
+      aliases: ['he falls first', 'he falls first romance', 'hero falls first', 'he falls first/her falls harder']
+    }
+  };
+
+  function normalizeReaderTypeTrope(value){
+    return normalize(String(value || '').replace(/[\/_-]+/g, ' ').replace(/\s+x\s+/g, ' '));
+  }
+
+  function readerTypeRuleKeyForTrope(trope){
+    var normalized = normalizeReaderTypeTrope(trope);
+    var match = '';
+    if (!normalized) return '';
+
+    Object.keys(readerTypeRules).some(function(ruleKey){
+      var aliases = [ruleKey].concat(readerTypeRules[ruleKey].aliases || []);
+      return aliases.some(function(alias){
+        var aliasKey = normalizeReaderTypeTrope(alias);
+        if (!aliasKey) return false;
+        if (normalized === aliasKey || normalized.indexOf(aliasKey) > -1 || aliasKey.indexOf(normalized) > -1){
+          match = ruleKey;
+          return true;
+        }
+        return false;
+      });
+    });
+
+    return match || normalized;
+  }
+
   function getBookshelfPattern(sourceBooks){
     var insightBooks = Array.isArray(sourceBooks) ? sourceBooks : getShelfInsightBooks();
     var tropeCounts = {};
-    var shelfCounts = {};
-    var stats = { spice: 0, tension: 0, damage: 0, darkness: 0, yearning: 0 };
 
     insightBooks.forEach(function(book){
+      var status = getBookStatus({ handle: book.handle, title: book.title });
+      var weight = status === 'read' ? 5 : status === 'reading' ? 4 : status === 'tbr' ? 3 : status === 'dnf' ? 1 : 2;
+
       (book.tropes || []).forEach(function(trope){
-        var key = normalize(trope);
+        var key = readerTypeRuleKeyForTrope(trope);
         if (!key) return;
-        tropeCounts[key] = (tropeCounts[key] || 0) + 1;
+        tropeCounts[key] = (tropeCounts[key] || 0) + weight;
       });
-
-      var shelfKey = normalize(book.shelf);
-      if (shelfKey){
-        shelfCounts[shelfKey] = (shelfCounts[shelfKey] || 0) + 1;
-      }
-
-      stats.spice += Number(book.spice || 0);
-      stats.tension += Number(book.tension || 0);
-      stats.damage += Number(book.damage || 0);
-      stats.darkness += Number(book.darkness || 0);
-      stats.yearning += Number(book.yearning || 0);
     });
 
     var topTropes = Object.keys(tropeCounts).sort(function(a, b){
@@ -4796,47 +6483,12 @@ function initMadeForYou(){
       }
       return tropeCounts[b] - tropeCounts[a];
     });
-    var topShelves = Object.keys(shelfCounts).sort(function(a, b){
-      return shelfCounts[b] - shelfCounts[a];
-    });
-    var avg = insightBooks.length ? {
-      spice: stats.spice / insightBooks.length,
-      tension: stats.tension / insightBooks.length,
-      damage: stats.damage / insightBooks.length,
-      darkness: stats.darkness / insightBooks.length,
-      yearning: stats.yearning / insightBooks.length
-    } : stats;
+    var topRule = readerTypeRules[topTropes[0]] || null;
+    var title = topRule ? topRule.title : 'mood-led romance reader';
+    var body = topRule ? topRule.body : 'your shelf is giving a little bit of everything, with mood doing more steering than one fixed trope.';
 
-    var hasTrope = function(names){
-      return names.some(function(name){
-        return tropeCounts[normalize(name)] > 0;
-      });
-    };
-
-    var title = 'your bookshelf has a type';
-    var body = (getThemeProfile().key && shelfCopy[getThemeProfile().key]) ? shelfCopy[getThemeProfile().key] : '';
-
-    if ((avg.tension >= 2 && avg.yearning >= 1.4) || hasTrope(['slow burn', 'yearning', 'grumpy sunshine'])){
-      title = 'you keep choosing tension-first romances';
-      body = 'slow build, withheld feelings, and payoff that takes its time are showing up more than any single trope label.';
-    } else if ((avg.darkness >= 2 && avg.spice >= 2) || hasTrope(['dark romance', 'morally gray', 'obsession', 'stalker', 'villain gets the girl'])){
-      title = 'you lean toward dark devotion and dangerous chemistry';
-      body = 'your finished shelf keeps pulling toward obsession, risk, and romance that feels a little unsafe in the best way.';
-    } else if ((avg.damage >= 1.8 && avg.yearning >= 1.4) || hasTrope(['angst', 'second chance', 'emotional devastation'])){
-      title = 'you like the ache before the payoff';
-      body = 'you are repeatedly choosing books that make the emotional damage part of the appeal, not a side effect.';
-    } else if ((avg.spice >= 2.2 && avg.tension >= 1.8) || hasTrope(['enemies to lovers', 'forbidden romance', 'banter'])){
-      title = 'you keep chasing sharp chemistry';
-      body = 'banter, friction, and immediate pull are doing more work on your shelf than soft comfort reads.';
-    } else if (hasTrope(['friends to lovers', 'healing', 'comfort', 'caretaking']) || topShelves[0] === 'contemporary romance' || topShelves[0] === 'small town romance'){
-      title = 'you come back to devotion with heart';
-      body = 'you keep picking books where tenderness, loyalty, and emotional safety still have enough ache to matter.';
-    } else if (topShelves[0] && (topShelves[0].indexOf('romantasy') > -1 || topShelves[0].indexOf('fantasy') > -1 || hasTrope(['magic', 'fated mates', 'prince']))){
-      title = 'your shelf wants drama with a bigger world';
-      body = 'fantasy stakes, larger-than-life longing, and romantic chaos are shaping your pattern more than plain realism.';
-    } else if (topTropes.length){
-      title = 'your reading pattern is getting clearer';
-      body = 'the strongest repeats right now are ' + topTropes.slice(0, 3).join(', ') + ', which is a much better clue than any one label alone.';
+    if (topRule && topRule.flag){
+      body += ' red flag: ' + topRule.flag;
     }
 
     return {
@@ -4890,60 +6542,1556 @@ function initMadeForYou(){
     return score;
   }
 
-  function renderRecommendations(answeredCount){
-    if (!row) return;
-    var boyfriendProfile = fictionalManProfiles[profile.fictional_man];
-    var allRanked = books
+  function mfyEscape(value){
+    return String(value || '').replace(/[&<>"']/g, function(char){
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char];
+    });
+  }
+
+  function mfyDecodeEntities(value){
+    var textarea = document.createElement('textarea');
+    textarea.innerHTML = String(value || '');
+    return textarea.value;
+  }
+
+  function getPersonaLabel(){
+    return getPersonaProfile().label;
+  }
+
+  function getFallbackReaderTypes(){
+    return [
+      { key: 'chaos_reader', label: 'the chaos reader', emoji: 'why-choose', bio: 'maximum spice, maximum plot complications, very little concern for emotional safety.', triggers: ['why-choose', 'forbidden-love', 'mafia-romance', 'touch-her-and-die', 'stalker-romance'], theme: { name: 'scarlet riot', surface: '#1C0A0C', border: '#3D1216', deep: '#8A1622', accent: '#FF4040', accent2: '#FFB3B8', onAccent: '#4A0408', textHeading: '#FFF2F2', textBody: '#F4E2E4', textMuted: '#C49AA0', glow: 'rgba(255,64,64,.14)' } },
+      { key: 'dark_romance_girlie', label: 'the dark romance girlie', emoji: 'touch-her-and-die', bio: 'danger, obsession, morally gray choices, and devotion with teeth.', triggers: ['dark-romance', 'stalker-romance', 'mafia-romance', 'captor-x-captive', 'villain-gets-the-girl', 'bully-romance'], theme: { name: 'oxblood velvet', surface: '#170609', border: '#38101C', deep: '#6E1233', accent: '#E0245E', accent2: '#F77FAB', onAccent: '#3D0218', textHeading: '#FBEFF4', textBody: '#EFDCE4', textMuted: '#B58FA0', glow: 'rgba(224,36,94,.13)' } },
+      { key: 'fantasy_girlie', label: 'the fantasy girlie', emoji: 'fated-mates', bio: 'magic systems, fated stakes, crowns, monsters, and dramatic yearning.', triggers: ['romantasy', 'paranormal-romance', 'fated-mates', 'dystopian-romance'], theme: { name: 'amethyst hour', surface: '#110A1D', border: '#271746', deep: '#4E2E96', accent: '#A875FF', accent2: '#D4BCFF', onAccent: '#25104F', textHeading: '#F7F2FF', textBody: '#E8DEF7', textMuted: '#A996C9', glow: 'rgba(168,117,255,.14)' } },
+      { key: 'jersey_chaser', label: 'the jersey chaser', emoji: 'hockey-romance', bio: 'athletes, rivalry, teammates, locker-room confidence, and softness after the game.', triggers: ['sports-romance', 'hockey-romance', 'baseball-romance'], theme: { name: 'rink lights', surface: '#07101C', border: '#122B4A', deep: '#1A4E8F', accent: '#4FA8FF', accent2: '#A8D2FF', onAccent: '#062646', textHeading: '#F0F7FF', textBody: '#DCE8F4', textMuted: '#8FA9C7', glow: 'rgba(79,168,255,.13)' } },
+      { key: 'slow_burn_girlie', label: 'the slow burn girlie', emoji: 'slow-burn', bio: 'glances, restraint, almost-confessions, and payoff that takes its sweet time.', triggers: ['slow-burn', 'he-falls-first', 'forbidden-love', 'second-chance'], theme: { name: 'candlelit amber', surface: '#181004', border: '#3B2A0C', deep: '#7D5A14', accent: '#F2B13D', accent2: '#FFE0A3', onAccent: '#3F2A04', textHeading: '#FFF8EC', textBody: '#F2E8D4', textMuted: '#C2B08C', glow: 'rgba(242,177,61,.12)' } },
+      { key: 'tension_addict', label: 'the tension addict', emoji: 'enemies-to-lovers', bio: 'banter, friction, rivalry, and the very specific joy of two people losing the argument.', triggers: ['enemies-to-lovers', 'forced-proximity', 'grumpy-sunshine', 'opposites-attract', 'boss-x-employee'], theme: { name: 'live wire', surface: '#1A0C06', border: '#3D1C0E', deep: '#8A3A14', accent: '#FF7438', accent2: '#FFC09A', onAccent: '#471A04', textHeading: '#FFF4ED', textBody: '#F4E4DA', textMuted: '#C7A48F', glow: 'rgba(255,116,56,.13)' } },
+      { key: 'fake_dating_fanatic', label: 'the fake dating fanatic', emoji: 'fake-dating', bio: 'contracts, public pretending, private feelings, and the moment the lie starts telling the truth.', triggers: ['fake-dating', 'one-bed', 'marriage-of-convenience'], theme: { name: 'bubblegum noir', surface: '#1B0814', border: '#3F1230', deep: '#87265F', accent: '#FF6FC2', accent2: '#FFC2E4', onAccent: '#470A30', textHeading: '#FFF1F8', textBody: '#F4DEEA', textMuted: '#C397B0', glow: 'rgba(255,111,194,.14)' } },
+      { key: 'sweet_romance_devotee', label: 'the sweet romance devotee', emoji: 'friends-to-lovers', bio: 'comfort, tenderness, caretaking, and low-spice softness that still knows how to ache.', triggers: ['friends-to-lovers', 'small-town', 'found-family', 'single-dad', 'grumpy-sunshine', 'contemporary-romance'], theme: { name: 'blush hour', surface: '#170D11', border: '#38202A', deep: '#74404F', accent: '#FFB3C6', accent2: '#FFDDE7', onAccent: '#4A1626', textHeading: '#FFF4F7', textBody: '#F2E3E8', textMuted: '#BFA0AB', glow: 'rgba(255,179,198,.10)' } },
+      { key: 'romance_reader', label: 'the romance reader', emoji: 'found-family', bio: 'balanced taste, flexible moods, and a dashboard still learning the exact flavor of book chaos.', triggers: ['found-family', 'opposites-attract', 'second-chance', 'he-falls-first', 'contemporary-romance'], theme: { name: 'unsorted silver', surface: '#131013', border: '#2E282C', deep: '#5E5258', accent: '#D4C2CE', accent2: '#EFE4EA', onAccent: '#2E242A', textHeading: '#FAF6F8', textBody: '#EAE2E6', textMuted: '#A89AA1', glow: 'rgba(212,194,206,.08)' } }
+    ];
+  }
+
+  function getReaderTypes(){
+    var types = readerTypeRegistry && readerTypeRegistry.length ? readerTypeRegistry : getFallbackReaderTypes();
+    return types.map(function(type){
+      type.triggers = Array.isArray(type.triggers) && type.triggers.length ? type.triggers : (type.supporting || []);
+      type.theme = type.theme || {};
+      return type;
+    });
+  }
+
+  function slugifyTaste(value){
+    return normalize(value).replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+
+  function getReaderTypeByKey(key){
+    return getReaderTypes().find(function(type){ return type.key === key; }) || getReaderTypes().slice(-1)[0] || getFallbackReaderTypes().slice(-1)[0];
+  }
+
+  function hasReaderTypeKey(key){
+    key = String(key || '');
+    return getReaderTypes().some(function(type){ return type.key === key; });
+  }
+
+  function addReaderTypeScore(scores, key, amount){
+    scores[key] = (scores[key] || 0) + amount;
+  }
+
+  function getQuizResolvedReaderTypeKey(){
+    var picks = [profile.group_chat_text, profile.love_interest, profile.wall_line].filter(Boolean);
+    if (picks.length < 3) return '';
+
+    var counts = {};
+    picks.forEach(function(key){
+      counts[key] = (counts[key] || 0) + 1;
+    });
+
+    var matched = Object.keys(counts).find(function(key){
+      return counts[key] >= 2;
+    });
+    if (matched) return matched;
+
+    var feralOrder = [
+      'sweet_romance_devotee',
+      'slow_burn_girlie',
+      'fake_dating_fanatic',
+      'jersey_chaser',
+      'fantasy_girlie',
+      'tension_addict',
+      'dark_romance_girlie',
+      'chaos_reader'
+    ];
+    var sorted = picks.slice().sort(function(a, b){
+      return feralOrder.indexOf(a) - feralOrder.indexOf(b);
+    });
+    var lane = profile.heat_lane || 'cracked';
+
+    if (lane === 'unhinged' && picks.indexOf('dark_romance_girlie') > -1 && picks.indexOf('chaos_reader') > -1){
+      return 'chaos_reader';
+    }
+    if (lane === 'closed') return sorted[0] || '';
+    if (lane === 'open' || lane === 'unhinged') return sorted[sorted.length - 1] || '';
+    return sorted[1] || sorted[0] || '';
+  }
+
+  function getHeatLaneSpiceDial(lane){
+    return {
+      closed: 'soft_open_door',
+      cracked: 'balanced',
+      open: 'high_spice',
+      unhinged: 'wreck_me'
+    }[lane || ''] || '';
+  }
+
+  function getReaderTypeSpiceDial(readerTypeKey){
+    return {
+      chaos_reader: 'wreck_me',
+      dark_romance_girlie: 'high_spice',
+      tension_addict: 'balanced',
+      fantasy_girlie: 'balanced',
+      jersey_chaser: 'balanced',
+      fake_dating_fanatic: 'balanced',
+      slow_burn_girlie: 'some_heat',
+      sweet_romance_devotee: 'soft_open_door',
+      romance_reader: 'balanced'
+    }[readerTypeKey || ''] || '';
+  }
+
+  function getDisplaySpiceDial(readerTypeKey){
+    var heatDial = getHeatLaneSpiceDial(profile.heat_lane);
+    if (heatDial) return heatDial;
+
+    var currentDial = spiceDialValues.indexOf(profile.spice_dial) > -1 ? profile.spice_dial : '';
+    var typeDial = getReaderTypeSpiceDial(readerTypeKey || profile.reader_type_prior || getPreviewReaderTypeKey());
+
+    if ((!currentDial || currentDial === 'soft_open_door') && typeDial && typeDial !== 'soft_open_door'){
+      return typeDial;
+    }
+
+    return currentDial || typeDial || 'balanced';
+  }
+
+  function syncDisplaySpiceDial(readerTypeKey){
+    var nextDial = getDisplaySpiceDial(readerTypeKey);
+    if (!nextDial || nextDial === profile.spice_dial) return false;
+    if (profile.heat_lane && getHeatLaneSpiceDial(profile.heat_lane) !== nextDial) return false;
+    if (profile.spice_dial && profile.spice_dial !== 'soft_open_door' && !profile.heat_lane) return false;
+
+    profile.spice_dial = nextDial;
+    saveSharedSpiceProfile(Math.max(spiceDialValues.indexOf(nextDial) + 1, 1), 'made-for-you-display');
+    saveProfile(profile);
+    return true;
+  }
+
+  function syncQuizDerivedProfile(){
+    var lane = profile.heat_lane || '';
+    var laneDial = getHeatLaneSpiceDial(lane);
+    if (laneDial){
+      profile.spice_dial = laneDial;
+      saveSharedSpiceProfile(Math.max(spiceDialValues.indexOf(profile.spice_dial) + 1, 1), 'made-for-you-heat-lane');
+    }
+
+    var resolved = getQuizResolvedReaderTypeKey();
+    if (resolved){
+      profile.reader_type_prior = resolved;
+    }
+
+	    if (resolved && readerTypePrimaryTrope[resolved] && !profile.favorite_trope){
+	      profile.favorite_trope = readerTypePrimaryTrope[resolved];
+	    }
+	  }
+
+  function getBookReaderTypeScore(book, persona){
+    if (!book || !persona) return 0;
+    var score = 0;
+    var bookTropes = (book.tropes || []).map(slugifyTaste);
+    var shelfName = slugifyTaste(book.shelf || '');
+    var triggers = (persona.triggers || []).map(slugifyTaste);
+
+    triggers.forEach(function(trigger){
+      if (!trigger) return;
+      if (bookTropes.indexOf(trigger) > -1) score += 7;
+      if (shelfName && (shelfName === trigger || shelfName.indexOf(trigger) > -1 || trigger.indexOf(shelfName) > -1)) score += 5;
+    });
+
+    if (persona.key === 'chaos_reader' && Number(book.spice || 0) >= 4) score += 8;
+    if (persona.key === 'dark_romance_girlie' && (Number(book.darkness || 0) >= 3 || shelfName.indexOf('dark') > -1)) score += 7;
+    if (persona.key === 'fantasy_girlie' && (shelfName.indexOf('fantasy') > -1 || shelfName.indexOf('romantasy') > -1 || bookTropes.indexOf('fated-mates') > -1)) score += 8;
+    if (persona.key === 'jersey_chaser' && (shelfName.indexOf('sports') > -1 || bookTropes.indexOf('hockey-romance') > -1 || bookTropes.indexOf('sports-romance') > -1)) score += 8;
+    if (persona.key === 'slow_burn_girlie' && (Number(book.yearning || 0) >= 3 || bookTropes.indexOf('slow-burn') > -1)) score += 7;
+    if (persona.key === 'tension_addict' && (Number(book.tension || 0) >= 3 || bookTropes.indexOf('enemies-to-lovers') > -1 || bookTropes.indexOf('forced-proximity') > -1)) score += 7;
+    if (persona.key === 'fake_dating_fanatic' && (bookTropes.indexOf('fake-dating') > -1 || bookTropes.indexOf('marriage-of-convenience') > -1)) score += 9;
+    if (persona.key === 'sweet_romance_devotee' && (Number(book.spice || 0) <= 2 || bookTropes.indexOf('friends-to-lovers') > -1 || bookTropes.indexOf('found-family') > -1)) score += 6;
+    if (persona.key === 'romance_reader' && score === 0) score += 1;
+
+    return score;
+  }
+
+  function softProfileGuardrailActive(){
+    var personaKey = (profile.reader_type_prior || getQuizResolvedReaderTypeKey() || getPreviewReaderTypeKey() || '');
+    var displayDial = getDisplaySpiceDial(personaKey);
+    return personaKey === 'sweet_romance_devotee' || displayDial === 'soft_open_door' || profile.heat_lane === 'closed';
+  }
+
+  function isSoftProfileIncompatibleBook(book){
+    if (!book || !softProfileGuardrailActive()) return false;
+
+    var bookTropes = (book.tropes || []).map(normalize);
+    var shelfName = normalize(book.shelf || '');
+    var combined = [shelfName].concat(bookTropes).join(' ');
+    var blockedSignals = [
+      'dark romance',
+      'dark academia',
+      'mafia',
+      'bully romance',
+      'touch her and die',
+      'stalker',
+      'obsession',
+      'morally gray'
+    ];
+
+    if (Number(book.spice || 0) > 2) return true;
+    if (Number(book.darkness || 0) >= 2) return true;
+
+    return blockedSignals.some(function(signal){
+      return combined.indexOf(signal) > -1;
+    });
+  }
+
+  function getReaderTypeRankedBooks(limit){
+    var persona = getPersonaProfile();
+    return books
       .map(function(book){
-        return { book: book, score: scoreBook(book) };
+        return { book: book, score: getBookReaderTypeScore(book, persona) + Math.max(0, scoreBook(book)) };
+      })
+      .filter(function(entry){
+        var status = getBookStatus({ handle: entry.book.handle, title: entry.book.title });
+        return entry.score > 0 && status !== 'read' && status !== 'dnf' && !isSoftProfileIncompatibleBook(entry.book);
+      })
+      .sort(function(a, b){ return b.score - a.score; })
+      .map(function(entry){ return entry.book; })
+      .slice(0, limit || 5);
+  }
+
+  function getPreviewReaderTypeKey(){
+    try {
+      var params = new URLSearchParams(window.location.search || '');
+      var key = params.get('mfy_type') || '';
+      var isLocal = window.location.hostname === 'localhost' || window.location.hostname.indexOf('.local') > -1;
+      return isLocal && key && getReaderTypeByKey(key) ? key : '';
+    } catch(e) {
+      return '';
+    }
+  }
+
+  function scoreReaderTypes(){
+    var types = getReaderTypes();
+    var scores = {};
+    var shelf = getShelf();
+    var spiceLevel = getSpiceLevel(getDisplaySpiceDial(profile.reader_type_prior) || 'balanced');
+    var previewKey = getPreviewReaderTypeKey();
+
+    if (previewKey){
+      var previewAssigned = getReaderTypeByKey(previewKey);
+      try {
+        storageSet(scopedMfyStorageKey('bbbReaderTypeState'), JSON.stringify({ key: previewAssigned.key, score: 999, assignedAt: new Date().toISOString(), scores: {} }));
+        cleanupLegacyMfyStorage('bbbReaderTypeState');
+      } catch(e) {}
+      return { assigned: previewAssigned, scores: {}, ranked: [{ key: previewAssigned.key, score: 999 }] };
+    }
+
+    var quizPrior = String(profile.reader_type_prior || '');
+    if (!quizPrior){
+      quizPrior = getQuizResolvedReaderTypeKey();
+      if (quizPrior){
+        profile.reader_type_prior = quizPrior;
+      }
+    }
+    var hasCompleteQuizPrior = quizPrior && hasReaderTypeKey(quizPrior) && questionsOrder.every(function(question){
+      return !!String(profile[question] || '').trim();
+    });
+    if (hasCompleteQuizPrior){
+      var quizAssigned = getReaderTypeByKey(quizPrior);
+      var quizScores = {};
+      quizScores[quizAssigned.key] = 999;
+      try {
+        storageSet(scopedMfyStorageKey('bbbReaderTypeState'), JSON.stringify({ key: quizAssigned.key, score: 999, assignedAt: new Date().toISOString(), scores: quizScores }));
+        cleanupLegacyMfyStorage('bbbReaderTypeState');
+      } catch(e) {}
+      return { assigned: quizAssigned, scores: quizScores, ranked: [{ key: quizAssigned.key, score: 999 }] };
+    }
+
+    types.forEach(function(type){ scores[type.key] = type.key === 'romance_reader' ? 1 : 0; });
+
+    shelf.forEach(function(item){
+      var status = getBookStatus(item);
+      var weight = status === 'read' ? 3 : status === 'reading' ? 2 : status === 'dnf' ? -2 : 1;
+      var matchedBook = books.find(function(book){
+        return getBookStatusKey(book) === getBookStatusKey(item);
+      }) || item;
+      var tropeSignals = (matchedBook.tropes || item.tropes || []).concat([matchedBook.shelf || item.shelf || '']).map(slugifyTaste);
+
+      types.forEach(function(type){
+        var triggers = (type.triggers || []).map(slugifyTaste);
+        if (tropeSignals.some(function(signal){ return triggers.indexOf(signal) > -1; })){
+          addReaderTypeScore(scores, type.key, weight);
+        }
+      });
+    });
+
+    var favoriteTrope = slugifyTaste(profile.favorite_trope || '');
+    if (favoriteTrope){
+      types.forEach(function(type){
+        if ((type.triggers || []).map(slugifyTaste).indexOf(favoriteTrope) > -1){
+          addReaderTypeScore(scores, type.key, 2);
+        }
+      });
+    }
+
+    if (profile.reader_type_prior && getReaderTypeByKey(profile.reader_type_prior)){
+      var priorWeight = shelf.length ? 2 : 5;
+      if (profile.reader_type_prior === 'chaos_reader' && spiceLevel <= 2){
+        priorWeight = 1;
+      }
+      addReaderTypeScore(scores, profile.reader_type_prior, priorWeight);
+    }
+
+    if (spiceLevel >= 5) addReaderTypeScore(scores, 'chaos_reader', 3);
+    if (spiceLevel <= 2) addReaderTypeScore(scores, 'chaos_reader', -8);
+    if (spiceLevel <= 2) addReaderTypeScore(scores, 'sweet_romance_devotee', 2);
+    if (profile.craving === 'dark') addReaderTypeScore(scores, 'dark_romance_girlie', 2);
+    if (profile.craving === 'slowburn') addReaderTypeScore(scores, 'slow_burn_girlie', 2);
+    if (profile.craving === 'cozy') addReaderTypeScore(scores, 'sweet_romance_devotee', 2);
+
+    var ranked = Object.keys(scores).map(function(key){
+      return { key: key, score: scores[key] || 0 };
+    }).sort(function(a, b){ return b.score - a.score; });
+    var leader = ranked[0] || { key: 'romance_reader', score: 0 };
+    var runnerUp = ranked[1] || { score: 0 };
+    var assignedKey = leader.score >= 3 && leader.score >= Math.max(1, runnerUp.score * 1.5) ? leader.key : 'romance_reader';
+    if (!shelf.length && profile.dashboard_built && profile.reader_type_prior){
+      assignedKey = profile.reader_type_prior;
+    } else if (!shelf.length && assignedKey === 'romance_reader' && leader.score >= 2){
+      assignedKey = leader.key;
+    }
+    if (assignedKey === 'chaos_reader' && spiceLevel <= 2){
+      assignedKey = profile.craving === 'dark' ? 'dark_romance_girlie' : 'tension_addict';
+    }
+    var assigned = getReaderTypeByKey(assignedKey);
+
+    try {
+      storageSet(scopedMfyStorageKey('bbbReaderTypeState'), JSON.stringify({ key: assigned.key, score: leader.score, assignedAt: new Date().toISOString(), scores: scores }));
+      cleanupLegacyMfyStorage('bbbReaderTypeState');
+    } catch(e) {}
+
+    return { assigned: assigned, scores: scores, ranked: ranked };
+  }
+
+  function getPersonaProfile(){
+    return scoreReaderTypes().assigned;
+  }
+
+  function getPersonaBadgeMarkup(){
+    var persona = getPersonaProfile();
+    var emoji = persona.emoji || 'found-family';
+    return '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/' + mfyEscape(emoji) + '.png" alt="" aria-hidden="true" loading="lazy" decoding="async"><span>' + mfyEscape(persona.label || 'the romance reader') + '</span>';
+  }
+
+  function renderHeroReaderTypeSymbol(){
+    if (!heroKicker) return;
+    var persona = getPersonaProfile();
+    var emoji = persona.emoji || 'found-family';
+    heroKicker.classList.add('sss-mfy__readerTypeSymbol');
+    heroKicker.innerHTML =
+      '<img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/' + mfyEscape(emoji) + '.png" alt="" aria-hidden="true" loading="lazy" decoding="async">' +
+      '<span>' + mfyEscape(persona.label || 'the romance reader') + '</span>';
+  }
+
+  function applyReaderTheme(persona){
+    if (!persona || !persona.theme) return;
+    var target = root;
+    var theme = persona.theme || {};
+    var surface = theme.surface || '#131013';
+    var border = theme.border || theme.soft || '#2E282C';
+    var deep = theme.deep || '#5E5258';
+    var accent = theme.accent || '#D4C2CE';
+    var accent2 = theme.accent2 || theme.accent_2 || theme.soft || '#EFE4EA';
+    var onAccent = theme.onAccent || theme.on_accent || theme.bg || '#2E242A';
+    var textHeading = theme.textHeading || theme.text_heading || theme.soft || '#FAF6F8';
+    var textBody = theme.textBody || theme.text_body || theme.soft || '#EAE2E6';
+    var textMuted = theme.textMuted || theme.text_muted || theme.deep || '#A89AA1';
+    var glow = theme.glow || 'rgba(212,194,206,.08)';
+    target.setAttribute('data-reader-theme', persona.key || 'romance_reader');
+    target.style.setProperty('--reader-bg', '#0b090b');
+    target.style.setProperty('--reader-surface', surface);
+    target.style.setProperty('--reader-border', border);
+    target.style.setProperty('--reader-deep', deep);
+    target.style.setProperty('--reader-accent', accent);
+    target.style.setProperty('--reader-accent-2', accent2);
+    target.style.setProperty('--reader-on-accent', onAccent);
+    target.style.setProperty('--reader-text-heading', textHeading);
+    target.style.setProperty('--reader-text-body', textBody);
+    target.style.setProperty('--reader-text-muted', textMuted);
+    target.style.setProperty('--reader-glow', glow);
+    target.style.setProperty('--reader-soft', accent2);
+    target.style.setProperty('--mfy-accent', accent);
+    target.style.setProperty('--mfy-accent-two', accent2);
+    target.style.setProperty('--mfy-accent-three', deep);
+    target.style.setProperty('--mfy-accent-four', surface);
+    target.style.setProperty('--mfy-accent-soft', 'color-mix(in srgb, var(--reader-accent) 24%, transparent)');
+    target.style.setProperty('--mfy-accent-two-soft', 'color-mix(in srgb, var(--reader-accent-2) 18%, transparent)');
+    target.style.setProperty('--mfy-accent-three-soft', 'color-mix(in srgb, var(--reader-deep) 28%, transparent)');
+    target.style.setProperty('--mfy-accent-four-soft', 'color-mix(in srgb, var(--reader-surface) 42%, transparent)');
+    target.style.setProperty('--mfy-accent-ink', onAccent);
+    target.style.setProperty('--mfy-accent-two-ink', onAccent);
+    target.style.setProperty('--mfy-accent-three-ink', textBody);
+    target.style.setProperty('--mfy-accent-four-ink', textBody);
+    target.style.setProperty('--mfy-primary', deep);
+    target.style.setProperty('--mfy-cream', textBody);
+  }
+
+	  function renderSocietyShelfPreview(){
+	    if (!societyShelfPreview) return;
+	    var previewLimit = 5;
+    var shelf = getShelf();
+    var previewBooks = shelf.map(function(item){
+      return books.find(function(book){ return getBookStatusKey(book) === getBookStatusKey(item); }) || item;
+    }).slice(0, previewLimit);
+    if (!previewBooks.length){
+      previewBooks = getReaderTypeRankedBooks(previewLimit);
+    }
+    societyShelfPreview.innerHTML = previewBooks.length ? previewBooks.map(function(book, index){
+      return '<span class="sss-mfy__shelfPreviewCover">' + getDashboardCoverMarkup(book, index, true) + '</span>';
+    }).join('') : '<span class="sss-mfy__empty">save a book to start the preview.</span>';
+  }
+
+	  function renderSocietyTropeDna(readBooks){
+	    if (!societyTropeDna) return;
+	    var top = getTopReadTropes(readBooks, 5);
+	    var activeTropeLane = getActiveTropeLane();
+	    if (activeTropeLane){
+	      top = top.filter(function(entry){
+	        return normalize(entry.name) !== activeTropeLane;
+	      });
+	      top.unshift({ name: activeTropeLane, count: Math.max(1, (top[0] && top[0].count) || 1) });
+	    } else if (!top.length && profile.favorite_trope){
+	      top = [{ name: profile.favorite_trope, count: 1 }];
+	    }
+    [
+      { name: 'found family', count: 1 },
+      { name: 'slow burn', count: 1 },
+      { name: 'forced proximity', count: 1 }
+    ].forEach(function(fallback){
+      if (top.length >= 3) return;
+      if (top.some(function(item){ return normalize(item.name) === normalize(fallback.name); })) return;
+      top.push(fallback);
+    });
+    var max = Math.max.apply(null, top.map(function(item){ return item.count || 1; }));
+    societyTropeDna.innerHTML = top.map(function(item){
+      var percent = Math.max(18, Math.round(((item.count || 1) / max) * 100));
+      return '<div class="sss-mfy__tropeDnaRow">' +
+        '<span>' + mfyEscape(item.name) + '</span>' +
+        '<i><b style="width:' + percent + '%"></b></i>' +
+        '<em>' + mfyEscape(String(item.count || 1)) + '</em>' +
+      '</div>';
+    }).join('');
+  }
+
+  function renderSocietyPerks(){
+    if (!societyPerks) return;
+    var weeklyPicks = getWeeklyReadNextPicks();
+    var perks = [
+      {
+        label: 'weekly read-next logic',
+        value: 'live from your profile',
+        preview: renderSocietyReadNextPreview(weeklyPicks)
+      },
+      {
+        label: 'private notes layer',
+        value: 'synced from book notes',
+        preview: renderSocietyNotesPreview(weeklyPicks)
+      }
+    ];
+    societyPerks.innerHTML = perks.map(function(perk){
+      var examples = Array.isArray(perk.examples) && perk.examples.length ? '<div class="sss-mfy__societyPerkExamples">' + perk.examples.map(function(example){
+        return '<em>' + mfyEscape(example) + '</em>';
+      }).join('') + '</div>' : '';
+      return '<article class="sss-mfy__societyPerk"><span>' + mfyEscape(perk.label) + '</span><strong>' + mfyEscape(perk.value) + '</strong>' + (perk.preview || examples) + '</article>';
+    }).join('');
+  }
+
+  function renderSocietyBoyfriendMatch(){
+    if (!societyBfCard) return;
+    var match = getPaidFictionalBfMatch();
+    var book = match.book || {};
+    var profileEntry = match.profileEntry || getFictionalBfProfile(book, book.boyfriend_name || '', book.title || '');
+    var title = mfyDecodeEntities(profileEntry && profileEntry.name ? profileEntry.name : (book.boyfriend_name || match.typeLabel || 'fictional boyfriend'));
+    var url = profileEntry && profileEntry.url ? profileEntry.url : '/fictional-boyfriends/';
+    var portrait = renderFictionalBfPortrait(profileEntry, title);
+    var profileBookTitle = profileEntry && profileEntry.bookTitle ? mfyDecodeEntities(profileEntry.bookTitle) : '';
+    var scoringBookTitle = book && book.title ? mfyDecodeEntities(book.title) : '';
+    var sameProfileBook = profileBookTitle && scoringBookTitle && mfyMatchKey(profileBookTitle) === mfyMatchKey(scoringBookTitle);
+    var contextLabel = profileBookTitle;
+    if (!contextLabel && match.source === 'reader_type'){
+      contextLabel = (profileEntry && profileEntry.bookTitle) ? profileEntry.bookTitle : 'reader type match';
+    }
+    if (!contextLabel && match.source === 'quiz'){
+      contextLabel = (match.savedBoyfriend && match.savedBoyfriend.matchedAt) ? 'saved from your quiz' : 'fictional boyfriend quiz';
+    }
+    if (!contextLabel){
+      contextLabel = book.title ? ('shelf signal: ' + book.title) : (((match.persona && match.persona.label) || 'reader type') + ' match');
+    }
+    var descriptorLabel = match.source === 'reader_type' && profileEntry
+      ? (profileEntry.descriptor || profileEntry.bookTitle || match.typeLabel || 'fictional boyfriend')
+      : (match.typeLabel || 'fictional boyfriend');
+    if (match.source === 'quiz' && profileEntry){
+      descriptorLabel = profileEntry.descriptor || match.typeLabel || descriptorLabel;
+    }
+    if (profileEntry && !sameProfileBook){
+      descriptorLabel = profileEntry.descriptor || match.typeLabel || descriptorLabel;
+    }
+    contextLabel = mfyDecodeEntities(contextLabel);
+    descriptorLabel = mfyDecodeEntities(descriptorLabel);
+    if (societyBfName) societyBfName.textContent = title;
+    societyBfCard.innerHTML =
+      '<a class="sss-mfy__societyBfLink" href="' + mfyEscape(url) + '">' +
+        portrait +
+        '<span><strong>' + mfyEscape(descriptorLabel) + '</strong>' +
+        '<small>' + mfyEscape(contextLabel) + '</small></span>' +
+      '</a>';
+  }
+
+  function renderSocietyDashboard(){
+    if (!societyDashboard) return;
+    var persona = getPersonaProfile();
+    var readBooks = getReadBooks();
+    var topTropes = getTopReadTropes(readBooks, 1);
+    var leadTrope = getLeadTropeName(topTropes);
+    var spiceLevel = getSpiceLevel(profile.spice_dial || 'balanced');
+    applyReaderTheme(persona);
+
+    if (societyDashboardTitle) societyDashboardTitle.textContent = persona.label || 'the romance reader';
+    if (societyReaderBadge) societyReaderBadge.innerHTML = getPersonaBadgeMarkup();
+    if (societyReaderBio) societyReaderBio.textContent = getReaderTypeVsTropeText(persona, leadTrope);
+    if (societyReaderFootnote) societyReaderFootnote.textContent = getReaderTypeWhyText(persona, leadTrope) + ' Theme: ' + ((persona.theme && persona.theme.name) || 'unsorted silver') + '.';
+    if (societySaveCount) societySaveCount.textContent = getShelf().length ? (getShelf().length + ' saved') : 'suggested';
+    if (societyReadCount) societyReadCount.textContent = String(readBooks.length);
+    if (societyTopTrope) societyTopTrope.textContent = leadTrope || 'still learning';
+    if (societyThemeButton) societyThemeButton.textContent = 'reader theme';
+    if (societyHeatBar){
+      Array.prototype.forEach.call(societyHeatBar.children, function(segment, index){
+        segment.classList.toggle('is-on', index < spiceLevel);
+      });
+    }
+
+    renderSocietyShelfPreview();
+    renderSocietyBoyfriendMatch();
+    renderSocietyTropeDna(readBooks);
+    renderSocietyPerks();
+  }
+
+  function getBookThemeColor(book, index){
+    var themePalette = {
+      rose_ribbon: [['#F4C0D1', '#993556'], ['#FBEAF0', '#72243E'], ['#ED93B1', '#72243E']],
+      stormy_blue: [['#3C3489', '#CECBF6'], ['#1E2445', '#AEBBFF'], ['#5E6BC4', '#F6F4FF']],
+      pearl_white: [['#9FE1CB', '#085041'], ['#F2D982', '#64470A'], ['#DDECC8', '#365316']],
+      obsession_red: [['#FAC775', '#854F0B'], ['#F5C4B3', '#993C1D'], ['#FFE6A7', '#5D3303']],
+      dark_hearts: [['#27202F', '#D6D0E3'], ['#3A2532', '#F4C0D1'], ['#1B1A22', '#CECBF6']],
+      royal_violet: [['#CEB3F2', '#3C3489'], ['#BFA1FF', '#28175A'], ['#E1D4FF', '#4B2280']]
+    };
+    var palette = themePalette[getThemeProfile().key] || themePalette.rose_ribbon;
+    return palette[index % palette.length];
+  }
+
+  function getDashboardCoverMarkup(book, index, compact){
+    var colors = getBookThemeColor(book, index);
+    var handle = book && book.handle ? String(book.handle) : '';
+    var source = handle ? (
+      root.querySelector('.sss-mfy__sourceGrid .sss-lib__book[data-handle="' + handle + '"] .sss-lib__coverWrap') ||
+      document.querySelector('.sss-lib__book[data-handle="' + handle + '"] .sss-lib__coverWrap')
+    ) : null;
+
+    if (source){
+      var clone = source.cloneNode(true);
+      clone.querySelectorAll('[data-heart], button').forEach(function(item){
+        item.remove();
+      });
+      clone.setAttribute('data-book-rating-cover', '');
+      clone.dataset.handle = book && book.handle ? String(book.handle) : (clone.dataset.handle || '');
+      clone.dataset.title = book && book.title ? String(book.title) : (clone.dataset.title || '');
+      applyRatingStamp(clone, getBookRating(book));
+      return clone.outerHTML;
+    }
+
+    var rating = getBookRating(book);
+    var ratingStamp = rating ? '<div class="sss-lib__ratingStamp" data-book-rating-stamp aria-label="' + rating + ' out of 5 stars">' + mfyEscape(ratingStampText(rating)) + '</div>' : '';
+
+    return '<div class="' + (compact ? 'sss-mfy__fallbackCover sss-mfy__fallbackCover--mini' : 'sss-mfy__fallbackCover') + '" data-book-rating-cover data-handle="' + mfyEscape(book && book.handle || '') + '" data-title="' + mfyEscape(book && book.title || '') + '" style="--mfy-rec-bg:' + colors[0] + ';--mfy-rec-ink:' + colors[1] + '">' + ratingStamp + '<span>' + mfyEscape(book && book.title || 'book') + '</span></div>';
+  }
+
+  function getSocietyPreviewTropes(book, limit){
+    return (Array.isArray(book && book.tropes) ? book.tropes : []).filter(Boolean).slice(0, limit || 2);
+  }
+
+  function renderSocietyReadNextPreview(entries){
+    var picks = (entries || []).filter(function(entry){
+      return entry && entry.book;
+    }).slice(0, 3);
+
+    if (!picks.length){
+      return '<div class="sss-mfy__societyPerkExamples"><em>profile picks are loading.</em></div>';
+    }
+
+    return '<div class="sss-mfy__societyReadPreview">' + picks.map(function(entry, index){
+      var book = entry.book || {};
+      var tropes = getSocietyPreviewTropes(book, 2);
+      return '<article class="sss-mfy__societyReadItem">' +
+        '<div class="sss-mfy__societyReadCover">' + getDashboardCoverMarkup(book, index, true) + '</div>' +
+        '<div class="sss-mfy__societyReadMeta">' +
+          '<b>' + mfyEscape(mfyDecodeEntities(book.title || 'your next read')) + '</b>' +
+          '<div>' + tropes.map(function(trope){ return '<i>' + mfyEscape(trope) + '</i>'; }).join('') + '</div>' +
+        '</div>' +
+      '</article>';
+    }).join('') + '</div>';
+  }
+
+  function renderSocietyNotesPreview(entries){
+    var pick = (entries || []).filter(function(entry){
+      return entry && entry.book;
+    })[0];
+    var book = pick && pick.book ? pick.book : {};
+    var title = mfyDecodeEntities(book.title || 'your next read');
+    var trope = getSocietyPreviewTropes(book, 1)[0] || profile.favorite_trope || 'reader signal';
+
+    return '<div class="sss-mfy__societyNotesPreview">' +
+      '<div class="sss-mfy__societyNotesCover">' + getDashboardCoverMarkup(book, 0, true) + '</div>' +
+      '<div class="sss-mfy__societyNotePaper">' +
+        '<b>' + mfyEscape(title) + '</b>' +
+        '<p>"the exact kind of ' + mfyEscape(String(trope).toLowerCase()) + ' chaos i want saved for later."</p>' +
+        '<small>private note mockup</small>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function getDashboardWhy(book, index){
+    var bookTropes = (book && book.tropes || []).map(normalize);
+    if (profile.favorite_trope && bookTropes.indexOf(normalize(profile.favorite_trope)) > -1){
+      return 'matches your tropes + heat exactly';
+    }
+    if (getSpiceDialReason(book)){
+      return 'hits your saved spice lane';
+    }
+    if (profile.craving === 'slowburn') return 'slow burn readers always come here';
+    if (index === 2) return 'wildcard pick for your current vibe';
+    return 'based on your profile';
+  }
+
+  function renderDashboardRecCard(entry, index){
+    var book = entry && entry.book ? entry.book : {};
+    var colors = getBookThemeColor(book, index);
+    var labels = ['closest match', 'trope twin', 'wildcard pick'];
+    var spice = Math.max(0, Math.min(5, Number(book.spice || 0)));
+    var tropes = (book.tropes || []).slice(0, 2);
+    return '<article class="sss-mfy__dashRec" role="button" tabindex="0" data-mfy-dashboard-book data-handle="' + mfyEscape(book.handle || '') + '" data-title="' + mfyEscape(book.title || '') + '">' +
+      '<div class="sss-mfy__dashRecCover" style="--mfy-rec-bg:' + colors[0] + ';--mfy-rec-ink:' + colors[1] + '">' + getDashboardCoverMarkup(book, index, false) + '</div>' +
+      '<div class="sss-mfy__dashRecBody">' +
+        '<div class="sss-mfy__dashRecLabel">' + mfyEscape(labels[index] || 'made for you') + '</div>' +
+        '<div class="sss-mfy__dashRecTitle">' + mfyEscape(book.title || 'your next read') + '</div>' +
+        '<div class="sss-mfy__dashRecAuthor">' + mfyEscape(book.author || '') + '</div>' +
+        '<div class="sss-mfy__dashSpice" aria-label="' + spice + ' out of 5 spice">' +
+          [1,2,3,4,5].map(function(n){ return '<span class="' + (n <= spice ? 'is-on' : '') + '"></span>'; }).join('') +
+        '</div>' +
+        '<div class="sss-mfy__dashTags">' + tropes.map(function(trope){ return '<span>' + mfyEscape(trope) + '</span>'; }).join('') + '</div>' +
+        '<div class="sss-mfy__dashWhy">' + mfyEscape(getDashboardWhy(book, index)) + '</div>' +
+      '</div>' +
+    '</article>';
+  }
+
+  function getReadNextReasons(book){
+    var reasons = [];
+    var bookTropes = (book && book.tropes || []).map(normalize);
+    var status = getBookStatus({ handle: book && book.handle, title: book && book.title });
+    var saved = getShelf().find(function(item){
+      return getBookStatusKey(item) === getBookStatusKey(book);
+    });
+
+    if (profile.favorite_trope && bookTropes.indexOf(normalize(profile.favorite_trope)) > -1){
+      reasons.push('favorite trope');
+    }
+    if (getSpiceDialReason(book)){
+      reasons.push('spice match');
+    }
+    if (status === 'reading'){
+      reasons.push('already reading');
+    } else if (status === 'tbr' || saved){
+      reasons.push('saved shelf');
+    }
+    if (profile.craving && tokenLabels.craving && tokenLabels.craving[profile.craving]){
+      reasons.push(tokenLabels.craving[profile.craving]);
+    }
+
+    return reasons.filter(Boolean).slice(0, 4);
+  }
+
+  function getWeeklyReadNextPicks(entries){
+    var picks = (entries || []).filter(function(entry){
+      return entry && entry.book && entry.score > -999 && !isSoftProfileIncompatibleBook(entry.book);
+    }).slice(0, 3);
+    var seen = {};
+
+    picks.forEach(function(entry){
+      var key = getBookStatusKey(entry.book || {});
+      if (key) seen[key] = true;
+    });
+
+    if (picks.length < 3){
+      books
+        .map(function(book){
+          return { book: book, score: scoreQuizOnlyBook(book) };
+        })
+        .filter(function(entry){
+          var key = getBookStatusKey(entry.book || {});
+          return entry && entry.book && entry.score > -999 && key && !seen[key] && !isSoftProfileIncompatibleBook(entry.book);
+        })
+        .sort(function(a, b){
+          return b.score - a.score;
+        })
+        .slice(0, 3 - picks.length)
+        .forEach(function(entry){
+          var key = getBookStatusKey(entry.book || {});
+          if (key) seen[key] = true;
+          picks.push(entry);
+        });
+    }
+
+    return picks;
+  }
+
+  function renderNextOpinion(entries){
+    if (!nextOpinionEl) return;
+
+    var picks = getWeeklyReadNextPicks(entries);
+
+    if (!picks.length){
+      if (nextOpinionEl.children.length) return;
+      nextOpinionEl.innerHTML = '<div class="sss-mfy__empty">answer the quiz and your first three profile picks will land here.</div>';
+      return;
+    }
+
+    nextOpinionEl.innerHTML = picks.map(function(entry, index){
+      var book = entry.book || {};
+      var colors = getBookThemeColor(book, index);
+      var reasons = getReadNextReasons(book);
+      var label = index === 0 ? 'our pick' : (index === 1 ? 'backup plan' : 'wildcard');
+      var spice = Math.max(0, Math.min(5, Number(book.spice || 0)));
+      return '<article class="sss-mfy__nextOpinionCard' + (index === 0 ? ' sss-mfy__nextOpinionCard--primary' : '') + '">' +
+        '<div class="sss-mfy__nextOpinionCover" style="--mfy-rec-bg:' + colors[0] + ';--mfy-rec-ink:' + colors[1] + '">' + getDashboardCoverMarkup(book, index, index !== 0) + '</div>' +
+        '<div class="sss-mfy__nextOpinionBody">' +
+          '<span class="sss-mfy__nextOpinionLabel">' + mfyEscape(label) + '</span>' +
+          '<strong>' + mfyEscape(book.title || 'your next read') + '</strong>' +
+          '<small>' + mfyEscape(book.author || '') + '</small>' +
+          '<div class="sss-mfy__dashSpice" aria-label="' + spice + ' out of 5 spice">' +
+            [1,2,3,4,5].map(function(n){ return '<span class="' + (n <= spice ? 'is-on' : '') + '"></span>'; }).join('') +
+          '</div>' +
+          '<p>' + mfyEscape(index === 0 ? getDashboardWhy(book, index) : 'kept close because it still fits your reader pattern.') + '</p>' +
+          '<div class="sss-mfy__nextOpinionReasons">' + reasons.map(function(reason){ return '<span>' + mfyEscape(reason) + '</span>'; }).join('') + '</div>' +
+        '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  function renderDashboardBookshelf(){
+    if (!dashboardBookshelf) return;
+    bookshelfTabButtons.forEach(function(button){
+      button.classList.toggle('is-active', (button.getAttribute('data-mfy-bookshelf-tab') || 'reading') === dashboardBookshelfTab);
+    });
+    var statusMap = { reading: 'reading', tbr: 'tbr', read: 'read' };
+    var targetStatus = statusMap[dashboardBookshelfTab] || 'reading';
+    var entries = books.filter(function(book){
+      return getBookStatus({ handle: book.handle, title: book.title }) === targetStatus;
+    }).slice(0, 3);
+    if (!entries.length){
+      entries = getReaderTypeRankedBooks(3);
+    }
+    if (entries.length < 3){
+      var seen = {};
+      entries.forEach(function(book){
+        var key = getBookStatusKey(book || {});
+        if (key) seen[key] = true;
+      });
+      getWeeklyReadNextPicks().forEach(function(entry){
+        var book = entry && entry.book ? entry.book : null;
+        var key = getBookStatusKey(book || {});
+        if (book && key && !seen[key] && entries.length < 3){
+          seen[key] = true;
+          entries.push(book);
+        }
+      });
+    }
+    if (entries.length < 3){
+      books.forEach(function(book){
+        var key = getBookStatusKey(book || {});
+        if (book && key && !seen[key] && entries.length < 3){
+          seen[key] = true;
+          entries.push(book);
+        }
+      });
+    }
+    dashboardBookshelf.innerHTML = entries.length ? entries.map(function(book, index){
+      var colors = getBookThemeColor(book, index);
+      var tropes = (book.tropes || []).slice(0, 2).map(function(trope){ return '<span>' + mfyEscape(trope) + '</span>'; }).join('');
+      return '<div class="sss-mfy__bookRow">' +
+        '<div class="sss-mfy__miniCover" style="--mfy-rec-bg:' + colors[0] + ';--mfy-rec-ink:' + colors[1] + '">' + getDashboardCoverMarkup(book, index, true) + '</div>' +
+        '<div><strong>' + mfyEscape(book.title || 'untitled') + '</strong><small>' + mfyEscape(book.author || '') + '</small><div>' + tropes + '</div></div>' +
+      '</div>';
+    }).join('') : '<div class="sss-mfy__empty">mark books in the library and they’ll show up here.</div>';
+  }
+
+  function getBestBoyfriendBook(){
+    return books
+      .map(function(book){
+        var boyfriendScore = scoreBoyfriendMatch(book);
+        var bookScore = scoreBook(book);
+        return { book: book, score: boyfriendScore + Math.max(0, bookScore / 4) };
+      })
+      .filter(function(entry){
+        var book = entry && entry.book ? entry.book : {};
+        return entry.score > -999 && (!!String(book.boyfriend_name || '').trim() || !!String(book.boyfriend_type || '').trim());
+      })
+      .sort(function(a, b){ return b.score - a.score; })[0];
+  }
+
+  function getFictionalBfTypeLabel(book){
+    var type = canonicalBoyfriendType(book && book.boyfriend_type);
+    return tokenLabels.fictional_man[type] || String(book && book.boyfriend_type || '').trim() || 'fictional boyfriend';
+  }
+
+  function mfyMatchKey(value){
+    return normalize(mfyDecodeEntities(value)).replace(/[^a-z0-9]+/g, ' ').trim();
+  }
+
+  function mfyLooseKeyMatch(candidate, target){
+    var candidateKey = mfyMatchKey(candidate);
+    var targetKey = mfyMatchKey(target);
+    if (!candidateKey || !targetKey) return false;
+    if (candidateKey === targetKey) return true;
+    if (targetKey.length >= 4 && candidateKey.indexOf(targetKey) > -1) return true;
+    if (candidateKey.length >= 4 && targetKey.indexOf(candidateKey) > -1) return true;
+    return false;
+  }
+
+  function mfyProfileSearchText(profileEntry){
+    if (!profileEntry) return '';
+    return [
+      profileEntry.name,
+      profileEntry.bookTitle,
+      profileEntry.descriptor,
+      profileEntry.hook,
+      profileEntry.shelf,
+      (profileEntry.traits || []).join(' '),
+      (profileEntry.traitLabels || []).join(' '),
+      (profileEntry.tropes || []).join(' ')
+    ].map(mfyMatchKey).join(' ');
+  }
+
+  function getFictionalBfProfile(book, boyfriendName, sourceTitle){
+    var nameKey = mfyMatchKey(boyfriendName);
+    var bookKey = mfyMatchKey(sourceTitle || (book && book.title));
+    if (!boyfriendLibrary.length) return null;
+
+    if (nameKey){
+      var byName = boyfriendLibrary.find(function(profileEntry){
+        return mfyMatchKey(profileEntry && profileEntry.name) === nameKey;
+      });
+      if (byName) return byName;
+
+      var byLooseName = boyfriendLibrary.find(function(profileEntry){
+        return mfyLooseKeyMatch(profileEntry && profileEntry.name, nameKey);
+      });
+      if (byLooseName) return byLooseName;
+    }
+
+    if (bookKey){
+      var byBook = boyfriendLibrary.find(function(profileEntry){
+        return mfyMatchKey(profileEntry && profileEntry.bookTitle) === bookKey;
+      });
+      if (byBook) return byBook;
+
+      var byLooseBook = boyfriendLibrary.find(function(profileEntry){
+        return mfyLooseKeyMatch(profileEntry && profileEntry.bookTitle, bookKey);
+      });
+      if (byLooseBook) return byLooseBook;
+    }
+
+    var typeLabel = getFictionalBfTypeLabel(book);
+    var typeWords = mfyMatchKey(typeLabel).split(' ').filter(function(word){ return word.length >= 5; });
+    if (!nameKey && !bookKey && typeWords.length){
+      var byType = boyfriendLibrary.find(function(profileEntry){
+        var searchText = mfyProfileSearchText(profileEntry);
+        return typeWords.some(function(word){ return searchText.indexOf(word) > -1; });
+      });
+      if (byType) return byType;
+    }
+
+    return (!nameKey && !bookKey) ? (boyfriendLibrary[0] || null) : null;
+  }
+
+  function renderFictionalBfPortrait(profileEntry, title){
+    var image = profileEntry && (profileEntry.imageFull || profileEntry.image) ? (profileEntry.imageFull || profileEntry.image) : '';
+    var name = profileEntry && profileEntry.name ? profileEntry.name : title;
+    if (image){
+      return '<img src="' + mfyEscape(image) + '" alt="' + mfyEscape(name || 'fictional boyfriend') + '" loading="lazy" decoding="async">';
+    }
+    return '<div class="sss-mfy__fictionalBfFallback"><span>' + mfyEscape((name || 'quiz').split(' ').slice(0, 2).join(' ')) + '</span></div>';
+  }
+
+  function getReaderTypeBoyfriendTypes(personaKey){
+    return {
+      chaos_reader: ['stalker', 'morally_gray_villain', 'mafia_boss', 'bully'],
+      dark_romance_girlie: ['morally_gray_villain', 'stalker', 'mafia_boss', 'obsessive_protector'],
+      tension_addict: ['academic_rival', 'cold_grump', 'arrogant_asshole', 'obsessive_protector'],
+      fantasy_girlie: ['tortured_prince', 'morally_gray_villain', 'cold_grump'],
+      jersey_chaser: ['athlete_with_heart'],
+      fake_dating_fanatic: ['sweetheart', 'arrogant_asshole', 'athlete_with_heart'],
+      slow_burn_girlie: ['cold_grump', 'emotionally_unavailable_man', 'academic_rival', 'tortured_prince'],
+      sweet_romance_devotee: ['sweetheart', 'athlete_with_heart', 'obsessive_protector'],
+      romance_reader: ['sweetheart', 'cold_grump', 'obsessive_protector']
+    }[personaKey || ''] || ['sweetheart'];
+  }
+
+  function getReaderTypeBoyfriendNames(personaKey){
+    return {
+      chaos_reader: ['tiernan callaghan', 'zade meadows', 'aaron warner'],
+      dark_romance_girlie: ['thiago el diablo da silva', 'tiernan callaghan', 'zade meadows'],
+      fantasy_girlie: ['aaron warner', 'kai rhodes', 'zade meadows']
+    }[personaKey || ''] || [];
+  }
+
+  function findBoyfriendProfileByNames(names){
+    if (!boyfriendLibrary.length || !names || !names.length) return null;
+    for (var i = 0; i < names.length; i += 1){
+      var target = mfyMatchKey(names[i]);
+      var looseTarget = target.replace(/\s+/g, '');
+      var matched = boyfriendLibrary.find(function(profileEntry){
+        var name = mfyMatchKey(profileEntry && profileEntry.name);
+        return name === target || name.replace(/\s+/g, '') === looseTarget || mfyLooseKeyMatch(profileEntry && profileEntry.name, target);
+      });
+      if (matched) return matched;
+    }
+    return null;
+  }
+
+  function normalizeSavedFictionalBoyfriend(value){
+    if (!value || typeof value !== 'object') return null;
+    var name = String(value.name || '').trim();
+    var profileId = String(value.profile_id || value.profileid || value.id || '').trim();
+    var bookTitle = String(value.book_title || value.booktitle || value.bookTitle || '').trim();
+    var resultType = canonicalBoyfriendType(value.result_type || value.resulttype || value.type || value.fictional_man || '');
+
+    if (!name && !profileId && !bookTitle) return null;
+
+    return {
+      source: String(value.source || 'fictional_boyfriend_quiz'),
+      matchedAt: String(value.matched_at || value.matchedat || value.matchedAt || value.completed_at || ''),
+      profileId: profileId,
+      name: name,
+      url: String(value.url || ''),
+      image: String(value.image || value.image_full || value.imagefull || ''),
+      imageFull: String(value.image_full || value.imagefull || value.image || ''),
+      bookId: String(value.book_id || value.bookid || ''),
+      bookTitle: bookTitle,
+      bookUrl: String(value.book_url || value.bookurl || value.bookUrl || ''),
+      bookCover: String(value.book_cover || value.bookcover || value.bookCover || ''),
+      author: String(value.author || ''),
+      shelf: String(value.shelf || ''),
+      descriptor: String(value.descriptor || ''),
+      resultType: resultType,
+      resultTitle: String(value.result_title || value.resulttitle || ''),
+      resultKicker: String(value.result_kicker || value.resultkicker || ''),
+      resultCopy: String(value.result_copy || value.resultcopy || ''),
+      tropes: Array.isArray(value.tropes) ? value.tropes : [],
+      traits: Array.isArray(value.traits) ? value.traits : [],
+      traitLabels: Array.isArray(value.trait_labels || value.traitlabels || value.traitLabels) ? (value.trait_labels || value.traitlabels || value.traitLabels) : [],
+      scores: value.scores && typeof value.scores === 'object' ? value.scores : {}
+    };
+  }
+
+  function getSavedFictionalBoyfriend(sourceProfile){
+    var nextProfile = sourceProfile || profile || {};
+    var direct = normalizeSavedFictionalBoyfriend(nextProfile.fictional_boyfriend);
+    if (direct) return direct;
+
+    var latest = nextProfile.quiz_evidence && nextProfile.quiz_evidence.latest ? nextProfile.quiz_evidence.latest : null;
+    var byType = nextProfile.quiz_evidence && nextProfile.quiz_evidence.by_type ? nextProfile.quiz_evidence.by_type : {};
+    var boyfriendEvidence = (latest && latest.quiz_type === 'boyfriend') ? latest : (byType && byType.boyfriend ? byType.boyfriend : null);
+    if (!boyfriendEvidence || typeof boyfriendEvidence !== 'object') return null;
+
+    return normalizeSavedFictionalBoyfriend(boyfriendEvidence.fictional_boyfriend || boyfriendEvidence.boyfriend_match || null);
+  }
+
+  function getSavedFictionalBoyfriendProfile(saved){
+    if (!saved) return null;
+    if (saved.profileId && boyfriendLibrary.length){
+      var byId = boyfriendLibrary.find(function(profileEntry){
+        return String(profileEntry && profileEntry.id || '') === saved.profileId;
+      });
+      if (byId) return byId;
+    }
+
+    return getFictionalBfProfile(
+      {
+        title: saved.bookTitle,
+        boyfriend_name: saved.name,
+        boyfriend_type: saved.resultType,
+        cover: saved.bookCover
+      },
+      saved.name,
+      saved.bookTitle
+    );
+  }
+
+  function getProfileTypeMatch(profileEntry, typeKey){
+    var searchText = mfyProfileSearchText(profileEntry);
+    var typeLabel = tokenLabels.fictional_man[typeKey] || String(typeKey || '').replace(/_/g, ' ');
+    var words = mfyMatchKey(typeLabel).split(' ').filter(function(word){ return word.length >= 4; });
+    var boosts = fictionalManProfiles[typeKey] || {};
+    var boostWords = (boosts.boyfriendBoosts || []).concat(boosts.tropeBoosts || []).join(' ');
+    var boostTokens = mfyMatchKey(boostWords).split(' ').filter(function(word){ return word.length >= 4; });
+    return words.concat(boostTokens).some(function(word){ return searchText.indexOf(word) > -1; });
+  }
+
+  function getPaidFictionalBfMatch(){
+    var persona = getPersonaProfile();
+    var personaKey = persona && persona.key ? persona.key : 'romance_reader';
+    var savedBoyfriend = getSavedFictionalBoyfriend(profile);
+    if (savedBoyfriend){
+      var savedProfile = getSavedFictionalBoyfriendProfile(savedBoyfriend);
+      var savedType = canonicalBoyfriendType(savedBoyfriend.resultType || profile.fictional_man || '');
+      var savedBook = books.find(function(book){
+        return mfyMatchKey(book && book.title) === mfyMatchKey(savedBoyfriend.bookTitle) ||
+          mfyMatchKey(book && book.boyfriend_name) === mfyMatchKey(savedBoyfriend.name);
+      }) || {
+        title: savedBoyfriend.bookTitle,
+        author: savedBoyfriend.author,
+        cover: savedBoyfriend.bookCover,
+        boyfriend_name: savedBoyfriend.name,
+        boyfriend_type: savedType,
+        shelf: savedBoyfriend.shelf,
+        tropes: savedBoyfriend.tropes || []
+      };
+
+      return {
+        persona: persona,
+        typeKey: savedType || 'obsessive_protector',
+        typeLabel: tokenLabels.fictional_man[savedType] || savedBoyfriend.descriptor || 'fictional boyfriend',
+        profileEntry: savedProfile || {
+          id: savedBoyfriend.profileId,
+          name: savedBoyfriend.name,
+          url: savedBoyfriend.url,
+          image: savedBoyfriend.image,
+          imageFull: savedBoyfriend.imageFull,
+          bookTitle: savedBoyfriend.bookTitle,
+          bookUrl: savedBoyfriend.bookUrl,
+          bookCover: savedBoyfriend.bookCover,
+          author: savedBoyfriend.author,
+          shelf: savedBoyfriend.shelf,
+          descriptor: savedBoyfriend.descriptor,
+          tropes: savedBoyfriend.tropes,
+          traits: savedBoyfriend.traits,
+          traitLabels: savedBoyfriend.traitLabels,
+          scores: savedBoyfriend.scores
+        },
+        book: savedBook,
+        body: fictionalManProfiles[savedType] || null,
+        source: 'quiz',
+        savedBoyfriend: savedBoyfriend
+      };
+    }
+    var personaNames = getReaderTypeBoyfriendNames(personaKey);
+    var explicitProfile = findBoyfriendProfileByNames(personaNames);
+    if (explicitProfile){
+      var explicitNameKey = mfyMatchKey(explicitProfile.name);
+      var explicitBook = books.find(function(book){
+        return mfyMatchKey(book && book.boyfriend_name) === explicitNameKey || mfyLooseKeyMatch(book && book.boyfriend_name, explicitNameKey);
+      }) || null;
+      var explicitType = canonicalBoyfriendType(explicitBook && explicitBook.boyfriend_type) || 'morally_gray_villain';
+      return {
+        persona: persona,
+        typeKey: explicitType,
+        typeLabel: tokenLabels.fictional_man[explicitType] || 'fictional boyfriend',
+        profileEntry: explicitProfile,
+        book: explicitBook,
+        body: fictionalManProfiles[explicitType] || null,
+        source: 'reader_type'
+      };
+    }
+
+    var typeOrder = getReaderTypeBoyfriendTypes(personaKey);
+    var bestBookEntry = getBestBoyfriendBook();
+    var bestBook = bestBookEntry && bestBookEntry.book ? bestBookEntry.book : null;
+
+    for (var i = 0; i < typeOrder.length; i += 1){
+      var typeKey = canonicalBoyfriendType(typeOrder[i]);
+      var profileBody = fictionalManProfiles[typeKey] || null;
+      var matchingBook = bestBook && canonicalBoyfriendType(bestBook.boyfriend_type) === typeKey ? bestBook : null;
+      if (!matchingBook){
+        matchingBook = books.find(function(book){
+          return canonicalBoyfriendType(book && book.boyfriend_type) === typeKey;
+        }) || null;
+      }
+
+      var matchingProfile = null;
+      if (boyfriendLibrary.length){
+        matchingProfile = boyfriendLibrary.find(function(profileEntry){
+          return getProfileTypeMatch(profileEntry, typeKey);
+        }) || null;
+      }
+
+      if (matchingProfile || matchingBook || profileBody){
+        return {
+          persona: persona,
+          typeKey: typeKey,
+          typeLabel: tokenLabels.fictional_man[typeKey] || 'fictional boyfriend',
+          profileEntry: matchingProfile,
+          book: matchingBook,
+          body: profileBody
+        };
+      }
+    }
+
+    return {
+      persona: persona,
+      typeKey: 'sweetheart',
+      typeLabel: tokenLabels.fictional_man.sweetheart || 'fictional boyfriend',
+      profileEntry: boyfriendLibrary[0] || null,
+      book: bestBook,
+      body: fictionalManProfiles.sweetheart || null
+    };
+  }
+
+  function renderFictionalBfCard(){
+    if (!fictionalBfCard) return;
+
+    if (profile.dashboard_built){
+      var paidMatch = getPaidFictionalBfMatch();
+      var paidBook = paidMatch.book || {};
+      var paidProfile = paidMatch.profileEntry || getFictionalBfProfile(paidBook, paidBook.boyfriend_name || '', paidBook.title || '');
+      var paidTitle = paidProfile && paidProfile.name ? paidProfile.name : (paidBook.boyfriend_name || paidMatch.typeLabel || 'fictional boyfriend match');
+      var paidUrl = paidProfile && paidProfile.url ? paidProfile.url : '/fictional-boyfriends/';
+      var personaLabel = (paidMatch.persona && paidMatch.persona.label) || 'reader type';
+      var paidCopy = personaLabel + ' points your profile toward ' + paidMatch.typeLabel + ' energy.';
+      if (paidMatch.source === 'quiz'){
+        paidCopy = 'your fictional boyfriend quiz locked this match onto your reader profile.';
+        if (paidProfile && paidProfile.bookTitle){
+          paidCopy += ' he is tied to ' + paidProfile.bookTitle + '.';
+        } else if (paidBook.title){
+          paidCopy += ' the closest book signal is ' + paidBook.title + '.';
+        }
+      } else if (paidMatch.source === 'reader_type' && paidProfile){
+        paidCopy = personaLabel + ' points your profile toward ' + paidTitle + (paidProfile.bookTitle ? (' from ' + paidProfile.bookTitle) : '') + '.';
+      } else if (paidBook.title){
+        paidCopy += ' the closest shelf signal right now is ' + paidBook.title + '.';
+      }
+
+      if (fictionalBfLabel){
+        fictionalBfLabel.textContent = paidMatch.source === 'quiz' ? 'saved from your quiz' : 'match from your reader type';
+      }
+
+      fictionalBfCard.innerHTML =
+        '<div class="sss-mfy__fictionalBfCopy">' +
+          '<span>💘 fictional boyfriend match</span>' +
+          '<strong>' + mfyEscape(paidTitle) + '</strong>' +
+          '<p>' + mfyEscape(paidCopy) + '</p>' +
+          (paidMatch.body && paidMatch.body.body ? '<small>' + mfyEscape(paidMatch.body.body) + '</small>' : '') +
+          '<div class="sss-mfy__fictionalBfActions">' +
+            '<a href="/fictional-boyfriend-quiz/">take quiz →</a>' +
+            '<a href="' + mfyEscape(paidUrl) + '">' + mfyEscape(paidProfile ? 'open profile →' : 'meet the lineup →') + '</a>' +
+          '</div>' +
+        '</div>' +
+        '<a class="sss-mfy__fictionalBfBook" href="' + mfyEscape(paidUrl) + '">' +
+          renderFictionalBfPortrait(paidProfile, paidTitle) +
+          '<span>' + mfyEscape(paidProfile && paidProfile.name ? paidProfile.name : paidMatch.typeLabel) + '</span>' +
+        '</a>';
+      return;
+    }
+
+    var favoriteHandle = String(profile.favorite_book || '').trim();
+    var favoriteBook = favoriteHandle && favoriteBookMap[favoriteHandle] ? favoriteBookMap[favoriteHandle] : null;
+    var suggestedEntry = getBestBoyfriendBook();
+    var suggestedBook = suggestedEntry && suggestedEntry.book ? suggestedEntry.book : null;
+    var isCustomFavorite = favoriteHandle.indexOf('custom:') === 0 && !favoriteBook;
+    var customTitle = isCustomFavorite ? favoriteHandle.replace(/^custom:/, '') : '';
+    var hasFavorite = !!favoriteBook || !!customTitle;
+    var book = favoriteBook || (!hasFavorite ? suggestedBook : null);
+    var boyfriendName = book ? String(book.boyfriend_name || '').trim() : '';
+    var boyfriendType = book ? getFictionalBfTypeLabel(book) : (profile.fictional_man ? tokenLabels.fictional_man[profile.fictional_man] : '');
+    var profileBody = fictionalManProfiles[canonicalBoyfriendType(book && book.boyfriend_type)] || fictionalManProfiles[profile.fictional_man];
+    var title = boyfriendName || boyfriendType || 'find your fictional boyfriend';
+    var sourceTitle = book && book.title ? book.title : customTitle;
+    var boyfriendProfile = getFictionalBfProfile(book, boyfriendName, sourceTitle);
+    var boyfriendUrl = boyfriendProfile && boyfriendProfile.url ? boyfriendProfile.url : '/fictional-boyfriends/';
+    var portraitLabel = boyfriendProfile && boyfriendProfile.name ? boyfriendProfile.name : title;
+    var copy = hasFavorite && favoriteBook && sourceTitle
+      ? ('because your favorite book is ' + sourceTitle + ', your dashboard is clocking ' + (boyfriendType || 'that exact boyfriend energy') + '.')
+      : hasFavorite && sourceTitle
+        ? ('because your favorite book is ' + sourceTitle + ', take the quiz to lock in the fictional boyfriend energy behind it.')
+      : sourceTitle
+        ? ('no favorite book saved yet, so i pulled a likely match from ' + sourceTitle + '. take the quiz to make it official.')
+        : 'save a favorite book or take the quiz and this card will lock onto your exact fictional boyfriend problem.';
+
+    if (fictionalBfLabel){
+      fictionalBfLabel.textContent = hasFavorite ? 'from your favorite book' : 'suggested from your matches';
+    }
+
+    fictionalBfCard.innerHTML =
+      '<div class="sss-mfy__fictionalBfCopy">' +
+        '<span>💘 ' + mfyEscape(hasFavorite ? 'favorite book signal' : 'suggested match') + '</span>' +
+        '<strong>' + mfyEscape(title) + '</strong>' +
+        '<p>' + mfyEscape(copy) + '</p>' +
+        (profileBody && profileBody.body ? '<small>' + mfyEscape(profileBody.body) + '</small>' : '') +
+        '<div class="sss-mfy__fictionalBfActions">' +
+          '<a href="/fictional-boyfriend-quiz/">take quiz →</a>' +
+          '<a href="' + mfyEscape(boyfriendUrl) + '">' + mfyEscape(boyfriendProfile ? 'open profile →' : 'meet the lineup →') + '</a>' +
+        '</div>' +
+      '</div>' +
+      '<a class="sss-mfy__fictionalBfBook" href="' + mfyEscape(boyfriendUrl) + '">' +
+        renderFictionalBfPortrait(boyfriendProfile, title) +
+        '<span>' + mfyEscape(portraitLabel || 'fictional boyfriend quiz') + '</span>' +
+      '</a>';
+  }
+
+  function renderQuickLinks(){
+    quickLinksGrid = quickLinksGrid || document.getElementById('sssMfyQuickLinks') || root.querySelector('#sssMfyQuickLinks');
+    if (!quickLinksGrid) return;
+    var spiceLevel = getSpiceLevel(profile.spice_dial || 'balanced');
+    var links = [
+      { emoji: '🏆', name: 'reader quiz', sub: 'refresh your type', url: '/reader-quizzes/' },
+      { emoji: '💘', name: 'boyfriend quiz', sub: 'find your fictional man', url: '/fictional-boyfriend-quiz/' },
+      { emoji: '📚', name: 'the library', sub: 'save books + notes', url: '/library/' },
+      { emoji: '🌶', name: 'spice picks', sub: 'level ' + spiceLevel + ' recs', url: '/romance-books-by-spice-level/' }
+    ];
+    quickLinksGrid.innerHTML = links.map(function(link){
+      return '<a href="' + mfyEscape(link.url) + '"><b aria-hidden="true">' + mfyEscape(link.emoji) + '</b><span><strong>' + mfyEscape(link.name) + '</strong><small>' + mfyEscape(link.sub) + '</small></span></a>';
+    }).join('');
+  }
+
+	  function getDashboardTopBook(){
+	    var activeTropeLane = getActiveTropeLane();
+	    var ranked = books
+	      .map(function(book){ return { book: book, score: scoreBook(book) }; })
+	      .filter(function(entry){ return entry.score > -999; })
+	      .sort(function(a, b){ return b.score - a.score; });
+	    var laneRanked = filterRankedByTropeLane(ranked, activeTropeLane);
+	    return (laneRanked[0] || ranked[0]);
+	  }
+
+  function readerTypeReadFallbacks(persona, topBook){
+    var key = persona && persona.key ? persona.key : 'romance_reader';
+    var favoriteTrope = profile.favorite_trope || (topBook && topBook.tropes && topBook.tropes[0]) || 'romance';
+    var map = {
+      chaos_reader: [
+        ['why choose romance guide', 'maximum plot complications', '/romance-trope-dictionary/#why-choose', 'why choose'],
+        ['forbidden romance picks', 'because restraint is optional', '/romance-trope-dictionary/#forbidden-love', 'forbidden romance'],
+        ['books like your current chaos', 'same-energy rec lists', '/if-you-liked-pages/', 'chaos romance']
+      ],
+      dark_romance_girlie: [
+        ['dark romance guide', 'danger, obsession, devotion', '/romance-trope-dictionary/#dark-romance', 'dark romance'],
+        ['mafia romance picks', 'morally gray and possessive', '/romance-trope-dictionary/#mafia-romance', 'mafia romance'],
+        ['touch her and die books', 'protective menace energy', '/romance-trope-dictionary/#touch-her-and-die', 'touch her and die']
+      ],
+      fantasy_girlie: [
+        ['romantasy reading guide', 'magic, stakes, yearning', '/romance-trope-dictionary/#romantasy', 'romantasy'],
+        ['fated mates picks', 'destiny with teeth', '/romance-trope-dictionary/#fated-mates', 'fated mates'],
+        ['fantasy romance moodboards', 'visuals for your next spiral', '/romance-book-moodboards/', 'fantasy romance']
+      ],
+      jersey_chaser: [
+        ['sports romance guide', 'athletes with feelings', '/romance-trope-dictionary/#sports-romance', 'sports romance'],
+        ['hockey romance picks', 'rink lights and soft landings', '/romance-trope-dictionary/#hockey-romance', 'hockey romance'],
+        ['baseball romance picks', 'dugout longing, obviously', '/romance-trope-dictionary/#baseball-romance', 'baseball romance']
+      ],
+      slow_burn_girlie: [
+        ['slow burn romance guide', 'the almost-touch economy', '/romance-trope-dictionary/#slow-burn', 'slow burn'],
+        ['he falls first picks', 'yearning with receipts', '/romance-trope-dictionary/#he-falls-first', 'he falls first'],
+        ['second chance romance', 'old feelings, new damage', '/romance-trope-dictionary/#second-chance', 'second chance romance']
+      ],
+      tension_addict: [
+        ['enemies to lovers guide', 'banter, friction, payoff', '/romance-trope-dictionary/#enemies-to-lovers', 'enemies to lovers'],
+        ['forced proximity picks', 'one room, too much tension', '/romance-trope-dictionary/#forced-proximity', 'forced proximity'],
+        ['grumpy sunshine books', 'the argument becomes affection', '/romance-trope-dictionary/#grumpy-sunshine', 'grumpy sunshine']
+      ],
+      fake_dating_fanatic: [
+        ['fake dating romance guide', 'public lie, private feelings', '/romance-trope-dictionary/#fake-dating', 'fake dating'],
+        ['one bed picks', 'logistical romance problems', '/romance-trope-dictionary/#one-bed', 'one bed'],
+        ['marriage of convenience', 'contract first, feelings later', '/romance-trope-dictionary/#marriage-of-convenience', 'marriage of convenience']
+      ],
+      sweet_romance_devotee: [
+        ['friends to lovers guide', 'softness that still aches', '/romance-trope-dictionary/#friends-to-lovers', 'friends to lovers'],
+        ['small town romance picks', 'comfort, gossip, porch lights', '/romance-trope-dictionary/#small-town', 'small town romance'],
+        ['found family romance', 'tender chaos, chosen people', '/romance-trope-dictionary/#found-family', 'found family']
+      ],
+      romance_reader: [
+        ['what to read next', 'fresh picks from your profile', '/what-to-read-next/', favoriteTrope],
+        ['romance trope dictionary', 'browse your strongest signal', '/romance-trope-dictionary/', favoriteTrope],
+        ['book moodboards', 'find the visual lane', '/romance-book-moodboards/', favoriteTrope]
+      ]
+    };
+
+    return (map[key] || map.romance_reader).map(function(item){
+      var trope = item[3] || favoriteTrope;
+      var isTropePage = String(item[2] || '').indexOf('/romance-trope-dictionary/') > -1;
+      var url = item[2];
+      if (isTropePage && String(url).indexOf('#') === -1 && trope){
+        url = '/romance-trope-dictionary/#' + getTropeEmojiKey(trope);
+      }
+      return {
+        badge: isTropePage ? 'trope page' : 'blog pick',
+        emoji: isTropePage ? getTropeEmojiKey(trope) : '📝',
+        name: item[0],
+        sub: item[1],
+        url: url,
+        trope: isTropePage ? trope : ''
+      };
+    });
+  }
+
+	  function getPostMatchScore(post, persona, topBook){
+    var haystack = [
+      post && post.title,
+      post && post.summary,
+      Array.isArray(post && post.terms) ? post.terms.join(' ') : ''
+    ].join(' ').toLowerCase();
+	    var score = 0;
+	    var favoriteTrope = getActiveTropeLane();
+	    var activeTropeAliases = getTropeLaneAliases(favoriteTrope);
+	    var bookTropes = (topBook && topBook.tropes || []).map(normalize);
+	    var personaTriggers = (persona && persona.triggers || []).map(normalize);
+
+	    activeTropeAliases.forEach(function(alias){
+	      if (alias && haystack.indexOf(alias.replace(/-/g, ' ')) > -1) score += 6;
+	    });
+	    personaTriggers.forEach(function(trigger){
+	      if (trigger && haystack.indexOf(trigger.replace(/-/g, ' ')) > -1) score += 4;
+	    });
+    bookTropes.forEach(function(trope){
+      if (trope && haystack.indexOf(trope.replace(/-/g, ' ')) > -1) score += 3;
+	    });
+	    if (persona && persona.label && haystack.indexOf(String(persona.label).replace(/^the\s+/i, '').toLowerCase()) > -1) score += 2;
+	    (tropeLaneConflicts[favoriteTrope] || []).forEach(function(conflict){
+	      if (conflict && haystack.indexOf(conflict.replace(/-/g, ' ')) > -1) score -= 20;
+	    });
+	    return score;
+	  }
+
+  function getReaderTypeBlogLinks(topEntry){
+    var topBook = topEntry && topEntry.book ? topEntry.book : {};
+    var persona = getPersonaProfile();
+    var seen = {};
+    var posts = (blogPostLibrary || []).map(function(post){
+      return { post: post, score: getPostMatchScore(post, persona, topBook) };
+	    }).sort(function(a, b){
+	      return b.score - a.score;
+	    }).filter(function(entry){
+	      return entry && entry.score > 0 && entry.post && entry.post.title && entry.post.url;
+	    }).slice(0, 3).map(function(entry){
+      seen[normalizeMfyUrl(entry.post.url)] = true;
+      return {
+        badge: entry.score > 0 ? 'matched post' : 'blog pick',
+        emoji: '📝',
+        name: entry.post.title,
+        sub: entry.post.summary || ((persona && persona.label ? persona.label : 'your reader type') + ' reading route'),
+        url: entry.post.url,
+        image: entry.post.image || '',
+        alt: entry.post.alt || ''
+      };
+    });
+
+    readerTypeReadFallbacks(persona, topBook).forEach(function(link){
+      if (posts.length >= 3) return;
+      var key = normalizeMfyUrl(link.url);
+      if (seen[key]) return;
+      seen[key] = true;
+      posts.push(link);
+    });
+
+    return posts.slice(0, 3);
+  }
+
+  function normalizeMfyUrl(value){
+    return String(value || '').trim().replace(/\/$/, '').toLowerCase();
+  }
+
+  function getMatchingNewsletter(book){
+    var bookUrl = normalizeMfyUrl(book && book.newsletter);
+    if (bookUrl){
+      var matched = newsletterLibrary.find(function(issue){
+        return normalizeMfyUrl(issue && issue.url) === bookUrl;
+      });
+      if (matched) return matched;
+    }
+    var persona = getPersonaProfile();
+    var scored = (newsletterLibrary || []).map(function(issue){
+      return { issue: issue, score: getPostMatchScore(issue || {}, persona, book || {}) };
+    }).sort(function(a, b){
+      return b.score - a.score;
+    });
+    if (scored.length && scored[0].score > 0){
+      return scored[0].issue;
+    }
+    return newsletterLibrary[0] || null;
+  }
+
+  function getTropeEmojiKey(trope){
+    var key = normalize(trope).replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    if (key === 'age-gap' || normalize(trope).indexOf('age gap') > -1) return 'age-gap';
+    if (key === 'forbidden-romance') return 'forbidden-love';
+    if (key === 'small-town-romance') return 'small-town';
+    if (key === 'grumpy-sunshine') return 'grumpy-x-sunshine';
+    return key || 'romance';
+  }
+
+  function renderFeatureMedia(link){
+    if (link.image){
+      return '<span class="sss-mfy__featureMedia sss-mfy__featureMedia--image"><b aria-hidden="true">📚</b><img src="' + mfyEscape(link.image) + '" alt="' + mfyEscape(link.alt || '') + '" loading="lazy" decoding="async" onerror="this.parentNode.classList.add(&quot;is-missing-image&quot;);this.remove();"></span>';
+    }
+    if (link.trope){
+      var emojiKey = link.emoji || getTropeEmojiKey(link.trope);
+      return '<span class="sss-mfy__featureMedia sss-mfy__featureMedia--emoji"><img class="bbb-custom-emoji" src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/' + mfyEscape(emojiKey) + '.png" alt="" aria-hidden="true" loading="lazy" decoding="async" onerror="this.parentNode.classList.add(&quot;is-missing-image&quot;);this.remove();"><b aria-hidden="true">📚</b></span>';
+    }
+    return '<span class="sss-mfy__featureMedia"><b aria-hidden="true">' + mfyEscape(link.emoji || '✨') + '</b></span>';
+  }
+
+  function hydrateFeatureImageFallbacks(){
+    if (!featureLinksGrid) return;
+    Array.prototype.forEach.call(featureLinksGrid.querySelectorAll('.sss-mfy__featureMedia img'), function(img){
+      function markMissing(){
+        var wrap = img.parentNode;
+        if (!wrap) return;
+        wrap.classList.add('is-missing-image');
+        img.remove();
+      }
+
+      if (img.complete && !img.naturalWidth){
+        markMissing();
+        return;
+      }
+
+      img.addEventListener('error', markMissing, { once: true });
+    });
+  }
+
+  function renderFeatureLinks(){
+    if (!featureLinksGrid) return;
+    var featureHead = root.querySelector('[data-mfy-feature-head]');
+    var topEntry = getDashboardTopBook();
+    var topBook = topEntry && topEntry.book ? topEntry.book : {};
+    var persona = getPersonaProfile();
+    var newsletter = getMatchingNewsletter(topBook);
+    var newsletterSub = newsletter && newsletter.summary
+      ? newsletter.summary
+      : topBook.title ? ('newsletter pick near ' + topBook.title) : ((persona && persona.label ? persona.label : 'reader type') + ' dispatch');
+    var links = getReaderTypeBlogLinks(topEntry);
+    links.push({
+      badge: 'newsletter match',
+      emoji: '💌',
+      name: newsletter && newsletter.title ? newsletter.title : 'latest society newsletter',
+      sub: newsletterSub,
+      url: newsletter && newsletter.url ? newsletter.url : '/society-newsletter-recent/',
+      image: newsletter && newsletter.image ? newsletter.image : '',
+      alt: newsletter && newsletter.alt ? newsletter.alt : ''
+    });
+    links = links.filter(function(link){
+      return !!(link && link.name && link.url);
+    });
+    if (!links.length){
+      if (featureLinksGrid.children.length){
+        featureLinksGrid.hidden = false;
+        if (featureHead) featureHead.hidden = false;
+      }
+      return;
+    }
+    var html = links.map(function(link){
+      return '<a href="' + mfyEscape(link.url) + '">' + renderFeatureMedia(link) + '<span><em>' + mfyEscape(link.badge || 'update') + '</em><strong>' + mfyEscape(mfyDecodeEntities(link.name)) + '</strong><small>' + mfyEscape(mfyDecodeEntities(link.sub)) + '</small></span></a>';
+    }).join('');
+    if (!html) return;
+    featureLinksGrid.innerHTML = html;
+    hydrateFeatureImageFallbacks();
+    featureLinksGrid.hidden = false;
+    if (featureHead) featureHead.hidden = false;
+  }
+
+	  function renderRecommendations(answeredCount){
+	    if (!row) return;
+	    var boyfriendProfile = fictionalManProfiles[profile.fictional_man];
+	    var activeTropeLane = getActiveTropeLane();
+	    var quizRecommendationEntries = Array.isArray(profile.quiz_recommendations)
+	      ? profile.quiz_recommendations.map(function(rec, index){
+	          var handle = normalize(rec && rec.handle || '');
+	          var title = normalize(rec && rec.title || '');
+	          var matched = books.find(function(book){
+	            return (handle && normalize(book.handle || book.book_handle) === handle) ||
+	              (title && normalize(book.title || book.book_title) === title);
+	          });
+	          return matched ? { book: matched, score: 1000 - index } : null;
+	        }).filter(Boolean)
+	      : [];
+	    var allRanked = books
+	      .map(function(book){
+	        return { book: book, score: scoreBook(book) };
       })
       .filter(function(entry){
         return entry.score > -999;
       })
-      .sort(function(a, b){
-        return b.score - a.score;
-      });
+	      .sort(function(a, b){
+	        return b.score - a.score;
+	      });
+	    var laneRanked = filterRankedByTropeLane(allRanked, activeTropeLane);
 
-    var ranked = books
-      .map(function(book){
+	    var quizRanked = books
+	      .map(function(book){
         return { book: book, score: scoreQuizOnlyBook(book) };
       })
       .filter(function(entry){
         return entry.score > -999;
       })
-      .sort(function(a, b){
-        return b.score - a.score;
-      })
-      .slice(0, 1);
+	      .sort(function(a, b){
+	        return b.score - a.score;
+	      });
+	    var quizLaneRanked = filterRankedByTropeLane(quizRanked, activeTropeLane);
+	    var rankedSource = quizRecommendationEntries.length >= 3 ? quizRecommendationEntries : (quizLaneRanked.length >= 3 ? quizLaneRanked : (laneRanked.length >= 3 ? laneRanked : quizRanked));
+	    var ranked = rankedSource.slice(0, 3);
+	    var paidOpinionRanked = laneRanked.length ? laneRanked : (allRanked.length ? allRanked : quizRanked);
 
-    var dominantType = getDominantBoyfriendType(ranked);
+	    var dominantType = getDominantBoyfriendType(ranked);
     var boyfriendCandidates = books
       .map(function(book){
         return { book: book, score: scoreBoyfriendMatch(book) };
       })
-      .filter(function(entry){
-        return entry.score > -999;
-      });
-    var fallbackBoyfriendCandidates = books
-      .map(function(book){
-        return { book: book, score: scoreBook(book) };
+	      .filter(function(entry){
+	        return entry.score > -999;
+	      });
+	    var laneBoyfriendCandidates = filterRankedByTropeLane(boyfriendCandidates, activeTropeLane);
+	    var fallbackBoyfriendCandidates = books
+	      .map(function(book){
+	        return { book: book, score: scoreBook(book) };
       })
       .filter(function(entry){
         if (entry.score <= -999 || !boyfriendProfile) return false;
         var boyfriendType = canonicalBoyfriendType(entry.book && entry.book.boyfriend_type);
         return (boyfriendProfile.boyfriendBoosts || []).some(function(type){
           return boyfriendType === canonicalBoyfriendType(type);
-        });
-      });
-    var namedBoyfriendCandidates = boyfriendCandidates.filter(function(entry){
-      return !!String(entry && entry.book && entry.book.boyfriend_name || '').trim();
-    });
-    var namedFallbackBoyfriendCandidates = fallbackBoyfriendCandidates.filter(function(entry){
-      return !!String(entry && entry.book && entry.book.boyfriend_name || '').trim();
-    });
-    var namedGlobalCandidates = allRanked.filter(function(entry){
-      return !!String(entry && entry.book && entry.book.boyfriend_name || '').trim();
-    });
+	        });
+	      });
+	    var laneFallbackBoyfriendCandidates = filterRankedByTropeLane(fallbackBoyfriendCandidates, activeTropeLane);
+	    var namedBoyfriendCandidates = (laneBoyfriendCandidates.length ? laneBoyfriendCandidates : boyfriendCandidates).filter(function(entry){
+	      return !!String(entry && entry.book && entry.book.boyfriend_name || '').trim();
+	    });
+	    var namedFallbackBoyfriendCandidates = (laneFallbackBoyfriendCandidates.length ? laneFallbackBoyfriendCandidates : fallbackBoyfriendCandidates).filter(function(entry){
+	      return !!String(entry && entry.book && entry.book.boyfriend_name || '').trim();
+	    });
+	    var namedGlobalCandidates = (laneRanked.length ? laneRanked : allRanked).filter(function(entry){
+	      return !!String(entry && entry.book && entry.book.boyfriend_name || '').trim();
+	    });
 
     function sortFeaturedCandidates(entries){
       return entries.slice().sort(function(a, b){
@@ -4953,17 +8101,25 @@ function initMadeForYou(){
       });
     }
 
-    var featuredEntry = sortFeaturedCandidates(
-      namedBoyfriendCandidates.length ? namedBoyfriendCandidates :
-      boyfriendCandidates.length ? boyfriendCandidates :
-      namedFallbackBoyfriendCandidates.length ? namedFallbackBoyfriendCandidates :
-      fallbackBoyfriendCandidates.length ? fallbackBoyfriendCandidates :
-      namedGlobalCandidates.length ? namedGlobalCandidates :
-      allRanked
-    )[0] || ranked[0] || null;
-    recTitle.textContent = answeredCount >= 3
-      ? 'the book most likely to ruin your week, beautifully'
-      : 'your next read will land here';
+	    var featuredEntry = sortFeaturedCandidates(
+	      namedBoyfriendCandidates.length ? namedBoyfriendCandidates :
+	      laneBoyfriendCandidates.length ? laneBoyfriendCandidates :
+	      boyfriendCandidates.length ? boyfriendCandidates :
+	      namedFallbackBoyfriendCandidates.length ? namedFallbackBoyfriendCandidates :
+	      laneFallbackBoyfriendCandidates.length ? laneFallbackBoyfriendCandidates :
+	      fallbackBoyfriendCandidates.length ? fallbackBoyfriendCandidates :
+	      namedGlobalCandidates.length ? namedGlobalCandidates :
+	      laneRanked.length ? laneRanked :
+	      allRanked
+	    )[0] || ranked[0] || null;
+    if (recTitle){
+      recTitle.textContent = answeredCount >= 3
+        ? 'the book most likely to ruin your week, beautifully'
+        : 'your next read will land here';
+    }
+    if (personaBadge){
+      personaBadge.innerHTML = getPersonaBadgeMarkup();
+    }
 
     if (boyfriendKicker){
       boyfriendKicker.textContent = (moduleEmojiMap[getThemeProfile().emojiGroup] || ['🖤', '✨', '📚', '💌'])[1] + ' your fictional boyfriend';
@@ -4982,15 +8138,10 @@ function initMadeForYou(){
       }
     }
 
-    ranked.forEach(function(entry){
-      var source = root.querySelector('.sss-mfy__sourceGrid .sss-lib__book[data-handle="' + entry.book.handle + '"]') ||
-        document.querySelector('.sss-lib__book[data-handle="' + entry.book.handle + '"]');
-      if (!source) return;
-
-      var clone = source.cloneNode(true);
-      enhancePrimaryNextReadCard(clone, entry.book);
-      row.appendChild(clone);
-    });
+    row.innerHTML = ranked.length
+      ? ranked.map(renderDashboardRecCard).join('')
+      : '<div class="sss-mfy__empty">your recommendations are loading from the full library. try refresh if this stays empty.</div>';
+    renderNextOpinion(paidOpinionRanked);
 
     var featuredBookBtn = matchBookEl ? matchBookEl.querySelector('.sss-lib__book') : null;
     var featuredBoyfriendName = featuredBookBtn ? String(featuredBookBtn.dataset.boyfriendName || '').trim() : '';
@@ -5013,9 +8164,6 @@ function initMadeForYou(){
       ? fictionalManProfiles[profile.fictional_man].body
       : 'this is where i’ll lovingly explain what your taste in fictional men says about you.';
 
-    if (!row.children.length){
-      row.innerHTML = '<div class="sss-mfy__empty">save a few books or answer a few more questions and i’ll start matching your chaos.</div>';
-    }
     if (matchBookEl && !matchBookEl.children.length){
       matchBookEl.innerHTML = '<div class="sss-mfy__empty">your featured match will appear here.</div>';
     }
@@ -5027,7 +8175,10 @@ function initMadeForYou(){
       matchBookEl.firstElementChild.style.setProperty('--mfy-delay', '360ms');
     }
 
-    root.querySelectorAll('#sssMadeForYouRow [data-heart], #sssMfyMatchBook [data-heart]').forEach(function(heart){
+    renderDashboardBookshelf();
+    renderQuickLinks();
+
+    root.querySelectorAll('#sssMfyMatchBook [data-heart]').forEach(function(heart){
       var bookBtn = heart.closest('.sss-lib__book');
       if (!bookBtn) return;
 
@@ -5062,6 +8213,7 @@ function initMadeForYou(){
   function syncAddonDrafts(){
     draftHardNos = Array.isArray(profile.hard_nos) ? profile.hard_nos.slice() : [];
     draftManDial = profile.spice_dial || 'soft_open_door';
+    draftFavoriteTrope = profile.favorite_trope || '';
     draftFavoriteBook = profile.favorite_book || '';
   }
 
@@ -5105,6 +8257,7 @@ function initMadeForYou(){
       button.innerHTML = '<strong>' + book.title + '</strong><span>' + (book.author || 'library book') + '</span>';
       button.addEventListener('click', function(){
         setDraftFavoriteBook(book.handle);
+        saveFavoriteBookLayer(true);
       });
       favoriteBookResults.appendChild(button);
     });
@@ -5118,6 +8271,7 @@ function initMadeForYou(){
       customButton.innerHTML = '<strong>use "' + String(query || '').trim() + '"</strong><span>save as your favorite book anyway</span>';
       customButton.addEventListener('click', function(){
         setDraftFavoriteBook(customKey);
+        saveFavoriteBookLayer(true);
       });
       favoriteBookResults.appendChild(customButton);
     }
@@ -5206,6 +8360,10 @@ function initMadeForYou(){
       }
     });
 
+    if (profile.favorite_trope && bookTropes.indexOf(normalize(profile.favorite_trope)) > -1){
+      score += 6;
+    }
+
     if (profile.spice_dial === 'soft_open_door'){
       if ((book.spice || 0) <= 1) score += 5;
       if ((book.spice || 0) >= 4) score -= 4;
@@ -5247,11 +8405,59 @@ function initMadeForYou(){
   }
 
   function getDialDisplayText(dialKey){
-    if (dialKey === 'some_heat') return '🌶️🌶️ • some heat';
-    if (dialKey === 'balanced') return '🌶️🌶️🌶️ • balanced';
-    if (dialKey === 'high_spice') return '🌶️🌶️🌶️🌶️ • high spice';
-    if (dialKey === 'wreck_me') return '🌶️🌶️🌶️🌶️🌶️ • wreck me';
-    return '🌶️ • soft open door';
+    if (dialKey === 'some_heat') return '2/5 🌶️🌶️ • some heat';
+    if (dialKey === 'balanced') return '3/5 🌶️🌶️🌶️ • balanced';
+    if (dialKey === 'high_spice') return '4/5 🌶️🌶️🌶️🌶️ • high spice';
+    if (dialKey === 'wreck_me') return '5/5 🌶️🌶️🌶️🌶️🌶️ • wreck me';
+    return '1/5 🌶️ • soft open door';
+  }
+
+  function getSpiceLevel(dialKey){
+    var index = spiceDialValues.indexOf(dialKey);
+    return index > -1 ? index + 1 : 1;
+  }
+
+  function getThemeDisplayText(themeKey){
+    return tokenLabels.theme[themeKey] || 'unthemed';
+  }
+
+  function getReaderSignalText(){
+    if (profile.craving && tokenLabels.craving[profile.craving]){
+      return tokenLabels.craving[profile.craving];
+    }
+    return 'taste profile pending';
+  }
+
+	  function getLeadTropeName(topTropes){
+	    var activeTropeLane = getActiveTropeLane();
+	    if (activeTropeLane) {
+	      return activeTropeLane;
+	    }
+
+	    if (Array.isArray(topTropes) && topTropes[0] && topTropes[0].name){
+	      return String(topTropes[0].name || '').trim();
+	    }
+
+    var readTop = getTopReadTropes(getReadBooks(), 1);
+    if (readTop[0] && readTop[0].name){
+      return String(readTop[0].name || '').trim();
+    }
+
+    return String(profile.favorite_trope || '').trim();
+  }
+
+  function getReaderTypeVsTropeText(persona, leadTrope){
+    return (persona && (persona.signal || persona.bio)) || getReaderSignalText();
+  }
+
+  function getReaderTypeWhyText(persona, leadTrope){
+    var personaLabel = persona && persona.label ? String(persona.label) : 'your reader type';
+    var trope = String(leadTrope || '').trim();
+    if (!trope){
+      return 'Reader type is calculated from quiz answers, shelf patterns, tropes, and spice signals.';
+    }
+
+    return personaLabel + ' is the pattern your dashboard sees across quiz answers, shelf behavior, and spice. ' + trope + ' is the trope showing up most clearly.';
   }
 
   function getReadNextGroupKey(book, prompt, topTropes){
@@ -5292,6 +8498,11 @@ function initMadeForYou(){
   function matchesTopTrope(book, topTrope){
     if (!book || !topTrope) return false;
     return (book.tropes || []).map(normalize).indexOf(normalize(topTrope.name)) > -1;
+  }
+
+  function matchesFavoriteTrope(book){
+    if (!book || !profile.favorite_trope) return false;
+    return (book.tropes || []).map(normalize).indexOf(normalize(profile.favorite_trope)) > -1;
   }
 
   function matchesTopShelf(book, topShelf){
@@ -5640,6 +8851,18 @@ function initMadeForYou(){
       );
     }
 
+    var favoriteTropeEntries = collectSectionEntries(function(entry){
+      return matchesFavoriteTrope(entry.book);
+    }, 2);
+
+    if (profile.favorite_trope && favoriteTropeEntries.length){
+      addSection(
+        'favorite-trope',
+        'because you saved ' + profile.favorite_trope + ' as your favorite trope lane, these get pushed higher.',
+        favoriteTropeEntries
+      );
+    }
+
     if (!readNextSections.length){
       addSection(
         'library-match',
@@ -5674,7 +8897,7 @@ function initMadeForYou(){
 
   function getOpenAddons(){
     return (Array.isArray(profile.open_addons) ? profile.open_addons : []).filter(function(item){
-      return item === 'hard_nos' || item === 'spice_dial' || item === 'favorite_book';
+      return item === 'spice_dial' || item === 'favorite_trope';
     });
   }
 
@@ -5685,14 +8908,6 @@ function initMadeForYou(){
     }
     profile.open_addons = openAddons;
     syncAddonDrafts();
-    if (key === 'favorite_book'){
-      var savedBook = favoriteBookMap[draftFavoriteBook];
-      if (favoriteBookSearchInput){
-        favoriteBookSearchInput.value = savedBook ? (savedBook.title + (savedBook.author ? ' — ' + savedBook.author : '')) : '';
-      }
-      renderFavoriteBookResults(favoriteBookSearchInput ? favoriteBookSearchInput.value : '');
-      renderFavoriteBookEcho();
-    }
   }
 
   function closeAddon(key){
@@ -5715,6 +8930,42 @@ function initMadeForYou(){
     syncAddonUI();
   }
 
+  function saveManDialLayer(shouldClose){
+    profile.spice_dial = draftManDial || 'soft_open_door';
+    saveProfile(profile);
+    syncAddonUI();
+    renderMadeForYou();
+    if (shouldClose){
+      closeAddon('spice_dial');
+    }
+  }
+
+  function saveFavoriteTropeLayer(shouldClose){
+    profile.favorite_trope = draftFavoriteTrope || '';
+    saveProfile(profile);
+    syncAddonUI();
+    renderMadeForYou();
+    syncResultStepUI();
+    if (shouldClose){
+      closeAddon('favorite_trope');
+    }
+  }
+
+  function saveFavoriteBookLayer(shouldClose){
+    profile.favorite_book = draftFavoriteBook || '';
+    saveProfile(profile);
+    syncAddonUI();
+    renderMadeForYou();
+    syncResultStepUI();
+    if (shouldClose){
+      closeAddon('favorite_book');
+    }
+  }
+
+  function hasRequiredPersonalLayers(){
+    return !!profile.spice_dial && !!profile.favorite_trope;
+  }
+
   function getAddonSummary(key){
     if (key === 'hard_nos'){
       var count = Array.isArray(profile.hard_nos) ? profile.hard_nos.length : 0;
@@ -5732,6 +8983,9 @@ function initMadeForYou(){
       var book = favoriteBookMap[profile.favorite_book];
       return book ? ('saved: ' + book.title) : 'the one that changed you';
     }
+    if (key === 'favorite_trope'){
+      return profile.favorite_trope ? ('saved: ' + profile.favorite_trope) : 'your default lane';
+    }
     return '';
   }
 
@@ -5748,10 +9002,9 @@ function initMadeForYou(){
     if (profile.spice_dial){
       count += 1;
     }
-    if (profile.favorite_book && favoriteBookMap[profile.favorite_book]){
+    if (profile.favorite_trope){
       count += 1;
     }
-
     return count;
   }
 
@@ -5802,10 +9055,20 @@ function initMadeForYou(){
     return card;
   }
 
+  function getVisibleSavedQuotes(){
+    return getSavedQuotes()
+      .map(normalizeQuoteData)
+      .filter(function(item){
+        if (!item.text) return false;
+        if (item.handle && quoteLibraryHandles[item.handle]) return true;
+        return !!quoteLibraryKeys[getSavedQuoteKey(item)];
+      });
+  }
+
   function renderSavedQuotes(){
     if (!savedQuotesRow) return;
 
-    var savedQuotes = getSavedQuotes();
+    var savedQuotes = getVisibleSavedQuotes();
     savedQuotesRow.innerHTML = '';
 
     if (!savedQuotes.length){
@@ -5832,6 +9095,7 @@ function initMadeForYou(){
   function syncAddonUI(){
     var openAddons = getOpenAddons();
     var canShowDashboardExtras = isDashboardView && !!profile.dashboard_built;
+    var canShowPersonalLayers = isPersonalLayerView;
 
     addonButtons.forEach(function(button){
       var key = button.getAttribute('data-mfy-addon');
@@ -5840,14 +9104,16 @@ function initMadeForYou(){
         ? Array.isArray(profile.hard_nos) && profile.hard_nos.length > 0
         : key === 'spice_dial'
           ? !!profile.spice_dial
-          : !!(profile.favorite_book && favoriteBookMap[profile.favorite_book]);
+          : key === 'favorite_trope'
+            ? !!profile.favorite_trope
+            : !!(profile.favorite_book && favoriteBookMap[profile.favorite_book]);
       button.classList.toggle('is-active', isOpen);
       button.classList.toggle('is-saved', isSaved);
     });
 
     addonModules.forEach(function(module){
       var key = module.getAttribute('data-mfy-module');
-      module.hidden = openAddons.indexOf(key) === -1 || !canShowDashboardExtras;
+      module.hidden = openAddons.indexOf(key) === -1 || !canShowPersonalLayers;
     });
 
     hardNoButtons.forEach(function(button){
@@ -5882,6 +9148,11 @@ function initMadeForYou(){
       button.classList.toggle('is-active', value === draftManDial);
     });
 
+    favoriteTropeButtons.forEach(function(button){
+      var value = normalize(button.getAttribute('data-mfy-favorite-trope') || '');
+      button.classList.toggle('is-active', value === draftFavoriteTrope);
+    });
+
     if (saveHardNosBtn){
       var currentHardNos = Array.isArray(profile.hard_nos) ? profile.hard_nos : [];
       saveHardNosBtn.disabled = JSON.stringify(currentHardNos) === JSON.stringify(draftHardNos);
@@ -5892,6 +9163,9 @@ function initMadeForYou(){
     if (saveFavoriteBookBtn){
       saveFavoriteBookBtn.disabled = (profile.favorite_book || '') === (draftFavoriteBook || '');
     }
+    if (saveFavoriteTropeBtn){
+      saveFavoriteTropeBtn.disabled = (profile.favorite_trope || '') === (draftFavoriteTrope || '');
+    }
 
     if (hardNoSummary){
       hardNoSummary.textContent = getAddonSummary('hard_nos');
@@ -5901,6 +9175,13 @@ function initMadeForYou(){
     }
     if (favoriteSummary){
       favoriteSummary.textContent = getAddonSummary('favorite_book');
+    }
+    if (favoriteTropeSummary){
+      favoriteTropeSummary.textContent = getAddonSummary('favorite_trope');
+    }
+    if (seeFullBreakdownBtn){
+      seeFullBreakdownBtn.hidden = isDashboardView || !hasRequiredPersonalLayers();
+      seeFullBreakdownBtn.disabled = !hasRequiredPersonalLayers();
     }
   }
 
@@ -5957,7 +9238,7 @@ function initMadeForYou(){
       var picked = list[0];
       if (!picked) return null;
       return {
-        text: picked.quote,
+        text: picked.text || picked.quote,
         eyebrow: 'favorite book spotlight',
         source: [picked.title, picked.author].filter(Boolean).join(' by ')
       };
@@ -5965,9 +9246,9 @@ function initMadeForYou(){
 
     if (quoteLibrary.length){
       var fallbackQuote = quoteLibrary[Math.floor(Math.random() * quoteLibrary.length)];
-      if (fallbackQuote && fallbackQuote.quote){
+      if (fallbackQuote && (fallbackQuote.text || fallbackQuote.quote)){
         return {
-          text: fallbackQuote.quote,
+          text: fallbackQuote.text || fallbackQuote.quote,
           eyebrow: 'quote spotlight',
           source: [fallbackQuote.title, fallbackQuote.author].filter(Boolean).join(' by ')
         };
@@ -6041,7 +9322,19 @@ function initMadeForYou(){
   }
 
   function getThemeProfile(){
-    var key = profile.theme || legacyThemeMap[profile.color] || 'rose_ribbon';
+    var persona = getPersonaProfile();
+    var readerThemeMap = {
+      chaos_reader: 'obsession_red',
+      dark_romance_girlie: 'dark_hearts',
+      fantasy_girlie: 'royal_violet',
+      jersey_chaser: 'stormy_blue',
+      slow_burn_girlie: 'obsession_red',
+      tension_addict: 'obsession_red',
+      fake_dating_fanatic: 'rose_ribbon',
+      sweet_romance_devotee: 'pearl_white',
+      romance_reader: 'rose_ribbon'
+    };
+    var key = readerThemeMap[persona && persona.key] || legacyThemeMap[profile.color] || 'rose_ribbon';
     var themeProfile = themeProfiles[key] || themeProfiles.rose_ribbon;
 
     return {
@@ -6076,11 +9369,10 @@ function initReadFinder(){
 
   var shelfSelect = document.getElementById('sssFinderShelf');
   var tropeOneSelect = document.getElementById('sssFinderTropeOne');
-  var tropeTwoSelect = document.getElementById('sssFinderTropeTwo');
+  var selectedTropesEl = document.getElementById('sssFinderSelectedTropes');
   var submitBtn = document.getElementById('sssFinderSubmit');
   var stepOneField = root.querySelector('[data-finder-step="1"]');
   var stepTwoField = root.querySelector('[data-finder-step="2"]');
-  var stepThreeField = root.querySelector('[data-finder-step="3"]');
   var result = document.getElementById('sssFinderResult');
   var resultCover = document.getElementById('sssFinderCover');
   var resultTitle = document.getElementById('sssFinderResultTitle');
@@ -6098,7 +9390,6 @@ function initReadFinder(){
   if (
     !shelfSelect ||
     !tropeOneSelect ||
-    !tropeTwoSelect ||
     !submitBtn ||
     !result ||
     !resultCover ||
@@ -6130,19 +9421,40 @@ function initReadFinder(){
   var seenHandles = [];
   var currentBook = null;
   var currentKey = '';
+  var selectedTropes = [];
 
   function normalize(value){
     return String(value || '').trim().toLowerCase();
+  }
+
+  function cleanFilterLabel(value){
+    return String(value || '')
+      .replace(/\s*\(\s*\d+\s*(?:books?)?\s*\)\s*$/i, '')
+      .replace(/\s*[·-]\s*\d+\s*(?:books?)?\s*$/i, '')
+      .trim();
   }
 
   function dedupe(values){
     var seen = {};
 
     return values.filter(function(value){
-      var key = normalize(value);
+      var key = normalize(cleanFilterLabel(value));
       if (!key || seen[key]) return false;
       seen[key] = true;
       return true;
+    }).map(cleanFilterLabel);
+  }
+
+  function bookMatchesShelf(book, shelfValue){
+    var shelf = normalize(shelfValue);
+    return !shelf || shelf === 'all romance' || normalize(book.shelf) === shelf;
+  }
+
+  function bookMatchesTropeKeys(book, tropeKeys){
+    if (!tropeKeys.length) return true;
+
+    return tropeKeys.every(function(trope){
+      return book._tropes.indexOf(trope) > -1;
     });
   }
 
@@ -6161,10 +9473,11 @@ function initReadFinder(){
 
     list.forEach(function(item){
       mapper(item).forEach(function(value){
-        var key = normalize(value);
+        var label = cleanFilterLabel(value);
+        var key = normalize(label);
         if (!key) return;
         counts[key] = {
-          label: value,
+          label: label,
           count: (counts[key] ? counts[key].count : 0) + 1
         };
       });
@@ -6192,8 +9505,9 @@ function initReadFinder(){
 
     items.forEach(function(item){
       var option = document.createElement('option');
-      option.value = item.label;
-      option.textContent = item.label;
+      var label = cleanFilterLabel(item.label);
+      option.value = label;
+      option.textContent = label;
       select.appendChild(option);
     });
 
@@ -6202,41 +9516,28 @@ function initReadFinder(){
     }
   }
 
+  function selectedTropeKeys(){
+    return selectedTropes.map(normalize).filter(Boolean);
+  }
+
+  function bookMatchesSelectedTropes(book){
+    return bookMatchesTropeKeys(book, selectedTropeKeys());
+  }
+
   function getKey(){
     return [
       normalize(shelfSelect.value),
-      normalize(tropeOneSelect.value),
-      normalize(tropeTwoSelect.value)
+      selectedTropeKeys().join('+')
     ].join('|');
   }
 
   function getPools(){
     var shelf = normalize(shelfSelect.value);
-    var tropeOne = normalize(tropeOneSelect.value);
-    var tropeTwo = normalize(tropeTwoSelect.value);
 
     return [
       function(book){
-        return (!shelf || normalize(book.shelf) === shelf)
-          && (!tropeOne || book._tropes.indexOf(tropeOne) > -1)
-          && (!tropeTwo || book._tropes.indexOf(tropeTwo) > -1);
-      },
-      function(book){
-        return (!shelf || normalize(book.shelf) === shelf)
-          && (!tropeOne || book._tropes.indexOf(tropeOne) > -1);
-      },
-      function(book){
-        return (!tropeOne || book._tropes.indexOf(tropeOne) > -1)
-          && (!tropeTwo || book._tropes.indexOf(tropeTwo) > -1);
-      },
-      function(book){
-        return !tropeOne || book._tropes.indexOf(tropeOne) > -1;
-      },
-      function(book){
-        return !shelf || normalize(book.shelf) === shelf;
-      },
-      function(){
-        return true;
+        return bookMatchesShelf(book, shelf)
+          && bookMatchesSelectedTropes(book);
       }
     ];
   }
@@ -6257,56 +9558,93 @@ function initReadFinder(){
   }
 
   function booksForShelf(){
-    var shelf = normalize(shelfSelect.value);
-
     return books.filter(function(book){
-      return !shelf || shelf === 'all romance' || normalize(book.shelf) === shelf;
+      return bookMatchesShelf(book, shelfSelect.value);
     });
   }
 
   function booksForShelfAndTrope(){
-    var tropeOne = normalize(tropeOneSelect.value);
-
     return booksForShelf().filter(function(book){
-      return !tropeOne || book._tropes.indexOf(tropeOne) > -1;
+      return bookMatchesSelectedTropes(book);
+    });
+  }
+
+  function renderSelectedTropes(){
+    if (!selectedTropesEl) return;
+
+    selectedTropesEl.innerHTML = '';
+    selectedTropesEl.hidden = !selectedTropes.length;
+
+    selectedTropes.forEach(function(trope){
+      var chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'sss-lib__finderChip';
+      chip.setAttribute('data-finder-remove-trope', trope);
+      chip.setAttribute('aria-label', 'remove ' + trope);
+      chip.textContent = trope + ' ×';
+      selectedTropesEl.appendChild(chip);
     });
   }
 
   function refreshFinderOptions(){
-    fillSelect(shelfSelect, allShelves, 'choose a shelf');
-
-    var tropeOneOptions = buildCounts(booksForShelf(), function(book){
-      return tropeValues(book);
-    });
-
-    fillSelect(tropeOneSelect, tropeOneOptions, 'choose a trope');
-
-    var tropeTwoOptions = buildCounts(booksForShelfAndTrope(), function(book){
-      var values = tropeValues(book);
-      var selectedTrope = normalize(tropeOneSelect.value);
-
-      return values.filter(function(value){
-        return normalize(value) !== selectedTrope;
+    var activeTropeKeys = selectedTropeKeys();
+    var shelfOptions = allShelves.filter(function(item){
+      return books.some(function(book){
+        return bookMatchesShelf(book, item.label) && bookMatchesTropeKeys(book, activeTropeKeys);
       });
     });
 
-    fillSelect(tropeTwoSelect, tropeTwoOptions, 'surprise me');
-
-    if (!booksForShelfAndTrope().length) {
-      tropeTwoSelect.value = '';
+    if (!activeTropeKeys.length) {
+      shelfOptions = allShelves;
     }
+
+    fillSelect(shelfSelect, shelfOptions, 'choose a shelf');
+
+    var tropeOneOptions = buildCounts(booksForShelf(), function(book){
+      return tropeValues(book);
+    }).filter(function(item){
+      return selectedTropeKeys().indexOf(normalize(item.label)) === -1;
+    });
+
+    if (selectedTropes.length) {
+      tropeOneOptions = buildCounts(booksForShelfAndTrope(), function(book){
+        return tropeValues(book);
+      }).filter(function(item){
+        return selectedTropeKeys().indexOf(normalize(item.label)) === -1;
+      });
+    }
+
+    fillSelect(tropeOneSelect, tropeOneOptions, selectedTropes.length ? 'add another trope' : 'choose a trope');
+    renderSelectedTropes();
+  }
+
+  function addSelectedTrope(value){
+    var label = cleanFilterLabel(value);
+    var key = normalize(label);
+
+    if (!key || selectedTropeKeys().indexOf(key) > -1) {
+      tropeOneSelect.value = '';
+      return;
+    }
+
+    selectedTropes.push(label);
+    tropeOneSelect.value = '';
+  }
+
+  function removeSelectedTrope(value){
+    var key = normalize(value);
+
+    selectedTropes = selectedTropes.filter(function(trope){
+      return normalize(trope) !== key;
+    });
   }
 
   function updateFinderProgress(){
     var hasShelf = !!shelfSelect.value;
-    var hasTropeOne = !!tropeOneSelect.value;
+    var hasTropeOne = !!selectedTropes.length;
 
     if (stepTwoField) {
       stepTwoField.classList.remove('is-locked');
-    }
-
-    if (stepThreeField) {
-      stepThreeField.classList.toggle('is-locked', !hasTropeOne);
     }
 
     if (submitBtn) {
@@ -6410,7 +9748,7 @@ function initReadFinder(){
     retryBtn.hidden = false;
     setFinderBookAttrs(book);
     resultCover.src = book.cover || '';
-    resultCover.alt = book.title ? (book.title + ' cover') : '';
+    resultCover.alt = bookCoverAlt(book.title, book.author, book.shelf);
     resultTitle.textContent = book.title || '';
     resultAuthor.textContent = book.author ? ('by ' + book.author) : '';
 
@@ -6442,7 +9780,7 @@ function initReadFinder(){
   }
 
   function recommend(note){
-    if (!shelfSelect.value && !tropeOneSelect.value) {
+    if (!shelfSelect.value && !selectedTropes.length) {
       showEmptyState('pick a genre or a trope so i know where to start.');
       return;
     }
@@ -6468,15 +9806,36 @@ function initReadFinder(){
     recommend('fresh from the shelves.');
   });
 
-  [shelfSelect, tropeOneSelect, tropeTwoSelect].forEach(function(select){
-    select.addEventListener('change', function(){
+  shelfSelect.addEventListener('change', function(){
+    currentKey = '';
+    currentBook = null;
+    result.hidden = true;
+    refreshFinderOptions();
+    updateFinderProgress();
+  });
+
+  tropeOneSelect.addEventListener('change', function(){
+    addSelectedTrope(tropeOneSelect.value);
+    currentKey = '';
+    currentBook = null;
+    result.hidden = true;
+    refreshFinderOptions();
+    updateFinderProgress();
+  });
+
+  if (selectedTropesEl) {
+    selectedTropesEl.addEventListener('click', function(event){
+      var button = event.target.closest('[data-finder-remove-trope]');
+      if (!button) return;
+
+      removeSelectedTrope(button.getAttribute('data-finder-remove-trope'));
       currentKey = '';
       currentBook = null;
       result.hidden = true;
       refreshFinderOptions();
       updateFinderProgress();
     });
-  });
+  }
 
   retryBtn.addEventListener('click', function(){
     if (currentBook) seenHandles.push(currentBook.handle);
@@ -6654,5 +10013,734 @@ function buildRelatedTropes(){
 }
 
 buildRelatedTropes()
+
+/* ======================
+   PRIVATE READER NOTES MOCK
+====================== */
+
+function initReaderNotesMock(){
+  if (window.__bbbReaderNotesMockInitialized) return;
+
+  var storageKey = 'bbbReaderPrivateNotes:v1';
+  var migrationKey = 'bbbReaderPrivateNotesMigrated:v1';
+  var saveTimers = {};
+  var activeCard = null;
+  var activePanel = null;
+  var activeOverlay = null;
+  var swipeStartY = null;
+  var remoteNotesReady = false;
+  var remoteNotesSyncing = false;
+  var remoteNotesPending = false;
+  var notesChangedLocally = false;
+  var params = new URLSearchParams(window.location.search);
+  var isJournalPage = !!document.querySelector('[data-reader-journal]');
+  var hasNoteControls = !!document.querySelector('[data-reader-note-toggle]');
+  var hasMadeForYouNotesPreview = !!document.querySelector('[data-mfy-book-notes-preview]');
+  var root = document.querySelector('[data-sss-lib]');
+  var noteRoot = document;
+  var forcedState = String(params.get('reader_notes') || params.get('notes') || '').toLowerCase();
+  if (forcedState !== 'paid' && forcedState !== 'free' && !isJournalPage && !hasNoteControls && !hasMadeForYouNotesPreview) return;
+  if (forcedState !== 'paid' && forcedState !== 'free') {
+    forcedState = root && root.getAttribute('data-sss-lib') === 'society' ? 'paid' : 'free';
+  }
+  window.__bbbReaderNotesMockInitialized = true;
+
+	  var siteData = window.BBBSiteData || {};
+	  var readerAccount = siteData.BBBReaderAccount || {};
+	  var readerApi = window.BBBReaderAccountApi || siteData.readerAccount || {};
+	  var hasNotesAccess = forcedState === 'paid' || !!(readerAccount.hasNotesAccess || readerApi.hasNotesAccess || (window.BBBLibraryData && window.BBBLibraryData.hasNotesAccess));
+	  var notesPageUrl = readerApi.notesUrl || readerAccount.notesUrl || '/my-notes/';
+
+	  function getAccountApi(){
+	    var api = window.BBBReaderAccountApi || siteData.readerAccount || {};
+	    return api && api.notesEndpoint && api.nonce ? api : null;
+	  }
+
+  function accountNotesRequest(method, body){
+    var api = getAccountApi();
+    if (!api) return Promise.reject(new Error('Reader notes endpoint unavailable'));
+
+    return window.fetch(api.notesEndpoint, {
+      method: method || 'GET',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-WP-Nonce': api.nonce
+      },
+      body: body ? JSON.stringify(body) : undefined
+    }).then(function(response){
+      return response.json().then(function(payload){
+        if (!response.ok) throw payload || new Error('Reader notes request failed');
+        return payload || {};
+      });
+    });
+  }
+
+  function readNotes(){
+    try {
+      return JSON.parse(localStorage.getItem(storageKey) || '{}') || {};
+    } catch(err) {
+      return {};
+    }
+  }
+
+  function writeNotes(notes){
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(notes || {}));
+      return true;
+    } catch(err) {
+      if (window.console && console.warn) console.warn('Reader notes local save failed', err);
+      return false;
+    }
+  }
+
+  function noteTimestamp(note){
+    var time = note && note.updatedAt ? new Date(note.updatedAt).getTime() : 0;
+    return isNaN(time) ? 0 : time;
+  }
+
+  function mergeNotes(localNotes, remoteNotes){
+    var merged = {};
+    var keys = {};
+    localNotes = localNotes && typeof localNotes === 'object' ? localNotes : {};
+    remoteNotes = remoteNotes && typeof remoteNotes === 'object' ? remoteNotes : {};
+
+    Object.keys(localNotes).forEach(function(key){ keys[key] = true; });
+    Object.keys(remoteNotes).forEach(function(key){ keys[key] = true; });
+
+    Object.keys(keys).forEach(function(key){
+      var localNote = localNotes[key];
+      var remoteNote = remoteNotes[key];
+      var localText = localNote && String(localNote.text || '').trim();
+      var remoteText = remoteNote && String(remoteNote.text || '').trim();
+
+      if (!localText && !remoteText) return;
+      if (!remoteText) {
+        merged[key] = localNote;
+        return;
+      }
+      if (!localText) {
+        merged[key] = remoteNote;
+        return;
+      }
+
+      merged[key] = noteTimestamp(localNote) >= noteTimestamp(remoteNote) ? localNote : remoteNote;
+    });
+
+    return merged;
+  }
+
+	  function syncNotesToAccount(notes){
+	    if (!hasNotesAccess || !getAccountApi()) return;
+    if (remoteNotesSyncing) {
+      remoteNotesPending = true;
+      return;
+    }
+
+    remoteNotesSyncing = true;
+    accountNotesRequest('POST', { notes: notes || readNotes() }).then(function(payload){
+      if (payload && payload.notes) {
+        writeNotes(payload.notes);
+        refreshCards();
+        renderJournal();
+      }
+    }).catch(function(err){
+      if (window.console && console.warn) console.warn('Reader account notes sync failed', err);
+    }).finally(function(){
+      remoteNotesSyncing = false;
+      if (remoteNotesPending) {
+        remoteNotesPending = false;
+        syncNotesToAccount(readNotes());
+      }
+    });
+  }
+
+	  function loadAccountNotes(){
+	    if (!hasNotesAccess || !getAccountApi()) {
+      remoteNotesReady = true;
+      return Promise.resolve(readNotes());
+    }
+
+    return accountNotesRequest('GET').then(function(payload){
+      var remoteNotes = payload && payload.notes && typeof payload.notes === 'object' ? payload.notes : {};
+      var localNotes = readNotes();
+
+      if (notesChangedLocally) {
+        remoteNotesReady = true;
+        syncNotesToAccount(localNotes);
+        return localNotes;
+      }
+
+      var hasLocalNotes = Object.keys(localNotes).length > 0;
+      var merged = mergeNotes(localNotes, remoteNotes);
+      var mergedJson = '';
+      var remoteJson = '';
+
+      try {
+        mergedJson = JSON.stringify(merged);
+        remoteJson = JSON.stringify(remoteNotes);
+      } catch(err) {}
+
+      if (hasLocalNotes && mergedJson !== remoteJson) syncNotesToAccount(merged);
+
+      writeNotes(merged);
+      try {
+        localStorage.setItem(migrationKey, '1');
+      } catch(err) {}
+      remoteNotesReady = true;
+      return merged;
+    }).catch(function(err){
+      remoteNotesReady = true;
+      if (window.console && console.warn) console.warn('Reader account notes load failed', err);
+      return readNotes();
+    });
+  }
+
+  function noteKey(card){
+    return String((card && (card.dataset.handle || card.dataset.title)) || '').trim().toLowerCase();
+  }
+
+  function setNoteBookDataset(target, book){
+    if (!target || !target.dataset || !book) return target;
+
+    [
+      'handle',
+      'title',
+      'author',
+      'cover',
+      'url',
+      'amazon',
+      'bookshop',
+      'spice',
+      'tropes',
+      'mini',
+      'series',
+      'seriesName',
+      'seriesNumber',
+      'ku'
+    ].forEach(function(key){
+      if (book[key] !== undefined && book[key] !== null && String(book[key]).trim() !== ''){
+        target.dataset[key] = String(book[key]);
+      }
+    });
+
+    return target;
+  }
+
+  function resolveNoteCard(toggle){
+    if (!toggle) return null;
+
+    var card = toggle.closest && toggle.closest('.sss-lib__book[data-title]');
+    if (card) return card;
+
+    if (toggle.dataset && (toggle.dataset.title || toggle.dataset.handle)) return toggle;
+
+    var modal = toggle.closest && toggle.closest('.sss-lib__modal');
+    if (modal && modal.__currentBook){
+      return setNoteBookDataset(toggle, modal.__currentBook);
+    }
+
+    var bookPage = toggle.closest && toggle.closest('.sss-book-page');
+    if (bookPage){
+      card = bookPage.querySelector('.sss-lib__book[data-title]');
+      if (card) return card;
+    }
+
+    return null;
+  }
+
+  function escapeHtml(value){
+    return String(value || '').replace(/[&<>"']/g, function(char){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char];
+    });
+  }
+
+  function firstLine(value){
+    return String(value || '').split(/\r?\n/).map(function(line){
+      return line.trim();
+    }).filter(Boolean)[0] || '';
+  }
+
+  function snippet(value){
+    var line = firstLine(value);
+    return line.length > 64 ? line.slice(0, 61).trim() + '...' : line;
+  }
+
+  function dateLabel(timestamp){
+    if (!timestamp) return '';
+    try {
+      return new Intl.DateTimeFormat('en-US', { month:'short', day:'numeric' }).format(new Date(timestamp));
+    } catch(err) {
+      return '';
+    }
+  }
+
+  function getCardData(card){
+    if (!card || !card.dataset){
+      return {
+        key: '',
+        handle: '',
+        title: '',
+        author: '',
+        cover: ''
+      };
+    }
+
+    return {
+      key: noteKey(card),
+      handle: card.dataset.handle || '',
+      title: card.dataset.title || '',
+      author: card.dataset.author || '',
+      cover: card.dataset.cover || ''
+    };
+  }
+
+  function updateCard(card){
+    if (!card) return;
+    var notes = readNotes();
+    var note = notes[noteKey(card)];
+    var wrap = card.closest('[data-reader-note-wrap]');
+    var preview = wrap ? wrap.querySelector('[data-reader-note-preview]') : card.querySelector('[data-reader-note-preview]');
+    var toggle = card.matches && card.matches('[data-reader-note-toggle]')
+      ? card
+      : (wrap ? wrap.querySelector('[data-reader-note-toggle]') : card.querySelector('[data-reader-note-toggle]'));
+    var hasNote = !!(note && String(note.text || '').trim());
+
+    card.classList.toggle('has-reader-note', hasNote);
+    if (toggle){
+      toggle.classList.toggle('has-reader-note', hasNote);
+      toggle.setAttribute('aria-label', hasNote ? 'open your private note' : 'add your private note');
+      if (toggle.matches && toggle.matches('.sss-lib__mnoteBtn')){
+        toggle.textContent = hasNote ? 'edit note' : 'add note';
+      } else if (toggle.matches && toggle.matches('.sss-book-page__noteText')){
+        toggle.textContent = hasNote ? 'edit note' : 'add note';
+      }
+    }
+
+    if (preview){
+      if (hasNote){
+        preview.textContent = '"' + snippet(note.text) + '"';
+        preview.hidden = false;
+      } else {
+        preview.textContent = '';
+        preview.hidden = true;
+      }
+    }
+  }
+
+  function refreshCards(){
+    document.querySelectorAll('.sss-lib__book[data-title]').forEach(updateCard);
+    document.querySelectorAll('.sss-lib__modal [data-reader-note-toggle][data-title]').forEach(updateCard);
+  }
+
+  function closePanel(){
+    flushActivePanel();
+    if (activePanel){
+      activePanel.remove();
+      activePanel = null;
+    }
+    if (activeOverlay){
+      activeOverlay.remove();
+      activeOverlay = null;
+    }
+    document.body.classList.remove('bbb-reader-note-open');
+    activeCard = null;
+  }
+
+  function positionDesktopPanel(card){
+    if (!activePanel || !card) return;
+
+    var rect = card.getBoundingClientRect();
+    var gutter = 10;
+    var width = Math.min(560, window.innerWidth - (gutter * 2));
+    var left = rect.left + ((rect.width - width) / 2);
+    left = Math.max(gutter, Math.min(left, window.innerWidth - width - gutter));
+
+    var belowTop = rect.bottom + gutter;
+    var maxHeight = Math.min(440, window.innerHeight - (gutter * 2));
+    var top = belowTop;
+
+    if (belowTop + maxHeight > window.innerHeight - gutter) {
+      top = Math.max(gutter, rect.top - maxHeight - gutter);
+    }
+
+    activePanel.style.setProperty('--reader-note-left', left + 'px');
+    activePanel.style.setProperty('--reader-note-top', top + 'px');
+    activePanel.style.setProperty('--reader-note-width', width + 'px');
+    activePanel.style.setProperty('--reader-note-max-height', maxHeight + 'px');
+  }
+
+  function repositionActivePanel(){
+    if (!activePanel || !activeCard || !activePanel.classList.contains('bbb-reader-note--desktop')) return;
+    positionDesktopPanel(activeCard);
+  }
+
+	  function flushActivePanel(){
+	    if (!activeCard || !activePanel || !hasNotesAccess) return;
+    var textarea = activePanel.querySelector('[data-reader-note-text]');
+    if (!textarea) return;
+
+    window.clearTimeout(saveTimers[noteKey(activeCard)]);
+    saveNote(activeCard, textarea.value, activePanel.querySelector('[data-reader-note-status]'));
+  }
+
+  function queueNoteSave(card, textarea, statusEl){
+    var key = noteKey(card);
+    if (!key || !textarea) return;
+
+    window.clearTimeout(saveTimers[key]);
+    if (statusEl) statusEl.textContent = 'saving...';
+    saveTimers[key] = window.setTimeout(function(){
+      saveNote(card, textarea.value, statusEl);
+    }, 450);
+  }
+
+  function saveNote(card, value, statusEl){
+    try {
+      var data = getCardData(card);
+      if (!data.key) return false;
+      var notes = readNotes();
+      var text = String(value || '').trim();
+      notesChangedLocally = true;
+
+      if (text){
+        notes[data.key] = {
+          key: data.key,
+          handle: data.handle,
+          title: data.title,
+          author: data.author,
+          cover: data.cover,
+          text: value,
+          updatedAt: new Date().toISOString()
+        };
+      } else {
+        delete notes[data.key];
+      }
+
+      if (!writeNotes(notes)) {
+        if (statusEl) statusEl.textContent = 'could not save on this device';
+        return false;
+      }
+      syncNotesToAccount(notes);
+      updateCard(card);
+      renderJournal();
+
+      if (statusEl){
+        statusEl.textContent = text ? 'saved' : 'note cleared';
+        window.setTimeout(function(){
+          if (statusEl) statusEl.textContent = text ? 'saved quietly' : '';
+        }, 1200);
+      }
+    } catch(err) {
+      if (statusEl){
+        statusEl.textContent = 'could not save locally';
+      }
+      if (window.console && console.warn){
+        console.warn('Reader note save failed', err);
+      }
+      return false;
+    }
+
+    return true;
+  }
+
+  function panelHtml(card){
+    var notes = readNotes();
+    var data = getCardData(card);
+    var note = notes[data.key] || {};
+    var updated = note.updatedAt ? 'last updated ' + dateLabel(note.updatedAt) : 'not saved yet';
+
+    return '' +
+      '<div class="bbb-reader-note__sheet" role="dialog" aria-modal="true" aria-label="private reading note">' +
+        '<div class="bbb-reader-note__pull" aria-hidden="true"></div>' +
+        '<div class="bbb-reader-note__privacy">your notes are completely private — only you can see them.</div>' +
+        '<div class="bbb-reader-note__book">' +
+          (data.cover ? '<img src="' + escapeHtml(data.cover) + '" alt="" loading="lazy">' : '') +
+          '<div><strong>' + escapeHtml(data.title) + '</strong>' +
+          (data.author ? '<span>by ' + escapeHtml(data.author) + '</span>' : '') + '</div>' +
+        '</div>' +
+        '<textarea class="bbb-reader-note__textarea" data-reader-note-text placeholder="your thoughts, feelings, spoilers, reasons to reread...">' + escapeHtml(note.text || '') + '</textarea>' +
+        '<div class="bbb-reader-note__meta">' +
+          '<span data-reader-note-status>' + escapeHtml(updated) + '</span>' +
+          '<div class="bbb-reader-note__actions">' +
+            '<a class="bbb-reader-note__journal" href="' + escapeHtml(notesPageUrl) + '">open my notes</a>' +
+            '<button class="bbb-reader-note__delete" type="button" data-reader-note-delete>delete</button>' +
+            '<button class="bbb-reader-note__save" type="button" data-reader-note-save>save</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function freePromptHtml(card){
+    var title = card && card.dataset.title ? card.dataset.title : 'this book';
+    return '' +
+      '<div class="bbb-reader-note__sheet bbb-reader-note__sheet--locked" role="dialog" aria-modal="true" aria-label="notes are a member feature">' +
+        '<button class="bbb-reader-note__close" type="button" data-reader-note-close aria-label="close">×</button>' +
+        '<div class="bbb-reader-note__privacy">your notes are completely private — only you can see them.</div>' +
+	        '<p>notes are a member feature — join the society to keep your own reading journal.</p>' +
+        '<a href="/smut-sentiment-society/">join the society</a>' +
+        '<small>' + escapeHtml(title) + ' will be waiting.</small>' +
+      '</div>';
+  }
+
+  function openPanel(card){
+    if (!card) return;
+    closePanel();
+    activeCard = card;
+
+    var isMobile = window.matchMedia('(max-width: 749px)').matches;
+    activePanel = document.createElement('div');
+    activePanel.className = 'bbb-reader-note' + (isMobile ? ' bbb-reader-note--mobile' : ' bbb-reader-note--desktop');
+	    activePanel.innerHTML = hasNotesAccess ? panelHtml(card) : freePromptHtml(card);
+
+    activeOverlay = document.createElement('div');
+    activeOverlay.className = 'bbb-reader-note__overlay';
+    activeOverlay.addEventListener('click', closePanel);
+
+    if (isMobile){
+      document.body.appendChild(activeOverlay);
+      document.body.appendChild(activePanel);
+      document.body.classList.add('bbb-reader-note-open');
+    } else {
+      document.body.appendChild(activePanel);
+      positionDesktopPanel(card);
+    }
+
+    var sheet = activePanel.querySelector('.bbb-reader-note__sheet');
+    if (sheet){
+      sheet.addEventListener('touchstart', function(e){
+        swipeStartY = e.touches && e.touches[0] ? e.touches[0].clientY : null;
+      }, { passive:true });
+      sheet.addEventListener('touchend', function(e){
+        if (swipeStartY === null || !e.changedTouches || !e.changedTouches[0]) return;
+        if (e.changedTouches[0].clientY - swipeStartY > 70) closePanel();
+        swipeStartY = null;
+      }, { passive:true });
+    }
+
+    var close = activePanel.querySelector('[data-reader-note-close]');
+    if (close) close.addEventListener('click', closePanel);
+
+	    if (!hasNotesAccess) return;
+
+    var textarea = activePanel.querySelector('[data-reader-note-text]');
+    var status = activePanel.querySelector('[data-reader-note-status]');
+    var deleteBtn = activePanel.querySelector('[data-reader-note-delete]');
+    var saveBtn = activePanel.querySelector('[data-reader-note-save]');
+
+    if (textarea){
+      textarea.focus({ preventScroll:true });
+      textarea.addEventListener('input', function(){
+        queueNoteSave(card, textarea, status);
+      });
+      textarea.addEventListener('change', function(){
+        saveNote(card, textarea.value, status);
+      });
+      textarea.addEventListener('blur', function(){
+        saveNote(card, textarea.value, status);
+      });
+    }
+
+    if (saveBtn){
+      function commitSave(e){
+        e.preventDefault();
+        e.stopPropagation();
+        if (saveBtn.__bbbReaderNoteCommitted) return;
+        saveBtn.__bbbReaderNoteCommitted = true;
+        window.clearTimeout(saveTimers[noteKey(card)]);
+        if (saveNote(card, textarea ? textarea.value : '', status)) closePanel();
+        window.setTimeout(function(){
+          saveBtn.__bbbReaderNoteCommitted = false;
+        }, 500);
+      }
+
+      saveBtn.addEventListener('pointerdown', function(e){
+        if (e.pointerType === 'mouse') return;
+        commitSave(e);
+      });
+      saveBtn.addEventListener('click', commitSave);
+    }
+
+    if (deleteBtn){
+      function commitDelete(e){
+        e.preventDefault();
+        e.stopPropagation();
+        if (deleteBtn.__bbbReaderNoteCommitted) return;
+        deleteBtn.__bbbReaderNoteCommitted = true;
+        if (textarea) textarea.value = '';
+        if (saveNote(card, '', status)) closePanel();
+        window.setTimeout(function(){
+          deleteBtn.__bbbReaderNoteCommitted = false;
+        }, 500);
+      }
+
+      deleteBtn.addEventListener('pointerdown', function(e){
+        if (e.pointerType === 'mouse') return;
+        commitDelete(e);
+      });
+      deleteBtn.addEventListener('click', commitDelete);
+    }
+  }
+
+  function handleToggleEvent(e, shouldOpen){
+    var toggle = e.target && e.target.closest ? e.target.closest('[data-reader-note-toggle]') : null;
+    if (!toggle) return false;
+
+    var card = resolveNoteCard(toggle);
+    if (!card) return false;
+
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+
+    if (shouldOpen) openPanel(card);
+    return true;
+  }
+
+  function bindCards(){
+    document.querySelectorAll('.sss-lib__book[data-title]').forEach(function(card){
+      if (card.__bbbReaderNotesBound) return;
+      card.__bbbReaderNotesBound = true;
+      var toggle = card.querySelector('[data-reader-note-toggle]');
+      if (!toggle) return;
+    });
+    refreshCards();
+  }
+
+  function renderJournal(){
+    var list = document.querySelector('[data-reader-journal-list]');
+    if (!list) return;
+
+	    if (!hasNotesAccess){
+	      list.innerHTML = '<div class="bbb-reader-journal__empty"><p>notes are a member feature — join the society to keep your own reading journal.</p><a href="/smut-sentiment-society/">join the society</a></div>';
+      return;
+    }
+
+    var term = String((document.querySelector('[data-reader-journal-search]') || {}).value || '').toLowerCase().trim();
+    var storedNotes = readNotes();
+    var notes = Object.keys(storedNotes).map(function(key){
+      return storedNotes[key];
+    }).filter(function(note){
+      return note && String(note.text || '').trim();
+    }).sort(function(a, b){
+      return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
+    }).filter(function(note){
+      if (!term) return true;
+      return [note.title, note.author, note.text].join(' ').toLowerCase().indexOf(term) !== -1;
+    });
+
+    if (!notes.length){
+      list.innerHTML = '<div class="bbb-reader-journal__empty">no private notes here yet. tap the little note on a book card when one has something to say back.</div>';
+      return;
+    }
+
+    list.innerHTML = notes.map(function(note){
+      return '' +
+        '<article class="bbb-reader-journal__entry">' +
+          (note.cover ? '<img src="' + escapeHtml(note.cover) + '" alt="" loading="lazy">' : '') +
+          '<div class="bbb-reader-journal__entryBody">' +
+            '<div class="bbb-reader-journal__entryMeta">last updated ' + escapeHtml(dateLabel(note.updatedAt)) + '</div>' +
+            '<h2>' + escapeHtml(note.title || 'untitled book') + '</h2>' +
+            (note.author ? '<p class="bbb-reader-journal__author">by ' + escapeHtml(note.author) + '</p>' : '') +
+            '<p class="bbb-reader-journal__note">' + escapeHtml(note.text).replace(/\n/g, '<br>') + '</p>' +
+          '</div>' +
+        '</article>';
+    }).join('');
+  }
+
+  function renderMadeForYouNotesPreview(){
+    var list = document.querySelector('[data-mfy-book-notes-preview]');
+    if (!list) return;
+
+	    if (!hasNotesAccess){
+	      list.innerHTML = '<div class="sss-mfy__noteItem"><p>book notes are a member feature.</p><span>join the society to keep a private reading journal</span></div>';
+      return;
+    }
+
+    var notesUrl = list.getAttribute('data-notes-url') || '/my-notes/';
+    var libraryUrl = list.getAttribute('data-library-url') || '/library/';
+    var storedNotes = readNotes();
+    var notes = Object.keys(storedNotes).map(function(key){
+      return storedNotes[key];
+    }).filter(function(note){
+      return note && String(note.text || '').trim();
+    }).sort(function(a, b){
+      return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
+    }).slice(0, 3);
+
+    if (!notes.length){
+      list.innerHTML = '' +
+        '<div class="sss-mfy__noteItem sss-mfy__noteItem--empty">' +
+          '<p>"the betrayal works because he notices what everyone else missed."</p>' +
+          '<span>example private note</span>' +
+        '</div>' +
+        '<div class="sss-mfy__noteItem sss-mfy__noteItem--empty">' +
+          '<p>"save this one for when i want obsessive, messy, touch-her-and-die energy."</p>' +
+          '<span>example private note · <a href="' + escapeHtml(libraryUrl) + '">add yours in the library</a></span>' +
+        '</div>';
+      return;
+    }
+
+    list.innerHTML = notes.map(function(note){
+      return '' +
+        '<article class="sss-mfy__noteItem sss-mfy__bookNote">' +
+          (note.cover ? '<img src="' + escapeHtml(note.cover) + '" alt="" loading="lazy">' : '') +
+          '<div>' +
+            '<strong>' + escapeHtml(note.title || 'untitled book') + '</strong>' +
+            (note.author ? '<small>by ' + escapeHtml(note.author) + '</small>' : '') +
+            '<p>"' + escapeHtml(snippet(note.text)) + '"</p>' +
+            '<span>updated ' + escapeHtml(dateLabel(note.updatedAt)) + '</span>' +
+          '</div>' +
+        '</article>';
+    }).join('') + '<a class="sss-mfy__notesJournalLink" href="' + escapeHtml(notesUrl) + '">view all book notes</a>';
+  }
+
+  window.bbbReaderNotesRefresh = function(){
+    bindCards();
+    refreshCards();
+    renderJournal();
+    renderMadeForYouNotesPreview();
+  };
+
+  bindCards();
+  renderJournal();
+  renderMadeForYouNotesPreview();
+  loadAccountNotes().then(function(){
+    refreshCards();
+    renderJournal();
+    renderMadeForYouNotesPreview();
+  });
+
+  var search = document.querySelector('[data-reader-journal-search]');
+  if (search) search.addEventListener('input', renderJournal);
+
+  if (noteRoot){
+    noteRoot.addEventListener('click', function(e){
+      handleToggleEvent(e, true);
+    }, true);
+
+    noteRoot.addEventListener('keydown', function(e){
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      handleToggleEvent(e, true);
+    }, true);
+  }
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') closePanel();
+  });
+
+  window.addEventListener('resize', repositionActivePanel, { passive:true });
+  window.addEventListener('scroll', repositionActivePanel, { passive:true });
+  window.addEventListener('pagehide', flushActivePanel);
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'hidden') flushActivePanel();
+  });
+}
+
+if (document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', initReaderNotesMock);
+} else {
+  initReaderNotesMock();
+}
 
 })();

@@ -23,7 +23,7 @@ function sss_token_engine(string $content, int $post_id): string {
 	$books = is_array($books) ? array_values(array_filter($books)) : array();
 	$trope = function_exists('get_field') ? get_field('trope', $post_id) : null;
 
-	$block_tokens = '(?:book(?::[^\]]+)?|bookpage(?::[^\]]+)?|bookquote(?::[^\]]+)?|bookreview(?::[^\]]+)?|bookcard|pillar|pillar\s*nav|pillar\s*bookcard|library|read\s*next|what\s+to\s+read\s+next|whattoreadnext|weekly\s+obsession|series|ku|quickstats(?::\d+)?|newsletter(?:\s+preview)?|newsletter:[^\]]+|specific(?::[A-Za-z0-9_-]+)?|bigspecific)';
+	$block_tokens = '(?:book(?::[^\]]+)?|bookpage(?::[^\]]+)?|bookquote(?::[^\]]+)?|bookspicychapters(?::[^\]]+)?|specificquote(?::[^\]]+)?|bookreview(?::[^\]]+)?|fictionalman(?::[^\]]+)?|bestofyear(?:\s+[^\]]+)?|bookcard|filterbookcard|filter\s*bookcard|pillar|pillar\s*nav|pillar\s*bookcard|library|read\s*next|what\s+to\s+read\s+next|whattoreadnext|weekly\s+obsession|series|ku|quickstats(?::\d+)?|newsletter(?:\s+preview)?|newsletter:[^\]]+|specific(?::[A-Za-z0-9_-]+)?|bigspecific)';
 	$block_token  = '\[' . $block_tokens . '\]';
 	$content = preg_replace('/<p\b[^>]*>\s*(' . $block_token . '(?:\s*(?:<br\s*\/?>)?\s*' . $block_token . ')*)\s*<\/p>/i', '$1', $content) ?? $content;
 	$content = preg_replace(
@@ -70,6 +70,41 @@ function sss_token_engine(string $content, int $post_id): string {
 	) ?? $content;
 
 	$content = preg_replace_callback(
+		'/\[bookspicychapters:([^\]\r\n]+)\]/i',
+		static function (array $matches): string {
+			$name = trim(wp_strip_all_tags((string) $matches[1]));
+			if ('' === $name) {
+				return $matches[0];
+			}
+
+			return sprintf('[bookspicychapters name="%s"]', esc_attr($name));
+		},
+		$content
+	) ?? $content;
+
+	$content = preg_replace_callback(
+		'/\[specificquote:([^\]\r\n]+)\]/i',
+		static function (array $matches): string {
+			$parts = array_map(
+				static fn($part): string => trim(wp_strip_all_tags((string) $part)),
+				explode('|', (string) $matches[1], 2)
+			);
+			$name = $parts[0] ?? '';
+			if ('' === $name) {
+				return $matches[0];
+			}
+
+			$quote = $parts[1] ?? '';
+			if ('' === $quote) {
+				return sprintf('[specificbookquote book="%s"]', esc_attr($name));
+			}
+
+			return sprintf('[specificbookquote book="%s" quote="%s"]', esc_attr($name), esc_attr($quote));
+		},
+		$content
+	) ?? $content;
+
+	$content = preg_replace_callback(
 		'/\[bookreview:([^\]\r\n]+)\]/i',
 		static function (array $matches) use ($post_id): string {
 			$name = trim(wp_strip_all_tags((string) $matches[1]));
@@ -82,9 +117,23 @@ function sss_token_engine(string $content, int $post_id): string {
 		$content
 	) ?? $content;
 
+	$content = preg_replace_callback(
+		'/\[fictionalman:([^\]\r\n]+)\]/i',
+		static function (array $matches): string {
+			$name = trim(wp_strip_all_tags((string) $matches[1]));
+			if ('' === $name) {
+				return $matches[0];
+			}
+
+			return sprintf('[bbb_fictionalman name="%s"]', esc_attr($name));
+		},
+		$content
+	) ?? $content;
+
 	$map = array(
 		'/\[book\]/i'                  => '[sss_book index="1" post_id="' . $post_id . '"]',
 		'/\[bookcard\]/i'              => '[sss_bookcard post_id="' . $post_id . '"]',
+		'/\[(?:filterbookcard|filter\s*bookcard)\]/i' => '[sss_filterbookcard post_id="' . $post_id . '"]',
 		'/\[bookpage:suggestions\]/i'  => '[sss_bookpage_suggestions post_id="' . $post_id . '"]',
 		'/\[pillar\s*bookcard\]/i'     => '[sss_pillar_bookcard post_id="' . $post_id . '"]',
 		'/\[library\]/i'               => '[sss_library post_id="' . $post_id . '"]',

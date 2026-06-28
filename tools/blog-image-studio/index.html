@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>BBB Blog Image Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@400;500;700;800&family=Kaushan+Script&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="studio">
+      <section class="panel controls" aria-label="Template controls">
+        <div class="brand">By Bookish Babe</div>
+        <h1>Blog Image Studio</h1>
+        <form id="scrapeForm" class="url-form">
+          <label for="blogUrl">Blog URL</label>
+          <div class="inline">
+            <input id="blogUrl" name="blogUrl" type="url" value="https://bybookishbabe.com/best-hockey-romance-books/" required>
+            <button type="submit">Pull Page</button>
+          </div>
+          <p id="status" class="status">Ready to pull the post title and likely book covers.</p>
+        </form>
+
+        <div class="field-grid">
+          <label>
+            Title
+            <textarea id="titleInput" rows="3">Best Hockey Romance Books</textarea>
+          </label>
+          <label>
+            Subtitle
+            <input id="subtitleInput" value="spicy reads for your romance shelf">
+          </label>
+          <label>
+            CTA Question
+            <input id="ctaInput" value="which one are you reading first?">
+          </label>
+          <label>
+            Profile Name
+            <input id="profileNameInput" value="the hockey boyfriend">
+          </label>
+          <label>
+            Profile Line
+            <input id="profileLineInput" value="protective, competitive, emotionally inconvenient">
+          </label>
+          <label>
+            Template
+            <select id="templateInput">
+              <option value="library">The Curated Shelf</option>
+              <option value="rink">Rink Night</option>
+              <option value="stack">Book Stack</option>
+              <option value="boyfriend">Fictional Boyfriend Profile</option>
+              <option value="book">Book Quote Collage</option>
+              <option value="quoteCard">Book Quote</option>
+              <option value="reviewPin">Blog Review Pin</option>
+              <option value="seriesReviewPin">Series Review Pin</option>
+              <option value="seriesReadingOrder">Series Reading Order</option>
+              <option value="tropeMood">Trope / Genre</option>
+            </select>
+          </label>
+          <label id="quoteField" class="is-hidden">
+            Quote
+            <select id="quoteInput"></select>
+          </label>
+        </div>
+
+        <div class="actions actions--single">
+          <button id="downloadBtn" type="button">Download PNG</button>
+        </div>
+      </section>
+
+      <section class="preview-wrap" aria-label="Image preview">
+        <div class="preview-toolbar">
+          <strong>1000 x 1500 PNG Preview</strong>
+          <span id="templateName">Library Shelf</span>
+        </div>
+        <canvas id="pinCanvas" width="1000" height="1500"></canvas>
+      </section>
+    </main>
+
+    <script src="./studio.js" type="module"></script>
+  </body>
+</html>

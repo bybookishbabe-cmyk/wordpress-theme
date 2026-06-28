@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 760" role="img" aria-label="book bouquet wrap with watercolor flowers">
+  <defs>
+    <linearGradient id="paper" x1="154" x2="566" y1="350" y2="704" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f1d8c1"/>
+      <stop offset=".48" stop-color="#d7ad88"/>
+      <stop offset="1" stop-color="#b77f5d"/>
+    </linearGradient>
+    <linearGradient id="paperShade" x1="168" x2="556" y1="430" y2="658" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff1df" stop-opacity=".68"/>
+      <stop offset=".5" stop-color="#c68f70" stop-opacity=".28"/>
+      <stop offset="1" stop-color="#7b4633" stop-opacity=".36"/>
+    </linearGradient>
+    <radialGradient id="pinkPetal" cx=".35" cy=".35" r=".74">
+      <stop offset="0" stop-color="#ffe0ea"/>
+      <stop offset=".5" stop-color="#e899b4"/>
+      <stop offset="1" stop-color="#b75577"/>
+    </radialGradient>
+    <radialGradient id="lavPetal" cx=".38" cy=".28" r=".82">
+      <stop offset="0" stop-color="#eef0ff"/>
+      <stop offset=".58" stop-color="#b6b7dd"/>
+      <stop offset="1" stop-color="#7777a8"/>
+    </radialGradient>
+    <linearGradient id="leaf" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#acc39f"/>
+      <stop offset="1" stop-color="#526f54"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#2d130b" flood-opacity=".24"/>
+    </filter>
+    <filter id="paperGrain">
+      <feTurbulence type="fractalNoise" baseFrequency=".78" numOctaves="3" seed="9"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 .12"/>
+      </feComponentTransfer>
+      <feBlend in="SourceGraphic" mode="multiply"/>
+    </filter>
+    <path id="petalLong" d="M0,-34 C22,-28 34,-10 29,8 C24,30 2,42 -17,28 C-35,14 -31,-17 0,-34Z"/>
+    <path id="petalRound" d="M0,-30 C27,-30 43,-11 34,12 C25,36 -5,43 -24,24 C-42,5 -29,-28 0,-30Z"/>
+  </defs>
+
+  <rect width="720" height="760" fill="#f8f1e6" opacity=".01"/>
+
+  <g filter="url(#softShadow)">
+    <g fill="none" stroke="#577552" stroke-width="5" stroke-linecap="round" opacity=".78">
+      <path d="M318 508 C298 404 258 300 216 172"/>
+      <path d="M348 510 C348 386 346 270 346 122"/>
+      <path d="M378 510 C414 392 458 292 512 166"/>
+      <path d="M302 512 C248 406 188 324 114 234"/>
+      <path d="M394 510 C470 414 540 336 618 246"/>
+      <path d="M333 512 C300 408 316 296 306 206"/>
+      <path d="M367 510 C390 408 394 310 418 210"/>
+    </g>
+
+    <g opacity=".85">
+      <path fill="url(#leaf)" d="M237 342 C194 322 160 322 126 346 C170 354 202 358 237 342Z"/>
+      <path fill="url(#leaf)" d="M488 338 C532 314 570 310 612 332 C566 346 528 352 488 338Z"/>
+      <path fill="url(#leaf)" d="M300 276 C268 242 254 212 260 176 C292 210 306 238 300 276Z"/>
+      <path fill="url(#leaf)" d="M410 280 C450 246 468 218 468 178 C430 210 414 240 410 280Z"/>
+    </g>
+
+    <g transform="translate(214 142)">
+      <use href="#petalRound" fill="url(#pinkPetal)" transform="rotate(-58) translate(0 -16)"/>
+      <use href="#petalRound" fill="url(#pinkPetal)" transform="rotate(-18) translate(0 -18)"/>
+      <use href="#petalRound" fill="url(#pinkPetal)" transform="rotate(22) translate(0 -17)"/>
+      <use href="#petalRound" fill="url(#pinkPetal)" transform="rotate(64) translate(0 -15)"/>
+      <circle r="16" fill="#c56d80"/>
+    </g>
+    <g transform="translate(346 104) scale(1.12)">
+      <use href="#petalRound" fill="url(#pinkPetal)" transform="rotate(-70) translate(0 -17)"/>
+      <use href="#petalRound" fill="url(#pinkPetal)" transform="rotate(-28) translate(0 -19)"/>
+      <use href="#petalRound" fill="url(#pinkPetal)" transform="rotate(12) translate(0 -18)"/>
+      <use href="#petalRound" fill="url(#pinkPetal)" transform="rotate(54) translate(0 -16)"/>
+      <circle r="15" fill="#c66b82"/>
+    </g>
+    <g transform="translate(512 156)">
+      <use href="#petalRound" fill="url(#pinkPetal)" transform="rotate(-56) translate(0 -16)"/>
+      <use href="#petalRound" fill="url(#pinkPetal)" transform="rotate(-14) translate(0 -18)"/>
+      <use href="#petalRound" fill="url(#pinkPetal)" transform="rotate(30) translate(0 -17)"/>
+      <use href="#petalRound" fill="url(#pinkPetal)" transform="rotate(70) translate(0 -15)"/>
+      <circle r="14" fill="#bd657d"/>
+    </g>
+
+    <g transform="translate(110 226) rotate(-20)">
+      <use href="#petalLong" fill="url(#lavPetal)"/>
+      <path d="M-16 4 C-4 18 12 16 24 2" fill="none" stroke="#7982ad" stroke-width="2" opacity=".38"/>
+    </g>
+    <g transform="translate(300 194) rotate(-10)">
+      <use href="#petalLong" fill="url(#lavPetal)"/>
+      <path d="M-16 4 C-3 18 12 16 24 2" fill="none" stroke="#7982ad" stroke-width="2" opacity=".38"/>
+    </g>
+    <g transform="translate(420 198) rotate(8)">
+      <use href="#petalLong" fill="url(#lavPetal)"/>
+      <path d="M-16 4 C-3 18 12 16 24 2" fill="none" stroke="#7982ad" stroke-width="2" opacity=".38"/>
+    </g>
+    <g transform="translate(624 246) rotate(24)">
+      <use href="#petalLong" fill="url(#lavPetal)"/>
+      <path d="M-16 4 C-3 18 12 16 24 2" fill="none" stroke="#7982ad" stroke-width="2" opacity=".38"/>
+    </g>
+
+    <g filter="url(#paperGrain)">
+      <path fill="url(#paper)" d="M78 362 C166 396 258 410 360 404 C466 398 562 378 648 344 C626 444 568 576 458 682 C392 722 322 724 254 688 C162 606 102 492 78 362Z"/>
+      <path fill="#efd4bd" d="M78 362 C168 404 248 454 338 536 C272 522 192 520 102 548 C96 474 86 414 78 362Z" opacity=".88"/>
+      <path fill="#e5c4a9" d="M648 344 C570 400 498 456 386 536 C466 514 544 510 626 536 C630 466 640 396 648 344Z" opacity=".9"/>
+      <path fill="url(#paperShade)" d="M122 548 C220 526 302 548 360 610 C422 540 506 516 606 536 C566 602 512 662 454 696 C392 728 324 728 262 694 C206 662 156 606 122 548Z"/>
+      <path fill="#f5ddc6" d="M176 398 C240 438 302 482 360 544 C422 478 486 430 554 386 C472 410 402 424 348 424 C294 424 236 416 176 398Z" opacity=".7"/>
+    </g>
+
+    <g transform="translate(360 604)">
+      <path d="M-130 0 C-86 -28 -46 -28 0 2 C46 -28 86 -28 130 0" fill="none" stroke="#9d653a" stroke-width="18" stroke-linecap="round"/>
+      <path d="M-84 8 C-126 46 -170 62 -218 60 C-178 20 -134 4 -84 8Z" fill="none" stroke="#9d653a" stroke-width="11" stroke-linecap="round"/>
+      <path d="M84 8 C126 46 170 62 218 60 C178 20 134 4 84 8Z" fill="none" stroke="#9d653a" stroke-width="11" stroke-linecap="round"/>
+      <circle r="20" fill="#a66e42"/>
+      <path d="M-120 30 C-82 18 -36 20 0 38 C36 20 82 18 120 30" fill="none" stroke="#6e3f24" stroke-width="5" opacity=".42"/>
+    </g>
+
+    <g transform="translate(470 648) rotate(8)">
+      <path fill="#e89ba7" d="M0 0 L156 10 L146 82 L10 78 L-22 38Z"/>
+      <circle cx="10" cy="40" r="9" fill="#f9d7d7"/>
+      <path d="M10 40 C-18 28 -56 12 -100 -18" fill="none" stroke="#a54e42" stroke-width="7" stroke-linecap="round"/>
+      <path d="M32 31 C54 24 78 24 98 34 M35 51 C66 48 94 54 122 64" fill="none" stroke="#5d2828" stroke-width="4" stroke-linecap="round" opacity=".48"/>
+    </g>
+  </g>
+</svg>

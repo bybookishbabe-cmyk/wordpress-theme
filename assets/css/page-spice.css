@@ -216,6 +216,130 @@
   margin-top: 34px;
 }
 
+.sss-spicePicker {
+  align-items: flex-end;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
+  margin: 18px 0 0;
+  max-width: 300px;
+  padding: 0;
+}
+
+.sss-spicePicker__field {
+  display: grid;
+  flex: 0 0 260px;
+  gap: 6px;
+  min-width: 0;
+  width: min(260px, 100%);
+}
+
+.sss-spicePicker__field span {
+  color: rgba(247,243,238,.58);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  line-height: 1.2;
+  text-transform: lowercase;
+}
+
+.sss-spicePicker__field select {
+  appearance: none;
+  background:
+    linear-gradient(45deg, transparent 50%, rgba(247,243,238,.7) 50%) right 15px center / 6px 6px no-repeat,
+    linear-gradient(135deg, rgba(247,243,238,.7) 50%, transparent 50%) right 11px center / 6px 6px no-repeat,
+    #0d0d0d;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 2px;
+  color: #fff;
+  font: 700 12px/1 var(--font-body-family, inherit);
+  height: 34px;
+  max-height: 34px;
+  min-height: 34px;
+  padding: 0 32px 0 10px;
+  text-transform: lowercase;
+  width: 100%;
+}
+
+.sss-spicePicker__field select:focus-visible {
+  border-color: rgba(247,243,238,.45);
+  outline: 0;
+}
+
+.sss-spicePicker__selected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.sss-spicePicker__selected[hidden] {
+  display: none;
+}
+
+.sss-spicePicker__chip {
+  appearance: none;
+  background: rgba(255,138,199,.14);
+  border: 1px solid rgba(255,138,199,.44);
+  border-radius: 999px;
+  color: #ffb8dc;
+  cursor: pointer;
+  font: 800 11px/1 var(--font-body-family, inherit);
+  min-height: 28px;
+  padding: 0 10px;
+  text-transform: lowercase;
+  transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+
+.sss-spicePicker__chip:hover,
+.sss-spicePicker__chip:focus-visible {
+  background: rgba(255,138,199,.22);
+  border-color: rgba(255,138,199,.7);
+  outline: 0;
+  transform: translateY(-1px);
+}
+
+.sss-spicePicker__clear {
+  appearance: none;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 2px;
+  color: rgba(247,243,238,.7);
+  cursor: pointer;
+  flex: 0 0 auto;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  height: 34px;
+  min-height: 34px;
+  padding: 0 10px;
+  text-transform: lowercase;
+  transition: border-color .18s ease, color .18s ease;
+}
+
+.sss-spicePicker__clear:hover,
+.sss-spicePicker__clear:focus-visible {
+  border-color: rgba(247,243,238,.45);
+  color: #fff;
+  outline: 0;
+}
+
+.sss-spiceEmpty {
+  color: rgba(247,243,238,.64);
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.45;
+  margin: 34px 0 0;
+  text-align: center;
+}
+
+.sss-spiceEmpty[hidden] {
+  display: none !important;
+}
+
 .sss-lib__spiceActions {
   align-items: center;
   display: flex;
@@ -322,6 +446,17 @@
     min-height: 38px;
     min-width: 0;
     padding: 0 18px;
+  }
+
+  .sss-spicePicker {
+    align-items: flex-end;
+    border-radius: 0;
+    flex-direction: row;
+    max-width: 300px;
+  }
+
+  .sss-spicePicker__clear {
+    width: auto;
   }
 }
 

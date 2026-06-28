@@ -113,6 +113,24 @@ if (!function_exists('bbb_quote_admin_books')) {
 	}
 }
 
+if (!function_exists('bbb_quote_admin_boyfriends')) {
+	function bbb_quote_admin_boyfriends(): array {
+		if (!post_type_exists('bbb_boyfriend')) {
+			return array();
+		}
+
+		return get_posts(
+			array(
+				'post_type'      => 'bbb_boyfriend',
+				'post_status'    => array('publish', 'draft', 'pending', 'private'),
+				'posts_per_page' => -1,
+				'orderby'        => 'title',
+				'order'          => 'ASC',
+			)
+		);
+	}
+}
+
 function bbb_add_quote_details_meta_box(): void {
 	foreach (bbb_quote_post_types() as $post_type) {
 		add_meta_box(
@@ -147,7 +165,12 @@ function bbb_render_quote_details_meta_box(WP_Post $post): void {
 		(int) get_post_meta($post->ID, 'book_id', true),
 		(int) get_post_meta($post->ID, 'library_book_id', true)
 	);
+	$selected_boyfriend_id = max(
+		(int) get_post_meta($post->ID, '_quote_boyfriend_id', true),
+		(int) get_post_meta($post->ID, '_bbb_quote_boyfriend_id', true)
+	);
 	$books = bbb_quote_admin_books();
+	$boyfriends = bbb_quote_admin_boyfriends();
 	?>
 	<style>
 		.bbb-quote-fields { display: grid; gap: 14px; }
@@ -181,6 +204,23 @@ function bbb_render_quote_details_meta_box(WP_Post $post): void {
 					<?php endforeach; ?>
 				</select>
 				<p class="bbb-quote-fields__help"><?php esc_html_e('When linked, the quote wall can open the book modal and search can match the book, author, shelf, and tropes.', 'bybookishbabe-shopify-port'); ?></p>
+			</div>
+		</div>
+
+		<div class="bbb-quote-fields__row">
+			<label for="bbb_quote_boyfriend_id"><?php esc_html_e('Linked fictional boyfriend', 'bybookishbabe-shopify-port'); ?></label>
+			<div>
+				<select id="bbb_quote_boyfriend_id" name="bbb_quote_boyfriend_id">
+					<option value="0"><?php esc_html_e('Infer from linked book', 'bybookishbabe-shopify-port'); ?></option>
+					<?php foreach ($boyfriends as $boyfriend) : ?>
+						<?php if ($boyfriend instanceof WP_Post) : ?>
+							<option value="<?php echo esc_attr((string) $boyfriend->ID); ?>" <?php selected($selected_boyfriend_id, $boyfriend->ID); ?>>
+								<?php echo esc_html(get_the_title($boyfriend)); ?>
+							</option>
+						<?php endif; ?>
+					<?php endforeach; ?>
+				</select>
+				<p class="bbb-quote-fields__help"><?php esc_html_e('Use this when a series quote belongs to a specific fictional boyfriend. This controls which boyfriend profile can display the quote.', 'bybookishbabe-shopify-port'); ?></p>
 			</div>
 		</div>
 	</div>
@@ -220,6 +260,17 @@ function bbb_save_quote_details(int $post_id): void {
 		update_post_meta($post_id, '_quote_book_title', get_the_title($book_id));
 	} else {
 		foreach (array('_quote_book_id', '_quote_library_book_id', 'book_id', 'library_book_id', '_quote_book_handle', '_quote_book_title') as $key) {
+			delete_post_meta($post_id, $key);
+		}
+	}
+
+	$boyfriend_id = isset($_POST['bbb_quote_boyfriend_id']) ? (int) $_POST['bbb_quote_boyfriend_id'] : 0;
+	if ($boyfriend_id > 0 && 'bbb_boyfriend' === get_post_type($boyfriend_id)) {
+		update_post_meta($post_id, '_quote_boyfriend_id', $boyfriend_id);
+		update_post_meta($post_id, '_bbb_quote_boyfriend_id', $boyfriend_id);
+		update_post_meta($post_id, '_quote_boyfriend_name', get_the_title($boyfriend_id));
+	} else {
+		foreach (array('_quote_boyfriend_id', '_bbb_quote_boyfriend_id', '_quote_boyfriend_name') as $key) {
 			delete_post_meta($post_id, $key);
 		}
 	}

@@ -12,6 +12,120 @@
   }
 }
 
+.bbb-pwa-back {
+  align-items: center;
+  appearance: none;
+  background: rgba(23, 20, 23, 0.9);
+  border: 0.1rem solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  bottom: calc(8.2rem + env(safe-area-inset-bottom));
+  box-shadow: 0 1rem 2.4rem rgba(23, 20, 23, 0.22);
+  color: #fff;
+  cursor: pointer;
+  display: none;
+  font: inherit;
+  font-size: 2.1rem;
+  font-weight: 700;
+  height: 4.6rem;
+  justify-content: center;
+  left: calc(2rem + env(safe-area-inset-left));
+  line-height: 1;
+  padding: 0;
+  position: fixed;
+  text-decoration: none;
+  width: 4.6rem;
+  z-index: 2147482400;
+}
+
+.bbb-pwa-back[hidden] {
+  display: none !important;
+}
+
+.bbb-pwa-share,
+.bbb-pwa-share-toast {
+  display: none;
+}
+
+.bbb-pwa-share {
+  align-items: center;
+  appearance: none;
+  background: #e779b8;
+  border: 0.1rem solid rgba(255, 255, 255, 0.34);
+  border-radius: 999px;
+  bottom: calc(8.2rem + env(safe-area-inset-bottom));
+  box-shadow: 0 1.2rem 2.8rem rgba(0, 0, 0, 0.34);
+  color: #1c0b13;
+  cursor: pointer;
+  font: inherit;
+  font-size: 2.1rem;
+  height: 4.6rem;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  position: fixed;
+  right: calc(2rem + env(safe-area-inset-right));
+  text-decoration: none;
+  width: 4.6rem;
+  z-index: 2147482400;
+}
+
+.bbb-pwa-share-toast {
+  background: #fff7fb;
+  border: 0.1rem solid rgba(255, 138, 199, 0.4);
+  border-radius: 999px;
+  bottom: calc(13.2rem + env(safe-area-inset-bottom));
+  box-shadow: 0 1.2rem 2.8rem rgba(0, 0, 0, 0.28);
+  color: #1c0b13;
+  font-size: 1.2rem;
+  font-weight: 900;
+  opacity: 0;
+  padding: 0.8rem 1.1rem;
+  pointer-events: none;
+  position: fixed;
+  right: calc(2rem + env(safe-area-inset-right));
+  text-transform: lowercase;
+  transform: translateY(0.6rem);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 2147482400;
+}
+
+.bbb-pwa-share-toast.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+body.bbb-book-modal-open .bbb-pwa-back,
+body.bbb-book-modal-open .bbb-pwa-share,
+body.bbb-book-modal-open .bbb-pwa-share-toast {
+  display: none !important;
+}
+
+.bbb-is-pwa-app .bbb-pwa-back {
+  display: inline-flex;
+}
+
+.bbb-is-pwa-app .bbb-pwa-share {
+  display: inline-flex;
+}
+
+.bbb-is-pwa-app .bbb-pwa-share-toast {
+  display: inline-block;
+}
+
+@media (display-mode: standalone) {
+  .bbb-pwa-back {
+    display: inline-flex;
+  }
+
+  .bbb-pwa-share {
+    display: inline-flex;
+  }
+
+  .bbb-pwa-share-toast {
+    display: inline-block;
+  }
+}
+
 .bbb-pwa-promo {
   align-items: center;
   gap: 0.9rem;

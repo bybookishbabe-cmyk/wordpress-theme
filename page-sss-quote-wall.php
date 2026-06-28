@@ -41,7 +41,48 @@ if (!function_exists('bbb_quote_wall_text')) {
 	}
 }
 
+if (!function_exists('bbb_quote_wall_highlighted_text')) {
+	function bbb_quote_wall_highlighted_text(string $text, string $theme): string {
+		$lines = preg_split('/\R/u', $text);
+		if (!is_array($lines) || !$lines) {
+			$lines = array($text);
+		}
+
+		$output     = array();
+		$last_index = count($lines) - 1;
+		foreach ($lines as $index => $line) {
+			if ($index > 0) {
+				$output[] = '<br>';
+			}
+
+			if ('' === trim((string) $line)) {
+				continue;
+			}
+
+			$line_text = (string) $line;
+			if (0 === $index) {
+				$line_text = '"' . $line_text;
+			}
+			if ($last_index === $index) {
+				$line_text .= '"';
+			}
+
+			$output[] = sprintf(
+				'<span class="hl hl--%1$s">%2$s</span>',
+				esc_attr($theme),
+				esc_html($line_text)
+			);
+		}
+
+		return implode('', $output);
+	}
+}
+
 if (!function_exists('bbb_quote_wall_book')) {
+	function bbb_quote_wall_book_can_surface(?WP_Post $book): bool {
+		return true;
+	}
+
 	function bbb_quote_wall_book(WP_Post $quote): ?WP_Post {
 		$book = function_exists('get_field') ? get_field('book', $quote->ID) : null;
 		if ($book instanceof WP_Post) {
@@ -111,7 +152,7 @@ if (!function_exists('bbb_quote_wall_book_meta')) {
 			return array('title' => '', 'author' => '', 'handle' => '', 'shelf' => '', 'url' => home_url('/library/'), 'modal' => array());
 		}
 
-		if (function_exists('sss_book_data')) {
+		if (function_exists('sss_book_data') && 'sss_book' === get_post_type($book)) {
 			$data          = sss_book_data($book);
 			$trope_names   = array_column((array) ($data['tropes'] ?? array()), 'name');
 			$trope_display = array_map(
@@ -194,21 +235,29 @@ if (!function_exists('bbb_quote_wall_theme')) {
 }
 
 $quote_post_types = function_exists('bbb_quote_post_types') ? bbb_quote_post_types() : array();
-$is_society = function_exists('bbb_reader_is_society') ? bbb_reader_is_society() : false;
-$quote_limit = $is_society ? -1 : 6;
+foreach (array('bbb_quote', 'sss_quote') as $quote_post_type) {
+	if (post_type_exists($quote_post_type) && !in_array($quote_post_type, $quote_post_types, true)) {
+		$quote_post_types[] = $quote_post_type;
+	}
+}
+$has_member_access = function_exists('bbb_reader_has_member_identity')
+	? bbb_reader_has_member_identity()
+	: is_user_logged_in();
+$quote_limit = $has_member_access ? -1 : 6;
+$quote_query_limit = $has_member_access ? -1 : 75;
 $quotes = $quote_post_types
 	? get_posts(
 		array(
 			'post_type'      => $quote_post_types,
-			'post_status'    => array('publish', 'draft'),
-			'posts_per_page' => $quote_limit,
+			'post_status'    => 'publish',
+			'posts_per_page' => $quote_query_limit,
 			'orderby'        => 'date',
 			'order'          => 'DESC',
 		)
 	)
 	: array();
 if (!$quotes && function_exists('bbb_quote_export_entries')) {
-	$quotes = bbb_quote_export_entries((int) $quote_limit);
+	$quotes = bbb_quote_export_entries((int) $quote_query_limit);
 }
 
 $join_url = get_option('bbb_society_gate_member_url', 'https://thesmutandsentimentsociety.substack.com/subscribe');
@@ -216,7 +265,7 @@ $join_url = get_option('bbb_society_gate_member_url', 'https://thesmutandsentime
 get_header();
 ?>
 
-<section class="sss-qw<?php echo $is_society ? ' is-unlocked' : ' is-preview'; ?>" data-sss-quote-wall data-sss-lib="<?php echo esc_attr($is_society ? 'society' : 'public'); ?>">
+<section class="sss-qw<?php echo $has_member_access ? ' is-unlocked' : ' is-preview'; ?>" data-sss-quote-wall data-sss-lib="<?php echo esc_attr($has_member_access ? 'society' : 'public'); ?>">
 	<div class="sss-qw__wrap">
 		<p class="sss-kicker">quote library</p>
 		<h1 class="sss-title">faded pages & fatal lines.</h1>
@@ -234,7 +283,7 @@ get_header();
 			>
 			<div class="sss-qw__metaRow">
 				<div class="sss-qw__count" data-qw-count>all quotes</div>
-				<div class="sss-qw__hint">paid members get the full wall.</div>
+				<div class="sss-qw__hint"><?php echo esc_html($has_member_access ? 'free and paid members get the full wall.' : 'preview a few favorite lines before joining.'); ?></div>
 			</div>
 		</div>
 
@@ -245,12 +294,28 @@ get_header();
 			</div>
 		<?php endif; ?>
 
+		<?php $rendered_quotes = 0; ?>
 		<?php foreach ($quotes as $index => $quote) : ?>
 			<?php
+			if (!$has_member_access && $rendered_quotes >= $quote_limit) {
+				break;
+			}
 			$book_meta = array('title' => '', 'author' => '', 'handle' => '', 'shelf' => '', 'url' => home_url('/library/'));
 			if ($quote instanceof WP_Post) {
 				$text = bbb_quote_wall_text($quote);
-				$book_meta = bbb_quote_wall_book_meta(bbb_quote_wall_book($quote));
+				$book_handle = (string) get_post_meta($quote->ID, '_quote_book_handle', true);
+				$book_handle = '' !== $book_handle ? $book_handle : (string) get_post_meta($quote->ID, 'book_handle', true);
+				$book_handle = '' !== $book_handle ? $book_handle : (string) get_post_meta($quote->ID, '_bbb_book_handle', true);
+				$book_title = (string) get_post_meta($quote->ID, '_quote_book_title', true);
+				$book_title = '' !== $book_title ? $book_title : ('' !== $book_handle ? ucwords(str_replace('-', ' ', $book_handle)) : '');
+				$book_meta = array(
+					'title'  => wp_specialchars_decode($book_title, ENT_QUOTES),
+					'author' => '',
+					'handle' => $book_handle,
+					'shelf'  => '',
+					'url'    => '' !== $book_handle ? home_url('/library/?book=' . rawurlencode($book_handle)) : home_url('/library/'),
+					'modal'  => array(),
+				);
 				$fallback_title = get_the_title($quote);
 			} elseif (is_array($quote)) {
 				$text = trim((string) ($quote['text'] ?? ''));
@@ -278,8 +343,10 @@ get_header();
 			$theme = bbb_quote_wall_theme((string) $book_meta['shelf'], (int) $index);
 			$align = 0 === ((int) $index % 2) ? 'is-left' : 'is-right';
 			$modal = (array) ($book_meta['modal'] ?? array());
+			$quote_anchor = 'quote-' . (is_object($quote) && isset($quote->ID) ? (string) $quote->ID : (string) $index);
 			?>
 			<div
+				id="<?php echo esc_attr($quote_anchor); ?>"
 				class="qw-item <?php echo esc_attr($align); ?>"
 				data-qw-item
 				data-qw-quote="<?php echo esc_attr($text); ?>"
@@ -303,10 +370,10 @@ get_header();
 					<?php else : ?>
 						<a class="qw-cardSurface" href="<?php echo esc_url((string) $book_meta['url']); ?>">
 					<?php endif; ?>
-							<div class="qw-paper">
-								<p class="qw-quote">
-									<span class="hl hl--<?php echo esc_attr($theme); ?>">"<?php echo esc_html($text); ?>"</span>
-								</p>
+								<div class="qw-paper">
+									<p class="qw-quote">
+										<?php echo bbb_quote_wall_highlighted_text($text, $theme); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+									</p>
 								<div class="qw-meta">
 									<div class="qw-book">
 										<?php if ('' !== $book_meta['title']) : ?>
@@ -323,14 +390,15 @@ get_header();
 					<?php echo $modal ? '</button>' : '</a>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				</div>
 			</div>
+			<?php $rendered_quotes++; ?>
 		<?php endforeach; ?>
 		</div>
 		<div class="sss-qw__empty" data-qw-empty>no matches yet. try a book title, author, shelf, or trope instead.</div>
 
-	<?php if (!$is_society) : ?>
+	<?php if (!$has_member_access) : ?>
 		<section class="sss-qw__gate">
-			<p>preview mode</p>
-			<h2>paid members get the full quote wall.</h2>
+			<p>member access</p>
+			<h2>free and paid members get the full quote wall.</h2>
 			<a href="<?php echo esc_url($join_url); ?>">join the society</a>
 		</section>
 	<?php endif; ?>

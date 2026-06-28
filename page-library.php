@@ -7,18 +7,10 @@
 
 declare(strict_types=1);
 
-wp_enqueue_script('bbb-supabase', 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2', array(), null, false);
 if (function_exists('bbb_enqueue_css')) {
-	bbb_enqueue_css('bbb-sss-library', 'assets/css/sss-library.css');
 	bbb_enqueue_css('bbb-library-trope-signpost', 'assets/css/library-trope-signpost.css', array('bbb-sss-library'));
 } else {
-	wp_enqueue_style('bbb-sss-library', get_template_directory_uri() . '/assets/css/sss-library.css', array(), wp_get_theme()->get('Version'));
 	wp_enqueue_style('bbb-library-trope-signpost', get_template_directory_uri() . '/assets/css/library-trope-signpost.css', array('bbb-sss-library'), wp_get_theme()->get('Version'));
-}
-if (function_exists('bbb_enqueue_js')) {
-	bbb_enqueue_js('bbb-sss-library', 'assets/js/sss-library.js', array('bbb-supabase'), false);
-} else {
-	wp_enqueue_script('bbb-sss-library', get_template_directory_uri() . '/assets/js/sss-library.js', array('bbb-supabase'), wp_get_theme()->get('Version'), false);
 }
 
 get_header();
@@ -42,7 +34,7 @@ $all_public_books = array_values(
 		<?php get_template_part('template-parts/library/library-trope-signpost'); ?>
 		<?php get_template_part('template-parts/library/library-rec-demo'); ?>
 		<?php get_template_part('template-parts/library/library-my-shelf'); ?>
-		<?php get_template_part('template-parts/library/library-society-layer', null, array('mode' => 'private_shelf', 'books' => $all_books, 'public_books' => $all_public_books, 'is_society' => $is_society)); ?>
+		<?php get_template_part('template-parts/library/library-society-layer', null, array('mode' => 'private_shelf', 'books' => $all_public_books, 'public_books' => $all_public_books, 'is_society' => $is_society)); ?>
 		<?php get_template_part('template-parts/library/library-society-classics', null, array('books' => $all_public_books)); ?>
 		<?php get_template_part('template-parts/library/library-starter-pack', null, array('books' => $all_public_books)); ?>
 		<?php get_template_part('template-parts/library/library-books-of-month', null, array('books' => $all_public_books)); ?>

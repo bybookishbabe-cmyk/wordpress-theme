@@ -445,7 +445,8 @@ function sss_render_article_book_card(int $book_id, bool $show_why = false): str
 	?>
 <div class="article-book-card" data-book-preview <?php echo sss_article_data_attrs($book); ?>>
 
-  <div class="article-book-card__header">
+  <?php if (!empty($book['shelf']['name']) || $book['series_name'] || $book['series_number']) : ?>
+  <div class="article-book-card__metaTop">
     <?php if (!empty($book['shelf']['name'])) : ?>
     <div class="article-book-card__genreRow">
       <span class="article-book-card__genreLine" aria-hidden="true"></span>
@@ -453,16 +454,24 @@ function sss_render_article_book_card(int $book_id, bool $show_why = false): str
     </div>
     <?php endif; ?>
 
+    <?php if ($book['series_name'] || $book['series_number']) : ?>
+    <div class="article-book-card__series">
+      <?php echo esc_html(($book['series_number'] ? '#' . $book['series_number'] . ' • ' : '') . ($book['series_name'] ? (function_exists('bbb_book_series_label') ? bbb_book_series_label((string) $book['series_name']) : (string) $book['series_name']) : '')); ?>
+    </div>
+    <?php endif; ?>
+  </div>
+  <?php endif; ?>
+
+  <div class="article-book-card__header">
     <h3><?php echo esc_html($book['title']); ?></h3>
 
     <?php if ($book['author']) : ?>
     <div class="article-book-card__author"><?php echo esc_html($book['author']); ?></div>
     <?php endif; ?>
-
-    <?php if ($book['series_name'] || $book['series_number']) : ?>
-    <div class="article-book-card__series">
-      <?php echo esc_html(($book['series_number'] ? '#' . $book['series_number'] . ' • ' : '') . ($book['series_name'] ? $book['series_name'] . ' series' : '')); ?>
-    </div>
+    <?php if ($book['ku']) : ?>
+    <span class="article-book-card__ku article-book-card__ku--yes">✓ on kindle unlimited</span>
+    <?php else : ?>
+    <span class="article-book-card__ku article-book-card__ku--no">✕ not on kindle unlimited</span>
     <?php endif; ?>
   </div>
 
@@ -480,22 +489,11 @@ function sss_render_article_book_card(int $book_id, bool $show_why = false): str
     <?php endif; ?>
 
     <?php if ($book['cover']) : ?>
-    <img src="<?php echo esc_url($book['cover']); ?>" alt="<?php echo esc_attr($book['title']); ?>" loading="lazy">
+    <img src="<?php echo esc_url($book['cover']); ?>" alt="<?php echo esc_attr(function_exists('bbb_book_cover_alt') ? bbb_book_cover_alt((string) $book['title'], (string) $book['author'], (string) ($book['shelf']['name'] ?? '')) : (string) $book['title'] . ' book cover'); ?>" loading="lazy">
     <?php endif; ?>
   </div>
 
   <div class="article-book-card__content">
-    <?php if ($book['mini']) : ?>
-    <p class="book-pitch"><?php echo esc_html($book['mini']); ?></p>
-    <?php endif; ?>
-
-    <?php if ($show_why && $book['why']) : ?>
-    <p class="book-pitch book-pitch--why">
-      <span class="book-pitch__label">why i loved it</span>
-      <?php echo esc_html($book['why']); ?>
-    </p>
-    <?php endif; ?>
-
     <?php if ($book['tropes']) : ?>
 	    <div class="article-book-card__tropes">
 	      <?php foreach ($book['tropes'] as $trope) : ?>
@@ -507,13 +505,16 @@ function sss_render_article_book_card(int $book_id, bool $show_why = false): str
     </div>
     <?php endif; ?>
 
-    <div class="article-book-card__ratings">
-      <?php if ($book['ku']) : ?>
-      <span class="article-book-card__ku article-book-card__ku--yes">✓ on kindle unlimited</span>
-      <?php else : ?>
-      <span class="article-book-card__ku article-book-card__ku--no">✕ not on kindle unlimited</span>
-      <?php endif; ?>
-    </div>
+    <?php if ($book['mini']) : ?>
+    <p class="book-pitch"><?php echo esc_html($book['mini']); ?></p>
+    <?php endif; ?>
+
+    <?php if ($show_why && $book['why']) : ?>
+    <p class="book-pitch book-pitch--why">
+      <span class="book-pitch__label">why i loved it</span>
+      <?php echo esc_html($book['why']); ?>
+    </p>
+    <?php endif; ?>
 
 	    <div class="article-book-card__buttons">
 	      <?php if ($book['amazon'] && $book['ku']) : ?>
@@ -544,7 +545,7 @@ function sss_article_books_for_source(string $source, string $value, int $limit 
 
 	$books = array_values(
 		array_filter(
-			sss_article_all_visible_books(),
+			sss_article_all_visible_books(true),
 			static function (WP_Post $book) use ($source, $value): bool {
 				$data = sss_article_book_data($book->ID);
 
@@ -567,6 +568,10 @@ function sss_article_books_for_source(string $source, string $value, int $limit 
 		)
 	);
 
+	if (in_array($source, array('trope', 'shelf'), true)) {
+		$books = sss_article_collapse_required_series_books($books, true);
+	}
+
 	usort(
 		$books,
 		static function (WP_Post $a, WP_Post $b) use ($source): int {
@@ -583,6 +588,66 @@ function sss_article_books_for_source(string $source, string $value, int $limit 
 	);
 
 	return array_slice($books, 0, $limit);
+}
+
+function sss_article_collapse_required_series_books(array $books, bool $allow_hidden_from_library = false): array {
+	$collapsed = array();
+	$seen      = array();
+
+	foreach ($books as $book) {
+		if (!$book instanceof WP_Post) {
+			continue;
+		}
+
+		$representative = sss_article_required_series_representative($book, $allow_hidden_from_library);
+		$book_id        = $representative instanceof WP_Post ? (int) $representative->ID : (int) $book->ID;
+
+		if (isset($seen[$book_id])) {
+			continue;
+		}
+
+		$seen[$book_id] = true;
+		$collapsed[]    = $representative instanceof WP_Post ? $representative : $book;
+	}
+
+	return $collapsed;
+}
+
+function sss_article_required_series_representative(WP_Post $book, bool $allow_hidden_from_library = false): ?WP_Post {
+	$data          = sss_article_book_data($book->ID);
+	$series_handle = sanitize_title((string) ($data['series_handle'] ?? ''));
+	$series_number = (int) ($data['series_number'] ?? 0);
+
+	if ('' === $series_handle || $series_number <= 1 || !empty($data['standalone'])) {
+		return $book;
+	}
+
+	$first_book = null;
+	$first_num  = PHP_INT_MAX;
+
+	foreach (sss_article_all_visible_books($allow_hidden_from_library) as $candidate) {
+		$candidate_data   = sss_article_book_data($candidate->ID);
+		$candidate_series = sanitize_title((string) ($candidate_data['series_handle'] ?? ''));
+		if ($candidate_series !== $series_handle) {
+			continue;
+		}
+
+		$candidate_num = (int) ($candidate_data['series_number'] ?? 0);
+		if ($candidate_num <= 0) {
+			continue;
+		}
+
+		if (1 === $candidate_num) {
+			return $candidate;
+		}
+
+		if ($candidate_num < $first_num) {
+			$first_book = $candidate;
+			$first_num  = $candidate_num;
+		}
+	}
+
+	return $first_book instanceof WP_Post ? $first_book : $book;
 }
 
 function sss_article_books_for_selected_source(int $post_id): array {
@@ -627,30 +692,35 @@ function sss_article_post_books(int $post_id, bool $include_mentions = true): ar
 	return $books ?: ($include_mentions ? sss_article_books_mentioned_in_post($post_id) : array());
 }
 
-function sss_article_book_visible(WP_Post $book): bool {
+function sss_article_book_visible(WP_Post $book, bool $allow_hidden_from_library = false): bool {
 	if ('bbb_book' === $book->post_type && function_exists('bbb_is_book_visible')) {
-		return bbb_is_book_visible($book->ID);
+		return bbb_is_book_visible($book->ID, $allow_hidden_from_library);
 	}
 
 	$is_visible = function_exists('get_field') ? get_field('is_visible', $book->ID) : null;
 	if (null === $is_visible || '' === $is_visible) {
 		$is_visible = get_post_meta($book->ID, 'is_visible', true);
 	}
-	if ('' !== $is_visible && null !== $is_visible && !sss_article_bool($is_visible)) {
+	if (!$allow_hidden_from_library && '' !== $is_visible && null !== $is_visible && !sss_article_bool($is_visible)) {
 		return false;
 	}
-	if (function_exists('bbb_book_is_publicly_visible')) {
+	if (!$allow_hidden_from_library && function_exists('bbb_book_is_publicly_visible')) {
 		return bbb_book_is_publicly_visible($book->ID);
 	}
 	if ('' === $is_visible || null === $is_visible) {
 		$is_visible = true;
 	}
-	return sss_article_bool($is_visible) && !sss_article_bool(sss_article_field('hide_from_library', $book->ID, false));
+	return sss_article_bool($is_visible) && ($allow_hidden_from_library || !sss_article_bool(sss_article_field('hide_from_library', $book->ID, false)));
 }
 
-function sss_article_all_visible_books(): array {
+function sss_article_all_visible_books(bool $allow_hidden_from_library = false): array {
 	$books = get_posts(array('post_type' => array('sss_book', 'bbb_book'), 'post_status' => 'publish', 'posts_per_page' => -1, 'orderby' => 'title', 'order' => 'ASC'));
-	return array_values(array_filter($books, 'sss_article_book_visible'));
+	return array_values(
+		array_filter(
+			$books,
+			static fn(WP_Post $book): bool => sss_article_book_visible($book, $allow_hidden_from_library)
+		)
+	);
 }
 
 function sss_article_books_for_trope(WP_Post $trope): array {
@@ -834,10 +904,13 @@ function sss_render_weekly_obsession_banner(): string {
 	if (!function_exists('sss_get_current_newsletter_issue') || !function_exists('sss_get_obsession_book')) {
 		return '';
 	}
-	$issue = sss_get_current_newsletter_issue();
-	$book = null;
+
+	$context = function_exists('sss_get_current_obsession_context') ? sss_get_current_obsession_context() : array();
+	$issue   = $context['issue'] ?? sss_get_current_newsletter_issue();
+	$book    = $context['book'] ?? null;
+
 	if ($issue) {
-		$book = sss_article_post(sss_article_field('book', $issue->ID, null));
+		$book = $book instanceof WP_Post ? $book : sss_article_post(sss_article_field('book', $issue->ID, null));
 		if (!$book) {
 			$book = sss_article_post(sss_article_field('library_book', $issue->ID, null));
 		}
@@ -845,11 +918,34 @@ function sss_render_weekly_obsession_banner(): string {
 			$book = sss_get_obsession_book($issue);
 		}
 	}
+	if (!$book instanceof WP_Post && function_exists('sss_get_latest_featured_book')) {
+		$book = sss_get_latest_featured_book();
+	}
 	if (!$book) {
 		return '';
 	}
-	$tropes = array_slice(sss_article_tropes($book->ID), 0, 2);
-	if (!$tropes) {
+
+	$chips = array_slice(sss_article_tropes($book->ID), 0, 2);
+	if (!$chips) {
+		$shelf = sss_article_shelf($book->ID);
+		if (!empty($shelf['name'])) {
+			$chips[] = array(
+				'name'  => $shelf['name'],
+				'slug'  => $shelf['slug'] ?? sanitize_title((string) $shelf['name']),
+				'emoji' => '📚',
+				'url'   => home_url('/' . sanitize_title((string) ($shelf['slug'] ?? $shelf['name'])) . '-books/'),
+			);
+		}
+	}
+	if (!$chips) {
+		$chips[] = array(
+			'name'  => get_the_title($book),
+			'slug'  => $book->post_name,
+			'emoji' => '📖',
+			'url'   => get_permalink($book),
+		);
+	}
+	if (!$chips) {
 		return '';
 	}
 	$url = function_exists('bbb_resolve_page_url') ? bbb_resolve_page_url('weekly-obsession') : home_url('/pages/weekly-obsession/');
@@ -860,9 +956,9 @@ function sss_render_weekly_obsession_banner(): string {
   <p class="blog-obsession-banner__text">
     see the book everyone is talking about...
     think
-    <?php foreach ($tropes as $i => $trope) : ?>
+    <?php foreach ($chips as $i => $trope) : ?>
 	    <?php echo 1 === $i ? 'and' : ''; ?>
-	    <?php $trope_url = function_exists('bbb_trope_page_url') ? bbb_trope_page_url((string) ($trope['name'] ?? ''), (string) ($trope['slug'] ?? $trope['handle'] ?? '')) : home_url('/' . sanitize_title((string) ($trope['slug'] ?? $trope['handle'] ?? $trope['name'] ?? '')) . '-books/'); ?>
+	    <?php $trope_url = !empty($trope['url']) ? (string) $trope['url'] : (function_exists('bbb_trope_page_url') ? bbb_trope_page_url((string) ($trope['name'] ?? ''), (string) ($trope['slug'] ?? $trope['handle'] ?? '')) : home_url('/' . sanitize_title((string) ($trope['slug'] ?? $trope['handle'] ?? $trope['name'] ?? '')) . '-books/')); ?>
 	    <span class="blog-obsession-banner__trope" data-trope-url="<?php echo esc_url($trope_url); ?>" role="link" tabindex="0">
 	      <span class="blog-obsession-banner__tropeEmoji"><?php echo function_exists('bbb_trope_emoji_html') ? bbb_trope_emoji_html((string) ($trope['name'] ?? ''), $trope['emoji'] ?? '', (string) ($trope['slug'] ?? $trope['handle'] ?? '')) : esc_html(((string) ($trope['emoji'] ?? '') ?: '🖤')); ?></span>
 	      <?php echo esc_html($trope['name']); ?>
@@ -925,6 +1021,8 @@ function sss_bookpage_suggestions_shortcode($atts): string {
 		array(
 			'post_id' => get_the_ID(),
 			'source'  => '',
+			'include' => '',
+			'first'   => '',
 			'count'   => 3,
 		),
 		$atts,
@@ -936,23 +1034,134 @@ function sss_bookpage_suggestions_shortcode($atts): string {
 		return '';
 	}
 
-	$cards = '';
-	$count = 0;
+	$count = max(1, min(6, (int) $atts['count']));
+	$books = array();
+	$seen  = array((int) $source->ID => true);
+	$pinned_sources = array_filter(
+		array_map(
+			'trim',
+			explode(',', (string) ($atts['first'] ?: $atts['include']))
+		)
+	);
+
+	foreach ($pinned_sources as $pinned_source) {
+		$pinned = sss_article_book_from_name($pinned_source);
+		if (!$pinned instanceof WP_Post || isset($seen[(int) $pinned->ID])) {
+			continue;
+		}
+
+		$books[] = $pinned;
+		$seen[(int) $pinned->ID] = true;
+		if (count($books) >= $count) {
+			break;
+		}
+	}
+
 	foreach (bbb_books_like_recommendations((int) $source->ID) as $suggestion) {
 		if (empty($suggestion['id'])) {
 			continue;
 		}
 
-		$cards .= sss_render_article_book_card((int) $suggestion['id']);
-		$count++;
-		if ($count >= max(1, (int) $atts['count'])) {
+		$suggestion_id = (int) $suggestion['id'];
+		if (isset($seen[$suggestion_id])) {
+			continue;
+		}
+
+		$book = get_post($suggestion_id);
+		if (!$book instanceof WP_Post) {
+			continue;
+		}
+
+		$books[] = $book;
+		$seen[$suggestion_id] = true;
+		if (count($books) >= $count) {
 			break;
 		}
 	}
 
-	return $cards;
+	if (!$books) {
+		return '';
+	}
+
+	ob_start();
+	?>
+	<div class="bbb-bookpage-suggestions" data-bookpage-suggestions>
+		<h2 class="bbb-bookpage-suggestions__title">same energy, different obsession</h2>
+		<?php foreach (array_slice($books, 0, $count) as $book) : ?>
+			<?php echo sss_render_bookpage_suggestion_mini_card((int) $book->ID); ?>
+		<?php endforeach; ?>
+	</div>
+	<?php
+	return ob_get_clean();
 }
 add_shortcode('sss_bookpage_suggestions', 'sss_bookpage_suggestions_shortcode');
+
+function sss_bookpage_suggestion_reason(int $book_id): string {
+	$data = array();
+	if (function_exists('sss_article_book_data')) {
+		$data = sss_article_book_data($book_id);
+	} elseif (function_exists('sss_book_data')) {
+		$book = get_post($book_id);
+		if ($book instanceof WP_Post) {
+			$data = sss_book_data($book);
+		}
+	}
+
+	$mini = trim(wp_strip_all_tags((string) ($data['mini'] ?? get_post_meta($book_id, '_bbb_mini_note', true))));
+	if ('' !== $mini) {
+		return $mini;
+	}
+
+	return 'same addictive pull, different obsession to lose sleep over.';
+}
+
+function sss_render_bookpage_suggestion_mini_card(int $book_id): string {
+	$cover    = function_exists('bbb_get_book_cover_url') ? bbb_get_book_cover_url($book_id) : '';
+	$title    = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title(get_the_title($book_id)) : get_the_title($book_id);
+	$author   = function_exists('bbb_get_book_author') ? bbb_get_book_author($book_id) : (string) get_post_meta($book_id, '_bbb_author', true);
+	$spice    = (int) get_post_meta($book_id, '_bbb_spice', true);
+	$data     = function_exists('bbb_get_book_data_attrs') ? bbb_get_book_data_attrs($book_id) : '';
+	$url      = get_permalink($book_id) ?: home_url('/books/' . get_post_field('post_name', $book_id) . '/');
+	$shelf    = function_exists('bbb_get_book_shelf_name') ? bbb_get_book_shelf_name($book_id) : '';
+	$cover_alt = function_exists('bbb_book_cover_alt') ? bbb_book_cover_alt($title, $author, $shelf) : $title . ' book cover';
+	$trope    = '';
+	$reason   = sss_bookpage_suggestion_reason($book_id);
+	$terms    = get_the_terms($book_id, 'bbb_trope');
+	if ($terms && !is_wp_error($terms)) {
+		$term = $terms[0];
+		$emoji = (string) get_term_meta($term->term_id, 'trope_emoji', true);
+		$trope = function_exists('bbb_trope_label_html') ? bbb_trope_label_html($term->name, $emoji, $term->slug) : esc_html($term->name);
+	}
+
+	ob_start();
+	?>
+	<article class="bbb-bookpage-suggestion sss-lib__book">
+		<a class="bbb-bookpage-suggestion__link" href="<?php echo esc_url($url); ?>" aria-label="<?php echo esc_attr('read more about ' . $title); ?>">
+			<span class="bbb-bookpage-suggestion__cover">
+				<?php if ($spice > 0) : ?>
+					<span class="bbb-bookpage-suggestion__spice" aria-label="<?php echo esc_attr((string) $spice); ?> spice"><?php echo esc_html(str_repeat('🌶', min(5, $spice))); ?></span>
+				<?php endif; ?>
+				<?php if ($cover) : ?>
+					<img src="<?php echo esc_url((string) $cover); ?>" alt="<?php echo esc_attr($cover_alt); ?>" loading="lazy">
+				<?php endif; ?>
+			</span>
+			<span class="bbb-bookpage-suggestion__body">
+				<span class="bbb-bookpage-suggestion__title"><?php echo esc_html($title); ?></span>
+				<?php if ($author) : ?>
+					<span class="bbb-bookpage-suggestion__author"><?php echo esc_html($author); ?></span>
+				<?php endif; ?>
+				<?php if ($trope) : ?>
+					<span class="bbb-bookpage-suggestion__trope"><?php echo wp_kses_post($trope); ?></span>
+				<?php endif; ?>
+				<?php if ($reason) : ?>
+					<span class="bbb-bookpage-suggestion__reason"><?php echo esc_html($reason); ?></span>
+				<?php endif; ?>
+			</span>
+		</a>
+	</article>
+	<?php
+	return ob_get_clean();
+}
 
 function sss_book_trope_shortcode($atts): string {
 	$atts = shortcode_atts(array('index' => 1, 'post_id' => get_the_ID()), $atts, 'sss_book_trope');
@@ -1027,6 +1236,87 @@ function sss_bookcard_shortcode($atts): string {
 add_shortcode('sss_bookcard', 'sss_bookcard_shortcode');
 add_shortcode('bookcard', 'sss_bookcard_shortcode');
 
+function sss_filter_bookcard_shortcode($atts): string {
+	$atts    = shortcode_atts(array('post_id' => get_the_ID()), $atts, 'sss_filterbookcard');
+	$post_id = (int) $atts['post_id'];
+	$books   = sss_article_books_for_post($post_id);
+	if (!$books) {
+		return '';
+	}
+
+	$genres = array();
+	$spice_levels = array();
+	foreach ($books as $book) {
+		$data = sss_article_book_data($book->ID);
+		$genre_slug = sanitize_title((string) ($data['shelf']['slug'] ?? ''));
+		$genre_name = trim((string) ($data['shelf']['name'] ?? ''));
+		if ('' !== $genre_slug && '' !== $genre_name) {
+			$genres[$genre_slug] = $genre_name;
+		}
+
+		$spice = max(0, min(5, (int) ($data['spice'] ?? 0)));
+		if ($spice > 0) {
+			$spice_levels[$spice] = $spice;
+		}
+	}
+	asort($genres, SORT_NATURAL | SORT_FLAG_CASE);
+	ksort($spice_levels, SORT_NUMERIC);
+
+	$midpoint  = (int) floor(count($books) / 2);
+	$obsession = sss_render_weekly_obsession_banner();
+
+	ob_start();
+	?>
+<div class="guide-bookcard guide-bookcard--filter" data-guide-bookcard data-filter-bookcard data-guide-title="<?php echo esc_attr(get_the_title($post_id)); ?>">
+  <div class="guide-bookcard__head">
+    <div>
+      <div class="guide-bookcard__header">filter this reading list</div>
+    </div>
+    <button type="button" class="sss-lib__exportBtn guide-bookcard__export" data-guide-export>save this list</button>
+  </div>
+  <div class="guide-bookcard__filters" aria-label="filter books">
+    <div class="guide-bookcard__filterGroup" data-filter-bookcard-spice>
+      <span class="guide-bookcard__filterLabel">spice</span>
+      <button type="button" class="guide-bookcard__filterButton is-active" data-filter-spice="" aria-pressed="true">all</button>
+      <?php foreach ($spice_levels as $level) : ?>
+        <button type="button" class="guide-bookcard__filterButton" data-filter-spice="<?php echo esc_attr((string) $level); ?>" aria-pressed="false" aria-label="<?php echo esc_attr((string) $level); ?> out of 5 spice">
+          <span class="guide-bookcard__spiceFull"><?php echo esc_html(str_repeat('🌶', (int) $level)); ?></span>
+          <span class="guide-bookcard__spiceCompact"><?php echo esc_html((string) $level); ?>🌶</span>
+        </button>
+      <?php endforeach; ?>
+    </div>
+    <?php if ($genres) : ?>
+      <label class="guide-bookcard__filterSelectWrap">
+        <span class="guide-bookcard__filterLabel">genre</span>
+        <select class="guide-bookcard__filterSelect" data-filter-genre>
+          <option value="">all genres</option>
+          <?php foreach ($genres as $slug => $name) : ?>
+            <option value="<?php echo esc_attr((string) $slug); ?>"><?php echo esc_html((string) $name); ?></option>
+          <?php endforeach; ?>
+        </select>
+      </label>
+    <?php endif; ?>
+    <button type="button" class="guide-bookcard__filterReset" data-filter-reset>reset</button>
+  </div>
+  <div class="guide-bookcard__affiliate-note">some links may be affiliate links, so thank you for supporting the recs. &lt;3</div>
+  <div class="guide-bookcard__list">
+    <?php foreach ($books as $i => $book) : ?>
+      <?php if ($obsession && $i === $midpoint) : ?>
+      <div class="guide-bookcard__obsession" data-filter-bookcard-extra><?php echo $obsession; ?></div>
+      <?php endif; ?>
+      <?php $book_data = sss_article_book_data($book->ID); ?>
+      <div class="guide-bookcard__item" data-filter-bookcard-item data-filter-spice="<?php echo esc_attr((string) max(0, min(5, (int) ($book_data['spice'] ?? 0)))); ?>" data-filter-genre="<?php echo esc_attr(sanitize_title((string) ($book_data['shelf']['slug'] ?? ''))); ?>">
+        <?php echo sss_render_article_book_card($book->ID); ?>
+      </div>
+    <?php endforeach; ?>
+  </div>
+</div>
+	<?php
+	return ob_get_clean();
+}
+add_shortcode('sss_filterbookcard', 'sss_filter_bookcard_shortcode');
+add_shortcode('filterbookcard', 'sss_filter_bookcard_shortcode');
+
 function sss_pillar_bookcard_shortcode($atts): string {
 	$atts = shortcode_atts(array('post_id' => get_the_ID()), $atts, 'sss_pillar_bookcard');
 	$post_id = (int) $atts['post_id'];
@@ -1074,6 +1364,119 @@ function sss_pillar_bookcard_shortcode($atts): string {
 }
 add_shortcode('sss_pillar_bookcard', 'sss_pillar_bookcard_shortcode');
 add_shortcode('pillarbookcard', 'sss_pillar_bookcard_shortcode');
+
+function bbb_book_spicy_chapter_number_words(int $number): string {
+	$number = max(0, min(999, $number));
+	$ones = array(
+		0 => 'zero',
+		1 => 'one',
+		2 => 'two',
+		3 => 'three',
+		4 => 'four',
+		5 => 'five',
+		6 => 'six',
+		7 => 'seven',
+		8 => 'eight',
+		9 => 'nine',
+		10 => 'ten',
+		11 => 'eleven',
+		12 => 'twelve',
+		13 => 'thirteen',
+		14 => 'fourteen',
+		15 => 'fifteen',
+		16 => 'sixteen',
+		17 => 'seventeen',
+		18 => 'eighteen',
+		19 => 'nineteen',
+	);
+	$tens = array(
+		2 => 'twenty',
+		3 => 'thirty',
+		4 => 'forty',
+		5 => 'fifty',
+		6 => 'sixty',
+		7 => 'seventy',
+		8 => 'eighty',
+		9 => 'ninety',
+	);
+
+	if ($number < 20) {
+		$words = $ones[$number];
+	} elseif ($number < 100) {
+		$ten = intdiv($number, 10);
+		$remainder = $number % 10;
+		$words = $tens[$ten] . ($remainder ? '-' . $ones[$remainder] : '');
+	} else {
+		$hundreds = intdiv($number, 100);
+		$remainder = $number % 100;
+		$words = $ones[$hundreds] . ' hundred' . ($remainder ? ' ' . bbb_book_spicy_chapter_number_words($remainder) : '');
+	}
+
+	return implode('-', array_map('ucfirst', explode('-', ucwords($words))));
+}
+
+function bbb_book_spicy_chapters_normalized(int $book_id): array {
+	$chapters = function_exists('bbb_book_spicy_chapters') ? bbb_book_spicy_chapters($book_id) : array();
+	if (!$chapters) {
+		$raw = get_post_meta($book_id, '_bbb_spicy_chapters', true);
+		$chapters = is_scalar($raw) ? preg_split('/\r\n|\r|\n/', (string) $raw) ?: array() : array();
+	}
+
+	$normalized = array();
+	foreach ($chapters as $chapter) {
+		foreach (preg_split('/[,;]+/', (string) $chapter) ?: array() as $part) {
+			$part = trim(wp_strip_all_tags($part));
+			if ('' !== $part) {
+				$normalized[] = $part;
+			}
+		}
+	}
+
+	return array_values(array_unique($normalized));
+}
+
+function bbb_book_spicy_chapter_label(string $chapter): string {
+	$chapter = trim(wp_strip_all_tags($chapter));
+	if (preg_match('/\d+/', $chapter, $matches)) {
+		return 'Chapter ' . bbb_book_spicy_chapter_number_words((int) $matches[0]);
+	}
+
+	return $chapter;
+}
+
+function bbb_book_spicy_chapters_shortcode($atts, ?string $content = null): string {
+	$atts = shortcode_atts(array('name' => ''), is_array($atts) ? $atts : array(), 'bookspicychapters');
+	$name = trim((string) ($atts['name'] ?: $content));
+	if ('' === $name) {
+		return '';
+	}
+
+	$book = sss_article_book_from_name($name);
+	if (!$book instanceof WP_Post) {
+		return '';
+	}
+
+	$chapters = bbb_book_spicy_chapters_normalized((int) $book->ID);
+	if (!$chapters) {
+		return '';
+	}
+
+	$title = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title(get_the_title($book)) : get_the_title($book);
+
+	ob_start();
+	?>
+<div class="blog-book-spicy-chapters" aria-label="<?php echo esc_attr($title); ?> spicy chapters">
+  <p class="blog-book-spicy-chapters__intro" style="color:#f6a9bd;">a few to start with:</p>
+  <div class="blog-book-spicy-chapters__list">
+    <?php foreach ($chapters as $chapter) : ?>
+    <p>- <?php echo esc_html(bbb_book_spicy_chapter_label((string) $chapter)); ?></p>
+    <?php endforeach; ?>
+  </div>
+</div>
+	<?php
+	return ob_get_clean();
+}
+add_shortcode('bookspicychapters', 'bbb_book_spicy_chapters_shortcode');
 
 function sss_ku_shortcode($atts): string {
 	return '<div class="blog-ku-cta">

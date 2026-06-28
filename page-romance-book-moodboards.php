@@ -307,6 +307,30 @@ function bbb_moodboards_group_pin_url(array $group, array $books): string {
 	return function_exists('bbb_normalize_moodboard_pin_url') ? bbb_normalize_moodboard_pin_url($fallback_pin) : esc_url_raw($fallback_pin);
 }
 
+function bbb_moodboards_group_has_pin(array $group): bool {
+	if (!empty($group['pin'])) {
+		return true;
+	}
+
+	foreach ((array) ($group['books'] ?? array()) as $title) {
+		$book = bbb_moodboards_find_book((string) $title);
+		if ($book instanceof WP_Post && '' !== bbb_moodboards_pin_url_from_book($book)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+function bbb_moodboards_book_permalink(?WP_Post $book, array $manual_book = array()): string {
+	if ($book instanceof WP_Post) {
+		return get_permalink($book);
+	}
+
+	$review_url = trim((string) ($manual_book['review_url'] ?? ''));
+	return '' !== $review_url ? $review_url : '';
+}
+
 function bbb_moodboards_embed_title(array $group): string {
 	$label = trim((string) ($group['label'] ?? 'romance moodboard'));
 	if ('' === $label) {
@@ -357,6 +381,7 @@ function bbb_moodboards_render_manual_book(array $book, array $terms = array()):
 	$review_url = trim((string) ($book['review_url'] ?? ''));
 	$handle  = sanitize_title((string) ($book['handle'] ?? $title));
 	$why     = trim((string) ($book['why'] ?? ''));
+	$cover_alt = function_exists('bbb_book_cover_alt') ? bbb_book_cover_alt($title, $author, 'dark romance') : $title . ' book cover';
 	$terms[] = sanitize_title(implode(' ', $tropes));
 	$term_value = implode(' ', array_values(array_filter(array_unique(array_map('sanitize_title', $terms)))));
 	?>
@@ -401,7 +426,7 @@ function bbb_moodboards_render_manual_book(array $book, array $terms = array()):
 					<div class="sss-lib__floatSpice"><?php echo esc_html(str_repeat('🌶', $spice)); ?></div>
 				<?php endif; ?>
 				<?php if ('' !== $cover) : ?>
-					<img class="sss-lib__cover" src="<?php echo esc_url($cover); ?>" alt="<?php echo esc_attr($title); ?>" loading="lazy">
+					<img class="sss-lib__cover" src="<?php echo esc_url($cover); ?>" alt="<?php echo esc_attr($cover_alt); ?>" loading="lazy">
 				<?php else : ?>
 					<div class="bbb-moodboards__manualCover">
 						<span>pin-backed pick</span>
@@ -435,13 +460,100 @@ function bbb_moodboards_book_shelf_slug(WP_Post $book): string {
 
 function bbb_moodboards_group_url_for_term(string $term): string {
 	$urls = array(
-		'dark-romance'       => '/dark-romance-books/',
-		'paranormal-romance' => '/paranormal-romance-books/',
-		'romantasy'          => '/romantasy-books/',
-		'sports-romance'     => '/sports-romance-books/',
+		'contemporary-romance' => '',
+		'dark-romance'         => '/dark-romance-books/',
+		'dystopian-romance'    => '',
+		'paranormal-romance'   => '/paranormal-romance-books/',
+		'romantasy'            => '/romantasy-books/',
+		'sports-romance'       => '/sports-romance-books/',
 	);
 
 	return $urls[$term] ?? '';
+}
+
+function bbb_moodboards_shelf_config(string $term): array {
+	$config = array(
+		'contemporary-romance' => array(
+			'eyebrow' => 'contemporary romance shelf',
+			'title'   => 'real-world ache. multiple spirals.',
+			'copy'    => 'swipe through contemporary boards for second chances, small towns, soft history, and the feelings that still have receipts.',
+		),
+		'dark-romance'         => array(
+			'eyebrow' => 'dark romance shelf',
+			'title'   => 'dark romance aesthetic books',
+			'copy'    => 'for readers who want their dark romance moodboards smoky, possessive, dangerous, and just soft enough to hurt. start here when you want obsession, morally gray men, mafia edges, dark academia, or the kind of tension that feels like a warning label.',
+		),
+		'dystopian-romance'    => array(
+			'eyebrow' => 'dystopian romance shelf',
+			'title'   => 'dangerous worlds. devoted hearts.',
+			'copy'    => 'swipe through the boards where survival, loyalty, and obsession all share the same air.',
+		),
+		'paranormal-romance'   => array(
+			'eyebrow' => 'paranormal romance shelf',
+			'title'   => 'paranormal romance moodboards',
+			'copy'    => 'for readers who like the romance haunted, bonded, bitten, fated, or otherwise not obeying human rules. these boards lean into supernatural atmosphere, shadowy devotion, monster-adjacent tension, and the feeling that the love interest already knows your soul.',
+		),
+		'romantasy'            => array(
+			'eyebrow' => 'romantasy shelf',
+			'title'   => 'romantasy moodboard shelf',
+			'copy'    => 'for readers who want magic with consequences, trials with teeth, and a romance that feels written into the bones of the world. browse romantasy aesthetics for feral bonds, forbidden pull, deadly courts, and heroines sharpening in real time.',
+		),
+		'sports-romance'       => array(
+			'eyebrow' => 'sports romance shelf',
+			'title'   => 'sports romance aesthetics',
+			'copy'    => 'for readers who want game-day pressure, locker room looks, found family chaos, and athletes who are softer than their public image. this shelf gathers hockey, baseball, basketball, and competition-era romance moodboards without making you dig through every book page first.',
+		),
+	);
+
+	$fallback = ucwords(str_replace('-', ' ', $term));
+	return $config[$term] ?? array(
+		'eyebrow' => strtolower($fallback) . ' shelf',
+		'title'   => strtolower($fallback) . ' moodboards.',
+		'copy'    => 'swipe through the boards, then save the book that fits your current obsession.',
+	);
+}
+
+function bbb_moodboards_group_primary_term(array $group): string {
+	$terms = array_values(array_filter(array_map('sanitize_title', (array) ($group['terms'] ?? array()))));
+	return $terms[0] ?? 'romance';
+}
+
+function bbb_moodboards_group_shelves(array $groups): array {
+	$order   = array('dark-romance', 'sports-romance', 'romantasy', 'contemporary-romance', 'dystopian-romance', 'paranormal-romance');
+	$shelves = array();
+
+	foreach ($groups as $group) {
+		if (!empty($group['preview_only'])) {
+			continue;
+		}
+		if (!bbb_moodboards_group_has_pin($group)) {
+			continue;
+		}
+
+		$term = bbb_moodboards_group_primary_term($group);
+		if (!isset($shelves[$term])) {
+			$shelves[$term] = array(
+				'term'   => $term,
+				'groups' => array(),
+			);
+		}
+
+		$shelves[$term]['groups'][] = $group;
+	}
+
+	uksort(
+		$shelves,
+		static function (string $left, string $right) use ($order): int {
+			$left_index  = array_search($left, $order, true);
+			$right_index = array_search($right, $order, true);
+			$left_index  = false === $left_index ? PHP_INT_MAX : $left_index;
+			$right_index = false === $right_index ? PHP_INT_MAX : $right_index;
+
+			return $left_index === $right_index ? strcasecmp($left, $right) : $left_index <=> $right_index;
+		}
+	);
+
+	return array_values($shelves);
 }
 
 function bbb_moodboards_apply_auto_books(array $groups): array {
@@ -484,28 +596,15 @@ function bbb_moodboards_apply_auto_books(array $groups): array {
 
 		$term       = bbb_moodboards_book_shelf_slug($book);
 		$shelf_name = ucwords(str_replace('-', ' ', $term));
-		$merged     = false;
 
-		foreach ($groups as $index => $group) {
-			if (!empty($group['preview_only']) || !empty($group['pin']) || !in_array($term, (array) ($group['terms'] ?? array()), true)) {
-				continue;
-			}
-
-			$groups[$index]['books'][] = $title;
-			$merged                    = true;
-			break;
-		}
-
-		if (!$merged) {
-			$groups[] = array(
-				'label' => strtolower($shelf_name) . ' moodboard',
-				'title' => strtolower($title) . ' moodboard',
-				'copy'  => 'a reader-saved board pulled straight from the book record, ready to pin, save, and open.',
-				'terms' => array($term),
-				'books' => array($title),
-				'url'   => bbb_moodboards_group_url_for_term($term),
-			);
-		}
+		$groups[] = array(
+			'label' => strtolower($shelf_name) . ' moodboard',
+			'title' => strtolower($title) . ' moodboard',
+			'copy'  => 'a reader-saved board pulled straight from the book record, ready to pin, save, and open.',
+			'terms' => array($term),
+			'books' => array($title),
+			'url'   => bbb_moodboards_group_url_for_term($term),
+		);
 	}
 
 	return $groups;
@@ -532,19 +631,30 @@ function bbb_moodboards_render_group_inner(array $group): void {
 	} elseif (empty($books)) {
 		$books = bbb_moodboards_fallback_books(3);
 	}
-	$book_count = count($books) + (!empty($manual_book) ? 1 : 0);
-	$pin_url    = bbb_moodboards_group_pin_url($group, $books);
+	$books       = array_slice($books, 0, 1);
+	$book_count  = count($books) + (!empty($manual_book) ? 1 : 0);
+	$primary_book = $books[0] ?? null;
+	$pin_url     = bbb_moodboards_group_pin_url($group, $books);
+	if ('' === $pin_url) {
+		return;
+	}
+
+	$full_url    = bbb_moodboards_book_permalink($primary_book instanceof WP_Post ? $primary_book : null, $manual_book);
+	$cta_url     = '' !== $full_url ? $full_url : (!empty($group['url']) ? home_url((string) $group['url']) : '');
 	?>
 	<div class="bbb-moodboards__copy">
 		<p class="bbb-moodboards__eyebrow"><?php echo esc_html((string) ($group['label'] ?? 'moodboard')); ?></p>
 		<h2>
-			<?php if (!empty($group['url'])) : ?>
-				<a href="<?php echo esc_url(home_url((string) $group['url'])); ?>"><?php echo esc_html((string) ($group['title'] ?? 'moodboard')); ?></a>
+			<?php if ('' !== $cta_url) : ?>
+				<a href="<?php echo esc_url($cta_url); ?>"><?php echo esc_html((string) ($group['title'] ?? 'moodboard')); ?></a>
 			<?php else : ?>
 				<?php echo esc_html((string) ($group['title'] ?? 'moodboard')); ?>
 			<?php endif; ?>
 		</h2>
 		<p><?php echo esc_html((string) ($group['copy'] ?? '')); ?></p>
+		<?php if ('' !== $cta_url) : ?>
+			<a class="bbb-moodboards__fullLink" href="<?php echo esc_url($cta_url); ?>">see the full board + breakdown</a>
+		<?php endif; ?>
 	</div>
 	<div class="bbb-moodboards__pinPanel" aria-label="pinterest moodboard">
 		<?php if ('' !== $pin_url) : ?>
@@ -558,12 +668,6 @@ function bbb_moodboards_render_group_inner(array $group): void {
 				loading="lazy"
 				title="<?php echo esc_attr(bbb_moodboards_embed_title($group)); ?>"
 			></iframe>
-		<?php else : ?>
-			<div class="bbb-moodboards__pinFrame">
-				<span>pin embed goes here</span>
-				<strong>save the aesthetic</strong>
-				<small>drop the pinterest pin url into this board when it is ready.</small>
-			</div>
 		<?php endif; ?>
 	</div>
 	<div class="bbb-moodboards__books">
@@ -641,6 +745,123 @@ $featured_groups = array(
 		'url'   => '/romantasy-books/',
 	),
 	array(
+		'label' => 'contemporary romance moodboard',
+		'title' => 'forever, almosts, and the timing that ruins you',
+		'copy'  => 'for the books that feel like soft history, unfinished business, and one more chance you should probably not take.',
+		'terms' => array('contemporary-romance'),
+		'books' => array('When We Had Forever'),
+		'pin'   => 'https://assets.pinterest.com/ext/embed.html?id=999728817300615265',
+	),
+	array(
+		'label' => 'sports romance moodboard',
+		'title' => 'baseball boys, soft ache, and one reason to stay',
+		'copy'  => 'for the sports romance shelf with old feelings, close calls, and a heart that refuses to leave quietly.',
+		'terms' => array('sports-romance'),
+		'books' => array("Please Don't Go"),
+		'pin'   => 'https://assets.pinterest.com/ext/embed.html?id=999728817300457611',
+		'url'   => '/sports-romance-books/',
+	),
+	array(
+		'label' => 'sports romance moodboard',
+		'title' => 'pressure, pretend lines, and the moment it breaks',
+		'copy'  => 'for sports romance with fake dating, messy proximity, and feelings that do not stay in the game plan.',
+		'terms' => array('sports-romance'),
+		'books' => array('Breaking Point'),
+		'pin'   => 'https://assets.pinterest.com/ext/embed.html?id=999728817299499046',
+		'url'   => '/sports-romance-books/',
+	),
+	array(
+		'label' => 'contemporary romance moodboard',
+		'title' => 'lyrics, old wounds, and the song that still knows you',
+		'copy'  => 'for second chance romance with paper cuts, stage lights, and the kind of history that keeps humming.',
+		'terms' => array('contemporary-romance'),
+		'books' => array('The Words'),
+		'pin'   => 'https://assets.pinterest.com/ext/embed.html?id=999728817298743201',
+	),
+	array(
+		'label' => 'dystopian romance moodboard',
+		'title' => 'classified devotion and the war inside the want',
+		'copy'  => 'for dystopian romance that feels dangerous, loyal, and a little too close to the edge.',
+		'terms' => array('dystopian-romance'),
+		'books' => array('Until I Die'),
+		'pin'   => 'https://assets.pinterest.com/ext/embed.html?id=999728817298442173',
+	),
+	array(
+		'label' => 'dark romance moodboard',
+		'title' => 'venom, secrets, and the call you should not answer',
+		'copy'  => 'for dark romance with obsession, danger, and a mystery that keeps looking back at you.',
+		'terms' => array('dark-romance'),
+		'books' => array('Craving Venom'),
+		'pin'   => 'https://assets.pinterest.com/ext/embed.html?id=999728817297901973',
+	),
+	array(
+		'label' => 'contemporary romance moodboard',
+		'title' => 'small town heat, old trucks, and nowhere to hide',
+		'copy'  => 'for contemporary romance that feels dusty, intimate, and entirely too close to home.',
+		'terms' => array('contemporary-romance'),
+		'books' => array('The Endless Fall'),
+		'pin'   => 'https://assets.pinterest.com/ext/embed.html?id=999728817297637452',
+	),
+	array(
+		'label' => 'romantasy moodboard',
+		'title' => 'wolves, trials, and the bond that bites back',
+		'copy'  => 'for romantasy with feral stakes, deadly tests, and the kind of loyalty that does not ask nicely.',
+		'terms' => array('romantasy'),
+		'books' => array('Dire Bound'),
+		'pin'   => 'https://assets.pinterest.com/ext/embed.html?id=999728817297364708',
+		'url'   => '/romantasy-books/',
+	),
+	array(
+		'label' => 'sports romance moodboard',
+		'title' => 'hockey luck, single dad softness, and one risky bet',
+		'copy'  => 'for the sports romance shelf with warmth, chaos, and a grin that knows exactly what it is doing.',
+		'terms' => array('sports-romance'),
+		'books' => array('Lucky Shot'),
+		'pin'   => 'https://assets.pinterest.com/ext/embed.html?id=999728817297035771',
+		'url'   => '/sports-romance-books/',
+	),
+	array(
+		'label' => 'dark romance moodboard',
+		'title' => 'letters, locked rooms, and Paris after dark',
+		'copy'  => 'for dark academia romance with secrets, sharp edges, and more than one beautiful bad idea.',
+		'terms' => array('dark-romance'),
+		'books' => array('Dear Reader'),
+		'pin'   => 'https://assets.pinterest.com/ext/embed.html?id=999728817296786823',
+	),
+	array(
+		'label' => 'dark romance moodboard',
+		'title' => 'bishops, vows, and the pretty face with a dark soul',
+		'copy'  => 'for mafia romance with power plays, marriage lines, and someone dangerous taking up too much space.',
+		'terms' => array('dark-romance'),
+		'books' => array('Bad Bishop'),
+		'pin'   => 'https://assets.pinterest.com/ext/embed.html?id=999728817296489532',
+	),
+	array(
+		'label' => 'dystopian romance moodboard',
+		'title' => 'silhouettes, blades, and the kingdom after the fall',
+		'copy'  => 'for dystopian romance with forced proximity, sharp loyalties, and a world that refuses to stay gentle.',
+		'terms' => array('dystopian-romance'),
+		'books' => array('Daggermouth'),
+		'pin'   => 'https://assets.pinterest.com/ext/embed.html?id=999728817295891964',
+	),
+	array(
+		'label' => 'dark romance moodboard',
+		'title' => 'therapy sessions, locked doors, and the game beneath it all',
+		'copy'  => 'for dark romance with captor-captive tension, mind games, and the kind of obsession that studies you back.',
+		'terms' => array('dark-romance'),
+		'books' => array('Born, Darkly'),
+		'pin'   => 'https://assets.pinterest.com/ext/embed.html?id=999728817295592921',
+	),
+	array(
+		'label' => 'romantasy moodboard',
+		'title' => 'trials, traitors, and the girl they should not underestimate',
+		'copy'  => 'for romantasy with forbidden pull, dangerous games, and a heroine learning exactly how sharp she can be.',
+		'terms' => array('romantasy'),
+		'books' => array('Powerless'),
+		'pin'   => 'https://assets.pinterest.com/ext/embed.html?id=999728817294761518',
+		'url'   => '/romantasy-books/',
+	),
+	array(
 		'label' => 'sports romance moodboard',
 		'title' => 'game day tension, locker room looks, and one more play',
 		'copy'  => 'for the shelf with competitive boys, soft landings, and the kind of tension that keeps score.',
@@ -651,27 +872,7 @@ $featured_groups = array(
 );
 
 $featured_groups = bbb_moodboards_apply_auto_books($featured_groups);
-
-$dark_romance_groups = array_values(
-	array_filter(
-		$featured_groups,
-		static fn(array $group): bool => empty($group['preview_only']) && in_array('dark-romance', (array) ($group['terms'] ?? array()), true)
-	)
-);
-$non_dark_romance_groups = array_values(
-	array_filter(
-		$featured_groups,
-		static fn(array $group): bool => empty($group['preview_only']) && !in_array('dark-romance', (array) ($group['terms'] ?? array()), true)
-	)
-);
-
-$filters = array(
-	'all'                => 'all',
-	'dark-romance'       => '🖤 dark romance',
-	'paranormal-romance' => '🌙 paranormal romance',
-	'romantasy'          => '🐉 romantasy',
-	'sports-romance'     => '🏒 sports romance',
-);
+$moodboard_shelves = bbb_moodboards_group_shelves($featured_groups);
 
 get_header();
 ?>
@@ -689,19 +890,6 @@ get_header();
 			</div>
 		</header>
 
-		<?php if (!empty($featured_groups[0])) : ?>
-			<section class="bbb-moodboards__preview" id="moodboard-preview" aria-label="romance moodboard preview">
-				<div class="bbb-moodboards__previewIntro">
-					<p class="bbb-moodboards__eyebrow">preview</p>
-					<h2>start with the visual.</h2>
-					<p>each moodboard gives you the aesthetic first, then the book, tropes, save button, and review link when one exists.</p>
-				</div>
-				<article class="bbb-moodboards__previewCard">
-					<?php bbb_moodboards_render_group_inner($featured_groups[0]); ?>
-				</article>
-			</section>
-		<?php endif; ?>
-
 		<section class="bbb-moodboards__how">
 			<h2>how it works</h2>
 			<div class="bbb-moodboards__steps">
@@ -711,94 +899,40 @@ get_header();
 			</div>
 		</section>
 
-		<section class="bbb-moodboards__aesthetic" aria-label="the aesthetic menu">
-			<div class="bbb-moodboards__aestheticHead">
-				<p class="bbb-moodboards__eyebrow">the aesthetic</p>
-				<h2>jump to your shelf.</h2>
-			</div>
-			<nav class="bbb-moodboards__filters" aria-label="filter romance moodboards by shelf">
-				<?php foreach ($filters as $filter => $label) : ?>
-					<button class="bbb-moodboards__filter<?php echo 'all' === $filter ? ' is-active' : ''; ?>" type="button" data-mood-filter="<?php echo esc_attr($filter); ?>" aria-pressed="<?php echo 'all' === $filter ? 'true' : 'false'; ?>">
-						<?php echo esc_html($label); ?>
-					</button>
-				<?php endforeach; ?>
-			</nav>
-		</section>
-
 		<div class="bbb-moodboards__wrap" id="moodboard-grid">
-			<?php if (!empty($dark_romance_groups)) : ?>
-				<section class="bbb-moodboards__shelfGroup" data-mood-group data-mood-terms="dark-romance">
+			<?php foreach ($moodboard_shelves as $shelf) : ?>
+				<?php
+				$shelf_term   = (string) ($shelf['term'] ?? 'romance');
+				$shelf_groups = (array) ($shelf['groups'] ?? array());
+				$shelf_config = bbb_moodboards_shelf_config($shelf_term);
+				$shelf_url    = bbb_moodboards_group_url_for_term($shelf_term);
+				?>
+				<section class="bbb-moodboards__shelfGroup" id="<?php echo esc_attr('moodboard-' . $shelf_term); ?>" data-mood-group data-mood-terms="<?php echo esc_attr($shelf_term); ?>">
 					<div class="bbb-moodboards__shelfHeader">
-						<p class="bbb-moodboards__eyebrow">dark romance shelf</p>
-						<h2><a href="<?php echo esc_url(home_url('/dark-romance-books/')); ?>">one shelf. multiple spirals.</a></h2>
-						<p>swipe through the darker boards, then save the book that fits your current obsession.</p>
+						<p class="bbb-moodboards__eyebrow"><?php echo esc_html((string) $shelf_config['eyebrow']); ?></p>
+						<h2>
+							<?php if ('' !== $shelf_url) : ?>
+								<a href="<?php echo esc_url(home_url($shelf_url)); ?>"><?php echo esc_html((string) $shelf_config['title']); ?></a>
+							<?php else : ?>
+								<?php echo esc_html((string) $shelf_config['title']); ?>
+							<?php endif; ?>
+						</h2>
+						<p><?php echo esc_html((string) $shelf_config['copy']); ?></p>
 						<p class="bbb-moodboards__swipeCue bbb-moodboards__swipeCue--rail">swipe me</p>
 					</div>
-					<div class="bbb-moodboards__rail" aria-label="dark romance shelf moodboards">
-						<?php foreach ($dark_romance_groups as $group) : ?>
+					<div class="bbb-moodboards__rail" aria-label="<?php echo esc_attr((string) $shelf_config['eyebrow']); ?> moodboards">
+						<?php foreach ($shelf_groups as $group) : ?>
 							<article class="bbb-moodboards__slide">
 								<?php bbb_moodboards_render_group_inner($group); ?>
 							</article>
 						<?php endforeach; ?>
 					</div>
 				</section>
-			<?php endif; ?>
-
-			<?php foreach ($non_dark_romance_groups as $group) : ?>
-				<section class="bbb-moodboards__group" data-mood-group data-mood-terms="<?php echo esc_attr(implode(' ', $group['terms'])); ?>">
-					<?php bbb_moodboards_render_group_inner($group); ?>
-				</section>
 			<?php endforeach; ?>
 		</div>
-
-		<p class="bbb-moodboards__empty" data-mood-empty hidden>no boards on that shelf yet. try all.</p>
 	</section>
 
 	<?php get_template_part('template-parts/library/library-modal'); ?>
 </main>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-	const root = document.querySelector('[data-moodboards]');
-	if (!root) return;
-
-	const filters = Array.from(root.querySelectorAll('[data-mood-filter]'));
-	const groups = Array.from(root.querySelectorAll('[data-mood-group]'));
-	const empty = root.querySelector('[data-mood-empty]');
-	const grid = root.querySelector('#moodboard-grid');
-
-	filters.forEach(function (button) {
-		button.addEventListener('click', function () {
-			const filter = button.getAttribute('data-mood-filter') || 'all';
-			let shown = 0;
-
-			filters.forEach(function (item) {
-				const active = item === button;
-				item.classList.toggle('is-active', active);
-				item.setAttribute('aria-pressed', active ? 'true' : 'false');
-			});
-
-			groups.forEach(function (group) {
-				const terms = (group.getAttribute('data-mood-terms') || '').split(/\s+/);
-				const show = filter === 'all' || terms.indexOf(filter) !== -1;
-
-				group.querySelectorAll('[data-mood-book]').forEach(function (book) {
-					book.hidden = !show;
-				});
-
-				group.hidden = !show;
-				if (show) shown++;
-			});
-
-			if (empty) empty.hidden = shown > 0;
-			if (grid) {
-				window.setTimeout(function () {
-					grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
-				}, 80);
-			}
-		});
-	});
-});
-</script>
 
 <?php get_footer(); ?>

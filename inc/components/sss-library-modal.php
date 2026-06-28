@@ -12,6 +12,7 @@ if (!empty($GLOBALS['bbb_sss_library_modal_rendered'])) {
 }
 
 $GLOBALS['bbb_sss_library_modal_rendered'] = true;
+$bbb_modal_notes_url = function_exists('bbb_page_url') ? bbb_page_url('my-notes') : home_url('/my-notes/');
 ?>
 <div class="sss-lib__modal" hidden aria-hidden="true">
 	<div class="sss-lib__backdrop" data-close></div>
@@ -40,6 +41,9 @@ $GLOBALS['bbb_sss_library_modal_rendered'] = true;
 						<span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♡</span>
 						<span class="sss-lib__heartLabel" data-heart-label>save</span>
 					</span>
+					<button class="sss-lib__noteToggle sss-lib__noteToggle--modal" type="button" data-reader-note-toggle data-modal-note-toggle aria-label="add your private note">
+						<span class="sss-lib__noteIcon" aria-hidden="true">✎</span>
+					</button>
 					<div class="sss-lib__floatSpice sss-lib__mspice" data-mspice hidden></div>
 
 					<img class="sss-lib__mcover" alt="" loading="lazy" data-mcover>
@@ -53,6 +57,10 @@ $GLOBALS['bbb_sss_library_modal_rendered'] = true;
 					<a class="sss-lib__mbtn sss-lib__mbtn--ku" href="#" target="_blank" rel="noopener" data-ku-btn>read free on kindle unlimited</a>
 					<a class="sss-lib__mbtn sss-lib__mbtn--amazon" href="#" target="_blank" rel="noopener" data-amazon-btn>buy on amazon <span>· own it forever</span></a>
 					<a class="sss-lib__mbtn sss-lib__mbtn--bookshop" href="#" target="_blank" rel="noopener" data-bookshop-btn>prefer indie? bookshop.org →</a>
+				</div>
+				<div class="sss-lib__mnotes" data-modal-notes-actions>
+					<button class="sss-lib__mnoteBtn" type="button" data-reader-note-toggle data-modal-note-toggle>add note</button>
+					<a class="sss-lib__mnotesLink" href="<?php echo esc_url($bbb_modal_notes_url); ?>" data-modal-notes-link>my notes</a>
 				</div>
 			</div>
 

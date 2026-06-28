@@ -15,6 +15,52 @@ $books = function_exists('bbb_books_like_all_visible_books')
 
 $spice_books  = array();
 $spice_counts = array_fill(1, 5, 0);
+$spice_filter_options = array(
+	'genre' => array(),
+	'trope' => array(),
+);
+$spice_filter_key = static function (string $value): string {
+	return sanitize_title($value);
+};
+$spice_filter_label = static function ($value): string {
+	if ($value instanceof WP_Term) {
+		return (string) $value->name;
+	}
+
+	if ($value instanceof WP_Post) {
+		return get_the_title($value);
+	}
+
+	if (is_array($value)) {
+		foreach (array('name', 'label', 'title') as $key) {
+			if (!empty($value[$key]) && is_scalar($value[$key])) {
+				return (string) $value[$key];
+			}
+		}
+	}
+
+	return is_scalar($value) ? (string) $value : '';
+};
+$spice_filter_add = static function (string $kind, string $label) use (&$spice_filter_options, $spice_filter_key): void {
+	$label = trim($label);
+	if ('' === $label) {
+		return;
+	}
+
+	$key = $spice_filter_key($label);
+	if ('' === $key) {
+		return;
+	}
+
+	if (!isset($spice_filter_options[$kind][$key])) {
+		$spice_filter_options[$kind][$key] = array(
+			'label' => $label,
+			'count' => 0,
+		);
+	}
+
+	$spice_filter_options[$kind][$key]['count']++;
+};
 $spice_levels = array(
 	1 => array(
 		'peppers' => '🌶',
@@ -66,9 +112,28 @@ foreach ($books as $book) {
 
 	$spice_books[] = $book;
 	$spice_counts[$spice]++;
+
+	$shelf = trim($spice_filter_label($data['shelf'] ?? ''));
+	$spice_filter_add('genre', $shelf);
+	foreach ((array) ($data['tropes'] ?? array()) as $trope) {
+		if (is_array($trope)) {
+			$spice_filter_add('trope', (string) ($trope['name'] ?? ''));
+		} elseif (is_string($trope)) {
+			$spice_filter_add('trope', $trope);
+		}
+	}
+}
+
+foreach ($spice_filter_options as $kind => $options) {
+	uasort(
+		$options,
+		static fn(array $first, array $second): int => strcasecmp((string) $first['label'], (string) $second['label'])
+	);
+	$spice_filter_options[$kind] = $options;
 }
 ?>
 <section class="sss-lib sss-lib--spicePage" data-sss-lib="public">
+	<?php $society_layer = function_exists('bbb_society_private_layer_state') ? bbb_society_private_layer_state() : array('label' => 'the private layer', 'class' => 'private', 'url' => 'https://thesmutandsentimentsociety.substack.com/subscribe', 'cta' => 'enter the society'); ?>
 	<div class="sss-lib__wrap">
 		<header class="sss-tropeTop">
 			<div class="sss-tropeTop__left">
@@ -78,9 +143,9 @@ foreach ($books as $book) {
 			</div>
 			<div class="sss-tropeTop__right">
 				<div class="sss-lib__societyInviteCard">
-					<div class="sss-lib__societyInviteKicker">the private layer</div>
+					<div class="sss-lib__societyInviteKicker sss-lib__societyInviteKicker--<?php echo esc_attr((string) $society_layer['class']); ?>"><?php echo esc_html((string) $society_layer['label']); ?></div>
 					<div class="sss-lib__societyInviteTitle">join the society for the weekly recommendation</div>
-					<a href="https://thesmutandsentimentsociety.substack.com/subscribe" class="sss-lib__societyInviteBtn">enter the society</a>
+					<a href="<?php echo esc_url((string) $society_layer['url']); ?>" class="sss-lib__societyInviteBtn"><?php echo esc_html((string) $society_layer['cta']); ?></a>
 				</div>
 			</div>
 		</header>
@@ -116,6 +181,36 @@ foreach ($books as $book) {
 				<span class="sss-spiceDial__badge"><span data-spice-card-count>0</span><span>books</span></span>
 			</div>
 		</div>
+		<?php if ($spice_filter_options['genre'] || $spice_filter_options['trope']) : ?>
+			<div class="sss-spicePicker" data-spice-discovery-filter>
+				<label class="sss-spicePicker__field" for="sssSpiceDiscoveryFilter">
+					<span>genre / trope</span>
+					<select id="sssSpiceDiscoveryFilter" data-spice-discovery-select>
+						<option value="">all genres + tropes</option>
+						<?php if ($spice_filter_options['genre']) : ?>
+							<optgroup label="genres">
+								<?php foreach ($spice_filter_options['genre'] as $key => $option) : ?>
+									<option value="<?php echo esc_attr('genre:' . (string) $key); ?>">
+										<?php echo esc_html(strtolower((string) $option['label'])); ?>
+									</option>
+								<?php endforeach; ?>
+							</optgroup>
+						<?php endif; ?>
+						<?php if ($spice_filter_options['trope']) : ?>
+							<optgroup label="tropes">
+								<?php foreach ($spice_filter_options['trope'] as $key => $option) : ?>
+									<option value="<?php echo esc_attr('trope:' . (string) $key); ?>">
+										<?php echo esc_html(strtolower((string) $option['label'])); ?>
+									</option>
+								<?php endforeach; ?>
+							</optgroup>
+						<?php endif; ?>
+					</select>
+					<div class="sss-spicePicker__selected" data-spice-discovery-selected aria-live="polite"></div>
+				</label>
+				<button class="sss-spicePicker__clear" type="button" data-spice-discovery-clear hidden>clear</button>
+			</div>
+		<?php endif; ?>
 		<div class="sss-lib__grid sss-lib__grid--spicePage" id="sssSpiceGrid">
 			<?php
 			foreach ($spice_books as $book) {
@@ -127,10 +222,16 @@ foreach ($books as $book) {
 			}
 			?>
 		</div>
+		<p class="sss-spiceEmpty" data-spice-empty hidden>no books match that spice and trope yet.</p>
 		<div class="sss-lib__spiceActions">
 			<a class="sss-lib__spiceAction sss-lib__spiceAction--ghost" href="<?php echo esc_url(bbb_resolve_page_url('library')); ?>">← back to full library</a>
 			<a class="sss-lib__spiceAction" href="https://thesmutandsentimentsociety.substack.com/subscribe">join the society →</a>
 		</div>
+	</div>
+	<div id="sssTropePopup" class="sss-tropePopup" hidden>
+		<div class="sss-tropePopup__title">i want books by trope</div>
+		<div class="sss-tropePopup__list" id="sssTropePopupList"></div>
+		<button class="sss-tropePopup__close" id="sssTropePopupClose" type="button">×</button>
 	</div>
 	<?php bbb_render_component('library-modal'); ?>
 </section>

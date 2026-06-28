@@ -152,7 +152,8 @@ $finder_tropes = array_values(
 natcasesort($finder_tropes);
 $finder_tropes = array_values($finder_tropes);
 
-$join_url  = get_option('bbb_society_gate_member_url', 'https://thesmutandsentimentsociety.substack.com/subscribe');
+$society_layer = function_exists('bbb_society_private_layer_state') ? bbb_society_private_layer_state() : array('label' => 'the private layer', 'class' => 'private', 'url' => 'https://thesmutandsentimentsociety.substack.com/subscribe', 'cta' => 'enter the society');
+$join_url  = (string) $society_layer['url'];
 $login_url = home_url('/account/');
 ?>
 <section class="sss-lib__societyLayer sss-lib__societyLayer--<?php echo esc_attr(str_replace('_', '-', $mode)); ?>" id="<?php echo esc_attr($show_match ? 'society-matchmaker' : 'society-private-shelf'); ?>">
@@ -183,19 +184,11 @@ $login_url = home_url('/account/');
 						<?php endforeach; ?>
 					</select>
 				</label>
-				<label class="sss-lib__finderField" data-finder-step="2">
-					<span>pick the main trope</span>
+				<label class="sss-lib__finderField sss-lib__finderField--multi" data-finder-step="2">
+					<span>pick tropes</span>
+					<div class="sss-lib__finderSelected" id="sssFinderSelectedTropes" aria-live="polite"></div>
 					<select id="sssFinderTropeOne">
 						<option value="">choose a trope</option>
-						<?php foreach ($finder_tropes as $trope) : ?>
-							<option value="<?php echo esc_attr($trope); ?>"><?php echo esc_html($trope); ?></option>
-						<?php endforeach; ?>
-					</select>
-				</label>
-				<label class="sss-lib__finderField" data-finder-step="3">
-					<span>add a second mood</span>
-					<select id="sssFinderTropeTwo">
-						<option value="">surprise me</option>
 						<?php foreach ($finder_tropes as $trope) : ?>
 							<option value="<?php echo esc_attr($trope); ?>"><?php echo esc_html($trope); ?></option>
 						<?php endforeach; ?>
@@ -299,14 +292,14 @@ $login_url = home_url('/account/');
 				<?php endif; ?>
 			</div>
 			<div>
-				<p class="sss-lib__finderKicker">paid member access</p>
+				<p class="sss-lib__finderKicker sss-lib__societyInviteKicker--<?php echo esc_attr((string) $society_layer['class']); ?>"><?php echo esc_html((string) $society_layer['label']); ?></p>
 				<h3 class="sss-lib__finderTitle"><?php echo esc_html($show_match ? 'book matchmaker' : 'the private shelf'); ?></h3>
 				<p class="sss-lib__finderSub">
 					<?php echo esc_html($show_match ? 'paid members can use the full library matchmaker here.' : 'paid members can open the private shelf here.'); ?>
 				</p>
 			</div>
 			<div class="sss-lib__societyLockedActions">
-				<a class="sss-lib__finderBtn" href="<?php echo esc_url($join_url); ?>">join the society</a>
+				<a class="sss-lib__finderBtn" href="<?php echo esc_url($join_url); ?>"><?php echo esc_html((string) $society_layer['cta']); ?></a>
 				<a class="sss-lib__finderBtn sss-lib__finderBtn--ghost" href="<?php echo esc_url($login_url); ?>">log in</a>
 			</div>
 		</div>

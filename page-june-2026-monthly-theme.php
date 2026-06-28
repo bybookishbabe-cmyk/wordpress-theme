@@ -16,7 +16,10 @@ $is_paid_society_member = function_exists('bbb_reader_is_society') && bbb_reader
 $theme_release_at = '2026-06-01 00:00:00';
 $theme_is_released = current_time('Y-m-d H:i:s') >= $theme_release_at;
 $has_theme_access = $is_paid_society_member && $theme_is_released;
-$calendar_pdf_url = get_theme_file_uri($asset_base . '/downloads/June2026_Calendar.pdf');
+$calendar_pdf_path = $asset_base . '/downloads/June2026_Calendar.pdf';
+$calendar_pdf_url = function_exists('bbb_forced_theme_asset_download_url')
+	? bbb_forced_theme_asset_download_url($calendar_pdf_path, 'June2026_Calendar.pdf')
+	: get_theme_file_uri($calendar_pdf_path);
 $calendar_preview_url = get_theme_file_uri($asset_base . '/previews/june-2026-calendar.png');
 $canva_template_url = 'https://canva.link/595w9ekd1jv34re';
 $join_url = function_exists('bbb_substack_subscribe_url') ? bbb_substack_subscribe_url() : 'https://thesmutandsentimentsociety.substack.com/subscribe';
@@ -66,10 +69,10 @@ $designs = array(
 		'slogan'   => 'the kind of light you cannot fake',
 		'desc'     => 'bright orange, citrus, butterflies, torn paper, open sky. soft daylight maximalism. she is the warm part of summer.',
 		'vibe'     => array('bright citrus', 'monarchs', 'torn paper', 'golden'),
-		'image'    => 'previews/the-light-finds-you-first.png',
-		'mockup'   => 'previews/the-light-finds-you-first-mockup.png',
-		'wallpaper' => 'wallpapers/the-light-finds-you-first-wallpaper.png',
-		'file_key' => 'TheLightFindsYouFirst',
+		'image'    => 'previews/you-glow-different.png',
+		'mockup'   => 'previews/you-glow-different-mockup.png',
+		'wallpaper' => 'wallpapers/you-glow-different-wallpaper.png',
+		'file_key' => 'YouGlowDifferent',
 		'class'    => 'light',
 	),
 	array(
@@ -79,10 +82,10 @@ $designs = array(
 		'slogan'   => 'radiant by nature',
 		'desc'     => 'dark botanicals, marigolds, camera lens quiet. cinematic stillness. she blooms in the dark.',
 		'vibe'     => array('dark floral', 'botanical', 'cinematic', 'quiet fire'),
-		'image'    => 'previews/you-glow-different.png',
-		'mockup'   => 'previews/you-glow-different-mockup.png',
-		'wallpaper' => 'wallpapers/you-glow-different-wallpaper.png',
-		'file_key' => 'YouGlowDifferent',
+		'image'    => 'previews/the-light-finds-you-first.png',
+		'mockup'   => 'previews/the-light-finds-you-first-mockup.png',
+		'wallpaper' => 'wallpapers/the-light-finds-you-first-wallpaper.png',
+		'file_key' => 'TheLightFindsYouFirst',
 		'class'    => 'glow',
 	),
 );
@@ -341,13 +344,18 @@ get_header();
 				<?php
 				$book_title  = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title((string) $book['title']) : (string) $book['title'];
 				$book_author = function_exists('bbb_bookish_proper_name') ? bbb_bookish_proper_name((string) $book['author']) : (string) $book['author'];
+				$cover_alt   = function_exists('bbb_book_cover_alt') ? bbb_book_cover_alt($book_title, $book_author, (string) $book['shelf']) : $book_title . ' book cover';
+				$book_post   = get_page_by_path((string) $book['handle'], OBJECT, array('bbb_book', 'sss_book'));
+				$book_url    = $book_post instanceof WP_Post && get_permalink($book_post)
+					? (string) get_permalink($book_post)
+					: home_url('/books/' . sanitize_title((string) $book['handle']) . '/');
 				?>
 				<article
 					class="sss-lib__book bbb-burn-book<?php echo esc_attr(!$has_theme_access && $index >= 2 ? ' bbb-burn-preview-veil' : ''); ?>"
 					role="button"
 					tabindex="0"
 					data-handle="<?php echo esc_attr($book['handle']); ?>"
-					data-url="<?php echo esc_url(home_url('/library/?book=' . rawurlencode($book['handle']))); ?>"
+					data-url="<?php echo esc_url($book_url); ?>"
 					data-title="<?php echo esc_attr($book_title); ?>"
 					data-author="<?php echo esc_attr($book_author); ?>"
 					data-cover="<?php echo esc_url($book['cover']); ?>"
@@ -375,7 +383,7 @@ get_header();
 						<span class="sss-lib__floatSpice bbb-burn-book__spice" aria-label="<?php echo esc_attr((string) $book['spice'] . ' spice level'); ?>">
 							<?php echo esc_html(str_repeat('🌶', (int) $book['spice'])); ?>
 						</span>
-						<img class="sss-lib__cover bbb-burn-book__cover" src="<?php echo esc_url($book['cover']); ?>" alt="<?php echo esc_attr($book_title); ?> book cover" loading="lazy">
+						<img class="sss-lib__cover bbb-burn-book__cover" src="<?php echo esc_url($book['cover']); ?>" alt="<?php echo esc_attr($cover_alt); ?>" loading="lazy">
 					</span>
 					<div class="bbb-burn-book__body">
 						<h3><?php echo esc_html($book_title); ?></h3>
@@ -404,7 +412,7 @@ get_header();
 			</p>
 			<div class="bbb-burn-calendar__actions">
 				<?php if ($has_theme_access) : ?>
-					<a href="<?php echo esc_url($calendar_pdf_url); ?>" download>download calendar</a>
+					<a href="<?php echo esc_url($calendar_pdf_url); ?>" download data-burn-force-download>download calendar</a>
 					<a href="<?php echo esc_url($canva_template_url); ?>" target="_blank" rel="noopener">edit in canva</a>
 				<?php else : ?>
 					<a class="bbb-burn-locked" href="<?php echo esc_url($locked_url); ?>"<?php echo $locked_link_attrs; ?>><?php echo esc_html($theme_is_released ? 'unlock calendar' : 'calendar releases june 1'); ?></a>
@@ -438,12 +446,18 @@ get_header();
 			<?php foreach ($designs as $index => $design) : ?>
 				<article class="bbb-burn-wallpaper<?php echo esc_attr(!$has_theme_access && $index >= 2 ? ' bbb-burn-preview-veil' : ''); ?>">
 					<figure>
-						<img src="<?php echo esc_url(get_theme_file_uri($asset_base . '/' . $design['wallpaper'])); ?>" alt="<?php echo esc_attr($design['name']); ?> iphone wallpaper preview" loading="lazy">
+						<?php $wallpaper_path = $asset_base . '/' . $design['wallpaper']; ?>
+						<img src="<?php echo esc_url(get_theme_file_uri($wallpaper_path)); ?>" alt="<?php echo esc_attr($design['name']); ?> iphone wallpaper preview" loading="lazy">
 					</figure>
 					<div class="bbb-burn-wallpaper__body">
 						<h3><?php echo esc_html($design['name']); ?></h3>
 						<?php if ($has_theme_access) : ?>
-							<a href="<?php echo esc_url(get_theme_file_uri($asset_base . '/' . $design['wallpaper'])); ?>" download>download wallpaper</a>
+							<?php
+							$wallpaper_url = function_exists('bbb_forced_theme_asset_download_url')
+								? bbb_forced_theme_asset_download_url($wallpaper_path, basename((string) $design['wallpaper']))
+								: get_theme_file_uri($wallpaper_path);
+							?>
+							<a href="<?php echo esc_url($wallpaper_url); ?>" download data-burn-force-download>download wallpaper</a>
 						<?php else : ?>
 							<a class="bbb-burn-locked" href="<?php echo esc_url($locked_url); ?>"<?php echo $locked_link_attrs; ?>><?php echo esc_html($theme_is_released ? 'unlock wallpaper' : 'wallpaper releases june 1'); ?></a>
 						<?php endif; ?>
@@ -467,9 +481,9 @@ get_header();
 			<p class="bbb-burn-kicker">steal the color palette</p>
 			<div class="bbb-burn-swatches" aria-label="burn bright colors">
 				<?php foreach ($palette as $index => $color) : ?>
-					<button<?php echo $has_theme_access ? '' : ' class="bbb-burn-locked' . ($index >= 3 ? ' bbb-burn-preview-veil' : '') . '" disabled'; ?> type="button" style="--swatch:<?php echo esc_attr($color['hex']); ?>"<?php echo $has_theme_access ? ' data-copy-color="' . esc_attr($color['hex']) . '"' : ' aria-label="' . esc_attr('locked color ' . $color['name']) . '"'; ?>>
+					<button type="button" style="--swatch:<?php echo esc_attr($color['hex']); ?>" data-copy-color="<?php echo esc_attr($color['hex']); ?>">
 						<span><?php echo esc_html($color['name']); ?></span>
-						<strong><?php echo esc_html($has_theme_access ? strtolower($color['hex']) : $locked_release_label); ?></strong>
+						<strong><?php echo esc_html(strtolower($color['hex'])); ?></strong>
 					</button>
 				<?php endforeach; ?>
 			</div>
@@ -499,10 +513,13 @@ get_header();
 						<?php foreach ($sizes as $label => $pattern) : ?>
 							<?php
 							$file = sprintf($pattern, $design['file_key']);
-							$url = get_theme_file_uri($asset_base . '/downloads/' . $file);
+							$file_path = $asset_base . '/downloads/' . $file;
+							$url = function_exists('bbb_forced_theme_asset_download_url')
+								? bbb_forced_theme_asset_download_url($file_path, $file)
+								: get_theme_file_uri($file_path);
 							?>
 							<?php if ($has_theme_access) : ?>
-								<a href="<?php echo esc_url($url); ?>" download><?php echo esc_html($label); ?></a>
+								<a href="<?php echo esc_url($url); ?>" download data-burn-force-download><?php echo esc_html($label); ?></a>
 							<?php else : ?>
 								<a class="bbb-burn-locked" href="<?php echo esc_url($locked_url); ?>"<?php echo $locked_link_attrs; ?>><?php echo esc_html($theme_is_released ? $label . ' locked' : $label . ' releases june 1'); ?></a>
 							<?php endif; ?>

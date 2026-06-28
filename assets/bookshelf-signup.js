@@ -138,6 +138,14 @@
     }
   }
 
+  function getStoredRatings(){
+    try {
+      return JSON.parse(localStorage.getItem("sssBookRatings") || "{}") || {};
+    } catch (err) {
+      return {};
+    }
+  }
+
   function getBookSnapshot(book){
     if (!book) return null;
     return {
@@ -212,6 +220,7 @@
     if (!supabaseClient || !emailNormalized) return;
 
     var statuses = getStoredStatuses();
+    var ratings = getStoredRatings();
     var keys = Object.keys(statuses || {});
 
     try {
@@ -242,7 +251,7 @@
           book_title: book.title || key,
           status: statuses[key],
           source: getReaderCustomerId() ? "wordpress_account" : "site",
-          metadata: {}
+          metadata: ratings[key] ? { rating: Number(ratings[key]) || null } : {}
         };
         })
       );
@@ -535,6 +544,13 @@
   });
 
   document.addEventListener("bbb:book-status-changed", function(){
+    var emailNormalized = getSubscriberEmail();
+    if (!emailNormalized) return;
+    ensureSubscriberRecord(emailNormalized);
+    syncAllStatuses(emailNormalized);
+  });
+
+  document.addEventListener("bbb:book-rating-changed", function(){
     var emailNormalized = getSubscriberEmail();
     if (!emailNormalized) return;
     ensureSubscriberRecord(emailNormalized);

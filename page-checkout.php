@@ -9,6 +9,10 @@ declare(strict_types=1);
 
 bbb_enqueue_css('bbb-edd-checkout', 'assets/css/edd-checkout.css', array('bbb-base'));
 
+$vault_upgrade_url = function_exists('bbb_vault_upgrade_checkout_url') ? bbb_vault_upgrade_checkout_url() : (function_exists('bbb_vault_buy_url') ? bbb_vault_buy_url() : home_url('/downloads/bybookishbabe-vault/'));
+$vault_upgrade_price = function_exists('bbb_vault_price_label') ? bbb_vault_price_label() : '';
+$vault_upgrade_button = 'upgrade to vault' . ('' !== $vault_upgrade_price ? ' - ' . $vault_upgrade_price : '');
+
 get_header();
 ?>
 
@@ -58,11 +62,24 @@ get_header();
 				<ul class="bbb-checkout__trust">
 					<li>instant delivery after payment</li>
 					<li>download links sent to your email</li>
-					<li>choose only the kindle size you need</li>
+					<li>re-download and print anytime</li>
 				</ul>
 			</aside>
 		</div>
 	</section>
+	<div class="bbb-checkout__sampleModal" data-bbb-sample-modal aria-hidden="true">
+		<div class="bbb-checkout__sampleViewer" role="dialog" aria-modal="true" aria-label="sample pdf preview">
+			<div class="bbb-checkout__sampleBar">
+				<a class="bbb-checkout__sampleOpen" href="<?php echo esc_url(get_template_directory_uri() . '/assets/6Inch_Printable_Test.pdf'); ?>" target="_blank" rel="noopener noreferrer" data-bbb-sample-open>
+					open in browser
+				</a>
+				<button class="bbb-checkout__sampleClose" type="button" aria-label="close sample pdf" data-bbb-sample-close>
+					<span aria-hidden="true">×</span>
+				</button>
+			</div>
+			<iframe class="bbb-checkout__sampleFrame" title="sample pdf preview" data-bbb-sample-frame></iframe>
+		</div>
+	</div>
 </main>
 
 <script>
@@ -83,15 +100,121 @@ get_header();
 		sideRail.appendChild(extras);
 	});
 
+	document.addEventListener('DOMContentLoaded', function () {
+		var vaultUrl = <?php echo wp_json_encode(esc_url($vault_upgrade_url)); ?>;
+		var vaultButton = <?php echo wp_json_encode($vault_upgrade_button); ?>;
+		var upgradeClass = 'bbb-checkout__vaultUpgradeRow';
+		var upgradeInnerClass = 'bbb-checkout__vaultUpgrade';
+
+		function cartHasVault(cart) {
+			return Array.prototype.some.call(cart.querySelectorAll('.edd_checkout_cart_item_title, .edd_cart_item_name'), function (item) {
+				return /vault/i.test(item.textContent || '');
+			});
+		}
+
+		function buildUpgradeInner() {
+			var wrap = document.createElement('div');
+			wrap.className = upgradeInnerClass;
+			wrap.innerHTML = '<div><strong>want all designs now &amp; future?</strong><span>replace this cart with vault access and get the full archive plus every future drop.</span></div><a href="' + vaultUrl + '">' + vaultButton + '</a>';
+			return wrap;
+		}
+
+		function insertCheckoutVaultUpgrade() {
+			var cart = document.querySelector('#edd_checkout_cart');
+			var total = cart ? cart.querySelector('.edd_cart_total') : null;
+			var totalRow = total ? (total.closest('tr') || total.closest('.edd-blocks-cart__row-footer')) : null;
+
+			if (!cart || !totalRow) {
+				return;
+			}
+
+			Array.prototype.forEach.call(cart.querySelectorAll('.' + upgradeClass), function (existing) {
+				existing.remove();
+			});
+
+			if (cartHasVault(cart)) {
+				return;
+			}
+
+			if (totalRow.previousElementSibling && totalRow.previousElementSibling.classList.contains(upgradeClass)) {
+				return;
+			}
+
+			if ('TR' === totalRow.tagName) {
+				var row = document.createElement('tr');
+				var cell = document.createElement('th');
+				row.className = 'edd_cart_footer_row ' + upgradeClass;
+				cell.colSpan = total.closest('th, td') ? total.closest('th, td').colSpan || 3 : 3;
+				cell.appendChild(buildUpgradeInner());
+				row.appendChild(cell);
+				totalRow.parentNode.insertBefore(row, totalRow);
+				return;
+			}
+
+			var blockRow = document.createElement('div');
+			blockRow.className = 'edd-blocks-cart__row edd-blocks-cart__row-footer ' + upgradeClass;
+			blockRow.appendChild(buildUpgradeInner());
+			totalRow.parentNode.insertBefore(blockRow, totalRow);
+		}
+
+		insertCheckoutVaultUpgrade();
+
+		var cartRoot = document.querySelector('#edd_checkout_cart_form');
+		if (cartRoot && 'MutationObserver' in window) {
+			var observer = new MutationObserver(insertCheckoutVaultUpgrade);
+			observer.observe(cartRoot, { childList: true, subtree: true });
+		}
+	});
+
 	document.addEventListener('change', function (event) {
 		var select = event.target.closest('[data-bbb-sample-select]');
 		var link = document.querySelector('[data-bbb-sample-link]');
+		var openLink = document.querySelector('[data-bbb-sample-open]');
 
-		if (!select || !link) {
+		if (!select || !link || !openLink) {
 			return;
 		}
 
 		link.href = select.value;
+		openLink.href = select.value;
+	});
+
+	document.addEventListener('click', function (event) {
+		var sampleLink = event.target.closest('[data-bbb-sample-link]');
+		var close = event.target.closest('[data-bbb-sample-close]');
+		var modal = document.querySelector('[data-bbb-sample-modal]');
+		var frame = document.querySelector('[data-bbb-sample-frame]');
+		var openLink = document.querySelector('[data-bbb-sample-open]');
+
+		if (sampleLink && modal && frame && openLink) {
+			event.preventDefault();
+			frame.src = sampleLink.href;
+			openLink.href = sampleLink.href;
+			modal.setAttribute('aria-hidden', 'false');
+			document.documentElement.classList.add('bbb-sample-pdf-open');
+			return;
+		}
+
+		if (close && modal && frame) {
+			frame.removeAttribute('src');
+			modal.setAttribute('aria-hidden', 'true');
+			document.documentElement.classList.remove('bbb-sample-pdf-open');
+		}
+	});
+
+	document.addEventListener('keydown', function (event) {
+		var modal = document.querySelector('[data-bbb-sample-modal]');
+		var frame = document.querySelector('[data-bbb-sample-frame]');
+
+		if ('Escape' !== event.key || !modal || 'false' !== modal.getAttribute('aria-hidden')) {
+			return;
+		}
+
+		if (frame) {
+			frame.removeAttribute('src');
+		}
+		modal.setAttribute('aria-hidden', 'true');
+		document.documentElement.classList.remove('bbb-sample-pdf-open');
 	});
 </script>
 

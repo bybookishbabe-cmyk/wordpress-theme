@@ -15,9 +15,9 @@ wp_enqueue_style(
 	file_exists($dictionary_css_path) ? (string) filemtime($dictionary_css_path) : wp_get_theme()->get('Version')
 );
 
-$dictionary_title              = 'romance tropes list — every trope defined & explained';
-$dictionary_description        = 'a complete romance tropes list — every trope defined with links to curated book lists. from enemies to lovers to dark romance, all in one place.';
-$dictionary_social_description = 'every romance trope defined in one place — enemies to lovers, slow burn, dark romance and 40+ more. with links to curated book lists for each.';
+$dictionary_title              = 'romance trope dictionary — browse every trope & find your next read | bybookishbabe';
+$dictionary_description        = 'every romance trope in one place. enemies to lovers, dark romance, slow burn, and more — browse the full list and find books organized by trope.';
+$dictionary_social_description = $dictionary_description;
 $dictionary_canonical          = home_url('/romance-trope-dictionary/');
 $dictionary_image              = get_theme_file_uri('assets/images/romance-tropes-list-og.png');
 $dictionary_image_alt          = 'romance tropes list — every romance trope defined by bybookishbabe';

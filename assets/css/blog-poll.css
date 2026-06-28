@@ -1,0 +1,227 @@
+.bbb-blog-poll{
+position:relative;
+margin:34px 0;
+padding:16px;
+border:1px solid rgba(232, 90, 155, .22);
+border-radius:8px;
+background:rgba(18, 16, 18, .72);
+box-shadow:0 12px 30px rgba(0, 0, 0, .14);
+overflow:hidden;
+}
+
+.bbb-blog-poll__head{
+margin-bottom:10px;
+}
+
+.bbb-blog-poll__kicker{
+margin:0 0 2px;
+font-size:12px;
+line-height:1;
+letter-spacing:.12em;
+text-transform:lowercase;
+color:#e58ab8;
+}
+
+.bbb-blog-poll__question{
+margin:0 !important;
+padding:0 !important;
+border:0 !important;
+font-size:clamp(19px, 2.2vw, 25px);
+line-height:1.14;
+font-weight:500;
+}
+
+.bbb-blog-poll__options{
+display:grid;
+gap:10px;
+}
+
+.bbb-blog-poll__optionWrap{
+position:relative;
+}
+
+.bbb-blog-poll__option{
+position:relative;
+display:grid;
+grid-template-columns:minmax(0, 1fr) 58px;
+gap:10px;
+align-items:center;
+width:100%;
+min-height:56px;
+padding:10px 12px;
+border:1px solid rgba(255, 255, 255, .12);
+border-radius:8px;
+background:rgba(255, 255, 255, .045);
+color:inherit;
+font:inherit;
+text-align:left;
+cursor:pointer;
+overflow:hidden;
+transition:border-color .2s ease, transform .2s ease, background .2s ease, box-shadow .2s ease;
+}
+
+.bbb-blog-poll__option:hover,
+.bbb-blog-poll__option.is-selected{
+border-color:rgba(232, 90, 155, .45);
+background:rgba(232, 90, 155, .08);
+transform:translateY(-1px);
+}
+
+.bbb-blog-poll__option.is-selected{
+box-shadow:0 0 0 1px rgba(247, 164, 200, .22), 0 0 22px rgba(232, 90, 155, .18);
+}
+
+.bbb-blog-poll__option.is-selected::after{
+content:"";
+position:absolute;
+inset:0;
+z-index:1;
+background:linear-gradient(90deg, rgba(247, 164, 200, .24), rgba(255, 209, 102, .14), rgba(247, 164, 200, .18));
+opacity:.78;
+pointer-events:none;
+}
+
+.bbb-blog-poll__option.is-celebrating{
+animation:bbb-blog-poll-selected-glow 1.25s ease;
+}
+
+.bbb-blog-poll__optionMain,
+.bbb-blog-poll__result{
+position:relative;
+z-index:2;
+}
+
+.bbb-blog-poll__optionLabel{
+display:block;
+font-size:15px;
+line-height:1.15;
+font-weight:600;
+}
+
+.bbb-blog-poll__optionNote{
+display:block;
+margin-top:4px;
+font-size:12px;
+line-height:1.35;
+color:rgba(255, 255, 255, .72);
+}
+
+.bbb-blog-poll__result{
+display:flex;
+justify-content:flex-end;
+align-items:center;
+font-size:14px;
+font-weight:700;
+opacity:0;
+transition:opacity .2s ease;
+}
+
+.bbb-blog-poll.has-results .bbb-blog-poll__result{
+opacity:1;
+}
+
+.bbb-blog-poll__bar{
+position:absolute;
+inset:0 auto 0 0;
+z-index:1;
+width:0;
+background:linear-gradient(90deg, rgba(232, 90, 155, .22), rgba(232, 90, 155, .05));
+transition:width .35s ease;
+}
+
+.bbb-blog-poll__percent{
+min-width:46px;
+text-align:right;
+}
+
+.bbb-blog-poll__status{
+margin:10px 0 0;
+font-size:12px;
+color:rgba(255, 255, 255, .68);
+text-align:right;
+}
+
+.bbb-blog-poll__confetti{
+position:absolute;
+inset:0;
+z-index:4;
+pointer-events:none;
+overflow:hidden;
+}
+
+.bbb-blog-poll__confetti span{
+position:absolute;
+top:-14px;
+width:7px;
+height:11px;
+border-radius:2px;
+background:var(--confetti-color, #f7a4c8);
+box-shadow:0 0 10px rgba(255, 255, 255, .18);
+animation:bbb-blog-poll-confetti-fall 1.1s ease-in forwards;
+}
+
+.bbb-blog-poll__confetti span:nth-child(3n){
+width:9px;
+height:9px;
+border-radius:50%;
+}
+
+.bbb-blog-poll__confetti span:nth-child(4n){
+width:10px;
+height:5px;
+}
+
+@keyframes bbb-blog-poll-selected-glow{
+0%{
+box-shadow:0 0 0 1px rgba(247, 164, 200, .28), 0 0 0 rgba(232, 90, 155, 0);
+}
+38%{
+box-shadow:0 0 0 1px rgba(247, 164, 200, .72), 0 0 34px rgba(232, 90, 155, .42), 0 0 58px rgba(255, 209, 102, .18);
+}
+100%{
+box-shadow:0 0 0 1px rgba(247, 164, 200, .22), 0 0 22px rgba(232, 90, 155, .18);
+}
+}
+
+@keyframes bbb-blog-poll-confetti-fall{
+0%{
+opacity:0;
+transform:translate3d(0, -18px, 0) rotate(0deg);
+}
+12%{
+opacity:1;
+}
+100%{
+opacity:0;
+transform:translate3d(var(--confetti-drift, 0), 280px, 0) rotate(var(--confetti-rotate, 360deg));
+}
+}
+
+@media (prefers-reduced-motion: reduce){
+.bbb-blog-poll__option.is-celebrating{
+animation:none;
+}
+
+.bbb-blog-poll__confetti{
+display:none;
+}
+}
+
+@media (max-width: 640px){
+.bbb-blog-poll{
+padding:18px;
+}
+
+.bbb-blog-poll__option{
+grid-template-columns:minmax(0, 1fr);
+gap:8px;
+}
+
+.bbb-blog-poll__result{
+justify-content:flex-start;
+}
+
+.bbb-blog-poll__percent{
+text-align:left;
+}
+}

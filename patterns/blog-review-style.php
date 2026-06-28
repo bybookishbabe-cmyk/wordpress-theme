@@ -76,6 +76,74 @@
 <!-- /wp:list -->
 
 <!-- wp:heading -->
+<h2 class="wp-block-heading">what to read after [book title]</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>trying to figure out what part of this book had you in a chokehold?</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>if it was [specific trope, character dynamic, or romance energy], read <em><a href="[book url]">[next book title]</a></em> next.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>if it was [setting, emotional tone, or darker/messier element], try <em><a href="[book url]">[second next book title]</a></em>.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>or skip the guessing entirely:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>→ <a href="[shelf url]">browse more [shelf/category] books</a></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>→ <a href="[trope url]">browse more [trope] romance books</a></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">favorite quote</h2>
+<!-- /wp:heading -->
+
+<!-- wp:shortcode -->
+[specificquote:[book title] | [quote snippet]]
+<!-- /wp:shortcode -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">fictional boyfriend material?</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>[character name] is [one-sentence verdict on the fictional man problem].</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>[describe the energy: what makes him dangerous, devoted, soft, unhinged, protective, or worth the obsession.]</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:shortcode -->
+[fictionalman:[character name]]
+<!-- /wp:shortcode -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">[book title] spicy chapters</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>keeping this one spoiler-light.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>just know the spice is not hard to find.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:shortcode -->
+[bookspicychapters:[book title]]
+<!-- /wp:shortcode -->
+
+<!-- wp:heading -->
 <h2 class="wp-block-heading">final thoughts</h2>
 <!-- /wp:heading -->
 

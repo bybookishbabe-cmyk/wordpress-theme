@@ -1,0 +1,203 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap");
+
+:where(.rte, .entry-content, .wp-block-post-content) .bbb-toc {
+  max-width: 64rem;
+  margin: 2.6rem auto 3.2rem;
+  padding: clamp(2.2rem, 4vw, 3.4rem) clamp(2rem, 5vw, 4rem);
+  border: 1px solid rgba(246, 215, 223, 0.14);
+  border-radius: 1.6rem;
+  background: #170910;
+}
+
+:where(.rte, .entry-content, .wp-block-post-content) .bbb-toc__eyebrow {
+  margin: 0 0 2.2rem;
+  color: #f6d7df;
+  font-family: "Playfair Display", var(--font-heading-family, serif);
+  font-size: clamp(2.5rem, 4vw, 3.6rem);
+  font-style: italic;
+  font-weight: 500;
+  line-height: 0.95;
+  text-transform: lowercase;
+}
+
+:where(.rte, .entry-content, .wp-block-post-content) .bbb-toc__eyebrow::before {
+  content: "in this guide";
+  display: block;
+  margin: 0 0 1.2rem;
+  color: rgba(246, 215, 223, 0.48);
+  font-family: var(--font-body-family, Assistant, sans-serif);
+  font-size: 1.05rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+:where(.rte, .entry-content, .wp-block-post-content) .bbb-toc__list,
+.article-template__content .bbb-toc .bbb-toc__list,
+.rte .bbb-toc .bbb-toc__list,
+.entry-content .bbb-toc .bbb-toc__list,
+.wp-block-post-content .bbb-toc .bbb-toc__list {
+  display: grid;
+  gap: clamp(1.25rem, 2vw, 1.8rem);
+  margin: 0;
+  padding: 0;
+  list-style: none !important;
+}
+
+:where(.rte, .entry-content, .wp-block-post-content) .bbb-toc__item,
+.article-template__content .bbb-toc .bbb-toc__item,
+.rte .bbb-toc .bbb-toc__item,
+.entry-content .bbb-toc .bbb-toc__item,
+.wp-block-post-content .bbb-toc .bbb-toc__item {
+  display: block;
+  margin: 0;
+  padding: 0;
+  list-style: none !important;
+}
+
+:where(.rte, .entry-content, .wp-block-post-content) .bbb-toc__item::marker {
+  content: "";
+}
+
+:where(.rte, .entry-content, .wp-block-post-content) .bbb-toc__link,
+.article-template__content .bbb-toc a.bbb-toc__link,
+.rte .bbb-toc a.bbb-toc__link,
+.entry-content .bbb-toc a.bbb-toc__link,
+.wp-block-post-content .bbb-toc a.bbb-toc__link {
+  display: grid;
+  grid-template-columns: 2.7rem 1fr;
+  gap: 1.5rem;
+  align-items: center;
+  min-height: 3rem;
+  padding: 0;
+  color: #d7bec8 !important;
+  font-family: "Playfair Display", var(--font-heading-family, serif);
+  font-size: clamp(1.6rem, 2.2vw, 2.05rem);
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none !important;
+  text-decoration-line: none !important;
+  box-shadow: none !important;
+  border-bottom: 0 !important;
+  transition: color 180ms ease, transform 180ms ease;
+}
+
+:where(.rte, .entry-content, .wp-block-post-content) .bbb-toc__link::before,
+.article-template__content .bbb-toc a.bbb-toc__link::before,
+.rte .bbb-toc a.bbb-toc__link::before,
+.entry-content .bbb-toc a.bbb-toc__link::before,
+.wp-block-post-content .bbb-toc a.bbb-toc__link::before {
+  content: none !important;
+}
+
+:where(.rte, .entry-content, .wp-block-post-content) .bbb-toc__emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.7rem;
+  color: inherit;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+:where(.rte, .entry-content, .wp-block-post-content) .bbb-toc__text {
+  min-width: 0;
+}
+
+:where(.rte, .entry-content, .wp-block-post-content) .bbb-toc__link:hover,
+:where(.rte, .entry-content, .wp-block-post-content) .bbb-toc__link:focus-visible,
+.article-template__content .bbb-toc a.bbb-toc__link:hover,
+.article-template__content .bbb-toc a.bbb-toc__link:focus-visible,
+.rte .bbb-toc a.bbb-toc__link:hover,
+.rte .bbb-toc a.bbb-toc__link:focus-visible,
+.entry-content .bbb-toc a.bbb-toc__link:hover,
+.entry-content .bbb-toc a.bbb-toc__link:focus-visible,
+.wp-block-post-content .bbb-toc a.bbb-toc__link:hover,
+.wp-block-post-content .bbb-toc a.bbb-toc__link:focus-visible {
+  color: var(--bbb-pink, #e85a9b) !important;
+  text-decoration: none !important;
+  text-decoration-line: none !important;
+  transform: translateX(0.2rem);
+}
+
+:where(.rte, .entry-content, .wp-block-post-content) .bbb-toc__item--faq {
+  margin-top: clamp(1.25rem, 2vw, 1.8rem);
+  padding-top: clamp(1.25rem, 2vw, 1.8rem);
+  border-top: 1px solid rgba(246, 215, 223, 0.12);
+}
+
+:where(.rte, .entry-content, .wp-block-post-content) .bbb-toc__item--faq .bbb-toc__link,
+.article-template__content .bbb-toc .bbb-toc__item--faq a.bbb-toc__link {
+  grid-template-columns: 0.7rem 1fr;
+  gap: 1.2rem;
+  color: rgba(215, 190, 200, 0.56) !important;
+  font-size: clamp(1.35rem, 1.8vw, 1.7rem);
+}
+
+:where(.rte, .entry-content, .wp-block-post-content) .bbb-toc__item--faq .bbb-toc__link::after {
+  content: "";
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+  justify-self: center;
+  width: 0.38rem;
+  height: 0.38rem;
+  border-radius: 50%;
+  background: #a994ff;
+}
+
+:where(.rte, .entry-content, .wp-block-post-content) .bbb-toc__item--faq .bbb-toc__text {
+  grid-column: 2;
+}
+
+:where(.rte, .entry-content, .wp-block-post-content) h2[id],
+:where(.rte, .entry-content, .wp-block-post-content) h3[id] {
+  scroll-margin-top: 9rem;
+}
+
+html:has(body.single-post) {
+  scroll-padding-top: 9rem;
+}
+
+body.single-post .article-template__content :is(h2, h3)[id] {
+  scroll-margin-top: 9rem;
+}
+
+@media screen and (max-width: 989px) {
+  html:has(body.single-post) {
+    scroll-padding-top: 13rem;
+  }
+
+  body.single-post .article-template__content :is(h2, h3)[id],
+  :where(.rte, .entry-content, .wp-block-post-content) h2[id],
+  :where(.rte, .entry-content, .wp-block-post-content) h3[id] {
+    scroll-margin-top: 13rem;
+  }
+}
+
+@media screen and (max-width: 749px) {
+  :where(.rte, .entry-content, .wp-block-post-content) .bbb-toc {
+    margin: 2.2rem 0 2.8rem;
+    padding: 2rem 1.6rem;
+    border-radius: 1.2rem;
+  }
+
+  :where(.rte, .entry-content, .wp-block-post-content) .bbb-toc__link {
+    grid-template-columns: 2.3rem 1fr;
+    gap: 1.1rem;
+    font-size: 1.55rem;
+  }
+
+  :where(.rte, .entry-content, .wp-block-post-content) .bbb-toc__item--faq .bbb-toc__link {
+    grid-template-columns: 0.7rem 1fr;
+    gap: 1.1rem;
+    font-size: 1.45rem;
+  }
+
+  :where(.rte, .entry-content, .wp-block-post-content) .bbb-toc__emoji {
+    width: 2.3rem;
+    font-size: 1.8rem;
+  }
+}

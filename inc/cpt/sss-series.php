@@ -114,7 +114,7 @@ add_action(
 					'singular_name' => __('Series', 'bybookishbabe-shopify-port'),
 				),
 				'public'       => true,
-				'show_in_rest' => true,
+				'show_in_rest' => false,
 				'menu_icon'    => 'dashicons-book-alt',
 				'supports'     => array('title', 'editor', 'thumbnail', 'custom-fields'),
 				'has_archive'  => 'series',
@@ -140,6 +140,15 @@ add_action(
 
 function bbb_series_add_meta_box(): void {
 	add_meta_box(
+		'bbb_series_faq',
+		__('Series FAQ', 'bybookishbabe-shopify-port'),
+		'bbb_series_render_faq_meta_box',
+		'sss_series',
+		'normal',
+		'high'
+	);
+
+	add_meta_box(
 		'bbb_series_books',
 		__('Books in this series', 'bybookishbabe-shopify-port'),
 		'bbb_series_render_books_meta_box',
@@ -156,6 +165,17 @@ function bbb_series_add_meta_box(): void {
 		'normal',
 		'high'
 	);
+
+	if (function_exists('bbb_render_hidden_from_public_browsing_meta_box')) {
+		add_meta_box(
+			'bbb_series_visibility',
+			__('Public Visibility', 'bybookishbabe-shopify-port'),
+			'bbb_render_hidden_from_public_browsing_meta_box',
+			'sss_series',
+			'side',
+			'high'
+		);
+	}
 }
 add_action('add_meta_boxes_sss_series', 'bbb_series_add_meta_box');
 
@@ -192,6 +212,21 @@ function bbb_series_render_books_meta_box(WP_Post $post): void {
 		<?php endfor; ?>
 		<p class="bbb-series-books__help"><?php esc_html_e('Pick books in reading order. Saving updates the series record and each selected book’s series handle and number.', 'bybookishbabe-shopify-port'); ?></p>
 	</div>
+	<?php
+}
+
+function bbb_series_render_faq_meta_box(WP_Post $post): void {
+	wp_nonce_field('bbb_save_series_faq', 'bbb_series_faq_nonce');
+	$value = (string) get_post_meta($post->ID, '_bbb_series_faq_shortcode', true);
+	?>
+	<p class="description"><?php esc_html_e('Optional. If blank, the series page uses the FAQ shortcode from the main editor or auto-generates a fallback.', 'bybookishbabe-shopify-port'); ?></p>
+	<textarea
+		id="bbb_series_faq_shortcode"
+		name="bbb_series_faq_shortcode"
+		rows="10"
+		class="large-text code"
+		placeholder="[faq]&#10;[q]what order should i read this series?[/q]&#10;[a]start with book one, then follow the reading order above.[/a]&#10;[/faq]"
+	><?php echo esc_textarea($value); ?></textarea>
 	<?php
 }
 
@@ -271,6 +306,32 @@ function bbb_series_save_meta_box(int $post_id): void {
 	}
 }
 add_action('save_post_sss_series', 'bbb_series_save_meta_box');
+add_action('save_post_sss_series', 'bbb_save_hidden_from_public_browsing_meta');
+
+function bbb_series_save_faq_meta_box(int $post_id): void {
+	if (!isset($_POST['bbb_series_faq_nonce']) || !wp_verify_nonce((string) wp_unslash($_POST['bbb_series_faq_nonce']), 'bbb_save_series_faq')) {
+		return;
+	}
+
+	if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+		return;
+	}
+
+	if (!current_user_can('edit_post', $post_id)) {
+		return;
+	}
+
+	$value = isset($_POST['bbb_series_faq_shortcode']) ? (string) wp_unslash($_POST['bbb_series_faq_shortcode']) : '';
+	$value = trim(str_ireplace(array('[FAQ]', '[/FAQ]', '[Q]', '[/Q]', '[A]', '[/A]'), array('[faq]', '[/faq]', '[q]', '[/q]', '[a]', '[/a]'), $value));
+
+	if ('' === $value) {
+		delete_post_meta($post_id, '_bbb_series_faq_shortcode');
+		return;
+	}
+
+	update_post_meta($post_id, '_bbb_series_faq_shortcode', wp_kses_post($value));
+}
+add_action('save_post_sss_series', 'bbb_series_save_faq_meta_box');
 
 function bbb_series_save_books_meta_box(int $post_id): void {
 	if (!isset($_POST['bbb_series_books_nonce']) || !wp_verify_nonce((string) wp_unslash($_POST['bbb_series_books_nonce']), 'bbb_save_series_books')) {

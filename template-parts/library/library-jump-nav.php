@@ -24,11 +24,14 @@ foreach ($shelf_counts as $count) {
 		break;
 	}
 }
+
+$notes_url = function_exists('bbb_page_url') ? bbb_page_url('my-notes') : home_url('/my-notes/');
 ?>
 <nav class="sss-lib__jumpNav">
 	<div class="sss-lib__jumpTitle">choose where to begin</div>
 	<div class="sss-lib__jumpLinks">
 		<a href="#sssMyShelfSection">📚 your bookshelf</a>
+		<a href="<?php echo esc_url($notes_url); ?>">✎ reading journal</a>
 		<a href="#society-classics">👑 classics</a>
 		<a href="<?php echo esc_url(home_url('/series-reading-orders/')); ?>">🔗 series</a>
 		<?php if ($starter_count > 0) : ?>

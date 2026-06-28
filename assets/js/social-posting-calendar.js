@@ -1,0 +1,2451 @@
+(function () {
+	'use strict';
+
+	var calendarEl = document.getElementById('bbbSocialFullCalendar');
+	var settings = window.bbbSocialCalendar || {};
+	var pageRoot = document.querySelector('[data-social-calendar-page]');
+	var modal = document.querySelector('[data-social-modal]');
+	var modalDate = document.querySelector('[data-social-modal-date]');
+	var modalTitle = document.querySelector('[data-social-modal-title]');
+	var modalStatus = document.querySelector('[data-social-modal-status]');
+	var platformPicker = document.querySelector('[data-platform-picker]');
+	var postForm = document.querySelector('[data-post-form]');
+	var postPlatform = document.querySelector('[data-post-platform]');
+	var postTime = document.querySelector('[data-post-time]');
+	var postDraft = document.querySelector('[data-post-draft]');
+	var postOpen = document.querySelector('[data-post-open]');
+	var postCopy = document.querySelector('[data-post-copy]');
+	var postScheduled = document.querySelector('[data-post-scheduled]');
+	var closeButtons = document.querySelectorAll('[data-social-modal-close]');
+	var visualPlanner = document.querySelector('[data-visual-planner]');
+	var visualWeek = document.querySelector('[data-visual-week]');
+	var pinterestReview = document.querySelector('[data-pinterest-review]');
+	var visualPlatforms = document.querySelector('[data-visual-platforms]');
+	var visualWeekLabel = document.querySelector('[data-visual-week-label]');
+	var modeButtons = document.querySelectorAll('[data-calendar-mode]');
+	var visualPrev = document.querySelector('[data-visual-prev]');
+	var visualNext = document.querySelector('[data-visual-next]');
+	var visualToday = document.querySelector('[data-visual-today]');
+	var pinterestReviewToggle = document.querySelector('[data-review-pinterest]');
+	var pinterestExport = document.querySelector('[data-export-pinterest]');
+	var pinterestShare = document.querySelector('[data-share-pinterest]');
+	var pinterestContactSheet = document.querySelector('[data-contact-sheet-pinterest]');
+	var pinterestScheduler = document.querySelector('[data-scheduler-pinterest]');
+	var instagramScheduler = document.querySelector('[data-scheduler-instagram]');
+	var socialStateKey = 'bbbSocialPostingState:v2';
+	var socialState = Object.assign({}, settings.state || {});
+	var entrySaveTimers = {};
+	var pinterestAutoQueueTimers = {};
+	var pinterestAutoQueueInFlight = {};
+	var instagramAutoQueueTimers = {};
+	var instagramAutoQueueInFlight = {};
+	var pinterestStatusSyncInFlight = false;
+	var pinterestVisibleAutoQueueTimer = null;
+	var activeCalendar = null;
+	var selectedDate = localIsoDate(new Date());
+	var selectedPlatform = '';
+	var activeMode = pageRoot && pageRoot.dataset.currentMode === 'visual' ? 'visual' : 'calendar';
+	var visualPlatformOnly = settings.visualPlatformOnly || '';
+	var visualPlatformOptions = Array.isArray(settings.visualPlatformOptions) && settings.visualPlatformOptions.length ? settings.visualPlatformOptions : [];
+	var visualPlatform = visualPlatformOnly || visualPlatformOptions[0] || 'pinterest';
+	var pinterestReviewActive = false;
+	var reviewPlatform = 'pinterest';
+	var visualWindowDays = 8;
+	var visualWindowStart = dateFromIso(localIsoDate(new Date()));
+	var pinterestMaxImages = 3;
+	var pinterestSlotTimes = ['8am', '12pm', '9pm'];
+	var pinterestSundaySlotTimes = ['10am', '12pm', '9pm'];
+	var platformOrder = ['pinterest', 'instagram', 'threads', 'substack'];
+	var socialPostingDays = {
+		2: true,
+		3: true,
+		5: true,
+		6: true
+	};
+	var dayHeaderLabels = [
+		{ english: 'Sunday', french: 'dimanche' },
+		{ english: 'Monday', french: 'lundi' },
+		{ english: 'Tuesday', french: 'mardi' },
+		{ english: 'Wednesday', french: 'mercredi' },
+		{ english: 'Thursday', french: 'jeudi' },
+		{ english: 'Friday', french: 'vendredi' },
+		{ english: 'Saturday', french: 'samedi' }
+	];
+	var newsletterAnchor = '2026-05-31';
+
+	var platforms = {
+		threads: { label: 'Threads', url: settings.threadsUrl || 'https://www.threads.net/', color: '#f05a9d', textColor: '#fff', minuteStart: 510, minuteWindow: 720 },
+		instagram: { label: 'Instagram', url: settings.instagramUrl || 'https://www.instagram.com/', color: '#c06cff', textColor: '#fff', minuteStart: 600, minuteWindow: 540 },
+		tiktok: { label: 'TikTok', url: settings.tiktokUrl || 'https://www.tiktok.com/', color: '#35f2e6', textColor: '#020202', minuteStart: 660, minuteWindow: 600 },
+		pinterest: { label: 'Pinterest', url: settings.pinterestUrl || settings.pinterestApp || 'https://www.pinterest.com/', color: '#e60023', textColor: '#fff', minuteStart: 420, minuteWindow: 780 },
+		substack: { label: 'Substack Note', url: 'https://substack.com/notes', color: '#ff8a00', textColor: '#fff', minuteStart: 540, minuteWindow: 600 },
+		email: { label: 'Email', url: settings.dashboardUrl || '/', color: '#7da7ff', textColor: '#050505', minuteStart: 480, minuteWindow: 300 },
+		newsletter: { label: 'Newsletter', url: settings.dashboardUrl || '/', color: '#fff', textColor: '#050505', minuteStart: 600, minuteWindow: 1 }
+	};
+
+	function localIsoDate(date) {
+		return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+	}
+
+	function dateFromIso(isoDate) {
+		var parts = String(isoDate).split('-').map(Number);
+		return new Date(parts[0], parts[1] - 1, parts[2]);
+	}
+
+	function dateLabel(isoDate) {
+		return dateFromIso(isoDate).toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
+	}
+
+	function shortDateLabel(isoDate) {
+		return dateFromIso(isoDate).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+	}
+
+	function startOfWeek(date) {
+		var start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+		start.setDate(start.getDate() - start.getDay());
+		return start;
+	}
+
+	function escapeHtml(value) {
+		return String(value || '').replace(/[&<>"']/g, function (character) {
+			return {
+				'&': '&amp;',
+				'<': '&lt;',
+				'>': '&gt;',
+				'"': '&quot;',
+				"'": '&#039;'
+			}[character];
+		});
+	}
+
+	function hashValue(value) {
+		var hash = 0;
+		for (var index = 0; index < value.length; index += 1) {
+			hash = ((hash << 5) - hash) + value.charCodeAt(index);
+			hash |= 0;
+		}
+		return Math.abs(hash);
+	}
+
+	function daysBetween(startIso, endIso) {
+		return Math.floor((dateFromIso(endIso).getTime() - dateFromIso(startIso).getTime()) / 86400000);
+	}
+
+	function newsletterLabelForDate(date) {
+		var day = dateFromIso(date).getDay();
+		if (day === 4) return 'Paid newsletter drop';
+		if (day === 0) return 'Free newsletter drop';
+		if (settings.newsletterSchedule && settings.newsletterSchedule[date]) return settings.newsletterSchedule[date];
+		var types = settings.newsletterTypes || {};
+		var labels = Object.keys(types).map(function (key) { return types[key]; }).filter(Boolean);
+		if (!labels.length) labels = ['smutty sunday', 'sentimental sunday', 'trope report', 'extra extra', "chapter's end"];
+		var weeks = Math.floor(daysBetween(newsletterAnchor, date) / 7);
+		var index = ((weeks % labels.length) + labels.length) % labels.length;
+		return labels[index];
+	}
+
+	function labelForPlatform(date, platformKey) {
+		if (platformKey === 'newsletter') return newsletterLabelForDate(date);
+		return (platforms[platformKey] || platforms.threads).label;
+	}
+
+	function requiredPlatformsForDate(date) {
+		var day = dateFromIso(date).getDay();
+		var required = ['pinterest'];
+		if (day === 0 || day === 4) return required.concat(['newsletter']);
+		if (socialPostingDays[day]) {
+			platformOrder.forEach(function (platformKey) {
+				if (required.indexOf(platformKey) === -1) required.push(platformKey);
+			});
+		}
+		return required;
+	}
+
+	function newsletterForDate(date) {
+		var day = dateFromIso(date).getDay();
+		if (day !== 0 && day !== 4) return '';
+		return newsletterLabelForDate(date);
+	}
+
+	function restLabelForDate(date) {
+		return dateFromIso(date).getDay() === 1 ? 'Full rest day' : '';
+	}
+
+	function isMonthBuildDate(date) {
+		var parsed = dateFromIso(date);
+		var lastDay = new Date(parsed.getFullYear(), parsed.getMonth() + 1, 0).getDate();
+		return parsed.getDate() >= lastDay - 1;
+	}
+
+	function postingTimeFor(date, platformKey) {
+		if (platformKey === 'instagram') {
+			var instagramDay = dateFromIso(date).getDay();
+			if (instagramDay === 2) {
+				return {
+					hour: 9,
+					minute: 30,
+					label: '9:30 AM'
+				};
+			}
+			if (instagramDay === 3) {
+				return {
+					hour: 16,
+					minute: 0,
+					label: '4:00 PM'
+				};
+			}
+			if (instagramDay === 5) {
+				return {
+					hour: 11,
+					minute: 0,
+					label: '11:00 AM'
+				};
+			}
+			if (instagramDay === 6) {
+				return {
+					hour: 15,
+					minute: 30,
+					label: '3:30 PM'
+				};
+			}
+		}
+
+		var platform = platforms[platformKey] || platforms.threads;
+		var minutes = platform.minuteStart + (hashValue(date + ':' + platformKey) % platform.minuteWindow);
+		minutes = Math.round(minutes / 5) * 5;
+		var hour = Math.floor(minutes / 60);
+		var minute = minutes % 60;
+		var displayDate = new Date();
+		displayDate.setHours(hour, minute, 0, 0);
+		return {
+			hour: hour,
+			minute: minute,
+			label: displayDate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+		};
+	}
+
+	function readState() {
+		if (socialState && Object.keys(socialState).length) return socialState;
+		try {
+			socialState = JSON.parse(window.localStorage.getItem(socialStateKey) || '{}') || {};
+			return socialState;
+		} catch (error) {
+			return {};
+		}
+	}
+
+	function writeState(state) {
+		socialState = state || {};
+		try {
+			window.localStorage.setItem(socialStateKey, JSON.stringify(socialState));
+		} catch (error) {
+			if (window.console && window.console.warn) {
+				window.console.warn('Unable to save social calendar state.', error);
+			}
+		}
+	}
+
+	function postSocialForm(formData) {
+		if (!settings.ajaxUrl || !settings.stateNonce || !window.fetch) return Promise.resolve(null);
+		formData.append('nonce', settings.stateNonce);
+		return window.fetch(settings.ajaxUrl, {
+			method: 'POST',
+			credentials: 'same-origin',
+			body: formData
+		}).then(function (response) {
+			return response.json();
+		}).then(function (payload) {
+			if (!payload || !payload.success) {
+				throw new Error(payload && payload.data && payload.data.message ? payload.data.message : 'Social planner save failed.');
+			}
+			return payload.data || {};
+		});
+	}
+
+		function persistEntry(date, platformKey, entry) {
+			if (!settings.ajaxUrl || !settings.stateNonce) return;
+			var key = entryKey(date, platformKey);
+			window.clearTimeout(entrySaveTimers[key]);
+			entrySaveTimers[key] = window.setTimeout(function () {
+				persistEntryNow(date, platformKey, entry).catch(function (error) {
+					if (window.console && window.console.warn) window.console.warn(error.message || error);
+				});
+			}, 350);
+		}
+
+		function persistEntryNow(date, platformKey, entry) {
+			if (!settings.ajaxUrl || !settings.stateNonce) return Promise.resolve(null);
+			window.clearTimeout(entrySaveTimers[entryKey(date, platformKey)]);
+			var formData = new FormData();
+			formData.append('action', 'bbb_social_calendar_save_entry');
+			formData.append('date', date);
+			formData.append('platform', platformKey);
+			formData.append('draft', entry.draft || '');
+			formData.append('board', entry.board || '');
+			formData.append('scheduled', entry.scheduled ? '1' : '0');
+			formData.append('assets', JSON.stringify(Array.isArray(entry.assets) ? entry.assets : []));
+			return postSocialForm(formData);
+		}
+
+		function hydrateStateFromLocalCache() {
+			var localState = {};
+			try {
+				localState = JSON.parse(window.localStorage.getItem(socialStateKey) || '{}') || {};
+			} catch (error) {
+			localState = {};
+		}
+
+		var changed = false;
+		Object.keys(localState).forEach(function (key) {
+			if (!socialState[key]) {
+				socialState[key] = localState[key];
+				changed = true;
+			}
+			});
+			if (changed) writeState(socialState);
+		}
+
+		function syncLocalInstagramStateToWordPress() {
+			if (!settings.ajaxUrl || !settings.stateNonce) return;
+			var state = readState();
+			var today = localIsoDate(new Date());
+			Object.keys(state).forEach(function (key) {
+				if (!/:instagram$/.test(key)) return;
+				var date = key.slice(0, 10);
+				var entry = state[key] || {};
+				var assets = Array.isArray(entry.assets) ? entry.assets : [];
+				var hasImage = assets.some(function (asset) {
+					return asset && (asset.url || asset.dataUrl);
+				});
+				var hasContent = String(entry.draft || '').trim() || hasImage || assets.some(function (asset) {
+					return asset && String(asset.note || '').trim();
+				});
+				if (date < today || !hasContent) return;
+				persistEntry(date, 'instagram', entry);
+			});
+		}
+
+	function entryKey(date, platformKey) {
+		return date + ':' + platformKey;
+	}
+
+	function getEntry(date, platformKey) {
+		var state = readState();
+		return state[entryKey(date, platformKey)] || { draft: '', board: '', scheduled: false, assets: [] };
+	}
+
+	function refreshCalendarState() {
+		if (!activeCalendar) return;
+		activeCalendar.refetchEvents();
+		window.setTimeout(renderVisibleDayCells, 0);
+	}
+
+	function saveEntry(date, platformKey, updates) {
+		var state = readState();
+		var key = entryKey(date, platformKey);
+		state[key] = Object.assign({}, state[key] || { draft: '', scheduled: false }, updates);
+		writeState(state);
+		persistEntry(date, platformKey, state[key]);
+		refreshCalendarState();
+		if (platformKey === 'instagram') {
+			maybeAutoQueueInstagramPost(date);
+		}
+	}
+
+	function getVisualAssets(date, platformKey) {
+		var entry = getEntry(date, platformKey);
+		return Array.isArray(entry.assets) ? entry.assets : [];
+	}
+
+	function pinterestAssetWithDefaults(asset) {
+		if (!asset) return asset;
+		var hasImage = !!(asset.url || asset.dataUrl);
+		if (!hasImage) return asset;
+		var title = String(asset.pinTitle || asset.name || '').trim();
+		if (!asset.pinTitle && /\b(?:moodboard|hero|book cover|quote)?\s*pin\s+\d*\b/i.test(title)) {
+			title = String(asset.boyfriendTitle || title.replace(/\s*(?:moodboard|hero|book cover|quote)?\s*pin\s+\d*/i, '') || '').trim() + ' aesthetic';
+		}
+		title = title.toLowerCase();
+		var description = String(asset.pinDescription || '').trim().toLowerCase();
+		if (!description && title.indexOf(' aesthetic') !== -1) {
+			description = 'check out his profile for all the details.';
+		} else if (!description && title) {
+			description = 'save this ' + title + ' from bybookishbabe.';
+		}
+		return Object.assign({}, asset, {
+			pinTitle: title,
+			pinDescription: description,
+			sourceUrl: asset.sourceUrl || asset.profileUrl || asset.link || asset.permalink || ''
+		});
+	}
+
+	function normalizePinterestAssets(assets) {
+		return assets.slice(0, pinterestMaxImages).map(function (asset, index) {
+			if (!asset) return asset;
+			return Object.assign({}, pinterestAssetWithDefaults(asset), { pinTime: asset.pinTime || pinterestSlotTimes[index] || '' });
+		});
+	}
+
+	function isSundayDate(date) {
+		var value = dateFromIso(date);
+		return value && value.getDay() === 0;
+	}
+
+	function pinterestSlotTimeForDate(date, index) {
+		var times = isSundayDate(date) ? pinterestSundaySlotTimes : pinterestSlotTimes;
+		return times[index] || '';
+	}
+
+	function saveVisualAssets(date, platformKey, assets) {
+		if (platformKey === 'pinterest') assets = normalizePinterestAssets(assets);
+		saveEntry(date, platformKey, { assets: assets });
+		if (platformKey === 'pinterest') {
+			assets.slice(0, pinterestMaxImages).forEach(function (asset, index) {
+				refreshPinterestSlotStatus(date, index);
+				if (isPinterestPinReady(asset) && !asset.schedulerId) {
+					maybeAutoQueuePinterestSlot(date, index);
+				}
+			});
+		}
+	}
+
+	function platformLabel(platformKey) {
+		return (platforms[platformKey] || platforms.threads).label;
+	}
+
+	function entryStatus(entry) {
+		if (entry.scheduled) return 'scheduled/done';
+		if (entry.draft) return 'draft started';
+		return 'needs done';
+	}
+
+		function pinterestCompletionForDate(date) {
+			var assets = normalizePinterestAssets(getVisualAssets(date, 'pinterest'));
+			var statuses = assets.slice(0, pinterestMaxImages).map(pinterestPinStatus);
+			var queued = statuses.filter(function (status) { return status.queued; }).length;
+		var staged = statuses.filter(function (status) { return status.ready && !status.queued; }).length;
+		return {
+			count: queued,
+			staged: staged,
+			total: pinterestMaxImages,
+				complete: queued >= pinterestMaxImages
+			};
+		}
+
+		function isInstagramReady(date, entry) {
+			var caption = String((entry && entry.draft) || '').trim();
+			var hasImage = getVisualAssets(date, 'instagram').some(function (asset) {
+				return asset && (asset.url || asset.dataUrl);
+			});
+			return !!((entry && entry.scheduled) || (caption && hasImage));
+		}
+
+		function isPlatformComplete(date, platformKey, entry) {
+			if (platformKey === 'pinterest') return pinterestCompletionForDate(date).complete;
+			if (platformKey === 'instagram') return isInstagramReady(date, entry);
+			return !!entry.scheduled;
+		}
+
+	function dayCompletionLabel() {
+		var required = requiredPlatformsForDate(selectedDate);
+		if (!required.length) return 'rest day';
+		var done = required.filter(function (platformKey) {
+			return isPlatformComplete(selectedDate, platformKey, getEntry(selectedDate, platformKey));
+		}).length;
+		return done + '/' + required.length + ' done';
+	}
+
+	function platformProgressLabel(date, platformKey, entry) {
+			if (platformKey === 'pinterest') {
+				var pinterest = pinterestCompletionForDate(date);
+				return pinterest.count + '/' + pinterest.total + ' queued' + (pinterest.staged ? ' / ' + pinterest.staged + ' staged' : '');
+			}
+			if (platformKey === 'instagram' && isInstagramReady(date, entry)) {
+				return entry.scheduled ? 'scheduled' : 'ready';
+			}
+			if (entry.scheduled) return 'done';
+			if (entry.draft) return 'draft';
+			return 'todo';
+	}
+
+	function eventTitle(date, platformKey, entry) {
+			var prefix = platformKey === 'pinterest'
+				? platformProgressLabel(date, platformKey, entry)
+				: platformProgressLabel(date, platformKey, entry);
+			return prefix + ' · ' + labelForPlatform(date, platformKey);
+		}
+
+	function platformClass(platformKey) {
+		return 'bbb-social-event--' + platformKey;
+	}
+
+	function eventsForRange(fetchInfo) {
+		var events = [];
+		var cursor = new Date(fetchInfo.start.getFullYear(), fetchInfo.start.getMonth(), fetchInfo.start.getDate());
+		var end = new Date(fetchInfo.end.getFullYear(), fetchInfo.end.getMonth(), fetchInfo.end.getDate());
+
+		while (cursor < end) {
+			var isoDate = localIsoDate(cursor);
+			requiredPlatformsForDate(isoDate).forEach(function (platformKey) {
+				var platform = platforms[platformKey] || platforms.threads;
+				var entry = getEntry(isoDate, platformKey);
+				var timing = postingTimeFor(isoDate, platformKey);
+				var isComplete = isPlatformComplete(isoDate, platformKey, entry);
+				var start = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate(), timing.hour, timing.minute, 0);
+				events.push({
+					id: platformKey + '-' + isoDate,
+					title: eventTitle(isoDate, platformKey, entry),
+					start: start,
+					allDay: false,
+					color: isComplete ? '#35b36f' : platform.color,
+					borderColor: isComplete ? '#35b36f' : platform.color,
+					textColor: isComplete ? '#fff' : platform.textColor,
+					extendedProps: {
+						platform: platformKey,
+						isoDate: isoDate,
+						scheduled: isComplete
+					}
+				});
+			});
+			cursor.setDate(cursor.getDate() + 1);
+		}
+		return events;
+	}
+
+	function dayCellHtml(date) {
+		var newsletterLabel = newsletterForDate(date);
+		var restLabel = restLabelForDate(date);
+		var monthBuildBanner = isMonthBuildDate(date) ? '<div class="bbb-social-calendar__cellBanner bbb-social-calendar__cellBanner--monthBuild" data-month-build-banner>' +
+			'<span aria-hidden="true">⚡</span>' +
+			'<strong>new month build &amp; deploy</strong>' +
+			'</div>' : '';
+		var banner = newsletterLabel ? '<div class="bbb-social-calendar__cellBanner" data-newsletter-banner>' +
+			'<span aria-hidden="true">mail</span>' +
+			'<strong>' + newsletterLabel + '</strong>' +
+			'</div>' : '';
+		var restBanner = restLabel ? '<div class="bbb-social-calendar__cellBanner bbb-social-calendar__cellBanner--rest" data-rest-banner>' +
+			'<span aria-hidden="true">rest</span>' +
+			'<strong>' + restLabel + '</strong>' +
+			'</div>' : '';
+		var items = requiredPlatformsForDate(date).map(function (platformKey) {
+			var platform = platforms[platformKey] || platforms.threads;
+			var entry = getEntry(date, platformKey);
+			var isComplete = isPlatformComplete(date, platformKey, entry);
+			var statusClass = isComplete ? 'is-done' : (entry.draft ? 'has-draft' : 'needs-done');
+			var label = labelForPlatform(date, platformKey);
+			var prefix = platformProgressLabel(date, platformKey, entry);
+			return '<button type="button" class="bbb-social-calendar__cellTask ' + statusClass + '" data-cell-platform="' + platformKey + '">' +
+				'<span style="--task-color:' + platform.color + '"></span>' +
+				'<strong>' + label + '</strong>' +
+				'<em>' + prefix + '</em>' +
+				'</button>';
+		});
+		return '<div class="bbb-social-calendar__cellTasks">' + monthBuildBanner + banner + restBanner + items.join('') + '</div>';
+	}
+
+	function renderDayCell(cell, date) {
+		var frame = cell.querySelector('.fc-daygrid-day-frame') || cell;
+		var existing = frame.querySelector('.bbb-social-calendar__cellTasks');
+		if (existing) existing.remove();
+		cell.classList.toggle('bbb-social-calendar__monthBuildDay', isMonthBuildDate(date));
+		cell.classList.toggle('bbb-social-calendar__sunday', dateFromIso(date).getDay() === 0);
+		cell.classList.toggle('bbb-social-calendar__pinterestCompleteDay', pinterestCompletionForDate(date).complete);
+		frame.insertAdjacentHTML('beforeend', dayCellHtml(date));
+	}
+
+	function renderVisibleDayCells() {
+		if (!calendarEl) return;
+		Array.prototype.slice.call(calendarEl.querySelectorAll('.fc-daygrid-day[data-date]')).forEach(function (cell) {
+			renderDayCell(cell, cell.getAttribute('data-date'));
+		});
+	}
+
+	function renderPlatformPicker() {
+		if (!platformPicker) return;
+		var required = requiredPlatformsForDate(selectedDate);
+		if (!required.length) {
+			platformPicker.innerHTML = '<div class="bbb-social-calendar__emptyDay">Nothing scheduled. Full rest day.</div>';
+			return;
+		}
+		platformPicker.innerHTML = required.map(function (platformKey) {
+			return '<button type="button" data-platform-choice="' + platformKey + '">' + labelForPlatform(selectedDate, platformKey) + '</button>';
+		}).join('');
+	}
+
+	function visualDates() {
+		var dates = [];
+		var cursor = new Date(visualWindowStart.getFullYear(), visualWindowStart.getMonth(), visualWindowStart.getDate());
+		for (var index = 0; index < visualWindowDays; index += 1) {
+			dates.push(localIsoDate(cursor));
+			cursor.setDate(cursor.getDate() + 1);
+		}
+		return dates;
+	}
+
+	function visualWeekRangeLabel(dates) {
+		if (!dates.length) return 'Today + next 7 days';
+		return shortDateLabel(dates[0]) + ' - ' + shortDateLabel(dates[dates.length - 1]);
+	}
+
+	function renderVisualPlatforms() {
+		if (!visualPlatforms) return;
+		if (visualPlatformOnly) {
+			visualPlatforms.hidden = true;
+			return;
+		}
+		visualPlatforms.hidden = false;
+		var platformsToShow = visualPlatformOptions.length ? visualPlatformOptions : platformOrder;
+		visualPlatforms.innerHTML = platformsToShow.map(function (platformKey) {
+			var activeClass = platformKey === visualPlatform ? ' is-active' : '';
+			return '<button type="button" class="' + activeClass + '" data-visual-platform="' + platformKey + '">' + platformLabel(platformKey) + '</button>';
+		}).join('');
+	}
+
+	function pinterestBoardOptions(selectedBoard) {
+		var boards = Array.isArray(settings.pinterestBoards) ? settings.pinterestBoards : [];
+		var options = ['<option value="">choose board</option>'];
+		var selectedFound = !selectedBoard;
+		boards.forEach(function (board) {
+			var boardValue = typeof board === 'string' ? board : String((board && board.value) || '');
+			var boardLabel = typeof board === 'string' ? board : String((board && board.label) || boardValue);
+			if (!boardValue) return;
+			var selected = boardValue === selectedBoard ? ' selected' : '';
+			if (selected) selectedFound = true;
+			options.push('<option value="' + escapeHtml(boardValue) + '"' + selected + '>' + escapeHtml(boardLabel) + '</option>');
+		});
+		if (selectedBoard && !selectedFound) {
+			options.push('<option value="' + escapeHtml(selectedBoard) + '" selected>' + escapeHtml(selectedBoard) + '</option>');
+		}
+		return options.join('');
+	}
+
+	function renderVisualAssetNote(date, asset, index, platformKey) {
+		var slotAttr = typeof index === 'number' ? ' data-visual-asset-slot="' + String(index) + '"' : '';
+		var labelPrefix = platformKey === 'instagram' ? 'slide' : 'image';
+		var label = typeof index === 'number' ? labelPrefix + ' ' + String(index + 1) + ' note' : labelPrefix + ' note';
+		return '<label class="bbb-social-calendar__assetNote">' +
+			'<span>' + label + '</span>' +
+			'<textarea rows="3" data-visual-asset-note="' + escapeHtml(date) + '"' + slotAttr + ' data-visual-asset-note-id="' + escapeHtml((asset && asset.id) || '') + '" placeholder="Add your note for this ' + labelPrefix + '">' + escapeHtml((asset && asset.note) || '') + '</textarea>' +
+		'</label>';
+	}
+
+	function renderVisualAsset(asset, date, includeNote, index, total, platformKey) {
+		var assetUrl = asset && (asset.url || asset.dataUrl);
+		var isImage = asset && asset.type === 'image' && assetUrl;
+		return '<article class="bbb-social-calendar__visualAsset" draggable="true" data-visual-asset-id="' + escapeHtml(asset.id) + '" data-visual-asset-date="' + escapeHtml(date) + '">' +
+			(platformKey === 'instagram' && typeof index === 'number' ? '<div class="bbb-social-calendar__slideMeta"><span>slide ' + String(index + 1) + ' of ' + String(total || 1) + '</span></div>' : '') +
+			(isImage ? '<img src="' + escapeHtml(assetUrl) + '" alt="' + escapeHtml(asset.name || 'planned image') + '" />' : '') +
+			(includeNote ? renderVisualAssetNote(date, asset, index, platformKey) : '') +
+			'<div><strong>' + escapeHtml(asset.name || 'image') + '</strong>' +
+				(platformKey === 'instagram' && typeof index === 'number' ? '<span class="bbb-social-calendar__slideControls"><button type="button" data-move-visual-asset="' + escapeHtml(asset.id) + '" data-move-visual-asset-direction="-1">earlier</button><button type="button" data-move-visual-asset="' + escapeHtml(asset.id) + '" data-move-visual-asset-direction="1">later</button></span>' : '') +
+				'<button type="button" data-remove-visual-asset="' + escapeHtml(asset.id) + '">remove</button></div>' +
+			'</article>';
+	}
+
+	function renderChooseBoyfriendPinButton(date, slotIndex, multiple) {
+		var slotAttr = typeof slotIndex === 'number' ? ' data-visual-boyfriend-pin-slot="' + String(slotIndex) + '"' : '';
+		var multipleAttr = multiple ? ' data-visual-boyfriend-pin-multiple="true"' : '';
+		return '<button type="button" class="bbb-social-calendar__visualBoyfriendPin" data-visual-boyfriend-pin="' + escapeHtml(date) + '"' + slotAttr + multipleAttr + '>choose boyfriend pin</button>';
+	}
+
+	function isPinterestPinReady(asset) {
+		return !!(
+			asset &&
+			(asset.url || asset.dataUrl) &&
+			asset.pinTitle &&
+			asset.pinDescription &&
+			asset.sourceUrl &&
+			asset.board
+		);
+	}
+
+	function isQueueablePinterestImage(value) {
+		var image = String(value || '').trim();
+		return /^https?:\/\//i.test(image) || /^data:image\/[a-z0-9.+-]+;base64,/i.test(image);
+	}
+
+	function pinterestPinStatus(asset) {
+		if (asset && (asset.schedulerStatus === 'published' || asset.publishedAt)) {
+			return {
+				className: 'is-published',
+				label: 'published',
+				ready: true,
+				queued: true,
+				published: true
+			};
+		}
+		if (asset && asset.schedulerId) {
+			return {
+				className: 'is-queued',
+				label: 'queued',
+				ready: true,
+				queued: true,
+				published: false
+			};
+		}
+		if (isPinterestPinReady(asset)) {
+			return {
+				className: 'is-staged',
+				label: 'staged',
+				ready: true,
+				queued: false,
+				published: false
+			};
+		}
+		return {
+			className: 'is-missing',
+			label: 'needs fields',
+			ready: false,
+			queued: false,
+			published: false
+		};
+	}
+
+	function refreshPinterestSlotStatus(date, slot) {
+		var assets = normalizePinterestAssets(getVisualAssets(date, 'pinterest'));
+		var status = pinterestPinStatus(assets[slot] || {});
+		var slotEl = document.querySelector('[data-visual-day="' + date + '"] [data-pin-slot="' + String(slot) + '"]');
+		if (slotEl) {
+			slotEl.classList.remove('is-missing', 'is-staged', 'is-queued', 'is-published', 'is-scheduled');
+			slotEl.classList.add(status.className);
+			var label = slotEl.querySelector('.bbb-social-calendar__pinSchedule em');
+			if (label) label.textContent = status.label;
+		}
+		var reviewField = document.querySelector('[data-review-asset-field="' + date + '"][data-review-asset-slot="' + String(slot) + '"]');
+		var reviewCard = reviewField ? reviewField.closest('.bbb-social-calendar__pinReviewCard') : null;
+		if (reviewCard) {
+			reviewCard.classList.remove('is-missing', 'is-staged', 'is-queued', 'is-published', 'is-scheduled');
+			reviewCard.classList.add(status.className);
+			var reviewLabel = reviewCard.querySelector('.bbb-social-calendar__pinReviewTime span');
+			if (reviewLabel) reviewLabel.textContent = status.label;
+		}
+	}
+
+	function renderPinterestImageSlot(date, asset, index) {
+		var assetUrl = asset && (asset.url || asset.dataUrl);
+		var selectedBoard = (asset && asset.board) || '';
+		var boardStateClass = selectedBoard ? ' is-filled' : ' is-empty';
+		var pinTime = pinterestSlotTimeForDate(date, index);
+		var savedTime = pinTime || (asset && asset.pinTime) || '';
+		var status = pinterestPinStatus(asset);
+		return '<div class="bbb-social-calendar__pinSlot ' + status.className + '" data-pin-slot="' + String(index) + '">' +
+			'<div class="bbb-social-calendar__pinSchedule"><span>slot ' + String(index + 1) + '</span><strong>' + escapeHtml(pinTime) + '</strong><em>' + escapeHtml(status.label) + '</em></div>' +
+			'<label class="bbb-social-calendar__boardSelect' + boardStateClass + '"><span>image ' + String(index + 1) + ' board</span><select required data-visual-asset-board="' + escapeHtml(date) + '" data-visual-asset-slot="' + String(index) + '">' + pinterestBoardOptions(selectedBoard) + '</select></label>' +
+			(assetUrl
+				? renderVisualAsset(asset, date)
+				: '<div class="bbb-social-calendar__pinSlotEmpty"><span>image ' + String(index + 1) + '</span></div>') +
+			'<div class="bbb-social-calendar__pinFields">' +
+				'<label><span>title</span><input type="text" value="' + escapeHtml((asset && asset.pinTitle) || '') + '" data-visual-asset-field="' + escapeHtml(date) + '" data-visual-asset-slot="' + String(index) + '" data-visual-asset-key="pinTitle" placeholder="Pin title" /></label>' +
+				'<label><span>description</span><textarea rows="3" data-visual-asset-field="' + escapeHtml(date) + '" data-visual-asset-slot="' + String(index) + '" data-visual-asset-key="pinDescription" placeholder="Pin description">' + escapeHtml((asset && asset.pinDescription) || '') + '</textarea></label>' +
+				'<label><span>link</span><input type="url" value="' + escapeHtml((asset && asset.sourceUrl) || '') + '" data-visual-asset-field="' + escapeHtml(date) + '" data-visual-asset-slot="' + String(index) + '" data-visual-asset-key="sourceUrl" placeholder="https://bybookishbabe.com/..." /></label>' +
+				'<input type="hidden" value="' + escapeHtml(savedTime) + '" data-visual-asset-field="' + escapeHtml(date) + '" data-visual-asset-slot="' + String(index) + '" data-visual-asset-key="pinTime" />' +
+			'</div>' +
+			renderVisualAssetNote(date, asset, index) +
+			'<label class="bbb-social-calendar__visualUpload">' +
+				'<span>' + (assetUrl ? 'replace image' : 'upload image') + '</span>' +
+				'<input type="file" accept="image/*" data-visual-upload="' + escapeHtml(date) + '" data-visual-upload-slot="' + String(index) + '" />' +
+			'</label>' +
+			renderChooseBoyfriendPinButton(date, index, false) +
+			'</div>';
+	}
+
+	function visualNoPostMessage(platformKey) {
+		if (platformKey === 'instagram') return 'No Instagram post today';
+		return 'No post today';
+	}
+
+	function renderVisualDay(date) {
+		var entry = getEntry(date, visualPlatform);
+		var assets = getVisualAssets(date, visualPlatform);
+		var isToday = date === localIsoDate(new Date()) ? ' is-today' : '';
+		var isSunday = dateFromIso(date).getDay() === 0 ? ' is-sunday' : '';
+		var isPinterest = visualPlatform === 'pinterest';
+		var isInstagram = visualPlatform === 'instagram';
+		var isThreads = visualPlatform === 'threads';
+		if (isPinterest) assets = normalizePinterestAssets(assets);
+		var isPostingDay = !!socialPostingDays[dateFromIso(date).getDay()];
+		var visibleAssets = isPinterest ? assets.slice(0, pinterestMaxImages) : assets;
+		var pinStatuses = isPinterest ? visibleAssets.map(pinterestPinStatus) : [];
+		var queuedPinCount = isPinterest ? pinStatuses.filter(function (status) { return status.queued; }).length : 0;
+		var stagedPinCount = isPinterest ? pinStatuses.filter(function (status) { return status.ready && !status.queued; }).length : 0;
+		var isPinterestComplete = isPinterest && queuedPinCount >= pinterestMaxImages ? ' is-complete' : '';
+		var dayStatus = isPinterest ? '<em class="bbb-social-calendar__dayStatus">' + String(queuedPinCount) + '/3 queued' + (stagedPinCount ? ' / ' + String(stagedPinCount) + ' staged' : '') + '</em>' : '';
+		var remainingSlots = isPinterest ? Math.max(0, pinterestMaxImages - visibleAssets.length) : 99;
+		return '<article class="bbb-social-calendar__visualDay' + isToday + isSunday + isPinterestComplete + '" data-visual-day="' + escapeHtml(date) + '">' +
+			'<header><span>' + escapeHtml(shortDateLabel(date)) + '</span><strong>' + escapeHtml(platformLabel(visualPlatform)) + '</strong>' + dayStatus + '</header>' +
+			((isThreads || (isInstagram && !isPostingDay)) ? '' : '<div class="bbb-social-calendar__visualDrop" data-visual-drop="' + escapeHtml(date) + '">' +
+				'<div class="bbb-social-calendar__visualAssets">' +
+					(isPinterest
+						? [0, 1, 2].map(function (index) { return renderPinterestImageSlot(date, visibleAssets[index], index); }).join('')
+						: (assets.length ? assets.map(function (asset, index) { return renderVisualAsset(asset, date, isInstagram, index, assets.length, visualPlatform); }).join('') : '<p>No image yet.</p>')) +
+				'</div>' +
+				(!isPinterest && remainingSlots > 0 ? '<label class="bbb-social-calendar__visualUpload">' +
+					'<span>' + (isInstagram ? 'upload carousel images' : 'upload images') + '</span>' +
+					'<input type="file" accept="image/*" multiple data-visual-upload="' + escapeHtml(date) + '" />' +
+				'</label>' : '') +
+				(isInstagram ? renderChooseBoyfriendPinButton(date, null, true) : '') +
+			'</div>') +
+			(isInstagram && !isPostingDay ? '<div class="bbb-social-calendar__emptyDay">' + visualNoPostMessage(visualPlatform) + '</div>' : '') +
+			(isPinterest ? '' : '<label class="bbb-social-calendar__visualText">' +
+				'<span>' + (isThreads ? 'thread' : (isInstagram ? 'caption' : 'post text')) + '</span>' +
+				'<textarea rows="' + (isThreads ? '8' : '5') + '" data-visual-draft="' + escapeHtml(date) + '" placeholder="' + (isInstagram ? 'Write the Instagram caption, hashtags, or posting reminders' : '') + '">' + escapeHtml(entry.draft || '') + '</textarea>' +
+			'</label>') +
+			'</article>';
+	}
+
+	function renderVisualPlanner() {
+		if (!visualPlanner || !visualWeek) return;
+		var dates = visualDates();
+		if (visualWeekLabel) visualWeekLabel.textContent = visualWeekRangeLabel(dates);
+		renderVisualPlatforms();
+		visualWeek.innerHTML = dates.map(renderVisualDay).join('');
+		if (pinterestReviewActive) renderReviewPanel();
+		visualWeek.hidden = pinterestReviewActive;
+		if (visualPlatforms) visualPlatforms.hidden = pinterestReviewActive;
+		if (pinterestReview) pinterestReview.hidden = !pinterestReviewActive;
+		if (pinterestReviewToggle) {
+			pinterestReviewToggle.classList.toggle('is-active', pinterestReviewActive);
+			pinterestReviewToggle.textContent = pinterestReviewActive ? 'week view' : 'review/edit';
+		}
+		if (visualPlatform === 'pinterest') {
+			maybeAutoQueueVisiblePinterestRows();
+			syncPinterestPublishedStatuses();
+		}
+	}
+
+	function renderReviewTabs() {
+		return '<div class="bbb-social-calendar__reviewTabs" data-review-platforms>' +
+			['pinterest', 'instagram'].map(function (platformKey) {
+				return '<button type="button" class="' + (reviewPlatform === platformKey ? 'is-active' : '') + '" data-review-platform="' + platformKey + '">' + escapeHtml(platformLabel(platformKey)) + '</button>';
+			}).join('') +
+		'</div>';
+	}
+
+	function renderReviewPanel() {
+		if (!pinterestReview) return;
+		pinterestReview.innerHTML = renderReviewTabs() + (reviewPlatform === 'instagram' ? renderInstagramReview() : renderPinterestReview());
+	}
+
+	function renderPinterestReview() {
+		var dates = visualDates();
+		return dates.map(function (date) {
+			var assets = normalizePinterestAssets(getVisualAssets(date, 'pinterest'));
+			return '<section class="bbb-social-calendar__pinReviewDay">' +
+				'<h3>' + escapeHtml(shortDateLabel(date)) + '</h3>' +
+					[0, 1, 2].map(function (index) {
+						var asset = assets[index] || {};
+						var image = asset.url || asset.dataUrl || '';
+						var status = pinterestPinStatus(asset);
+						return '<article class="bbb-social-calendar__pinReviewCard ' + status.className + '">' +
+							'<div><div class="bbb-social-calendar__pinReviewTime">' + escapeHtml('slot ' + String(index + 1)) + ' · ' + escapeHtml(pinterestSlotTimeForDate(date, index)) + '<span>' + escapeHtml(status.label) + '</span></div>' +
+						'<div class="bbb-social-calendar__pinReviewImage">' + (image ? '<img src="' + escapeHtml(image) + '" alt="">' : '<span>No image</span>') + '</div>' +
+						'<label class="bbb-social-calendar__visualUpload bbb-social-calendar__pinReviewUpload">' +
+							'<span>' + (image ? 'replace image' : 'upload image') + '</span>' +
+							'<input type="file" accept="image/*" data-review-upload="' + escapeHtml(date) + '" data-review-upload-slot="' + String(index) + '">' +
+						'</label></div>' +
+						'<div class="bbb-social-calendar__pinReviewFields">' +
+							'<label><span>Title</span><input type="text" value="' + escapeHtml(asset.pinTitle || '') + '" data-review-asset-field="' + escapeHtml(date) + '" data-review-asset-slot="' + String(index) + '" data-review-asset-key="pinTitle"></label>' +
+							'<label><span>Description</span><textarea rows="4" data-review-asset-field="' + escapeHtml(date) + '" data-review-asset-slot="' + String(index) + '" data-review-asset-key="pinDescription">' + escapeHtml(asset.pinDescription || '') + '</textarea></label>' +
+							'<label><span>Link</span><input type="url" value="' + escapeHtml(asset.sourceUrl || '') + '" data-review-asset-field="' + escapeHtml(date) + '" data-review-asset-slot="' + String(index) + '" data-review-asset-key="sourceUrl"></label>' +
+							'<label><span>Board</span><select data-review-asset-field="' + escapeHtml(date) + '" data-review-asset-slot="' + String(index) + '" data-review-asset-key="board">' + pinterestBoardOptions(asset.board || '') + '</select></label>' +
+							'<label><span>Note</span><textarea rows="3" data-review-asset-field="' + escapeHtml(date) + '" data-review-asset-slot="' + String(index) + '" data-review-asset-key="note">' + escapeHtml(asset.note || '') + '</textarea></label>' +
+							'<button type="button" class="bbb-social-calendar__reviewSave" data-review-save="' + escapeHtml(date) + '" data-review-save-platform="pinterest">save/update</button>' +
+						'</div></article>';
+					}).join('') +
+				'</section>';
+		}).join('');
+	}
+
+	function renderInstagramReview() {
+		var dates = visualDates();
+		return dates.map(function (date) {
+				var isPostingDay = !!socialPostingDays[dateFromIso(date).getDay()];
+				var entry = getEntry(date, 'instagram');
+				var assets = getVisualAssets(date, 'instagram');
+				var instagramStatusLabel = entry.scheduled ? 'scheduled' : (assets.length > 1 ? 'swipeable post' : String(assets.length) + ' image' + (assets.length === 1 ? '' : 's'));
+				var instagramReady = !!(String(entry.draft || '').trim() && assets.some(function (asset) {
+					return asset && (asset.url || asset.dataUrl);
+				}));
+				var instagramStatusClass = entry.scheduled ? ' is-scheduled' : (instagramReady ? ' is-staged' : '');
+				return '<section class="bbb-social-calendar__pinReviewDay bbb-social-calendar__pinReviewDay--instagram">' +
+					'<h3>' + escapeHtml(shortDateLabel(date)) + '</h3>' +
+					(isPostingDay ? '<article class="bbb-social-calendar__pinReviewCard bbb-social-calendar__instagramReviewCard' + instagramStatusClass + '">' +
+					'<div>' +
+						'<div class="bbb-social-calendar__pinReviewTime">Instagram<span>' + escapeHtml(instagramStatusLabel) + '</span></div>' +
+						'<label class="bbb-social-calendar__visualUpload bbb-social-calendar__pinReviewUpload">' +
+							'<span>upload carousel images</span>' +
+							'<input type="file" accept="image/*" multiple data-review-upload="' + escapeHtml(date) + '" data-review-upload-platform="instagram">' +
+						'</label>' +
+					'</div>' +
+					'<div class="bbb-social-calendar__pinReviewFields">' +
+						'<label><span>Caption</span><textarea rows="5" data-review-draft="' + escapeHtml(date) + '" data-review-draft-platform="instagram" placeholder="Write the Instagram caption, hashtags, or posting reminders">' + escapeHtml(entry.draft || '') + '</textarea></label>' +
+						'<div class="bbb-social-calendar__instagramReviewAssets">' +
+							(assets.length ? assets.map(function (asset, index) {
+								var image = asset.url || asset.dataUrl || '';
+								return '<article class="bbb-social-calendar__instagramReviewAsset">' +
+									'<div class="bbb-social-calendar__instagramReviewSlideHead"><strong>slide ' + String(index + 1) + ' of ' + String(assets.length) + '</strong><span><button type="button" data-review-move-asset="' + escapeHtml(asset.id || '') + '" data-review-move-date="' + escapeHtml(date) + '" data-review-move-platform="instagram" data-review-move-direction="-1">earlier</button><button type="button" data-review-move-asset="' + escapeHtml(asset.id || '') + '" data-review-move-date="' + escapeHtml(date) + '" data-review-move-platform="instagram" data-review-move-direction="1">later</button></span></div>' +
+									'<div class="bbb-social-calendar__pinReviewImage">' + (image ? '<img src="' + escapeHtml(image) + '" alt="">' : '<span>No image</span>') + '</div>' +
+									'<label><span>Slide note</span><textarea rows="3" data-review-asset-note="' + escapeHtml(date) + '" data-review-asset-platform="instagram" data-review-asset-slot="' + String(index) + '" data-review-asset-note-id="' + escapeHtml(asset.id || '') + '">' + escapeHtml(asset.note || '') + '</textarea></label>' +
+								'</article>';
+							}).join('') : '<article class="bbb-social-calendar__instagramReviewAsset bbb-social-calendar__instagramReviewAsset--empty">' +
+								'<div class="bbb-social-calendar__instagramReviewSlideHead"><strong>image needed</strong></div>' +
+								'<div class="bbb-social-calendar__pinReviewImage"><span>No image</span></div>' +
+								'<label><span>Note</span><textarea rows="3" data-review-asset-note="' + escapeHtml(date) + '" data-review-asset-platform="instagram" data-review-asset-slot="0" placeholder="Add what image needs to be made or found."></textarea></label>' +
+								'</article>') +
+							'</div>' +
+							'<div class="bbb-social-calendar__reviewActions">' +
+								'<button type="button" class="bbb-social-calendar__reviewSave" data-review-save="' + escapeHtml(date) + '" data-review-save-platform="instagram">save/update</button>' +
+								'<button type="button" class="bbb-social-calendar__reviewSave bbb-social-calendar__reviewSend" data-review-send="' + escapeHtml(date) + '">send to scheduler</button>' +
+							'</div>' +
+							'</div>' +
+					'</article>' : '<div class="bbb-social-calendar__emptyDay">' + visualNoPostMessage('instagram') + '</div>') +
+				'</section>';
+			}).join('');
+		}
+
+	function savePinterestReviewField(field) {
+		var date = field.getAttribute('data-review-asset-field') || field.getAttribute('data-visual-asset-field');
+		var slot = Number(field.getAttribute('data-review-asset-slot') || field.getAttribute('data-visual-asset-slot'));
+		var key = field.getAttribute('data-review-asset-key') || field.getAttribute('data-visual-asset-key');
+		var allowed = { pinTitle: true, pinDescription: true, sourceUrl: true, board: true, note: true, pinTime: true };
+		if (!date || Number.isNaN(slot) || !allowed[key]) return;
+		var assets = getVisualAssets(date, 'pinterest');
+		assets[slot] = Object.assign(
+			{
+				id: 'slot-' + String(slot),
+				type: 'image',
+				name: 'image ' + String(slot + 1),
+				pinTime: pinterestSlotTimeForDate(date, slot)
+			},
+			assets[slot] || {}
+		);
+			assets[slot][key] = field.value;
+			assets[slot].pinTime = pinterestSlotTimeForDate(date, slot) || assets[slot].pinTime || '';
+			saveVisualAssets(date, 'pinterest', assets);
+		}
+
+	function saveReviewAssetNote(field) {
+		var date = field.getAttribute('data-review-asset-note');
+		var platformKey = field.getAttribute('data-review-asset-platform') || reviewPlatform;
+		var slot = Number(field.getAttribute('data-review-asset-slot'));
+		var assetId = field.getAttribute('data-review-asset-note-id');
+		if (!date || Number.isNaN(slot)) return;
+		var assets = getVisualAssets(date, platformKey);
+		if (!assets[slot]) {
+			assets[slot] = {
+				id: 'slot-' + String(slot),
+				type: 'image',
+				name: platformKey === 'instagram' ? 'instagram image note' : 'image ' + String(slot + 1)
+			};
+		}
+		assets = assets.map(function (asset, index) {
+			if (!asset) return asset;
+			if ((assetId && asset.id === assetId) || index === slot) {
+				return Object.assign({}, asset, { note: field.value });
+			}
+			return asset;
+		});
+			saveVisualAssets(date, platformKey, assets);
+		}
+
+			function saveReviewCard(button) {
+			var date = button.getAttribute('data-review-save');
+			var platformKey = button.getAttribute('data-review-save-platform') || reviewPlatform;
+			var card = button.closest('.bbb-social-calendar__pinReviewCard');
+			if (!date || !card) return;
+			var originalText = button.textContent;
+			var state = readState();
+			var key = entryKey(date, platformKey);
+			var entry = Object.assign({ draft: '', board: '', scheduled: false, assets: [] }, state[key] || {});
+			var assets = Array.isArray(entry.assets) ? entry.assets.slice() : [];
+
+			card.querySelectorAll('[data-review-asset-field]').forEach(function (field) {
+				var slot = Number(field.getAttribute('data-review-asset-slot'));
+				var assetKey = field.getAttribute('data-review-asset-key');
+				if (Number.isNaN(slot) || !assetKey) return;
+				assets[slot] = Object.assign(
+					{
+						id: 'slot-' + String(slot),
+						type: 'image',
+						name: platformKey === 'instagram' ? 'instagram image' : 'image ' + String(slot + 1)
+					},
+					assets[slot] || {}
+				);
+				assets[slot][assetKey] = field.value;
+				if (platformKey === 'pinterest') {
+					assets[slot].pinTime = pinterestSlotTimeForDate(date, slot) || assets[slot].pinTime || '';
+				}
+			});
+
+			card.querySelectorAll('[data-review-asset-note]').forEach(function (field) {
+				var slot = Number(field.getAttribute('data-review-asset-slot'));
+				var assetId = field.getAttribute('data-review-asset-note-id');
+				if (Number.isNaN(slot)) return;
+				assets[slot] = Object.assign(
+					{
+						id: assetId || 'slot-' + String(slot),
+						type: 'image',
+						name: platformKey === 'instagram' ? 'instagram image note' : 'image ' + String(slot + 1)
+					},
+					assets[slot] || {},
+					{ note: field.value }
+				);
+			});
+
+			var draft = card.querySelector('[data-review-draft]');
+			if (draft) entry.draft = draft.value;
+			entry.assets = assets;
+			state[key] = entry;
+			writeState(state);
+			button.disabled = true;
+			button.textContent = 'saving...';
+			persistEntryNow(date, platformKey, entry).then(function () {
+				button.textContent = 'saved';
+				refreshCalendarState();
+				if (platformKey === 'instagram') {
+					maybeAutoQueueInstagramPost(date);
+				}
+				if (platformKey === 'pinterest') {
+					assets.slice(0, pinterestMaxImages).forEach(function (asset, index) {
+						refreshPinterestSlotStatus(date, index);
+						if (isPinterestPinReady(asset) && !asset.schedulerId) {
+							maybeAutoQueuePinterestSlot(date, index);
+						}
+					});
+				}
+				window.setTimeout(function () {
+					button.disabled = false;
+					button.textContent = originalText || 'save/update';
+				}, 1200);
+			}).catch(function (error) {
+				button.disabled = false;
+				button.textContent = originalText || 'save/update';
+				window.alert(error && error.message ? error.message : 'Could not save this review card.');
+			});
+		}
+
+	function moveAssetWithinDay(date, platformKey, assetId, direction) {
+		var assets = getVisualAssets(date, platformKey);
+		var fromIndex = assets.findIndex(function (asset) {
+			return asset && asset.id === assetId;
+		});
+		var toIndex = fromIndex + direction;
+		if (fromIndex < 0 || toIndex < 0 || toIndex >= assets.length) return;
+		var moved = assets[fromIndex];
+		assets[fromIndex] = assets[toIndex];
+		assets[toIndex] = moved;
+		saveVisualAssets(date, platformKey, assets);
+		renderVisualPlanner();
+	}
+
+	function pinterestPlannerRows() {
+		var dates = visualDates();
+		var rows = [];
+		dates.forEach(function (date) {
+			var assets = normalizePinterestAssets(getVisualAssets(date, 'pinterest'));
+			for (var index = 0; index < pinterestMaxImages; index += 1) {
+				var asset = assets[index] || {};
+				rows.push({
+					date: date,
+					dateLabel: shortDateLabel(date),
+					pin: 'slot ' + String(index + 1),
+					slot: index,
+					time: pinterestSlotTimeForDate(date, index) || asset.pinTime || '',
+					image: asset.url || asset.dataUrl || '',
+					imagePreview: asset.url || asset.dataUrl ? '=IMAGE("' + String(asset.url || asset.dataUrl).replace(/"/g, '""') + '")' : '',
+					title: asset.pinTitle || '',
+					description: asset.pinDescription || '',
+					link: asset.sourceUrl || '',
+					board: asset.board || '',
+					note: asset.note || '',
+					schedulerId: asset.schedulerId || '',
+					schedulerQueuedAt: asset.schedulerQueuedAt || ''
+				});
+			}
+
+			function entryFromReviewCard(button, platformKey) {
+				var date = button.getAttribute('data-review-save') || button.getAttribute('data-review-send');
+				var card = button.closest('.bbb-social-calendar__pinReviewCard');
+				if (!date || !card) return null;
+				var state = readState();
+				var key = entryKey(date, platformKey);
+				var entry = Object.assign({ draft: '', board: '', scheduled: false, assets: [] }, state[key] || {});
+				var assets = Array.isArray(entry.assets) ? entry.assets.slice() : [];
+				card.querySelectorAll('[data-review-asset-field]').forEach(function (field) {
+					var slot = Number(field.getAttribute('data-review-asset-slot'));
+					var assetKey = field.getAttribute('data-review-asset-key');
+					if (Number.isNaN(slot) || !assetKey) return;
+					assets[slot] = Object.assign({ id: 'slot-' + String(slot), type: 'image', name: 'image ' + String(slot + 1) }, assets[slot] || {});
+					assets[slot][assetKey] = field.value;
+				});
+				card.querySelectorAll('[data-review-asset-note]').forEach(function (field) {
+					var slot = Number(field.getAttribute('data-review-asset-slot'));
+					var assetId = field.getAttribute('data-review-asset-note-id');
+					if (Number.isNaN(slot)) return;
+					assets[slot] = Object.assign(
+						{ id: assetId || 'slot-' + String(slot), type: 'image', name: platformKey === 'instagram' ? 'instagram image note' : 'image ' + String(slot + 1) },
+						assets[slot] || {},
+						{ note: field.value }
+					);
+				});
+				var draft = card.querySelector('[data-review-draft]');
+				if (draft) entry.draft = draft.value;
+				entry.assets = assets;
+				state[key] = entry;
+				writeState(state);
+				return { date: date, entry: entry, assets: assets };
+			}
+
+			function sendInstagramReviewCard(button) {
+				var schedulerUrl = String(settings.instagramSchedulerUrl || '').trim();
+				var schedulerSecret = String(settings.instagramSchedulerSecret || '').trim();
+				if (!schedulerUrl || !schedulerSecret) {
+					window.alert('Instagram scheduler is not configured for this planner.');
+					return;
+				}
+				var data = entryFromReviewCard(button, 'instagram');
+				if (!data) return;
+				var caption = String(data.entry.draft || '').trim();
+				var images = data.assets.filter(function (asset) {
+					return asset && (asset.url || asset.dataUrl);
+				});
+				if (!caption || !images.length) {
+					window.alert('Add a caption and at least one image before sending this Instagram post.');
+					return;
+				}
+				var originalText = button.textContent;
+				button.disabled = true;
+				button.textContent = 'sending...';
+				persistEntryNow(data.date, 'instagram', data.entry).then(function () {
+					var timing = postingTimeFor(data.date, 'instagram');
+					var post = {
+						date: data.date,
+						time: timing.label,
+						scheduledFor: platformScheduledIso(data.date, 'instagram'),
+						caption: caption,
+						note: '',
+						scheduled: !!data.entry.scheduled,
+						images: images.map(function (asset, index) {
+							return {
+								url: asset.url || asset.dataUrl || '',
+								name: asset.name || 'slide ' + String(index + 1),
+								note: asset.note || '',
+								slide: index + 1
+							};
+						})
+					};
+					return window.fetch(schedulerUrl + '?secret=' + encodeURIComponent(schedulerSecret), {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ posts: [post] })
+					}).then(function (response) {
+						return response.json().then(function (payload) {
+							if (!response.ok) throw new Error((payload && payload.error) || 'Instagram scheduler rejected the post.');
+							return payload;
+						});
+					});
+				}).then(function () {
+					saveEntry(data.date, 'instagram', { scheduled: true, draft: caption, assets: data.assets });
+					button.textContent = 'sent';
+					renderVisualPlanner();
+				}).catch(function (error) {
+					button.disabled = false;
+					button.textContent = originalText || 'send to scheduler';
+					window.alert(error && error.message ? error.message : 'Could not send this Instagram post to the scheduler.');
+				});
+			}
+		});
+		return rows;
+	}
+
+	function exportPinterestPlanner() {
+		var dates = visualDates();
+		var rows = pinterestPlannerRows();
+		var csvEscape = function (value) {
+			return '"' + String(value || '').replace(/"/g, '""') + '"';
+		};
+		var header = ['Date', 'Date Label', 'Pin', 'Time', 'Image Preview', 'Image URL', 'Title', 'Description', 'Link', 'Board', 'Note'];
+		var csv = '\ufeff' + [header].concat(rows.map(function (row) {
+			return [row.date, row.dateLabel, row.pin, row.time, row.imagePreview, row.image, row.title, row.description, row.link, row.board, row.note];
+		})).map(function (row) {
+			return row.map(csvEscape).join(',');
+		}).join('\r\n');
+		var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+		var url = URL.createObjectURL(blob);
+		var link = document.createElement('a');
+		link.href = url;
+		link.download = 'social-planner-pinterest-' + dates[0] + '-to-' + dates[dates.length - 1] + '.csv';
+		document.body.appendChild(link);
+		link.click();
+		link.remove();
+		window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+	}
+
+	function pinterestScheduledIso(date, time) {
+		var hour = time === '12pm' ? 12 : time === '9pm' ? 21 : 8;
+		var value = new Date(date + 'T' + String(hour).padStart(2, '0') + ':00:00');
+		return Number.isNaN(value.getTime()) ? '' : value.toISOString();
+	}
+
+	function isPinterestRowQueueable(row) {
+		return !!(
+			row &&
+				isQueueablePinterestImage(row.image) &&
+			row.title &&
+			row.description &&
+			row.link &&
+			row.board &&
+			!row.schedulerId
+		);
+	}
+
+	function pinterestRowsToPayload(rows) {
+		return rows.map(function (row) {
+			return {
+				date: row.date,
+				slot: row.slot,
+				time: row.time,
+				scheduledFor: pinterestScheduledIso(row.date, row.time),
+				image: row.image,
+				title: row.title,
+				description: row.description,
+				link: row.link,
+				board: row.board,
+				note: row.note
+			};
+		});
+	}
+
+	function markPinterestRowsQueued(queued) {
+		(Array.isArray(queued) ? queued : []).forEach(function (item) {
+			var assets = getVisualAssets(item.date, 'pinterest');
+			var slot = Number(item.slot);
+			if (!Number.isNaN(slot) && assets[slot]) {
+					assets[slot] = Object.assign({}, assets[slot], {
+						schedulerId: item.id || '',
+						schedulerStatus: 'queued',
+						schedulerQueuedAt: new Date().toISOString()
+					});
+					saveVisualAssets(item.date, 'pinterest', assets);
+			}
+		});
+	}
+
+	function postPinterestRowsToScheduler(rows) {
+		var schedulerUrl = String(settings.pinterestSchedulerUrl || '').trim();
+		var schedulerSecret = String(settings.pinterestSchedulerSecret || '').trim();
+		if (!schedulerUrl || !schedulerSecret) {
+			return Promise.reject(new Error('Scheduler is not configured for this planner.'));
+		}
+		return window.fetch(schedulerUrl + '?secret=' + encodeURIComponent(schedulerSecret), {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ pins: pinterestRowsToPayload(rows) })
+		}).then(function (response) {
+			return response.json().then(function (data) {
+				if (!response.ok) throw new Error((data && data.error) || 'Scheduler rejected the pins.');
+				return data;
+			});
+		}).then(function (data) {
+			markPinterestRowsQueued(Array.isArray(data.queued) ? data.queued : []);
+			return data;
+		});
+	}
+
+	function queueablePinterestRowForSlot(date, slot) {
+		return pinterestPlannerRows().find(function (row) {
+			return row.date === date && Number(row.slot) === Number(slot) && isPinterestRowQueueable(row);
+		}) || null;
+	}
+
+	function maybeAutoQueuePinterestSlot(date, slot) {
+		var key = date + ':' + String(slot);
+		window.clearTimeout(pinterestAutoQueueTimers[key]);
+		pinterestAutoQueueTimers[key] = window.setTimeout(function () {
+			var row = queueablePinterestRowForSlot(date, slot);
+			if (!row || pinterestAutoQueueInFlight[key]) return;
+			pinterestAutoQueueInFlight[key] = true;
+			postPinterestRowsToScheduler([row]).then(function () {
+				renderVisualPlanner();
+			}).catch(function (error) {
+				if (window.console && window.console.warn) {
+					window.console.warn(error && error.message ? error.message : error);
+				}
+			}).finally(function () {
+				pinterestAutoQueueInFlight[key] = false;
+			});
+		}, 700);
+	}
+
+	function maybeAutoQueueVisiblePinterestRows() {
+		window.clearTimeout(pinterestVisibleAutoQueueTimer);
+		pinterestVisibleAutoQueueTimer = window.setTimeout(function () {
+			pinterestPlannerRows().forEach(function (row) {
+				if (isPinterestRowQueueable(row)) {
+					maybeAutoQueuePinterestSlot(row.date, row.slot);
+				}
+			});
+		}, 900);
+	}
+
+	function syncPinterestPublishedStatuses() {
+		var statusUrl = String(settings.pinterestSchedulerStatusUrl || '').trim();
+		var schedulerSecret = String(settings.pinterestSchedulerSecret || '').trim();
+		if (!statusUrl || !schedulerSecret || pinterestStatusSyncInFlight || !window.fetch) return;
+		var state = readState();
+		var pending = {};
+		Object.keys(state || {}).forEach(function (key) {
+			if (!/:pinterest$/.test(key)) return;
+			var date = key.split(':')[0];
+			var assets = Array.isArray(state[key].assets) ? state[key].assets : [];
+			assets.forEach(function (asset, index) {
+				if (asset && asset.schedulerId && asset.schedulerStatus !== 'published') {
+					pending[asset.schedulerId] = { date: date, slot: index };
+				}
+			});
+		});
+		var ids = Object.keys(pending);
+		if (!ids.length) return;
+		pinterestStatusSyncInFlight = true;
+		window.fetch(statusUrl + '?secret=' + encodeURIComponent(schedulerSecret) + '&ids=' + encodeURIComponent(ids.join(',')))
+			.then(function (response) {
+				return response.json().then(function (data) {
+					if (!response.ok) throw new Error((data && data.error) || 'Scheduler status check failed.');
+					return data;
+				});
+			})
+			.then(function (data) {
+				var changed = false;
+				(Array.isArray(data.items) ? data.items : []).forEach(function (item) {
+					if (!item || item.status !== 'published' || !pending[item.id]) return;
+					var target = pending[item.id];
+					var assets = getVisualAssets(target.date, 'pinterest');
+					if (!assets[target.slot]) return;
+					assets[target.slot] = Object.assign({}, assets[target.slot], {
+						schedulerStatus: 'published',
+						publishedAt: item.publishedAt || new Date().toISOString(),
+						pinterestPinId: item.pinterestPinId || '',
+						pinterestPinUrl: item.pinterestPinUrl || ''
+					});
+					saveVisualAssets(target.date, 'pinterest', assets);
+					changed = true;
+				});
+				if (changed) renderVisualPlanner();
+			})
+			.catch(function (error) {
+				if (window.console && window.console.warn) {
+					window.console.warn(error && error.message ? error.message : error);
+				}
+			})
+			.finally(function () {
+				pinterestStatusSyncInFlight = false;
+			});
+	}
+
+	function platformScheduledIso(date, platformKey) {
+		var timing = postingTimeFor(date, platformKey);
+		var value = new Date(date + 'T' + String(timing.hour).padStart(2, '0') + ':' + String(timing.minute).padStart(2, '0') + ':00');
+		return Number.isNaN(value.getTime()) ? '' : value.toISOString();
+	}
+
+	function instagramPlannerPosts() {
+		return visualDates().map(function (date) {
+			var entry = getEntry(date, 'instagram');
+			var assets = getVisualAssets(date, 'instagram').filter(function (asset) {
+				return asset && (asset.url || asset.dataUrl);
+			});
+			var timing = postingTimeFor(date, 'instagram');
+			return {
+				date: date,
+				time: timing.label,
+				scheduledFor: platformScheduledIso(date, 'instagram'),
+				caption: entry.draft || '',
+				note: '',
+				scheduled: !!entry.scheduled,
+				images: assets.map(function (asset, index) {
+					return {
+						url: asset.url || asset.dataUrl || '',
+						name: asset.name || 'slide ' + String(index + 1),
+						note: asset.note || '',
+						slide: index + 1
+					};
+				})
+			};
+			}).filter(function (post) {
+				return socialPostingDays[dateFromIso(post.date).getDay()] && post.caption && post.images.length;
+			});
+	}
+
+	function instagramPlannerPostForDate(date) {
+		return instagramPlannerPosts().find(function (post) {
+			return post.date === date;
+		}) || null;
+	}
+
+	function maybeAutoQueueInstagramPost(date) {
+		window.clearTimeout(instagramAutoQueueTimers[date]);
+		instagramAutoQueueTimers[date] = window.setTimeout(function () {
+			var post = instagramPlannerPostForDate(date);
+			var schedulerUrl = String(settings.instagramSchedulerUrl || '').trim();
+			var schedulerSecret = String(settings.instagramSchedulerSecret || '').trim();
+			if (!post || !schedulerUrl || !schedulerSecret || instagramAutoQueueInFlight[date] || !window.fetch) return;
+			instagramAutoQueueInFlight[date] = true;
+			window.fetch(schedulerUrl + '?secret=' + encodeURIComponent(schedulerSecret), {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ posts: [post] })
+			}).then(function (response) {
+				return response.json().then(function (data) {
+					if (!response.ok) throw new Error((data && data.error) || 'Instagram scheduler rejected the post.');
+					return data;
+				});
+			}).then(function (data) {
+				var queued = Array.isArray(data.queued) ? data.queued : [];
+				if (queued.length) {
+					saveEntry(date, 'instagram', { scheduled: true });
+					renderVisualPlanner();
+				}
+			}).catch(function (error) {
+				if (window.console && window.console.warn) {
+					window.console.warn(error && error.message ? error.message : error);
+				}
+			}).finally(function () {
+				instagramAutoQueueInFlight[date] = false;
+			});
+		}, 900);
+	}
+
+	function sendInstagramToScheduler() {
+		var schedulerUrl = String(settings.instagramSchedulerUrl || '').trim();
+		var schedulerSecret = String(settings.instagramSchedulerSecret || '').trim();
+		if (!schedulerUrl || !schedulerSecret) {
+			window.alert('Instagram scheduler is not configured for this planner.');
+			return;
+		}
+		var posts = instagramPlannerPosts();
+		if (!posts.length) {
+			window.alert('No new ready Instagram posts to send. Posts need a caption, at least one image, and cannot already be marked scheduled.');
+			return;
+		}
+		if (instagramScheduler) instagramScheduler.disabled = true;
+		window.fetch(schedulerUrl + '?secret=' + encodeURIComponent(schedulerSecret), {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ posts: posts })
+		}).then(function (response) {
+			return response.json().then(function (data) {
+				if (!response.ok) throw new Error((data && data.error) || 'Instagram scheduler rejected the posts.');
+				return data;
+			});
+		}).then(function (data) {
+			var queued = Array.isArray(data.queued) ? data.queued : [];
+			queued.forEach(function (item) {
+				if (item && item.date) saveEntry(item.date, 'instagram', { scheduled: true });
+			});
+			renderVisualPlanner();
+			window.alert('Sent ' + String(queued.length || posts.length) + ' Instagram post(s) to the scheduler.');
+		}).catch(function (error) {
+			window.alert(error && error.message ? error.message : 'Could not send Instagram posts to the local scheduler. Make sure localhost:8787 is running on this device.');
+		}).finally(function () {
+			if (instagramScheduler) instagramScheduler.disabled = false;
+		});
+	}
+
+	function sendPinterestToScheduler() {
+		var schedulerUrl = String(settings.pinterestSchedulerUrl || '').trim();
+		var schedulerSecret = String(settings.pinterestSchedulerSecret || '').trim();
+		if (!schedulerUrl || !schedulerSecret) {
+			window.alert('Scheduler is not configured for this planner.');
+			return;
+		}
+		var rows = pinterestPlannerRows().filter(function (row) {
+			return isPinterestRowQueueable(row);
+		});
+		if (!rows.length) {
+			window.alert('No new ready pins to send. Pins need image, title, description, link, and board, and cannot already be queued.');
+			return;
+		}
+		if (pinterestScheduler) pinterestScheduler.disabled = true;
+		postPinterestRowsToScheduler(rows).then(function (data) {
+			var queued = Array.isArray(data.queued) ? data.queued : [];
+			renderVisualPlanner();
+			window.alert('Sent ' + String(queued.length || rows.length) + ' pin(s) to the Pinterest scheduler.');
+		}).catch(function (error) {
+			window.alert(error && error.message ? error.message : 'Could not send pins to the local scheduler. Make sure localhost:8787 is running on this device.');
+		}).finally(function () {
+			if (pinterestScheduler) pinterestScheduler.disabled = false;
+		});
+	}
+
+	function sharePinterestPlanner() {
+		var dates = visualDates();
+		var formData = new FormData();
+		formData.append('action', 'bbb_social_calendar_create_share');
+		formData.append('range', visualWeekRangeLabel(dates));
+		formData.append('rows', JSON.stringify(pinterestPlannerRows()));
+		postSocialForm(formData).then(function (data) {
+			var url = data && data.url ? data.url : '';
+			if (!url) return;
+			if (navigator.clipboard && navigator.clipboard.writeText) {
+				navigator.clipboard.writeText(url).catch(function () {});
+			}
+			window.prompt('Shareable view-only link:', url);
+		}).catch(function (error) {
+			window.alert(error && error.message ? error.message : 'Could not create share link.');
+		});
+	}
+
+	function loadContactSheetImage(src) {
+		return new Promise(function (resolve) {
+			if (!src) {
+				resolve(null);
+				return;
+			}
+			var image = new Image();
+			image.crossOrigin = 'anonymous';
+			image.onload = function () { resolve(image); };
+			image.onerror = function () { resolve(null); };
+			image.src = src;
+		});
+	}
+
+	function drawWrappedText(context, text, x, y, maxWidth, lineHeight, maxLines) {
+		var words = String(text || '').split(/\s+/).filter(Boolean);
+		var line = '';
+		var lines = 0;
+		if (!words.length) return y;
+		words.forEach(function (word) {
+			var test = line ? line + ' ' + word : word;
+			if (context.measureText(test).width > maxWidth && line) {
+				if (lines < maxLines) context.fillText(line, x, y);
+				y += lineHeight;
+				lines += 1;
+				line = word;
+			} else {
+				line = test;
+			}
+		});
+		if (line && lines < maxLines) {
+			context.fillText(line, x, y);
+			y += lineHeight;
+		}
+		return y;
+	}
+
+	function dataUrlToBytes(dataUrl) {
+		var base64 = String(dataUrl || '').split(',')[1] || '';
+		var binary = window.atob(base64);
+		var bytes = new Uint8Array(binary.length);
+		for (var i = 0; i < binary.length; i += 1) {
+			bytes[i] = binary.charCodeAt(i);
+		}
+		return bytes;
+	}
+
+	function buildPdfFromJpegs(pages, pageWidth, pageHeight) {
+		var encoder = new TextEncoder();
+		var parts = [];
+		var offsets = [0];
+		var position = 0;
+		var objectCount = 2 + pages.length * 3;
+
+		function pushString(value) {
+			var bytes = encoder.encode(value);
+			parts.push(bytes);
+			position += bytes.length;
+		}
+
+		function pushBytes(bytes) {
+			parts.push(bytes);
+			position += bytes.length;
+		}
+
+		function addObject(number, bodyParts) {
+			offsets[number] = position;
+			pushString(number + ' 0 obj\n');
+			bodyParts.forEach(function (part) {
+				if (typeof part === 'string') {
+					pushString(part);
+				} else {
+					pushBytes(part);
+				}
+			});
+			pushString('\nendobj\n');
+		}
+
+		pushString('%PDF-1.4\n');
+		addObject(1, ['<< /Type /Catalog /Pages 2 0 R >>']);
+		addObject(2, ['<< /Type /Pages /Kids [', pages.map(function (_page, index) {
+			return String(3 + index * 3) + ' 0 R';
+		}).join(' '), '] /Count ' + pages.length + ' >>']);
+
+		pages.forEach(function (page, index) {
+			var pageObject = 3 + index * 3;
+			var contentObject = pageObject + 1;
+			var imageObject = pageObject + 2;
+			var imageName = 'Im' + String(index + 1);
+			var content = 'q\n' + pageWidth + ' 0 0 ' + pageHeight + ' 0 0 cm\n/' + imageName + ' Do\nQ';
+			addObject(pageObject, [
+				'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + pageWidth + ' ' + pageHeight + '] ',
+				'/Resources << /XObject << /' + imageName + ' ' + imageObject + ' 0 R >> >> ',
+				'/Contents ' + contentObject + ' 0 R >>'
+			]);
+			addObject(contentObject, ['<< /Length ' + encoder.encode(content).length + ' >>\nstream\n' + content + '\nendstream']);
+			addObject(imageObject, [
+				'<< /Type /XObject /Subtype /Image /Width ' + page.width + ' /Height ' + page.height + ' ',
+				'/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' + page.bytes.length + ' >>\nstream\n',
+				page.bytes,
+				'\nendstream'
+			]);
+		});
+
+		var xrefStart = position;
+		pushString('xref\n0 ' + (objectCount + 1) + '\n0000000000 65535 f \n');
+		for (var i = 1; i <= objectCount; i += 1) {
+			pushString(String(offsets[i]).padStart(10, '0') + ' 00000 n \n');
+		}
+		pushString('trailer\n<< /Size ' + (objectCount + 1) + ' /Root 1 0 R >>\nstartxref\n' + xrefStart + '\n%%EOF');
+		return new Blob(parts, { type: 'application/pdf' });
+	}
+
+	function downloadPinterestContactSheet() {
+		var rows = pinterestPlannerRows();
+		var dates = visualDates();
+		var width = 2550;
+		var height = 3300;
+		var margin = 120;
+		Promise.all(rows.map(function (row) { return loadContactSheetImage(row.image); })).then(function (images) {
+			var pdfPages = [];
+			rows.forEach(function (row, index) {
+				var canvas = document.createElement('canvas');
+				canvas.width = width;
+				canvas.height = height;
+				var context = canvas.getContext('2d');
+				if (!context) return;
+				context.fillStyle = '#f6f6f6';
+				context.fillRect(0, 0, width, height);
+				context.fillStyle = '#111';
+				context.font = 'bold 72px Arial, sans-serif';
+				context.fillText('Social Planner Pinterest Contact Sheet', margin, 110);
+				context.font = '38px Arial, sans-serif';
+				context.fillStyle = '#555';
+				context.fillText(visualWeekRangeLabel(dates) + ' · page ' + String(index + 1) + ' of ' + String(rows.length), margin, 170);
+				var top = 240;
+				context.fillStyle = '#fff';
+				context.fillRect(margin, top, width - margin * 2, height - top - margin);
+				context.strokeStyle = '#ddd';
+				context.lineWidth = 4;
+				context.strokeRect(margin, top, width - margin * 2, height - top - margin);
+				context.fillStyle = '#111';
+				context.fillRect(margin + 44, top + 44, 760, 88);
+				context.fillStyle = '#fff';
+				context.font = 'bold 40px Arial, sans-serif';
+				context.fillText(row.dateLabel + ' · ' + row.pin + ' · ' + row.time, margin + 72, top + 102);
+				context.fillStyle = '#eee';
+				context.fillRect(margin + 44, top + 170, 760, 1140);
+				var image = images[index];
+				if (image) {
+					var boxX = margin + 44;
+					var boxY = top + 170;
+					var boxW = 760;
+					var boxH = 1140;
+					var ratio = Math.max(boxW / image.width, boxH / image.height);
+					var drawW = image.width * ratio;
+					var drawH = image.height * ratio;
+					context.drawImage(image, boxX + (boxW - drawW) / 2, boxY + (boxH - drawH) / 2, drawW, drawH);
+				} else {
+					context.fillStyle = '#777';
+					context.font = 'bold 42px Arial, sans-serif';
+					context.fillText('Image could not be embedded', margin + 110, top + 740);
+				}
+				var textX = margin + 880;
+				var textY = top + 72;
+				var textW = width - textX - margin - 56;
+				context.fillStyle = '#777';
+				context.font = 'bold 30px Arial, sans-serif';
+				context.fillText('TITLE', textX, textY);
+				context.fillStyle = '#111';
+				context.font = '48px Arial, sans-serif';
+				textY = drawWrappedText(context, row.title || 'Not filled', textX, textY + 66, textW, 58, 4) + 42;
+				context.fillStyle = '#777';
+				context.font = 'bold 30px Arial, sans-serif';
+				context.fillText('DESCRIPTION', textX, textY);
+				context.fillStyle = '#111';
+				context.font = '40px Arial, sans-serif';
+				textY = drawWrappedText(context, row.description || 'Not filled', textX, textY + 58, textW, 50, 10) + 42;
+				context.fillStyle = '#777';
+				context.font = 'bold 30px Arial, sans-serif';
+				context.fillText('LINK', textX, textY);
+				context.fillStyle = '#111';
+				context.font = '34px Arial, sans-serif';
+				textY = drawWrappedText(context, row.link || 'Not filled', textX, textY + 52, textW, 42, 4) + 42;
+				context.fillStyle = '#777';
+				context.font = 'bold 30px Arial, sans-serif';
+				context.fillText('BOARD / NOTE', textX, textY);
+				context.fillStyle = '#111';
+				context.font = '34px Arial, sans-serif';
+				drawWrappedText(context, (row.board || 'Not filled') + (row.note ? ' · ' + row.note : ''), textX, textY + 52, textW, 42, 5);
+				context.fillStyle = '#555';
+				context.font = '24px Arial, sans-serif';
+				drawWrappedText(context, 'Image URL: ' + (row.image || 'Not filled'), margin + 44, height - margin - 44, width - margin * 2 - 88, 30, 2);
+				pdfPages.push({
+					bytes: dataUrlToBytes(canvas.toDataURL('image/jpeg', 0.92)),
+					width: width,
+					height: height
+				});
+			});
+			if (!pdfPages.length) return;
+			var blob = buildPdfFromJpegs(pdfPages, 612, 792);
+			var link = document.createElement('a');
+			link.href = window.URL.createObjectURL(blob);
+			link.download = 'social-planner-contact-sheet-' + dates[0] + '-to-' + dates[dates.length - 1] + '.pdf';
+			document.body.appendChild(link);
+			link.click();
+			window.setTimeout(function () {
+				window.URL.revokeObjectURL(link.href);
+				link.remove();
+			}, 0);
+		}).catch(function () {
+			window.alert('Could not create the PDF. One of the images may be blocking browser export, so try replacing that image or use the share link.');
+		});
+	}
+
+	function setMode(mode) {
+		activeMode = mode === 'visual' ? 'visual' : 'calendar';
+		if (calendarEl) calendarEl.hidden = activeMode === 'visual';
+		if (visualPlanner) visualPlanner.hidden = activeMode !== 'visual';
+		if (pageRoot) {
+			pageRoot.dataset.currentMode = activeMode;
+			pageRoot.classList.toggle('is-calendar-mode', activeMode === 'calendar');
+			pageRoot.classList.toggle('is-visual-mode', activeMode === 'visual');
+		}
+		Array.prototype.slice.call(modeButtons).forEach(function (button) {
+			var isActive = button.getAttribute('data-calendar-mode') === activeMode;
+			button.classList.toggle('is-active', isActive);
+			button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+		});
+		if (activeMode === 'visual') renderVisualPlanner();
+		if (activeMode === 'calendar' && activeCalendar) activeCalendar.updateSize();
+	}
+
+	function imageFileToPreview(file, callback) {
+		var reader = new FileReader();
+		reader.onload = function () {
+			var image = new Image();
+			image.onload = function () {
+				var maxSide = 900;
+				var ratio = Math.min(1, maxSide / Math.max(image.width, image.height));
+				var canvas = document.createElement('canvas');
+				canvas.width = Math.max(1, Math.round(image.width * ratio));
+				canvas.height = Math.max(1, Math.round(image.height * ratio));
+				var context = canvas.getContext('2d');
+				if (!context) {
+					callback(String(reader.result || ''));
+					return;
+				}
+				context.drawImage(image, 0, 0, canvas.width, canvas.height);
+				callback(canvas.toDataURL('image/jpeg', 0.84));
+			};
+			image.onerror = function () {
+				callback(String(reader.result || ''));
+			};
+			image.src = String(reader.result || '');
+		};
+		reader.readAsDataURL(file);
+	}
+
+	function uploadVisualFile(file) {
+		if (!settings.ajaxUrl || !settings.stateNonce) return Promise.resolve(null);
+		var formData = new FormData();
+		formData.append('action', 'bbb_social_calendar_upload_asset');
+		formData.append('asset', file);
+		return postSocialForm(formData).then(function (data) {
+			return data && data.asset ? data.asset : null;
+		});
+	}
+
+	function loadBoyfriendPinResults(query) {
+		if (!settings.ajaxUrl || !settings.stateNonce) return Promise.resolve({ results: [] });
+		var formData = new FormData();
+		formData.append('action', 'bbb_social_calendar_boyfriend_pins');
+		formData.append('query', query || '');
+		return postSocialForm(formData).then(function (data) {
+			data = data || {};
+			return { results: Array.isArray(data.results) ? data.results : [] };
+		});
+	}
+
+	function closeBoyfriendPinPicker() {
+		var existing = document.querySelector('[data-boyfriend-pin-picker]');
+		if (existing) existing.remove();
+	}
+
+	function chooseBoyfriendPinAsset(date, slotIndex, allowMultiple, asset) {
+		if (!asset || !asset.url) return;
+		asset = pinterestAssetWithDefaults(asset);
+		var currentAssets = getVisualAssets(date, visualPlatform);
+		if (visualPlatform === 'pinterest' && typeof slotIndex === 'number') {
+			var existingAsset = currentAssets[slotIndex] || {};
+				currentAssets[slotIndex] = Object.assign({}, asset, {
+					board: existingAsset.board || asset.board || '',
+					note: existingAsset.note || asset.note || '',
+					pinTime: pinterestSlotTimes[slotIndex] || asset.pinTime || '',
+					pinTitle: existingAsset.pinTitle || asset.pinTitle || '',
+					pinDescription: existingAsset.pinDescription || asset.pinDescription || '',
+					sourceUrl: existingAsset.sourceUrl || asset.sourceUrl || asset.profileUrl || ''
+				});
+		} else {
+			currentAssets = currentAssets.concat([Object.assign({}, asset, {
+				pinTitle: asset.pinTitle || '',
+				pinDescription: asset.pinDescription || '',
+				sourceUrl: asset.sourceUrl || asset.profileUrl || ''
+			})]);
+		}
+		saveVisualAssets(date, visualPlatform, currentAssets);
+		renderVisualPlanner();
+		if (!allowMultiple) closeBoyfriendPinPicker();
+	}
+
+	function renderBoyfriendPinResults(results) {
+		if (!results.length) {
+			return '<p class="bbb-social-calendar__pinPickerEmpty">No boyfriend pins found.</p>';
+		}
+		return results.map(function (result) {
+			var assets = Array.isArray(result.assets) ? result.assets : [];
+			return '<section class="bbb-social-calendar__pinPickerGroup">' +
+				'<header><strong>' + escapeHtml(result.title || 'Book boyfriend') + '</strong><a href="' + escapeHtml(result.url || '#') + '" target="_blank" rel="noopener noreferrer">open page</a></header>' +
+				'<div class="bbb-social-calendar__pinPickerGrid">' +
+					assets.map(function (asset) {
+						var choiceAsset = Object.assign({}, asset, {
+							profileUrl: asset.profileUrl || result.url || '',
+							sourceUrl: asset.sourceUrl || asset.profileUrl || result.url || ''
+						});
+						return '<button type="button" data-boyfriend-pin-choice=\'' + escapeHtml(JSON.stringify(choiceAsset)) + '\'>' +
+							'<img src="' + escapeHtml(choiceAsset.url || choiceAsset.dataUrl || '') + '" alt="' + escapeHtml(choiceAsset.name || 'pinnable image') + '" loading="lazy">' +
+							'<span>' + escapeHtml(choiceAsset.pinTitle || choiceAsset.name || 'pin image') + '</span>' +
+						'</button>';
+					}).join('') +
+				'</div>' +
+			'</section>';
+		}).join('');
+	}
+
+	function openBoyfriendPinPicker(date, slotIndex, allowMultiple) {
+		closeBoyfriendPinPicker();
+		var picker = document.createElement('div');
+		picker.className = 'bbb-social-calendar__pinPicker';
+		picker.setAttribute('data-boyfriend-pin-picker', 'true');
+		picker.innerHTML = '<div class="bbb-social-calendar__pinPickerPanel" role="dialog" aria-modal="true" aria-label="Choose boyfriend pin">' +
+			'<header><div><span>Book Boyfriend Pins</span><strong>Choose a pinnable image</strong></div><button type="button" data-boyfriend-pin-close>close</button></header>' +
+			'<label><span>search boyfriend page</span><input type="search" data-boyfriend-pin-search placeholder="name, book, or boyfriend" autocomplete="off"></label>' +
+			'<div class="bbb-social-calendar__pinPickerResults" data-boyfriend-pin-results><p class="bbb-social-calendar__pinPickerEmpty">Loading pins...</p></div>' +
+		'</div>';
+		document.body.appendChild(picker);
+		var resultsEl = picker.querySelector('[data-boyfriend-pin-results]');
+		var searchEl = picker.querySelector('[data-boyfriend-pin-search]');
+		var searchTimer = null;
+		var renderResults = function (query) {
+			if (resultsEl) resultsEl.innerHTML = '<p class="bbb-social-calendar__pinPickerEmpty">Loading pins...</p>';
+			loadBoyfriendPinResults(query).then(function (data) {
+				if (resultsEl) resultsEl.innerHTML = renderBoyfriendPinResults(data.results || []);
+			}).catch(function () {
+				if (resultsEl) resultsEl.innerHTML = '<p class="bbb-social-calendar__pinPickerEmpty">Could not load pins.</p>';
+			});
+		};
+		picker.addEventListener('click', function (event) {
+			if (event.target === picker || event.target.closest('[data-boyfriend-pin-close]')) {
+				closeBoyfriendPinPicker();
+				return;
+			}
+			var choice = event.target.closest('[data-boyfriend-pin-choice]');
+			if (!choice) return;
+			try {
+				chooseBoyfriendPinAsset(date, slotIndex, allowMultiple, JSON.parse(choice.getAttribute('data-boyfriend-pin-choice') || '{}'));
+			} catch (error) {
+				if (window.console && window.console.warn) window.console.warn(error);
+			}
+		});
+		if (searchEl) {
+			searchEl.addEventListener('input', function () {
+				window.clearTimeout(searchTimer);
+				searchTimer = window.setTimeout(function () {
+					renderResults(searchEl.value || '');
+				}, 220);
+			});
+			searchEl.focus();
+		}
+		renderResults('');
+	}
+
+	function addVisualFiles(date, fileList, slotIndex, platformOverride) {
+		var targetPlatform = platformOverride || visualPlatform;
+		if (targetPlatform === 'instagram' && !socialPostingDays[dateFromIso(date).getDay()]) return;
+		var remainingSlots = targetPlatform === 'pinterest' ? Math.max(0, pinterestMaxImages - getVisualAssets(date, targetPlatform).length) : 99;
+		var files = Array.prototype.slice.call(fileList || []).filter(function (file) {
+			return file && file.type && file.type.indexOf('image/') === 0;
+		}).slice(0, targetPlatform === 'pinterest' ? 1 : remainingSlots);
+		if (!files.length) return;
+		files.forEach(function (file, fileIndex) {
+			imageFileToPreview(file, function (dataUrl) {
+				var tempId = 'uploading-' + String(Date.now()) + '-' + Math.random().toString(36).slice(2);
+				var assets = getVisualAssets(date, targetPlatform);
+				var targetIndex = targetPlatform === 'pinterest' && typeof slotIndex === 'number' ? slotIndex : assets.length + fileIndex;
+				var existingAsset = assets[targetIndex] || {};
+				var tempAsset = {
+					id: tempId,
+					type: 'image',
+					name: file.name + ' (uploading)',
+					board: existingAsset.board || '',
+					note: existingAsset.note || '',
+					pinTitle: existingAsset.pinTitle || '',
+					pinDescription: existingAsset.pinDescription || '',
+					sourceUrl: existingAsset.sourceUrl || '',
+					pinTime: pinterestSlotTimes[targetIndex] || existingAsset.pinTime || '',
+					dataUrl: dataUrl,
+					url: dataUrl
+				};
+				assets[targetIndex] = tempAsset;
+				saveVisualAssets(date, targetPlatform, assets);
+				renderVisualPlanner();
+				uploadVisualFile(file).then(function (uploadedAsset) {
+					if (!uploadedAsset) return;
+					var nextAssets = getVisualAssets(date, targetPlatform).map(function (asset) {
+						return asset.id === tempId ? Object.assign({}, uploadedAsset, {
+							board: existingAsset.board || asset.board || '',
+							note: existingAsset.note || asset.note || '',
+							pinTitle: existingAsset.pinTitle || '',
+							pinDescription: existingAsset.pinDescription || '',
+							sourceUrl: existingAsset.sourceUrl || '',
+							pinTime: pinterestSlotTimes[targetIndex] || existingAsset.pinTime || asset.pinTime || ''
+						}) : asset;
+					});
+					saveVisualAssets(date, targetPlatform, nextAssets);
+					renderVisualPlanner();
+				}).catch(function (error) {
+					if (window.console && window.console.warn) window.console.warn(error.message || error);
+					var failedAssets = getVisualAssets(date, targetPlatform).map(function (asset) {
+						if (!asset) return asset;
+						if (asset.id !== tempId) return asset;
+						return Object.assign({}, asset, { name: file.name + ' (saved on this device)' });
+					});
+					saveVisualAssets(date, targetPlatform, failedAssets);
+					renderVisualPlanner();
+				});
+			});
+		});
+	}
+
+	function moveVisualAsset(fromDate, toDate, assetId) {
+		if (!fromDate || !toDate || !assetId || fromDate === toDate) return;
+		if (visualPlatform === 'pinterest' && getVisualAssets(toDate, visualPlatform).length >= pinterestMaxImages) return;
+		var fromAssets = getVisualAssets(fromDate, visualPlatform);
+		var asset = fromAssets.find(function (item) { return item && item.id === assetId; });
+		if (!asset) return;
+		saveVisualAssets(fromDate, visualPlatform, fromAssets.filter(function (item) { return item && item.id !== assetId; }));
+		var toAssets = getVisualAssets(toDate, visualPlatform);
+		toAssets.push(asset);
+		saveVisualAssets(toDate, visualPlatform, toAssets);
+		renderVisualPlanner();
+	}
+
+	function removeVisualAsset(date, assetId) {
+		var assets = getVisualAssets(date, visualPlatform);
+		if (visualPlatform === 'pinterest') {
+			assets = assets.map(function (item, index) {
+				if (!item || item.id !== assetId) return item;
+				return {
+					id: 'slot-' + String(index),
+					type: 'image',
+					name: 'image ' + String(index + 1),
+					board: item.board || '',
+					note: item.note || '',
+					pinTitle: item.pinTitle || '',
+					pinDescription: item.pinDescription || '',
+					sourceUrl: item.sourceUrl || '',
+					pinTime: pinterestSlotTimes[index] || item.pinTime || ''
+				};
+			});
+		} else {
+			assets = assets.filter(function (item) {
+				return item && item.id !== assetId;
+			});
+		}
+		saveVisualAssets(date, visualPlatform, assets);
+		renderVisualPlanner();
+	}
+
+	function showPlatformPicker() {
+		selectedPlatform = '';
+		if (modalTitle) modalTitle.textContent = 'choose platform';
+		if (modalStatus) modalStatus.textContent = dayCompletionLabel();
+		if (platformPicker) platformPicker.hidden = false;
+		if (postForm) postForm.hidden = true;
+		if (modal) {
+			delete modal.dataset.platform;
+			modal.classList.remove('is-scheduled');
+		}
+		renderPlatformPicker();
+	}
+
+	function renderPostForm(platformKey) {
+		var platform = platforms[platformKey] || platforms.threads;
+		var entry = getEntry(selectedDate, platformKey);
+		var timing = postingTimeFor(selectedDate, platformKey);
+		var label = labelForPlatform(selectedDate, platformKey);
+		selectedPlatform = platformKey;
+
+		if (modalTitle) modalTitle.textContent = label;
+		if (modalStatus) modalStatus.textContent = entry.scheduled ? 'scheduled' : 'not scheduled';
+		if (platformPicker) platformPicker.hidden = true;
+		if (postForm) postForm.hidden = false;
+		if (postPlatform) postPlatform.textContent = label;
+		if (postTime) postTime.textContent = 'suggested time: ' + timing.label;
+		if (postDraft) postDraft.value = entry.draft || '';
+		if (postOpen) postOpen.href = platform.url;
+		if (modal) modal.dataset.platform = platformKey;
+		if (modal) modal.classList.toggle('is-scheduled', !!entry.scheduled);
+	}
+
+	function openModal(date, platformKey) {
+		selectedDate = date || selectedDate;
+		selectedPlatform = platformKey || '';
+		if (!modal) return;
+		modal.classList.add('is-open');
+		modal.setAttribute('aria-hidden', 'false');
+		if (modalDate) modalDate.textContent = dateLabel(selectedDate);
+		if (selectedPlatform) renderPostForm(selectedPlatform);
+		else showPlatformPicker();
+	}
+
+	function closeModal() {
+		if (!modal) return;
+		modal.classList.remove('is-open');
+		modal.setAttribute('aria-hidden', 'true');
+	}
+
+	function refreshCalendar() {
+		if (activeCalendar) activeCalendar.refetchEvents();
+	}
+
+	function initCalendar() {
+		if (!calendarEl || !window.FullCalendar) return;
+		var plugins = [
+			window.FullCalendar.dayGridPlugin,
+			window.FullCalendar.timeGridPlugin,
+			window.FullCalendar.listPlugin,
+			window.FullCalendar.interactionPlugin
+		].filter(Boolean);
+
+		if (window.FullCalendar.ICalendar && window.FullCalendar.ICalendar.default) {
+			plugins.push(window.FullCalendar.ICalendar.default);
+		}
+
+		var eventSources = [];
+		if (settings.icsProxyUrl) {
+			eventSources.push({ url: settings.icsProxyUrl, format: 'ics', color: '#d9d9d9', textColor: '#050505' });
+		}
+
+		activeCalendar = new window.FullCalendar.Calendar(calendarEl, {
+			plugins: plugins,
+			initialView: 'bbbFourWeek',
+			initialDate: startOfWeek(new Date()),
+			views: {
+				bbbFourWeek: {
+					type: 'dayGrid',
+					duration: { weeks: 4 },
+					dateAlignment: 'week',
+					dateIncrement: { weeks: 4 },
+					buttonText: '4 weeks'
+				}
+			},
+			height: 'auto',
+			timeZone: settings.timeZone || 'local',
+			nowIndicator: true,
+			navLinks: true,
+			dayMaxEvents: false,
+			headerToolbar: { left: 'prev,next', center: 'title', right: '' },
+			dayHeaderContent: function (arg) {
+				var label = dayHeaderLabels[arg.date.getUTCDay()];
+				return {
+					html: '<span class="bbb-social-calendar__dayHeader"><strong>' + label.english + '</strong><em>' + label.french + '</em></span>'
+				};
+			},
+			datesSet: function () {
+				window.setTimeout(renderVisibleDayCells, 0);
+			},
+			dayCellDidMount: function (info) {
+				renderDayCell(info.el, localIsoDate(info.date));
+			},
+			dateClick: function (info) { openModal(info.dateStr); },
+			eventClick: function (info) {
+				var props = info.event.extendedProps || {};
+				if (props.platform && props.isoDate) {
+					info.jsEvent.preventDefault();
+					openModal(props.isoDate, props.platform);
+				}
+			},
+			eventDidMount: function (info) {
+				var props = info.event.extendedProps || {};
+				if (props.platform) info.el.classList.add(platformClass(props.platform));
+				if (props.scheduled) info.el.classList.add('is-scheduled');
+			},
+			eventClassNames: function (arg) {
+				var props = arg.event.extendedProps || {};
+				return [props.platform ? platformClass(props.platform) : '', props.scheduled ? 'is-scheduled' : ''].filter(Boolean);
+			}
+		});
+		activeCalendar.render();
+		renderVisibleDayCells();
+
+		calendarEl.addEventListener('click', function (event) {
+			var task = event.target.closest('[data-cell-platform]');
+			if (!task) return;
+			var cell = task.closest('.fc-daygrid-day[data-date]');
+			if (!cell) return;
+			event.preventDefault();
+			event.stopPropagation();
+			openModal(cell.getAttribute('data-date'), task.getAttribute('data-cell-platform'));
+		});
+
+		var todayButton = document.querySelector('[data-calendar-today]');
+		if (todayButton) todayButton.addEventListener('click', function () {
+			activeCalendar.today();
+			window.setTimeout(renderVisibleDayCells, 0);
+		});
+	}
+
+	function initModal() {
+		if (!modal) return;
+		Array.prototype.slice.call(closeButtons).forEach(function (button) {
+			button.addEventListener('click', closeModal);
+		});
+		document.addEventListener('keydown', function (event) {
+			if (event.key === 'Escape') closeModal();
+		});
+		if (platformPicker) {
+			platformPicker.addEventListener('click', function (event) {
+				var button = event.target.closest('[data-platform-choice]');
+				if (button) renderPostForm(button.getAttribute('data-platform-choice'));
+			});
+		}
+		if (postDraft) {
+			postDraft.addEventListener('input', function () {
+				if (!selectedPlatform) return;
+				saveEntry(selectedDate, selectedPlatform, { draft: postDraft.value });
+				refreshCalendar();
+				renderVisibleDayCells();
+				if (activeMode === 'visual') renderVisualPlanner();
+			});
+		}
+		if (postCopy) {
+			postCopy.addEventListener('click', function () {
+				var text = postDraft ? postDraft.value : '';
+				if (navigator.clipboard && text) {
+					navigator.clipboard.writeText(text);
+					postCopy.textContent = 'copied';
+					window.setTimeout(function () { postCopy.textContent = 'copy post'; }, 1400);
+				}
+			});
+		}
+		if (postScheduled) {
+			postScheduled.addEventListener('click', function () {
+				if (!selectedPlatform) return;
+				saveEntry(selectedDate, selectedPlatform, { scheduled: true, draft: postDraft ? postDraft.value : '' });
+				renderPostForm(selectedPlatform);
+				refreshCalendar();
+				renderVisibleDayCells();
+				closeModal();
+			});
+		}
+	}
+
+	function initVisualPlanner() {
+		if (!visualPlanner) return;
+		Array.prototype.slice.call(modeButtons).forEach(function (button) {
+			button.addEventListener('click', function () {
+				setMode(button.getAttribute('data-calendar-mode'));
+			});
+		});
+		if (visualPrev) {
+			visualPrev.addEventListener('click', function () {
+				visualWindowStart.setDate(visualWindowStart.getDate() - visualWindowDays);
+				renderVisualPlanner();
+			});
+		}
+		if (visualNext) {
+			visualNext.addEventListener('click', function () {
+				visualWindowStart.setDate(visualWindowStart.getDate() + visualWindowDays);
+				renderVisualPlanner();
+			});
+		}
+		if (visualToday) {
+			visualToday.addEventListener('click', function () {
+				visualWindowStart = dateFromIso(localIsoDate(new Date()));
+				renderVisualPlanner();
+			});
+		}
+		if (pinterestReviewToggle) {
+			pinterestReviewToggle.addEventListener('click', function () {
+				setMode('visual');
+				pinterestReviewActive = !pinterestReviewActive;
+				if (pinterestReviewActive) visualPlatform = reviewPlatform;
+				renderVisualPlanner();
+			});
+		}
+		if (pinterestExport) {
+			pinterestExport.addEventListener('click', exportPinterestPlanner);
+		}
+		if (pinterestShare) {
+			pinterestShare.addEventListener('click', sharePinterestPlanner);
+		}
+		if (pinterestContactSheet) {
+			pinterestContactSheet.addEventListener('click', downloadPinterestContactSheet);
+		}
+		if (pinterestScheduler) {
+			pinterestScheduler.addEventListener('click', sendPinterestToScheduler);
+		}
+		if (instagramScheduler) {
+			instagramScheduler.addEventListener('click', sendInstagramToScheduler);
+		}
+		if (visualPlatforms) {
+			visualPlatforms.addEventListener('click', function (event) {
+				var button = event.target.closest('[data-visual-platform]');
+				if (!button) return;
+				visualPlatform = button.getAttribute('data-visual-platform') || 'pinterest';
+				pinterestReviewActive = false;
+				renderVisualPlanner();
+			});
+		}
+		if (pinterestReview) {
+			pinterestReview.addEventListener('click', function (event) {
+					var platformButton = event.target.closest('[data-review-platform]');
+					if (platformButton) {
+						reviewPlatform = platformButton.getAttribute('data-review-platform') || 'pinterest';
+						visualPlatform = reviewPlatform;
+						renderVisualPlanner();
+						return;
+					}
+					var saveButton = event.target.closest('[data-review-save]');
+					if (saveButton) {
+						saveReviewCard(saveButton);
+						return;
+					}
+					var sendButton = event.target.closest('[data-review-send]');
+					if (sendButton) {
+						sendInstagramReviewCard(sendButton);
+						return;
+					}
+					var move = event.target.closest('[data-review-move-asset]');
+					if (!move) return;
+				moveAssetWithinDay(
+					move.getAttribute('data-review-move-date'),
+					move.getAttribute('data-review-move-platform') || reviewPlatform,
+					move.getAttribute('data-review-move-asset'),
+					Number(move.getAttribute('data-review-move-direction')) || 0
+				);
+			});
+			pinterestReview.addEventListener('input', function (event) {
+				var field = event.target.closest('[data-review-asset-field]');
+				if (field) {
+					savePinterestReviewField(field);
+					return;
+				}
+				var assetNote = event.target.closest('[data-review-asset-note]');
+				if (assetNote) {
+					saveReviewAssetNote(assetNote);
+					return;
+				}
+				var draft = event.target.closest('[data-review-draft]');
+				if (draft) {
+					saveEntry(draft.getAttribute('data-review-draft'), draft.getAttribute('data-review-draft-platform') || reviewPlatform, { draft: draft.value });
+				}
+			});
+			pinterestReview.addEventListener('change', function (event) {
+				var upload = event.target.closest('[data-review-upload]');
+				if (upload) {
+					var uploadSlot = upload.hasAttribute('data-review-upload-slot') ? Number(upload.getAttribute('data-review-upload-slot')) : null;
+					addVisualFiles(upload.getAttribute('data-review-upload'), upload.files, uploadSlot, upload.getAttribute('data-review-upload-platform') || reviewPlatform);
+					upload.value = '';
+					return;
+				}
+				var field = event.target.closest('[data-review-asset-field]');
+				if (field) {
+					savePinterestReviewField(field);
+					renderVisualPlanner();
+					return;
+				}
+				var assetNote = event.target.closest('[data-review-asset-note]');
+				if (assetNote) {
+					saveReviewAssetNote(assetNote);
+					renderVisualPlanner();
+					return;
+				}
+				var draft = event.target.closest('[data-review-draft]');
+				if (!draft) return;
+				saveEntry(draft.getAttribute('data-review-draft'), draft.getAttribute('data-review-draft-platform') || reviewPlatform, { draft: draft.value });
+				renderVisualPlanner();
+			});
+		}
+		if (visualWeek) {
+			visualWeek.addEventListener('click', function (event) {
+				var moveButton = event.target.closest('[data-move-visual-asset]');
+				if (moveButton) {
+					var moveDay = moveButton.closest('[data-visual-day]');
+					if (moveDay) {
+						moveAssetWithinDay(
+							moveDay.getAttribute('data-visual-day'),
+							visualPlatform,
+							moveButton.getAttribute('data-move-visual-asset'),
+							Number(moveButton.getAttribute('data-move-visual-asset-direction')) || 0
+						);
+					}
+					return;
+				}
+				var boyfriendPinButton = event.target.closest('[data-visual-boyfriend-pin]');
+				if (!boyfriendPinButton) return;
+				var boyfriendPinSlot = boyfriendPinButton.hasAttribute('data-visual-boyfriend-pin-slot') ? Number(boyfriendPinButton.getAttribute('data-visual-boyfriend-pin-slot')) : null;
+				openBoyfriendPinPicker(
+					boyfriendPinButton.getAttribute('data-visual-boyfriend-pin'),
+					boyfriendPinSlot,
+					boyfriendPinButton.getAttribute('data-visual-boyfriend-pin-multiple') === 'true'
+				);
+			});
+			visualWeek.addEventListener('input', function (event) {
+				var assetField = event.target.closest('[data-visual-asset-field]');
+				if (assetField) {
+					var fieldDate = assetField.getAttribute('data-visual-asset-field');
+					var fieldSlot = Number(assetField.getAttribute('data-visual-asset-slot'));
+					var fieldKey = assetField.getAttribute('data-visual-asset-key');
+					var allowedFields = { pinTitle: true, pinDescription: true, sourceUrl: true, pinTime: true };
+					if (!allowedFields[fieldKey] || Number.isNaN(fieldSlot)) return;
+					var fieldAssets = getVisualAssets(fieldDate, visualPlatform);
+					fieldAssets[fieldSlot] = Object.assign(
+						{
+							id: 'slot-' + String(fieldSlot),
+							type: 'image',
+							name: 'image ' + String(fieldSlot + 1),
+							pinTime: pinterestSlotTimes[fieldSlot] || ''
+						},
+						fieldAssets[fieldSlot] || {}
+					);
+					fieldAssets[fieldSlot][fieldKey] = assetField.value;
+					if (fieldKey !== 'pinTime') {
+						fieldAssets[fieldSlot].pinTime = pinterestSlotTimes[fieldSlot] || fieldAssets[fieldSlot].pinTime || '';
+					}
+					saveVisualAssets(fieldDate, visualPlatform, fieldAssets);
+					return;
+				}
+				var assetNote = event.target.closest('[data-visual-asset-note]');
+				if (assetNote) {
+					var noteDate = assetNote.getAttribute('data-visual-asset-note');
+					var noteSlot = assetNote.hasAttribute('data-visual-asset-slot') ? Number(assetNote.getAttribute('data-visual-asset-slot')) : null;
+					var noteAssetId = assetNote.getAttribute('data-visual-asset-note-id');
+					var noteAssets = getVisualAssets(noteDate, visualPlatform);
+					if (visualPlatform === 'pinterest' && typeof noteSlot === 'number') {
+						noteAssets[noteSlot] = Object.assign(
+							{
+								id: 'slot-' + String(noteSlot),
+								type: 'image',
+								name: 'image ' + String(noteSlot + 1)
+							},
+							noteAssets[noteSlot] || {},
+							{ note: assetNote.value }
+						);
+					} else {
+						noteAssets = noteAssets.map(function (asset) {
+							return asset && asset.id === noteAssetId ? Object.assign({}, asset, { note: assetNote.value }) : asset;
+						});
+					}
+					saveVisualAssets(noteDate, visualPlatform, noteAssets);
+					return;
+				}
+				var draft = event.target.closest('[data-visual-draft]');
+				if (!draft) return;
+				saveEntry(draft.getAttribute('data-visual-draft'), visualPlatform, { draft: draft.value });
+				refreshCalendar();
+				renderVisibleDayCells();
+			});
+			visualWeek.addEventListener('change', function (event) {
+				var assetBoard = event.target.closest('[data-visual-asset-board]');
+				if (assetBoard) {
+					var slot = Number(assetBoard.getAttribute('data-visual-asset-slot'));
+					var date = assetBoard.getAttribute('data-visual-asset-board');
+					var assets = getVisualAssets(date, visualPlatform);
+					assets[slot] = Object.assign(
+						{
+							id: 'slot-' + String(slot),
+							type: 'image',
+							name: 'image ' + String(slot + 1)
+						},
+						assets[slot] || {},
+						{ board: assetBoard.value }
+					);
+					saveVisualAssets(date, visualPlatform, assets);
+					assetBoard.closest('.bbb-social-calendar__boardSelect').classList.toggle('is-filled', !!assetBoard.value);
+					assetBoard.closest('.bbb-social-calendar__boardSelect').classList.toggle('is-empty', !assetBoard.value);
+					return;
+				}
+				var board = event.target.closest('[data-visual-board]');
+				if (board) {
+					saveEntry(board.getAttribute('data-visual-board'), visualPlatform, { board: board.value });
+					return;
+				}
+				var upload = event.target.closest('[data-visual-upload]');
+				if (!upload) return;
+				var uploadSlot = upload.hasAttribute('data-visual-upload-slot') ? Number(upload.getAttribute('data-visual-upload-slot')) : null;
+				addVisualFiles(upload.getAttribute('data-visual-upload'), upload.files, uploadSlot);
+				upload.value = '';
+			});
+			visualWeek.addEventListener('dragstart', function (event) {
+				var asset = event.target.closest('[data-visual-asset-id]');
+				if (!asset || !event.dataTransfer) return;
+				event.dataTransfer.setData('text/plain', JSON.stringify({
+					assetId: asset.getAttribute('data-visual-asset-id'),
+					fromDate: asset.getAttribute('data-visual-asset-date')
+				}));
+			});
+			visualWeek.addEventListener('dragover', function (event) {
+				var drop = event.target.closest('[data-visual-drop]');
+				if (!drop) return;
+				event.preventDefault();
+				drop.classList.add('is-dragging');
+			});
+			visualWeek.addEventListener('dragleave', function (event) {
+				var drop = event.target.closest('[data-visual-drop]');
+				if (drop) drop.classList.remove('is-dragging');
+			});
+			visualWeek.addEventListener('drop', function (event) {
+				var drop = event.target.closest('[data-visual-drop]');
+				if (!drop) return;
+				event.preventDefault();
+				drop.classList.remove('is-dragging');
+				var date = drop.getAttribute('data-visual-drop');
+				if (event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length) {
+					addVisualFiles(date, event.dataTransfer.files);
+					return;
+				}
+				try {
+					var payload = JSON.parse(event.dataTransfer.getData('text/plain') || '{}');
+					moveVisualAsset(payload.fromDate, date, payload.assetId);
+				} catch (error) {
+					return;
+				}
+			});
+			visualWeek.addEventListener('click', function (event) {
+				var remove = event.target.closest('[data-remove-visual-asset]');
+				if (!remove) return;
+				var day = remove.closest('[data-visual-day]');
+				if (!day) return;
+				removeVisualAsset(day.getAttribute('data-visual-day'), remove.getAttribute('data-remove-visual-asset'));
+			});
+		}
+		setMode(activeMode);
+	}
+
+		hydrateStateFromLocalCache();
+		syncLocalInstagramStateToWordPress();
+		initModal();
+	initVisualPlanner();
+	initCalendar();
+	window.setInterval(syncPinterestPublishedStatuses, 60000);
+})();

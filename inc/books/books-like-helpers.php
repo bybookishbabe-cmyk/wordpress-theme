@@ -17,6 +17,15 @@ function bbb_books_like_post_types(): array {
 }
 
 function bbb_books_like_book_data(int $book_id): array {
+	$modified  = (string) get_post_field('post_modified_gmt', $book_id);
+	$version   = function_exists('sss_library_cache_version') ? sss_library_cache_version() : (string) wp_get_theme()->get('Version');
+	$cache_key = 'bbb_books_like_book_' . $book_id . '_' . md5($version . '|' . $modified);
+	$cached    = get_transient($cache_key);
+
+	if (is_array($cached)) {
+		return $cached;
+	}
+
 	if (function_exists('sss_article_book_data')) {
 		$data = sss_article_book_data($book_id);
 	} else {
@@ -52,6 +61,8 @@ function bbb_books_like_book_data(int $book_id): array {
 	$data['private'] = function_exists('bbb_book_is_private') ? bbb_book_is_private($book_id) : false;
 	$data['title'] = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title((string) ($data['title'] ?? '')) : (string) ($data['title'] ?? '');
 	$data['author'] = function_exists('bbb_bookish_proper_name') ? bbb_bookish_proper_name((string) ($data['author'] ?? '')) : (string) ($data['author'] ?? '');
+	$data['most_like_book_ids'] = bbb_books_like_related_ids($book_id);
+	$data['most_like_handles'] = bbb_books_like_related_handles($book_id);
 
 	if (!isset($data['shelf']) || !is_array($data['shelf'])) {
 		$data['shelf'] = array('name' => '', 'slug' => '');
@@ -60,7 +71,58 @@ function bbb_books_like_book_data(int $book_id): array {
 		$data['tropes'] = array();
 	}
 
+	set_transient($cache_key, $data, 12 * HOUR_IN_SECONDS);
+
 	return $data;
+}
+
+function bbb_books_like_related_ids(int $book_id): array {
+	if (function_exists('bbb_sanitize_book_relationship_ids')) {
+		return bbb_sanitize_book_relationship_ids(get_post_meta($book_id, '_bbb_most_like_book_ids', true), $book_id);
+	}
+
+	$ids = array();
+	foreach ((array) get_post_meta($book_id, '_bbb_most_like_book_ids', true) as $item) {
+		$id = absint($item);
+		if ($id > 0 && $id !== $book_id && 'bbb_book' === get_post_type($id)) {
+			$ids[] = $id;
+		}
+	}
+
+	return array_values(array_unique($ids));
+}
+
+function bbb_books_like_related_handles(int $book_id): array {
+	$handles = array();
+	foreach (bbb_books_like_related_ids($book_id) as $related_id) {
+		$handle = sanitize_title((string) get_post_field('post_name', $related_id));
+		if ('' !== $handle) {
+			$handles[] = $handle;
+		}
+	}
+
+	return array_values(array_unique($handles));
+}
+
+function bbb_books_like_manual_match_score(array $source, array $candidate): float {
+	$source_id        = (int) ($source['id'] ?? 0);
+	$candidate_id     = (int) ($candidate['id'] ?? 0);
+	$source_handle    = sanitize_title((string) ($source['handle'] ?? ''));
+	$candidate_handle = sanitize_title((string) ($candidate['handle'] ?? ''));
+	$source_related   = array_map('absint', (array) ($source['most_like_book_ids'] ?? array()));
+	$candidate_related = array_map('absint', (array) ($candidate['most_like_book_ids'] ?? array()));
+	$source_handles   = array_map('sanitize_title', (array) ($source['most_like_handles'] ?? array()));
+	$candidate_handles = array_map('sanitize_title', (array) ($candidate['most_like_handles'] ?? array()));
+
+	if (($candidate_id > 0 && in_array($candidate_id, $source_related, true)) || ($candidate_handle && in_array($candidate_handle, $source_handles, true))) {
+		return 220.0;
+	}
+
+	if (($source_id > 0 && in_array($source_id, $candidate_related, true)) || ($source_handle && in_array($source_handle, $candidate_handles, true))) {
+		return 190.0;
+	}
+
+	return 0.0;
 }
 
 function bbb_books_like_data_attrs(array $book): string {
@@ -113,6 +175,7 @@ function bbb_books_like_data_attrs(array $book): string {
 		'data-standalone'     => !empty($book['standalone']) ? 'true' : 'false',
 		'data-ku'             => $ku,
 		'data-darkness'       => (string) ($book['darkness'] ?? ''),
+		'data-most-like'      => implode(', ', (array) ($book['most_like_handles'] ?? array())),
 	);
 
 	$out = array();
@@ -522,6 +585,25 @@ function bbb_books_like_grouped_blog_guides(): array {
 }
 
 function bbb_books_like_all_visible_books(): array {
+	$version   = function_exists('sss_library_cache_version') ? sss_library_cache_version() : (string) wp_get_theme()->get('Version');
+	$cache_key = 'bbb_books_like_visible_' . md5($version . '|' . implode(',', bbb_books_like_post_types()));
+	$book_ids  = get_transient($cache_key);
+
+	if (is_array($book_ids)) {
+		$book_ids = array_values(array_filter(array_map('absint', $book_ids)));
+
+		if ($book_ids) {
+			_prime_post_caches($book_ids, true, true);
+
+			return array_values(
+				array_filter(
+					array_map('get_post', $book_ids),
+					static fn($post): bool => $post instanceof WP_Post
+				)
+			);
+		}
+	}
+
 	$books = get_posts(
 		array(
 			'post_type'      => bbb_books_like_post_types(),
@@ -529,10 +611,11 @@ function bbb_books_like_all_visible_books(): array {
 			'posts_per_page' => -1,
 			'orderby'        => 'title',
 			'order'          => 'ASC',
+			'no_found_rows'  => true,
 		)
 	);
 
-	return array_values(
+	$visible = array_values(
 		array_filter(
 			$books,
 			static function (WP_Post $book): bool {
@@ -546,23 +629,209 @@ function bbb_books_like_all_visible_books(): array {
 			}
 		)
 	);
+
+	set_transient($cache_key, wp_list_pluck($visible, 'ID'), 30 * MINUTE_IN_SECONDS);
+
+	return $visible;
 }
 
 function bbb_books_like_shared_tropes(array $source, array $candidate): array {
 	$source_tropes = array();
 	foreach ($source['tropes'] as $trope) {
-		$source_tropes[sanitize_title((string) ($trope['slug'] ?? $trope['name'] ?? ''))] = (string) ($trope['name'] ?? '');
+		$source_tropes[bbb_books_like_trope_key($trope)] = (string) ($trope['name'] ?? '');
 	}
 
 	$shared = array();
 	foreach ($candidate['tropes'] as $trope) {
-		$slug = sanitize_title((string) ($trope['slug'] ?? $trope['name'] ?? ''));
+		$slug = bbb_books_like_trope_key($trope);
 		if ($slug && isset($source_tropes[$slug])) {
 			$shared[] = (string) ($trope['name'] ?? $source_tropes[$slug]);
 		}
 	}
 
 	return array_values(array_filter(array_unique($shared)));
+}
+
+function bbb_books_like_trope_key(array $trope): string {
+	return sanitize_title((string) ($trope['slug'] ?? $trope['handle'] ?? $trope['name'] ?? ''));
+}
+
+function bbb_books_like_shelf_key(array $book): string {
+	$shelf = $book['shelf'] ?? array();
+	if (is_array($shelf)) {
+		return sanitize_title((string) ($shelf['slug'] ?? $shelf['handle'] ?? $shelf['name'] ?? ''));
+	}
+
+	return sanitize_title((string) $shelf);
+}
+
+function bbb_books_like_match_keys(array $book): array {
+	$keys = array();
+	$keys[] = bbb_books_like_shelf_key($book);
+
+	foreach ((array) ($book['tropes'] ?? array()) as $trope) {
+		if (is_array($trope)) {
+			$keys[] = bbb_books_like_trope_key($trope);
+		}
+	}
+
+	return array_values(array_filter(array_unique($keys)));
+}
+
+function bbb_books_like_source_lanes(array $source): array {
+	$keys      = bbb_books_like_match_keys($source);
+	$primary   = (string) ($keys[0] ?? '');
+	$secondary = '';
+
+	foreach ($keys as $key) {
+		if ($key !== $primary) {
+			$secondary = $key;
+			break;
+		}
+	}
+
+	return array(
+		'primary'   => $primary,
+		'secondary' => $secondary,
+		'keys'      => $keys,
+	);
+}
+
+function bbb_books_like_candidate_has_key(array $candidate, string $key): bool {
+	return '' !== $key && in_array($key, bbb_books_like_match_keys($candidate), true);
+}
+
+function bbb_books_like_closeness_score(array $source, array $candidate, array $weights = array()): float {
+	$weights = array_merge(
+		array(
+			'spice'    => 6,
+			'darkness' => 5,
+			'tension'  => 2,
+			'damage'   => 2,
+		),
+		$weights
+	);
+	$score = 0.0;
+
+	foreach ($weights as $key => $weight) {
+		$source_value    = (int) ($source[$key] ?? 0);
+		$candidate_value = (int) ($candidate[$key] ?? 0);
+		if ($source_value > 0 && $candidate_value > 0) {
+			$score += max(0, (float) $weight - (abs($source_value - $candidate_value) * 2));
+		}
+	}
+
+	return $score;
+}
+
+function bbb_books_like_context_score(array $source, array $candidate, string $mode): float {
+	$shared_count = count((array) ($candidate['shared_tropes'] ?? bbb_books_like_shared_tropes($source, $candidate)));
+	$score        = bbb_books_like_manual_match_score($source, $candidate) > 0 ? 1.0 : 0.0;
+
+	if ('primary' === $mode) {
+		$score += bbb_books_like_closeness_score($source, $candidate, array('spice' => 10, 'darkness' => 4));
+	} elseif ('secondary' === $mode) {
+		$score += bbb_books_like_closeness_score($source, $candidate, array('spice' => 7, 'darkness' => 7));
+	} else {
+		$score += bbb_books_like_closeness_score($source, $candidate, array('spice' => 8, 'darkness' => 8));
+	}
+
+	$score += min(20, $shared_count * 6);
+	$score += (float) ($candidate['score'] ?? 0) / 20;
+
+	return $score;
+}
+
+function bbb_books_like_best_candidate(array $source, array $candidates, callable $filter, string $mode, array $used_ids): ?array {
+	$matches = array_values(
+		array_filter(
+			$candidates,
+			static function (array $candidate) use ($filter, $used_ids): bool {
+				$id = (int) ($candidate['id'] ?? 0);
+				return $id > 0 && !isset($used_ids[$id]) && $filter($candidate);
+			}
+		)
+	);
+
+	if (!$matches) {
+		return null;
+	}
+
+	usort(
+		$matches,
+		static function (array $a, array $b) use ($source, $mode): int {
+			$a_score = bbb_books_like_context_score($source, $a, $mode);
+			$b_score = bbb_books_like_context_score($source, $b, $mode);
+			if ($a_score === $b_score) {
+				return strcasecmp((string) $a['title'], (string) $b['title']);
+			}
+			return $a_score < $b_score ? 1 : -1;
+		}
+	);
+
+	return $matches[0];
+}
+
+function bbb_books_like_curated_first_three(array $source, array $items): array {
+	$lanes     = bbb_books_like_source_lanes($source);
+	$primary   = (string) ($lanes['primary'] ?? '');
+	$secondary = (string) ($lanes['secondary'] ?? '');
+	$selected  = array();
+	$used_ids  = array();
+
+	$add = static function (?array $candidate) use (&$selected, &$used_ids): void {
+		if (!$candidate) {
+			return;
+		}
+		$id = (int) ($candidate['id'] ?? 0);
+		if ($id <= 0 || isset($used_ids[$id])) {
+			return;
+		}
+		$selected[]    = $candidate;
+		$used_ids[$id] = true;
+	};
+
+	if ('' !== $primary && '' !== $secondary) {
+		$add(
+			bbb_books_like_best_candidate(
+				$source,
+				$items,
+				static fn(array $candidate): bool => bbb_books_like_candidate_has_key($candidate, $primary) && bbb_books_like_candidate_has_key($candidate, $secondary),
+				'blend',
+				$used_ids
+			)
+		);
+	}
+
+	if ('' !== $primary) {
+		$add(
+			bbb_books_like_best_candidate(
+				$source,
+				$items,
+				static fn(array $candidate): bool => bbb_books_like_candidate_has_key($candidate, $primary),
+				'primary',
+				$used_ids
+			)
+		);
+	}
+
+	if ('' !== $secondary) {
+		$add(
+			bbb_books_like_best_candidate(
+				$source,
+				$items,
+				static fn(array $candidate): bool => bbb_books_like_candidate_has_key($candidate, $secondary),
+				'secondary',
+				$used_ids
+			)
+		);
+	}
+
+	foreach ($items as $item) {
+		$add($item);
+	}
+
+	return $selected;
 }
 
 function bbb_books_like_series_key(array $book): string {
@@ -583,6 +852,7 @@ function bbb_books_like_is_same_series(array $source, array $candidate): bool {
 
 function bbb_books_like_score(array $source, array $candidate): float {
 	$score = 0.0;
+	$score += bbb_books_like_manual_match_score($source, $candidate);
 
 	if (($source['shelf']['slug'] ?? '') && ($source['shelf']['slug'] ?? '') === ($candidate['shelf']['slug'] ?? '')) {
 		$score += 36;
@@ -613,6 +883,14 @@ function bbb_books_like_score(array $source, array $candidate): float {
 }
 
 function bbb_books_like_recommendations(int $source_id): array {
+	$version   = function_exists('sss_library_cache_version') ? sss_library_cache_version() : (string) wp_get_theme()->get('Version');
+	$cache_key = 'bbb_books_like_recs_' . $source_id . '_' . md5($version . '|tiered-vibe-v5');
+	$cached    = get_transient($cache_key);
+
+	if (is_array($cached)) {
+		return $cached;
+	}
+
 	$source = bbb_books_like_book_data($source_id);
 	$items  = array();
 
@@ -643,6 +921,10 @@ function bbb_books_like_recommendations(int $source_id): array {
 			return (float) $a['score'] < (float) $b['score'] ? 1 : -1;
 		}
 	);
+
+	$items = bbb_books_like_curated_first_three($source, $items);
+
+	set_transient($cache_key, $items, 12 * HOUR_IN_SECONDS);
 
 	return $items;
 }

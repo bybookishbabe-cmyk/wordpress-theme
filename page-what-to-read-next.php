@@ -8,10 +8,12 @@
 declare(strict_types=1);
 
 $next_css_path = get_theme_file_path('assets/css/bbb-what-to-read-next.css');
+$rec_js_path   = get_theme_file_path('assets/js/bbb-rec-engine.js');
 $next_js_path  = get_theme_file_path('assets/js/bbb-what-to-read-next.js');
 
 wp_enqueue_style('bbb-what-to-read-next', get_theme_file_uri('assets/css/bbb-what-to-read-next.css'), array('bbb-sss-library'), file_exists($next_css_path) ? (string) filemtime($next_css_path) : wp_get_theme()->get('Version'));
-wp_enqueue_script('bbb-what-to-read-next', get_theme_file_uri('assets/js/bbb-what-to-read-next.js'), array('bbb-sss-library'), file_exists($next_js_path) ? (string) filemtime($next_js_path) : wp_get_theme()->get('Version'), true);
+wp_enqueue_script('bbb-rec-engine', get_theme_file_uri('assets/js/bbb-rec-engine.js'), array(), file_exists($rec_js_path) ? (string) filemtime($rec_js_path) : wp_get_theme()->get('Version'), true);
+wp_enqueue_script('bbb-what-to-read-next', get_theme_file_uri('assets/js/bbb-what-to-read-next.js'), array('bbb-sss-library', 'bbb-rec-engine'), file_exists($next_js_path) ? (string) filemtime($next_js_path) : wp_get_theme()->get('Version'), true);
 get_header();
 
 $books = array();
@@ -50,6 +52,7 @@ if (function_exists('bbb_books_like_all_visible_books') && function_exists('bbb_
 			'series'       => (string) ($data['series_handle'] ?? ''),
 			'seriesName'   => (string) ($data['series_name'] ?? ''),
 			'seriesNumber' => (string) ($data['series_number'] ?? ''),
+			'mostLike'     => array_values(array_filter(array_map('strval', (array) ($data['most_like_handles'] ?? array())))),
 			'url'          => home_url('/library/?book=' . rawurlencode((string) ($data['handle'] ?? ''))),
 			'tropes'       => array_values(
 				array_filter(
@@ -131,17 +134,18 @@ if (function_exists('bbb_books_like_all_visible_books') && function_exists('bbb_
 						<h2 class="bbb-next__quizTitle">what should this next book feel like?</h2>
 					</div>
 
-					<fieldset class="bbb-next__question">
+					<fieldset class="bbb-next__question bbb-next__question--vibe">
 						<legend>what are you chasing?</legend>
 						<div class="bbb-next__answerGrid">
-							<label><input type="radio" name="vibe" value="emotional" required><span>feelings first</span></label>
-							<label><input type="radio" name="vibe" value="danger"><span>dangerous obsession</span></label>
-							<label><input type="radio" name="vibe" value="fantasy"><span>romantasy escape</span></label>
-							<label><input type="radio" name="vibe" value="banter"><span>banter and chemistry</span></label>
+							<label><input type="radio" name="vibe" value="emotional" required><span>💔 feelings first</span></label>
+							<label><input type="radio" name="vibe" value="mafia"><span>🥀 mafia and dangerous devotion</span></label>
+							<label><input type="radio" name="vibe" value="danger"><span>🖤 dangerous obsession</span></label>
+							<label><input type="radio" name="vibe" value="fantasy"><span>🌙 romantasy escape</span></label>
+							<label><input type="radio" name="vibe" value="banter"><span>⚔️ banter and chemistry</span></label>
 						</div>
 					</fieldset>
 
-					<fieldset class="bbb-next__question">
+					<fieldset class="bbb-next__question bbb-next__question--heat">
 						<legend>how much heat?</legend>
 						<div class="bbb-next__answerGrid">
 							<label><input type="radio" name="heat" value="soft" required><span>soft burn</span></label>
@@ -151,7 +155,7 @@ if (function_exists('bbb_books_like_all_visible_books') && function_exists('bbb_
 						</div>
 					</fieldset>
 
-					<fieldset class="bbb-next__question">
+					<fieldset class="bbb-next__question bbb-next__question--darkness">
 						<legend>how dark can we go?</legend>
 						<div class="bbb-next__answerGrid">
 							<label><input type="radio" name="darkness" value="soft" required><span>keep it soft</span></label>
@@ -161,7 +165,7 @@ if (function_exists('bbb_books_like_all_visible_books') && function_exists('bbb_
 						</div>
 					</fieldset>
 
-					<fieldset class="bbb-next__question">
+					<fieldset class="bbb-next__question bbb-next__question--access">
 						<legend>any reader math?</legend>
 						<div class="bbb-next__answerGrid bbb-next__answerGrid--compact">
 							<label><input type="radio" name="access" value="any" required><span>anything works</span></label>

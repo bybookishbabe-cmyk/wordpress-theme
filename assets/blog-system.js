@@ -9,6 +9,12 @@ Handles:
 
 document.addEventListener("DOMContentLoaded", function () {
 
+function bbbSeriesDisplayLabel(name) {
+  const value = String(name || "").trim();
+  if (!value) return "";
+  return /\b(series|duet|trilogy|saga)\s*$/i.test(value) ? value : value + " series";
+}
+
 /* ======================
 SHARE BUTTON
 ====================== */
@@ -565,7 +571,7 @@ if (seriesEl) {
   if (seriesName) {
     const seriesHref = series ? `/series/${encodeURIComponent(series || "")}/` : "#";
     seriesEl.hidden = false;
-    seriesEl.innerHTML = `<a href="${seriesHref}" class="sss-lib__seriesLink">${seriesName} series →</a>`;
+    seriesEl.innerHTML = `<a href="${seriesHref}" class="sss-lib__seriesLink">${bbbSeriesDisplayLabel(seriesName)} →</a>`;
   } else {
     seriesEl.hidden = true;
     seriesEl.innerHTML = "";

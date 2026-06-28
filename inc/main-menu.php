@@ -67,15 +67,40 @@ function bbb_get_fallback_main_menu(): array {
 			'children' => array(),
 		),
 
-		// ── Library [CONFIRMED — primary hero CTA: /library/] ─────
 		array(
-			'title'    => 'library',
+			'title'    => 'browse',
 			'url'      => bbb_page_url( 'library' ),
-			'children' => array(),
+			'children' => array(
+				array(
+					'title'    => 'the library',
+					'url'      => bbb_page_url( 'library' ),
+					'children' => array(),
+				),
+				array(
+					'title'    => 'by trope',
+					'url'      => bbb_page_url( 'romance-trope-dictionary' ),
+					'children' => array(),
+				),
+				array(
+					'title'    => 'book reviews',
+					'url'      => bbb_page_url( 'book-reviews' ),
+					'children' => array(),
+				),
+				array(
+					'title'    => 'series reading orders',
+					'url'      => bbb_page_url( 'series' ),
+					'children' => array(),
+				),
+				array(
+					'title'    => 'book pages',
+					'url'      => bbb_page_url( 'books' ),
+					'children' => array(),
+				),
+			),
 		),
 
 		array(
-			'title'    => 'find your read',
+			'title'    => 'discover',
 			'url'      => bbb_page_url( 'what-to-read-next' ),
 			'children' => array(
 				array(
@@ -89,35 +114,35 @@ function bbb_get_fallback_main_menu(): array {
 					'children' => array(),
 				),
 				array(
+					'title'    => 'romance guides',
+					'url'      => home_url( '/curated-romance-guides/' ),
+					'children' => array(),
+				),
+				array(
 					'title'    => 'reader quizzes',
 					'url'      => bbb_page_url( 'reader-quizzes' ),
+					'children' => array(),
+				),
+				array(
+					'title'    => 'reading bingo',
+					'url'      => bbb_page_url( 'romance-reading-bingo' ),
 					'children' => array(),
 				),
 			),
 		),
 
 		array(
-			'title'    => 'reviews & guides',
-			'url'      => home_url( '/curated-romance-guides/' ),
+			'title'    => 'book boyfriends',
+			'url'      => bbb_page_url( 'fictional-boyfriends' ),
 			'children' => array(
 				array(
-					'title'    => 'book reviews',
-					'url'      => bbb_page_url( 'book-reviews' ),
+					'title'    => 'character profiles',
+					'url'      => bbb_page_url( 'fictional-boyfriends' ),
 					'children' => array(),
 				),
 				array(
-					'title'    => 'romance guides',
-					'url'      => home_url( '/curated-romance-guides/' ),
-					'children' => array(),
-				),
-				array(
-					'title'    => 'series reading orders',
-					'url'      => bbb_page_url( 'series-reading-orders' ),
-					'children' => array(),
-				),
-				array(
-					'title'    => 'books like x',
-					'url'      => bbb_page_url( 'books-like' ),
+					'title'    => 'who\'s your book boyfriend?',
+					'url'      => bbb_page_url( 'fictional-boyfriend-quiz' ),
 					'children' => array(),
 				),
 			),
@@ -126,23 +151,7 @@ function bbb_get_fallback_main_menu(): array {
 		array(
 			'title'    => 'the society',
 			'url'      => bbb_page_url( 'smut-sentiment-society' ),
-			'children' => array(
-				array(
-					'title'    => 'about the society',
-					'url'      => bbb_page_url( 'smut-sentiment-society' ),
-					'children' => array(),
-				),
-				array(
-					'title'    => 'society\'s library',
-					'url'      => bbb_page_url( 'library' ),
-					'children' => array(),
-				),
-				array(
-					'title'    => 'society submissions',
-					'url'      => bbb_page_url( 'society-submissions' ),
-					'children' => array(),
-				),
-			),
+			'children' => array(),
 		),
 
 		array(

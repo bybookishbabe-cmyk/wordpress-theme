@@ -16,6 +16,143 @@
   box-shadow: 0 1px 0 rgba(255,138,199,.15);
 }
 
+.bbb-home-popular-man {
+  overflow: hidden;
+  padding: clamp(28px, 5vw, 54px) 16px clamp(20px, 3vw, 34px);
+  background: #000;
+  color: #f7f3ee;
+}
+
+.bbb-home-popular-man__inner {
+  display: grid;
+  grid-template-columns: minmax(150px, 220px) minmax(0, 1fr);
+  align-items: center;
+  justify-content: center;
+  gap: clamp(18px, 4vw, 42px);
+  width: min(760px, 100%);
+  margin: 0 auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.bbb-home-popular-man__profile {
+  display: grid;
+  justify-items: center;
+  min-width: 0;
+  gap: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.bbb-home-popular-man__image,
+.bbb-home-popular-man__profile > img {
+  display: block;
+  width: min(220px, 48vw);
+  height: auto;
+  max-height: 300px;
+  aspect-ratio: 3 / 4;
+  border: 1px solid rgba(77, 232, 154, .3);
+  border-radius: 8px;
+  object-fit: contain;
+  background: #000;
+  box-shadow: 0 20px 52px rgba(0, 0, 0, .5);
+  animation: bbbHomePopularSwipe .62s cubic-bezier(.16, .84, .22, 1) both;
+}
+
+.bbb-home-popular-man__profile span,
+.bbb-home-popular-man__copy {
+  display: grid;
+  gap: 8px;
+}
+
+.bbb-home-popular-man__profile strong {
+  overflow-wrap: anywhere;
+  color: #fff;
+  font-family: Cormorant, "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(20px, 2.4vw, 30px);
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  text-transform: lowercase;
+  animation: bbbHomePopularSwipe .62s cubic-bezier(.16, .84, .22, 1) .14s both;
+}
+
+.bbb-home-popular-man__badge,
+.bbb-fb-popular-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 24px;
+  padding: 5px 10px;
+  border: 1px solid rgba(77, 232, 154, .45);
+  border-radius: 999px;
+  background: rgba(77, 232, 154, .14);
+  color: #4de89a;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  line-height: 1;
+  text-transform: lowercase;
+  animation: bbbHomePopularSwipe .62s cubic-bezier(.16, .84, .22, 1) .08s both, bbbHomePopularFlash 1.08s ease-in-out .7s infinite;
+}
+
+@keyframes bbbHomePopularSwipe {
+  from {
+    opacity: 0;
+    transform: translateX(-26px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes bbbHomePopularFlash {
+  0%,
+  100% {
+    background: rgba(77, 232, 154, .14);
+    box-shadow: 0 0 16px rgba(77, 232, 154, .18);
+    color: #4de89a;
+  }
+
+  50% {
+    background: #4de89a;
+    box-shadow: 0 0 26px rgba(77, 232, 154, .58);
+    color: #04140b;
+  }
+}
+
+.bbb-home-popular-man__copy {
+  justify-items: center;
+  text-align: center;
+}
+
+.bbb-home-popular-man__copy p {
+  margin: 0;
+  max-width: 18ch;
+  color: #fff;
+  font-family: Cormorant, "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(28px, 4vw, 48px);
+  font-weight: 500;
+  line-height: .98;
+  text-transform: lowercase;
+  animation: bbbHomePopularSwipe .62s cubic-bezier(.16, .84, .22, 1) .24s both;
+}
+
+.bbb-home-popular-man__copy a {
+  color: #4de89a;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-decoration: none;
+  text-transform: lowercase;
+  animation: bbbHomePopularSwipe .62s cubic-bezier(.16, .84, .22, 1) .34s both;
+}
+
 /* ── Section shell ── */
 .bbb-home-obsession {
   background: #0b0b0b;
@@ -419,6 +556,50 @@ a.bbb-home-obsession__trope:focus-visible {
 
 /* ── Mobile (≤749px) ── */
 @media (max-width: 749px) {
+  .bbb-home-popular-man {
+    padding: 22px 12px 18px;
+  }
+
+  .bbb-home-popular-man__inner {
+    align-items: center;
+    grid-template-columns: minmax(92px, 118px) minmax(0, 1fr);
+    justify-items: stretch;
+    gap: 14px;
+    width: min(430px, 100%);
+  }
+
+  .bbb-home-popular-man__copy {
+    justify-items: start;
+    text-align: left;
+  }
+
+  .bbb-home-popular-man__image,
+  .bbb-home-popular-man__profile > img {
+    width: min(118px, 30vw);
+    max-height: none;
+  }
+
+  .bbb-home-popular-man__copy p {
+    max-width: 12ch;
+    font-size: clamp(23px, 8vw, 34px);
+    line-height: 1;
+  }
+
+  .bbb-home-popular-man__profile {
+    justify-items: center;
+  }
+
+  .bbb-home-popular-man__profile strong {
+    font-size: 18px;
+  }
+
+  .bbb-home-popular-man__badge,
+  .bbb-fb-popular-badge {
+    min-height: 22px;
+    padding: 4px 8px;
+    font-size: 9px;
+  }
+
   .bbb-home-obsession {
     padding: 14px 16px 28px;
   }

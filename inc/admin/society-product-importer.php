@@ -53,6 +53,16 @@ function bbb_society_product_importer_platform(): string {
 	return '';
 }
 
+function bbb_society_product_importer_removed_handles(): array {
+	return array(
+		'pages-ive-turned-book-tracker-bookmark',
+	);
+}
+
+function bbb_society_product_importer_is_removed_handle(string $handle): bool {
+	return in_array(sanitize_title($handle), bbb_society_product_importer_removed_handles(), true);
+}
+
 function bbb_society_product_importer_export_paths(): array {
 	return array(
 		get_theme_file_path('data/society-products-free-for-members-seed.json'),
@@ -84,7 +94,7 @@ function bbb_society_product_importer_export_rows(): array {
 			}
 
 			$handle = sanitize_title((string) ($row['handle'] ?? ''));
-			if ('' === $handle || isset($seen[$handle])) {
+			if ('' === $handle || isset($seen[$handle]) || bbb_society_product_importer_is_removed_handle($handle)) {
 				continue;
 			}
 
@@ -573,6 +583,10 @@ function bbb_society_product_file_count(int $post_id): int {
 }
 
 function bbb_society_product_is_publicly_sellable(int $post_id): bool {
+	if (function_exists('bbb_vault_full_access_product_ids') && in_array($post_id, bbb_vault_full_access_product_ids(), true)) {
+		return true;
+	}
+
 	if ('yes' === get_post_meta($post_id, '_bbb_missing_download_url', true)) {
 		return false;
 	}
@@ -855,6 +869,20 @@ function bbb_society_product_importer_upsert_product(array $product) {
 	}
 
 	$post_type = 'edd' === $platform ? 'download' : 'product';
+	if (bbb_society_product_importer_is_removed_handle($handle)) {
+		$existing = get_page_by_path($handle, OBJECT, $post_type);
+		if ($existing instanceof WP_Post) {
+			wp_delete_post((int) $existing->ID, true);
+		}
+
+		return array(
+			'post_id'      => 0,
+			'handle'       => $handle,
+			'status'       => 'removed',
+			'platform'     => $platform,
+		);
+	}
+
 	$existing  = get_page_by_path($handle, OBJECT, $post_type);
 	$post_id  = $existing instanceof WP_Post ? (int) $existing->ID : 0;
 	$args     = array(

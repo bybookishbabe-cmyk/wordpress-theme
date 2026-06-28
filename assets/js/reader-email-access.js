@@ -1,6 +1,13 @@
 (function () {
   function apiConfig() {
-    return window.BBBReaderAccountApi || {};
+    var siteData = window.siteData || {};
+    var api = window.BBBReaderAccountApi || siteData.readerAccount || {};
+
+    if (!api.emailEndpoint) {
+      api.emailEndpoint = window.location.origin + '/wp-json/bbb/v1/reader-account/email-session';
+    }
+
+    return api;
   }
 
   function message(node, text, tone) {
@@ -8,6 +15,22 @@
     node.textContent = text || '';
     node.dataset.tone = tone || '';
     node.hidden = !text;
+  }
+
+  function isStandaloneApp() {
+    return window.matchMedia && window.matchMedia('(display-mode: standalone)').matches
+      || window.navigator.standalone === true
+      || document.documentElement.classList.contains('bbb-is-pwa-app');
+  }
+
+  function syncHeaderAccountState() {
+    var indicator = document.querySelector('.header__account-indicator');
+    if (!indicator) return;
+
+    indicator.classList.remove('header__account-indicator--visitor', 'header__account-indicator--paid');
+    indicator.classList.add('header__account-indicator--free');
+    indicator.setAttribute('aria-label', 'free reader account');
+    indicator.setAttribute('title', 'free reader account');
   }
 
   function submitEmail(form) {
@@ -39,10 +62,15 @@
         return payload;
       });
     }).then(function () {
-      message(status, 'email found. opening your account...', 'success');
+      var target = isStandaloneApp()
+        ? '/?reader_opened=' + Date.now()
+        : '/account/?reader_opened=' + Date.now();
+
+      syncHeaderAccountState();
+      message(status, isStandaloneApp() ? 'email found. opening your dashboard...' : 'email found. opening your account...', 'success');
       window.setTimeout(function () {
-        window.location.reload();
-      }, 450);
+        window.location.replace(target);
+      }, 100);
     }).catch(function (error) {
       var text = error && (error.message || (error.data && error.data.message)) || 'that email was not found yet.';
       message(status, text, 'error');

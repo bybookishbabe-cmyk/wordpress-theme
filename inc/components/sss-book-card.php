@@ -150,6 +150,8 @@ if ('' === $shelf && $shelf_terms && !is_wp_error($shelf_terms)) {
 	$shelf = $shelf_terms[0]->name;
 }
 
+$cover_alt = function_exists('bbb_book_cover_alt') ? bbb_book_cover_alt($title, $author, $shelf) : $title . ' book cover';
+
 $series_value  = bbb_sss_card_field('series', $book_id, '');
 $series_post   = bbb_sss_card_series_post($series_value);
 $series_handle = $series_post ? $series_post->post_name : sanitize_title((string) $series_value);
@@ -235,7 +237,7 @@ $standalone = bbb_sss_card_bool(bbb_sss_card_field('read_as_standalone', $book_i
 		<?php endif; ?>
 
 		<?php if ('' !== $cover_url) : ?>
-			<img class="sss-lib__cover" src="<?php echo esc_url($cover_url); ?>" alt="<?php echo esc_attr($title); ?>" loading="lazy">
+			<img class="sss-lib__cover" src="<?php echo esc_url($cover_url); ?>" alt="<?php echo esc_attr($cover_alt); ?>" loading="lazy">
 		<?php endif; ?>
 	</div>
 

@@ -27,6 +27,7 @@ function bbb_get_book_data_attrs(int $post_id): string {
 	$darkness   = get_post_meta($post_id, '_bbb_darkness', true);
 	$ku_raw     = get_post_meta($post_id, '_bbb_ku', true);
 	$ku         = ($ku_raw === '1') ? 'true' : (($ku_raw === '0') ? 'false' : '');
+	$most_like  = function_exists('bbb_books_like_related_handles') ? bbb_books_like_related_handles($post_id) : array();
 
 	$standalone_raw = get_post_meta($post_id, '_bbb_standalone', true);
 	$standalone     = ($standalone_raw === '1') ? 'true' : 'false';
@@ -88,6 +89,7 @@ function bbb_get_book_data_attrs(int $post_id): string {
 		'data-standalone'     => $standalone,
 		'data-ku'             => $ku,
 		'data-darkness'       => $darkness,
+		'data-most-like'      => implode(', ', $most_like),
 	);
 
 	$parts = array();
@@ -106,6 +108,8 @@ function bbb_render_library_book_card(int $post_id, bool $mini = false): string 
 	$cover           = function_exists('bbb_get_book_cover_url') ? bbb_get_book_cover_url($post_id) : get_post_meta($post_id, '_bbb_cover_url', true);
 	$title           = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title(get_the_title($post_id)) : get_the_title($post_id);
 	$author          = function_exists('bbb_get_book_author') ? bbb_get_book_author($post_id) : get_post_meta($post_id, '_bbb_author', true);
+	$shelf_name      = function_exists('bbb_get_book_shelf_name') ? bbb_get_book_shelf_name($post_id) : '';
+	$cover_alt       = function_exists('bbb_book_cover_alt') ? bbb_book_cover_alt($title, (string) $author, $shelf_name) : $title . ' book cover';
 	$spice           = (int) get_post_meta($post_id, '_bbb_spice', true);
 	$series_handle   = get_post_meta($post_id, '_bbb_series_handle', true);
 	$series_number   = get_post_meta($post_id, '_bbb_series_number', true);
@@ -115,6 +119,8 @@ function bbb_render_library_book_card(int $post_id, bool $mini = false): string 
 	$mini_class      = $mini ? ' sss-lib__book--mini' : '';
 	$data_attrs      = bbb_get_book_data_attrs($post_id);
 	$series_badge    = '';
+	$notes_mock_mode = isset($_GET['reader_notes']) ? sanitize_key((string) wp_unslash($_GET['reader_notes'])) : (isset($_GET['notes']) ? sanitize_key((string) wp_unslash($_GET['notes'])) : '');
+	$show_notes_mock = in_array($notes_mock_mode, array('paid', 'free'), true) || is_page('library');
 
 	if ($series_handle) {
 		$series_term = get_term_by('slug', $series_handle, 'bbb_series');
@@ -146,17 +152,25 @@ function bbb_render_library_book_card(int $post_id, bool $mini = false): string 
       <span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♡</span>
       <span class="sss-lib__heartLabel" data-heart-label>save</span>
     </span>
+    <?php if ($show_notes_mock) : ?>
+    <span class="sss-lib__noteToggle" data-reader-note-toggle role="button" tabindex="0" aria-label="add your private note">
+      <span class="sss-lib__noteIcon" aria-hidden="true">✎</span>
+    </span>
+    <?php endif; ?>
     <?php echo $series_badge; ?>
     <?php if ($spice > 0) : ?>
     <div class="sss-lib__floatSpice"><?php echo esc_html(str_repeat('🌶', $spice)); ?></div>
     <?php endif; ?>
     <?php if ($cover) : ?>
-    <img class="sss-lib__cover" src="<?php echo esc_url((string) $cover); ?>" alt="<?php echo esc_attr($title); ?>" loading="lazy">
+    <img class="sss-lib__cover" src="<?php echo esc_url((string) $cover); ?>" alt="<?php echo esc_attr($cover_alt); ?>" loading="lazy">
     <?php endif; ?>
   </div>
   <div class="sss-lib__under">
     <div class="sss-lib__name" style="text-transform:none !important;"><?php echo esc_html($title); ?></div>
     <div class="sss-lib__author" style="text-transform:none !important;"><?php echo esc_html((string) $author); ?></div>
+    <?php if ($show_notes_mock) : ?>
+    <div class="sss-lib__notePreview" data-reader-note-preview hidden></div>
+    <?php endif; ?>
   </div>
 </button>
 	<?php
@@ -188,6 +202,7 @@ function bbb_render_article_book_card(int $post_id, bool $show_why = false): str
 
 	$shelf_terms = get_the_terms($post_id, 'bbb_shelf');
 	$shelf_name  = ($shelf_terms && !is_wp_error($shelf_terms)) ? $shelf_terms[0]->name : '';
+	$cover_alt   = function_exists('bbb_book_cover_alt') ? bbb_book_cover_alt($title, (string) $author, $shelf_name) : $title . ' book cover';
 	$trope_terms = get_the_terms($post_id, 'bbb_trope');
 	$data_attrs  = bbb_get_book_data_attrs($post_id);
 
@@ -196,22 +211,32 @@ function bbb_render_article_book_card(int $post_id, bool $show_why = false): str
 <div class="article-book-card" data-book-preview
   <?php echo $data_attrs; ?>>
 
-  <div class="article-book-card__header">
+  <?php if ($shelf_name || $series_name || $series_number) : ?>
+  <div class="article-book-card__metaTop">
     <?php if ($shelf_name) : ?>
     <div class="article-book-card__genreRow">
       <span class="article-book-card__genreLine" aria-hidden="true"></span>
       <span class="article-book-card__genre"><?php echo esc_html($shelf_name); ?></span>
     </div>
     <?php endif; ?>
+    <?php if ($series_name || $series_number) : ?>
+    <div class="article-book-card__series">
+      <?php if ($series_number) echo '#' . esc_html((string) $series_number) . ' • '; ?>
+      <?php echo esc_html(function_exists('bbb_book_series_label') ? bbb_book_series_label((string) $series_name) : (string) $series_name); ?>
+    </div>
+    <?php endif; ?>
+  </div>
+  <?php endif; ?>
+
+  <div class="article-book-card__header">
     <h3><?php echo esc_html($title); ?></h3>
     <?php if ($author) : ?>
     <div class="article-book-card__author"><?php echo esc_html((string) $author); ?></div>
     <?php endif; ?>
-    <?php if ($series_name || $series_number) : ?>
-    <div class="article-book-card__series">
-      <?php if ($series_number) echo '#' . esc_html((string) $series_number) . ' • '; ?>
-      <?php echo esc_html($series_name); ?><?php if ($series_name) echo ' series'; ?>
-    </div>
+    <?php if ($ku_raw === '1') : ?>
+    <span class="article-book-card__ku article-book-card__ku--yes">✓ on kindle unlimited</span>
+    <?php elseif ($ku_raw === '0') : ?>
+    <span class="article-book-card__ku article-book-card__ku--no">✕ not on kindle unlimited</span>
     <?php endif; ?>
   </div>
 
@@ -224,20 +249,11 @@ function bbb_render_article_book_card(int $post_id, bool $show_why = false): str
     <div class="article-book-card__spice"><?php echo esc_html(str_repeat('🌶', $spice)); ?></div>
     <?php endif; ?>
     <?php if ($cover) : ?>
-    <img src="<?php echo esc_url((string) $cover); ?>" alt="<?php echo esc_attr($title); ?>" loading="lazy">
+    <img src="<?php echo esc_url((string) $cover); ?>" alt="<?php echo esc_attr($cover_alt); ?>" loading="lazy">
     <?php endif; ?>
   </div>
 
   <div class="article-book-card__content">
-    <?php if ($mini) : ?>
-    <p class="book-pitch"><?php echo esc_html((string) $mini); ?></p>
-    <?php endif; ?>
-    <?php if ($show_why && $why) : ?>
-    <p class="book-pitch book-pitch--why">
-      <span class="book-pitch__label">why i loved it</span>
-      <?php echo esc_html((string) $why); ?>
-    </p>
-    <?php endif; ?>
     <?php if ($trope_terms && !is_wp_error($trope_terms)) : ?>
     <div class="article-book-card__tropes">
       <?php foreach ($trope_terms as $trope) : ?>
@@ -249,13 +265,15 @@ function bbb_render_article_book_card(int $post_id, bool $show_why = false): str
       <?php endforeach; ?>
     </div>
     <?php endif; ?>
-    <div class="article-book-card__ratings">
-      <?php if ($ku_raw === '1') : ?>
-      <span class="article-book-card__ku article-book-card__ku--yes">✓ on kindle unlimited</span>
-      <?php elseif ($ku_raw === '0') : ?>
-      <span class="article-book-card__ku article-book-card__ku--no">✕ not on kindle unlimited</span>
-      <?php endif; ?>
-    </div>
+    <?php if ($mini) : ?>
+    <p class="book-pitch"><?php echo esc_html((string) $mini); ?></p>
+    <?php endif; ?>
+    <?php if ($show_why && $why) : ?>
+    <p class="book-pitch book-pitch--why">
+      <span class="book-pitch__label">why i loved it</span>
+      <?php echo esc_html((string) $why); ?>
+    </p>
+    <?php endif; ?>
     <div class="article-book-card__buttons">
       <?php if ($amazon && $ku_raw === '1') : ?>
       <a class="article-book-card__button article-book-card__button--ku" href="<?php echo esc_url((string) $amazon); ?>" target="_blank" rel="noopener">read free on kindle unlimited</a>

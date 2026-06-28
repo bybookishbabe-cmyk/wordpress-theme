@@ -64,6 +64,141 @@ function bbb_blog_post_seo_review_rating(int $post_id): string {
 	return '';
 }
 
+function bbb_blog_post_seo_norm(string $value): string {
+	$value = strtolower(bbb_blog_post_seo_clean($value));
+	$value = str_replace(array('’', '–'), array("'", '—'), $value);
+	$value = preg_replace('/[^a-z0-9]+/', ' ', $value);
+
+	return trim((string) preg_replace('/\s+/', ' ', (string) $value));
+}
+
+function bbb_blog_post_seo_terms(int $post_id, array $taxonomies): array {
+	foreach ($taxonomies as $taxonomy) {
+		if (!taxonomy_exists($taxonomy)) {
+			continue;
+		}
+
+		$terms = wp_get_post_terms($post_id, $taxonomy, array('fields' => 'names'));
+		if (!is_wp_error($terms) && is_array($terms) && $terms) {
+			return array_values(array_filter(array_map('bbb_blog_post_seo_clean', $terms)));
+		}
+	}
+
+	return array();
+}
+
+function bbb_blog_post_seo_book_author(int $book_id): string {
+	$author = function_exists('bbb_get_book_author')
+		? (string) bbb_get_book_author($book_id)
+		: (string) get_post_meta($book_id, '_bbb_author', true);
+
+	return function_exists('bbb_bookish_proper_name') ? bbb_bookish_proper_name($author) : bbb_blog_post_seo_clean($author);
+}
+
+function bbb_blog_post_seo_book_for_review(int $post_id, string $post_title): ?WP_Post {
+	$linked_book_id = (int) get_post_meta($post_id, '_bbb_article_book_1', true);
+	if ($linked_book_id > 0 && 'bbb_book' === get_post_type($linked_book_id)) {
+		$book = get_post($linked_book_id);
+		if ($book instanceof WP_Post) {
+			return $book;
+		}
+	}
+
+	if (!preg_match('/^(.*?)\s+review\b/i', $post_title, $matches)) {
+		return null;
+	}
+
+	$needle = bbb_blog_post_seo_norm((string) $matches[1]);
+	if ('' === $needle) {
+		return null;
+	}
+
+	$books = get_posts(
+		array(
+			'post_type'      => 'bbb_book',
+			'post_status'    => array('publish', 'draft', 'private', 'pending', 'future'),
+			'posts_per_page' => -1,
+			'no_found_rows'  => true,
+		)
+	);
+
+	foreach ($books as $book) {
+		if ($book instanceof WP_Post && $needle === bbb_blog_post_seo_norm($book->post_title)) {
+			return $book;
+		}
+	}
+
+	return null;
+}
+
+function bbb_blog_post_seo_review_description(int $book_id): string {
+	$shelves = bbb_blog_post_seo_terms($book_id, array('bbb_shelf', 'book_shelves', 'sss_shelf'));
+	$tropes  = bbb_blog_post_seo_terms($book_id, array('bbb_trope', 'book_tropes', 'post_tag'));
+	$spice   = max(0, min(5, (int) get_post_meta($book_id, '_bbb_spice', true)));
+	$shelf   = strtolower($shelves[0] ?? 'romance');
+	$tropes  = array_values(array_filter(array_map('strtolower', $tropes)));
+	$hook    = $shelf;
+
+	if ($tropes) {
+		$hook .= ' with ' . implode(', ', array_slice($tropes, 0, 2));
+	} else {
+		$hook .= ' with reader-favorite tension';
+	}
+
+	return $hook . ' — ' . $spice . '/5 spice. tropes, content warnings & honest verdict inside.';
+}
+
+function bbb_blog_post_seo_autofill_review(int $post_id, WP_Post $post, bool $update): void {
+	unset($update);
+
+	if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id) || 'post' !== $post->post_type) {
+		return;
+	}
+
+	if ('auto-draft' === $post->post_status || '' === trim($post->post_title)) {
+		return;
+	}
+
+	if (!bbb_blog_post_seo_is_book_review($post_id)) {
+		return;
+	}
+
+	$book = bbb_blog_post_seo_book_for_review($post_id, $post->post_title);
+	if (!$book instanceof WP_Post) {
+		return;
+	}
+
+	$author = bbb_blog_post_seo_book_author($book->ID);
+	if ('' === $author) {
+		return;
+	}
+
+	$book_title = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title($book->post_title) : bbb_blog_post_seo_clean($book->post_title);
+	$seo_title  = $book_title . ' review — ' . $author . ' (spice level, tropes & is it worth it)';
+	$slug       = sanitize_title((string) $book->post_name . '-review');
+	$focus      = strtolower($book_title . ' review');
+	$desc       = bbb_blog_post_seo_review_description($book->ID);
+
+	$post_changes = array('ID' => $post_id);
+	if ($post->post_title !== $seo_title) {
+		$post_changes['post_title'] = wp_slash($seo_title);
+	}
+	if ($slug && $post->post_name !== $slug) {
+		$post_changes['post_name'] = $slug;
+	}
+
+	if (count($post_changes) > 1) {
+		remove_action('save_post_post', 'bbb_blog_post_seo_autofill_review', 80);
+		wp_update_post($post_changes);
+		add_action('save_post_post', 'bbb_blog_post_seo_autofill_review', 80, 3);
+	}
+
+	update_post_meta($post_id, 'rank_math_title', wp_slash($seo_title));
+	update_post_meta($post_id, 'rank_math_description', wp_slash($desc));
+	update_post_meta($post_id, 'rank_math_focus_keyword', wp_slash($focus));
+}
+add_action('save_post_post', 'bbb_blog_post_seo_autofill_review', 80, 3);
+
 function bbb_blog_post_seo_row(int $post_id): array {
 	$seo_title = bbb_blog_post_seo_first_meta($post_id, array('rank_math_title', '_yoast_wpseo_title'));
 	$seo_desc  = bbb_blog_post_seo_first_meta($post_id, array('rank_math_description', '_yoast_wpseo_metadesc'));

@@ -50,6 +50,9 @@
 </head>
 <body <?php body_class('gradient'); ?>>
 <?php wp_body_open(); ?>
+<?php if (function_exists('bbb_urgency_banner_render')) : ?>
+	<?php bbb_urgency_banner_render(); ?>
+<?php endif; ?>
 <?php if (function_exists('bbb_render_pwa_promo')) : ?>
 	<?php bbb_render_pwa_promo('header'); ?>
 <?php endif; ?>

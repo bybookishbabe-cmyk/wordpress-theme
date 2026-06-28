@@ -18,6 +18,34 @@
     if (window.localStorage && window.localStorage.getItem(storageKey) === '1') return;
   } catch (error) {}
 
+  // Swap CTA for any logged-in member (free or paid), regardless of page cache state.
+  // BBBSiteData is injected server-side but may be stale in cached pages; this runs
+  // fresh on every page load and corrects the CTA client-side.
+  var account = window.BBBSiteData && window.BBBSiteData.BBBReaderAccount;
+  if (banner.getAttribute('data-banner-mode') !== 'live' && account && (account.loggedIn || account.hasEmailAccess)) {
+    var societyUrl = banner.getAttribute('data-society-url') || '/smut-sentiment-society/';
+    var cta = banner.querySelector('.bbb-urgency-banner__cta');
+    if (cta) {
+      // Non-paid member: CTA exists, update it in place.
+      cta.href = societyUrl;
+      cta.removeAttribute('target');
+      cta.removeAttribute('rel');
+      cta.textContent = 'the society';
+    } else {
+      // Paid member: PHP omits the CTA — create one.
+      var inner = banner.querySelector('.bbb-urgency-banner__inner');
+      var dismissBtn = banner.querySelector('[data-bbb-urgency-dismiss]');
+      if (inner && dismissBtn) {
+        var newCta = document.createElement('a');
+        newCta.className = 'bbb-urgency-banner__cta';
+        newCta.href = societyUrl;
+        newCta.textContent = 'the society';
+        inner.insertBefore(newCta, dismissBtn);
+        banner.classList.remove('bbb-urgency-banner--no-cta');
+      }
+    }
+  }
+
   function pad(value) {
     return String(value).padStart(2, '0');
   }

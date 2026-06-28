@@ -34,6 +34,61 @@ function bbb_reader_email_session_lifetime(): int {
 	return 30 * DAY_IN_SECONDS;
 }
 
+function bbb_reader_request_has_email_session(): bool {
+	return isset($_COOKIE[bbb_reader_email_session_cookie_name()])
+		|| isset($_COOKIE[bbb_reader_legacy_email_session_cookie_name()]);
+}
+
+function bbb_reader_request_is_pwa_home(): bool {
+	$source = isset($_GET['source']) ? sanitize_key((string) wp_unslash($_GET['source'])) : '';
+
+	return 'pwa-bybookishbabe' === $source;
+}
+
+add_action(
+	'init',
+	static function (): void {
+		if (!bbb_reader_request_has_email_session() && !bbb_reader_request_is_pwa_home()) {
+			return;
+		}
+
+		if (!defined('DONOTCACHEPAGE')) {
+			define('DONOTCACHEPAGE', true);
+		}
+		if (!defined('DONOTCACHEOBJECT')) {
+			define('DONOTCACHEOBJECT', true);
+		}
+		if (!defined('DONOTCACHEDB')) {
+			define('DONOTCACHEDB', true);
+		}
+	},
+	0
+);
+
+add_action(
+	'send_headers',
+	static function (): void {
+		if (!bbb_reader_request_has_email_session() && !bbb_reader_request_is_pwa_home()) {
+			return;
+		}
+
+		nocache_headers();
+		header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0, private');
+	},
+	0
+);
+
+function bbb_reader_is_local_request(): bool {
+	if (function_exists('wp_get_environment_type') && 'local' === wp_get_environment_type()) {
+		return true;
+	}
+
+	$host = isset($_SERVER['HTTP_HOST']) ? strtolower((string) wp_unslash($_SERVER['HTTP_HOST'])) : '';
+	$host = preg_replace('/:\d+$/', '', $host) ?: '';
+
+	return in_array($host, array('localhost', '127.0.0.1', '::1'), true) || str_ends_with($host, '.local');
+}
+
 function bbb_reader_cookie_secret(): string {
 	$parts = array_filter(
 		array(
@@ -267,7 +322,7 @@ function bbb_reader_sync_external_subscriber(array $payload, string $source = 's
 	$is_inactive = bbb_reader_substack_payload_is_inactive($payload);
 	$is_paid = !$is_inactive && bbb_reader_substack_payload_is_paid($payload);
 
-	return bbb_reader_supabase_request(
+	$result = bbb_reader_supabase_request(
 		'POST',
 		'bookshelf_subscribers',
 		array('on_conflict' => 'email_normalized'),
@@ -300,6 +355,12 @@ function bbb_reader_sync_external_subscriber(array $payload, string $source = 's
 			),
 		)
 	);
+
+	if (!is_wp_error($result) && function_exists('bbb_society_clear_subscriber_count_caches')) {
+		bbb_society_clear_subscriber_count_caches();
+	}
+
+	return $result;
 }
 
 function bbb_reader_user_has_wp_society_access(int $user_id = 0): bool {
@@ -488,7 +549,7 @@ function bbb_reader_fetch_account_books_for_identity(string $email, int $user_id
 		'GET',
 		'bookshelf_saved_books',
 		array(
-			'select'    => 'book_handle,book_title,author,cover,amazon,bookshop,spice_level,darkness_level,tropes,saved_at',
+			'select'    => 'book_key,book_handle,book_title,author,cover,amazon,bookshop,spice_level,darkness_level,tropes,saved_at',
 			'is_active' => 'eq.true',
 			'or'        => $or,
 			'order'     => 'saved_at.desc',
@@ -496,7 +557,55 @@ function bbb_reader_fetch_account_books_for_identity(string $email, int $user_id
 		)
 	);
 
-	return is_wp_error($rows) ? array() : (array) $rows;
+	if (is_wp_error($rows)) {
+		return array();
+	}
+
+	$seen   = array();
+	$unique = array();
+	foreach ((array) $rows as $row) {
+		if (!is_array($row)) {
+			continue;
+		}
+
+		$aliases = array_values(
+			array_filter(
+				array_unique(
+					array_map(
+						static fn($value): string => strtolower(trim(sanitize_text_field((string) $value))),
+						array(
+							$row['book_key'] ?? '',
+							$row['book_handle'] ?? '',
+							trim((string) ($row['book_title'] ?? '')) . '|' . trim((string) ($row['author'] ?? '')),
+							$row['book_title'] ?? '',
+						)
+					)
+				)
+			)
+		);
+
+		if (!$aliases) {
+			continue;
+		}
+
+		$already_seen = false;
+		foreach ($aliases as $alias) {
+			if (isset($seen[$alias])) {
+				$already_seen = true;
+				break;
+			}
+		}
+		if ($already_seen) {
+			continue;
+		}
+
+		foreach ($aliases as $alias) {
+			$seen[$alias] = true;
+		}
+		$unique[] = $row;
+	}
+
+	return $unique;
 }
 
 function bbb_reader_fetch_account_books(WP_User $user): array {
@@ -513,7 +622,7 @@ function bbb_reader_fetch_account_book_statuses_for_identity(string $email, int 
 		'GET',
 		'bookshelf_book_statuses',
 		array(
-			'select' => 'book_key,book_handle,book_title,status',
+			'select' => 'book_key,book_handle,book_title,status,metadata',
 			'or'     => $or,
 			'limit'  => 250,
 		)
@@ -526,8 +635,42 @@ function bbb_reader_book_status_key(array $book): string {
 	return strtolower(trim(sanitize_text_field((string) ($book['book_key'] ?? $book['book_handle'] ?? $book['handle'] ?? $book['book_title'] ?? $book['title'] ?? ''))));
 }
 
+function bbb_reader_sanitize_book_status_row(array $row, string $email, int $user_id): ?array {
+	$key = bbb_reader_book_status_key($row);
+	$status = sanitize_key((string) ($row['status'] ?? ''));
+	if ('' === $key || !in_array($status, array('read', 'reading', 'tbr', 'dnf'), true)) {
+		return null;
+	}
+
+	$rating = isset($row['rating']) ? absint($row['rating']) : 0;
+	if (($rating < 1 || $rating > 5) && isset($row['metadata']) && is_array($row['metadata'])) {
+		$rating = absint($row['metadata']['rating'] ?? 0);
+	}
+
+	$metadata = isset($row['metadata']) && is_array($row['metadata']) ? $row['metadata'] : array();
+	if ($rating >= 1 && $rating <= 5) {
+		$metadata['rating'] = $rating;
+	} else {
+		unset($metadata['rating']);
+	}
+
+	return array(
+		'email_normalized'    => $email,
+		'wordpress_user_id'   => $user_id ? (string) $user_id : null,
+		'shopify_customer_id' => $user_id ? (string) $user_id : null,
+		'customer_email'      => $email,
+		'book_key'            => $key,
+		'book_handle'         => sanitize_title((string) ($row['handle'] ?? $row['book_handle'] ?? '')),
+		'book_title'          => sanitize_text_field((string) ($row['title'] ?? $row['book_title'] ?? $key)),
+		'status'              => $status,
+		'source'              => 'wordpress_bookshelf',
+		'metadata'            => $metadata,
+	);
+}
+
 function bbb_reader_enrich_books_with_statuses(array $books, array $statuses): array {
 	$status_by_key = array();
+	$rating_by_key = array();
 	foreach ($statuses as $status_row) {
 		if (!is_array($status_row)) {
 			continue;
@@ -537,6 +680,12 @@ function bbb_reader_enrich_books_with_statuses(array $books, array $statuses): a
 		$status = sanitize_key((string) ($status_row['status'] ?? ''));
 		if ('' !== $key && '' !== $status) {
 			$status_by_key[$key] = $status;
+		}
+
+		$metadata = isset($status_row['metadata']) && is_array($status_row['metadata']) ? $status_row['metadata'] : array();
+		$rating = isset($status_row['rating']) ? absint($status_row['rating']) : absint($metadata['rating'] ?? 0);
+		if ('' !== $key && $rating >= 1 && $rating <= 5) {
+			$rating_by_key[$key] = $rating;
 		}
 	}
 
@@ -548,6 +697,9 @@ function bbb_reader_enrich_books_with_statuses(array $books, array $statuses): a
 		$key = bbb_reader_book_status_key($book);
 		if ('' !== $key && isset($status_by_key[$key])) {
 			$books[$index]['status'] = $status_by_key[$key];
+		}
+		if ('' !== $key && isset($rating_by_key[$key])) {
+			$books[$index]['rating'] = $rating_by_key[$key];
 		}
 	}
 
@@ -621,12 +773,163 @@ function bbb_reader_account_status_counts(array $books, array $statuses): array 
 	return $counts;
 }
 
+function bbb_reader_type_rules(): array {
+	return array(
+		'slow burn' => array(
+			'title'   => 'the patient one',
+			'summary' => 'patient in fiction. chaotic in real life. lives for the almost-moment. deep down just wants to be perceived that carefully by someone.',
+			'flag'    => 'has cried at a forehead touch before. no notes.',
+			'aliases' => array('slow burn', 'yearning'),
+		),
+		'forced proximity' => array(
+			'title'   => 'the one-bed truther',
+			'summary' => 'loves the idea that love finds you, not the other way around. probably romanticises being stuck somewhere with someone.',
+			'flag'    => 'has thought "if only we were snowed in" about someone who did not deserve it.',
+			'aliases' => array('forced proximity', 'one bed', 'only one bed'),
+		),
+		'fake dating' => array(
+			'title'   => 'the plausible deniability fan',
+			'summary' => 'comes for the fake intimacy that accidentally becomes real. that is the only kind of love story that makes sense to them and they know it.',
+			'flag'    => 'has entertained a fake-dating plan. has not acted on it. yet.',
+			'aliases' => array('fake dating', 'fake relationship', 'marriage of convenience'),
+		),
+		'second chance' => array(
+			'title'   => 'the door-holder',
+			'summary' => 'believes in people maybe a little too much. reads this trope for permission to try again, or to feel okay about not.',
+			'flag'    => 'definitely has an unsent message somewhere.',
+			'aliases' => array('second chance', 'exes to lovers'),
+		),
+		'sports romance' => array(
+			'title'   => 'here for the man, not the sport',
+			'summary' => 'cannot name a single real player. is here because athletes are written with a very specific kind of devotion: the dedication, the discipline, the biceps.',
+			'flag'    => 'has very strong opinions about ryan shay.',
+			'aliases' => array('sports romance', 'sports', 'hockey romance', 'football romance', 'baseball romance'),
+		),
+		'grumpy sunshine' => array(
+			'title'   => 'secretly both',
+			'summary' => 'either brings light into difficult spaces and gets called too much, or is the grumpy one who needs someone to soften them and will not admit it.',
+			'flag'    => 'they are grumpy about being assigned sunshine.',
+			'aliases' => array('grumpy sunshine', 'grumpy / sunshine', 'grumpy/sunshine', 'grumpy x sunshine'),
+		),
+		'enemies to lovers' => array(
+			'title'   => 'loves the problem',
+			'summary' => 'does not want easy. wants someone who challenges them and then loves them so hard it breaks the whole thing open. the argument is the intimacy.',
+			'flag'    => 'has confused conflict with chemistry at least once. this trope did not help.',
+			'aliases' => array('enemies to lovers', 'rivals to lovers', 'hate to love'),
+		),
+		'forbidden romance' => array(
+			'title'   => 'the rule is the problem, not them',
+			'summary' => 'not here for easy love. wants the kind that costs something. boss/employee, rival families, that is the only love that feels real to them.',
+			'flag'    => 'deeply committed to the idea that circumstance is the only obstacle here.',
+			'aliases' => array('forbidden romance', 'forbidden love', 'forbidden'),
+		),
+		'dark romance' => array(
+			'title'   => 'the villain is the love interest',
+			'summary' => 'wants to feel something, not be told what they are allowed to feel. they are not advocating. they are escaping. and they do not need to explain that to anyone.',
+			'flag'    => 'has a type in fiction they would absolutely never date in real life.',
+			'aliases' => array('dark romance', 'dark', 'stalker romance', 'stalker', 'touch her and die', 'villain gets the girl'),
+		),
+		'mafia romance' => array(
+			'title'   => 'the suit is doing something to them',
+			'summary' => 'not about crime. it is about devotion without limit. someone who would destroy the world for this one person. the protection. the contradiction.',
+			'flag'    => 'has a ranked list of fictional dons. it is detailed.',
+			'aliases' => array('mafia romance', 'mafia', 'bratva', 'cartel romance'),
+		),
+		'bully romance' => array(
+			'title'   => 'obsession decoder',
+			'summary' => 'does not want to be bullied. wants to be the person someone hates so specifically it reads as obsession. that is not cruelty. that is being perceived. completely.',
+			'flag'    => 'would describe their ideal relationship as "he hates me in a way that feels personal."',
+			'aliases' => array('bully romance', 'bully', 'bully romance books'),
+		),
+		'morally gray mmc' => array(
+			'title'   => 'the problem is the point',
+			'summary' => 'tired of being told who to root for. wants a man who does the wrong thing for the right reason, or the wrong reason with extremely good hair.',
+			'flag'    => 'their book boyfriend list reads like a restraining order waiting to happen. they are fine.',
+			'aliases' => array('morally gray mmc', 'morally gray', 'morally grey', 'morally grey mmc', 'antihero'),
+		),
+		'age gap' => array(
+			'title'   => 'experience is a vibe',
+			'summary' => 'here for the dynamic. the knowing. someone who has done something with their life loving someone still becoming. experience reading as devotion.',
+			'flag'    => 'googles age gaps in fictional couples. then googles it again.',
+			'aliases' => array('age gap', 'age-gap'),
+		),
+		'reverse harem' => array(
+			'title'   => 'why choose is not a question',
+			'summary' => 'less about the fantasy of many, more about the fantasy of being completely loved by multiple people who just accept all of you. the logistics are not the point.',
+			'flag'    => 'finds monogamy limitations in fiction genuinely boring at this point.',
+			'aliases' => array('reverse harem', 'why choose', 'poly romance'),
+		),
+		'instalove' => array(
+			'title'   => 'vibes over evidence',
+			'summary' => 'when it is right it is right. that is the whole philosophy. refuses to feel bad about wanting to skip to the good part.',
+			'flag'    => 'has said "i just knew" about someone they knew for four days.',
+			'aliases' => array('instalove', 'insta love', 'love at first sight'),
+		),
+		'paranormal monster romance' => array(
+			'title'   => 'not here to explain herself',
+			'summary' => 'has simply decided that fictional men available in reality are not meeting the brief. the spec: dangerous, ancient, non-human, completely devoted to one woman specifically.',
+			'flag'    => 'claws are negotiable. the obsession is not.',
+			'aliases' => array('paranormal / monster romance', 'paranormal romance', 'monster romance', 'monster', 'vampire romance', 'shifter romance'),
+		),
+		'bodyguard protector' => array(
+			'title'   => 'safety is the love language',
+			'summary' => 'wants to feel safe in a specific, consuming, slightly-overwhelming way. someone who would rearrange the world so nothing bad reaches her. that is it.',
+			'flag'    => 'has asked "but would he keep me safe" as a genuine compatibility metric.',
+			'aliases' => array('bodyguard / protector', 'bodyguard', 'protector', 'protector romance', 'bodyguard romance'),
+		),
+		'he falls first' => array(
+			'title'   => 'watching him spiral is the plot',
+			'summary' => 'needs the man to be completely undone before she knows it. wants to watch the exact moment it shifts, when she becomes the whole thing for him and she is still just getting there.',
+			'flag'    => 'has a list of scenes where the man realises first. it is long.',
+			'aliases' => array('he falls first', 'he falls first romance', 'hero falls first', 'he falls first/her falls harder'),
+		),
+	);
+}
+
+function bbb_reader_normalize_trope_key(string $trope): string {
+	$trope = strtolower(trim(wp_strip_all_tags($trope)));
+	$trope = str_replace(array('&', '+', ' x '), array(' and ', ' ', ' '), $trope);
+	$trope = preg_replace('/[\/_-]+/', ' ', $trope) ?: $trope;
+	$trope = preg_replace('/\s+/', ' ', $trope) ?: $trope;
+
+	return trim($trope);
+}
+
+function bbb_reader_type_rule_key_for_trope(string $trope): string {
+	$normalized = bbb_reader_normalize_trope_key($trope);
+	if ('' === $normalized) {
+		return '';
+	}
+
+	foreach (bbb_reader_type_rules() as $rule_key => $rule) {
+		$aliases = array_merge(array($rule_key), (array) ($rule['aliases'] ?? array()));
+		foreach ($aliases as $alias) {
+			$alias = bbb_reader_normalize_trope_key((string) $alias);
+			if ('' === $alias) {
+				continue;
+			}
+			if ($normalized === $alias || str_contains($normalized, $alias) || str_contains($alias, $normalized)) {
+				return (string) $rule_key;
+			}
+		}
+	}
+
+	return $normalized;
+}
+
+function bbb_reader_type_display_trope(string $rule_key): string {
+	$labels = array(
+		'grumpy sunshine' => 'grumpy / sunshine',
+		'paranormal monster romance' => 'paranormal / monster romance',
+		'bodyguard protector' => 'bodyguard / protector',
+	);
+
+	return $labels[$rule_key] ?? $rule_key;
+}
+
 function bbb_reader_account_reader_type(array $books, array $statuses): array {
 	$counts       = bbb_reader_account_status_counts($books, $statuses);
 	$trope_counts = array();
-	$spice_total  = 0;
-	$dark_total   = 0;
-	$rated_count  = 0;
 
 	foreach ($books as $book) {
 		if (!is_array($book)) {
@@ -634,66 +937,43 @@ function bbb_reader_account_reader_type(array $books, array $statuses): array {
 		}
 
 		$status = sanitize_key((string) ($book['status'] ?? ''));
-		$weight = 'read' === $status ? 3 : ('reading' === $status ? 2 : 1);
+		$weight = match ($status) {
+			'read' => 5,
+			'reading' => 4,
+			'tbr' => 3,
+			'dnf' => 1,
+			default => 2,
+		};
 		foreach (bbb_reader_split_book_tropes($book['tropes'] ?? '') as $trope) {
-			$trope_counts[$trope] = ($trope_counts[$trope] ?? 0) + $weight;
-		}
-
-		$spice = (int) ($book['spice_level'] ?? $book['spice'] ?? 0);
-		$dark  = (int) ($book['darkness_level'] ?? $book['darkness'] ?? 0);
-		if ($spice > 0 || $dark > 0) {
-			$spice_total += $spice;
-			$dark_total  += $dark;
-			++$rated_count;
+			$rule_key = bbb_reader_type_rule_key_for_trope($trope);
+			if ('' === $rule_key) {
+				continue;
+			}
+			$trope_counts[$rule_key] = ($trope_counts[$rule_key] ?? 0) + $weight;
 		}
 	}
 
 	arsort($trope_counts);
-	$top_tropes = array_slice(array_keys($trope_counts), 0, 3);
-	$avg_spice  = $rated_count ? $spice_total / $rated_count : 0;
-	$avg_dark   = $rated_count ? $dark_total / $rated_count : 0;
-	$has_trope  = static function (array $needles) use ($trope_counts): bool {
-		foreach ($needles as $needle) {
-			if (!empty($trope_counts[strtolower($needle)])) {
-				return true;
-			}
-		}
-
-		return false;
-	};
-
-	$title = 'mood-led romance reader';
-	$body  = 'your shelf is giving a little bit of everything, with mood doing more steering than one fixed trope.';
+	$top_trope_keys = array_slice(array_keys($trope_counts), 0, 3);
+	$top_tropes = array_map('bbb_reader_type_display_trope', $top_trope_keys);
+	$rules      = bbb_reader_type_rules();
+	$top_key    = (string) ($top_trope_keys[0] ?? '');
+	$top_rule   = isset($rules[$top_key]) && is_array($rules[$top_key]) ? $rules[$top_key] : array();
+	$title      = (string) ($top_rule['title'] ?? 'mood-led romance reader');
+	$body       = (string) ($top_rule['summary'] ?? 'your shelf is giving a little bit of everything, with mood doing more steering than one fixed trope.');
+	$red_flag   = (string) ($top_rule['flag'] ?? '');
 
 	if (0 === $counts['saved'] && 0 === count($statuses)) {
 		$title = 'fresh shelf romantic';
 		$body  = 'save or tag a few books and this will start calling your pattern.';
-	} elseif ($has_trope(array('dark romance', 'morally gray', 'obsession', 'stalker', 'villain gets the girl')) || ($avg_dark >= 2 && $avg_spice >= 2)) {
-		$title = 'dark devotion reader';
-		$body  = 'your shelf keeps circling obsession, risk, and love interests who come with warning labels.';
-	} elseif ($has_trope(array('slow burn', 'yearning', 'grumpy sunshine', 'forbidden romance'))) {
-		$title = 'slow-burn tension reader';
-		$body  = 'you keep saving the books that make restraint, longing, and delayed payoff do the heavy lifting.';
-	} elseif ($has_trope(array('angst', 'second chance', 'emotional devastation'))) {
-		$title = 'ache-before-payoff reader';
-		$body  = 'your pattern says the hurt matters as much as the happily-ever-after.';
-	} elseif ($has_trope(array('romantasy', 'fated mates', 'magic', 'fae', 'prince'))) {
-		$title = 'romantasy world-builder';
-		$body  = 'big stakes, mythic devotion, and dangerous worlds are showing up in your saves.';
-	} elseif ($avg_spice >= 3.4) {
-		$title = 'high-heat mood reader';
-		$body  = 'your saved stack is leaning spicy, intense, and very allergic to subtle chemistry.';
-	} elseif ($counts['tbr'] > ($counts['read'] + $counts['reading'])) {
-		$title = 'collector of future obsessions';
-		$body  = 'your tbr is doing what a good tbr does: making promises your calendar may not survive.';
-	} elseif ($counts['read'] >= 3) {
-		$title = 'pattern-locked romance reader';
-		$body  = 'your finished books are starting to show enough signal for sharper recommendations.';
+		$red_flag = '';
 	}
 
 	return array(
 		'title'     => $title,
 		'summary'   => $body,
+		'redFlag'   => $red_flag,
+		'primaryTrope' => bbb_reader_type_display_trope($top_key),
 		'topTropes' => $top_tropes,
 		'counts'    => $counts,
 	);
@@ -728,6 +1008,395 @@ function bbb_reader_account_next_read(array $books): ?array {
 	);
 
 	return $candidates[0] ?? null;
+}
+
+function bbb_reader_spice_profiles(): array {
+	return array(
+		1 => array(
+			'level'       => 1,
+			'label'       => 'soft spice',
+			'peppers'     => '🌶',
+			'description' => 'closed-door, fade-to-black, or just a little heat around the edges.',
+		),
+		2 => array(
+			'level'       => 2,
+			'label'       => 'some heat',
+			'peppers'     => '🌶🌶',
+			'description' => 'a little open-door energy without letting the plot disappear.',
+		),
+		3 => array(
+			'level'       => 3,
+			'label'       => 'balanced',
+			'peppers'     => '🌶🌶🌶',
+			'description' => 'chemistry, feelings, and spice all pulling their weight.',
+		),
+		4 => array(
+			'level'       => 4,
+			'label'       => 'high spice',
+			'peppers'     => '🌶🌶🌶🌶',
+			'description' => 'open-door, high-heat romance with the tension turned up.',
+		),
+		5 => array(
+			'level'       => 5,
+			'label'       => 'wreck me',
+			'peppers'     => '🌶🌶🌶🌶🌶',
+			'description' => 'maximum heat, maximum chaos, no pretending otherwise.',
+		),
+	);
+}
+
+function bbb_reader_normalize_spice_profile($value): int {
+	$level = absint($value);
+	return min(max($level, 1), 5);
+}
+
+function bbb_reader_spice_profile_payload(int $level = 0): array {
+	$profiles = bbb_reader_spice_profiles();
+	$level    = $level > 0 ? bbb_reader_normalize_spice_profile($level) : 0;
+
+	if (0 === $level || !isset($profiles[$level])) {
+		return array(
+			'level'       => 0,
+			'label'       => '',
+			'peppers'     => '',
+			'description' => '',
+		);
+	}
+
+	return $profiles[$level];
+}
+
+function bbb_reader_spice_profile_for_identity(array $identity): array {
+	$user = $identity['user'] ?? null;
+	if ($user instanceof WP_User && $user->ID) {
+		return bbb_reader_spice_profile_payload((int) get_user_meta((int) $user->ID, 'bbb_reader_spice_profile', true));
+	}
+
+	return bbb_reader_spice_profile_payload(0);
+}
+
+function bbb_reader_save_spice_profile_for_identity(array $identity, int $level): array {
+	$level = bbb_reader_normalize_spice_profile($level);
+	$user  = $identity['user'] ?? null;
+
+	if ($user instanceof WP_User && $user->ID) {
+		update_user_meta((int) $user->ID, 'bbb_reader_spice_profile', $level);
+	}
+
+	return bbb_reader_spice_profile_payload($level);
+}
+
+function bbb_reader_mfy_profile_option_key_for_email(string $email): string {
+	return 'bbb_reader_mfy_profile_' . md5(bbb_reader_normalize_email($email));
+}
+
+function bbb_reader_mfy_profile_version(): string {
+	return 'mfy-2026-06-11-reader-types';
+}
+
+function bbb_reader_sanitize_mfy_profile_value($value) {
+	if (is_bool($value)) {
+		return $value;
+	}
+
+	if (is_int($value) || is_float($value)) {
+		return $value;
+	}
+
+	if (is_array($value)) {
+		$clean = array();
+		foreach ($value as $key => $item) {
+			$clean_key = is_int($key) ? $key : sanitize_key((string) $key);
+			if ('' === (string) $clean_key && !is_int($clean_key)) {
+				continue;
+			}
+			$clean[$clean_key] = bbb_reader_sanitize_mfy_profile_value($item);
+		}
+		return $clean;
+	}
+
+	return sanitize_text_field((string) $value);
+}
+
+function bbb_reader_sanitize_mfy_profile($profile): array {
+	$profile = is_array($profile) ? $profile : array();
+	if (!$profile) {
+		return array();
+	}
+
+	$clean   = array();
+
+	foreach ($profile as $key => $value) {
+		$clean_key = sanitize_key((string) $key);
+		if ('' === $clean_key) {
+			continue;
+		}
+		$clean[$clean_key] = bbb_reader_sanitize_mfy_profile_value($value);
+	}
+
+	$clean['updatedAt'] = sanitize_text_field((string) ($profile['updatedAt'] ?? gmdate('c')));
+
+	return $clean;
+}
+
+function bbb_reader_mfy_profile_is_current(array $profile): bool {
+	$version = (string) ($profile['mfy_profile_version'] ?? $profile['profile_version'] ?? '');
+	return bbb_reader_mfy_profile_version() === $version;
+}
+
+function bbb_reader_mfy_profile_is_complete(array $profile): bool {
+	if (!bbb_reader_mfy_profile_is_current($profile)) {
+		return false;
+	}
+
+	foreach (array('name', 'heat_lane', 'group_chat_text', 'love_interest', 'wall_line') as $key) {
+		if ('' === trim((string) ($profile[$key] ?? ''))) {
+			return false;
+		}
+	}
+
+	return !empty($profile['dashboard_built']);
+}
+
+function bbb_reader_mfy_profile_updated_at(array $profile): int {
+	$raw = (string) ($profile['updatedAt'] ?? $profile['updated_at'] ?? '');
+	$time = '' !== $raw ? strtotime($raw) : false;
+
+	return false === $time ? 0 : (int) $time;
+}
+
+function bbb_reader_preferred_mfy_profile(array $profiles): array {
+	$profiles = array_values(
+		array_filter(
+			array_map(
+				static function ($profile): array {
+					$profile = is_array($profile) && $profile ? bbb_reader_sanitize_mfy_profile($profile) : array();
+					return bbb_reader_mfy_profile_is_current($profile) ? $profile : array();
+				},
+				$profiles
+			)
+		)
+	);
+
+	if (!$profiles) {
+		return array();
+	}
+
+	usort(
+		$profiles,
+		static function (array $a, array $b): int {
+			$a_complete = bbb_reader_mfy_profile_is_complete($a) ? 1 : 0;
+			$b_complete = bbb_reader_mfy_profile_is_complete($b) ? 1 : 0;
+
+			if ($a_complete !== $b_complete) {
+				return $b_complete <=> $a_complete;
+			}
+
+			return bbb_reader_mfy_profile_updated_at($b) <=> bbb_reader_mfy_profile_updated_at($a);
+		}
+	);
+
+	return $profiles[0];
+}
+
+function bbb_reader_mfy_profile_for_identity(array $identity): array {
+	$user = $identity['user'] ?? null;
+	if ($user instanceof WP_User && $user->ID) {
+		$email = bbb_reader_normalize_email((string) $user->user_email);
+		$user_profile = get_user_meta((int) $user->ID, 'bbb_reader_mfy_profile', true);
+		$email_profile = '' !== $email && is_email($email)
+			? get_option(bbb_reader_mfy_profile_option_key_for_email($email), array())
+			: array();
+		$profile = bbb_reader_preferred_mfy_profile(array($user_profile, $email_profile));
+
+		if ($profile) {
+			update_user_meta((int) $user->ID, 'bbb_reader_mfy_profile', $profile);
+			if ('' !== $email && is_email($email)) {
+				update_option(bbb_reader_mfy_profile_option_key_for_email($email), $profile, false);
+			}
+		}
+
+		return $profile;
+	}
+
+	$email = bbb_reader_normalize_email((string) ($identity['email'] ?? ''));
+	if ('' === $email || !is_email($email)) {
+		return array();
+	}
+
+	$profile = get_option(bbb_reader_mfy_profile_option_key_for_email($email), array());
+	return bbb_reader_preferred_mfy_profile(array($profile));
+}
+
+function bbb_reader_save_mfy_profile_for_identity(array $identity, array $profile): array {
+	$profile = bbb_reader_sanitize_mfy_profile($profile);
+	if ($profile) {
+		$profile['mfy_profile_version'] = bbb_reader_mfy_profile_version();
+	}
+	$user    = $identity['user'] ?? null;
+
+	if ($user instanceof WP_User && $user->ID) {
+		update_user_meta((int) $user->ID, 'bbb_reader_mfy_profile', $profile);
+		$email = bbb_reader_normalize_email((string) $user->user_email);
+		if ('' !== $email && is_email($email)) {
+			update_option(bbb_reader_mfy_profile_option_key_for_email($email), $profile, false);
+		}
+		return $profile;
+	}
+
+	$email = bbb_reader_normalize_email((string) ($identity['email'] ?? ''));
+	if ('' !== $email && is_email($email)) {
+		update_option(bbb_reader_mfy_profile_option_key_for_email($email), $profile, false);
+	}
+
+	return $profile;
+}
+
+function bbb_reader_get_current_mfy_profile(WP_REST_Request $request) {
+	$identity = bbb_reader_current_identity();
+	if (!$identity) {
+		return new WP_Error('bbb_reader_auth_required', 'Enter your reader email first.', array('status' => 401));
+	}
+
+	return rest_ensure_response(array('profile' => bbb_reader_mfy_profile_for_identity((array) $identity)));
+}
+
+function bbb_reader_update_current_mfy_profile(WP_REST_Request $request) {
+	$identity = bbb_reader_current_identity();
+	if (!$identity) {
+		return new WP_Error('bbb_reader_auth_required', 'Enter your reader email first.', array('status' => 401));
+	}
+
+	$params = $request->get_json_params();
+	if (!is_array($params)) {
+		$params = $request->get_params();
+	}
+
+	$profile = bbb_reader_save_mfy_profile_for_identity((array) $identity, is_array($params['profile'] ?? null) ? $params['profile'] : array());
+
+	return rest_ensure_response(array('profile' => $profile));
+}
+
+function bbb_reader_notes_option_key_for_email(string $email): string {
+	return 'bbb_reader_private_notes_' . md5(bbb_reader_normalize_email($email));
+}
+
+function bbb_reader_sanitize_note_item($note): ?array {
+	if (!is_array($note)) {
+		return null;
+	}
+
+	$key = substr(trim((string) ($note['key'] ?? $note['handle'] ?? $note['title'] ?? '')), 0, 180);
+	if ('' === $key) {
+		return null;
+	}
+
+	$text = sanitize_textarea_field((string) ($note['text'] ?? ''));
+	if ('' === trim($text)) {
+		return null;
+	}
+
+	return array(
+		'key'       => $key,
+		'handle'    => sanitize_text_field((string) ($note['handle'] ?? '')),
+		'title'     => sanitize_text_field((string) ($note['title'] ?? '')),
+		'author'    => sanitize_text_field((string) ($note['author'] ?? '')),
+		'cover'     => esc_url_raw((string) ($note['cover'] ?? '')),
+		'text'      => $text,
+		'updatedAt' => sanitize_text_field((string) ($note['updatedAt'] ?? gmdate('c'))),
+	);
+}
+
+function bbb_reader_sanitize_notes_payload($notes): array {
+	$clean = array();
+	$items = is_array($notes) ? $notes : array();
+
+	foreach ($items as $key => $note) {
+		if (is_array($note) && !isset($note['key'])) {
+			$note['key'] = (string) $key;
+		}
+
+		$item = bbb_reader_sanitize_note_item($note);
+		if (!$item) {
+			continue;
+		}
+
+		$clean[$item['key']] = $item;
+	}
+
+	return $clean;
+}
+
+function bbb_reader_notes_for_identity(array $identity): array {
+	$user = $identity['user'] ?? null;
+	if ($user instanceof WP_User && $user->ID) {
+		$notes = get_user_meta((int) $user->ID, 'bbb_reader_private_notes', true);
+		return bbb_reader_sanitize_notes_payload(is_array($notes) ? $notes : array());
+	}
+
+	$email = bbb_reader_normalize_email((string) ($identity['email'] ?? ''));
+	if ('' === $email || !is_email($email)) {
+		return array();
+	}
+
+	$notes = get_option(bbb_reader_notes_option_key_for_email($email), array());
+	return bbb_reader_sanitize_notes_payload(is_array($notes) ? $notes : array());
+}
+
+function bbb_reader_save_notes_for_identity(array $identity, array $notes): array {
+	$notes = bbb_reader_sanitize_notes_payload($notes);
+	$user  = $identity['user'] ?? null;
+
+	if ($user instanceof WP_User && $user->ID) {
+		update_user_meta((int) $user->ID, 'bbb_reader_private_notes', $notes);
+		return $notes;
+	}
+
+	$email = bbb_reader_normalize_email((string) ($identity['email'] ?? ''));
+	if ('' !== $email && is_email($email)) {
+		update_option(bbb_reader_notes_option_key_for_email($email), $notes, false);
+	}
+
+	return $notes;
+}
+
+function bbb_reader_account_notes_response(array $identity): array {
+	return array(
+		'notes' => bbb_reader_notes_for_identity($identity),
+	);
+}
+
+function bbb_reader_get_current_notes(WP_REST_Request $request) {
+	$identity = bbb_reader_current_identity();
+	if (!$identity) {
+		return new WP_Error('bbb_reader_auth_required', 'Enter your reader email first.', array('status' => 401));
+	}
+
+	if (function_exists('bbb_reader_can_use_notes') && !bbb_reader_can_use_notes()) {
+		return new WP_Error('bbb_reader_member_required', 'Notes are a member feature.', array('status' => 403));
+	}
+
+	return rest_ensure_response(bbb_reader_account_notes_response((array) $identity));
+}
+
+function bbb_reader_update_current_notes(WP_REST_Request $request) {
+	$identity = bbb_reader_current_identity();
+	if (!$identity) {
+		return new WP_Error('bbb_reader_auth_required', 'Enter your reader email first.', array('status' => 401));
+	}
+
+	if (function_exists('bbb_reader_can_use_notes') && !bbb_reader_can_use_notes()) {
+		return new WP_Error('bbb_reader_member_required', 'Notes are a member feature.', array('status' => 403));
+	}
+
+	$params = $request->get_json_params();
+	if (!is_array($params)) {
+		$params = $request->get_params();
+	}
+
+	$notes = bbb_reader_save_notes_for_identity((array) $identity, is_array($params['notes'] ?? null) ? $params['notes'] : array());
+
+	return rest_ensure_response(array('notes' => $notes));
 }
 
 function bbb_reader_account_insights(array $books, array $statuses): array {
@@ -800,6 +1469,43 @@ if (!function_exists('bbb_reader_active_society_drop')) {
 	}
 }
 
+if (!function_exists('bbb_reader_june_2026_daily_prompts')) {
+	function bbb_reader_june_2026_daily_prompts(): array {
+		return array(
+			'what do i want june to feel like?',
+			'what am i finally ready to let go of?',
+			'where in my life am i playing small?',
+			'what does my ideal summer day look like?',
+			'what version of myself am i becoming?',
+			'what am i pretending not to know?',
+			'what would i do if i was not afraid of being seen?',
+			'what does my aura actually feel like right now?',
+			'where am i giving energy that is not returned?',
+			'what do i keep almost saying out loud?',
+			'what does "golden & unbothered" mean to me personally?',
+			'what am i most proud of that nobody knows about?',
+			'who inspires me and what specifically is it about them?',
+			'what part of me is ready to bloom?',
+			'what habits make me feel most like myself?',
+			'what do i need to stop apologizing for?',
+			'what would i do differently if i trusted myself completely?',
+			'what does my morning routine say about how i see myself?',
+			'what is my relationship with rest?',
+			'what does luxury mean to me, not money, but feeling?',
+			'what am i tolerating that i should not be?',
+			'what book changed how i see myself and why?',
+			'what conversation do i keep avoiding?',
+			'what would my most radiant self do today?',
+			'what do i want people to feel when they are around me?',
+			'what does this version of me deserve?',
+			'what am i learning to want without guilt?',
+			'how have i grown since january?',
+			'what was the best moment of june so far?',
+			'what do i want to carry into july?',
+		);
+	}
+}
+
 if (!function_exists('bbb_reader_active_society_daily_prompt')) {
 	function bbb_reader_active_society_daily_prompt(array $drop): array {
 		$fields = array();
@@ -810,6 +1516,16 @@ if (!function_exists('bbb_reader_active_society_daily_prompt')) {
 		$journal_start = bbb_reader_drop_field_value($fields, 'journal_start_date');
 		$prompts_raw   = bbb_reader_drop_field_value($fields, 'prompts');
 		$prompts       = array_values(array_filter(array_map('trim', preg_split('/\s*\|\|\s*/', $prompts_raw) ?: array())));
+
+		if (!$prompts && function_exists('bbb_reader_june_2026_daily_prompts')) {
+			$timestamp = (int) current_time('timestamp');
+			$year      = (int) date_i18n('Y', $timestamp);
+			$month     = (int) date_i18n('n', $timestamp);
+			if (2026 === $year && 6 === $month) {
+				$prompts = bbb_reader_june_2026_daily_prompts();
+				$journal_start = '2026-06-01';
+			}
+		}
 
 		$day = 0;
 		$prompt = '';
@@ -883,6 +1599,8 @@ function bbb_reader_account_response(WP_User $user): array {
 		'bookStatuses'  => $insights['bookStatuses'],
 		'readerType'    => $insights['readerType'],
 		'nextRead'      => $insights['nextRead'],
+		'spiceProfile'  => bbb_reader_spice_profile_for_identity(array('user' => $user)),
+		'madeForYouProfile' => bbb_reader_mfy_profile_for_identity(array('user' => $user)),
 	);
 }
 
@@ -905,6 +1623,7 @@ function bbb_reader_account_response_for_identity(array $identity): array {
 				'status'  => 401,
 			),
 			'books' => array(),
+			'spiceProfile' => bbb_reader_spice_profile_payload(0),
 		);
 	}
 
@@ -941,6 +1660,8 @@ function bbb_reader_account_response_for_identity(array $identity): array {
 		'bookStatuses'  => $insights['bookStatuses'],
 		'readerType'    => $insights['readerType'],
 		'nextRead'      => $insights['nextRead'],
+		'spiceProfile'  => bbb_reader_spice_profile_for_identity($identity),
+		'madeForYouProfile' => bbb_reader_mfy_profile_for_identity($identity),
 	);
 }
 
@@ -951,11 +1672,15 @@ function bbb_reader_start_email_access_session(string $email) {
 	}
 
 	$subscriber = bbb_reader_fetch_subscriber_by_email($email);
+	if (is_wp_error($subscriber) && bbb_reader_is_local_request()) {
+		$subscriber = null;
+	}
 	if (is_wp_error($subscriber)) {
 		return $subscriber;
 	}
 
-	if (!is_array($subscriber)) {
+	$has_manual_vault_access = function_exists('bbb_vault_identity_has_manual_access') && bbb_vault_identity_has_manual_access($email, 0);
+	if (!is_array($subscriber) && !$has_manual_vault_access && !bbb_reader_is_local_request()) {
 		return new WP_Error(
 			'bbb_reader_subscriber_not_found',
 			'That email is not on the reader list yet.',
@@ -1031,12 +1756,113 @@ function bbb_reader_sync_current_shelf(WP_REST_Request $request) {
 		}
 	}
 
+	$has_status_payload = null !== $request->get_param('statuses');
+	$statuses = $request->get_param('statuses');
+	$ratings = $request->get_param('ratings');
+	$statuses = is_array($statuses) ? $statuses : array();
+	$ratings = is_array($ratings) ? $ratings : array();
+	$status_rows = array();
+
+	foreach ($statuses as $key => $status_value) {
+		$row = is_array($status_value)
+			? $status_value
+			: array(
+				'book_key' => (string) $key,
+				'status'   => (string) $status_value,
+			);
+
+		$status_key = bbb_reader_book_status_key($row);
+		if ('' !== $status_key && isset($ratings[$status_key])) {
+			$row['rating'] = $ratings[$status_key];
+		}
+
+		$status_row = bbb_reader_sanitize_book_status_row($row, $email, $user_id);
+		if ($status_row) {
+			$status_rows[] = $status_row;
+		}
+	}
+
+	if ($has_status_payload) {
+		$delete_statuses = bbb_reader_supabase_request(
+			'DELETE',
+			'bookshelf_book_statuses',
+			array('email_normalized' => 'eq.' . $email)
+		);
+
+		if (is_wp_error($delete_statuses)) {
+			return $delete_statuses;
+		}
+	}
+
+	if ($status_rows) {
+		$save_statuses = bbb_reader_supabase_request(
+			'POST',
+			'bookshelf_book_statuses',
+			array(),
+			$status_rows
+		);
+
+		if (is_wp_error($save_statuses)) {
+			return $save_statuses;
+		}
+	}
+
 	return rest_ensure_response(bbb_reader_account_response_for_identity($identity));
+}
+
+function bbb_reader_update_current_spice_profile(WP_REST_Request $request) {
+	$identity = bbb_reader_current_identity();
+	if (!$identity) {
+		return new WP_Error('bbb_reader_auth_required', 'Enter your reader email first.', array('status' => 401));
+	}
+
+	$params = $request->get_json_params();
+	if (!is_array($params)) {
+		$params = $request->get_params();
+	}
+
+	$profile = bbb_reader_save_spice_profile_for_identity((array) $identity, (int) ($params['level'] ?? 0));
+
+	return rest_ensure_response(
+		array(
+			'spiceProfile' => $profile,
+			'account'      => bbb_reader_account_response_for_identity((array) $identity),
+		)
+	);
 }
 
 add_action(
 	'template_redirect',
 	static function (): void {
+		$request_path = trim((string) wp_parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH), '/');
+
+		if (
+			'POST' === (string) ($_SERVER['REQUEST_METHOD'] ?? '')
+			&& 'account' === $request_path
+			&& isset($_POST['bbb_reader_email_access'])
+		) {
+			$email = isset($_POST['email']) ? bbb_reader_normalize_email((string) wp_unslash($_POST['email'])) : '';
+			$result = bbb_reader_start_email_access_session($email);
+			$return_to = isset($_POST['return_to']) ? esc_url_raw((string) wp_unslash($_POST['return_to'])) : home_url('/account/');
+			$return_to = wp_validate_redirect($return_to, home_url('/account/'));
+			$redirect_url = is_wp_error($result)
+				? add_query_arg('reader_email_error', rawurlencode($result->get_error_message()), $return_to)
+				: add_query_arg('reader_opened', (string) time(), $return_to);
+
+			wp_safe_redirect($redirect_url . '#reader-email-access');
+			exit;
+		}
+
+		if (isset($_GET['bbb_local_reader_access']) && bbb_reader_is_local_request()) {
+			$email = bbb_reader_normalize_email((string) wp_unslash($_GET['bbb_local_reader_access']));
+			if ('' !== $email && is_email($email)) {
+				bbb_reader_set_email_session($email);
+			}
+
+			wp_safe_redirect(remove_query_arg('bbb_local_reader_access'));
+			exit;
+		}
+
 		if (!isset($_GET['bbb_reader_logout'])) {
 			return;
 		}
@@ -1113,6 +1939,50 @@ add_action(
 				'methods'             => WP_REST_Server::CREATABLE,
 				'permission_callback' => static fn(): bool => (bool) bbb_reader_current_identity(),
 				'callback'            => 'bbb_reader_sync_current_shelf',
+			)
+		);
+
+			register_rest_route(
+				'bbb/v1',
+				'/reader-account/spice-profile',
+				array(
+					'methods'             => WP_REST_Server::CREATABLE,
+				'permission_callback' => static fn(): bool => (bool) bbb_reader_current_identity(),
+				'callback'            => 'bbb_reader_update_current_spice_profile',
+				)
+			);
+
+			register_rest_route(
+				'bbb/v1',
+				'/reader-account/made-for-you',
+				array(
+					array(
+						'methods'             => WP_REST_Server::READABLE,
+						'permission_callback' => static fn(): bool => (bool) bbb_reader_current_identity(),
+						'callback'            => 'bbb_reader_get_current_mfy_profile',
+					),
+					array(
+						'methods'             => WP_REST_Server::CREATABLE,
+						'permission_callback' => static fn(): bool => (bool) bbb_reader_current_identity(),
+						'callback'            => 'bbb_reader_update_current_mfy_profile',
+					),
+				)
+			);
+
+			register_rest_route(
+				'bbb/v1',
+				'/reader-account/notes',
+			array(
+				array(
+					'methods'             => WP_REST_Server::READABLE,
+					'permission_callback' => static fn(): bool => function_exists('bbb_reader_can_use_notes') && bbb_reader_can_use_notes(),
+					'callback'            => 'bbb_reader_get_current_notes',
+				),
+				array(
+					'methods'             => WP_REST_Server::CREATABLE,
+					'permission_callback' => static fn(): bool => function_exists('bbb_reader_can_use_notes') && bbb_reader_can_use_notes(),
+					'callback'            => 'bbb_reader_update_current_notes',
+				),
 			)
 		);
 

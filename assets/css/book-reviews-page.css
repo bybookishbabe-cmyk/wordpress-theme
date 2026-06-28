@@ -281,9 +281,37 @@
     padding-top:2.2rem;
   }
 
+  .bbb-review-index__grid{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:.8rem;
+  }
+
+  .bbb-review-index__item{
+    min-width:0;
+  }
+
+  .bbb-review-index__grid .bbb-review-card{
+    border-radius:1rem;
+  }
+
+  .bbb-review-index__grid .bbb-review-card__media{
+    aspect-ratio:2 / 3;
+  }
+
+  .bbb-review-index__grid .bbb-review-card__media img,
+  .bbb-review-index__grid .bbb-review-card__blogImage{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  }
+
   .bbb-review-card:not(.bbb-review-card--trending) .bbb-review-card__media,
   .bbb-review-card--trending .bbb-review-card__media{
     max-height:32rem;
+  }
+
+  .bbb-review-index__grid .bbb-review-card__media{
+    max-height:none;
   }
 
   .bbb-review-card--trending{
@@ -300,7 +328,366 @@
     padding:1.5rem;
   }
 
+  .bbb-review-index__grid .bbb-review-card__body{
+    gap:.45rem;
+    padding:.8rem;
+  }
+
+  .bbb-review-index__grid .bbb-review-card__meta{
+    gap:.45rem;
+    font-size:.9rem;
+    letter-spacing:.08em;
+  }
+
+  .bbb-review-index__grid .bbb-review-card__badge{
+    min-height:1.8rem;
+    padding:.15rem .45rem;
+  }
+
+  .bbb-review-index__grid .bbb-review-card__title{
+    font-size:1.25rem;
+    line-height:1.1;
+  }
+
+  .bbb-review-index__grid .bbb-review-card__book,
+  .bbb-review-index__grid .bbb-review-card__reviewMeta{
+    font-size:1.05rem;
+    line-height:1.3;
+  }
+
   .bbb-review-card__excerpt{
     display:none;
+  }
+}
+
+.bbb-book-archive__grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(20rem, 1fr));
+  gap:1.8rem;
+}
+
+.bbb-book-archive-search{
+  margin:-1.2rem 0 3rem;
+}
+
+.bbb-book-archive-search__label{
+  display:block;
+  margin:0 0 .8rem;
+  color:rgba(255,255,255,.68);
+  font-size:1.1rem;
+  font-weight:700;
+  letter-spacing:.14em;
+  text-transform:lowercase;
+}
+
+.bbb-book-archive-search__bar{
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) auto auto;
+  align-items:center;
+  gap:.8rem;
+  max-width:78rem;
+}
+
+.bbb-book-archive-search__bar input{
+  width:100%;
+  min-height:4.8rem;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:.8rem;
+  background:rgba(255,255,255,.045);
+  color:#fff;
+  font:inherit;
+  font-size:1.45rem;
+  padding:1rem 1.4rem;
+}
+
+.bbb-book-archive-search__bar input::placeholder{
+  color:rgba(255,255,255,.42);
+}
+
+.bbb-book-archive-search__bar input:focus{
+  border-color:rgba(255,138,199,.72);
+  box-shadow:0 0 0 .3rem rgba(255,138,199,.14);
+  outline:none;
+}
+
+.bbb-book-archive-search__bar button,
+.bbb-book-archive-search__bar a{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:4.8rem;
+  border:1px solid rgba(255,138,199,.46);
+  border-radius:.8rem;
+  background:rgba(255,138,199,.11);
+  color:#ffb0d8;
+  cursor:pointer;
+  font:inherit;
+  font-size:1.2rem;
+  font-weight:800;
+  letter-spacing:.1em;
+  padding:1rem 1.4rem;
+  text-decoration:none;
+  text-transform:lowercase;
+  white-space:nowrap;
+}
+
+.bbb-book-archive-search__submit{
+  background:#ff5fac;
+  border-color:#ff5fac;
+  color:#2b0619;
+  box-shadow:0 .8rem 1.8rem rgba(255,95,172,.24);
+}
+
+.bbb-book-archive-search__clear{
+  background:rgba(255,138,199,.11);
+  border-color:rgba(255,138,199,.46);
+  color:#ffb0d8;
+}
+
+.bbb-book-archive-search__bar button:hover,
+.bbb-book-archive-search__bar button:focus-visible,
+.bbb-book-archive-search__bar a:hover,
+.bbb-book-archive-search__bar a:focus-visible{
+  background:#ff7fbd;
+  border-color:rgba(255,138,199,.72);
+  color:#2b0619;
+  outline:none;
+}
+
+.bbb-book-archive-search__clear:hover,
+.bbb-book-archive-search__clear:focus-visible{
+  background:rgba(255,138,199,.18);
+  color:#ffdcf0;
+}
+
+.bbb-book-archive-search__status{
+  margin:.9rem 0 0;
+  color:rgba(255,255,255,.62);
+  font-size:1.25rem;
+  line-height:1.45;
+}
+
+.bbb-book-archive-card{
+  display:grid;
+  grid-template-rows:auto 1fr;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:1.6rem;
+  background:rgba(255,255,255,.025);
+  color:inherit;
+  text-decoration:none;
+  transition:transform .22s ease, border-color .22s ease, background .22s ease, box-shadow .22s ease;
+}
+
+.bbb-book-archive-card[hidden],
+.bbb-book-archive [hidden]{
+  display:none !important;
+}
+
+.bbb-book-archive-card:hover,
+.bbb-book-archive-card:focus-visible{
+  transform:translateY(-.3rem);
+  border-color:rgba(255,138,199,.68);
+  background:rgba(255,138,199,.055);
+  box-shadow:0 1.6rem 3.4rem rgba(0,0,0,.32);
+  outline:none;
+}
+
+.bbb-book-archive-card__cover{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  aspect-ratio:2 / 3;
+  max-height:34rem;
+  background:#151313;
+  overflow:hidden;
+}
+
+.bbb-book-archive-card__cover img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  transition:transform .28s ease;
+}
+
+.bbb-book-archive-card:hover .bbb-book-archive-card__cover img,
+.bbb-book-archive-card:focus-visible .bbb-book-archive-card__cover img{
+  transform:scale(1.025);
+}
+
+.bbb-book-archive-card__cover > span:not(.bbb-book-archive-card__spice){
+  font-family:"Cormorant Garamond", Georgia, serif;
+  font-size:7rem;
+  color:#ffb0d8;
+}
+
+.bbb-book-archive-card__spice{
+  position:absolute;
+  right:1rem;
+  top:1rem;
+  display:inline-flex;
+  align-items:center;
+  min-height:2.8rem;
+  padding:.35rem .8rem;
+  border-radius:999px;
+  background:rgba(0,0,0,.68);
+  color:#ff8ac7;
+  font-size:1.15rem;
+  letter-spacing:.04em;
+}
+
+.bbb-book-archive-card__body{
+  display:flex;
+  flex-direction:column;
+  gap:.7rem;
+  padding:1.6rem;
+}
+
+.bbb-book-archive-card__kicker{
+  margin:0;
+  color:#ff8ac7;
+  font-size:1.05rem;
+  font-weight:700;
+  letter-spacing:.08em;
+  line-height:1.2;
+  text-transform:lowercase;
+}
+
+.bbb-book-archive-card h2{
+  margin:0;
+  color:#fff;
+  font-size:clamp(1.9rem, 2.2vw, 2.6rem);
+  line-height:1.05;
+}
+
+.bbb-book-archive-card__author,
+.bbb-book-archive-card__mini{
+  margin:0;
+  color:rgba(255,255,255,.72);
+  font-size:1.35rem;
+  line-height:1.5;
+}
+
+.bbb-book-archive-card__mini{
+  color:rgba(255,255,255,.62);
+}
+
+.bbb-book-archive-card__tropes{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.6rem;
+  margin-top:auto;
+  padding-top:.5rem;
+}
+
+.bbb-book-archive-card__tropes span{
+  display:inline-flex;
+  align-items:center;
+  min-height:2.8rem;
+  padding:.35rem .9rem;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:999px;
+  color:rgba(255,255,255,.72);
+  font-size:1.15rem;
+  line-height:1.2;
+}
+
+.bbb-book-archive .page-numbers{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:3.8rem;
+  min-width:3.8rem;
+  padding:.8rem 1.2rem;
+  border:1px solid rgba(255,138,199,.34);
+  border-radius:999px;
+  color:#f6f6f6;
+  font-size:1.2rem;
+  text-decoration:none;
+}
+
+.bbb-book-archive .page-numbers.current,
+.bbb-book-archive .page-numbers:hover,
+.bbb-book-archive .page-numbers:focus-visible{
+  background:rgba(255,138,199,.14);
+  color:#ffb0d8;
+}
+
+@media (max-width:749px){
+  .bbb-book-archive{
+    overflow-x:hidden;
+  }
+
+  .bbb-book-archive > .page-width{
+    width:100%;
+    max-width:100%;
+    box-sizing:border-box;
+  }
+
+  .bbb-book-archive .bbb-review-index__sub{
+    max-width:100%;
+    overflow-wrap:anywhere;
+  }
+
+  .bbb-book-archive-search{
+    margin:-1.2rem 0 2rem;
+  }
+
+  .bbb-book-archive-search__bar{
+    grid-template-columns:minmax(0, 1fr);
+    gap:.7rem;
+  }
+
+  .bbb-book-archive-search__bar input,
+  .bbb-book-archive-search__bar button,
+  .bbb-book-archive-search__bar a{
+    min-height:4.2rem;
+    width:100%;
+  }
+
+  .bbb-book-archive__grid{
+    grid-template-columns:repeat(3, minmax(0, calc((100vw - 4.4rem) / 3)));
+    gap:.7rem;
+    justify-content:start;
+  }
+
+  .bbb-book-archive-card{
+    border-radius:.9rem;
+  }
+
+  .bbb-book-archive-card:hover,
+  .bbb-book-archive-card:focus-visible{
+    transform:translateY(-.15rem);
+    box-shadow:0 .8rem 1.8rem rgba(0,0,0,.28);
+  }
+
+  .bbb-book-archive-card__cover{
+    max-height:none;
+  }
+
+  .bbb-book-archive-card__spice{
+    right:.45rem;
+    top:.45rem;
+    min-height:1.9rem;
+    padding:.2rem .45rem;
+    font-size:.9rem;
+  }
+
+  .bbb-book-archive-card__body{
+    gap:.35rem;
+    padding:.65rem .55rem .7rem;
+  }
+
+  .bbb-book-archive-card__kicker,
+  .bbb-book-archive-card__author,
+  .bbb-book-archive-card__mini,
+  .bbb-book-archive-card__tropes{
+    display:none;
+  }
+
+  .bbb-book-archive-card h2{
+    font-size:1.15rem;
+    line-height:1.1;
   }
 }

@@ -52,26 +52,6 @@
   line-height: 1.65;
 }
 
-.bbb-society-landing__status {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin-top: 18px;
-  color: rgba(246, 246, 246, .66);
-  font-size: 12px;
-}
-
-.bbb-society-landing__statusLabel {
-  letter-spacing: .14em;
-  text-transform: lowercase;
-}
-
-.bbb-society-landing__status strong {
-  color: #fff;
-  font-weight: 600;
-}
-
 .bbb-society-theme {
   max-width: 980px;
   margin: 26px auto 0;
@@ -487,6 +467,15 @@
   font-size: 15px;
 }
 
+.bbb-society-link-card__emoji--pinterest::before {
+  content: "";
+  width: 15px;
+  height: 15px;
+  background: #e60023;
+  -webkit-mask: url("../icon-pinterest.svg") center / contain no-repeat;
+  mask: url("../icon-pinterest.svg") center / contain no-repeat;
+}
+
 .bbb-society-link-card__badge {
   flex: 0 0 auto;
   color: rgba(246, 246, 246, .54);
@@ -850,31 +839,104 @@
 
 @media (max-width: 560px) {
   .bbb-society-landing {
-    padding-inline: 14px;
+    padding: 24px 12px 54px;
   }
 
-  .bbb-society-landing__status {
-    align-items: flex-start;
-    flex-direction: column;
+  .bbb-society-landing__hero {
+    margin-bottom: 10px;
+  }
+
+  .bbb-society-landing h1 {
+    margin-top: 4px;
+    font-size: 34px;
+    line-height: .92;
+  }
+
+  .bbb-society-landing__intro {
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .bbb-society-theme {
+    margin-top: 10px;
+    padding: 9px;
+  }
+
+  .bbb-society-theme__featureLink {
+    gap: 10px;
+  }
+
+  .bbb-society-theme h2 {
+    font-size: 22px;
+  }
+
+  .bbb-society-theme p:not(.bbb-society-theme__eyebrow) {
+    font-size: 11px;
+    line-height: 1.3;
+  }
+
+  .bbb-society-theme__countdown {
+    margin-top: 8px;
+    padding: 8px;
+  }
+
+  .bbb-society-theme__timer {
+    gap: 5px;
+    margin-top: 7px;
+  }
+
+  .bbb-society-theme__timer span {
+    min-height: 40px;
+    padding: 5px 3px;
+  }
+
+  .bbb-society-theme__timer strong {
+    font-size: 21px;
+  }
+
+  .bbb-society-theme__timer em,
+  .bbb-society-theme__countdownNote,
+  .bbb-society-theme__countdownLabel {
+    font-size: 9px;
+  }
+
+  .bbb-society-theme__cta {
+    min-height: 26px;
+    margin-top: 7px;
+    padding: 5px 8px;
+    font-size: 10px;
+  }
+
+  .bbb-society-theme__preview {
+    display: none;
+  }
+
+  .bbb-society-sections {
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .bbb-society-section {
+    padding-top: 12px;
+  }
+
+  .bbb-society-section h2 {
+    margin-bottom: 7px;
+    font-size: 23px;
   }
 
   .bbb-society-link-grid,
   .bbb-society-about-grid,
   .bbb-society-main-hub {
-    display: flex;
-    grid-template-columns: none;
-    gap: 10px;
-    width: 100vw;
-    max-width: 100vw;
-    margin-inline: calc(50% - 50vw);
-    padding-inline: 14px;
-    box-sizing: border-box;
-    overflow-x: auto;
-    overscroll-behavior-inline: contain;
-    scroll-padding-inline: 14px;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    width: auto;
+    max-width: none;
+    margin-inline: 0;
+    padding-inline: 0;
+    overflow: visible;
   }
 
   .bbb-society-link-grid::-webkit-scrollbar,
@@ -886,19 +948,76 @@
   .bbb-society-link-card,
   .bbb-society-about-panel,
   .bbb-society-main-hub a {
-    flex: 0 0 min(76vw, 268px);
-    scroll-snap-align: start;
+    flex: initial;
+    scroll-snap-align: none;
   }
 
   .bbb-society-link-card {
-    min-height: 118px;
+    min-height: 80px;
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .bbb-society-link-card__top {
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .bbb-society-link-card__emoji {
+    width: 24px;
+    height: 24px;
+    flex-basis: 24px;
+    font-size: 12px;
+  }
+
+  .bbb-society-link-card__emoji--pinterest::before {
+    width: 12px;
+    height: 12px;
+  }
+
+  .bbb-society-link-card__title {
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  .bbb-society-link-card__badge {
+    display: none;
+  }
+
+  .bbb-society-link-card__copy {
+    font-size: 10px;
+    line-height: 1.28;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .bbb-society-link-card__lock {
+    font-size: 8px;
+  }
+
+  .bbb-society-link-card__upgrade {
+    min-height: 28px;
+    padding: 0 8px;
+    font-size: 10px;
   }
 
   .bbb-society-about-panel {
-    min-height: 156px;
+    min-height: 118px;
+    padding: 10px;
   }
 
   .bbb-society-main-hub a {
-    min-height: 56px;
+    min-height: 44px;
+    padding: 7px 8px;
+    font-size: 15px;
+  }
+
+  .bbb-society-main-hub__emoji {
+    width: 24px;
+    height: 24px;
+    flex-basis: 24px;
+    font-size: 12px;
   }
 }

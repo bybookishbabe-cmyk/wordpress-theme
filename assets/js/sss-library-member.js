@@ -15,6 +15,17 @@ document.addEventListener('DOMContentLoaded', function() {
 	var submit = document.getElementById('sssFinderSubmit');
 	var result = document.getElementById('sssFinderResult');
 
+	function bookCoverAlt(book) {
+		var title = String((book && book.title) || '').trim();
+		var author = String((book && book.author) || '').trim();
+		var shelf = String((book && (book.shelf || book.shelf_name)) || '').trim();
+
+		if (!title) return 'book cover';
+		if (author) title += ' by ' + author;
+		if (shelf) title += ' – ' + shelf;
+		return title + ' book cover';
+	}
+
 	function fillSelect(select, values) {
 		if (!select) return;
 		values.sort().forEach(function(value) {
@@ -42,7 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			var pick = matches[Math.floor(Math.random() * matches.length)] || books[Math.floor(Math.random() * books.length)];
 			if (!pick || !result) return;
 			document.getElementById('sssFinderCover').src = pick.cover_url || '';
-			document.getElementById('sssFinderCover').alt = pick.title || '';
+			document.getElementById('sssFinderCover').alt = bookCoverAlt(pick);
 			document.getElementById('sssFinderBookTitle').textContent = pick.title || '';
 			document.getElementById('sssFinderAuthor').textContent = pick.author || '';
 			document.getElementById('sssFinderWhy').textContent = pick.why || pick.mini || '';

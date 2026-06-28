@@ -79,7 +79,7 @@ if (!function_exists('bbb_trending_active_month')) {
 		$sundays       = bbb_trending_get_sunday_dates($current_month);
 		$first_sunday  = $sundays[0] ?? null;
 
-		if ($first_sunday instanceof DateTimeImmutable && $today->format('Y-m-d') <= $first_sunday->format('Y-m-d')) {
+		if ($first_sunday instanceof DateTimeImmutable && $today->format('Y-m-d') < $first_sunday->format('Y-m-d')) {
 			return $today->modify('first day of previous month')->format('Y-m');
 		}
 
@@ -153,7 +153,7 @@ $settings = wp_parse_args(
 	array(
 		'kicker'    => 'what the society is reading right now',
 		'title'     => 'trending romance reads',
-		'subtext'   => 'the books currently circulating through the smut & sentiment society.',
+		'subtext'   => 'the books currently circulating through the smut & sentiment society. every sunday. stay tuned.',
 		'cta_label' => 'explore the full library →',
 		'cta_link'  => '/library/',
 	)

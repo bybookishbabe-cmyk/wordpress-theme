@@ -27,6 +27,10 @@ function bbb_is_book_visible(int $post_id, bool $allow_hidden_from_library = fal
 		return false;
 	}
 
+	if (!$allow_hidden_from_library && function_exists('bbb_content_is_hidden_from_public_browsing') && bbb_content_is_hidden_from_public_browsing($post_id)) {
+		return false;
+	}
+
 	if (!$allow_hidden_from_library) {
 		$newsletter_date = get_post_meta($post_id, '_bbb_newsletter_date', true);
 		if ($newsletter_date) {

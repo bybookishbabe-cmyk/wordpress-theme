@@ -16,13 +16,14 @@ function bbb_render_header_dropdown_item(WP_Post $item, int $index, string $pare
 	$has_children = !empty($item->children);
 	$is_current  = bbb_menu_item_is_current($item);
 	$child_active = bbb_menu_item_child_active($item);
+	$item_class   = 'the-society' === $handle ? ' header__menu-item--cta' : '';
 
 	if ($has_children && !$parent_handle) :
 		?>
-		<li>
-			<header-menu>
+		<li class="header__menu-list-item header__menu-list-item--<?php echo esc_attr($handle); ?>">
+			<header-menu class="header-menu--<?php echo esc_attr($handle); ?>">
 				<details id="Details-HeaderMenu-<?php echo esc_attr((string) $index); ?>">
-					<summary id="HeaderMenu-<?php echo esc_attr($handle); ?>" class="header__menu-item list-menu__item link focus-inset">
+					<summary id="HeaderMenu-<?php echo esc_attr($handle); ?>" class="header__menu-item list-menu__item link focus-inset<?php echo esc_attr($item_class); ?>">
 						<span<?php echo $child_active ? ' class="header__active-menu-item"' : ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 							<?php echo esc_html($item->title); ?>
 						</span>
@@ -40,11 +41,11 @@ function bbb_render_header_dropdown_item(WP_Post $item, int $index, string $pare
 		return;
 	endif;
 	?>
-	<li>
+	<li class="header__menu-list-item header__menu-list-item--<?php echo esc_attr($handle); ?>">
 		<a
 			id="HeaderMenu-<?php echo esc_attr($id_prefix); ?>"
 			href="<?php echo esc_url($item->url); ?>"
-			class="header__menu-item list-menu__item link link--text focus-inset"
+			class="header__menu-item list-menu__item link link--text focus-inset<?php echo esc_attr($item_class); ?>"
 			<?php echo $is_current ? 'aria-current="page"' : ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 		>
 			<span<?php echo $is_current ? ' class="header__active-menu-item"' : ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>

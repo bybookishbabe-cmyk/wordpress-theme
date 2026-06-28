@@ -31,10 +31,16 @@
     #0d0d0d;
   box-shadow: 0 26px 80px rgba(0, 0, 0, 0.45);
   color: #f6f1eb;
+  cursor: pointer;
   opacity: 0;
   text-transform: lowercase;
   transform: translate3d(0, 18px, 0) scale(0.98);
   transition: opacity 220ms ease, transform 260ms ease;
+}
+
+.bbb-shop-drop__dialog:focus-visible {
+  outline: 2px solid rgba(255, 138, 199, 0.72);
+  outline-offset: 4px;
 }
 
 .bbb-shop-drop.is-visible .bbb-shop-drop__dialog {
@@ -53,6 +59,12 @@
   font: 700 58px/1 "Cormorant Garamond", Georgia, serif;
   place-items: center;
   text-decoration: none;
+}
+
+.bbb-shop-drop__media,
+.bbb-shop-drop__button,
+.bbb-shop-drop__close {
+  cursor: pointer;
 }
 
 .bbb-shop-drop__media img {

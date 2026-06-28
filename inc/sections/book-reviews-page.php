@@ -47,14 +47,32 @@ if (!function_exists('bbb_review_index_page_setting')) {
 	}
 }
 
+if (!function_exists('bbb_review_index_search_text')) {
+	function bbb_review_index_search_text(string $value): string {
+		$value = html_entity_decode(wp_strip_all_tags($value), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+		$value = strtolower($value);
+		$value = preg_replace('/[^a-z0-9]+/', ' ', $value) ?? $value;
+
+		return trim(preg_replace('/\s+/', ' ', $value) ?? $value);
+	}
+}
+
 if (!function_exists('bbb_review_index_posts')) {
 	function bbb_review_index_posts(string $blog_handle): array {
+		$category_slugs = array_values(array_unique(array_filter(array($blog_handle, 'book-reviews'))));
 		$posts = get_posts(
 			array(
 				'post_type'      => 'post',
 				'post_status'    => 'publish',
 				'posts_per_page' => 250,
-				'category_name'  => $blog_handle,
+				'tax_query'      => array(
+					array(
+						'taxonomy' => 'category',
+						'field'    => 'slug',
+						'terms'    => $category_slugs,
+						'operator' => 'IN',
+					),
+				),
 				'orderby'        => 'date',
 				'order'          => 'DESC',
 			)
@@ -130,6 +148,48 @@ if (!function_exists('bbb_review_index_article_books')) {
 		}
 
 		return array();
+	}
+}
+
+if (!function_exists('bbb_review_index_card_search_text')) {
+	function bbb_review_index_card_search_text(WP_Post $post): string {
+		$values = array(
+			get_the_title($post),
+			(string) get_post_field('post_name', $post),
+			get_the_excerpt($post),
+		);
+
+		foreach (bbb_review_index_article_books($post->ID) as $book) {
+			if (!$book instanceof WP_Post) {
+				continue;
+			}
+
+			$values[] = get_the_title($book);
+			$values[] = (string) get_post_field('post_name', $book);
+			$values[] = function_exists('bbb_get_book_author') ? bbb_get_book_author($book->ID) : (string) bbb_review_index_field($book->ID, array('author'), '');
+			$values[] = function_exists('bbb_get_book_shelf_name') ? bbb_get_book_shelf_name($book->ID) : '';
+			$values[] = (string) get_post_meta($book->ID, '_bbb_boyfriend_name', true);
+			$values[] = (string) get_post_meta($book->ID, '_bbb_boyfriend_type', true);
+
+			foreach (array('bbb_trope', 'bbb_shelf', 'bbb_series') as $taxonomy) {
+				$terms = get_the_terms($book->ID, $taxonomy);
+				if ($terms && !is_wp_error($terms)) {
+					$values = array_merge($values, wp_list_pluck($terms, 'name'));
+				}
+			}
+		}
+
+		$post_terms = get_the_terms($post->ID, 'category');
+		if ($post_terms && !is_wp_error($post_terms)) {
+			$values = array_merge($values, wp_list_pluck($post_terms, 'name'));
+		}
+
+		$post_tags = get_the_terms($post->ID, 'post_tag');
+		if ($post_tags && !is_wp_error($post_tags)) {
+			$values = array_merge($values, wp_list_pluck($post_tags, 'name'));
+		}
+
+		return bbb_review_index_search_text(implode(' ', array_filter($values)));
 	}
 }
 
@@ -309,13 +369,24 @@ $review_section_id = 'BookReviews-' . (int) $page_id;
         <h2 class="bbb-review-index__sectionTitle" id="BookReviewsArchive-<?php echo esc_attr((string) $page_id); ?>"><?php echo esc_html((string) bbb_review_index_page_setting('archive_heading', (int) $page_id, 'all book reviews')); ?></h2>
       </div>
 
+      <form class="bbb-book-archive-search" role="search" data-review-search>
+        <label class="bbb-book-archive-search__label" for="BookReviewsSearch-<?php echo esc_attr((string) $page_id); ?>">search book pages</label>
+        <div class="bbb-book-archive-search__bar">
+          <input id="BookReviewsSearch-<?php echo esc_attr((string) $page_id); ?>" type="search" placeholder="search by title, author, trope, series, or boyfriend" autocomplete="off" data-review-search-input>
+          <button type="button" data-review-search-clear hidden>clear</button>
+        </div>
+        <p class="bbb-book-archive-search__status" data-review-search-status aria-live="polite"></p>
+      </form>
+
       <div class="bbb-review-index__grid" data-review-grid>
         <?php foreach ($archive_posts as $index => $post) : ?>
-        <div class="bbb-review-index__item" data-review-card <?php echo ($index + 1) > $page_size ? 'hidden' : ''; ?>>
+        <div class="bbb-review-index__item" data-review-card data-review-search-text="<?php echo esc_attr(bbb_review_index_card_search_text($post)); ?>" <?php echo ($index + 1) > $page_size ? 'hidden' : ''; ?>>
           <?php echo bbb_render_review_index_card($post); ?>
         </div>
         <?php endforeach; ?>
       </div>
+
+      <div class="bbb-review-index__empty" data-review-search-empty hidden>no book pages matched that search.</div>
 
       <?php if (count($archive_posts) > $page_size) : ?>
       <nav class="bbb-review-index__pager" aria-label="book review pages" data-review-pager>
@@ -344,9 +415,19 @@ $review_section_id = 'BookReviews-' . (int) $page_id;
     var next = root.querySelector('[data-review-next]');
     var status = root.querySelector('[data-review-status]');
     var trending = root.querySelector('[data-review-trending]');
+    var search = root.querySelector('[data-review-search]');
+    var searchInput = root.querySelector('[data-review-search-input]');
+    var searchClear = root.querySelector('[data-review-search-clear]');
+    var searchStatus = root.querySelector('[data-review-search-status]');
+    var searchEmpty = root.querySelector('[data-review-search-empty]');
     var pageSize = parseInt(root.getAttribute('data-review-page-size'), 10) || 20;
     var currentPage = 1;
-    var totalPages = Math.max(1, Math.ceil(cards.length / pageSize));
+    var filteredCards = cards.slice();
+    var totalPages = Math.max(1, Math.ceil(filteredCards.length / pageSize));
+
+    function normalize(value){
+      return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
+    }
 
     function renderPage(page){
       currentPage = Math.min(Math.max(page, 1), totalPages);
@@ -354,32 +435,65 @@ $review_section_id = 'BookReviews-' . (int) $page_id;
       var end = start + pageSize;
 
       cards.forEach(function(card, index){
+        card.hidden = filteredCards.indexOf(card) === -1;
+      });
+
+      filteredCards.forEach(function(card, index){
         card.hidden = index < start || index >= end;
       });
 
       if (trending) {
-        trending.hidden = currentPage !== 1;
+        trending.hidden = Boolean(searchInput && normalize(searchInput.value)) || currentPage !== 1;
       }
 
       if (prev) prev.disabled = currentPage === 1;
       if (next) next.disabled = currentPage === totalPages;
       if (status) status.textContent = 'page ' + currentPage + ' of ' + totalPages;
+      if (pager) pager.hidden = totalPages <= 1 || filteredCards.length === 0;
 
       if (page !== 1) {
         root.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }
 
-    if (!pager || totalPages <= 1) return;
+    function updateSearch(){
+      var query = normalize(searchInput ? searchInput.value : '');
+      filteredCards = query
+        ? cards.filter(function(card){ return String(card.getAttribute('data-review-search-text') || '').indexOf(query) !== -1; })
+        : cards.slice();
+      totalPages = Math.max(1, Math.ceil(filteredCards.length / pageSize));
 
-    prev.addEventListener('click', function(){
+      if (searchClear) searchClear.hidden = !query;
+      if (searchEmpty) searchEmpty.hidden = !query || filteredCards.length > 0;
+      if (searchStatus) {
+        searchStatus.textContent = query
+          ? filteredCards.length + ' result' + (filteredCards.length === 1 ? '' : 's') + ' for "' + String(searchInput.value || '').trim() + '"'
+          : '';
+      }
+
+      renderPage(1);
+    }
+
+    if (prev) prev.addEventListener('click', function(){
       renderPage(currentPage - 1);
     });
 
-    next.addEventListener('click', function(){
+    if (next) next.addEventListener('click', function(){
       renderPage(currentPage + 1);
     });
 
-    renderPage(1);
+    if (search) search.addEventListener('submit', function(event){
+      event.preventDefault();
+    });
+
+    if (searchInput) searchInput.addEventListener('input', updateSearch);
+
+    if (searchClear) searchClear.addEventListener('click', function(){
+      searchInput.value = '';
+      searchInput.focus();
+      updateSearch();
+    });
+
+    updateSearch();
   })();
 </script>

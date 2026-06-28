@@ -105,6 +105,8 @@ function bbb_render_library_book_card(int $post_id, bool $mini = false): string 
 	$cover           = function_exists('bbb_get_book_cover_url') ? bbb_get_book_cover_url($post_id) : get_post_meta($post_id, '_bbb_cover_url', true);
 	$title           = get_the_title($post_id);
 	$author          = get_post_meta($post_id, '_bbb_author', true);
+	$shelf_name      = function_exists('bbb_get_book_shelf_name') ? bbb_get_book_shelf_name($post_id) : '';
+	$cover_alt       = function_exists('bbb_book_cover_alt') ? bbb_book_cover_alt($title, (string) $author, $shelf_name) : $title . ' book cover';
 	$spice           = (int) get_post_meta($post_id, '_bbb_spice', true);
 	$series_handle   = get_post_meta($post_id, '_bbb_series_handle', true);
 	$series_number   = get_post_meta($post_id, '_bbb_series_number', true);
@@ -150,7 +152,7 @@ function bbb_render_library_book_card(int $post_id, bool $mini = false): string 
     <div class="sss-lib__floatSpice"><?php echo esc_html(str_repeat('🌶', $spice)); ?></div>
     <?php endif; ?>
     <?php if ($cover) : ?>
-    <img class="sss-lib__cover" src="<?php echo esc_url((string) $cover); ?>" alt="<?php echo esc_attr($title); ?>" loading="lazy">
+    <img class="sss-lib__cover" src="<?php echo esc_url((string) $cover); ?>" alt="<?php echo esc_attr($cover_alt); ?>" loading="lazy">
     <?php endif; ?>
   </div>
   <div class="sss-lib__under">
@@ -184,6 +186,7 @@ function bbb_render_article_book_card(int $post_id, bool $show_why = false): str
 
 	$shelf_terms = get_the_terms($post_id, 'bbb_shelf');
 	$shelf_name  = ($shelf_terms && !is_wp_error($shelf_terms)) ? $shelf_terms[0]->name : '';
+	$cover_alt   = function_exists('bbb_book_cover_alt') ? bbb_book_cover_alt($title, (string) $author, $shelf_name) : $title . ' book cover';
 	$trope_terms = get_the_terms($post_id, 'bbb_trope');
 	$data_attrs  = bbb_get_book_data_attrs($post_id);
 
@@ -206,7 +209,7 @@ function bbb_render_article_book_card(int $post_id, bool $show_why = false): str
     <?php if ($series_name || $series_number) : ?>
     <div class="article-book-card__series">
       <?php if ($series_number) echo '#' . esc_html((string) $series_number) . ' • '; ?>
-      <?php echo esc_html($series_name); ?><?php if ($series_name) echo ' series'; ?>
+      <?php echo esc_html(function_exists('bbb_book_series_label') ? bbb_book_series_label((string) $series_name) : (string) $series_name); ?>
     </div>
     <?php endif; ?>
   </div>
@@ -220,7 +223,7 @@ function bbb_render_article_book_card(int $post_id, bool $show_why = false): str
     <div class="article-book-card__spice"><?php echo esc_html(str_repeat('🌶', $spice)); ?></div>
     <?php endif; ?>
     <?php if ($cover) : ?>
-    <img src="<?php echo esc_url((string) $cover); ?>" alt="<?php echo esc_attr($title); ?>" loading="lazy">
+    <img src="<?php echo esc_url((string) $cover); ?>" alt="<?php echo esc_attr($cover_alt); ?>" loading="lazy">
     <?php endif; ?>
   </div>
 

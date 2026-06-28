@@ -132,6 +132,47 @@ function bbb_society_admin_fetch_supabase_counts(array $config): array {
 	);
 }
 
+function bbb_society_subscriber_count_cache_ttl(): int {
+	$now = current_datetime();
+	$next_midnight = $now
+		->setTime(0, 0, 0)
+		->modify('+1 day');
+
+	return max($next_midnight->getTimestamp() - $now->getTimestamp(), HOUR_IN_SECONDS);
+}
+
+function bbb_society_clear_subscriber_count_caches(): void {
+	delete_transient('bbb_society_table_subscriber_count');
+	delete_transient('bbb_media_kit_stats_v1');
+}
+
+function bbb_society_cached_subscriber_count(): string {
+	$cached = get_transient('bbb_society_table_subscriber_count');
+	if (is_string($cached) && '' !== trim($cached)) {
+		return $cached;
+	}
+
+	$label_override = trim((string) get_option('bbb_society_subscriber_count_label_override', ''));
+	if ('' !== $label_override) {
+		$count = sanitize_text_field($label_override);
+		set_transient('bbb_society_table_subscriber_count', $count, bbb_society_subscriber_count_cache_ttl());
+
+		return $count;
+	}
+
+	$total = 0;
+	$config = bbb_society_admin_supabase_config();
+	if (!empty($config['url']) && !empty($config['key'])) {
+		$counts = bbb_society_admin_fetch_supabase_counts($config);
+		$total  = (int) ($counts['total'] ?? 0);
+	}
+
+	$count = $total > 0 ? number_format_i18n($total) : 'thousands of subscribers';
+	set_transient('bbb_society_table_subscriber_count', $count, bbb_society_subscriber_count_cache_ttl());
+
+	return $count;
+}
+
 function bbb_society_admin_csv_key(string $value): string {
 	return strtolower((string) preg_replace('/[^a-z0-9]+/i', '_', trim($value)));
 }
@@ -295,6 +336,8 @@ function bbb_society_admin_handle_substack_import() {
 	if (is_wp_error($result)) {
 		return $result;
 	}
+
+	bbb_society_clear_subscriber_count_caches();
 
 	$paid = count(array_filter($rows, static fn(array $row): bool => 'society' === $row['access_tier']));
 	return array(

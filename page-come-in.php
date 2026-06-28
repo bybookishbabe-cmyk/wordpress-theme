@@ -17,6 +17,7 @@ wp_enqueue_style(
 
 $society_join_url = get_option('bbb_society_gate_member_url', 'https://thesmutandsentimentsociety.substack.com/subscribe');
 $society_join_url = '' !== trim((string) $society_join_url) ? (string) $society_join_url : 'https://thesmutandsentimentsociety.substack.com/subscribe';
+$pwa_install_url  = function_exists('bbb_pwa_install_url') ? bbb_pwa_install_url() : home_url('/bybookishbabe-app/?install=1');
 
 $come_in_links = array(
 	array(
@@ -93,7 +94,7 @@ get_header();
 				<strong>not an app — just built like one</strong>
 				<span>save bybookishbabe to your home screen and open us like pinterest</span>
 			</span>
-			<button class="bbb-come-in__pwaButton" type="button" data-bbb-pwa-install>how to</button>
+			<a class="bbb-come-in__pwaButton" href="<?php echo esc_url($pwa_install_url); ?>" data-bbb-pwa-install-link>how to</a>
 		</div>
 
 		<div class="bbb-come-in__divider"><span>or dive straight in</span></div>

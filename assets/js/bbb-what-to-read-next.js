@@ -21,6 +21,17 @@
     });
   }
 
+  function bookCoverAlt(book) {
+    var title = String((book && book.title) || '').trim();
+    var author = String((book && book.author) || '').trim();
+    var shelf = String((book && book.shelf) || '').trim();
+
+    if (!title) return 'book cover';
+    if (author) title += ' by ' + author;
+    if (shelf) title += ' – ' + shelf;
+    return title + ' book cover';
+  }
+
   function uniq(items) {
     var seen = {};
     return (items || []).filter(function(item) {
@@ -127,6 +138,7 @@
   var preferenceMap = {
     vibe: {
       emotional: { shelf: 'contemporary romance', tropes: ['second chance romance', 'slow burn', 'friends to lovers', 'trauma bonding'] },
+      mafia: { shelf: 'dark romance', tropes: ['mafia romance', 'bratva', 'cartel', 'touch her and die', 'possessive'] },
       danger: { shelf: 'dark romance', tropes: ['stalker romance', 'touch her and die', 'mafia romance', 'enemies to lovers'] },
       fantasy: { shelf: 'romantasy', tropes: ['fated mates', 'enemies to lovers', 'slow burn', 'found family'] },
       banter: { shelf: 'contemporary romance', tropes: ['fake dating romance', 'opposites attract', 'forced proximity', 'friends to lovers'] }
@@ -172,6 +184,8 @@
       shelf: vibe.shelf || '',
       tropes: vibe.tropes || [],
       vibe: answers.vibe,
+      minSpice: preferenceMap.heat[answers.heat] || 0,
+      minDarkness: preferenceMap.darkness[answers.darkness] || 0,
       hasAnchor: Boolean(anchor && anchor.handle)
     };
 
@@ -188,6 +202,11 @@
     var value = book[key];
     if (Array.isArray(value)) return value.join(', ');
     return value == null ? '' : String(value);
+  }
+
+  function bookshelfUrl() {
+    var account = window.BBBSiteData && window.BBBSiteData.BBBReaderAccount;
+    return account && account.bookshelfUrl ? account.bookshelfUrl : '/my-bookshelf/';
   }
 
   function setBookAttrs(el, book) {
@@ -260,6 +279,14 @@
     var spiceDiff = Math.abs(Number(baseBook.spice || 0) - Number(candidate.spice || 0));
     var darknessDiff = Math.abs(Number(baseBook.darkness || 0) - Number(candidate.darkness || 0));
     var relatedScore = relatedTropeScore(baseBook, candidate);
+    var baseMostLike = (baseBook.mostLike || []).map(normalizeText);
+    var candidateMostLike = (candidate.mostLike || []).map(normalizeText);
+    var manualMatchScore = 0;
+    if (candidate.handle && baseMostLike.indexOf(normalizeText(candidate.handle)) !== -1) {
+      manualMatchScore = 260;
+    } else if (baseBook.handle && candidateMostLike.indexOf(normalizeText(baseBook.handle)) !== -1) {
+      manualMatchScore = 230;
+    }
     var boyfriendScore = baseBook.boyfriend && normalizeText(baseBook.boyfriend) === normalizeText(candidate.boyfriend) ? 24 : 0;
     var preferences = baseBook.preferences || {};
     var preferredTropes = (preferences.tropes || []).map(normalizeText);
@@ -269,12 +296,13 @@
     }).length;
     var preferredShelf = preferences.shelf && candidate.shelf && normalizeText(preferences.shelf) === normalizeText(candidate.shelf);
     var kuScore = preferences.access === 'ku' ? (candidate.ku === 'true' ? 55 : -25) : 0;
-    var matchScore = (shared.length * 100) + (preferredOverlap * 42) + (relatedScore * 28) + (sameShelf ? 150 : 0) + (preferredShelf ? 70 : 0) + boyfriendScore + kuScore - (spiceDiff * 10) - (darknessDiff * 8);
-    return { book: candidate, shared: shared, sameShelf: sameShelf, spiceDiff: spiceDiff, darknessDiff: darknessDiff, relatedScore: relatedScore, matchScore: matchScore };
+    var matchScore = manualMatchScore + (shared.length * 100) + (preferredOverlap * 42) + (relatedScore * 28) + (sameShelf ? 150 : 0) + (preferredShelf ? 70 : 0) + boyfriendScore + kuScore - (spiceDiff * 10) - (darknessDiff * 8);
+    return { book: candidate, shared: shared, sameShelf: sameShelf, spiceDiff: spiceDiff, darknessDiff: darknessDiff, relatedScore: relatedScore, manualMatchScore: manualMatchScore, matchScore: matchScore };
   }
 
   function sortByStrength(a, b) {
     if (b.matchScore !== a.matchScore) return b.matchScore - a.matchScore;
+    if (b.manualMatchScore !== a.manualMatchScore) return b.manualMatchScore - a.manualMatchScore;
     if (b.sameShelf !== a.sameShelf) return b.sameShelf ? 1 : -1;
     if (b.shared.length !== a.shared.length) return b.shared.length - a.shared.length;
     if (b.relatedScore !== a.relatedScore) return b.relatedScore - a.relatedScore;
@@ -294,8 +322,14 @@
   }
 
   function getMatches(books, selected, rotationStep) {
+    if (window.BBBRecEngine && typeof window.BBBRecEngine.matches === 'function') {
+      return window.BBBRecEngine.matches(books, selected, rotationStep);
+    }
+
     var candidates = books.filter(function(book) {
-      return !selected.handle || book.handle !== selected.handle;
+      var sameHandle = selected.handle && book.handle && normalizeText(book.handle) === normalizeText(selected.handle);
+      var sameTitle = selected.title && book.title && normalizeText(book.title) === normalizeText(selected.title);
+      return !sameHandle && !sameTitle;
     }).map(function(book) {
       return scoreCandidate(selected, book);
     }).sort(sortByStrength);
@@ -322,6 +356,12 @@
     if (!spicePool.length) spicePool = candidates;
 
     var first = pick(sameShelfPool, used, rotationStep);
+    var manualPool = candidates.filter(function(candidate) {
+      return candidate.manualMatchScore > 0;
+    });
+    if (manualPool.length) {
+      first = pick(manualPool, used, rotationStep) || first;
+    }
     if (first) used.push(first.book.handle);
     var second = pick(tropePool, used, rotationStep + 1);
     if (second) used.push(second.book.handle);
@@ -345,6 +385,11 @@
 
   function reasonHtml(match, index) {
     if (!match) return '';
+    if (match.reasons && match.reasons.length) {
+      return '<span>why this fits: </span>' + match.reasons.slice(0, 5).map(function(reason) {
+        return escapeHtml(reason);
+      }).join(', ');
+    }
     var book = match.book || {};
     var tropes = uniq((match.shared || []).concat(book.tropes || [])).slice(0, 5);
     return tropes.length ? '<span>tropes: </span>' + tropeListHtml(tropes, ', ') : '';
@@ -533,7 +578,7 @@
       }).slice(0, 60);
       searchResults.innerHTML = matches.map(function(book) {
         return '<button type="button" class="bbb-next__searchResult" data-next-handle="' + encodeURIComponent(book.handle) + '">' +
-          (book.cover ? '<img src="' + book.cover.replace(/"/g, '&quot;') + '" alt="" loading="lazy">' : '<span></span>') +
+          (book.cover ? '<img src="' + book.cover.replace(/"/g, '&quot;') + '" alt="' + escapeHtml(bookCoverAlt(book)) + '" loading="lazy">' : '<span></span>') +
           '<span><strong>' + book.title + '</strong><em>' + (book.author || 'unknown author') + '</em></span>' +
           '</button>';
       }).join('');
@@ -549,7 +594,7 @@
       sourceWrap.querySelector('[data-next-source-why]').textContent = book.mini || book.why || '';
       if (cover) {
         cover.src = book.cover || '';
-        cover.alt = book.title || '';
+        cover.alt = bookCoverAlt(book);
       }
       if (spice) {
         spice.hidden = !book.spice;
@@ -591,7 +636,7 @@
       card.querySelector('[data-next-reason]').innerHTML = reasonHtml(match, index);
       if (cover) {
         cover.src = book.cover || '';
-        cover.alt = book.title || '';
+        cover.alt = bookCoverAlt(book);
       }
       if (spice) {
         spice.hidden = !book.spice;
@@ -610,8 +655,8 @@
       }
       var link = card.querySelector('[data-next-link]');
       if (link) {
-        link.hidden = !book.url;
-        link.href = book.url || '#';
+        link.hidden = false;
+        link.href = bookshelfUrl();
       }
       Array.prototype.slice.call(card.querySelectorAll('[data-next-status]')).forEach(function(button) {
         button.setAttribute('data-next-status-handle', book.handle || '');

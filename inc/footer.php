@@ -104,6 +104,10 @@ function bbb_render_social_icons(string $class = ''): void {
 }
 
 function bbb_footer_menu_items(): array {
+	if (function_exists('bbb_get_fallback_menu_tree')) {
+		return bbb_get_fallback_menu_tree();
+	}
+
 	$locations = get_nav_menu_locations();
 	$menu_id   = isset($locations['main-menu']) ? (int) $locations['main-menu'] : 0;
 	$menu      = $menu_id ? wp_get_nav_menu_object($menu_id) : wp_get_nav_menu_object('main-menu');
@@ -140,6 +144,55 @@ function bbb_footer_menu_items(): array {
 	}
 
 	return $items;
+}
+
+function bbb_footer_menu_sections(): array {
+	$sections = array();
+
+	if (function_exists('bbb_get_fallback_menu_tree')) {
+		foreach (bbb_get_fallback_menu_tree() as $item) {
+			$title = (string) ($item->title ?? '');
+			if (in_array($title, array('home', 'shop'), true)) {
+				continue;
+			}
+
+			$links = array();
+			if (!empty($item->children) && is_array($item->children)) {
+				foreach ($item->children as $child) {
+					$links[] = $child;
+				}
+			} elseif (!empty($item->url)) {
+				$links[] = $item;
+			}
+
+			$sections[] = array(
+				'title' => $title,
+				'links' => $links,
+			);
+		}
+
+		$sections[] = array(
+			'title' => 'shop',
+			'links' => array(
+				bbb_fallback_item_to_post(
+					array(
+						'title'    => 'shop',
+						'url'      => bbb_page_url('shop'),
+						'children' => array(),
+					)
+				),
+			),
+		);
+
+		return $sections;
+	}
+
+	return array(
+		array(
+			'title' => 'browse',
+			'links' => bbb_footer_menu_items(),
+		),
+	);
 }
 
 function bbb_footer_fallback_menu_items(): array {

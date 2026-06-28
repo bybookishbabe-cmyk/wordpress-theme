@@ -15,15 +15,36 @@ if (!$source_post instanceof WP_Post) {
 
 $books_like_css_path = get_theme_file_path('assets/css/books-like.css');
 wp_enqueue_style('bbb-books-like', get_theme_file_uri('assets/css/books-like.css'), array('bbb-sss-library'), file_exists($books_like_css_path) ? (string) filemtime($books_like_css_path) : wp_get_theme()->get('Version'));
+
+$source                    = bbb_books_like_book_data($source_post->ID);
+$has_society_member_access = function_exists('bbb_reader_has_member_identity')
+	? bbb_reader_has_member_identity()
+	: (function_exists('bbb_society_reader_has_member_access') && bbb_society_reader_has_member_access());
+if (!$has_society_member_access && function_exists('bbb_society_render_locked_preview_page')) {
+	get_header();
+	bbb_society_render_locked_preview_page(
+		array(
+			'access'      => 'member',
+			'kicker'      => 'member reading guide',
+			'title'       => 'if you liked ' . (string) ($source['title'] ?? 'these books'),
+			'intro'       => 'these curated reading guides are tucked behind the society email wall.',
+			'panel_title' => 'enter your society email to unlock',
+			'panel_copy'  => 'free and paid society members can open these pages. paid access is not required.',
+			'cta'         => 'open account',
+			'cta_url'     => home_url('/account/'),
+			'items'       => array('curated books-like pages', 'same-energy recommendations', 'member-only reader routes'),
+		)
+	);
+	get_footer();
+	return;
+}
+
 get_header();
 
-$source                 = bbb_books_like_book_data($source_post->ID);
-$is_paid_society_member = function_exists('bbb_reader_is_society') && bbb_reader_is_society();
-$all_recommendations    = array_slice(bbb_books_like_recommendations($source_post->ID), 0, 7);
-$preview_limit          = 2;
-$recommendations        = $is_paid_society_member ? $all_recommendations : array_slice($all_recommendations, 0, $preview_limit);
-$locked_count           = max(0, count($all_recommendations) - count($recommendations));
-$source_tropes          = array_slice((array) $source['tropes'], 0, 5);
+$all_recommendations       = array_slice(bbb_books_like_recommendations($source_post->ID), 0, 7);
+$recommendations           = $has_society_member_access ? $all_recommendations : array();
+$locked_count              = max(0, count($all_recommendations) - count($recommendations));
+$source_tropes             = array_slice((array) $source['tropes'], 0, 5);
 
 function bbb_books_like_rating_dots(int $value): string {
 	$value = max(0, min(5, $value));
@@ -96,7 +117,7 @@ function bbb_books_like_trope_filter_value(array $trope): string {
 ?>
 
 <main id="MainContent" class="content-for-layout focus-none" role="main" tabindex="-1">
-	<section class="bbb-like<?php echo $is_paid_society_member ? ' is-unlocked' : ' is-preview'; ?>" data-books-like data-sss-lib="<?php echo esc_attr($is_paid_society_member ? 'society' : 'public'); ?>">
+	<section class="bbb-like<?php echo $has_society_member_access ? ' is-unlocked' : ' is-preview'; ?>" data-books-like data-sss-lib="<?php echo esc_attr($has_society_member_access ? 'society' : 'public'); ?>">
 		<div class="bbb-like__wrap">
 			<header class="bbb-like__hero">
 				<button class="bbb-like__share" type="button" data-books-like-share aria-label="share this reading guide">
@@ -127,11 +148,34 @@ function bbb_books_like_trope_filter_value(array $trope): string {
 				</div>
 
 				<div class="bbb-like__filters" data-like-filters>
-					<label class="bbb-like__spiceFilter">
+					<div class="bbb-like__spiceFilter">
 						<span>minimum spice</span>
-						<input type="range" min="0" max="5" step="1" value="0" data-like-spice>
+						<input class="bbb-like__spiceRange" type="range" min="0" max="5" step="1" value="0" data-like-spice aria-label="minimum spice">
+						<div class="bbb-like__spiceChoices" role="radiogroup" aria-label="minimum spice level">
+							<?php
+							$books_like_spice_profiles = function_exists('bbb_reader_spice_profiles') ? bbb_reader_spice_profiles() : array(
+								1 => array('label' => 'soft spice', 'peppers' => '🌶'),
+								2 => array('label' => 'some heat', 'peppers' => '🌶🌶'),
+								3 => array('label' => 'balanced', 'peppers' => '🌶🌶🌶'),
+								4 => array('label' => 'high spice', 'peppers' => '🌶🌶🌶🌶'),
+								5 => array('label' => 'wreck me', 'peppers' => '🌶🌶🌶🌶🌶'),
+							);
+							?>
+							<?php foreach ($books_like_spice_profiles as $level => $profile) : ?>
+								<button
+									type="button"
+									class="bbb-like__spiceChoice"
+									role="radio"
+									aria-checked="false"
+									data-like-spice-choice="<?php echo esc_attr((string) $level); ?>"
+								>
+									<span><?php echo esc_html((string) ($profile['peppers'] ?? '')); ?></span>
+									<strong><?php echo esc_html((string) ($profile['label'] ?? '')); ?></strong>
+								</button>
+							<?php endforeach; ?>
+						</div>
 						<output data-like-spice-label>any heat</output>
-					</label>
+					</div>
 					<button class="bbb-like__clearFilters" type="button" data-like-clear hidden>clear filters</button>
 				</div>
 			</header>
@@ -150,7 +194,7 @@ function bbb_books_like_trope_filter_value(array $trope): string {
 						</div>
 					<?php endif; ?>
 					<?php if (!empty($source['cover'])) : ?>
-						<img class="sss-lib__cover" src="<?php echo esc_url((string) $source['cover']); ?>" alt="<?php echo esc_attr((string) $source['title']); ?>" loading="lazy">
+						<img class="sss-lib__cover" src="<?php echo esc_url((string) $source['cover']); ?>" alt="<?php echo esc_attr(function_exists('bbb_book_cover_alt') ? bbb_book_cover_alt((string) $source['title'], (string) ($source['author'] ?? ''), (string) ($source['shelf']['name'] ?? '')) : (string) $source['title'] . ' book cover'); ?>" loading="lazy">
 					<?php else : ?>
 						<span aria-hidden="true">▮</span>
 					<?php endif; ?>
@@ -166,13 +210,6 @@ function bbb_books_like_trope_filter_value(array $trope): string {
 							<?php echo wp_kses_post(bbb_books_like_rating_dots((int) $source['spice'])); ?>
 						</div>
 					<?php endif; ?>
-					<?php if ((int) ($source['darkness'] ?? 0) > 0) : ?>
-						<div class="bbb-like__darkness" aria-label="<?php echo esc_attr((string) $source['darkness']); ?> darkness level">
-							<span>darkness</span>
-							<i aria-hidden="true"><?php echo esc_html(bbb_books_like_skulls((int) $source['darkness'])); ?></i>
-							<em><?php echo esc_html((string) (int) $source['darkness']); ?>/5</em>
-						</div>
-					<?php endif; ?>
 				</div>
 			</article>
 
@@ -182,11 +219,16 @@ function bbb_books_like_trope_filter_value(array $trope): string {
 				</p>
 				<div class="bbb-like__list" data-like-list>
 					<?php foreach ($recommendations as $index => $book) :
-						$tags = !empty($book['shared_tropes'])
-							? bbb_books_like_trope_display_values($book, $book['shared_tropes'])
-							: array_map('bbb_books_like_ensure_emoji_label_html', array_filter(array($book['shelf']['name'] ?? '', $book['boyfriend'] ?? '')));
-						$why  = (string) ($book['mini'] ?: $book['why']);
-					?>
+							$all_tropes            = array_values(array_filter((array) ($book['tropes'] ?? array()), static fn($trope): bool => is_array($trope) && '' !== trim((string) ($trope['name'] ?? ''))));
+							$matching_trope_keys   = array();
+							foreach ((array) ($book['shared_tropes'] ?? array()) as $shared_trope) {
+								$matching_trope_keys[] = sanitize_title((string) $shared_trope);
+							}
+							$why = (string) ($book['mini'] ?: $book['why']);
+							$book_url = !empty($book['url'])
+								? (string) $book['url']
+								: (get_permalink((int) ($book['id'] ?? 0)) ?: home_url('/books/' . sanitize_title((string) ($book['handle'] ?? $book['title'] ?? '')) . '/'));
+						?>
 						<article class="bbb-like__match sss-lib__book" data-book-preview <?php echo bbb_books_like_data_attrs($book); ?>>
 							<div class="bbb-like__matchRank"><?php echo esc_html(str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT)); ?></div>
 							<div class="bbb-like__matchCover sss-lib__coverWrap">
@@ -200,80 +242,76 @@ function bbb_books_like_trope_filter_value(array $trope): string {
 									</div>
 								<?php endif; ?>
 								<?php if (!empty($book['cover'])) : ?>
-									<img class="sss-lib__cover" src="<?php echo esc_url((string) $book['cover']); ?>" alt="<?php echo esc_attr((string) $book['title']); ?>" loading="lazy">
+									<img class="sss-lib__cover" src="<?php echo esc_url((string) $book['cover']); ?>" alt="<?php echo esc_attr(function_exists('bbb_book_cover_alt') ? bbb_book_cover_alt((string) $book['title'], (string) ($book['author'] ?? ''), (string) ($book['shelf']['name'] ?? '')) : (string) $book['title'] . ' book cover'); ?>" loading="lazy">
 								<?php endif; ?>
-							</div>
-							<div class="bbb-like__matchCopy">
-								<h3><?php echo esc_html((string) $book['title']); ?></h3>
-								<?php if (!empty($book['author'])) : ?>
-									<p class="bbb-like__matchAuthor"><?php echo esc_html((string) $book['author']); ?></p>
-								<?php endif; ?>
-								<?php if ($tags) : ?>
-									<div class="bbb-like__recTags">
-										<?php foreach (array_slice($tags, 0, 3) as $tag) : ?>
-											<span class="bbb-like__recTag"><?php echo wp_kses_post((string) $tag); ?></span>
-										<?php endforeach; ?>
-									</div>
-								<?php endif; ?>
-								<?php if ((int) ($book['darkness'] ?? 0) > 0) : ?>
-									<div class="bbb-like__darkness bbb-like__darkness--small" aria-label="<?php echo esc_attr((string) $book['darkness']); ?> darkness level">
-										<span>darkness</span>
-										<i aria-hidden="true"><?php echo esc_html(bbb_books_like_skulls((int) $book['darkness'])); ?></i>
-										<em><?php echo esc_html((string) (int) $book['darkness']); ?>/5</em>
-									</div>
-								<?php endif; ?>
-								<?php if ($why) : ?>
-									<p class="bbb-like__whyKicker">why you'll love it</p>
-									<p class="bbb-like__matchWhy"><?php echo esc_html($why); ?></p>
-								<?php endif; ?>
-								<div class="bbb-like__matchActions">
-									<?php if (!empty($book['amazon'])) : ?>
-										<a class="bbb-like__cta bbb-like__cta--amazon" href="<?php echo esc_url((string) $book['amazon']); ?>" target="_blank" rel="noopener">get on amazon</a>
-									<?php endif; ?>
-									<?php if (!empty($book['ku'])) : ?>
-										<a class="bbb-like__cta bbb-like__cta--ku" href="<?php echo esc_url((string) ($book['amazon'] ?: $book['bookshop'] ?: '#')); ?>" target="_blank" rel="noopener">on kindle unlimited</a>
-									<?php endif; ?>
-									<?php if (empty($book['amazon']) && !empty($book['bookshop'])) : ?>
-										<a class="bbb-like__cta bbb-like__cta--bookshop" href="<?php echo esc_url((string) $book['bookshop']); ?>" target="_blank" rel="noopener">get on bookshop</a>
-									<?php endif; ?>
 								</div>
-							</div>
-						</article>
+								<div class="bbb-like__matchCopy">
+									<h3><?php echo esc_html((string) $book['title']); ?></h3>
+									<?php if (!empty($book['author'])) : ?>
+										<p class="bbb-like__matchAuthor"><?php echo esc_html((string) $book['author']); ?></p>
+									<?php endif; ?>
+								<?php if ($all_tropes) : ?>
+									<div class="bbb-like__tropeGroups">
+										<div class="bbb-like__tropeGroup">
+											<p class="bbb-like__tropeKicker">tropes</p>
+											<div class="bbb-like__recTags bbb-like__recTags--all">
+												<?php foreach ($all_tropes as $trope) :
+													$trope_name = (string) ($trope['name'] ?? '');
+													$trope_slug = (string) ($trope['slug'] ?? $trope_name);
+													$is_match   = in_array(sanitize_title($trope_name), $matching_trope_keys, true) || in_array(sanitize_title($trope_slug), $matching_trope_keys, true);
+												?>
+													<span class="bbb-like__recTag<?php echo $is_match ? ' is-match' : ''; ?>"><?php echo wp_kses_post(bbb_books_like_trope_display_html($trope)); ?></span>
+												<?php endforeach; ?>
+											</div>
+										</div>
+									</div>
+								<?php endif; ?>
+									<?php if ($why) : ?>
+										<p class="bbb-like__whyKicker">why you'll love it</p>
+										<p class="bbb-like__matchWhy"><?php echo esc_html($why); ?></p>
+									<?php endif; ?>
+									<?php
+									$series_handle = sanitize_title((string) ($book['series_handle'] ?? $book['series'] ?? ''));
+									$series_name   = trim((string) ($book['series_name'] ?? ''));
+									?>
+									<div class="bbb-like__matchActions">
+										<?php if (!empty($book['ku'])) : ?>
+											<a class="bbb-like__cta bbb-like__cta--ku" href="<?php echo esc_url((string) ($book['amazon'] ?: $book['bookshop'] ?: '#')); ?>" target="_blank" rel="noopener">read free on kindle unlimited</a>
+										<?php endif; ?>
+										<?php if (!empty($book['amazon'])) : ?>
+											<a class="bbb-like__cta bbb-like__cta--amazon" href="<?php echo esc_url((string) $book['amazon']); ?>" target="_blank" rel="noopener">buy on amazon <span>&middot; own it forever</span></a>
+										<?php endif; ?>
+										<?php if (!empty($book['bookshop'])) : ?>
+											<a class="bbb-like__cta bbb-like__cta--bookshop" href="<?php echo esc_url((string) $book['bookshop']); ?>" target="_blank" rel="noopener">prefer indie? bookshop.org →</a>
+										<?php endif; ?>
+									</div>
+									<div class="bbb-like__secondaryLinks" aria-label="more book links">
+										<?php if ('' !== $series_handle && '' !== $series_name) : ?>
+											<div class="bbb-like__secondaryRow">
+												<span class="bbb-like__secondaryLabel">part of a series?</span>
+												<a class="bbb-like__secondaryLink" href="<?php echo esc_url(home_url('/series/' . $series_handle . '/')); ?>"><?php echo esc_html(strtolower(function_exists('bbb_book_series_label') ? bbb_book_series_label($series_name) : $series_name)); ?> reading order →</a>
+											</div>
+										<?php endif; ?>
+										<div class="bbb-like__secondaryRow">
+											<span class="bbb-like__secondaryLabel">save it to your shelf</span>
+											<a class="bbb-like__secondaryLink" href="<?php echo esc_url($book_url); ?>">view in library →</a>
+										</div>
+									</div>
+								</div>
+							</article>
 					<?php endforeach; ?>
 				</div>
 				<p class="bbb-like__emptyMatches" data-like-empty hidden>no visible matches for those filters yet. clear one and the list comes back.</p>
 
-				<?php if (!$is_paid_society_member && $locked_count > 0) : ?>
+				<?php if (!$has_society_member_access && $locked_count > 0) : ?>
 					<div class="bbb-like__unlock" data-like-lock>
 						<div>
 							<span>society shelf</span>
-							<p>+<?php echo esc_html((string) $locked_count); ?> more matching picks are waiting in the private library.</p>
+							<p><?php echo esc_html((string) $locked_count); ?> matching picks are waiting behind the email wall.</p>
 						</div>
 						<a href="<?php echo esc_url(get_option('bbb_society_gate_member_url', 'https://thesmutandsentimentsociety.substack.com/subscribe')); ?>">unlock the picks →</a>
 					</div>
 				<?php endif; ?>
-			</section>
-
-			<div class="bbb-like__rule"></div>
-
-			<a class="bbb-like__quizNudge" href="<?php echo esc_url(home_url('/fictional-boyfriend-quiz/')); ?>">
-				<span class="bbb-like__quizCover" aria-hidden="true">
-					<?php if (!empty($source['cover'])) : ?>
-						<img src="<?php echo esc_url((string) $source['cover']); ?>" alt="" loading="lazy">
-					<?php else : ?>
-						<span>♡</span>
-					<?php endif; ?>
-				</span>
-				<span class="bbb-like__quizCopy">
-					<strong>find your fictional match</strong>
-				</span>
-				<span aria-hidden="true">›</span>
-			</a>
-
-			<section class="bbb-like__newsletter">
-				<h2>one perfect romance, every sunday</h2>
-				<p>the smut &amp; sentiment society letter. morally gray men, sinful recs, soft feelings. free to join.</p>
-				<a class="bbb-like__cta" href="https://thesmutandsentimentsociety.substack.com/subscribe" target="_blank" rel="noopener">join</a>
 			</section>
 		</div>
 	</section>
@@ -305,6 +343,7 @@ document.addEventListener('click', function(event) {
 	var clear = root.querySelector('[data-like-clear]');
 	var empty = root.querySelector('[data-like-empty]');
 	var chips = Array.prototype.slice.call(root.querySelectorAll('[data-like-trope]'));
+	var spiceChoices = Array.prototype.slice.call(root.querySelectorAll('[data-like-spice-choice]'));
 	var matches = Array.prototype.slice.call(root.querySelectorAll('.bbb-like__match'));
 	var selected = [];
 	var labels = ['any heat', '1 pepper+', '2 peppers+', '3 peppers+', '4 peppers+', '5 peppers'];
@@ -317,20 +356,27 @@ document.addEventListener('click', function(event) {
 	}
 
 	function applyFilters() {
-		var minSpice = spice ? Number(spice.value || 0) : 0;
+		var minSpice = spice ? parseInt(spice.value || '0', 10) : 0;
 		var visible = 0;
 
 		if (spiceLabel) {
 			spiceLabel.textContent = labels[minSpice] || labels[0];
 		}
+		spiceChoices.forEach(function(choice) {
+			var level = Number(choice.getAttribute('data-like-spice-choice') || 0);
+			var active = level === minSpice;
+			choice.classList.toggle('is-active', active);
+			choice.setAttribute('aria-checked', active ? 'true' : 'false');
+		});
 
 		matches.forEach(function(book) {
-			var spiceValue = Number(book.getAttribute('data-spice') || 0);
+			var spiceValue = parseInt(book.getAttribute('data-spice') || '0', 10);
 			var tropes = bookTropes(book);
 			var spiceMatch = !minSpice || spiceValue >= minSpice;
 			var tropeMatch = selected.length === 0 || selected.every(function(trope) { return tropes.indexOf(trope) !== -1; });
 			var show = spiceMatch && tropeMatch;
 			book.hidden = !show;
+			book.classList.toggle('is-filtered-out', !show);
 			if (show) visible += 1;
 		});
 
@@ -360,6 +406,15 @@ document.addEventListener('click', function(event) {
 	if (spice) {
 		spice.addEventListener('input', applyFilters);
 	}
+	spiceChoices.forEach(function(choice) {
+		choice.addEventListener('click', function() {
+			if (!spice) return;
+			var value = String(choice.getAttribute('data-like-spice-choice') || '0');
+			spice.value = spice.value === value ? '0' : value;
+			spice.dispatchEvent(new Event('change', { bubbles: true }));
+			applyFilters();
+		});
+	});
 	if (clear) {
 		clear.addEventListener('click', function() {
 			selected = [];

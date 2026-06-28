@@ -14,9 +14,84 @@ function bbb_substack_feed_url(): string {
 	return (string) apply_filters('bbb_substack_feed_url', '' !== $url ? $url : 'https://thesmutandsentimentsociety.substack.com/feed');
 }
 
-function bbb_substack_subscribe_url(): string {
-	return (string) apply_filters('bbb_substack_subscribe_url', 'https://thesmutandsentimentsociety.substack.com/subscribe');
+function bbb_reader_has_account_identity(): bool {
+	if (is_user_logged_in()) {
+		return true;
+	}
+
+	if (!function_exists('bbb_reader_current_identity')) {
+		return false;
+	}
+
+	$identity = bbb_reader_current_identity();
+
+	return is_array($identity) && '' !== trim((string) ($identity['email'] ?? ''));
 }
+
+function bbb_substack_home_url(): string {
+	return (string) apply_filters('bbb_substack_home_url', 'https://thesmutandsentimentsociety.substack.com/');
+}
+
+function bbb_substack_subscribe_url(): string {
+	$url = bbb_reader_has_account_identity()
+		? bbb_substack_home_url()
+		: 'https://thesmutandsentimentsociety.substack.com/subscribe';
+
+	return (string) apply_filters('bbb_substack_subscribe_url', $url);
+}
+
+function bbb_society_private_layer_state(): array {
+	if (function_exists('bbb_reader_is_society') && bbb_reader_is_society()) {
+		return array(
+			'label' => 'subscribed',
+			'class' => 'subscribed',
+			'url'   => bbb_substack_home_url(),
+			'cta'   => 'open the society',
+		);
+	}
+
+	if (bbb_reader_has_account_identity()) {
+		return array(
+			'label' => 'upgrade',
+			'class' => 'upgrade',
+			'url'   => bbb_substack_home_url(),
+			'cta'   => 'upgrade',
+		);
+	}
+
+	return array(
+		'label' => 'the private layer',
+		'class' => 'private',
+		'url'   => bbb_substack_subscribe_url(),
+		'cta'   => 'enter the society',
+	);
+}
+
+function bbb_rewrite_substack_subscribe_links_for_readers(string $html): string {
+	if (!bbb_reader_has_account_identity()) {
+		return $html;
+	}
+
+	$home_url = rtrim(bbb_substack_home_url(), '/') . '/';
+
+	return (string) preg_replace(
+		'#href=(["\'])https://thesmutandsentimentsociety\.substack\.com/subscribe/?\1#i',
+		'href=$1' . esc_url($home_url) . '$1',
+		$html
+	);
+}
+
+add_action(
+	'template_redirect',
+	static function (): void {
+		if (is_admin() || wp_doing_ajax() || is_feed() || (defined('REST_REQUEST') && REST_REQUEST)) {
+			return;
+		}
+
+		ob_start('bbb_rewrite_substack_subscribe_links_for_readers');
+	},
+	0
+);
 
 function bbb_substack_issue_slug_from_url(string $url, string $title): string {
 	$path = (string) wp_parse_url($url, PHP_URL_PATH);

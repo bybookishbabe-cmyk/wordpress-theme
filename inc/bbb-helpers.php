@@ -226,10 +226,56 @@ function bbb_get_book_author(int $post_id): string {
 	return bbb_bookish_proper_name((string) bbb_get_field('author', $post_id, ''));
 }
 
+function bbb_get_book_shelf_name(int $post_id): string {
+	foreach (array('bbb_shelf', 'sss_shelf') as $taxonomy) {
+		$terms = get_the_terms($post_id, $taxonomy);
+
+		if ($terms && !is_wp_error($terms)) {
+			return bbb_bookish_proper_name((string) $terms[0]->name);
+		}
+	}
+
+	foreach (array('_bbb_shelf_name', 'sss_shelf', 'shelf') as $meta_key) {
+		$shelf = trim((string) get_post_meta($post_id, $meta_key, true));
+
+		if ('' !== $shelf) {
+			return bbb_bookish_proper_name($shelf);
+		}
+	}
+
+	return '';
+}
+
+function bbb_book_cover_alt(string $title, string $author = '', string $shelf = ''): string {
+	$title  = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title($title) : trim(wp_strip_all_tags($title));
+	$author = function_exists('bbb_bookish_proper_name') ? bbb_bookish_proper_name($author) : trim(wp_strip_all_tags($author));
+	$shelf  = function_exists('bbb_bookish_proper_name') ? bbb_bookish_proper_name($shelf) : trim(wp_strip_all_tags($shelf));
+
+	if ('' === $title) {
+		return 'book cover';
+	}
+
+	$alt = $title;
+
+	if ('' !== $author) {
+		$alt .= ' by ' . $author;
+	}
+
+	if ('' !== $shelf) {
+		$alt .= ' – ' . $shelf;
+	}
+
+	return $alt . ' book cover';
+}
+
 function bbb_bookish_proper_name(string $value): string {
 	$value = trim(wp_strip_all_tags($value));
 	if ('' === $value) {
 		return '';
+	}
+
+	if (preg_match('/^[A-Z0-9]{2,}(?:\.[A-Z0-9]+)*\.?$/', $value)) {
+		return $value;
 	}
 
 	if (preg_match('/[A-Z]/', $value) && !preg_match('/^[A-Z\s[:punct:]\d]+$/', $value)) {
@@ -354,10 +400,12 @@ add_filter('single_post_title', 'bbb_bookish_public_book_title', 20, 2);
 
 function bbb_book_is_hidden(int $post_id): bool {
 	if ('bbb_book' === get_post_type($post_id)) {
-		return bbb_truthy(get_post_meta($post_id, '_bbb_hide_from_library', true));
+		return bbb_truthy(get_post_meta($post_id, '_bbb_hide_from_library', true))
+			|| bbb_content_is_hidden_from_public_browsing($post_id);
 	}
 
-	return (bool) bbb_get_field('hide_from_library', $post_id, false);
+	return (bool) bbb_get_field('hide_from_library', $post_id, false)
+		|| bbb_content_is_hidden_from_public_browsing($post_id);
 }
 
 function bbb_book_is_private(int $post_id): bool {
@@ -410,17 +458,238 @@ function bbb_book_newsletter_is_unlocked(int $post_id): bool {
 	}
 }
 
+function bbb_content_reveal_date_is_unlocked(int $post_id): bool {
+	$reveal_date = (string) get_post_meta($post_id, '_bbb_reveal_date', true);
+	if ('' === trim($reveal_date)) {
+		$reveal_date = (string) bbb_get_field('reveal_date', $post_id, '');
+	}
+	if ('' === trim($reveal_date)) {
+		return true;
+	}
+
+	$date = substr(trim($reveal_date), 0, 10);
+	if (preg_match('/^\d{8}$/', $date)) {
+		$date = substr($date, 0, 4) . '-' . substr($date, 4, 2) . '-' . substr($date, 6, 2);
+	}
+
+	if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+		return true;
+	}
+
+	try {
+		$timezone = new DateTimeZone('America/Los_Angeles');
+		$unlock   = new DateTimeImmutable($date . ' 10:00:00', $timezone);
+		$now      = new DateTimeImmutable('now', $timezone);
+
+		return $unlock <= $now;
+	} catch (Exception $exception) {
+		return true;
+	}
+}
+
+function bbb_content_is_hidden_from_public_browsing(int $post_id): bool {
+	if (apply_filters('bbb_show_all_imported_books', false, $post_id)) {
+		return false;
+	}
+
+	if (bbb_truthy(get_post_meta($post_id, '_bbb_hidden_from_public_browsing', true))) {
+		return true;
+	}
+
+	if ('bbb_book' === get_post_type($post_id) && bbb_truthy(get_post_meta($post_id, '_bbb_hide_from_library', true))) {
+		return true;
+	}
+
+	return !bbb_content_reveal_date_is_unlocked($post_id);
+}
+
+function bbb_content_is_publicly_discoverable(int $post_id): bool {
+	return 'publish' === get_post_status($post_id) && !bbb_content_is_hidden_from_public_browsing($post_id);
+}
+
 function bbb_book_is_publicly_visible(int $post_id): bool {
 	if (apply_filters('bbb_show_all_imported_books', false, $post_id)) {
 		return 'publish' === get_post_status($post_id);
 	}
 
-	return !bbb_truthy(bbb_get_field('hide_from_library', $post_id, false))
+	return !bbb_content_is_hidden_from_public_browsing($post_id)
+		&& !bbb_truthy(bbb_get_field('hide_from_library', $post_id, false))
 		&& !bbb_truthy(bbb_get_field('is_private', $post_id, false))
 		&& bbb_book_newsletter_is_unlocked($post_id);
 }
 
+function bbb_render_hidden_from_public_browsing_meta_box(WP_Post $post): void {
+	wp_nonce_field('bbb_save_hidden_from_public_browsing', 'bbb_hidden_from_public_browsing_nonce');
+	$is_hidden = bbb_truthy(get_post_meta($post->ID, '_bbb_hidden_from_public_browsing', true));
+	$reveal_date = (string) get_post_meta($post->ID, '_bbb_reveal_date', true);
+	?>
+	<p>
+		<label>
+			<input type="checkbox" name="bbb_hidden_from_public_browsing" value="1" <?php checked($is_hidden); ?>>
+			<?php esc_html_e('Hide from public browsing', 'bybookishbabe-shopify-port'); ?>
+		</label>
+	</p>
+	<p class="description"><?php esc_html_e('The direct URL still works, but this page stays out of public grids, related sections, archives, search, and SEO indexing.', 'bybookishbabe-shopify-port'); ?></p>
+	<p>
+		<label for="bbb_reveal_date"><strong><?php esc_html_e('Reveal date', 'bybookishbabe-shopify-port'); ?></strong></label>
+		<input id="bbb_reveal_date" name="bbb_reveal_date" type="date" value="<?php echo esc_attr(substr($reveal_date, 0, 10)); ?>">
+	</p>
+	<p class="description"><?php esc_html_e('Optional. If set, public browsing unlocks at 10:00 AM Pacific on this date.', 'bybookishbabe-shopify-port'); ?></p>
+	<?php
+}
+
+function bbb_save_hidden_from_public_browsing_meta(int $post_id): void {
+	if (!isset($_POST['bbb_hidden_from_public_browsing_nonce']) || !wp_verify_nonce((string) wp_unslash($_POST['bbb_hidden_from_public_browsing_nonce']), 'bbb_save_hidden_from_public_browsing')) {
+		return;
+	}
+
+	if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+		return;
+	}
+
+	if (!current_user_can('edit_post', $post_id)) {
+		return;
+	}
+
+	if (!empty($_POST['bbb_hidden_from_public_browsing'])) {
+		update_post_meta($post_id, '_bbb_hidden_from_public_browsing', '1');
+	} else {
+		delete_post_meta($post_id, '_bbb_hidden_from_public_browsing');
+	}
+
+	$reveal_date = isset($_POST['bbb_reveal_date']) ? sanitize_text_field((string) wp_unslash($_POST['bbb_reveal_date'])) : '';
+	if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $reveal_date)) {
+		update_post_meta($post_id, '_bbb_reveal_date', $reveal_date);
+	} else {
+		delete_post_meta($post_id, '_bbb_reveal_date');
+	}
+}
+
+function bbb_hidden_content_robots(array $robots): array {
+	if (!is_singular(array('bbb_book', 'sss_series', 'bbb_boyfriend'))) {
+		return $robots;
+	}
+
+	$post_id = (int) get_queried_object_id();
+	if ($post_id > 0 && bbb_content_is_hidden_from_public_browsing($post_id)) {
+		unset($robots['index'], $robots['follow']);
+		$robots['noindex'] = 'noindex';
+		$robots['nofollow'] = 'nofollow';
+	}
+
+	return $robots;
+}
+add_filter('rank_math/frontend/robots', 'bbb_hidden_content_robots', 100);
+
+add_filter(
+	'wp_robots',
+	static function (array $robots): array {
+		if (!is_singular(array('bbb_book', 'sss_series', 'bbb_boyfriend'))) {
+			return $robots;
+		}
+
+		$post_id = (int) get_queried_object_id();
+		if ($post_id > 0 && bbb_content_is_hidden_from_public_browsing($post_id)) {
+			unset($robots['index'], $robots['follow']);
+			$robots['noindex'] = true;
+			$robots['nofollow'] = true;
+		}
+
+		return $robots;
+	},
+	100
+);
+
+function bbb_hidden_content_ids_for_query(array $post_types): array {
+	static $cache = array();
+
+	$post_types = array_values(array_intersect(array_unique($post_types), array('bbb_book', 'sss_series', 'bbb_boyfriend')));
+	$post_types = array_values(array_filter($post_types, 'post_type_exists'));
+	if (!$post_types) {
+		return array();
+	}
+
+	$cache_key = implode(',', $post_types);
+	if (isset($cache[$cache_key])) {
+		return $cache[$cache_key];
+	}
+
+	$today = wp_date('Y-m-d', null, new DateTimeZone('America/Los_Angeles'));
+	$meta_query = array(
+		'relation' => 'OR',
+		array(
+			'key'     => '_bbb_hidden_from_public_browsing',
+			'value'   => '1',
+			'compare' => '=',
+		),
+		array(
+			'key'     => '_bbb_reveal_date',
+			'value'   => $today,
+			'compare' => '>',
+			'type'    => 'DATE',
+		),
+	);
+
+	if (in_array('bbb_book', $post_types, true)) {
+		$meta_query[] = array(
+			'key'     => '_bbb_hide_from_library',
+			'value'   => '1',
+			'compare' => '=',
+		);
+	}
+
+	$ids = get_posts(
+		array(
+			'post_type'              => $post_types,
+			'post_status'            => 'publish',
+			'posts_per_page'         => -1,
+			'fields'                 => 'ids',
+			'no_found_rows'          => true,
+			'update_post_meta_cache' => false,
+			'update_post_term_cache' => false,
+			'suppress_filters'       => true,
+			'meta_query'             => $meta_query,
+		)
+	);
+
+	$cache[$cache_key] = array_values(array_filter(array_map('absint', $ids)));
+	return $cache[$cache_key];
+}
+
+add_action(
+	'pre_get_posts',
+	static function (WP_Query $query): void {
+		if (is_admin() || !$query->is_main_query() || is_singular()) {
+			return;
+		}
+
+		$post_type = $query->get('post_type');
+		$post_types = is_array($post_type) ? $post_type : array($post_type ?: 'post');
+		if ($query->is_search() || $query->is_post_type_archive() || $query->is_tax()) {
+			if (in_array('any', $post_types, true) || $query->is_search()) {
+				$post_types = array_merge($post_types, array('bbb_book', 'sss_series', 'bbb_boyfriend'));
+			}
+			$hidden_ids = bbb_hidden_content_ids_for_query(array_map('strval', $post_types));
+			if (!$hidden_ids) {
+				return;
+			}
+
+			$existing = array_filter(array_map('absint', (array) $query->get('post__not_in')));
+			$query->set('post__not_in', array_values(array_unique(array_merge($existing, $hidden_ids))));
+		}
+	},
+	20
+);
+
 function bbb_get_all_books_json(bool $include_private = true): array {
+	$cache_version = function_exists('sss_library_cache_version') ? sss_library_cache_version() : (string) get_option('bbb_library_cache_version', '1');
+	$cache_key     = 'bbb_books_json_' . md5($cache_version . '|' . ($include_private ? 'private' : 'public'));
+	$cached        = get_transient($cache_key);
+
+	if (is_array($cached)) {
+		return $cached;
+	}
+
 	$post_types = array_values(
 		array_filter(
 			array('sss_book', 'bbb_book'),
@@ -463,6 +732,9 @@ function bbb_get_all_books_json(bool $include_private = true): array {
 			'shelf_name'   => $shelf_terms && !is_wp_error($shelf_terms) ? $shelf_terms[0]->name : '',
 			'tropes'       => $trope_terms && !is_wp_error($trope_terms) ? wp_list_pluck($trope_terms, 'name') : array(),
 			'spice_level'  => (int) bbb_get_field('spice_level', $book->ID, bbb_get_field('book_spice_level', $book->ID, 0)),
+			'series_handle' => (string) bbb_get_field('series_handle', $book->ID, ''),
+			'series_number' => (string) bbb_get_field('series_number', $book->ID, ''),
+			'standalone'    => bbb_truthy(bbb_get_field('read_as_standalone', $book->ID, bbb_get_field('standalone', $book->ID, false))),
 			'is_private'   => $is_private,
 			'starter_pack' => function_exists('sss_book_is_starter_pack') ? sss_book_is_starter_pack($book->ID) : (bool) bbb_get_field('starter_pack', $book->ID, false),
 			'top_shelf'    => function_exists('sss_book_is_top_shelf') ? sss_book_is_top_shelf($book->ID) : (bool) bbb_get_field('top_shelf', $book->ID, false),
@@ -471,6 +743,8 @@ function bbb_get_all_books_json(bool $include_private = true): array {
 			'mini'         => (string) bbb_get_field('mini_note', $book->ID, ''),
 		);
 	}
+
+	set_transient($cache_key, $out, 30 * MINUTE_IN_SECONDS);
 
 	return $out;
 }

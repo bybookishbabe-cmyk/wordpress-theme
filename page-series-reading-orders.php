@@ -32,8 +32,8 @@ if (!function_exists('bbb_series_visible_books')) {
 			array_filter(
 				$books,
 				static function (WP_Post $book): bool {
-					if ('bbb_book' === $book->post_type && function_exists('bbb_book_is_publicly_visible')) {
-						return bbb_book_is_publicly_visible($book->ID);
+					if (function_exists('sss_book_is_series_visible')) {
+						return sss_book_is_series_visible($book->ID);
 					}
 
 					return function_exists('sss_book_is_visible') ? sss_book_is_visible($book->ID) : true;
@@ -375,7 +375,7 @@ if (!function_exists('bbb_series_title_matches_guide_post')) {
 	}
 }
 
-$series_cache_key = 'bbb_series_reading_orders_data_v3';
+$series_cache_key = 'bbb_series_reading_orders_data_v5';
 $series_data      = get_transient($series_cache_key);
 
 if (is_array($series_data) && isset($series_data['series_cards'], $series_data['shelf_groups'])) {

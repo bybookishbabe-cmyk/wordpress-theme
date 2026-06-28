@@ -1293,7 +1293,7 @@ accent_color:     "#a4303b"
 ```
 kicker:                   "digital shop"
 title:                    "curate your bybookishbabe vault"
-primary_cta_label:        "unlock for $27"
+primary_cta_label:        "unlock for $34"
 my_vault_url:             shopify://pages/my-vault
 insert_vault_url:         shopify://pages/my-kindle-inserts
 insert_buy_url:           shopify://products/printable-kindle-insert-vault

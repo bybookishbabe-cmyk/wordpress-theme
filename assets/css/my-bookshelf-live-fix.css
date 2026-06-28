@@ -1,0 +1,872 @@
+/* Live bookshelf alignment fixes loaded after the legacy bookshelf stylesheet. */
+.bbb-account-shelf[data-account-shelf] {
+  padding-top: 26px !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__wrap {
+  width: min(1260px, calc(100% - 52px)) !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__memberBadge {
+  display: block !important;
+  width: fit-content !important;
+  margin: 0 0 10px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--shelf-pink-soft, #ffb8dc) !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  letter-spacing: .14em !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__memberBadge > * {
+  display: none !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__memberBadge::after {
+  content: "my bookshelf";
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__title {
+  max-width: none !important;
+  margin: 0 !important;
+  color: var(--shelf-text, #f7f3ee) !important;
+  font-size: clamp(58px, 5.5vw, 92px) !important;
+  line-height: .9 !important;
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  hyphens: none !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__sub {
+  max-width: 560px !important;
+  margin: 18px 0 0 !important;
+  color: var(--shelf-muted, rgba(247,243,238,.74)) !important;
+  font-size: 17px !important;
+  line-height: 1.42 !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+  margin: 22px 0 0 !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__button {
+  min-height: 40px !important;
+  padding: 10px 18px !important;
+  font-size: 12px !important;
+  text-transform: lowercase !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshot {
+  padding: 24px 28px !important;
+  border: 1px solid rgba(255,255,255,.12) !important;
+  border-radius: 8px !important;
+  background: linear-gradient(135deg, rgba(255,255,255,.065), rgba(255,255,255,.025)), rgba(9,9,9,.9) !important;
+  box-shadow: none !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshotMain {
+  min-width: 0 !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshotMain .bbb-account-shelf__toolbarKicker {
+  margin: 0 0 20px !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshotIcon--text {
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+  overflow-wrap: normal !important;
+  letter-spacing: 0 !important;
+  line-height: 1 !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshotRows {
+  display: grid !important;
+  gap: 0 !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshotRow {
+  display: grid !important;
+  align-content: center !important;
+  justify-items: center !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+  min-height: 132px !important;
+  padding: 0 18px !important;
+  border-left: 1px solid rgba(255,255,255,.11) !important;
+  text-align: center !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshotRow:nth-child(2) {
+  grid-template-columns: 1fr !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshotRow strong {
+  display: block !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  color: var(--shelf-text, #f7f3ee) !important;
+  font: 400 27px/1.04 "Playfair Display", Georgia, serif !important;
+  letter-spacing: 0 !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshotRow em {
+  display: block !important;
+  margin-top: 12px !important;
+  color: var(--shelf-muted, rgba(247,243,238,.7)) !important;
+  font-size: 10px !important;
+  font-style: normal !important;
+  font-weight: 900 !important;
+  letter-spacing: .09em !important;
+  line-height: 1.15 !important;
+  text-transform: uppercase !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshot {
+  overflow: hidden !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshotStats {
+  display: grid !important;
+  gap: 0 !important;
+  min-width: 0 !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshotStats span {
+  display: grid !important;
+  align-content: center !important;
+  justify-items: center !important;
+  min-height: 132px !important;
+  min-width: 0 !important;
+  padding: 0 18px !important;
+  border: 0 !important;
+  border-left: 1px solid rgba(255,255,255,.11) !important;
+  background: transparent !important;
+  text-align: center !important;
+  color: var(--shelf-muted, rgba(247,243,238,.7)) !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: .08em !important;
+  line-height: 1.12 !important;
+  text-transform: uppercase !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshotStats strong {
+  white-space: nowrap !important;
+  margin: 0 0 12px !important;
+  color: var(--shelf-text, #f7f3ee) !important;
+  font: 400 34px/1 "Playfair Display", Georgia, serif !important;
+  letter-spacing: 0 !important;
+}
+
+.bbb-account-shelf[data-account-shelf] [data-snapshot-spice-peppers] {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  max-width: 140px !important;
+  color: var(--shelf-pink-soft, #ffb8dc) !important;
+  font-size: 20px !important;
+  white-space: nowrap !important;
+}
+
+@media (min-width: 900px) {
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__wrap {
+    display: grid !important;
+    grid-template-columns: minmax(440px, .78fr) minmax(650px, 1.22fr) !important;
+    gap: 28px 34px !important;
+    align-items: start !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__hero {
+    display: block !important;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    float: none !important;
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 22px 0 26px !important;
+    border-bottom: 0 !important;
+    align-self: start !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshot {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    margin: 0 0 18px !important;
+    display: grid !important;
+    grid-template-columns: minmax(275px, .86fr) minmax(390px, 1.14fr) !important;
+    align-self: start !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshotRows {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshotStats {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__current,
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__syncSpiceRow,
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__sectionHead,
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__shelfControls,
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__grid,
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__empty,
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__ratings,
+  .bbb-account-shelf[data-account-shelf] script {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+@media (max-width: 1180px) and (min-width: 900px) {
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__wrap {
+    grid-template-columns: minmax(360px, .78fr) minmax(560px, 1.22fr) !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__title {
+    font-size: clamp(46px, 5vw, 66px) !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshot {
+    grid-template-columns: minmax(245px, .86fr) minmax(330px, 1.14fr) !important;
+  }
+}
+
+@media (max-width: 899px) and (min-width: 700px) {
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__shelfControls {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    align-items: stretch !important;
+    margin: 0 0 18px !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__tabs {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    padding: 4px !important;
+    border: 1px solid rgba(255,255,255,.1) !important;
+    border-radius: 999px !important;
+    background: rgba(0,0,0,.24) !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__tabs button {
+    min-width: 0 !important;
+    width: 100% !important;
+    min-height: 38px !important;
+    padding: 8px 10px !important;
+    border-radius: 999px !important;
+    font-size: 10px !important;
+    letter-spacing: .04em !important;
+    line-height: 1.05 !important;
+    white-space: nowrap !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__shelfTools {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(180px, .38fr) !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+    width: 100% !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__shelfTools label,
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__shelfTools input,
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__shelfTools select {
+    width: 100% !important;
+  }
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__current {
+  margin-top: 24px !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__syncSpiceRow {
+  display: block !important;
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  margin: 0 0 24px !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__syncSpiceRow .bbb-account-shelf__status {
+  display: none !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__syncSpiceRow .bbb-account-shelf__spiceProfile,
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__spiceProfile {
+  display: grid !important;
+  grid-template-columns: minmax(220px, .62fr) minmax(0, 1fr) !important;
+  gap: 16px !important;
+  align-items: center !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 16px 18px !important;
+  border: 1px solid var(--shelf-border, rgba(255,255,255,.12)) !important;
+  border-radius: 8px !important;
+  background: rgba(255,255,255,.04) !important;
+  box-shadow: none !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__spiceProfile .bbb-account-shelf__perkKicker {
+  margin: 0 0 6px !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__spiceProfile h2 {
+  margin: 0 !important;
+  color: var(--shelf-text, #f7f3ee) !important;
+  font: 400 26px/1.05 "Playfair Display", Georgia, serif !important;
+  letter-spacing: 0 !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__spiceProfile p:not(.bbb-account-shelf__perkKicker):not(.bbb-account-shelf__spiceStatus) {
+  margin: 6px 0 0 !important;
+  max-width: 42ch !important;
+  color: var(--shelf-muted, rgba(247,243,238,.74)) !important;
+  font-size: 13px !important;
+  line-height: 1.35 !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__spiceProfile [data-spice-profile-peppers] {
+  display: block !important;
+  margin-top: 8px !important;
+  color: var(--shelf-pink-soft, #ffb8dc) !important;
+  font-size: 18px !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__spiceChoices {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+  width: 100% !important;
+  padding: 4px !important;
+  border: 1px solid rgba(255,255,255,.1) !important;
+  border-radius: 999px !important;
+  background: rgba(0,0,0,.28) !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__spiceChoices::before,
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__spiceChoice + .bbb-account-shelf__spiceChoice::before {
+  display: none !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__spiceChoice {
+  display: grid !important;
+  min-width: 0 !important;
+  min-height: 52px !important;
+  padding: 7px 8px !important;
+  border: 1px solid transparent !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  color: var(--shelf-muted, rgba(247,243,238,.74)) !important;
+  box-shadow: none !important;
+  place-items: center !important;
+  text-align: center !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__spiceChoice span {
+  display: block !important;
+  color: var(--shelf-pink-soft, #ffb8dc) !important;
+  font-size: 15px !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__spiceChoice strong {
+  display: block !important;
+  margin-top: 5px !important;
+  color: inherit !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  letter-spacing: .06em !important;
+  line-height: 1.05 !important;
+  text-transform: uppercase !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__spiceChoice.is-active {
+  border-color: var(--shelf-pink-soft, #ffb8dc) !important;
+  background: rgba(255,138,199,.16) !important;
+  color: var(--shelf-text, #f7f3ee) !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__spiceStatus {
+  grid-column: 1 / -1 !important;
+  min-height: 16px !important;
+  margin: 0 !important;
+  color: var(--shelf-pink-soft, #ffb8dc) !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__currentHead {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__currentBook {
+  grid-template-columns: 150px minmax(0, 760px) !important;
+  gap: 24px !important;
+  align-items: center !important;
+  width: auto !important;
+  max-width: 960px !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__currentCover {
+  width: 150px !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__currentCopy {
+  width: min(100%, 760px) !important;
+  justify-content: center !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__currentCopy strong {
+  max-width: 760px !important;
+  font-size: clamp(34px, 3.2vw, 52px) !important;
+  line-height: 1.05 !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__currentProgress {
+  display: grid !important;
+  grid-template-columns: max-content minmax(140px, 260px) !important;
+  width: min(100%, 430px) !important;
+  gap: 14px !important;
+  margin-top: 20px !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__currentProgress i {
+  width: 100% !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__currentActions {
+  margin-top: 16px !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .sss-lib__coverWrap {
+  position: relative !important;
+}
+
+.bbb-account-shelf[data-account-shelf] .bbb-account-shelf__noteToggle,
+.bbb-account-shelf[data-account-shelf] .sss-lib__noteToggle.bbb-account-shelf__noteToggle {
+  position: absolute !important;
+  right: 8px !important;
+  bottom: 8px !important;
+  top: auto !important;
+  left: auto !important;
+  z-index: 8 !important;
+  display: inline-flex !important;
+  width: 34px !important;
+  height: 34px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 999px !important;
+}
+
+@media (max-width: 899px) {
+  .bbb-account-shelf[data-account-shelf] {
+    padding-top: 18px !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__wrap {
+    display: block !important;
+    width: min(100% - 28px, 560px) !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__hero {
+    float: none !important;
+    width: auto !important;
+    padding: 0 0 18px !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__memberBadge {
+    margin-bottom: 10px !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__title {
+    font-size: clamp(44px, 11.5vw, 58px) !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__sub {
+    max-width: 360px !important;
+    margin-top: 10px !important;
+    font-size: 14px !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__actions {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    margin-top: 16px !important;
+    overflow-x: auto !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__button {
+    flex: 0 0 auto !important;
+    min-height: 34px !important;
+    padding: 8px 14px !important;
+    font-size: 11px !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshot {
+    display: block !important;
+    margin-left: 0 !important;
+    margin-bottom: 18px !important;
+    padding: 18px !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshotMain .bbb-account-shelf__toolbarKicker {
+    margin-bottom: 14px !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshotRows {
+    display: grid !important;
+    gap: 0 !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshotRow,
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshotRow:nth-child(2) {
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+    min-height: 64px !important;
+    justify-items: start !important;
+    gap: 12px !important;
+    padding: 10px 0 !important;
+    border-left: 0 !important;
+    border-bottom: 1px solid rgba(255,255,255,.1) !important;
+    text-align: left !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshotRow:nth-child(2) {
+    grid-template-columns: 112px minmax(0, 1fr) !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshotRow strong {
+    font-size: 18px !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshotRow em {
+    margin-top: 2px !important;
+    font-size: 8px !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] [data-snapshot-spice-peppers] {
+    width: 112px !important;
+    max-width: 112px !important;
+    justify-content: start !important;
+    overflow: visible !important;
+    font-size: 18px !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshotStats {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    margin-top: 0 !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshotStats span {
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+    justify-items: start !important;
+    align-items: center !important;
+    min-height: 48px !important;
+    padding: 8px 0 !important;
+    border-left: 0 !important;
+    border-bottom: 1px solid rgba(255,255,255,.1) !important;
+    text-align: left !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__snapshotStats strong {
+    margin: 0 !important;
+    font-size: 20px !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__currentBook {
+    grid-template-columns: 88px minmax(0, 1fr) !important;
+    gap: 12px !important;
+    max-width: none !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__currentCover {
+    width: 88px !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__currentCopy strong {
+    font-size: clamp(22px, 7vw, 30px) !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__currentProgress {
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__syncSpiceRow .bbb-account-shelf__spiceProfile,
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__spiceProfile {
+    grid-template-columns: 1fr !important;
+    padding: 14px !important;
+  }
+
+  .bbb-account-shelf[data-account-shelf] .bbb-account-shelf__spiceChoices {
+    overflow-x: auto !important;
+    grid-template-columns: repeat(5, minmax(96px, 1fr)) !important;
+    border-radius: 16px !important;
+  }
+}
+
+/* Account page guardrails: keep the newer account dashboard from collapsing the welcome title. */
+.bbb-account-home .bbb-account-profile__app {
+  display: grid !important;
+  grid-template-columns: minmax(360px, 520px) minmax(0, 1fr) !important;
+  gap: 24px 36px !important;
+  align-items: start !important;
+  width: 100% !important;
+}
+
+.bbb-account-home .bbb-account-welcome {
+  grid-column: 1 !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  padding: 18px 0 24px !important;
+}
+
+.bbb-account-home .bbb-account-welcome__copy {
+  display: grid !important;
+  gap: 14px !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+.bbb-account-home .bbb-account-welcome h1 {
+  max-width: 12ch !important;
+  min-width: 0 !important;
+  overflow-wrap: normal !important;
+  white-space: normal !important;
+  word-break: normal !important;
+  font-size: clamp(54px, 5.2vw, 76px) !important;
+  line-height: .92 !important;
+}
+
+.bbb-account-home .bbb-account-profile__stats {
+  grid-column: 2 !important;
+  min-width: 0 !important;
+}
+
+.bbb-account-home .bbb-account-flowLine,
+.bbb-account-home .bbb-account-profile__section {
+  grid-column: 1 / -1 !important;
+}
+
+.bbb-account-home .bbb-account-profile__membershipPanel {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 22px !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+.bbb-account-home .bbb-account-profile__societyCard,
+.bbb-account-home .bbb-account-profile__preferences {
+  box-sizing: border-box !important;
+  flex: 0 1 auto !important;
+  margin: 0 !important;
+  max-width: 760px !important;
+  min-width: 0 !important;
+  position: static !important;
+  width: 100% !important;
+}
+
+.bbb-account-home .bbb-account-profile__preferences h3,
+.bbb-account-home .bbb-account-profile__preferenceRow strong,
+.bbb-account-home .bbb-account-profile__preferenceRow em {
+  overflow-wrap: normal !important;
+  white-space: normal !important;
+  word-break: normal !important;
+}
+
+.bbb-account-home .bbb-account-profile__preferenceRow {
+  box-sizing: border-box !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+@media (min-width: 981px) {
+  .bbb-account-home .bbb-account-shelf__wrap {
+    box-sizing: border-box !important;
+    max-width: 1440px !important;
+    margin-inline: auto !important;
+    padding-inline: 32px !important;
+    width: 100% !important;
+  }
+
+  .bbb-account-home .bbb-account-profile__app {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .bbb-account-home .bbb-account-profile__section,
+  .bbb-account-home .bbb-account-profile__sectionHeader,
+  .bbb-account-home .bbb-account-profile__quickLinksGrid,
+  .bbb-account-home .bbb-account-shelf__panel,
+  .bbb-account-home .bbb-account-shelf__spiceProfile,
+  .bbb-account-home .bbb-account-profile__monthlyEra,
+  .bbb-account-home .bbb-account-profile__societyCard,
+  .bbb-account-home .bbb-account-profile__preferences {
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  .bbb-account-home .bbb-account-profile__quickLinksGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .bbb-account-home .bbb-account-profile__section--account .bbb-account-shelf__panel {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 420px) !important;
+  }
+
+  .bbb-account-home .bbb-account-welcome,
+  .bbb-account-home .bbb-account-profile__stats,
+  .bbb-account-home .bbb-account-flowLine,
+  .bbb-account-home .bbb-account-profile__section {
+    grid-column: 1 !important;
+  }
+
+  .bbb-account-home .bbb-account-welcome__readerProfile {
+    grid-column: 2 !important;
+    grid-row: 1 / span 4 !important;
+    margin-top: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  .bbb-account-home .bbb-account-welcome__copy {
+    align-items: start !important;
+    column-gap: 34px !important;
+    display: grid !important;
+    grid-template-columns: minmax(300px, 420px) minmax(0, 1fr) !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  .bbb-account-home .bbb-account-welcome__copy > .bbb-account-shelf__kicker,
+  .bbb-account-home .bbb-account-welcome__copy > h1,
+  .bbb-account-home .bbb-account-welcome__copy > .bbb-account-welcome__meta {
+    grid-column: 1 !important;
+  }
+
+  .bbb-account-home .bbb-account-profile__stats {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-row: auto !important;
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 980px) {
+  .bbb-account-home .bbb-account-profile__app {
+    grid-template-columns: minmax(280px, .72fr) minmax(0, 1fr) !important;
+    gap: 20px !important;
+  }
+
+  .bbb-account-home .bbb-account-welcome h1 {
+    font-size: clamp(42px, 6.8vw, 58px) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .bbb-account-home .bbb-account-profile__app {
+    display: block !important;
+  }
+
+  .bbb-account-home .bbb-account-welcome h1 {
+    max-width: 11ch !important;
+    font-size: clamp(40px, 12vw, 54px) !important;
+  }
+}
+
+@media (min-width: 750px) {
+  .bbb-account-shelf.bbb-account-home[data-account-shelf] {
+    box-sizing: border-box !important;
+    padding-inline: 32px !important;
+  }
+
+  .bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-shelf__wrap {
+    box-sizing: border-box !important;
+    margin-left: calc(50% - 50vw + 32px) !important;
+    margin-right: calc(50% - 50vw + 32px) !important;
+    max-width: 1440px !important;
+    padding-inline: 0 !important;
+    width: min(1440px, calc(100vw - 64px)) !important;
+  }
+
+  .bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__app {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 28px !important;
+    max-width: none !important;
+    width: min(1440px, calc(100vw - 64px)) !important;
+  }
+
+  .bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-welcome,
+  .bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__stats,
+  .bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-flowLine,
+  .bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__section {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+    max-width: none !important;
+    width: min(1440px, calc(100vw - 64px)) !important;
+  }
+
+  .bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-welcome__copy {
+    display: grid !important;
+    grid-template-columns: minmax(300px, 420px) minmax(0, 1fr) !important;
+    column-gap: 34px !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  .bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-welcome__readerProfile {
+    grid-column: 2 !important;
+    grid-row: 1 / span 4 !important;
+    margin-top: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  .bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__stats {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-shelf__spiceProfile,
+  .bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEra,
+  .bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__quickLinksGrid,
+  .bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-shelf__panel,
+  .bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__societyCard,
+  .bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__preferences {
+    max-width: none !important;
+    width: 100% !important;
+  }
+}

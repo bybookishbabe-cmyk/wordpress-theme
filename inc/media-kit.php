@@ -137,8 +137,39 @@ function bbb_media_kit_updated_label(array $stats): string {
 		return trim((string) $manual['last_updated']);
 	}
 
-	$timestamp = (int) ($stats['generated_at'] ?? time());
-	return 'live refresh ' . wp_date('M j, Y', $timestamp);
+	$timestamp = min((int) ($stats['generated_at'] ?? time()), time());
+	$timezone  = new DateTimeZone('America/Los_Angeles');
+	return 'live refresh ' . wp_date('M j, Y', $timestamp, $timezone);
+}
+
+function bbb_media_kit_latest_newsletter(): array {
+	$fallback = array(
+		'title' => 'latest society newsletter',
+		'url'   => function_exists('bbb_substack_home_url') ? bbb_substack_home_url() : 'https://thesmutandsentimentsociety.substack.com/',
+		'date'  => '',
+		'image' => function_exists('bbb_pwa_asset_uri') ? bbb_pwa_asset_uri('assets/pwa/bybookishbabe-apple-touch-icon.png') : get_theme_file_uri('assets/pwa/bybookishbabe-apple-touch-icon.png'),
+		'alt'   => 'bybookishbabe',
+	);
+
+	if (!function_exists('bbb_society_get_newsletter_issues')) {
+		return $fallback;
+	}
+
+	$issues = bbb_society_get_newsletter_issues(1);
+	$issue  = isset($issues[0]) && $issues[0] instanceof WP_Post ? $issues[0] : null;
+	if (!$issue instanceof WP_Post) {
+		return $fallback;
+	}
+
+	$image = function_exists('bbb_society_newsletter_issue_image') ? bbb_society_newsletter_issue_image($issue) : array();
+
+	return array(
+		'title' => get_the_title($issue),
+		'url'   => function_exists('bbb_society_newsletter_issue_url') ? bbb_society_newsletter_issue_url($issue) : get_permalink($issue),
+		'date'  => function_exists('bbb_society_newsletter_issue_date') ? bbb_society_newsletter_issue_date($issue) : '',
+		'image' => is_array($image) && !empty($image['url']) ? (string) $image['url'] : $fallback['image'],
+		'alt'   => is_array($image) && !empty($image['alt']) ? (string) $image['alt'] : get_the_title($issue),
+	);
 }
 
 function bbb_media_kit_admin_menu(): void {

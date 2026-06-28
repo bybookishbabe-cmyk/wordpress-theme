@@ -34,3 +34,4 @@ function sss_signoff_shortcode($atts = array()): string {
 </div>';
 }
 add_shortcode('sss_signoff', 'sss_signoff_shortcode');
+add_shortcode('signoff', 'sss_signoff_shortcode');

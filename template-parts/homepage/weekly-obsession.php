@@ -30,6 +30,7 @@ if (empty(trim($obsession_url))) {
 $obsession_url = function_exists('bbb_resolve_shopify_url') ? bbb_resolve_shopify_url($obsession_url) : $obsession_url;
 
 $book_id         = $featured_book->ID;
+$book_handle     = sanitize_title((string) get_post_field('post_name', $book_id));
 $thumb_id        = get_post_thumbnail_id($book_id);
 $has_native_dims = (bool) $thumb_id;
 
@@ -60,10 +61,12 @@ if ('' === trim($issue_title)) {
 if (empty($issue_title)) {
 	$issue_title = $featured_book->post_title;
 }
+$issue_title = function_exists('bbb_brand_standard_text') ? (string) bbb_brand_standard_text($issue_title) : $issue_title;
 $issue_subtitle = (string) ($obsession_context['subtitle'] ?? '');
 if ('' === trim($issue_subtitle)) {
 	$issue_subtitle = $current_issue ? get_post_meta($current_issue->ID, '_issue_subtitle', true) : get_post_meta($book_id, '_bbb_mini_note', true);
 }
+$issue_subtitle = function_exists('bbb_brand_standard_text') ? (string) bbb_brand_standard_text($issue_subtitle) : $issue_subtitle;
 $issue_excerpt = trim((string) ($obsession_context['excerpt'] ?? ''));
 if ('' === $issue_excerpt && $current_issue instanceof WP_Post) {
 	$issue_excerpt = (string) get_post_meta($current_issue->ID, '_issue_excerpt', true);
@@ -71,7 +74,14 @@ if ('' === $issue_excerpt && $current_issue instanceof WP_Post) {
 if ('' === $issue_excerpt) {
 	$issue_excerpt = $issue_subtitle;
 }
+$issue_excerpt = function_exists('bbb_brand_standard_text') ? (string) bbb_brand_standard_text($issue_excerpt) : $issue_excerpt;
 $issue_quote = trim((string) ($obsession_context['pull_quote'] ?? ''));
+$issue_quote_display = '';
+if ('' !== $issue_quote) {
+	$issue_quote_inner = html_entity_decode(wp_strip_all_tags($issue_quote), ENT_QUOTES | ENT_HTML5, get_bloginfo('charset') ?: 'UTF-8');
+	$issue_quote_inner = preg_replace('/^[\s"\'“”‘’]+|[\s"\'“”‘’]+$/u', '', $issue_quote_inner) ?: '';
+	$issue_quote_display = '"' . wp_trim_words($issue_quote_inner, 24, '') . '"';
+}
 $issue_url   = trim((string) ($obsession_context['url'] ?? ''));
 $issue_url   = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value($issue_url) : $issue_url;
 $secret_url  = trim((string) ($obsession_context['secret_url'] ?? ''));
@@ -86,7 +96,27 @@ if (function_exists('sss_article_field')) {
 	$darkness_level = (int) sss_article_field('darkness_score', $book_id, $darkness_level);
 	$damage_level   = (int) sss_article_field('emotional_damage_score', $book_id, $damage_level);
 }
+
+$popular_boyfriend = function_exists('bbb_fictional_boyfriend_popular_post') ? bbb_fictional_boyfriend_popular_post() : null;
 ?>
+
+<?php if ($popular_boyfriend instanceof WP_Post) : ?>
+	<section class="bbb-home-popular-man" aria-label="most popular fictional man">
+		<div class="bbb-home-popular-man__inner">
+			<a class="bbb-home-popular-man__profile" href="<?php echo esc_url(get_permalink($popular_boyfriend)); ?>">
+				<?php echo get_the_post_thumbnail($popular_boyfriend, 'medium_large', array('class' => 'bbb-home-popular-man__image')); ?>
+				<span>
+					<?php echo wp_kses_post(function_exists('bbb_fictional_boyfriend_popular_badge') ? bbb_fictional_boyfriend_popular_badge('bbb-home-popular-man__badge') : '<span class="bbb-fb-popular-badge bbb-home-popular-man__badge">most popular now</span>'); ?>
+					<strong><?php echo esc_html(get_the_title($popular_boyfriend)); ?></strong>
+				</span>
+			</a>
+			<div class="bbb-home-popular-man__copy">
+				<p>the most popular fictional man rn, who is yours?</p>
+				<a href="<?php echo esc_url(function_exists('bbb_page_url') ? bbb_page_url('fictional-boyfriend-quiz') : home_url('/fictional-boyfriend-quiz/')); ?>">take the quiz <span aria-hidden="true">→</span></a>
+			</div>
+		</div>
+	</section>
+<?php endif; ?>
 
 <section class="bbb-home-obsession">
 	<div class="section-divider"></div>
@@ -107,7 +137,12 @@ if (function_exists('sss_article_field')) {
 			<!-- Cover column -->
 			<div class="bbb-home-obsession__feature">
 				<a class="bbb-home-obsession__coverLink" href="<?php echo esc_url($obsession_url); ?>">
-					<div class="bbb-home-obsession__coverWrap">
+					<div
+						class="bbb-home-obsession__coverWrap"
+						data-book-rating-cover
+						data-handle="<?php echo esc_attr($book_handle); ?>"
+						data-title="<?php echo esc_attr($featured_book->post_title); ?>"
+					>
 						<?php if ($thumb_id) : ?>
 							<?php if ($has_native_dims) : ?>
 								<?php
@@ -205,8 +240,8 @@ if (function_exists('sss_article_field')) {
 						<span><strong>sentiment</strong> ??</span>
 					<?php endif; ?>
 				</div>
-				<?php if ($issue_quote) : ?>
-					<blockquote class="bbb-home-obsession__quote"><?php echo esc_html(wp_trim_words($issue_quote, 24, '')); ?></blockquote>
+				<?php if ($issue_quote_display) : ?>
+					<blockquote class="bbb-home-obsession__quote"><?php echo esc_html($issue_quote_display); ?></blockquote>
 				<?php endif; ?>
 				<div class="bbb-home-obsession__actions">
 					<a class="bbb-home-obsession__button bbb-home-obsession__button--primary" href="<?php echo esc_url($book_url ?: $weekly_url); ?>">ruin my tbr</a>

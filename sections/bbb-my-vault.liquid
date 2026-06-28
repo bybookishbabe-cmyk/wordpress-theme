@@ -40,8 +40,8 @@
     assign show_insert_preview = true
   endif
 
-  assign insert_vault_url = section.settings.insert_vault_url | default: '/pages/my-kindle-inserts'
-  assign insert_buy_url = section.settings.insert_buy_url | default: '/products/printable-kindle-insert-vault'
+  assign insert_vault_url = section.settings.insert_vault_url | default: '/pages/my-vault'
+  assign insert_buy_url = section.settings.insert_buy_url | default: '/downloads/bybookishbabe-vault'
   assign canva_buy_url = section.settings.canva_buy_url | default: '/pages/bookish-templates'
 
   if insert_vault_url contains 'shopify://pages/'
@@ -50,9 +50,6 @@
     assign insert_vault_url = insert_vault_url | replace: 'shopify://products/', '/products/'
   endif
 
-  if insert_vault_url == '/pages/my-vault'
-    assign insert_vault_url = '/pages/my-kindle-inserts'
-  endif
 -%}
 
 {%- paginate collections.all.products by 1000 -%}
@@ -126,6 +123,49 @@
         {%- continue -%}
       {%- endif -%}
 
+      {%- assign filter_text = product.title | append: ' ' | append: product.type | append: ' ' | append: product.vendor | append: ' ' | append: product.tags | downcase -%}
+      {%- assign filter_color = 'mixed' -%}
+      {%- if filter_text contains 'pink' or filter_text contains 'blush' or filter_text contains 'rose' or filter_text contains 'mauve' or filter_text contains 'berry' -%}
+        {%- assign filter_color = 'pink' -%}
+      {%- elsif filter_text contains 'red' or filter_text contains 'crimson' or filter_text contains 'burgundy' or filter_text contains 'wine' or filter_text contains 'cherry' -%}
+        {%- assign filter_color = 'red' -%}
+      {%- elsif filter_text contains 'orange' or filter_text contains 'peach' or filter_text contains 'coral' or filter_text contains 'autumn' -%}
+        {%- assign filter_color = 'orange' -%}
+      {%- elsif filter_text contains 'yellow' or filter_text contains 'gold' or filter_text contains 'honey' -%}
+        {%- assign filter_color = 'yellow' -%}
+      {%- elsif filter_text contains 'green' or filter_text contains 'sage' or filter_text contains 'olive' or filter_text contains 'emerald' or filter_text contains 'forest' -%}
+        {%- assign filter_color = 'green' -%}
+      {%- elsif filter_text contains 'blue' or filter_text contains 'navy' or filter_text contains 'teal' or filter_text contains 'aqua' -%}
+        {%- assign filter_color = 'blue' -%}
+      {%- elsif filter_text contains 'purple' or filter_text contains 'lavender' or filter_text contains 'lilac' or filter_text contains 'violet' or filter_text contains 'plum' -%}
+        {%- assign filter_color = 'purple' -%}
+      {%- elsif filter_text contains 'black' or filter_text contains 'noir' or filter_text contains 'gothic' or filter_text contains 'charcoal' -%}
+        {%- assign filter_color = 'black' -%}
+      {%- elsif filter_text contains 'white' or filter_text contains 'cream' or filter_text contains 'ivory' or filter_text contains 'beige' or filter_text contains 'tan' or filter_text contains 'brown' or filter_text contains 'espresso' or filter_text contains 'neutral' -%}
+        {%- assign filter_color = 'neutral' -%}
+      {%- elsif filter_text contains 'gray' or filter_text contains 'grey' or filter_text contains 'silver' or filter_text contains 'fog' -%}
+        {%- assign filter_color = 'gray' -%}
+      {%- endif -%}
+
+      {%- assign filter_theme = 'aesthetic' -%}
+      {%- if filter_text contains 'dark' or filter_text contains 'villain' or filter_text contains 'gothic' or filter_text contains 'obsession' -%}
+        {%- assign filter_theme = 'dark-romance' -%}
+      {%- elsif filter_text contains 'soft' or filter_text contains 'darling' or filter_text contains 'sweet' or filter_text contains 'forever' -%}
+        {%- assign filter_theme = 'soft-romance' -%}
+      {%- elsif filter_text contains 'fae' or filter_text contains 'fairy' or filter_text contains 'fantasy' or filter_text contains 'dragon' or filter_text contains 'witch' -%}
+        {%- assign filter_theme = 'fantasy' -%}
+      {%- elsif filter_text contains 'floral' or filter_text contains 'flower' or filter_text contains 'rose' or filter_text contains 'bloom' -%}
+        {%- assign filter_theme = 'floral' -%}
+      {%- elsif filter_text contains 'autumn' or filter_text contains 'fall' or filter_text contains 'winter' or filter_text contains 'holiday' -%}
+        {%- assign filter_theme = 'seasonal' -%}
+      {%- elsif filter_text contains 'western' or filter_text contains 'cowboy' -%}
+        {%- assign filter_theme = 'western' -%}
+      {%- elsif filter_text contains 'minimal' or filter_text contains 'simple' or filter_text contains 'neutral' -%}
+        {%- assign filter_theme = 'minimal' -%}
+      {%- elsif filter_text contains 'smut' or filter_text contains 'spicy' -%}
+        {%- assign filter_theme = 'smutty' -%}
+      {%- endif -%}
+
       {%- assign insert_matches = insert_matches | plus: 1 -%}
       {%- if show_insert_preview and preview_cards_shown >= preview_card_limit -%}
         {%- continue -%}
@@ -139,7 +179,14 @@
         {%- assign preview_image_zoom = preview_image | image_url: width: 1600 -%}
       {%- endif -%}
 
-      <article class="bbb-myv__assetCard">
+      <article
+        class="bbb-myv__assetCard"
+        data-bbb-vault-card
+        data-filter-kind="inserts"
+        data-filter-color="{{ filter_color | escape }}"
+        data-filter-theme="{{ filter_theme | escape }}"
+        data-filter-search="{{ filter_text | escape }}"
+      >
         <div class="bbb-myv__assetMedia">
           {% if preview_image != blank %}
             <button
@@ -198,6 +245,52 @@
         </div>
 
         {% if insert_matches > 0 %}
+          <section class="bbb-myv__filterPanel" aria-label="filter vault designs" data-bbb-vault-filters>
+            <div class="bbb-myv__filterHead">
+              <p class="bbb-myv__gateKicker">browse by vibe</p>
+              <p data-bbb-vault-filter-count>{{ preview_cards_shown }} preview{% if preview_cards_shown != 1 %}s{% endif %}</p>
+            </div>
+            <div class="bbb-myv__filterControls">
+              <label>
+                <span>color</span>
+                <select data-bbb-vault-filter="color">
+                  <option value="">all colors</option>
+                  <option value="pink">pink</option>
+                  <option value="red">red</option>
+                  <option value="orange">orange</option>
+                  <option value="yellow">yellow / gold</option>
+                  <option value="green">green</option>
+                  <option value="blue">blue</option>
+                  <option value="purple">purple</option>
+                  <option value="black">black</option>
+                  <option value="neutral">neutral</option>
+                  <option value="gray">gray</option>
+                  <option value="mixed">mixed</option>
+                </select>
+              </label>
+              <label>
+                <span>theme</span>
+                <select data-bbb-vault-filter="theme">
+                  <option value="">all themes</option>
+                  <option value="dark-romance">dark romance</option>
+                  <option value="soft-romance">soft romance</option>
+                  <option value="fantasy">fantasy</option>
+                  <option value="floral">floral</option>
+                  <option value="seasonal">seasonal</option>
+                  <option value="western">western</option>
+                  <option value="minimal">minimal</option>
+                  <option value="smutty">smutty</option>
+                  <option value="aesthetic">aesthetic</option>
+                </select>
+              </label>
+              <label>
+                <span>search</span>
+                <input type="search" data-bbb-vault-search placeholder="title, mood, collection">
+              </label>
+              <button type="button" data-bbb-vault-filter-reset>reset</button>
+            </div>
+          </section>
+          <p class="bbb-myv__noResults" data-bbb-vault-no-results hidden>no vault designs match those filters yet.</p>
           <div class="bbb-myv__previewFrame">
             <div class="bbb-myv__assetGrid bbb-myv__assetGrid--preview">
               {{ insert_cards }}
@@ -205,7 +298,7 @@
             <div class="bbb-myv__previewLock" aria-hidden="true">
               <div class="bbb-myv__previewLockInner">
                 <p class="bbb-myv__previewLockKicker">try before you unlock</p>
-                <p class="bbb-myv__previewLockText">unlock the full vault and download everything that fits your kindle size.</p>
+                <p class="bbb-myv__previewLockText">unlock the vault and download everything that fits your kindle size.</p>
                 <a class="bbb-myv__button" href="{{ insert_buy_url }}">buy the vault</a>
               </div>
             </div>
@@ -256,6 +349,52 @@
           </div>
 
           {% if insert_matches > 0 %}
+            <section class="bbb-myv__filterPanel" aria-label="filter vault designs" data-bbb-vault-filters>
+              <div class="bbb-myv__filterHead">
+                <p class="bbb-myv__gateKicker">browse by vibe</p>
+                <p data-bbb-vault-filter-count>{{ insert_matches }} design{% if insert_matches != 1 %}s{% endif %}</p>
+              </div>
+              <div class="bbb-myv__filterControls">
+                <label>
+                  <span>color</span>
+                  <select data-bbb-vault-filter="color">
+                    <option value="">all colors</option>
+                    <option value="pink">pink</option>
+                    <option value="red">red</option>
+                    <option value="orange">orange</option>
+                    <option value="yellow">yellow / gold</option>
+                    <option value="green">green</option>
+                    <option value="blue">blue</option>
+                    <option value="purple">purple</option>
+                    <option value="black">black</option>
+                    <option value="neutral">neutral</option>
+                    <option value="gray">gray</option>
+                    <option value="mixed">mixed</option>
+                  </select>
+                </label>
+                <label>
+                  <span>theme</span>
+                  <select data-bbb-vault-filter="theme">
+                    <option value="">all themes</option>
+                    <option value="dark-romance">dark romance</option>
+                    <option value="soft-romance">soft romance</option>
+                    <option value="fantasy">fantasy</option>
+                    <option value="floral">floral</option>
+                    <option value="seasonal">seasonal</option>
+                    <option value="western">western</option>
+                    <option value="minimal">minimal</option>
+                    <option value="smutty">smutty</option>
+                    <option value="aesthetic">aesthetic</option>
+                  </select>
+                </label>
+                <label>
+                  <span>search</span>
+                  <input type="search" data-bbb-vault-search placeholder="title, mood, collection">
+                </label>
+                <button type="button" data-bbb-vault-filter-reset>reset</button>
+              </div>
+            </section>
+            <p class="bbb-myv__noResults" data-bbb-vault-no-results hidden>no vault designs match those filters yet.</p>
             <div class="bbb-myv__assetGrid">
               {{ insert_cards }}
             </div>
@@ -265,7 +404,7 @@
               <h2>we don’t see any insert files for your current size.</h2>
               <p>your account is reading as <strong>{{ customer_size }}</strong>, but none of the active vault inserts matched that exact variant label with a live file attached yet.</p>
               <div class="bbb-myv__actions">
-                <a class="bbb-myv__button bbb-myv__button--ghost" href="{{ insert_vault_url }}">open standalone page</a>
+                <a class="bbb-myv__button bbb-myv__button--ghost" href="{{ insert_vault_url }}">back to my vault</a>
               </div>
             </div>
           {% endif %}
@@ -327,7 +466,7 @@
     {
       "type": "url",
       "id": "insert_vault_url",
-      "label": "standalone insert vault url"
+      "label": "insert vault fallback url"
     },
     {
       "type": "url",
@@ -493,6 +632,116 @@
   .bbb-myv__vaultBlock{
     padding:28px;
     margin-top:18px;
+  }
+
+  .bbb-myv__filterPanel{
+    margin-top:22px;
+    padding:16px;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:8px;
+    background:rgba(255,255,255,.035);
+  }
+
+  .bbb-myv__filterHead{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:14px;
+    margin-bottom:12px;
+  }
+
+  .bbb-myv__filterHead .bbb-myv__gateKicker{
+    margin-bottom:0;
+  }
+
+  .bbb-myv__filterHead p:last-child{
+    margin:0;
+    color:rgba(247,243,238,.64);
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    font-weight:800;
+  }
+
+  .bbb-myv__filterControls{
+    display:grid;
+    grid-template-columns:minmax(140px, .9fr) minmax(140px, .9fr) minmax(220px, 1.4fr) minmax(92px, .45fr);
+    gap:10px;
+  }
+
+  .bbb-myv__filterControls label{
+    display:grid;
+    gap:5px;
+  }
+
+  .bbb-myv__filterControls span{
+    color:#ff8ac7;
+    font-size:10px;
+    line-height:1;
+    text-transform:lowercase;
+    font-weight:900;
+  }
+
+  .bbb-myv__filterControls select,
+  .bbb-myv__filterControls input{
+    width:100%;
+    min-height:38px;
+    border:1px solid rgba(255,138,199,.28);
+    border-radius:4px;
+    background:#090909;
+    color:#f7f3ee;
+    font-size:13px;
+    line-height:1.2;
+    text-transform:lowercase;
+    font-weight:800;
+  }
+
+  .bbb-myv__filterControls select{
+    appearance:auto;
+    padding:8px 28px 8px 10px;
+  }
+
+  .bbb-myv__filterControls input{
+    padding:8px 10px;
+  }
+
+  .bbb-myv__filterControls select:focus-visible,
+  .bbb-myv__filterControls input:focus-visible,
+  .bbb-myv__filterControls button:focus-visible{
+    border-color:#ff8ac7;
+    outline:2px solid rgba(255,138,199,.2);
+    outline-offset:2px;
+  }
+
+  .bbb-myv__filterControls button{
+    align-self:end;
+    min-height:38px;
+    border:1px solid rgba(255,138,199,.38);
+    border-radius:4px;
+    background:rgba(255,255,255,.04);
+    color:#f7f3ee;
+    cursor:pointer;
+    font-size:12px;
+    line-height:1;
+    text-transform:lowercase;
+    font-weight:900;
+  }
+
+  .bbb-myv__filterControls button:hover{
+    border-color:#ff8ac7;
+    background:rgba(255,138,199,.14);
+  }
+
+  .bbb-myv__noResults{
+    margin:16px 0 0;
+    padding:16px;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:8px;
+    background:rgba(255,255,255,.035);
+    color:rgba(247,243,238,.74);
+    font-size:1.25rem;
+    line-height:1.4;
+    font-weight:800;
   }
 
   .bbb-myv__previewNote{
@@ -724,6 +973,26 @@
       flex-direction:column;
     }
 
+    .bbb-myv__filterPanel{
+      padding:14px;
+    }
+
+    .bbb-myv__filterHead{
+      align-items:flex-start;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .bbb-myv__filterControls{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:8px;
+    }
+
+    .bbb-myv__filterControls label:nth-of-type(3),
+    .bbb-myv__filterControls button{
+      grid-column:1 / -1;
+    }
+
     .bbb-myv__assetGrid{
       grid-template-columns:repeat(3, minmax(0, 1fr));
       gap:10px;
@@ -765,6 +1034,84 @@
   (function(){
     var section = document.getElementById('bbb-myv-{{ section.id }}');
     if (!section) return;
+
+    section.querySelectorAll('[data-bbb-vault-filters]').forEach(function(root){
+      var block = root.closest('.bbb-myv__vaultBlock') || section;
+      var cards = Array.prototype.slice.call(block.querySelectorAll('[data-bbb-vault-card]'));
+      var controls = Array.prototype.slice.call(root.querySelectorAll('[data-bbb-vault-filter]'));
+      var search = root.querySelector('[data-bbb-vault-search]');
+      var reset = root.querySelector('[data-bbb-vault-filter-reset]');
+      var count = root.querySelector('[data-bbb-vault-filter-count]');
+      var noResults = block.querySelector('[data-bbb-vault-no-results]');
+      var resultsFrame = block.querySelector('.bbb-myv__previewFrame') || block.querySelector('.bbb-myv__assetGrid');
+      var label = block.querySelector('.bbb-myv__assetGrid--preview') ? 'preview' : 'design';
+
+      function normalize(value){
+        return String(value || '').trim().toLowerCase();
+      }
+
+      function activeFilters(){
+        var filters = {};
+        controls.forEach(function(control){
+          filters[control.getAttribute('data-bbb-vault-filter')] = normalize(control.value);
+        });
+        filters.search = normalize(search ? search.value : '');
+        return filters;
+      }
+
+      function hasToken(value, token){
+        return normalize(value).split(/\s+/).indexOf(token) !== -1;
+      }
+
+      function cardMatches(card, filters){
+        return (!filters.color || hasToken(card.getAttribute('data-filter-color'), filters.color))
+          && (!filters.theme || card.getAttribute('data-filter-theme') === filters.theme)
+          && (!filters.search || normalize(card.getAttribute('data-filter-search')).indexOf(filters.search) !== -1);
+      }
+
+      function render(){
+        var filters = activeFilters();
+        var visible = 0;
+
+        cards.forEach(function(card){
+          var matches = cardMatches(card, filters);
+          card.hidden = !matches;
+          if (matches) visible += 1;
+        });
+
+        if (count) {
+          count.textContent = visible + ' ' + label + (visible === 1 ? '' : 's');
+        }
+
+        if (noResults) {
+          noResults.hidden = visible !== 0;
+        }
+
+        if (resultsFrame) {
+          resultsFrame.hidden = visible === 0;
+        }
+      }
+
+      controls.forEach(function(control){
+        control.addEventListener('change', render);
+      });
+
+      if (search) {
+        search.addEventListener('input', render);
+      }
+
+      if (reset) {
+        reset.addEventListener('click', function(){
+          controls.forEach(function(control){
+            control.value = '';
+          });
+          if (search) search.value = '';
+          render();
+        });
+      }
+
+      render();
+    });
 
     var lightbox = section.querySelector('[data-vault-preview]');
     var image = section.querySelector('[data-vault-preview-image]');

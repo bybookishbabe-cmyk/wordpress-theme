@@ -20,6 +20,9 @@ if ('bbb_book' === $post->post_type && function_exists('bbb_render_library_book_
 }
 
 $data          = sss_book_data($post);
+$cover_alt     = function_exists('bbb_book_cover_alt') ? bbb_book_cover_alt((string) $data['title'], (string) $data['author'], (string) $data['shelf']) : (string) $data['title'] . ' book cover';
+$notes_mock_mode = isset($_GET['reader_notes']) ? sanitize_key((string) wp_unslash($_GET['reader_notes'])) : (isset($_GET['notes']) ? sanitize_key((string) wp_unslash($_GET['notes'])) : '');
+$show_notes_mock = in_array($notes_mock_mode, array('paid', 'free'), true) || is_page('library');
 $trope_names   = array_column($data['tropes'], 'name');
 $trope_display = array_map(
 	static fn(array $trope): string => function_exists('bbb_trope_label') ? bbb_trope_label($trope['name'], $trope['emoji'] ?? '') : trim(((string) ($trope['emoji'] ?? '') ?: '🖤') . ' ' . $trope['name']),
@@ -71,7 +74,11 @@ $trope_urls    = array_map(
 			<span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♡</span>
 			<span class="sss-lib__heartLabel" data-heart-label>save</span>
 		</span>
-
+		<?php if ($show_notes_mock) : ?>
+			<span class="sss-lib__noteToggle" data-reader-note-toggle role="button" tabindex="0" aria-label="add your private note">
+				<span class="sss-lib__noteIcon" aria-hidden="true">✎</span>
+			</span>
+		<?php endif; ?>
 		<?php if ($data['series_number']) : ?>
 			<span
 				class="sss-lib__seriesBadge<?php echo $data['standalone'] ? ' sss-lib__seriesBadge--standalone' : ''; ?>"
@@ -89,12 +96,15 @@ $trope_urls    = array_map(
 		<?php endif; ?>
 
 		<?php if ($data['cover']) : ?>
-			<img class="sss-lib__cover" src="<?php echo esc_url($data['cover']); ?>" alt="<?php echo esc_attr($data['title']); ?>" loading="lazy">
+			<img class="sss-lib__cover" src="<?php echo esc_url($data['cover']); ?>" alt="<?php echo esc_attr($cover_alt); ?>" loading="lazy">
 		<?php endif; ?>
 	</div>
 
 	<div class="sss-lib__under">
 		<div class="sss-lib__name" style="text-transform:none !important;"><?php echo esc_html($data['title']); ?></div>
 		<div class="sss-lib__author" style="text-transform:none !important;"><?php echo esc_html($data['author']); ?></div>
+		<?php if ($show_notes_mock) : ?>
+			<div class="sss-lib__notePreview" data-reader-note-preview hidden></div>
+		<?php endif; ?>
 	</div>
 </button>

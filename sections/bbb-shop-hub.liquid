@@ -26,7 +26,7 @@
 
   assign my_vault_url = section.settings.my_vault_url | default: '/pages/my-vault'
   assign insert_vault_url = section.settings.insert_vault_url | default: '/pages/my-kindle-inserts'
-  assign insert_buy_url = section.settings.insert_buy_url | default: '/products/printable-kindle-insert-vault'
+  assign insert_buy_url = section.settings.insert_buy_url | default: '/downloads/bybookishbabe-vault'
 
   if my_vault_url contains 'shopify://pages/'
     assign my_vault_url = my_vault_url | replace: 'shopify://pages/', '/pages/'
@@ -69,12 +69,12 @@
         <div class="bbb-ds__vaultFeatureCopy">
           <div class="bbb-ds__vaultTop">
             <p class="bbb-ds__eyebrow">one-time vault access</p>
-            <span class="bbb-ds__state">$27</span>
+            <span class="bbb-ds__state"><s>$49</s> $34</span>
           </div>
-          <h2 class="bbb-ds__vaultTitle">printable kindle insert vault</h2>
+          <h2 class="bbb-ds__vaultTitle">bybookishbabe vault</h2>
           <p class="bbb-ds__vaultText">the easiest way to stop buying inserts one by one. choose your kindle size once, unlock {% if printable_inserts_count > 0 %}{{ printable_inserts_count }} printable insert{% if printable_inserts_count != 1 %}s{% endif %}{% else %}the full printable vault{% endif %} for that size, and come back whenever you want a new mood.</p>
           <div class="bbb-ds__vaultActions">
-            <a class="bbb-ds__button" href="{{ insert_buy_url }}">choose size + unlock for $27</a>
+            <a class="bbb-ds__button" href="{{ insert_buy_url }}">choose size + unlock for <s>$49</s> $34</a>
             <a class="bbb-ds__button bbb-ds__button--ghost" href="{{ insert_vault_url }}">preview the vault</a>
           </div>
         </div>
@@ -640,10 +640,10 @@
   "name": "bbb shop hub",
   "settings": [
     { "type": "text", "id": "kicker", "label": "kicker", "default": "digital shop" },
-    { "type": "text", "id": "title", "label": "title", "default": "the printable kindle insert vault" },
+    { "type": "text", "id": "title", "label": "title", "default": "the bybookishbabe vault" },
     { "type": "textarea", "id": "subtitle", "label": "subtitle", "default": "one-time access to the full printable insert world for your kindle size. no piecing it together one insert at a time unless you want to." },
     { "type": "image_picker", "id": "vault_feature_image", "label": "vault feature image" },
-    { "type": "text", "id": "primary_cta_label", "label": "primary cta label", "default": "unlock for $27" },
+    { "type": "text", "id": "primary_cta_label", "label": "primary cta label", "default": "unlock for $34" },
     { "type": "text", "id": "secondary_cta_label", "label": "secondary cta label", "default": "open my vault" },
     { "type": "url", "id": "my_vault_url", "label": "my vault url" },
     { "type": "url", "id": "insert_vault_url", "label": "insert vault page url" },

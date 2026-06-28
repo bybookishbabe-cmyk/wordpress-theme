@@ -20,7 +20,7 @@
     endif
   endif
 
-  assign buy_vault_url = section.settings.buy_vault_url | default: '/products/printable-kindle-insert-vault'
+  assign buy_vault_url = section.settings.buy_vault_url | default: '/downloads/bybookishbabe-vault'
   assign public_preview_mode = section.settings.public_preview_mode
   assign show_public_preview = public_preview_mode
 
@@ -162,7 +162,7 @@
       <div class="bbb-kiv__status">
         <div>
           <p class="bbb-kiv__statusKicker">preview the vault</p>
-          <h2 class="bbb-kiv__statusTitle">printable kindle insert vault</h2>
+          <h2 class="bbb-kiv__statusTitle">bybookishbabe vault</h2>
         </div>
         <div class="bbb-kiv__statusMeta">
           <span class="bbb-kiv__statusText">{{ vault_matches }} insert{% if vault_matches != 1 %}s{% endif %} inside</span>
@@ -171,7 +171,7 @@
 
       <div class="bbb-kiv__previewNote">
         <p>browse the vault first, then choose your kindle size at checkout to unlock the downloads.</p>
-        <a class="bbb-kiv__button" href="{{ buy_vault_url }}">choose size + unlock for $27</a>
+        <a class="bbb-kiv__button" href="{{ buy_vault_url }}">choose size + unlock for <s>$49</s> $34</a>
       </div>
 
       {% if vault_matches > 0 %}
@@ -207,7 +207,7 @@
       <div class="bbb-kiv__status">
         <div>
           <p class="bbb-kiv__statusKicker">your vault is open</p>
-          <h2 class="bbb-kiv__statusTitle">kindle insert vault</h2>
+          <h2 class="bbb-kiv__statusTitle">bybookishbabe vault</h2>
         </div>
         <div class="bbb-kiv__statusMeta">
           <span class="bbb-kiv__statusText">{{ vault_matches }} ready now</span>
@@ -239,13 +239,13 @@
 
 {% schema %}
 {
-  "name": "bbb kindle insert vault",
+  "name": "bbb bybookishbabe vault",
   "settings": [
     {
       "type": "text",
       "id": "kicker",
       "label": "kicker",
-      "default": "printable kindle insert vault"
+      "default": "bybookishbabe vault"
     },
     {
       "type": "text",
@@ -273,7 +273,7 @@
   ],
   "presets": [
     {
-      "name": "bbb kindle insert vault"
+      "name": "bbb bybookishbabe vault"
     }
   ]
 }

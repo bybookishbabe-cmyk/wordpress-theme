@@ -549,6 +549,73 @@
   transform: none;
 }
 
+.footer__blocks-wrapper {
+  display: grid;
+  grid-template-columns: minmax(22rem, 1.15fr) repeat(5, minmax(14rem, 1fr));
+  gap: 1.8rem;
+  align-items: start;
+}
+
+.footer__blocks-wrapper.grid {
+  column-gap: 1.8rem;
+  row-gap: 2.8rem;
+}
+
+.footer__blocks-wrapper .grid__item {
+  width: auto;
+  max-width: none;
+  min-width: 0;
+}
+
+.footer-block--brand .footer-block__heading {
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 2.2rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-transform: lowercase;
+}
+
+.footer-block__brand-copy {
+  max-width: 34rem;
+  margin: 0;
+  color: rgba(var(--color-foreground), 0.68);
+  font-size: 1.35rem;
+  font-weight: 400;
+  line-height: 1.55;
+}
+
+.footer-block--menu .footer-block__heading {
+  color: #ff8ac7;
+  font-family: var(--font-body-family, Assistant, sans-serif);
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1.25;
+  text-transform: lowercase;
+}
+
+.footer-block--menu .footer-block__details-content {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.footer-block--menu .list-menu__item--link {
+  display: inline-flex;
+  padding: 0;
+  color: rgba(var(--color-foreground), 0.72);
+  font-size: 1.4rem;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.footer-block--menu .list-menu__item--link:hover,
+.footer-block--menu .list-menu__item--link:focus-visible {
+  color: rgb(var(--color-foreground));
+  text-decoration-color: rgba(255, 138, 199, 0.75);
+  text-underline-offset: 0.3rem;
+}
+
 .footer__social-with-substack {
   display: inline-flex;
   align-items: center;
@@ -574,6 +641,27 @@
   color: rgb(var(--color-foreground));
   text-decoration: underline;
   text-underline-offset: 0.3rem;
+}
+
+@media screen and (max-width: 989px) {
+  .footer__blocks-wrapper {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .footer-block--brand {
+    grid-column: 1 / -1;
+  }
+}
+
+@media screen and (max-width: 749px) {
+  .footer__blocks-wrapper {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .footer-block__brand-copy {
+    max-width: none;
+  }
 }
 
 .bbb-pwa-notification-panel {

@@ -37,6 +37,7 @@ if (!function_exists('bbb_series_field')) {
 			'on_kindle_unlimited'      => 'sss_ku',
 			'read_as_standalone'       => 'sss_standalone',
 			'reread_badge'             => 'sss_reread',
+			'series_section'           => 'sss_series_section',
 			'spice_level'              => 'sss_spice',
 			'tension_score'            => 'sss_tension',
 			'why_i_loved_it'           => 'sss_why',
@@ -55,6 +56,7 @@ if (!function_exists('bbb_series_field')) {
 			'on_kindle_unlimited'      => '_bbb_ku',
 			'read_as_standalone'       => '_bbb_standalone',
 			'reread_badge'             => '_bbb_reread',
+			'series_section'           => '_bbb_series_section',
 			'series_number'            => '_bbb_series_number',
 			'spice_level'              => '_bbb_spice',
 			'tension_score'            => '_bbb_tension',
@@ -151,7 +153,13 @@ if (!function_exists('bbb_series_book_terms')) {
 
 if (!function_exists('bbb_series_book_data')) {
 	function bbb_series_book_data(WP_Post $book): array {
-		$post_id      = $book->ID;
+		static $book_data_cache = array();
+
+		$post_id = $book->ID;
+		if (isset($book_data_cache[$post_id])) {
+			return $book_data_cache[$post_id];
+		}
+
 		$is_bbb       = 'bbb_book' === $book->post_type;
 		$series_terms = bbb_series_book_terms($post_id, $is_bbb ? 'bbb_series' : 'sss_series');
 		$series_term  = $series_terms[0] ?? null;
@@ -206,7 +214,15 @@ if (!function_exists('bbb_series_book_data')) {
 		}
 		$cover       = bbb_series_image_url(bbb_series_field($post_id, 'cover', ''), $post_id);
 
-		return array(
+		$series_section = sanitize_key((string) bbb_series_field($post_id, 'series_section', 'main'));
+		if ('in-her-own-league' === $book->post_name && 'windy-city-series' === sanitize_title($series_handle)) {
+			$series_section = 'spinoff';
+		}
+		if (!in_array($series_section, array('main', 'spinoff'), true)) {
+			$series_section = 'main';
+		}
+
+		$book_data_cache[$post_id] = array(
 			'handle'         => $book->post_name,
 			'title'          => (string) bbb_series_field($post_id, 'title', get_the_title($post_id)),
 			'author'         => (string) bbb_series_field($post_id, 'author', ''),
@@ -223,6 +239,7 @@ if (!function_exists('bbb_series_book_data')) {
 			'series_handle'  => $series_handle,
 			'series_name'    => $series_name,
 			'series_number'  => (string) bbb_series_field($post_id, 'series_number', ''),
+			'series_section' => $series_section,
 			'tension'        => (string) bbb_series_field($post_id, 'tension_score', ''),
 			'damage'         => (string) bbb_series_field($post_id, 'emotional_damage_score', ''),
 			'yearning'       => (string) bbb_series_field($post_id, 'yearning_level', ''),
@@ -233,6 +250,8 @@ if (!function_exists('bbb_series_book_data')) {
 			'ku'             => bbb_series_bool(bbb_series_field($post_id, 'on_kindle_unlimited', false)),
 			'darkness'       => (string) bbb_series_field($post_id, 'darkness_level', ''),
 		);
+
+		return $book_data_cache[$post_id];
 	}
 }
 
@@ -241,6 +260,7 @@ if (!$book instanceof WP_Post) {
 }
 
 $data          = bbb_series_book_data($book);
+$cover_alt     = function_exists('bbb_book_cover_alt') ? bbb_book_cover_alt((string) $data['title'], (string) $data['author'], (string) $data['shelf']) : (string) $data['title'] . ' book cover';
 $trope_names   = array_map(static fn(array $trope): string => $trope['name'], $data['tropes']);
 $trope_display = array_map(
 	static fn(array $trope): string => function_exists('bbb_trope_label') ? bbb_trope_label($trope['name'], $trope['emoji'] ?? '') : trim(((string) ($trope['emoji'] ?? '') ?: '🖤') . ' ' . $trope['name']),
@@ -277,6 +297,7 @@ $trope_urls    = array_map(
 	data-series="<?php echo esc_attr($data['series_handle']); ?>"
 	data-series-name="<?php echo esc_attr($data['series_name']); ?>"
 	data-series-number="<?php echo esc_attr($data['series_number']); ?>"
+	data-series-section="<?php echo esc_attr($data['series_section']); ?>"
 	data-tension="<?php echo esc_attr($data['tension']); ?>"
 	data-damage="<?php echo esc_attr($data['damage']); ?>"
 	data-yearning="<?php echo esc_attr($data['yearning']); ?>"
@@ -304,7 +325,7 @@ $trope_urls    = array_map(
 		<?php endif; ?>
 
 		<?php if ('' !== $data['cover']) : ?>
-			<img class="sss-lib__cover" src="<?php echo esc_url($data['cover']); ?>" alt="<?php echo esc_attr($data['title']); ?>" loading="lazy">
+			<img class="sss-lib__cover" src="<?php echo esc_url($data['cover']); ?>" alt="<?php echo esc_attr($cover_alt); ?>" loading="lazy">
 		<?php endif; ?>
 	</div>
 

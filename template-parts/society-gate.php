@@ -5,7 +5,7 @@
  * @package ByBookishBabeShopifyPort
  */
 
-$join_url    = get_option('bbb_society_gate_member_url', 'https://thesmutandsentimentsociety.substack.com/subscribe');
+$join_url    = function_exists('bbb_substack_subscribe_url') ? bbb_substack_subscribe_url() : get_option('bbb_society_gate_member_url', 'https://thesmutandsentimentsociety.substack.com/subscribe');
 $account_url = home_url('/account/');
 $back_page   = get_page_by_path('smut-sentiment-society');
 $back_url    = $back_page instanceof WP_Post ? get_permalink($back_page) : home_url('/smut-sentiment-society/');

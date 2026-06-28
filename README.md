@@ -57,6 +57,32 @@ Before deploying, run the workflow check:
 
 It verifies that LocalWP is linked to this repo, the local site responds, the live site responds, key live pages do not show WordPress critical errors or maintenance mode, WP Engine SSH is ready, and the repo status is visible before anything is pushed.
 
+For visible web/PWA fixes, especially links, routes, member state, quizzes, homepage modules, and anything that can be cached, use the clean sweep deploy wrapper:
+
+```bash
+bash scripts/clean-sweep-deploy.sh --expect-redirect /old/path/=/new/path/ -- file.php assets/js/file.js
+```
+
+It lints touched PHP/JS, deploys through `scripts/push-files.sh` with a PWA version bump, flushes cache, runs live checks, and verifies declared redirects or content on the live site. See `docs/clean-sweep-process.md`.
+
+## Brand Capitalization Standard
+
+All site changes should follow the capitalization standard in:
+
+```text
+docs/brand-capitalization-standard.md
+```
+
+Short version: searchable proper nouns are capitalized everywhere, including inside lowercase bybookishbabe voice copy. Book titles, author names, series names, character names, and platform/brand names such as `Fourth Wing`, `Liz Tomforde`, `Ryan Shay`, `Kindle Unlimited`, `Amazon`, and `Bookshop.org` keep their correct capitalization. Navigation, UI labels, trope names, mood copy, and general prose can stay lowercase when they do not contain a proper noun.
+
+Before cleanup or deploy review, run:
+
+```bash
+php scripts/audit-brand-capitalization.php
+```
+
+Use `--strict` only after the current backlog has been cleaned up; it exits nonzero when blocking capitalization candidates remain. Slugs are ignored because lowercase URLs are not capitalization violations by themselves.
+
 ## Safer Theme Updates
 
 Avoid updating this theme through the WordPress admin theme uploader. If an admin update times out, WordPress can leave a `.maintenance` file behind and the public site shows:

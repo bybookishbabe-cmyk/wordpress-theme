@@ -48,6 +48,14 @@ function sss_book_is_visible(int $post_id): bool {
 	return !sss_bool(sss_meta($post_id, 'sss_hide_from_library', false));
 }
 
+function sss_book_is_series_visible(int $post_id): bool {
+	if (apply_filters('bbb_show_all_imported_books', false, $post_id)) {
+		return 'publish' === get_post_status($post_id);
+	}
+
+	return 'publish' === get_post_status($post_id);
+}
+
 function sss_book_is_private(int $post_id): bool {
 	if ('bbb_book' === get_post_type($post_id) && function_exists('bbb_is_book_private')) {
 		return bbb_is_book_private($post_id);
@@ -75,6 +83,44 @@ function sss_book_is_starter_pack(int $post_id): bool {
 	return sss_bool(sss_meta($post_id, 'sss_starter_pack', sss_meta($post_id, 'starter_pack', false)));
 }
 
+function sss_library_cache_version(): string {
+	$version = get_option('bbb_library_cache_version', '');
+
+	if (!is_string($version) || '' === $version) {
+		$version = (string) time();
+		update_option('bbb_library_cache_version', $version, false);
+	}
+
+	return $version;
+}
+
+function sss_library_flush_cache(): void {
+	update_option('bbb_library_cache_version', (string) time(), false);
+}
+
+function sss_library_flush_cache_for_post(int $post_id): void {
+	$post_type = get_post_type($post_id);
+
+	if (!$post_type) {
+		return;
+	}
+
+	$quote_types = function_exists('bbb_quote_post_types') ? bbb_quote_post_types() : array();
+	$watched     = array_merge(array('bbb_book', 'sss_book'), $quote_types);
+
+	if (in_array($post_type, array_filter($watched), true) || str_contains((string) $post_type, 'quote')) {
+		sss_library_flush_cache();
+	}
+}
+
+add_action('save_post_bbb_book', 'sss_library_flush_cache');
+add_action('save_post_sss_book', 'sss_library_flush_cache');
+add_action('save_post', 'sss_library_flush_cache_for_post');
+add_action('edited_bbb_trope', 'sss_library_flush_cache');
+add_action('edited_bbb_shelf', 'sss_library_flush_cache');
+add_action('edited_sss_trope', 'sss_library_flush_cache');
+add_action('edited_sss_shelf', 'sss_library_flush_cache');
+
 function sss_get_all_books(): array {
 	$post_types = array_values(
 		array_filter(
@@ -87,21 +133,44 @@ function sss_get_all_books(): array {
 		return array();
 	}
 
+	$cache_key = 'sss_all_books_' . md5(sss_library_cache_version() . '|' . implode(',', $post_types));
+	$book_ids  = get_transient($cache_key);
+
+	if (is_array($book_ids)) {
+		$book_ids = array_values(array_filter(array_map('absint', $book_ids)));
+
+		if ($book_ids) {
+			_prime_post_caches($book_ids, true, true);
+
+			return array_values(
+				array_filter(
+					array_map('get_post', $book_ids),
+					static fn($post): bool => $post instanceof WP_Post
+				)
+			);
+		}
+	}
+
 	$query = new WP_Query(
 		array(
 			'post_type'      => $post_types,
 			'posts_per_page' => -1,
 			'orderby'        => 'title',
 			'order'          => 'ASC',
+			'no_found_rows'  => true,
 		)
 	);
 
-	return array_values(
+	$books = array_values(
 		array_filter(
 			$query->posts,
 			static fn(WP_Post $post): bool => sss_book_is_visible($post->ID)
 		)
 	);
+
+	set_transient($cache_key, wp_list_pluck($books, 'ID'), 30 * MINUTE_IN_SECONDS);
+
+	return $books;
 }
 
 function sss_get_book_cover_url(int $post_id): string {
@@ -187,6 +256,13 @@ function sss_get_series_name(string $series_handle): string {
 }
 
 function sss_book_data(WP_Post $post): array {
+	$cache_key = 'sss_book_data_' . $post->ID . '_' . md5(sss_library_cache_version() . '|' . $post->post_modified_gmt);
+	$cached    = get_transient($cache_key);
+
+	if (is_array($cached)) {
+		return $cached;
+	}
+
 	if ('bbb_book' === $post->post_type) {
 		$series_handle = (string) get_post_meta($post->ID, '_bbb_series_handle', true);
 		$series_name   = '';
@@ -217,7 +293,7 @@ function sss_book_data(WP_Post $post): array {
 
 		$ku_raw = get_post_meta($post->ID, '_bbb_ku', true);
 
-		return array(
+		$data = array(
 			'handle'         => $post->post_name,
 			'url'            => get_permalink($post) ?: home_url('/books/' . $post->post_name . '/'),
 			'title'          => function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title((string) $post->post_title) : $post->post_title,
@@ -248,11 +324,15 @@ function sss_book_data(WP_Post $post): array {
 			'is_private'     => sss_book_is_private($post->ID),
 			'featured_month' => substr((string) get_post_meta($post->ID, '_bbb_newsletter_date', true), 0, 7),
 		);
+
+		set_transient($cache_key, $data, 12 * HOUR_IN_SECONDS);
+
+		return $data;
 	}
 
 	$series_handle = (string) sss_meta($post->ID, 'sss_series_handle', '');
 
-	return array(
+	$data = array(
 		'handle'         => $post->post_name,
 		'url'            => get_permalink($post) ?: home_url('/books/' . $post->post_name . '/'),
 		'title'          => function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title((string) $post->post_title) : $post->post_title,
@@ -283,4 +363,8 @@ function sss_book_data(WP_Post $post): array {
 		'is_private'     => sss_book_is_private($post->ID),
 		'featured_month' => (string) sss_meta($post->ID, 'sss_featured_month', ''),
 	);
+
+	set_transient($cache_key, $data, 12 * HOUR_IN_SECONDS);
+
+	return $data;
 }

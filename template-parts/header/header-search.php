@@ -49,7 +49,6 @@ $input_id = $args['input_id'] ?? 'Search-In-Modal';
 								spellcheck="false"
 							>
 							<label class="field__label" for="<?php echo esc_attr($input_id); ?>"><?php esc_html_e('Search', 'bybookishbabe-shopify-port'); ?></label>
-							<input type="hidden" name="options[prefix]" value="last">
 							<button type="reset" class="reset__button field__button hidden" aria-label="<?php esc_attr_e('Reset', 'bybookishbabe-shopify-port'); ?>">
 								<span class="svg-wrapper"><?php echo bbb_get_inline_svg('icon-reset'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
 							</button>

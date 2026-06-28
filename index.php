@@ -17,6 +17,10 @@ if (is_singular('post')) {
 
 get_header();
 
+if (is_home()) {
+	get_template_part('template-parts/home/quiz-nudge');
+}
+
 if (have_posts()) {
 	while (have_posts()) {
 		the_post();

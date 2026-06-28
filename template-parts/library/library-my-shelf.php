@@ -1,4 +1,8 @@
-<?php declare(strict_types=1); ?>
+<?php
+declare(strict_types=1);
+
+$notes_url = function_exists('bbb_page_url') ? bbb_page_url('my-notes') : home_url('/my-notes/');
+?>
 <div class="sss-lib__myshelf" id="sssMyShelfSection">
 	<div class="sss-lib__archiveHead">
 		<div class="sss-lib__archiveKicker">your shelf</div>
@@ -18,6 +22,7 @@
 		</div>
 		<button type="button" id="sssExportNotes" class="sss-lib__exportBtn">copy list</button>
 		<button type="button" id="sssEmailShelf" class="sss-lib__exportBtn sss-lib__exportBtn--secondary">email to self</button>
+		<a class="sss-lib__myshelfActionLink" href="<?php echo esc_url($notes_url); ?>">open reading journal</a>
 	</div>
 	<div class="sss-lib__grid" id="sssMyShelfGrid"></div>
 </div>

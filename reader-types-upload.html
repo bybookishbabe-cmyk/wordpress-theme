@@ -1,0 +1,364 @@
+<style>
+  .bbb-reader-types-upload {
+    padding: 48px clamp(16px, 4vw, 48px) 72px;
+    background:
+      radial-gradient(760px 360px at 0 0, rgba(232, 90, 155, .18), transparent 70%),
+      radial-gradient(620px 300px at 100% 10%, rgba(255, 214, 234, .08), transparent 72%),
+      #0b090b;
+    color: #f8f1f5;
+  }
+
+  .bbb-reader-types-upload * {
+    box-sizing: border-box;
+  }
+
+  .bbb-reader-types-upload__wrap {
+    width: min(1180px, 100%);
+    margin: 0 auto;
+  }
+
+  .bbb-reader-types-upload__hero {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid rgba(255, 255, 255, .12);
+  }
+
+  .bbb-reader-types-upload__heroCopy {
+    max-width: 760px;
+  }
+
+  .bbb-reader-types-upload__kicker {
+    margin: 0 0 8px;
+    color: #ff8ac7;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .16em;
+    text-transform: lowercase;
+  }
+
+  .bbb-reader-types-upload h1,
+  .bbb-reader-types-upload h2,
+  .bbb-reader-types-upload h3 {
+    margin: 0;
+    color: #fff;
+    font-family: Cormorant, "Cormorant Garamond", Georgia, serif;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: lowercase;
+  }
+
+  .bbb-reader-types-upload h1 {
+    font-size: clamp(54px, 9vw, 112px);
+    line-height: .88;
+  }
+
+  .bbb-reader-types-upload h2 {
+    font-size: clamp(32px, 5vw, 56px);
+    line-height: .95;
+  }
+
+  .bbb-reader-types-upload h3 {
+    font-size: 28px;
+    line-height: 1;
+  }
+
+  .bbb-reader-types-upload__hero p:not(.bbb-reader-types-upload__kicker) {
+    max-width: 680px;
+    margin: 18px 0 0;
+    color: rgba(248, 241, 245, .72);
+    font-size: 16px;
+    line-height: 1.65;
+    text-transform: lowercase;
+  }
+
+  .bbb-reader-types-upload__section {
+    margin-top: 34px;
+  }
+
+  .bbb-reader-types-upload__sectionHead {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 16px;
+  }
+
+  .bbb-reader-types-upload__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .bbb-reader-type-card {
+    min-width: 0;
+    display: grid;
+    gap: 14px;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 8px;
+    background:
+      radial-gradient(300px 160px at 0 0, rgba(255, 138, 199, .13), transparent 70%),
+      linear-gradient(180deg, rgba(255, 255, 255, .055), rgba(255, 255, 255, .025));
+  }
+
+  .bbb-reader-type-card__badge {
+    display: inline-flex;
+    width: max-content;
+    max-width: 100%;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 6px 12px 6px 7px;
+    border: 1px solid rgba(255, 138, 199, .42);
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(255, 138, 199, .2), rgba(255, 255, 255, .055));
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .18);
+  }
+
+  .bbb-reader-type-card__badge img {
+    width: 32px;
+    height: 32px;
+    max-width: none;
+    max-height: none;
+    object-fit: contain;
+    border-radius: 8px;
+  }
+
+  .bbb-reader-type-card__badge span {
+    color: #fff;
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 1.1;
+    text-transform: lowercase;
+  }
+
+  .bbb-reader-type-card p {
+    margin: 0;
+    color: rgba(248, 241, 245, .78);
+    font-size: 13px;
+    line-height: 1.55;
+    text-transform: lowercase;
+  }
+
+  .bbb-reader-type-card dl {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+  }
+
+  .bbb-reader-type-card dl div {
+    display: grid;
+    gap: 2px;
+  }
+
+  .bbb-reader-type-card dt {
+    color: rgba(255, 138, 199, .86);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .12em;
+    text-transform: lowercase;
+  }
+
+  .bbb-reader-type-card dd {
+    margin: 0;
+    color: rgba(248, 241, 245, .68);
+    font-size: 12px;
+    line-height: 1.45;
+    text-transform: lowercase;
+  }
+
+  .bbb-reader-type-card__emojiRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+
+  .bbb-reader-type-card__emojiRow span {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 10px;
+    background: rgba(0, 0, 0, .18);
+  }
+
+  .bbb-reader-type-card__emojiRow img {
+    width: 32px;
+    height: 32px;
+    max-width: none;
+    max-height: none;
+    object-fit: contain;
+  }
+
+  .bbb-reader-types-upload__emojiGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+    gap: 10px;
+  }
+
+  .bbb-reader-types-upload__emojiTile {
+    min-width: 0;
+    display: grid;
+    justify-items: center;
+    gap: 7px;
+    padding: 12px 8px;
+    border: 1px solid rgba(255, 255, 255, .1);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .045);
+    text-align: center;
+  }
+
+  .bbb-reader-types-upload__emojiTile img {
+    width: 58px;
+    height: 58px;
+    max-width: none;
+    max-height: none;
+    object-fit: contain;
+  }
+
+  .bbb-reader-types-upload__emojiTile span {
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.15;
+    text-transform: lowercase;
+  }
+
+  .bbb-reader-types-upload__emojiTile code {
+    max-width: 100%;
+    color: rgba(248, 241, 245, .54);
+    font-size: 10px;
+    overflow-wrap: anywhere;
+  }
+
+  @media (max-width: 900px) {
+    .bbb-reader-types-upload__hero {
+      display: grid;
+      align-items: start;
+    }
+
+    .bbb-reader-types-upload__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 640px) {
+    .bbb-reader-types-upload {
+      padding: 34px 14px 56px;
+    }
+
+    .bbb-reader-types-upload__grid,
+    .bbb-reader-types-upload__emojiGrid {
+      grid-template-columns: 1fr;
+    }
+
+    .bbb-reader-type-card {
+      padding: 14px;
+    }
+  }
+</style>
+
+<section class="bbb-reader-types-upload">
+  <div class="bbb-reader-types-upload__wrap">
+    <header class="bbb-reader-types-upload__hero">
+      <div class="bbb-reader-types-upload__heroCopy">
+        <p class="bbb-reader-types-upload__kicker">made for you</p>
+        <h1>find out your reader type</h1>
+        <p>answer the Made For You prompts and your dashboard will assign the reader badge that fits your favorite tropes, moods, spice comfort zone, and fictional men.</p>
+      </div>
+    </header>
+
+    <section class="bbb-reader-types-upload__section" aria-labelledby="reader-type-how">
+      <div class="bbb-reader-types-upload__sectionHead">
+        <div>
+          <p class="bbb-reader-types-upload__kicker">how it works</p>
+          <h2 id="reader-type-how">get your badge in three steps</h2>
+        </div>
+      </div>
+      <div class="bbb-reader-types-upload__grid">
+        <article class="bbb-reader-type-card"><p class="bbb-reader-types-upload__kicker">01</p><h3>become a Society member</h3><p>start free to unlock your reader account, bookshelf, and Made For You tools. upgrade when you want the paid Society extras.</p></article>
+        <article class="bbb-reader-type-card"><p class="bbb-reader-types-upload__kicker">02</p><h3>answer Made For You</h3><p>tell the dashboard what you reach for: tropes, intensity, romance moods, favorite chaos, and the fictional men you cannot stop thinking about.</p></article>
+        <article class="bbb-reader-type-card"><p class="bbb-reader-types-upload__kicker">03</p><h3>get assigned a reader type</h3><p>your answers turn into a reader badge, supporting emoji set, and better recommendations across quizzes, cards, and member views.</p></article>
+      </div>
+    </section>
+
+    <section class="bbb-reader-types-upload__section" aria-labelledby="reader-type-standards">
+      <div class="bbb-reader-types-upload__sectionHead">
+        <div>
+          <p class="bbb-reader-types-upload__kicker">possible results</p>
+          <h2 id="reader-type-standards">reader type badges</h2>
+        </div>
+      </div>
+
+      <div class="bbb-reader-types-upload__grid">
+        <article class="bbb-reader-type-card">
+          <div class="bbb-reader-type-card__badge"><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/why-choose.png" alt="" aria-hidden="true" loading="lazy" decoding="async"><span>the chaos reader</span></div>
+          <p>maximum spice, maximum plot complications, very little concern for emotional safety.</p>
+          <dl><div><dt>key tropes</dt><dd>5/5 spice or anything that says burn it down and make it romantic.</dd></div></dl>
+          <div class="bbb-reader-type-card__emojiRow"><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/stalker-romance.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/touch-her-and-die.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/forbidden-love.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/mafia-romance.png" alt=""></span></div>
+        </article>
+
+        <article class="bbb-reader-type-card">
+          <div class="bbb-reader-type-card__badge"><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/dark-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"><span>the dark romance girlie</span></div>
+          <p>danger, obsession, morally gray choices, and devotion with teeth.</p>
+          <dl><div><dt>key tropes</dt><dd>dark romance, dangerous moods, stalker romance, mafia romance, and villain-coded love interests.</dd></div></dl>
+          <div class="bbb-reader-type-card__emojiRow"><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/stalker-romance.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/mafia-romance.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/villain-gets-the-girl.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/captor-x-captive.png" alt=""></span></div>
+        </article>
+
+        <article class="bbb-reader-type-card">
+          <div class="bbb-reader-type-card__badge"><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/romantasy.png" alt="" aria-hidden="true" loading="lazy" decoding="async"><span>the fantasy girlie</span></div>
+          <p>magic systems, fated stakes, crowns, monsters, and dramatic yearning.</p>
+          <dl><div><dt>key tropes</dt><dd>romantasy, paranormal romance, fated mates, and fantasy-leaning shelves.</dd></div></dl>
+          <div class="bbb-reader-type-card__emojiRow"><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/paranormal-romance.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/fated-mates.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/villain-gets-the-girl.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/forced-proximity.png" alt=""></span></div>
+        </article>
+
+        <article class="bbb-reader-type-card">
+          <div class="bbb-reader-type-card__badge"><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/sports-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"><span>the jersey chaser</span></div>
+          <p>athletes, rivalry, teammates, locker-room confidence, and softness after the game.</p>
+          <dl><div><dt>key tropes</dt><dd>sports romance, hockey romance, baseball romance, or athlete-with-heart energy.</dd></div></dl>
+          <div class="bbb-reader-type-card__emojiRow"><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/hockey-romance.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/baseball-romance.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/friends-to-lovers.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/he-falls-first.png" alt=""></span></div>
+        </article>
+
+        <article class="bbb-reader-type-card">
+          <div class="bbb-reader-type-card__badge"><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/slow-burn.png" alt="" aria-hidden="true" loading="lazy" decoding="async"><span>the slow burn girlie</span></div>
+          <p>glances, restraint, almost-confessions, and payoff that takes its sweet time.</p>
+          <dl><div><dt>key tropes</dt><dd>slow burn moods, yearning-forward books, and readers who want tension before touch.</dd></div></dl>
+          <div class="bbb-reader-type-card__emojiRow"><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/friends-to-lovers.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/second-chance.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/forbidden-love.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/who-did-this-to-you.png" alt=""></span></div>
+        </article>
+
+        <article class="bbb-reader-type-card">
+          <div class="bbb-reader-type-card__badge"><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/enemies-to-lovers.png" alt="" aria-hidden="true" loading="lazy" decoding="async"><span>the tension addict</span></div>
+          <p>banter, friction, rivalry, and the very specific joy of two people losing the argument.</p>
+          <dl><div><dt>key tropes</dt><dd>enemies to lovers, forced proximity, rivals, and antagonistic chemistry.</dd></div></dl>
+          <div class="bbb-reader-type-card__emojiRow"><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/forced-proximity.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/grumpy-x-sunshine.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/boss-x-employee.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/one-bed.png" alt=""></span></div>
+        </article>
+
+        <article class="bbb-reader-type-card">
+          <div class="bbb-reader-type-card__badge"><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/fake-dating.png" alt="" aria-hidden="true" loading="lazy" decoding="async"><span>the fake dating fanatic</span></div>
+          <p>contracts, public pretending, private feelings, and the moment the lie starts telling the truth.</p>
+          <dl><div><dt>key tropes</dt><dd>fake dating, one bed, forced proximity, and relationship-of-convenience setups.</dd></div></dl>
+          <div class="bbb-reader-type-card__emojiRow"><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/one-bed.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/marriage-of-convenience.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/forced-proximity.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/opposites-attract.png" alt=""></span></div>
+        </article>
+
+        <article class="bbb-reader-type-card">
+          <div class="bbb-reader-type-card__badge"><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/friends-to-lovers.png" alt="" aria-hidden="true" loading="lazy" decoding="async"><span>the sweet romance devotee</span></div>
+          <p>comfort, tenderness, caretaking, and low-spice softness that still knows how to ache.</p>
+          <dl><div><dt>key tropes</dt><dd>cozy moods, lower spice levels, friends to lovers, small towns, and healing romance.</dd></div></dl>
+          <div class="bbb-reader-type-card__emojiRow"><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/small-town.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/single-dad.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/found-family.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/contemporary-romance.png" alt=""></span></div>
+        </article>
+
+        <article class="bbb-reader-type-card">
+          <div class="bbb-reader-type-card__badge"><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/contemporary-romance.png" alt="" aria-hidden="true" loading="lazy" decoding="async"><span>the romance reader</span></div>
+          <p>balanced taste, flexible moods, and a dashboard still learning the exact flavor of book chaos.</p>
+          <dl><div><dt>key tropes</dt><dd>the default reader type before a more specific pattern takes over.</dd></div></dl>
+          <div class="bbb-reader-type-card__emojiRow"><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/opposites-attract.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/found-family.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/second-chance.png" alt=""></span><span><img src="/wp-content/themes/wordpress-theme/assets/images/custom-emojis/he-falls-first.png" alt=""></span></div>
+        </article>
+      </div>
+    </section>
+
+  </div>
+</section>

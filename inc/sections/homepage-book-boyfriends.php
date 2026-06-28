@@ -274,7 +274,6 @@ if (!$slides) {
 		margin-bottom:8px;
 		font-size:clamp(1.9rem, 2.6vw, 2.5rem);
 		line-height:1.2;
-		text-transform:lowercase;
 	}
 	.bbb-boyfriends__label span{
 		color:#ff8ac7;

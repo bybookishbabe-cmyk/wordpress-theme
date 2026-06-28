@@ -43,6 +43,12 @@ window.sssAnalytics.include = function(){
 };
 window.sssAnalytics.isExcluded = isAnalyticsExcluded;
 
+function bbbSeriesDisplayLabel(name){
+  var value = String(name || '').trim();
+  if (!value) return '';
+  return /\b(series|duet|trilogy|saga)\s*$/i.test(value) ? value : value + ' series';
+}
+
 function getAnalyticsSessionId(){
 
   try {
@@ -457,6 +463,36 @@ function getBookStatusKey(bookData){
   return String(rawKey).trim().toLowerCase();
 }
 
+function getBookStatusKeys(bookData){
+  if (!bookData) return [];
+
+  var seen = {};
+  return [
+    bookData.handle,
+    bookData.bookHandle,
+    bookData.book_handle,
+    bookData.title,
+    bookData.bookTitle,
+    bookData.book_title
+  ].map(function(value){
+    return String(value || '').trim().toLowerCase();
+  }).filter(function(key){
+    if (!key || seen[key]) return false;
+    seen[key] = true;
+    return true;
+  });
+}
+
+function getBookMapValue(bookData, map){
+  var keys = getBookStatusKeys(bookData);
+  for (var i = 0; i < keys.length; i += 1){
+    if (Object.prototype.hasOwnProperty.call(map || {}, keys[i])){
+      return map[keys[i]];
+    }
+  }
+  return undefined;
+}
+
 function getBookStatuses(){
   try {
     return JSON.parse(localStorage.getItem('sssBookStatuses')) || {};
@@ -471,6 +507,23 @@ function getBookReactions(){
   } catch(e){
     return {};
   }
+}
+
+function getBookRatings(){
+  try {
+    return JSON.parse(localStorage.getItem('sssBookRatings')) || {};
+  } catch(e){
+    return {};
+  }
+}
+
+function setBookRatings(data){
+  localStorage.setItem('sssBookRatings', JSON.stringify(data || {}));
+  document.dispatchEvent(new CustomEvent('bbb:book-ratings-updated', {
+    detail: {
+      ratings: data || {}
+    }
+  }));
 }
 
 function setBookReactions(data){
@@ -491,26 +544,99 @@ function getBookStatus(bookData){
   if (!key) return '';
 
   var statuses = getBookStatuses();
-  return statuses[key] || '';
+  return getBookMapValue(bookData, statuses) || '';
 }
 
 function setBookStatus(bookData, status){
-  var key = getBookStatusKey(bookData);
+  var keys = getBookStatusKeys(bookData);
+  var key = keys[0] || '';
   if (!key) return;
 
   var statuses = getBookStatuses();
 
-  if (status){
-    statuses[key] = status;
-  } else {
-    delete statuses[key];
-  }
+  keys.forEach(function(statusKey){
+    if (status){
+      statuses[statusKey] = status;
+    } else {
+      delete statuses[statusKey];
+    }
+  });
 
   setBookStatuses(statuses);
   document.dispatchEvent(new CustomEvent('bbb:book-status-changed', {
     detail: {
       key: key,
       status: status || '',
+      book: {
+        handle: bookData.handle || bookData.bookHandle || '',
+        title: bookData.title || bookData.bookTitle || '',
+        author: bookData.author || '',
+        cover: bookData.cover || '',
+        amazon: bookData.amazon || '',
+        bookshop: bookData.bookshop || ''
+      },
+      source: document.body.dataset.template || 'library'
+    }
+  }));
+}
+
+function getBookRating(bookData){
+  var key = getBookStatusKey(bookData);
+  if (!key && !bookData) return 0;
+
+  var ratings = getBookRatings();
+  var rating = parseInt(getBookMapValue(bookData, ratings) || bookData.rating || 0, 10);
+  return rating >= 1 && rating <= 5 ? rating : 0;
+}
+
+function updateBookRatingOnShelf(bookData, rating){
+  var keys = getBookStatusKeys(bookData);
+  if (!keys.length) return;
+
+  var shelf = getShelf();
+  var changed = false;
+  shelf = shelf.map(function(item){
+    var itemKeys = getBookStatusKeys(item);
+    var matches = itemKeys.some(function(itemKey){
+      return keys.indexOf(itemKey) > -1;
+    });
+    if (!matches) return item;
+    changed = true;
+    return Object.assign({}, item, { rating: rating || '' });
+  });
+
+  if (changed){
+    setShelf(shelf);
+    renderMyShelf();
+  }
+}
+
+function setBookRating(bookData, rating){
+  var keys = getBookStatusKeys(bookData);
+  var key = keys[0] || '';
+  if (!key) return;
+
+  var normalizedRating = parseInt(rating || 0, 10);
+  if (!(normalizedRating >= 1 && normalizedRating <= 5)){
+    normalizedRating = 0;
+  }
+
+  var ratings = getBookRatings();
+  keys.forEach(function(ratingKey){
+    if (normalizedRating){
+      ratings[ratingKey] = normalizedRating;
+    } else {
+      delete ratings[ratingKey];
+    }
+  });
+
+  setBookRatings(ratings);
+  updateBookRatingOnShelf(bookData, normalizedRating);
+  document.dispatchEvent(new CustomEvent('bbb:book-rating-changed', {
+    detail: {
+      key: key,
+      rating: normalizedRating,
+      status: getBookStatus(bookData),
       book: {
         handle: bookData.handle || bookData.bookHandle || '',
         title: bookData.title || bookData.bookTitle || '',
@@ -626,18 +752,58 @@ function ensureStatusRibbon(target){
   return ribbon;
 }
 
+function ratingStampText(rating){
+  rating = parseInt(rating || 0, 10);
+  if (!(rating >= 1 && rating <= 5)) return '';
+  return Array(rating + 1).join('★');
+}
+
+function ensureRatingStamp(target){
+  if (!target) return null;
+
+  var stamp = target.querySelector('[data-book-rating-stamp]');
+
+  if (!stamp){
+    stamp = document.createElement('div');
+    stamp.className = 'sss-lib__ratingStamp';
+    stamp.setAttribute('data-book-rating-stamp', '');
+    target.appendChild(stamp);
+  }
+
+  return stamp;
+}
+
+function applyRatingStamp(target, rating){
+  if (!target) return;
+
+  var stamp = target.querySelector('[data-book-rating-stamp]');
+  var stampText = ratingStampText(rating);
+
+  if (!stampText){
+    if (stamp) stamp.remove();
+    return;
+  }
+
+  stamp = ensureRatingStamp(target);
+  stamp.textContent = stampText;
+  stamp.setAttribute('aria-label', rating + ' out of 5 stars');
+}
+
 function applyBookStatusToCard(card){
   if (!card || card.classList.contains('sss-lib__book--placeholder')) return;
 
   var coverWrap = card.querySelector('.sss-lib__coverWrap');
   if (!coverWrap) return;
 
-  var status = getBookStatus({
+  var bookData = {
     handle: card.dataset.handle,
     title: card.dataset.title
-  });
+  };
+  var status = getBookStatus(bookData);
+  var rating = getBookRating(bookData);
 
   var ribbon = coverWrap.querySelector('[data-book-status-ribbon]');
+  applyRatingStamp(coverWrap, rating);
 
   if (!status){
     if (ribbon) ribbon.remove();
@@ -685,6 +851,18 @@ function ensureModalStatusControls(modal){
     '<button type="button" class="sss-lib__mstatusBtn is-obsessed" data-reaction-option="obsessed">obsessed</button>',
     '<button type="button" class="sss-lib__mstatusBtn is-liked" data-reaction-option="liked_it">liked it</button>',
     '<button type="button" class="sss-lib__mstatusBtn is-notforme" data-reaction-option="not_for_me">not for me</button>',
+    '</div>',
+    '</div>',
+    '<div class="sss-lib__mreaderRating" data-modal-rating-controls>',
+    '<div class="sss-lib__mstatusLabel">your rating</div>',
+    '<div class="sss-lib__mstarButtons" role="radiogroup" aria-label="rate this book">',
+    '<button type="button" class="sss-lib__mstarBtn" data-rating-option="1" aria-label="rate 1 star" aria-checked="false" role="radio">★</button>',
+    '<button type="button" class="sss-lib__mstarBtn" data-rating-option="2" aria-label="rate 2 stars" aria-checked="false" role="radio">★</button>',
+    '<button type="button" class="sss-lib__mstarBtn" data-rating-option="3" aria-label="rate 3 stars" aria-checked="false" role="radio">★</button>',
+    '<button type="button" class="sss-lib__mstarBtn" data-rating-option="4" aria-label="rate 4 stars" aria-checked="false" role="radio">★</button>',
+    '<button type="button" class="sss-lib__mstarBtn" data-rating-option="5" aria-label="rate 5 stars" aria-checked="false" role="radio">★</button>',
+    '</div>',
+    '<div class="sss-lib__mratingNote" data-modal-rating-note>rating marks it read and saves it to your bookshelf.</div>',
     '</div>'
   ].join('');
 
@@ -740,6 +918,26 @@ function ensureModalStatusControls(modal){
     });
   });
 
+  controls.querySelectorAll('[data-rating-option]').forEach(function(button){
+    button.addEventListener('click', function(){
+      var modalBook = modal.__currentBook;
+      if (!modalBook) return;
+
+      var nextRating = parseInt(button.getAttribute('data-rating-option') || '0', 10);
+      if (!(nextRating >= 1 && nextRating <= 5)) return;
+
+      setBookStatus(modalBook, 'read');
+      setBookRating(modalBook, nextRating);
+      ensureBookOnShelf(modalBook);
+      syncBookStatusUI();
+      document.querySelectorAll('.sss-lib__madeForYou').forEach(function(mfyRoot){
+        if (typeof mfyRoot.__refreshMadeForYou === 'function'){
+          mfyRoot.__refreshMadeForYou();
+        }
+      });
+    });
+  });
+
   return controls;
 }
 
@@ -755,6 +953,8 @@ function renderModalBookStatus(modal, bookData){
     : (coverWrap ? coverWrap.querySelector('[data-book-status-ribbon]') : null);
   var status = getBookStatus(bookData);
   var meta = getBookStatusMeta(status);
+  var rating = getBookRating(bookData);
+  applyRatingStamp(coverFrame || coverWrap, rating);
 
   if (!status){
     if (ribbon) ribbon.remove();
@@ -782,6 +982,20 @@ function renderModalBookStatus(modal, bookData){
     var buttonReaction = button.getAttribute('data-reaction-option');
     button.classList.toggle('is-active', buttonReaction === reaction);
   });
+
+  controls.querySelectorAll('[data-rating-option]').forEach(function(button){
+    var buttonRating = parseInt(button.getAttribute('data-rating-option') || '0', 10);
+    var active = rating >= buttonRating;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-checked', rating === buttonRating ? 'true' : 'false');
+  });
+
+  var ratingNote = controls.querySelector('[data-modal-rating-note]');
+  if (ratingNote){
+    ratingNote.textContent = rating
+      ? rating + '/5 saved. this book is marked read.'
+      : 'rating marks it read and saves it to your bookshelf.';
+  }
 }
 
 function syncBookStatusUI(){
@@ -1847,7 +2061,7 @@ if (seriesEl){
 var slug = (data.series || '').toLowerCase().trim();
     var url = slug ? "/series/" + encodeURIComponent(slug) + "/" : "#";
 
-    var name = data.seriesName ? data.seriesName + " series →" : "";
+    var name = data.seriesName ? bbbSeriesDisplayLabel(data.seriesName) + " →" : "";
 
     if (name){
       if (seriesEl.tagName && seriesEl.tagName.toLowerCase() === 'a') {
@@ -3170,7 +3384,7 @@ function initMadeForYou(){
   if (!dataEl || !root) return;
 
   var storageKey = 'sssMadeForYouProfile';
-  var questionsOrder = ['name', 'craving', 'payoff', 'boyfriend_hook', 'boyfriend_dynamic', 'theme'];
+  var questionsOrder = ['name', 'craving', 'favorite_trope', 'spice_dial', 'theme'];
   var row = document.getElementById('sssMadeForYouRow');
   var matchBookEl = document.getElementById('sssMfyMatchBook');
   var boyfriendKicker = document.getElementById('sssMfyBoyfriendKicker');
@@ -3241,6 +3455,13 @@ function initMadeForYou(){
   var favoriteBookEcho = document.getElementById('sssMfyFavoriteBookEcho');
   var favoriteBookPreview = document.getElementById('sssMfyFavoriteBookPreview');
   var favoriteSummary = document.getElementById('sssMfyFavoriteSummary');
+  var dashboardSpice = document.getElementById('sssMfyDashboardSpice');
+  var dashboardSpiceLabel = document.getElementById('sssMfyDashboardSpiceLabel');
+  var dashboardReaderType = document.getElementById('sssMfyDashboardReaderType');
+  var dashboardReaderSignal = document.getElementById('sssMfyDashboardReaderSignal');
+  var dashboardTrope = document.getElementById('sssMfyDashboardTrope');
+  var dashboardTheme = document.getElementById('sssMfyDashboardTheme');
+  var dashboardThemeSignal = document.getElementById('sssMfyDashboardThemeSignal');
   var quoteCard = document.getElementById('sssMfyQuoteCard');
   var quoteText = document.getElementById('sssMfyQuoteText');
   var quoteSource = document.getElementById('sssMfyQuoteSource');
@@ -3272,9 +3493,8 @@ function initMadeForYou(){
 
   var answerGroups = {
     craving: {},
-    payoff: {},
-    boyfriend_hook: {},
-    boyfriend_dynamic: {},
+    favorite_trope: {},
+    spice_dial: {},
     theme: {}
   };
 
@@ -3487,6 +3707,46 @@ function initMadeForYou(){
   }
 
   var cravingProfiles = {
+    cozy: {
+      title: 'you are in your soft landing era',
+      body: 'you want comfort, sweetness, and romance that feels warm without going flat.',
+      tropeBoosts: ['friends to lovers', 'small town romance', 'grumpy sunshine', 'healing', 'comfort'],
+      shelfBoosts: ['contemporary romance', 'small town romance'],
+      boyfriendBoosts: ['sweetheart', 'athlete with heart', 'cold grump'],
+      stats: { yearning: 1, damage: 1 }
+    },
+    spicy: {
+      title: 'you want chaos with heat on it',
+      body: 'you are here for banter, bad decisions, sharp chemistry, and the kind of page-turning that feels a little reckless.',
+      tropeBoosts: ['enemies to lovers', 'forced proximity', 'forbidden romance', 'workplace romance'],
+      shelfBoosts: ['sports romance', 'dark romance', 'contemporary romance'],
+      boyfriendBoosts: ['arrogant asshole', 'bully', 'athlete with heart', 'mafia boss'],
+      stats: { tension: 2, spice: 2 }
+    },
+    dark: {
+      title: 'you are choosing the pretty bad idea',
+      body: 'you want intensity, obsession, and romance with enough danger to make the devotion feel impossible to ignore.',
+      tropeBoosts: ['dark romance', 'morally gray', 'touch her and die', 'obsession', 'forbidden romance'],
+      shelfBoosts: ['dark romance', 'gothic romance', 'romantasy'],
+      boyfriendBoosts: ['morally gray villain', 'mafia boss', 'stalker', 'obsessive protector'],
+      stats: { darkness: 2, tension: 2 }
+    },
+    slowburn: {
+      title: 'you want the almost-touch to do damage',
+      body: 'you like glances, restraint, tension that stretches, and payoff that earns every single page.',
+      tropeBoosts: ['slow burn', 'yearning', 'forced proximity', 'grumpy sunshine', 'second chance'],
+      shelfBoosts: ['sports romance', 'contemporary romance', 'romantasy'],
+      boyfriendBoosts: ['cold grump', 'emotionally unavailable man', 'academic rival', 'tortured prince'],
+      stats: { tension: 2, yearning: 2 }
+    },
+    surprise: {
+      title: 'you are letting the shelf choose violence',
+      body: 'you want the dashboard to read the room and hand you whatever feels most likely to hook you next.',
+      tropeBoosts: ['enemies to lovers', 'slow burn', 'forced proximity', 'second chance', 'forbidden romance'],
+      shelfBoosts: ['sports romance', 'contemporary romance', 'romantasy', 'dark romance'],
+      boyfriendBoosts: ['academic rival', 'athlete with heart', 'cold grump', 'morally gray villain'],
+      stats: { tension: 1, yearning: 1, spice: 1 }
+    },
     slow_ache: {
       title: 'you are here for yearning that ruins your peace',
       body: 'you like tension that stretches, glances that linger, and romance that takes its sweet time before it wrecks you.',
@@ -3535,6 +3795,21 @@ function initMadeForYou(){
     soft_after_storm: { tropeBoosts: ['healing', 'comfort'], stats: { damage: 1, yearning: 1 } },
     plot_addiction: { shelfBoosts: ['romantasy', 'sports romance'], stats: { tension: 1, darkness: 1 } },
     illegal_chemistry: { tropeBoosts: ['forbidden romance', 'enemies to lovers'], stats: { spice: 2 } }
+  };
+
+  var favoriteTropeProfiles = {
+    'enemies to lovers': { tropeBoosts: ['enemies to lovers', 'rivals to lovers', 'banter'], boyfriendBoosts: ['academic rival', 'arrogant asshole'], stats: { tension: 1 } },
+    'second chance': { tropeBoosts: ['second chance', 'angst', 'yearning'], boyfriendBoosts: ['emotionally unavailable man', 'tortured prince'], stats: { damage: 1, yearning: 1 } },
+    'forced proximity': { tropeBoosts: ['forced proximity', 'one bed', 'only one bed'], boyfriendBoosts: ['cold grump', 'academic rival'], stats: { tension: 1 } },
+    'fake dating': { tropeBoosts: ['fake dating', 'fake relationship', 'marriage of convenience'], boyfriendBoosts: ['sweetheart', 'arrogant asshole'], stats: { yearning: 1 } },
+    'grumpy sunshine': { tropeBoosts: ['grumpy sunshine', 'slow burn', 'forced proximity'], boyfriendBoosts: ['cold grump', 'sweetheart'], stats: { yearning: 1 } },
+    'sports romance': { tropeBoosts: ['sports romance', 'teammates', 'friends to lovers'], shelfBoosts: ['sports romance'], boyfriendBoosts: ['athlete with heart'], stats: { tension: 1 } },
+    'dark romance': { tropeBoosts: ['dark romance', 'morally gray', 'touch her and die', 'obsession'], shelfBoosts: ['dark romance'], boyfriendBoosts: ['morally gray villain', 'mafia boss', 'stalker'], stats: { darkness: 2 } },
+    romantasy: { tropeBoosts: ['fantasy romance', 'romantasy', 'magic', 'fated mates'], shelfBoosts: ['romantasy', 'fantasy romance'], boyfriendBoosts: ['tortured prince', 'morally gray villain'], stats: { yearning: 1 } },
+    'age gap': { tropeBoosts: ['age gap', 'forbidden romance'], boyfriendBoosts: ['emotionally unavailable man', 'mafia boss'], stats: { tension: 1 } },
+    'forbidden romance': { tropeBoosts: ['forbidden romance', 'forbidden love', 'angst'], boyfriendBoosts: ['morally gray villain', 'mafia boss', 'arrogant asshole'], stats: { tension: 1, spice: 1 } },
+    'workplace romance': { tropeBoosts: ['workplace romance', 'office romance', 'enemies to lovers'], boyfriendBoosts: ['arrogant asshole', 'academic rival'], stats: { tension: 1 } },
+    'small town romance': { tropeBoosts: ['small town romance', 'friends to lovers', 'healing'], shelfBoosts: ['small town romance'], boyfriendBoosts: ['sweetheart', 'athlete with heart'], stats: { yearning: 1 } }
   };
 
   var fictionalManProfiles = {
@@ -3626,6 +3901,11 @@ function initMadeForYou(){
   };
 
   var fallingEmotions = {
+    cozy: 'reader breakdown: cozy, curated, and only a little emotionally unsafe.',
+    spicy: 'reader breakdown: chemistry first, consequences eventually.',
+    dark: 'reader breakdown: danger, devotion, and one questionable choice.',
+    slowburn: 'reader breakdown: yearning at a simmer until it finally ruins you.',
+    surprise: 'reader breakdown: letting the shelf choose the plot today.',
     slow_ache: 'reader breakdown: stomach-drop longing and slow-motion devastation.',
     messy_obsession: 'reader breakdown: pulse-up obsession and one very bad decision.',
     comfort_devotion: 'reader breakdown: safety first, then the ache sneaks in.',
@@ -3636,13 +3916,18 @@ function initMadeForYou(){
   var tokenLabels = {
     theme: {
       dark_hearts: 'annotated in black tabs',
-      obsession_red: 'dog-eared after midnight',
-      rose_ribbon: 'pressed petals in chapter ten',
-      stormy_blue: 'margin notes in the rain',
-      pearl_white: 'cream dust jacket energy',
+      obsession_red: 'golden hour',
+      rose_ribbon: 'rose garden',
+      stormy_blue: 'midnight library',
+      pearl_white: 'sage & honey',
       royal_violet: 'underlined in velvet ink'
     },
     craving: {
+      cozy: 'cozy & sweet',
+      spicy: 'spicy chaos',
+      dark: 'dark & intense',
+      slowburn: 'slow burn only',
+      surprise: 'surprise me',
       slow_ache: 'slow burn',
       messy_obsession: 'obsession / stalker',
       comfort_devotion: 'friends to lovers',
@@ -3655,6 +3940,27 @@ function initMadeForYou(){
       soft_after_storm: 'softness after the storm',
       plot_addiction: 'plot that eats your brain',
       illegal_chemistry: 'chemistry so sharp it hurts'
+    },
+    favorite_trope: {
+      'enemies to lovers': 'enemies to lovers',
+      'second chance': 'second chance',
+      'forced proximity': 'forced proximity',
+      'fake dating': 'fake dating',
+      'grumpy sunshine': 'grumpy x sunshine',
+      'sports romance': 'sports romance',
+      'dark romance': 'dark romance',
+      romantasy: 'fantasy romance',
+      'age gap': 'age gap',
+      'forbidden romance': 'forbidden love',
+      'workplace romance': 'workplace romance',
+      'small town romance': 'small town romance'
+    },
+    spice_dial: {
+      soft_open_door: '🌶 • barely sweet',
+      some_heat: '🌶🌶 • warm',
+      balanced: '🌶🌶🌶 • medium',
+      high_spice: '🌶🌶🌶🌶 • hot',
+      wreck_me: '🌶🌶🌶🌶🌶 • burn it'
     },
     fictional_man: {
       academic_rival: 'academic rival',
@@ -3687,6 +3993,9 @@ function initMadeForYou(){
   answerButtons.forEach(function(button){
     var question = button.getAttribute('data-mfy-answer');
     var value = button.getAttribute('data-value');
+    if (!answerGroups[question]){
+      answerGroups[question] = {};
+    }
     answerGroups[question][value] = button;
 
     button.addEventListener('click', function(){
@@ -3781,7 +4090,10 @@ function initMadeForYou(){
       } else {
         draftHardNos.push(value);
       }
+      profile.hard_nos = draftHardNos.slice();
+      saveProfile(profile);
       syncAddonUI();
+      renderMadeForYou();
     });
   });
 
@@ -4028,6 +4340,7 @@ function initMadeForYou(){
     var theme = getThemeProfile();
     var craving = cravingProfiles[profile.craving];
     var payoff = payoffProfiles[profile.payoff];
+    var favoriteTrope = favoriteTropeProfiles[profile.favorite_trope];
     var man = fictionalManProfiles[profile.fictional_man];
     var bookTropes = (book.tropes || []).map(normalize);
     var shelfName = normalize(book.shelf);
@@ -4061,6 +4374,19 @@ function initMadeForYou(){
         if (shelfName === normalize(shelf)) score += 2;
       });
       score += statScore(book, payoff.stats);
+    }
+
+    if (favoriteTrope){
+      (favoriteTrope.tropeBoosts || []).forEach(function(trope){
+        if (bookTropes.indexOf(normalize(trope)) > -1) score += 4;
+      });
+      (favoriteTrope.shelfBoosts || []).forEach(function(shelf){
+        if (shelfName === normalize(shelf)) score += 3;
+      });
+      (favoriteTrope.boyfriendBoosts || []).forEach(function(type){
+        if (boyfriendType === canonicalBoyfriendType(type)) score += 2;
+      });
+      score += statScore(book, favoriteTrope.stats);
     }
 
     if (man){
@@ -4102,6 +4428,10 @@ function initMadeForYou(){
       if (profile.hard_nos.indexOf('secret baby') > -1 && bookTropes.indexOf('secret baby') > -1) score -= 20;
       if (profile.hard_nos.indexOf('why choose') > -1 && bookTropes.indexOf('why choose') > -1) score -= 20;
       if (profile.hard_nos.indexOf('friends with benefits') > -1 && bookTropes.indexOf('friends with benefits') > -1) score -= 20;
+      if (profile.hard_nos.indexOf('cliffhanger') > -1 && bookTropes.indexOf('cliffhanger') > -1) score -= 20;
+      if (profile.hard_nos.indexOf('dark romance') > -1 && (bookTropes.indexOf('dark romance') > -1 || shelfName === 'dark romance')) score -= 20;
+      if (profile.hard_nos.indexOf('instalove') > -1 && (bookTropes.indexOf('instalove') > -1 || bookTropes.indexOf('insta love') > -1)) score -= 20;
+      if (profile.hard_nos.indexOf('long series') > -1 && bookTropes.indexOf('long series') > -1) score -= 20;
     }
 
     if (profile.favorite_book && profile.favorite_book === book.handle) score += 8;
@@ -4150,6 +4480,7 @@ function initMadeForYou(){
     var theme = getThemeProfile();
     var craving = cravingProfiles[profile.craving];
     var payoff = payoffProfiles[profile.payoff];
+    var favoriteTrope = favoriteTropeProfiles[profile.favorite_trope];
     var man = fictionalManProfiles[profile.fictional_man];
     var bookTropes = (book.tropes || []).map(normalize);
     var shelfName = normalize(book.shelf);
@@ -4179,6 +4510,19 @@ function initMadeForYou(){
         if (shelfName === normalize(shelf)) score += 2;
       });
       score += statScore(book, payoff.stats);
+    }
+
+    if (favoriteTrope){
+      (favoriteTrope.tropeBoosts || []).forEach(function(trope){
+        if (bookTropes.indexOf(normalize(trope)) > -1) score += 4;
+      });
+      (favoriteTrope.shelfBoosts || []).forEach(function(shelf){
+        if (shelfName === normalize(shelf)) score += 3;
+      });
+      (favoriteTrope.boyfriendBoosts || []).forEach(function(type){
+        if (boyfriendType === canonicalBoyfriendType(type)) score += 2;
+      });
+      score += statScore(book, favoriteTrope.stats);
     }
 
     if (man){
@@ -4255,14 +4599,19 @@ function initMadeForYou(){
     var dynamic = nextProfile.boyfriend_dynamic;
     var scores = {};
 
-    if (!hook || !dynamic){
-      return canonicalBoyfriendType(nextProfile.fictional_man);
+    if (hook && boyfriendQuestionWeights.boyfriend_hook[hook]){
+      applyTypeWeights(scores, boyfriendQuestionWeights.boyfriend_hook[hook], 1.2);
+    }
+    if (dynamic && boyfriendQuestionWeights.boyfriend_dynamic[dynamic]){
+      applyTypeWeights(scores, boyfriendQuestionWeights.boyfriend_dynamic[dynamic], 1.1);
     }
 
-    applyTypeWeights(scores, boyfriendQuestionWeights.boyfriend_hook[hook], 1.2);
-    applyTypeWeights(scores, boyfriendQuestionWeights.boyfriend_dynamic[dynamic], 1.1);
-
     applyTypeWeights(scores, {
+      cozy: { sweetheart: 3, athlete_with_heart: 2, cold_grump: 1 },
+      spicy: { arrogant_asshole: 3, bully: 2, athlete_with_heart: 2, mafia_boss: 1 },
+      dark: { morally_gray_villain: 3, mafia_boss: 3, stalker: 2, obsessive_protector: 2 },
+      slowburn: { cold_grump: 3, emotionally_unavailable_man: 2, academic_rival: 2, tortured_prince: 2 },
+      surprise: { academic_rival: 1, athlete_with_heart: 1, cold_grump: 1, morally_gray_villain: 1 },
       slow_ache: { cold_grump: 2, emotionally_unavailable_man: 2, tortured_prince: 2, academic_rival: 1 },
       messy_obsession: { stalker: 3, obsessive_protector: 2, morally_gray_villain: 2, mafia_boss: 2 },
       comfort_devotion: { sweetheart: 3, athlete_with_heart: 2, obsessive_protector: 1 },
@@ -4278,9 +4627,25 @@ function initMadeForYou(){
       illegal_chemistry: { arrogant_asshole: 2, morally_gray_villain: 2, mafia_boss: 2, stalker: 1 }
     }[nextProfile.payoff], 1);
 
-    return Object.keys(boyfriendTypeAliases).sort(function(a, b){
+    applyTypeWeights(scores, {
+      'enemies to lovers': { academic_rival: 3, arrogant_asshole: 2, bully: 1 },
+      'second chance': { emotionally_unavailable_man: 3, tortured_prince: 2, sweetheart: 1 },
+      'forced proximity': { cold_grump: 3, academic_rival: 2, obsessive_protector: 1 },
+      'fake dating': { sweetheart: 2, arrogant_asshole: 2, athlete_with_heart: 1 },
+      'grumpy sunshine': { cold_grump: 3, sweetheart: 1 },
+      'sports romance': { athlete_with_heart: 4 },
+      'dark romance': { morally_gray_villain: 3, mafia_boss: 3, stalker: 2 },
+      romantasy: { tortured_prince: 3, morally_gray_villain: 2 },
+      'age gap': { emotionally_unavailable_man: 2, mafia_boss: 2 },
+      'forbidden romance': { morally_gray_villain: 3, mafia_boss: 2, arrogant_asshole: 1 },
+      'workplace romance': { arrogant_asshole: 3, academic_rival: 2 },
+      'small town romance': { sweetheart: 3, athlete_with_heart: 2 }
+    }[nextProfile.favorite_trope], 1.2);
+
+    var sortedTypes = Object.keys(boyfriendTypeAliases).sort(function(a, b){
       return (scores[b] || 0) - (scores[a] || 0);
-    })[0] || '';
+    });
+    return scores[sortedTypes[0]] ? sortedTypes[0] : canonicalBoyfriendType(nextProfile.fictional_man);
   }
 
   function getBookByHandle(handle){
@@ -4292,30 +4657,27 @@ function initMadeForYou(){
 
   function buildReaderCore(){
     var craving = cravingProfiles[profile.craving];
-    var payoff = payoffProfiles[profile.payoff];
     var man = fictionalManProfiles[profile.fictional_man];
     var theme = getThemeProfile();
     var titleParts = [];
-    var payoffLine = '';
+    var favoriteTropeLabel = tokenLabels.favorite_trope[profile.favorite_trope] || profile.favorite_trope || '';
+    var spiceLabel = tokenLabels.spice_dial[profile.spice_dial] || '';
 
-    if (profile.craving === 'slow_ache') titleParts.push('slow ache');
+    if (profile.craving === 'cozy' || profile.craving === 'comfort_devotion') titleParts.push('soft devotion');
+    if (profile.craving === 'spicy' || profile.craving === 'chaos_chemistry') titleParts.push('sharp chemistry');
+    if (profile.craving === 'dark' || profile.craving === 'dark_dangerous') titleParts.push('dangerous devotion');
+    if (profile.craving === 'slowburn' || profile.craving === 'slow_ache') titleParts.push('slow ache');
+    if (profile.craving === 'surprise') titleParts.push('curated chaos');
     if (profile.craving === 'messy_obsession') titleParts.push('messy obsession');
-    if (profile.craving === 'comfort_devotion') titleParts.push('soft devotion');
-    if (profile.craving === 'chaos_chemistry') titleParts.push('sharp chemistry');
-    if (profile.craving === 'dark_dangerous') titleParts.push('danger');
-
-    if (profile.payoff === 'long_tension') payoffLine = 'you want the tension stretched out.';
-    if (profile.payoff === 'emotional_devastation') payoffLine = 'you want it to hurt before it heals.';
-    if (profile.payoff === 'soft_after_storm') payoffLine = 'you want the softness after the wreckage.';
-    if (profile.payoff === 'plot_addiction') payoffLine = 'you need plot and chemistry pulling at the same time.';
-    if (profile.payoff === 'illegal_chemistry') payoffLine = 'you want chemistry with bite.';
+    if (favoriteTropeLabel) titleParts.push(favoriteTropeLabel);
 
     return {
       title: titleParts.length ? ('you are built for ' + titleParts.join(' + ')) : 'waiting on your answers',
       emotion: fallingEmotions[profile.craving] || 'reader breakdown: loading',
       body: [
         craving ? craving.body : '',
-        payoffLine,
+        favoriteTropeLabel ? ('your top trope lane is ' + favoriteTropeLabel + '.') : '',
+        spiceLabel ? ('your spice setting is ' + spiceLabel + '.') : '',
         man ? ('your weakness is still ' + tokenLabels.fictional_man[profile.fictional_man] + '.') : '',
         theme.key && tokenLabels.theme[theme.key] ? ('the whole thing is wrapped in ' + tokenLabels.theme[theme.key] + ' energy.') : ''
       ].filter(Boolean).slice(0, 2).join(' '),
@@ -4327,6 +4689,7 @@ function initMadeForYou(){
     var score = 0;
     var craving = cravingProfiles[profile.craving];
     var payoff = payoffProfiles[profile.payoff];
+    var favoriteTrope = favoriteTropeProfiles[profile.favorite_trope];
     var man = fictionalManProfiles[profile.fictional_man];
     var boyfriendType = canonicalBoyfriendType(book && book.boyfriend_type);
     var bookTropes = (book && book.tropes || []).map(normalize);
@@ -4361,6 +4724,15 @@ function initMadeForYou(){
       });
     }
 
+    if (favoriteTrope){
+      (favoriteTrope.boyfriendBoosts || []).forEach(function(type){
+        if (boyfriendType === canonicalBoyfriendType(type)) score += 7;
+      });
+      (favoriteTrope.tropeBoosts || []).forEach(function(trope){
+        if (bookTropes.indexOf(normalize(trope)) > -1) score += 2;
+      });
+    }
+
     return score;
   }
 
@@ -4369,6 +4741,10 @@ function initMadeForYou(){
     var readerCore = buildReaderCore();
     var man = fictionalManProfiles[profile.fictional_man];
     var firstName = String(profile.name || '').trim();
+    var bookshelfPattern = getBookshelfPattern();
+    var favoriteTropeLabel = tokenLabels.favorite_trope[profile.favorite_trope] || profile.favorite_trope || 'waiting';
+    var spiceLabel = tokenLabels.spice_dial[profile.spice_dial] || 'waiting';
+    var themeLabel = tokenLabels.theme[getThemeProfile().key] || 'unthemed';
 
     applyThemeProfile();
 
@@ -4391,6 +4767,28 @@ function initMadeForYou(){
 
     if (themeTokens){
       themeTokens.innerHTML = '';
+    }
+
+    if (dashboardSpice){
+      dashboardSpice.textContent = spiceLabel;
+    }
+    if (dashboardSpiceLabel){
+      dashboardSpiceLabel.textContent = profile.spice_dial ? 'saved spice setting' : 'choose your heat';
+    }
+    if (dashboardReaderType){
+      dashboardReaderType.textContent = bookshelfPattern.title || 'unread';
+    }
+    if (dashboardReaderSignal){
+      dashboardReaderSignal.textContent = bookshelfPattern.body || 'taste profile pending';
+    }
+    if (dashboardTrope){
+      dashboardTrope.textContent = favoriteTropeLabel;
+    }
+    if (dashboardTheme){
+      dashboardTheme.textContent = themeLabel;
+    }
+    if (dashboardThemeSignal){
+      dashboardThemeSignal.textContent = profile.theme ? 'dashboard aesthetic' : 'pick your colors';
     }
 
     applyModuleCopy();
@@ -4505,29 +4903,155 @@ function initMadeForYou(){
     return ordered;
   }
 
+  var readerTypeRules = {
+    'slow burn': {
+      title: 'the patient one',
+      body: 'patient in fiction. chaotic in real life. lives for the almost-moment. deep down just wants to be perceived that carefully by someone.',
+      flag: 'has cried at a forehead touch before. no notes.',
+      aliases: ['slow burn', 'yearning']
+    },
+    'forced proximity': {
+      title: 'the one-bed truther',
+      body: 'loves the idea that love finds you, not the other way around. probably romanticises being stuck somewhere with someone.',
+      flag: 'has thought "if only we were snowed in" about someone who did not deserve it.',
+      aliases: ['forced proximity', 'one bed', 'only one bed']
+    },
+    'fake dating': {
+      title: 'the plausible deniability fan',
+      body: 'comes for the fake intimacy that accidentally becomes real. that is the only kind of love story that makes sense to them and they know it.',
+      flag: 'has entertained a fake-dating plan. has not acted on it. yet.',
+      aliases: ['fake dating', 'fake relationship', 'marriage of convenience']
+    },
+    'second chance': {
+      title: 'the door-holder',
+      body: 'believes in people maybe a little too much. reads this trope for permission to try again, or to feel okay about not.',
+      flag: 'definitely has an unsent message somewhere.',
+      aliases: ['second chance', 'exes to lovers']
+    },
+    'sports romance': {
+      title: 'here for the man, not the sport',
+      body: 'cannot name a single real player. is here because athletes are written with a very specific kind of devotion: the dedication, the discipline, the biceps.',
+      flag: 'has very strong opinions about ryan shay.',
+      aliases: ['sports romance', 'sports', 'hockey romance', 'football romance', 'baseball romance']
+    },
+    'grumpy sunshine': {
+      title: 'secretly both',
+      body: 'either brings light into difficult spaces and gets called too much, or is the grumpy one who needs someone to soften them and will not admit it.',
+      flag: 'they are grumpy about being assigned sunshine.',
+      aliases: ['grumpy sunshine', 'grumpy / sunshine', 'grumpy/sunshine', 'grumpy x sunshine']
+    },
+    'enemies to lovers': {
+      title: 'loves the problem',
+      body: 'does not want easy. wants someone who challenges them and then loves them so hard it breaks the whole thing open. the argument is the intimacy.',
+      flag: 'has confused conflict with chemistry at least once. this trope did not help.',
+      aliases: ['enemies to lovers', 'rivals to lovers', 'hate to love']
+    },
+    'forbidden romance': {
+      title: 'the rule is the problem, not them',
+      body: 'not here for easy love. wants the kind that costs something. boss/employee, rival families, that is the only love that feels real to them.',
+      flag: 'deeply committed to the idea that circumstance is the only obstacle here.',
+      aliases: ['forbidden romance', 'forbidden love', 'forbidden']
+    },
+    'dark romance': {
+      title: 'the villain is the love interest',
+      body: 'wants to feel something, not be told what they are allowed to feel. they are not advocating. they are escaping. and they do not need to explain that to anyone.',
+      flag: 'has a type in fiction they would absolutely never date in real life.',
+      aliases: ['dark romance', 'dark', 'stalker romance', 'stalker', 'touch her and die', 'villain gets the girl']
+    },
+    'mafia romance': {
+      title: 'the suit is doing something to them',
+      body: 'not about crime. it is about devotion without limit. someone who would destroy the world for this one person. the protection. the contradiction.',
+      flag: 'has a ranked list of fictional dons. it is detailed.',
+      aliases: ['mafia romance', 'mafia', 'bratva', 'cartel romance']
+    },
+    'bully romance': {
+      title: 'obsession decoder',
+      body: 'does not want to be bullied. wants to be the person someone hates so specifically it reads as obsession. that is not cruelty. that is being perceived. completely.',
+      flag: 'would describe their ideal relationship as "he hates me in a way that feels personal."',
+      aliases: ['bully romance', 'bully', 'bully romance books']
+    },
+    'morally gray mmc': {
+      title: 'the problem is the point',
+      body: 'tired of being told who to root for. wants a man who does the wrong thing for the right reason, or the wrong reason with extremely good hair.',
+      flag: 'their book boyfriend list reads like a restraining order waiting to happen. they are fine.',
+      aliases: ['morally gray mmc', 'morally gray', 'morally grey', 'morally grey mmc', 'antihero']
+    },
+    'age gap': {
+      title: 'experience is a vibe',
+      body: 'here for the dynamic. the knowing. someone who has done something with their life loving someone still becoming. experience reading as devotion.',
+      flag: 'googles age gaps in fictional couples. then googles it again.',
+      aliases: ['age gap', 'age-gap']
+    },
+    'reverse harem': {
+      title: 'why choose is not a question',
+      body: 'less about the fantasy of many, more about the fantasy of being completely loved by multiple people who just accept all of you. the logistics are not the point.',
+      flag: 'finds monogamy limitations in fiction genuinely boring at this point.',
+      aliases: ['reverse harem', 'why choose', 'poly romance']
+    },
+    'instalove': {
+      title: 'vibes over evidence',
+      body: 'when it is right it is right. that is the whole philosophy. refuses to feel bad about wanting to skip to the good part.',
+      flag: 'has said "i just knew" about someone they knew for four days.',
+      aliases: ['instalove', 'insta love', 'love at first sight']
+    },
+    'paranormal monster romance': {
+      title: 'not here to explain herself',
+      body: 'has simply decided that fictional men available in reality are not meeting the brief. the spec: dangerous, ancient, non-human, completely devoted to one woman specifically.',
+      flag: 'claws are negotiable. the obsession is not.',
+      aliases: ['paranormal / monster romance', 'paranormal romance', 'monster romance', 'monster', 'vampire romance', 'shifter romance']
+    },
+    'bodyguard protector': {
+      title: 'safety is the love language',
+      body: 'wants to feel safe in a specific, consuming, slightly-overwhelming way. someone who would rearrange the world so nothing bad reaches her. that is it.',
+      flag: 'has asked "but would he keep me safe" as a genuine compatibility metric.',
+      aliases: ['bodyguard / protector', 'bodyguard', 'protector', 'protector romance', 'bodyguard romance']
+    },
+    'he falls first': {
+      title: 'watching him spiral is the plot',
+      body: 'needs the man to be completely undone before she knows it. wants to watch the exact moment it shifts, when she becomes the whole thing for him and she is still just getting there.',
+      flag: 'has a list of scenes where the man realises first. it is long.',
+      aliases: ['he falls first', 'he falls first romance', 'hero falls first', 'he falls first/her falls harder']
+    }
+  };
+
+  function normalizeReaderTypeTrope(value){
+    return normalize(String(value || '').replace(/[\/_-]+/g, ' ').replace(/\s+x\s+/g, ' '));
+  }
+
+  function readerTypeRuleKeyForTrope(trope){
+    var normalized = normalizeReaderTypeTrope(trope);
+    var match = '';
+    if (!normalized) return '';
+
+    Object.keys(readerTypeRules).some(function(ruleKey){
+      var aliases = [ruleKey].concat(readerTypeRules[ruleKey].aliases || []);
+      return aliases.some(function(alias){
+        var aliasKey = normalizeReaderTypeTrope(alias);
+        if (!aliasKey) return false;
+        if (normalized === aliasKey || normalized.indexOf(aliasKey) > -1 || aliasKey.indexOf(normalized) > -1){
+          match = ruleKey;
+          return true;
+        }
+        return false;
+      });
+    });
+
+    return match || normalized;
+  }
+
   function getBookshelfPattern(sourceBooks){
     var insightBooks = Array.isArray(sourceBooks) ? sourceBooks : getShelfInsightBooks();
     var tropeCounts = {};
-    var shelfCounts = {};
-    var stats = { spice: 0, tension: 0, damage: 0, darkness: 0, yearning: 0 };
 
     insightBooks.forEach(function(book){
+      var status = getBookStatus({ handle: book.handle, title: book.title });
+      var weight = status === 'read' ? 5 : status === 'reading' ? 4 : status === 'tbr' ? 3 : status === 'dnf' ? 1 : 2;
+
       (book.tropes || []).forEach(function(trope){
-        var key = normalize(trope);
+        var key = readerTypeRuleKeyForTrope(trope);
         if (!key) return;
-        tropeCounts[key] = (tropeCounts[key] || 0) + 1;
+        tropeCounts[key] = (tropeCounts[key] || 0) + weight;
       });
-
-      var shelfKey = normalize(book.shelf);
-      if (shelfKey){
-        shelfCounts[shelfKey] = (shelfCounts[shelfKey] || 0) + 1;
-      }
-
-      stats.spice += Number(book.spice || 0);
-      stats.tension += Number(book.tension || 0);
-      stats.damage += Number(book.damage || 0);
-      stats.darkness += Number(book.darkness || 0);
-      stats.yearning += Number(book.yearning || 0);
     });
 
     var topTropes = Object.keys(tropeCounts).sort(function(a, b){
@@ -4536,47 +5060,12 @@ function initMadeForYou(){
       }
       return tropeCounts[b] - tropeCounts[a];
     });
-    var topShelves = Object.keys(shelfCounts).sort(function(a, b){
-      return shelfCounts[b] - shelfCounts[a];
-    });
-    var avg = insightBooks.length ? {
-      spice: stats.spice / insightBooks.length,
-      tension: stats.tension / insightBooks.length,
-      damage: stats.damage / insightBooks.length,
-      darkness: stats.darkness / insightBooks.length,
-      yearning: stats.yearning / insightBooks.length
-    } : stats;
+    var topRule = readerTypeRules[topTropes[0]] || null;
+    var title = topRule ? topRule.title : 'mood-led romance reader';
+    var body = topRule ? topRule.body : 'your shelf is giving a little bit of everything, with mood doing more steering than one fixed trope.';
 
-    var hasTrope = function(names){
-      return names.some(function(name){
-        return tropeCounts[normalize(name)] > 0;
-      });
-    };
-
-    var title = 'your bookshelf has a type';
-    var body = (getThemeProfile().key && shelfCopy[getThemeProfile().key]) ? shelfCopy[getThemeProfile().key] : '';
-
-    if ((avg.tension >= 2 && avg.yearning >= 1.4) || hasTrope(['slow burn', 'yearning', 'grumpy sunshine'])){
-      title = 'you keep choosing tension-first romances';
-      body = 'slow build, withheld feelings, and payoff that takes its time are showing up more than any single trope label.';
-    } else if ((avg.darkness >= 2 && avg.spice >= 2) || hasTrope(['dark romance', 'morally gray', 'obsession', 'stalker', 'villain gets the girl'])){
-      title = 'you lean toward dark devotion and dangerous chemistry';
-      body = 'your finished shelf keeps pulling toward obsession, risk, and romance that feels a little unsafe in the best way.';
-    } else if ((avg.damage >= 1.8 && avg.yearning >= 1.4) || hasTrope(['angst', 'second chance', 'emotional devastation'])){
-      title = 'you like the ache before the payoff';
-      body = 'you are repeatedly choosing books that make the emotional damage part of the appeal, not a side effect.';
-    } else if ((avg.spice >= 2.2 && avg.tension >= 1.8) || hasTrope(['enemies to lovers', 'forbidden romance', 'banter'])){
-      title = 'you keep chasing sharp chemistry';
-      body = 'banter, friction, and immediate pull are doing more work on your shelf than soft comfort reads.';
-    } else if (hasTrope(['friends to lovers', 'healing', 'comfort', 'caretaking']) || topShelves[0] === 'contemporary romance' || topShelves[0] === 'small town romance'){
-      title = 'you come back to devotion with heart';
-      body = 'you keep picking books where tenderness, loyalty, and emotional safety still have enough ache to matter.';
-    } else if (topShelves[0] && (topShelves[0].indexOf('romantasy') > -1 || topShelves[0].indexOf('fantasy') > -1 || hasTrope(['magic', 'fated mates', 'prince']))){
-      title = 'your shelf wants drama with a bigger world';
-      body = 'fantasy stakes, larger-than-life longing, and romantic chaos are shaping your pattern more than plain realism.';
-    } else if (topTropes.length){
-      title = 'your reading pattern is getting clearer';
-      body = 'the strongest repeats right now are ' + topTropes.slice(0, 3).join(', ') + ', which is a much better clue than any one label alone.';
+    if (topRule && topRule.flag){
+      body += ' red flag: ' + topRule.flag;
     }
 
     return {

@@ -53,6 +53,16 @@
   text-transform: lowercase;
 }
 
+.bbb-book-quotes__subtitle {
+  margin: 10px 0 0;
+  color: rgba(246, 246, 246, .78);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.5;
+  text-transform: lowercase;
+}
+
 .sss-qw__feature,
 .sss-qw__gate {
   margin-top: 18px;
@@ -142,10 +152,220 @@
   line-height: 1.5;
 }
 
+.sss-qw__hint {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.sss-qw__hint a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #ff8ac7;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  line-height: 1;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-transform: lowercase;
+  box-shadow: none;
+  transition: color .18s ease, transform .18s ease;
+}
+
+.sss-qw__hint a:hover,
+.sss-qw__hint a:focus-visible {
+  color: #ffd1e6;
+  transform: translateY(-1px);
+}
+
+.sss-qw__hint a:focus-visible {
+  outline: 1px solid rgba(255, 138, 199, .72);
+  outline-offset: 3px;
+}
+
+.sss-qw__hintDivider {
+  width: 1px;
+  height: 12px;
+  background: rgba(255, 138, 199, .34);
+}
+
 .qw-list {
   display: grid;
   gap: 14px;
   margin-top: 14px;
+}
+
+.bbb-book-quotes__next,
+.bbb-book-quotes__explore {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, .1);
+}
+
+.bbb-book-quotes__nextGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.bbb-book-quotes__nextCard {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  min-height: 148px;
+  padding: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 8px;
+  background:
+    radial-gradient(300px 150px at 100% 0%, rgba(255, 138, 199, .13), transparent 70%),
+    rgba(255, 255, 255, .035);
+  color: #f6f6f6;
+  text-decoration: none;
+  transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+}
+
+.bbb-book-quotes__nextCard:hover,
+.bbb-book-quotes__nextCard:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(217, 93, 150, .42);
+  background:
+    radial-gradient(300px 150px at 100% 0%, rgba(255, 138, 199, .18), transparent 70%),
+    rgba(217, 93, 150, .07);
+  box-shadow: 0 16px 32px rgba(217, 93, 150, .12);
+  outline: 0;
+}
+
+.bbb-book-quotes__nextText {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+}
+
+.bbb-book-quotes__nextKicker,
+.bbb-book-quotes__sectionLabel {
+  margin: 0;
+  color: rgba(246, 246, 246, .48);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .05em;
+  line-height: 1.3;
+  text-transform: lowercase;
+}
+
+.bbb-book-quotes__nextText strong {
+  color: #ff8ac7;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: clamp(20px, 2.2vw, 29px);
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1.05;
+  text-transform: lowercase;
+}
+
+.bbb-book-quotes__nextText strong::after {
+  content: " →";
+}
+
+.bbb-book-quotes__nextText span:last-child {
+  max-width: 30ch;
+  color: rgba(246, 246, 246, .66);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.bbb-book-quotes__nextCover {
+  display: block;
+  width: 92px;
+  align-self: center;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 8px;
+  background: #0e0e0e;
+  box-shadow: 0 18px 32px rgba(0, 0, 0, .32);
+}
+
+.bbb-book-quotes__nextCover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform .22s ease, filter .22s ease;
+}
+
+.bbb-book-quotes__nextCard:hover .bbb-book-quotes__nextCover img,
+.bbb-book-quotes__nextCard:focus-visible .bbb-book-quotes__nextCover img {
+  transform: scale(1.025);
+  filter: brightness(1.07);
+}
+
+.bbb-book-quotes__exploreGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 11px;
+}
+
+.bbb-book-quotes__exploreLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .035);
+  color: rgba(246, 246, 246, .74);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-decoration: none;
+  transition: transform .18s ease, border-color .18s ease, background .18s ease, color .18s ease, box-shadow .18s ease;
+}
+
+.bbb-book-quotes__exploreLink:hover,
+.bbb-book-quotes__exploreLink:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(217, 93, 150, .7);
+  background: rgba(217, 93, 150, .1);
+  color: #ff8ac7;
+  box-shadow: 0 10px 22px rgba(217, 93, 150, .1);
+  outline: 0;
+}
+
+.bbb-book-quotes__exploreLink .bbb-custom-emoji {
+  width: 18px !important;
+  height: 18px !important;
+  max-width: 18px !important;
+  max-height: 18px !important;
+  object-fit: contain;
+  flex: 0 0 18px;
+  margin: 0;
+}
+
+.bbb-book-quotes__exploreLink .bbb-custom-emoji--text {
+  font-size: 14px;
+  line-height: 18px;
+  text-align: center;
 }
 
 .qw-item {
@@ -176,6 +396,7 @@
 
 .qw-card {
   display: block;
+  position: relative;
   width: min(760px, 94%);
   border-radius: 18px;
   transition: transform .14s ease, filter .14s ease, box-shadow .18s ease;
@@ -264,6 +485,7 @@
   position: relative;
   z-index: 2;
   display: inline;
+  white-space: pre-line;
   padding: 0 .14em;
   border-radius: 7px;
   box-decoration-break: clone;
@@ -382,6 +604,22 @@
     width: 100%;
   }
 
+  .bbb-book-quotes__nextGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .bbb-book-quotes__nextCard {
+    min-height: 132px;
+  }
+
+  .bbb-book-quotes__nextText strong {
+    font-size: 22px;
+  }
+
+  .bbb-book-quotes__nextCover {
+    width: 82px;
+  }
+
   .qw-paper {
     padding: 14px 14px 12px;
   }
@@ -399,6 +637,7 @@
   .qw-meta {
     margin-top: 9px;
   }
+
 }
 
 @media (prefers-reduced-motion: reduce) {

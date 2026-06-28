@@ -5,30 +5,37 @@
  * @package ByBookishBabeShopifyPort
  */
 
-$menu_items       = bbb_footer_menu_items();
+$menu_sections    = function_exists('bbb_footer_menu_sections') ? bbb_footer_menu_sections() : array();
 $has_social_icons = bbb_footer_has_social_links();
 ?>
 <footer class="footer color-scheme-1 gradient section-footer-padding">
 	<div class="footer__content-top page-width">
 		<div class="footer__blocks-wrapper grid grid--1-col grid--2-col grid--4-col-tablet scroll-trigger animate--slide-in" data-cascade>
-			<div class="footer-block grid__item footer-block--menu scroll-trigger animate--slide-in" data-cascade>
+			<div class="footer-block grid__item footer-block--brand scroll-trigger animate--slide-in" data-cascade>
 				<h2 class="footer-block__heading inline-richtext"><?php echo esc_html('© bybookishbabe'); ?></h2>
-				<ul class="footer-block__details-content list-unstyled">
-					<?php foreach ($menu_items as $item) : ?>
-						<?php
-						$link_class = 'link link--text list-menu__item list-menu__item--link';
-						if (bbb_footer_menu_item_is_active($item)) {
-							$link_class .= ' list-menu__item--active';
-						}
-						?>
-						<li>
-							<a href="<?php echo esc_url($item->url); ?>" class="<?php echo esc_attr($link_class); ?>">
-								<?php echo esc_html($item->title); ?>
-							</a>
-						</li>
-					<?php endforeach; ?>
-				</ul>
+				<p class="footer-block__brand-copy">romance recs, reader tools, and fictional men who made everyone raise their standards.</p>
 			</div>
+
+			<?php foreach ($menu_sections as $section) : ?>
+				<div class="footer-block grid__item footer-block--menu scroll-trigger animate--slide-in" data-cascade>
+					<h2 class="footer-block__heading inline-richtext"><?php echo esc_html((string) ($section['title'] ?? '')); ?></h2>
+					<ul class="footer-block__details-content list-unstyled">
+						<?php foreach ((array) ($section['links'] ?? array()) as $item) : ?>
+							<?php
+							$link_class = 'link link--text list-menu__item list-menu__item--link';
+							if (bbb_footer_menu_item_is_active($item)) {
+								$link_class .= ' list-menu__item--active';
+							}
+							?>
+							<li>
+								<a href="<?php echo esc_url($item->url); ?>" class="<?php echo esc_attr($link_class); ?>">
+									<?php echo esc_html($item->title); ?>
+								</a>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+				</div>
+			<?php endforeach; ?>
 		</div>
 
 		<div class="footer-block--newsletter scroll-trigger animate--slide-in" data-cascade>

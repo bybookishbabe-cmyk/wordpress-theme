@@ -11,11 +11,19 @@ function bbb_social_share_logo_fallback_url(): string {
 	return 'https://bybookishbabe.com/wp-content/uploads/2026/05/bybookishbabe.png';
 }
 
+function bbb_social_share_card_slug(string $slug): string {
+	$mapped_slugs = array(
+		'library' => 'library-romance-cover-20260616',
+	);
+
+	return (string) ($mapped_slugs[$slug] ?? $slug);
+}
+
 function bbb_social_share_slug(): string {
 	$path = trim((string) parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH), '/');
 
 	if (function_exists('bbb_current_route_slug')) {
-		$slug = bbb_current_route_slug();
+		$slug = bbb_social_share_card_slug(bbb_current_route_slug());
 		if ('' !== $slug && file_exists(get_theme_file_path('assets/seo/share-cards/' . $slug . '.png'))) {
 			return $slug;
 		}
@@ -25,7 +33,7 @@ function bbb_social_share_slug(): string {
 		return 'home';
 	}
 
-	return sanitize_title(basename($path));
+	return bbb_social_share_card_slug(sanitize_title(basename($path)));
 }
 
 function bbb_social_share_card_relative_path(): string {
@@ -41,8 +49,8 @@ function bbb_social_share_forced_card_slug(): string {
 		'sss-printable-kindle'          => 'sss-printable-kindle-inserts',
 		'sss-printable-kindle-inserts'  => 'sss-printable-kindle-inserts',
 		'kindle-inserts'                => 'kindle-inserts',
-		'reader-quizes'                 => 'reader-quizes',
-		'reader-quizzes'                => 'reader-quizes',
+		'reader-quizes'                 => 'reader-quizzes',
+		'reader-quizzes'                => 'reader-quizzes',
 		'books-like-fourth-wing'        => 'books-like-fourth-wing',
 	);
 

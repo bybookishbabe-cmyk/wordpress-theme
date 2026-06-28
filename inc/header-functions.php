@@ -79,6 +79,18 @@ function bbb_wc_cart_url(): string {
 	return function_exists('wc_get_cart_url') ? wc_get_cart_url() : home_url('/cart/');
 }
 
+function bbb_trending_now_banner(): array {
+	$summer_post = get_page_by_path('summer-reading-list-by-mood', OBJECT, 'post');
+	$summer_url  = $summer_post instanceof WP_Post ? get_permalink($summer_post) : home_url('/summer-reading-list-by-mood/');
+
+	return array(
+		'eyebrow' => (string) apply_filters('bbb_trending_now_eyebrow', ''),
+		'title'   => (string) apply_filters('bbb_trending_now_title', 'your summer reading list'),
+		'meta'    => (string) apply_filters('bbb_trending_now_meta', 'by mood'),
+		'url'     => (string) apply_filters('bbb_trending_now_url', $summer_url),
+	);
+}
+
 function bbb_cart_count(): int {
 	if (function_exists('WC') && WC() && WC()->cart) {
 		return (int) WC()->cart->get_cart_contents_count();
@@ -145,6 +157,10 @@ function bbb_flatten_society_menu_item(array $items): array {
 }
 
 function bbb_get_header_menu_items(): array {
+	if (function_exists('bbb_get_fallback_menu_tree')) {
+		return bbb_flatten_society_menu_item(bbb_normalize_menu_item_tree(bbb_get_fallback_menu_tree()));
+	}
+
 	$locations = get_nav_menu_locations();
 	$menu_id   = $locations['main-menu'] ?? 0;
 	$items     = $menu_id ? wp_get_nav_menu_items($menu_id) : array();

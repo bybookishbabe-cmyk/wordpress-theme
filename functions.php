@@ -8,6 +8,7 @@
 declare(strict_types=1);
 
 require_once get_theme_file_path('inc/linking.php');
+require_once get_theme_file_path('inc/forced-downloads.php');
 require_once get_theme_file_path('inc/main-menu.php');
 require_once get_theme_file_path('inc/page-router.php');
 require_once get_theme_file_path('inc/header-functions.php');
@@ -24,6 +25,7 @@ require_once get_theme_file_path('inc/acf-society-hero-options.php');
 require_once get_theme_file_path('inc/blog-society-recommendations.php');
 require_once get_theme_file_path('inc/society-pages.php');
 require_once get_theme_file_path('inc/society-discount.php');
+require_once get_theme_file_path('inc/reader-types.php');
 require_once get_theme_file_path('inc/books/book-cpt.php');
 require_once get_theme_file_path('inc/books/book-admin-fields.php');
 require_once get_theme_file_path('inc/books/book-visibility.php');
@@ -31,10 +33,13 @@ require_once get_theme_file_path('inc/books/trope-colors.php');
 require_once get_theme_file_path('inc/books/book-renderers.php');
 require_once get_theme_file_path('inc/books/book-taxonomy-pages.php');
 require_once get_theme_file_path('inc/books/books-like-helpers.php');
+require_once get_theme_file_path('inc/books/book-quote-pages.php');
 require_once get_theme_file_path('inc/books/book-seo.php');
 require_once get_theme_file_path('inc/books/article-book-connections.php');
 require_once get_theme_file_path('inc/books/book-import.php');
 require_once get_theme_file_path('inc/books/book-admin-importer.php');
+require_once get_theme_file_path('inc/fictional-boyfriends/fictional-boyfriends.php');
+require_once get_theme_file_path('inc/components/society-content-cta.php');
 require_once get_theme_file_path('inc/reader-quiz-helpers.php');
 require_once get_theme_file_path('inc/cpt-sss-book.php');
 require_once get_theme_file_path('inc/sss-book-helpers.php');
@@ -45,29 +50,39 @@ require_once get_theme_file_path('inc/taxonomy-sss-shelf.php');
 require_once get_theme_file_path('inc/taxonomies-extra.php');
 require_once get_theme_file_path('inc/redirects.php');
 require_once get_theme_file_path('inc/reader-account.php');
+require_once get_theme_file_path('inc/vault.php');
 require_once get_theme_file_path('inc/media-kit.php');
 require_once get_theme_file_path('inc/api/analytics-sync-endpoint.php');
 require_once get_theme_file_path('inc/api/books-endpoint.php');
 require_once get_theme_file_path('inc/api/shelf-endpoint.php');
 require_once get_theme_file_path('inc/enqueue-weekly-obsession.php');
 require_once get_theme_file_path('inc/token-engine.php');
+require_once get_theme_file_path('inc/social-posting-calendar.php');
 require_once get_theme_file_path('inc/shortcodes/sss-book-shortcode.php');
 require_once get_theme_file_path('inc/shortcodes/sss-quickstats-shortcode.php');
 require_once get_theme_file_path('inc/shortcodes/sss-library-shortcode.php');
 require_once get_theme_file_path('inc/shortcodes/sss-signoff-shortcode.php');
 require_once get_theme_file_path('inc/shortcodes/sss-readnext-shortcode.php');
 require_once get_theme_file_path('inc/shortcodes/sss-series-shortcode.php');
+require_once get_theme_file_path('inc/shortcodes/toc-shortcode.php');
 require_once get_theme_file_path('inc/series-seo.php');
 require_once get_theme_file_path('inc/shortcodes/sss-pillar-shortcode.php');
 require_once get_theme_file_path('inc/shortcodes/sss-newsletter-shortcode.php');
 require_once get_theme_file_path('inc/shortcodes/sss-bookquote-shortcode.php');
+require_once get_theme_file_path('inc/quote-pin-cards.php');
+require_once get_theme_file_path('inc/romance-reading-bingo-pins.php');
 require_once get_theme_file_path('inc/shortcodes/bbb-bookreview-shortcode.php');
+require_once get_theme_file_path('inc/shortcodes/bbb-fictionalman-shortcode.php');
+require_once get_theme_file_path('inc/shortcodes/bbb-bestofyear-shortcode.php');
+require_once get_theme_file_path('inc/shortcodes/blog-poll-shortcode.php');
+require_once get_theme_file_path('inc/shortcodes/sss-quiz-cta-shortcode.php');
 require_once get_theme_file_path('inc/admin/society-members.php');
 require_once get_theme_file_path('inc/admin/society-drop-importer.php');
 require_once get_theme_file_path('inc/admin/society-product-importer.php');
 require_once get_theme_file_path('inc/admin/seo-inventory.php');
 require_once get_theme_file_path('inc/admin/noindex-pages.php');
 require_once get_theme_file_path('inc/admin/blog-post-seo.php');
+require_once get_theme_file_path('inc/admin/review-pins.php');
 require_once get_theme_file_path('inc/admin/book-series-seo.php');
 require_once get_theme_file_path('inc/admin/trope-page-seo.php');
 require_once get_theme_file_path('inc/admin/page-tags.php');
@@ -75,6 +90,7 @@ require_once get_theme_file_path('inc/site-stability.php');
 require_once get_theme_file_path('inc/homepage-seo.php');
 require_once get_theme_file_path('inc/social-share-images.php');
 require_once get_theme_file_path('inc/seo-lowercase.php');
+require_once get_theme_file_path('inc/yearly-romance-census.php');
 
 function bbb_reader_is_society(): bool {
 	if (is_user_logged_in() && current_user_can('manage_options')) {
@@ -122,6 +138,7 @@ function bbb_is_legal_policy_page(): bool {
 		'shipping-policy',
 		'terms-and-conditions',
 		'terms-of-service',
+		'trust',
 	);
 
 	if (function_exists('get_privacy_policy_url') && function_exists('is_privacy_policy') && get_privacy_policy_url() && is_privacy_policy()) {
@@ -138,7 +155,24 @@ add_filter(
 			$classes[] = 'bbb-legal-page';
 		}
 
+		$pwa_source = isset($_GET['source']) ? sanitize_text_field((string) wp_unslash($_GET['source'])) : '';
+		if (0 === strpos($pwa_source, 'pwa-bybookishbabe')) {
+			$classes[] = 'bbb-pwa-launch';
+		}
+
 		return $classes;
+	}
+);
+
+add_action(
+	'template_redirect',
+	static function (): void {
+		if (!is_search() || !isset($_GET['options'])) {
+			return;
+		}
+
+		wp_safe_redirect(remove_query_arg('options'), 301);
+		exit;
 	}
 );
 
@@ -198,11 +232,18 @@ add_action(
 		wp_enqueue_style('bbb-fonts', 'https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,600;0,700;1,400;1,600&family=Kaushan+Script&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap', array(), null);
 		wp_enqueue_style('bbb-font-cormorant-allura', 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Allura&display=swap', array(), null);
 		wp_enqueue_style('bbb-font-dancing', 'https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600&display=swap', array(), null);
-		if (is_front_page()) {
+		wp_enqueue_style('bbb-font-playfair', 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap', array(), null);
+		wp_enqueue_style('bbb-font-system', 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=DM+Serif+Display:ital@0;1&family=Lato:wght@400;700;900&family=Source+Sans+3:wght@400;600;700;800;900&display=swap', array('bbb-font-playfair', 'bbb-font-cormorant-allura'), null);
+		$bbb_request_path    = isset($_SERVER['REQUEST_URI']) ? trailingslashit((string) parse_url((string) wp_unslash($_SERVER['REQUEST_URI']), PHP_URL_PATH)) : '';
+		$bbb_route_slug      = function_exists('bbb_current_route_slug') ? bbb_current_route_slug() : trim($bbb_request_path, '/');
+		$bbb_is_app_home     = 'bybookishbabe-app' === $bbb_route_slug || (function_exists('bbb_pwa_request_path_is') && bbb_pwa_request_path_is('bybookishbabe-app'));
+		$bbb_is_home_surface = is_front_page() || $bbb_is_app_home;
+
+		if ($bbb_is_home_surface) {
 			wp_enqueue_style('bbb-font-connect-cards', 'https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant:wght@500;600&display=swap', array(), null);
 		}
 
-		bbb_enqueue_css('bbb-base', 'assets/base.css', array('bbb-font-kaushan', 'bbb-font-cormorant-allura', 'bbb-font-dancing'));
+		bbb_enqueue_css('bbb-base', 'assets/base.css', array('bbb-font-kaushan', 'bbb-font-cormorant-allura', 'bbb-font-dancing', 'bbb-font-system'));
 		if (bbb_asset_exists('assets/bbb-design-tokens.css')) {
 			wp_add_inline_style('bbb-base', (string) file_get_contents(get_theme_file_path('assets/bbb-design-tokens.css')));
 		}
@@ -221,8 +262,6 @@ add_action(
 		bbb_enqueue_css('bbb-header-inline', 'assets/header-inline.css', array('bbb-contact-footer'));
 		bbb_enqueue_css('bbb-custom-overrides', 'assets/site-custom-overrides.css', array('bbb-header-inline'));
 		bbb_enqueue_css('bbb-bookshelf-signup', 'assets/bookshelf-signup.css', array('bbb-custom-overrides'));
-		$bbb_request_path = isset($_SERVER['REQUEST_URI']) ? trailingslashit((string) parse_url((string) wp_unslash($_SERVER['REQUEST_URI']), PHP_URL_PATH)) : '';
-		$bbb_route_slug   = function_exists('bbb_current_route_slug') ? bbb_current_route_slug() : trim($bbb_request_path, '/');
 		$bbb_library_routes = array(
 			'library',
 			'member-library',
@@ -234,7 +273,6 @@ add_action(
 			'fictional-boyfriend-quiz',
 			'romance-trope-quiz',
 			'romance-book-moodboards',
-			'reader-quizes',
 			'reader-quizzes',
 			'romance-books-by-spice-level',
 			'series',
@@ -252,6 +290,7 @@ add_action(
 			'weekly-obsession',
 			'june-2026-monthly-theme',
 			'burn-bright',
+			'books',
 		);
 		$bbb_book_taxonomy_term = function_exists('bbb_find_book_taxonomy_term') && $bbb_route_slug
 			? bbb_find_book_taxonomy_term($bbb_route_slug)
@@ -260,20 +299,20 @@ add_action(
 			|| str_starts_with($bbb_route_slug, 'books-like-')
 			|| str_starts_with($bbb_route_slug, 'if-you-liked-')
 			|| 1 === preg_match('#/(?:if-you-liked-pages/)?(?:books-like|if-you-liked)-[^/]+/?$#', $bbb_request_path);
-		$bbb_needs_library_styles = is_front_page()
+		$bbb_needs_library_styles = $bbb_is_home_surface
 			|| is_singular('post')
 			|| in_array($bbb_route_slug, $bbb_library_routes, true)
 			|| $bbb_book_taxonomy_term instanceof WP_Term
 			|| $bbb_is_books_like_route
 			|| 'page-shelf.php' === (string) (bbb_page_route_registry()[$bbb_route_slug] ?? '')
 			|| 'page-trope.php' === (string) (bbb_page_route_registry()[$bbb_route_slug] ?? '');
-		$bbb_needs_library_scripts = is_front_page()
-			|| is_singular('bbb_book')
+		$bbb_needs_library_scripts = is_singular('bbb_book')
 			|| in_array($bbb_route_slug, $bbb_library_routes, true)
 			|| $bbb_book_taxonomy_term instanceof WP_Term
 			|| $bbb_is_books_like_route
 			|| 'page-shelf.php' === (string) (bbb_page_route_registry()[$bbb_route_slug] ?? '')
 			|| 'page-trope.php' === (string) (bbb_page_route_registry()[$bbb_route_slug] ?? '');
+		$bbb_needs_library_core_scripts = $bbb_is_home_surface || $bbb_needs_library_scripts;
 		$bbb_is_spice_route = 'romance-books-by-spice-level' === $bbb_route_slug || str_starts_with($bbb_request_path, '/romance-books-by-spice-level/');
 		if (is_singular('post')) {
 			bbb_enqueue_css('section-blog-post', 'assets/css/section-blog-post.css', array('bbb-bookshelf-signup'));
@@ -281,16 +320,22 @@ add_action(
 			bbb_enqueue_css('blog-signoff', 'assets/css/blog-signoff.css', array('blog-system'));
 			bbb_enqueue_css('sss-you-might-like', 'assets/css/sss-you-might-like.css', array('blog-signoff'));
 		}
-		if (is_home() || is_archive()) {
+		if (is_home() || is_archive() || is_search()) {
 			bbb_enqueue_css('component-card', 'assets/css/component-card.css', array('bbb-bookshelf-signup'));
 			bbb_enqueue_css('component-article-card', 'assets/css/component-article-card.css', array('component-card'));
 			bbb_enqueue_css('section-main-blog', 'assets/css/section-main-blog.css', array('component-article-card'));
+			bbb_enqueue_css('bbb-home-static', 'assets/home-static.css', array('section-main-blog'));
 			bbb_enqueue_js('blog-trope-rotator', 'assets/js/blog-trope-rotator.js', array(), true);
+		}
+		if (is_post_type_archive('bbb_book')) {
+			bbb_enqueue_css('bbb-book-reviews-page', 'assets/css/book-reviews-page.css', array('bbb-bookshelf-signup'));
 		}
 		if ($bbb_needs_library_styles) {
 			bbb_enqueue_css('bbb-sss-library', 'assets/css/sss-library.css', array('bbb-bookshelf-signup'));
-			bbb_enqueue_css('bbb-sss-folder-tabs', 'assets/css/sss-folder-tabs.css', array('bbb-sss-library'));
-			bbb_enqueue_css('bbb-sss-memberdash', 'assets/css/sss-memberdash.css', array('bbb-sss-folder-tabs'));
+			if (!$bbb_is_home_surface) {
+				bbb_enqueue_css('bbb-sss-folder-tabs', 'assets/css/sss-folder-tabs.css', array('bbb-sss-library'));
+				bbb_enqueue_css('bbb-sss-memberdash', 'assets/css/sss-memberdash.css', array('bbb-sss-folder-tabs'));
+			}
 		}
 		if ($bbb_is_books_like_route) {
 			bbb_enqueue_css('bbb-books-like', 'assets/css/books-like.css', array('bbb-sss-library'));
@@ -323,10 +368,10 @@ add_action(
 		if (function_exists('bbb_is_media_kit_route') && bbb_is_media_kit_route()) {
 			bbb_enqueue_css('bbb-media-kit', 'assets/css/media-kit.css', array('bbb-society-gate'));
 		}
-		if (is_front_page() || $bbb_needs_library_styles) {
+		if ($bbb_is_home_surface || $bbb_needs_library_styles) {
 			bbb_enqueue_css('bbb-sponsorship-zones', 'assets/css/sponsorship-zones.css', array('bbb-society-gate'));
 		}
-		if (is_front_page()) {
+		if ($bbb_is_home_surface) {
 			bbb_enqueue_css('bbb-hero', 'assets/css/hero-smut-sentiment.css', array('bbb-society-gate'));
 			bbb_enqueue_css('bbb-browse-by-trope', 'assets/css/sections/browse-by-trope.css', array('bbb-sponsorship-zones'));
 			bbb_enqueue_css('bbb-home-static', 'assets/home-static.css', array('bbb-browse-by-trope'));
@@ -360,7 +405,7 @@ add_action(
 		bbb_enqueue_js('bbb-sticky-header', 'assets/sticky-header.js', array('bbb-global'));
 		bbb_enqueue_js('bbb-cart-notification', 'assets/cart-notification.js', array('bbb-pubsub'));
 		bbb_enqueue_js('bbb-bookshelf-signup', 'assets/bookshelf-signup.js', array('bbb-supabase'));
-		if ($bbb_needs_library_scripts) {
+		if ($bbb_needs_library_core_scripts) {
 			bbb_enqueue_js('bbb-sss-library', 'assets/js/sss-library.js', array('bbb-supabase'), true);
 		}
 		if ($bbb_is_series_route) {
@@ -381,7 +426,7 @@ add_action(
 		bbb_enqueue_js('bbb-thread-carousel', 'assets/bbb-thread-carousel.js', array('bbb-global'));
 		bbb_enqueue_js('bbb-rose-petals', 'assets/bbb-rose-petals.js', array('bbb-global'));
 		bbb_enqueue_js('bbb-holiday-overlay', 'assets/bbb-holiday-overlay.js', array('bbb-rose-petals'));
-		if (is_front_page()) {
+		if ($bbb_is_home_surface) {
 			bbb_enqueue_js('bbb-browse-by-trope', 'assets/js/browse-by-trope.js', array('bbb-global'));
 			bbb_enqueue_js('bbb-sponsorship-zones', 'assets/js/sponsorship-zones.js', array('bbb-global'));
 			bbb_enqueue_js('bbb-homepage-library-preview', 'assets/js/homepage-library-preview.js', array('bbb-supabase', 'bbb-sss-library'));
@@ -405,19 +450,20 @@ add_action(
 		wp_localize_script(
 			'bbb-globals',
 			'BBBSiteData',
-			array(
-				'shopUrl'                   => home_url(),
-				'BBBReaderAccount'          => array(
-					'loggedIn'     => $is_logged_in,
-					'hasEmailAccess' => (bool) $reader_identity,
-					'customerId'   => $reader_user_id ?: null,
-					'email'        => $reader_email,
-					'firstName'    => $is_logged_in ? (string) $user->first_name : '',
-					'isSociety'    => bbb_reader_is_society(),
-					'bookshelfUrl' => $bookshelf,
-					'accountUrl'   => $account_url,
-					'loginUrl'     => $account_url,
-				),
+				array(
+					'shopUrl'                   => home_url(),
+					'BBBReaderAccount'          => array(
+						'loggedIn'       => $is_logged_in,
+						'hasEmailAccess' => (bool) $reader_identity,
+						'customerId'     => $reader_user_id ?: null,
+						'email'          => $reader_email,
+						'firstName'      => $is_logged_in ? (string) $user->first_name : '',
+						'isSociety'      => bbb_reader_is_society(),
+						'hasNotesAccess' => function_exists('bbb_reader_can_use_notes') ? bbb_reader_can_use_notes() : (bool) $reader_identity,
+						'bookshelfUrl'   => $bookshelf,
+						'accountUrl'     => $account_url,
+						'loginUrl'       => $account_url,
+					),
 				'routes'                    => array(
 					'cart_add_url'          => admin_url('admin-ajax.php'),
 					'cart_change_url'       => admin_url('admin-ajax.php?action=bbb_cart_change'),
@@ -459,38 +505,79 @@ add_action(
 					'nonce' => wp_create_nonce('bbb_ajax'),
 				),
 				'customTropeEmojis'         => function_exists('bbb_custom_emoji_urls') ? bbb_custom_emoji_urls() : array(),
-				'readerAccount'             => array(
-					'endpoint'      => rest_url('bbb/v1/reader-account'),
-					'emailEndpoint' => rest_url('bbb/v1/reader-account/email-session'),
-					'shelfEndpoint' => rest_url('bbb/v1/reader-account/shelf'),
-					'nonce'         => wp_create_nonce('wp_rest'),
-				),
-			)
-		);
+					'readerAccount'             => array(
+						'endpoint'        => set_url_scheme(rest_url('bbb/v1/reader-account'), is_ssl() ? 'https' : 'http'),
+						'emailEndpoint'   => set_url_scheme(rest_url('bbb/v1/reader-account/email-session'), is_ssl() ? 'https' : 'http'),
+						'shelfEndpoint'   => set_url_scheme(rest_url('bbb/v1/reader-account/shelf'), is_ssl() ? 'https' : 'http'),
+						'spiceEndpoint'   => set_url_scheme(rest_url('bbb/v1/reader-account/spice-profile'), is_ssl() ? 'https' : 'http'),
+						'profileEndpoint' => set_url_scheme(rest_url('bbb/v1/reader-account/made-for-you'), is_ssl() ? 'https' : 'http'),
+						'notesEndpoint'   => set_url_scheme(rest_url('bbb/v1/reader-account/notes'), is_ssl() ? 'https' : 'http'),
+						'notesUrl'        => function_exists('bbb_page_url') ? bbb_page_url('my-notes') : home_url('/my-notes/'),
+						'hasNotesAccess'  => function_exists('bbb_reader_can_use_notes') ? bbb_reader_can_use_notes() : (bool) $reader_identity,
+						'nonce'           => wp_create_nonce('wp_rest'),
+					),
+				)
+			);
 
 		if (wp_script_is('bbb-sss-library', 'enqueued')) {
 			wp_localize_script(
 				'bbb-sss-library',
 				'BBBLibraryData',
 				array(
-					'books'       => bbb_get_all_books_json(),
-					'supabaseUrl' => defined('SUPABASE_URL') ? SUPABASE_URL : 'https://efmrfxsmgbeikfgtrxjv.supabase.co',
-					'supabaseKey' => defined('SUPABASE_ANON_KEY') ? SUPABASE_ANON_KEY : 'sb_publishable_iwjASe3QwixdDvHovaXZBQ_gbXU0Utk',
-					'currentUser' => $reader_email ?: null,
-					'isMember'    => bbb_reader_is_society(),
-					'ajaxUrl'     => admin_url('admin-ajax.php'),
-					'nonce'       => wp_create_nonce('bbb_shelf'),
-					'homeUrl'     => home_url('/'),
-				)
+						'books'       => bbb_get_all_books_json(),
+						'supabaseUrl' => defined('SUPABASE_URL') ? SUPABASE_URL : 'https://efmrfxsmgbeikfgtrxjv.supabase.co',
+						'supabaseKey' => defined('SUPABASE_ANON_KEY') ? SUPABASE_ANON_KEY : 'sb_publishable_iwjASe3QwixdDvHovaXZBQ_gbXU0Utk',
+						'currentUser' => $reader_email ?: null,
+						'isMember'    => bbb_reader_is_society(),
+						'hasNotesAccess' => function_exists('bbb_reader_can_use_notes') ? bbb_reader_can_use_notes() : (bool) $reader_identity,
+						'ajaxUrl'     => admin_url('admin-ajax.php'),
+						'nonce'       => wp_create_nonce('bbb_shelf'),
+						'homeUrl'     => home_url('/'),
+					)
 			);
 		}
 	}
+);
+
+add_filter(
+	'get_the_archive_title',
+	static function (string $title): string {
+		if (is_post_type_archive('bbb_book')) {
+			return 'book pages';
+		}
+
+		return $title;
+	}
+);
+
+add_filter(
+	'document_title_parts',
+	static function (array $parts): array {
+		if (is_post_type_archive('bbb_book')) {
+			$parts['title'] = 'book pages';
+		}
+
+		return $parts;
+	}
+);
+
+add_filter(
+	'pre_get_document_title',
+	static function (string $title): string {
+		if (is_post_type_archive('bbb_book')) {
+			return 'book pages - bybookishbabe';
+		}
+
+		return $title;
+	},
+	99
 );
 
 add_action(
 	'wp_enqueue_scripts',
 	static function (): void {
 		bbb_enqueue_css('bbb-cta-design-system', 'assets/css/cta-design-system.css');
+		bbb_enqueue_css('bbb-toc', 'assets/css/toc.css', array('bbb-cta-design-system'));
 	},
 	100
 );
@@ -507,6 +594,21 @@ function bbb_reader_has_member_identity(): bool {
 	$identity = bbb_reader_current_identity();
 
 	return is_array($identity) && '' !== trim((string) ($identity['email'] ?? ''));
+}
+
+function bbb_reader_can_use_notes(): bool {
+	return bbb_reader_has_member_identity();
+}
+
+function bbb_is_books_like_member_route(): bool {
+	$request_path = isset($_SERVER['REQUEST_URI'])
+		? trailingslashit((string) parse_url((string) wp_unslash($_SERVER['REQUEST_URI']), PHP_URL_PATH))
+		: '';
+	$route_slug = function_exists('bbb_current_route_slug') ? bbb_current_route_slug() : trim($request_path, '/');
+
+	return str_starts_with($route_slug, 'books-like-')
+		|| str_starts_with($route_slug, 'if-you-liked-')
+		|| 1 === preg_match('#/(?:if-you-liked-pages/)?(?:books-like|if-you-liked)-[^/]+/?$#', $request_path);
 }
 
 function bbb_society_render_route_preview(string $slug): void {
@@ -611,7 +713,30 @@ function bbb_society_gate_check(): void {
 	$slug       = '' !== $route_slug ? $route_slug : $page_slug;
 
 	if (!in_array($slug, $society_slugs, true) || bbb_reader_is_society()) {
-		return;
+		if (
+			!function_exists('bbb_is_books_like_member_route')
+			|| !bbb_is_books_like_member_route()
+			|| bbb_reader_has_member_identity()
+		) {
+			return;
+		}
+
+		get_header();
+		bbb_society_render_locked_preview_page(
+			array(
+				'access'      => 'member',
+				'kicker'      => 'member reading guide',
+				'title'       => 'if you liked pages',
+				'intro'       => 'these curated reading guides are tucked behind the society email wall.',
+				'panel_title' => 'enter your society email to unlock',
+				'panel_copy'  => 'free and paid society members can open these pages. paid access is not required.',
+				'cta'         => 'open account',
+				'cta_url'     => home_url('/account/'),
+				'items'       => array('curated books-like pages', 'same-energy recommendations', 'member-only reader routes'),
+			)
+		);
+		get_footer();
+		exit;
 	}
 
 	bbb_society_render_route_preview($slug);

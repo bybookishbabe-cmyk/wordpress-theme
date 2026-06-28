@@ -272,7 +272,7 @@ function bbb_article_book_connections_posts_for_book(int $book_id): array {
 		array(
 			'post_type'      => 'post',
 			'post_status'    => array('publish', 'draft', 'pending', 'private'),
-			'posts_per_page' => 200,
+			'posts_per_page' => -1,
 			'orderby'        => 'date',
 			'order'          => 'DESC',
 		)

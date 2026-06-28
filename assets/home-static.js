@@ -1,7 +1,121 @@
 (function () {
   var targets = document.querySelectorAll('.bbb-romance-lists, .sss-lib--preview, #bbb-newsletter-cta-society-hero');
   var dashboardScroller = document.querySelector('.bbb-home-shelf-week--dashboard .bbb-home-shelf-week__inner');
+  var madeForYouDashboard = document.querySelector('[data-home-mfy-dashboard]');
   var monthlyCountdowns = document.querySelectorAll('[data-monthly-release]');
+
+  function getStoredTasteProfile() {
+    try {
+      return JSON.parse(window.localStorage.getItem('bbbReaderTasteProfile') || '{}') || {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function getStoredMadeForYouProfile() {
+    try {
+      var profile = JSON.parse(window.localStorage.getItem('sssMadeForYouProfile') || '{}') || {};
+      var readerState = JSON.parse(window.localStorage.getItem('bbbReaderTypeState') || '{}') || {};
+      var tasteProfile = getStoredTasteProfile();
+      if (readerState.key && !profile.reader_type_prior) {
+        profile.reader_type_prior = readerState.key;
+      }
+      if (tasteProfile.reader_type && !profile.reader_type_prior) {
+        profile.reader_type_prior = tasteProfile.reader_type;
+      }
+      if ((profile.reader_type_prior || readerState.key) && !profile.dashboard_built) {
+        profile.dashboard_built = true;
+      }
+      return profile;
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function isMadeForYouReady(profile) {
+    return !!(profile && profile.dashboard_built && (profile.reader_type_prior || profile.theme));
+  }
+
+  function syncHomeMadeForYouDashboard() {
+    if (!madeForYouDashboard) return;
+
+    var tasteProfile = getStoredTasteProfile();
+    var madeForYouProfile = getStoredMadeForYouProfile();
+    var serverReady = madeForYouDashboard.getAttribute('data-home-mfy-server-ready') === 'true';
+    var serverReaderType = madeForYouDashboard.getAttribute('data-server-reader-type') || '';
+    var isReady = isMadeForYouReady(madeForYouProfile) || serverReady;
+    var theme = isReady ? (tasteProfile.dashboard_theme || madeForYouProfile.theme || '') : '';
+    var readerType = isReady ? (madeForYouProfile.reader_type_prior || tasteProfile.reader_type || serverReaderType || '') : '';
+
+    madeForYouDashboard.classList.toggle('is-home-mfy-locked', !isReady);
+    madeForYouDashboard.classList.toggle('is-home-mfy-ready', isReady);
+    madeForYouDashboard.setAttribute('data-home-mfy-locked', isReady ? 'false' : 'true');
+
+    if (!isReady) {
+      madeForYouDashboard.removeAttribute('data-home-mfy-theme');
+      madeForYouDashboard.removeAttribute('data-mfy-theme');
+      madeForYouDashboard.removeAttribute('data-reader-theme');
+      return;
+    }
+
+    if (readerType) {
+      madeForYouDashboard.setAttribute('data-reader-theme', readerType);
+    }
+
+    if (theme) {
+      madeForYouDashboard.setAttribute('data-home-mfy-theme', theme);
+      madeForYouDashboard.setAttribute('data-mfy-theme', theme);
+    }
+  }
+
+  function openHomeDashboard(url) {
+    if (!url) return;
+    window.location.href = url;
+  }
+
+  function initHomeMadeForYouDashboard() {
+    if (!madeForYouDashboard) return;
+
+    var dashboardUrl = madeForYouDashboard.getAttribute('data-dashboard-url') || '/made-for-you/';
+    syncHomeMadeForYouDashboard();
+
+    madeForYouDashboard.addEventListener('click', function (event) {
+      var book = event.target.closest('.bbb-home-shelf-week__book[data-url]');
+      var heart = event.target.closest('[data-heart]');
+      var link = event.target.closest('a');
+
+      if (heart) {
+        return;
+      }
+
+      if (book) {
+        var bookUrl = book.getAttribute('data-url');
+        if (bookUrl) {
+          event.preventDefault();
+          event.stopPropagation();
+          if (event.stopImmediatePropagation) {
+            event.stopImmediatePropagation();
+          }
+          openHomeDashboard(bookUrl);
+        }
+        return;
+      }
+
+      if (link) {
+        return;
+      }
+
+      openHomeDashboard(dashboardUrl);
+    }, true);
+
+    madeForYouDashboard.addEventListener('keydown', function (event) {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      if (event.target.closest('a, button, [data-heart]')) return;
+
+      event.preventDefault();
+      openHomeDashboard(dashboardUrl);
+    });
+  }
 
   function padCountdown(value) {
     return String(value).padStart(2, '0');
@@ -47,6 +161,8 @@
     updateCountdown();
     window.setInterval(updateCountdown, 1000);
   });
+
+  initHomeMadeForYouDashboard();
 
   if (dashboardScroller && window.matchMedia && window.matchMedia('(max-width: 640px)').matches) {
     window.setTimeout(function () {

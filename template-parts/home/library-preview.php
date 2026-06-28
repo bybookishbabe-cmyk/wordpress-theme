@@ -239,15 +239,15 @@ if (count($top_shelf_books) < 5 && function_exists('sss_get_all_books')) {
 
 		<div class="sss-lib__archiveHead">
 			<div class="sss-lib__archiveKicker">
-				society favorites
+				the books that started it all
 			</div>
 
 			<h2 class="sss-lib__archiveTitle">
-				what the society is obsessed with
+				my all-time 6-star reads
 			</h2>
 
 			<div class="sss-lib__archiveSub">
-				a few books the society can’t stop recommending.
+				the ones i can never stop thinking about.
 			</div>
 		</div>
 

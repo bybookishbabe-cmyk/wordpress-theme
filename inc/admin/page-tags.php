@@ -106,3 +106,5 @@ function bbb_page_tags_admin_column_content(string $column_name, int $post_id): 
 	echo wp_kses_post(implode(', ', $links));
 }
 add_action('manage_pages_custom_column', 'bbb_page_tags_admin_column_content', 10, 2);
+
+require_once get_theme_file_path('inc/admin/post-list.php');

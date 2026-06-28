@@ -292,14 +292,17 @@ $issue_title = (string) ($obsession_context['title'] ?? '');
 if ('' === trim($issue_title)) {
 	$issue_title = bbb_weekly_issue_meta($current_issue, array('_issue_title_override', 'title'), $current_issue instanceof WP_Post ? $current_issue->post_title : 'this week’s obsession');
 }
+$issue_title = function_exists('bbb_brand_standard_text') ? (string) bbb_brand_standard_text($issue_title) : $issue_title;
 $issue_subtitle = (string) ($obsession_context['subtitle'] ?? '');
 if ('' === trim($issue_subtitle)) {
 	$issue_subtitle = bbb_weekly_issue_meta($current_issue, array('_issue_subtitle', 'subtitle'), '');
 }
+$issue_subtitle = function_exists('bbb_brand_standard_text') ? (string) bbb_brand_standard_text($issue_subtitle) : $issue_subtitle;
 $issue_excerpt = bbb_weekly_issue_meta($current_issue, array('_issue_excerpt', 'excerpt'), '');
 if ('' === $issue_excerpt && $current_issue instanceof WP_Post) {
 	$issue_excerpt = $current_issue->post_excerpt ?: wp_trim_words(wp_strip_all_tags($current_issue->post_content), 42, '');
 }
+$issue_excerpt = function_exists('bbb_brand_standard_text') ? (string) bbb_brand_standard_text($issue_excerpt) : $issue_excerpt;
 $issue_pull_quote = trim((string) ($obsession_context['pull_quote'] ?? ''));
 if ('' === $issue_pull_quote) {
 	$issue_pull_quote = bbb_weekly_issue_meta($current_issue, array('_issue_pull_quote'), '');

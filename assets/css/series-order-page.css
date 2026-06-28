@@ -103,7 +103,6 @@
   font-weight:500;
   letter-spacing:0;
   line-height:1.05;
-  text-transform:lowercase;
 }
 
 .bbb-seriesOrderPage__author{
@@ -155,6 +154,12 @@
   margin:28px 0 12px;
 }
 
+.bbb-seriesOrderPage__orderHead.is-sectionBreak{
+  margin-top:42px;
+  padding-top:24px;
+  border-top:1px solid rgba(255,255,255,.12);
+}
+
 .bbb-seriesOrderPage__orderHead h2{
   margin:0;
   color:#fff;
@@ -175,8 +180,8 @@
 
 .bbb-seriesOrderPage__bookRow{
   display:grid;
-  grid-template-columns:34px 104px minmax(0, 1fr) auto;
-  gap:13px;
+  grid-template-columns:64px 104px minmax(0, 1fr) auto;
+  gap:15px;
   align-items:center;
   padding:15px 0;
   border-bottom:1px solid rgba(255,255,255,.1);
@@ -188,14 +193,6 @@
 
 .bbb-seriesOrderPage__bookRow:last-child{
   border-bottom:none;
-}
-
-.bbb-seriesOrderPage__bookNum{
-  color:rgba(246,246,246,.34);
-  font-family:"Cormorant Garamond", Cormorant, Georgia, serif;
-  font-size:28px;
-  line-height:1;
-  text-align:center;
 }
 
 .bbb-seriesOrderPage__coverLink{
@@ -262,22 +259,6 @@
   background:#e85a9b;
   border-color:#e85a9b;
   color:#fff;
-}
-
-.bbb-seriesOrderPage__bookRow .sss-lib__seriesBadge{
-  position:absolute;
-  top:9px;
-  left:9px;
-  z-index:4;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.bbb-seriesOrderPage__bookRow .sss-lib__seriesBadge--standalone{
-  background:#fff;
-  color:#e85a9b;
-  border:1px solid rgba(232,90,155,.28);
 }
 
 .bbb-seriesOrderPage__bookRow .sss-lib__floatSpice{
@@ -422,12 +403,149 @@
   line-height:1.6;
 }
 
+.bbb-seriesOrderPage__content,
 .bbb-seriesOrderPage__faq,
 .bbb-seriesOrderPage__also,
 .bbb-seriesOrderPage__seo{
   margin-top:30px;
   padding-top:24px;
   border-top:1px solid rgba(255,255,255,.1);
+}
+
+.bbb-seriesOrderPage__content{
+  color:rgba(246,246,246,.82);
+  font-size:15px;
+  line-height:1.7;
+}
+
+.bbb-seriesOrderPage__content h2,
+.bbb-seriesOrderPage__content h3{
+  margin:0 0 14px;
+  color:#fff;
+  font-family:"Cormorant Garamond", Cormorant, Georgia, serif;
+  font-weight:700;
+  line-height:1.15;
+}
+
+.bbb-seriesOrderPage__content h2{
+  font-size:clamp(26px, 3vw, 36px);
+}
+
+.bbb-seriesOrderPage__content h3{
+  font-size:22px;
+}
+
+.bbb-seriesOrderPage__content ol,
+.bbb-seriesOrderPage__content ul{
+  margin:0 0 24px;
+  padding-left:22px;
+}
+
+.bbb-seriesOrderPage__content ol{
+  list-style:none;
+  padding-left:0;
+}
+
+.bbb-seriesOrderPage__content li{
+  margin:8px 0;
+}
+
+.bbb-seriesOrderPage__content a{
+  color:#ff8ec6;
+}
+
+.bbb-seriesOrderPage__content .blog-faq,
+.bbb-seriesOrderPage__faq .blog-faq{
+  margin:0;
+}
+
+.bbb-seriesOrderPage__content .blog-faq__list,
+.bbb-seriesOrderPage__faq .blog-faq__list{
+  display:grid;
+  gap:10px;
+}
+
+.bbb-seriesOrderPage__content .blog-faq__item,
+.bbb-seriesOrderPage__faq .blog-faq__item{
+  border:1px solid rgba(217,93,150,.24);
+  border-radius:10px;
+  background:rgba(217,93,150,.07);
+}
+
+.bbb-seriesOrderPage__content .blog-faq__question,
+.bbb-seriesOrderPage__faq .blog-faq__question{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  padding:14px 16px;
+  color:#ffb0d4;
+  cursor:pointer;
+  font-weight:800;
+  line-height:1.35;
+  text-transform:lowercase;
+}
+
+.bbb-seriesOrderPage__content .blog-faq__question::-webkit-details-marker,
+.bbb-seriesOrderPage__faq .blog-faq__question::-webkit-details-marker{
+  display:none;
+}
+
+.bbb-seriesOrderPage__content .blog-faq__answer,
+.bbb-seriesOrderPage__faq .blog-faq__answer{
+  padding:0 16px 16px;
+  color:rgba(246,246,246,.82);
+  text-transform:lowercase;
+}
+
+.bbb-seriesOrderPage__content .blog-faq__answer p:last-child,
+.bbb-seriesOrderPage__faq .blog-faq__answer p:last-child{
+  margin-bottom:0;
+}
+
+.bbb-seriesOrderPage__content .blog-faq__bookLink,
+.bbb-seriesOrderPage__faq .blog-faq__bookLink{
+  display:inline;
+  padding:.02em .18em;
+  border-radius:.2rem;
+  background:rgba(217,93,150,.18);
+  color:#ffb0d4;
+  font-weight:700;
+  text-decoration:none !important;
+  box-decoration-break:clone;
+  -webkit-box-decoration-break:clone;
+  transition:background .16s ease, color .16s ease;
+}
+
+.bbb-seriesOrderPage__content .blog-faq__seriesLink,
+.bbb-seriesOrderPage__faq .blog-faq__seriesLink{
+  display:inline;
+  padding:.02em .18em;
+  border-radius:.2rem;
+  background:rgba(75,156,255,.18);
+  color:#9fcbff;
+  font-weight:700;
+  text-decoration:none !important;
+  box-decoration-break:clone;
+  -webkit-box-decoration-break:clone;
+  transition:background .16s ease, color .16s ease;
+}
+
+.bbb-seriesOrderPage__content .blog-faq__bookLink:hover,
+.bbb-seriesOrderPage__content .blog-faq__bookLink:focus-visible,
+.bbb-seriesOrderPage__faq .blog-faq__bookLink:hover,
+.bbb-seriesOrderPage__faq .blog-faq__bookLink:focus-visible{
+  background:rgba(217,93,150,.3);
+  color:#fff;
+  text-decoration:none !important;
+}
+
+.bbb-seriesOrderPage__content .blog-faq__seriesLink:hover,
+.bbb-seriesOrderPage__content .blog-faq__seriesLink:focus-visible,
+.bbb-seriesOrderPage__faq .blog-faq__seriesLink:hover,
+.bbb-seriesOrderPage__faq .blog-faq__seriesLink:focus-visible{
+  background:rgba(75,156,255,.3);
+  color:#fff;
+  text-decoration:none !important;
 }
 
 .bbb-seriesOrderPage__faq{
@@ -622,8 +740,9 @@
   }
 
   .bbb-seriesOrderPage__bookRow{
-    grid-template-columns:28px 86px minmax(0, 1fr);
+    grid-template-columns:40px 86px minmax(0, 1fr);
     align-items:start;
+    gap:10px;
   }
 
   .bbb-seriesOrderPage__coverWrap{
@@ -659,8 +778,171 @@
     height:0;
   }
 
-  .bbb-seriesOrderPage__alsoCard{
+.bbb-seriesOrderPage__alsoCard{
     flex:0 0 132px;
     scroll-snap-align:start;
+  }
+}
+
+/* Keep reading-order rows isolated from the reusable SSS card grid. */
+.bbb-seriesOrderPage .bbb-seriesOrderPage__bookRow.sss-lib__book{
+  display:grid !important;
+  grid-template-columns:64px 104px minmax(0, 1fr) minmax(150px, max-content) !important;
+  column-gap:15px;
+  row-gap:10px;
+  align-items:center;
+  width:100%;
+  max-width:none;
+  min-height:0;
+  overflow:visible;
+}
+
+.bbb-seriesOrderPage .bbb-seriesOrderPage__bookNum{
+  display:grid;
+  place-items:center;
+  grid-column:1;
+  grid-row:1;
+  justify-self:center;
+  align-self:center;
+  width:52px;
+  height:52px;
+  border:1px solid rgba(255,138,199,.36);
+  border-radius:50%;
+  color:#fff;
+  font-family:"Cormorant Garamond", Cormorant, Georgia, serif;
+  font-size:34px;
+  font-weight:500;
+  line-height:1;
+  padding-bottom:3px;
+  text-align:center;
+  box-shadow:0 0 0 1px rgba(255,138,199,.08),0 14px 26px rgba(0,0,0,.22);
+}
+
+.bbb-seriesOrderPage .bbb-seriesOrderPage__coverWrap{
+  grid-column:2;
+  grid-row:1;
+  justify-self:start;
+  width:104px !important;
+  min-width:104px !important;
+  max-width:104px !important;
+  height:156px !important;
+  min-height:156px !important;
+  max-height:156px !important;
+}
+
+.bbb-seriesOrderPage .bbb-seriesOrderPage__bookInfo{
+  grid-column:3;
+  grid-row:1;
+  width:auto;
+  max-width:none;
+  min-width:0;
+}
+
+.bbb-seriesOrderPage .bbb-seriesOrderPage__bookCta{
+  grid-column:4;
+  grid-row:1;
+  justify-self:end;
+  align-self:center;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:stretch;
+  width:100%;
+  min-width:150px;
+  max-width:190px;
+}
+
+.bbb-seriesOrderPage .bbb-seriesOrderPage__bookCta a{
+  width:100%;
+  min-width:0;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+
+@supports selector(:has(*)){
+  .bbb-seriesOrderPage .bbb-seriesOrderPage__bookRow.sss-lib__book:not(:has(.bbb-seriesOrderPage__bookNum)){
+    grid-template-columns:104px minmax(0, 1fr) minmax(150px, max-content) !important;
+  }
+
+  .bbb-seriesOrderPage .bbb-seriesOrderPage__bookRow.sss-lib__book:not(:has(.bbb-seriesOrderPage__bookNum)) .bbb-seriesOrderPage__coverWrap{
+    grid-column:1;
+  }
+
+  .bbb-seriesOrderPage .bbb-seriesOrderPage__bookRow.sss-lib__book:not(:has(.bbb-seriesOrderPage__bookNum)) .bbb-seriesOrderPage__bookInfo{
+    grid-column:2;
+  }
+
+  .bbb-seriesOrderPage .bbb-seriesOrderPage__bookRow.sss-lib__book:not(:has(.bbb-seriesOrderPage__bookNum)) .bbb-seriesOrderPage__bookCta{
+    grid-column:3;
+  }
+}
+
+@media (max-width:960px){
+  .bbb-seriesOrderPage .bbb-seriesOrderPage__bookRow.sss-lib__book{
+    grid-template-columns:56px 104px minmax(0, 1fr) !important;
+    align-items:start;
+  }
+
+  .bbb-seriesOrderPage .bbb-seriesOrderPage__bookCta{
+    grid-column:3;
+    grid-row:2;
+    justify-self:start;
+    width:100%;
+    max-width:none;
+    flex-direction:row !important;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+
+  .bbb-seriesOrderPage .bbb-seriesOrderPage__bookCta a{
+    width:auto;
+    min-width:150px;
+    max-width:210px;
+  }
+
+  @supports selector(:has(*)){
+    .bbb-seriesOrderPage .bbb-seriesOrderPage__bookRow.sss-lib__book:not(:has(.bbb-seriesOrderPage__bookNum)){
+      grid-template-columns:104px minmax(0, 1fr) !important;
+    }
+
+    .bbb-seriesOrderPage .bbb-seriesOrderPage__bookRow.sss-lib__book:not(:has(.bbb-seriesOrderPage__bookNum)) .bbb-seriesOrderPage__bookCta{
+      grid-column:2;
+    }
+  }
+}
+
+@media (max-width:749px){
+  .bbb-seriesOrderPage .bbb-seriesOrderPage__bookRow.sss-lib__book{
+    grid-template-columns:40px 86px minmax(0, 1fr) !important;
+  }
+
+  .bbb-seriesOrderPage .bbb-seriesOrderPage__bookNum{
+    width:32px;
+    height:32px;
+    margin-top:6px;
+    font-size:22px;
+  }
+
+  .bbb-seriesOrderPage .bbb-seriesOrderPage__coverWrap{
+    width:86px !important;
+    min-width:86px !important;
+    max-width:86px !important;
+    height:129px !important;
+    min-height:129px !important;
+    max-height:129px !important;
+  }
+
+  .bbb-seriesOrderPage .bbb-seriesOrderPage__bookCta{
+    grid-column:2 / -1;
+    grid-row:2;
+  }
+
+  @supports selector(:has(*)){
+    .bbb-seriesOrderPage .bbb-seriesOrderPage__bookRow.sss-lib__book:not(:has(.bbb-seriesOrderPage__bookNum)){
+      grid-template-columns:86px minmax(0, 1fr) !important;
+    }
+
+    .bbb-seriesOrderPage .bbb-seriesOrderPage__bookRow.sss-lib__book:not(:has(.bbb-seriesOrderPage__bookNum)) .bbb-seriesOrderPage__bookCta{
+      grid-column:1 / -1;
+    }
   }
 }

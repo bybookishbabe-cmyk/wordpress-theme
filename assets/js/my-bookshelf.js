@@ -11,6 +11,18 @@
     }
   }
 
+  function accountScopedKey(key, accountKey) {
+    accountKey = String(accountKey || '').trim();
+    return accountKey ? key + '::' + accountKey : key;
+  }
+
+  function cleanupLegacyKey(key, accountKey) {
+    if (!accountKey) return;
+    try {
+      window.localStorage.removeItem(key);
+    } catch (error) {}
+  }
+
   function getShelf() {
     var primary = getJSON('sssMyShelf', null);
     if (Array.isArray(primary)) return primary;
@@ -32,8 +44,53 @@
     });
   }
 
+  function decodeHtml(value) {
+    var text = String(value || '');
+    if (!text) return '';
+    var textarea = document.createElement('textarea');
+    var decoded = text;
+    for (var i = 0; i < 3; i += 1) {
+      textarea.innerHTML = decoded;
+      if (textarea.value === decoded) break;
+      decoded = textarea.value;
+    }
+    return decoded;
+  }
+
+  function bookCoverAlt(book) {
+    var title = String((book && book.title) || '').trim();
+    var author = String((book && book.author) || '').trim();
+    var shelf = String((book && book.shelf) || '').trim();
+
+    if (!title) return 'book cover';
+    if (author) title += ' by ' + author;
+    if (shelf) title += ' – ' + shelf;
+    return title + ' book cover';
+  }
+
   function normalizeKey(value) {
     return String(value || '').trim().toLowerCase();
+  }
+
+  function bookIdentityAliases(book, lookup) {
+    if (!book) return [];
+    var aliases = [];
+    var lookupKey = normalizeKey(book.handle || book.book_handle || book.bookKey || book.book_key || book.title || book.book_title);
+    var found = lookup && lookupKey ? (lookup[lookupKey] || {}) : {};
+    var handle = normalizeKey(book.handle || book.book_handle || found.handle);
+    var bookKey = normalizeKey(book.bookKey || book.book_key);
+    var title = normalizeKey(book.title || book.book_title || found.title);
+    var author = normalizeKey(book.author || found.author);
+
+    [handle, bookKey].forEach(function (value) {
+      if (value) aliases.push('key:' + value);
+    });
+    if (title && author) aliases.push('title-author:' + title + '|' + author);
+    if (title) aliases.push('title:' + title);
+
+    return aliases.filter(function (value, index, list) {
+      return value && list.indexOf(value) === index;
+    });
   }
 
   function normalizeBool(value) {
@@ -61,9 +118,27 @@
     }
   }
 
+  function parseEmbeddedJSON(selector, fallback) {
+    var source = document.querySelector(selector);
+    if (!source) return fallback;
+    try {
+      return JSON.parse(source.textContent || '') || fallback;
+    } catch (error) {
+      return fallback;
+    }
+  }
+
   function getBookStatuses() {
     try {
       return JSON.parse(window.localStorage.getItem('sssBookStatuses') || '{}') || {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function getBookRatings() {
+    try {
+      return JSON.parse(window.localStorage.getItem('sssBookRatings') || '{}') || {};
     } catch (error) {
       return {};
     }
@@ -116,8 +191,76 @@
       seriesName: book.seriesName || book.series_name || found.seriesName || '',
       seriesNumber: book.seriesNumber || book.series_number || found.seriesNumber || '',
       standalone: book.standalone || found.standalone || 'false',
+      rating: book.rating || found.rating || '',
+      progress: book.progress || book.progress_percent || book.percentComplete || book.percent_complete || found.progress || found.progress_percent || '',
       privateShelf: book.privateShelf || book.private_shelf || 'false'
     };
+  }
+
+  function bookRating(book) {
+    var ratings = getBookRatings();
+    var key = getBookStatusKey(book);
+    var rating = parseInt((key && ratings[key]) || book.rating || 0, 10);
+    return rating >= 1 && rating <= 5 ? rating : 0;
+  }
+
+  function ratingStars(rating) {
+    rating = parseInt(rating || 0, 10);
+    return rating >= 1 && rating <= 5 ? '★★★★★'.slice(0, rating) : '';
+  }
+
+  function getStoredMadeForYouProfile(accountKey) {
+    return getJSON(accountScopedKey('sssMadeForYouProfile', accountKey), {});
+  }
+
+  function isCurrentMadeForYouProfile(profile, version) {
+    return !!(profile && String(profile.mfy_profile_version || profile.profile_version || '') === String(version || ''));
+  }
+
+  function isCompleteMadeForYouProfile(profile, version) {
+    if (!isCurrentMadeForYouProfile(profile, version)) return false;
+    return ['name', 'heat_lane', 'group_chat_text', 'love_interest', 'wall_line'].every(function (key) {
+      return String(profile && profile[key] || '').trim() !== '';
+    }) && !!(profile && profile.dashboard_built);
+  }
+
+  function madeForYouReaderTypeKey(profile) {
+    var direct = String(profile && (profile.reader_type_prior || profile.theme) || '').trim();
+    if (direct) return direct;
+
+    var picks = [profile && profile.group_chat_text, profile && profile.love_interest, profile && profile.wall_line].filter(Boolean).map(String);
+    if (picks.length < 3) return '';
+
+    var counts = {};
+    picks.forEach(function (key) {
+      counts[key] = (counts[key] || 0) + 1;
+    });
+    var matched = Object.keys(counts).find(function (key) {
+      return counts[key] >= 2;
+    });
+    if (matched) return matched;
+
+    var order = [
+      'sweet_romance_devotee',
+      'slow_burn_girlie',
+      'fake_dating_fanatic',
+      'jersey_chaser',
+      'fantasy_girlie',
+      'tension_addict',
+      'dark_romance_girlie',
+      'chaos_reader'
+    ];
+    var sorted = picks.slice().sort(function (a, b) {
+      return order.indexOf(a) - order.indexOf(b);
+    });
+    var lane = String(profile && profile.heat_lane || '');
+
+    if (lane === 'unhinged' && picks.indexOf('dark_romance_girlie') > -1 && picks.indexOf('chaos_reader') > -1) {
+      return 'chaos_reader';
+    }
+    if (lane === 'closed') return sorted[0] || '';
+    if (lane === 'open' || lane === 'unhinged') return sorted[sorted.length - 1] || '';
+    return sorted[1] || sorted[0] || '';
   }
 
   function mergeBooks(localBooks, remoteBooks, lookup) {
@@ -126,9 +269,10 @@
       return normalizeBook(book, lookup);
     }).filter(function (book) {
       if (!book || !book.title) return false;
-      var key = normalizeKey(book.handle || book.title);
-      if (!key || seen[key]) return false;
-      seen[key] = true;
+      var aliases = bookIdentityAliases(book, lookup);
+      if (!aliases.length) return false;
+      if (aliases.some(function (alias) { return seen[alias]; })) return false;
+      aliases.forEach(function (alias) { seen[alias] = true; });
       return true;
     });
   }
@@ -154,6 +298,7 @@
       'data-series': book.series,
       'data-series-name': book.seriesName,
       'data-series-number': book.seriesNumber,
+      'data-rating': book.rating,
       'data-tension': book.tension,
       'data-damage': book.damage,
       'data-yearning': book.yearning,
@@ -173,7 +318,7 @@
     var spice = parseInt(book.spice, 10) || 0;
     var spiceMarkup = spice > 0 ? '<div class="sss-lib__floatSpice">' + '🌶'.repeat(Math.min(spice, 5)) + '</div>' : '';
     var cover = book.cover
-      ? '<img class="sss-lib__cover bbb-account-shelf__cover" src="' + esc(book.cover) + '" alt="' + esc(book.title) + '" loading="lazy">'
+      ? '<img class="sss-lib__cover bbb-account-shelf__cover" src="' + esc(book.cover) + '" alt="' + esc(bookCoverAlt(book)) + '" loading="lazy">'
       : '<div class="sss-lib__cover bbb-account-shelf__cover" aria-hidden="true"></div>';
 
     return '<button type="button" class="sss-lib__book sss-lib__book--mini bbb-account-shelf__book" ' + attrs(book) + '>' +
@@ -182,19 +327,23 @@
           '<span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♥</span>' +
           '<span class="sss-lib__heartLabel" data-heart-label>saved</span>' +
         '</span>' +
+        '<span class="sss-lib__noteToggle bbb-account-shelf__noteToggle" data-reader-note-toggle role="button" tabindex="0" aria-label="add your private note">' +
+          '<span class="sss-lib__noteIcon" aria-hidden="true">✎</span>' +
+        '</span>' +
         spiceMarkup +
         cover +
       '</div>' +
       '<div class="sss-lib__under">' +
         '<div class="sss-lib__name bbb-account-shelf__bookTitle">' + esc(book.title) + '</div>' +
         (book.author ? '<div class="sss-lib__author bbb-account-shelf__bookAuthor">' + esc(book.author) + '</div>' : '') +
+        '<div class="sss-lib__notePreview" data-reader-note-preview hidden></div>' +
       '</div>' +
     '</button>';
   }
 
   function renderReadCover(book, index) {
     var cover = book.cover
-      ? '<img src="' + esc(book.cover) + '" alt="' + esc(book.title) + '" loading="lazy">'
+      ? '<img src="' + esc(book.cover) + '" alt="' + esc(bookCoverAlt(book)) + '" loading="lazy">'
       : '<span class="bbb-account-shelf__readCoverPlaceholder" aria-hidden="true">' + esc((book.title || 'read').charAt(0)) + '</span>';
     var offset = Math.max(-3, Math.min(3, index - 2));
 
@@ -206,13 +355,56 @@
 
   function renderLaneBook(book) {
     var cover = book.cover
-      ? '<img src="' + esc(book.cover) + '" alt="' + esc(book.title) + '" loading="lazy">'
+      ? '<img src="' + esc(book.cover) + '" alt="' + esc(bookCoverAlt(book)) + '" loading="lazy">'
       : '<span aria-hidden="true">' + esc((book.title || 'book').charAt(0)) + '</span>';
 
     return '<button type="button" class="bbb-account-shelf__laneBook" ' + attrs(book) + '>' +
       '<span class="bbb-account-shelf__laneCover">' + cover + '</span>' +
       '<span class="bbb-account-shelf__laneTitle">' + esc(book.title) + '</span>' +
       (book.author ? '<span class="bbb-account-shelf__laneAuthor">' + esc(book.author) + '</span>' : '') +
+    '</button>';
+  }
+
+  function renderRatedBook(book) {
+    var rating = bookRating(book);
+    var cover = book.cover
+      ? '<img class="bbb-account-shelf__ratedCover" src="' + esc(book.cover) + '" alt="' + esc(bookCoverAlt(book)) + '" loading="lazy">'
+      : '<span class="bbb-account-shelf__ratedCover bbb-account-shelf__ratedCover--empty" aria-hidden="true">' + esc((book.title || 'rated').charAt(0)) + '</span>';
+
+    return '<button type="button" class="sss-lib__book bbb-account-shelf__ratedBook" ' + attrs(Object.assign({}, book, { rating: rating })) + '>' +
+      '<span class="bbb-account-shelf__ratedCoverWrap sss-lib__coverWrap">' + cover + '</span>' +
+      '<span class="bbb-account-shelf__ratedBody">' +
+        '<span class="bbb-account-shelf__ratedStars" aria-label="' + rating + ' out of 5 stars">' + esc(ratingStars(rating)) + '</span>' +
+        '<strong>' + esc(book.title) + '</strong>' +
+        (book.author ? '<em>' + esc(book.author) + '</em>' : '') +
+      '</span>' +
+    '</button>';
+  }
+
+  function renderCurrentBook(book) {
+    if (!book || !book.title) {
+      return '<div class="bbb-account-shelf__currentEmpty">mark a saved book as reading and it will appear here first.</div>';
+    }
+
+    var cover = book.cover
+      ? '<img src="' + esc(book.cover) + '" alt="' + esc(bookCoverAlt(book)) + '" loading="lazy">'
+      : '<span aria-hidden="true">' + esc((book.title || 'book').charAt(0)) + '</span>';
+    var progress = parseInt(book.progress || 0, 10);
+    var hasProgress = progress >= 1 && progress <= 100;
+    var progressLabel = hasProgress ? progress + '% complete' : 'track progress in your notes';
+    var progressWidth = hasProgress ? progress : 0;
+
+    return '<button type="button" class="sss-lib__book bbb-account-shelf__currentBook" ' + attrs(book) + '>' +
+      '<span class="bbb-account-shelf__currentCover">' + cover + '</span>' +
+      '<span class="bbb-account-shelf__currentCopy">' +
+        '<strong>' + esc(book.title) + '</strong>' +
+        (book.author ? '<em>' + esc(book.author) + '</em>' : '') +
+        '<span class="bbb-account-shelf__currentProgress"><b>' + esc(progressLabel) + '</b><i aria-hidden="true"><span style="width:' + progressWidth + '%"></span></i></span>' +
+        '<span class="bbb-account-shelf__currentActions">' +
+          '<span data-reader-note-toggle role="button" tabindex="0" aria-label="add your private note">update progress</span>' +
+          '<span>view book</span>' +
+        '</span>' +
+      '</span>' +
     '</button>';
   }
 
@@ -233,8 +425,10 @@
   }
 
   function getAccountApi() {
-    var api = window.BBBReaderAccountApi || {};
-    return api.shelfEndpoint && api.nonce ? api : null;
+    var directApi = typeof BBBReaderAccountApi !== 'undefined' ? BBBReaderAccountApi : window.BBBReaderAccountApi;
+    var siteData = typeof BBBSiteData !== 'undefined' ? BBBSiteData : window.BBBSiteData;
+    var api = directApi || (siteData && siteData.readerAccount) || {};
+    return (api.shelfEndpoint || api.spiceEndpoint || api.endpoint) && api.nonce ? api : null;
   }
 
   function accountApiRequest(url, method, body) {
@@ -243,7 +437,7 @@
       credentials: 'same-origin',
       headers: {
         'Content-Type': 'application/json',
-        'X-WP-Nonce': (window.BBBReaderAccountApi && window.BBBReaderAccountApi.nonce) || ''
+        'X-WP-Nonce': (getAccountApi() && getAccountApi().nonce) || ''
       },
       body: body ? JSON.stringify(body) : undefined
     }).then(function (response) {
@@ -258,6 +452,7 @@
 
   function remoteBook(row) {
     return {
+      book_key: row.book_key || '',
       handle: row.book_handle || '',
       title: row.book_title || '',
       author: row.author || '',
@@ -266,8 +461,119 @@
       bookshop: row.bookshop || '',
       spice: row.spice_level || '',
       darkness: row.darkness_level || '',
-      tropes: Array.isArray(row.tropes) ? row.tropes : []
+      tropes: Array.isArray(row.tropes) ? row.tropes : [],
+      rating: row.rating || (row.metadata && row.metadata.rating) || ''
     };
+  }
+
+  function getStoredSpiceProfile(accountKey) {
+    var value = parseInt(window.localStorage.getItem(accountScopedKey('bbbReaderSpiceProfile', accountKey)) || (!accountKey ? window.localStorage.getItem('bbbReaderSpiceProfile') : '') || '', 10);
+    return value >= 1 && value <= 5 ? value : 0;
+  }
+
+  function setStoredSpiceProfile(level, accountKey) {
+    window.localStorage.setItem(accountScopedKey('bbbReaderSpiceProfile', accountKey), String(level));
+    window.localStorage.setItem('bbbReaderSpiceProfile', String(level));
+    var profile = getJSON(accountScopedKey('sssMadeForYouProfile', accountKey), {});
+    var tasteProfile = getJSON(accountScopedKey('bbbReaderTasteProfile', accountKey), {});
+    var values = {
+      1: 'soft_open_door',
+      2: 'some_heat',
+      3: 'balanced',
+      4: 'high_spice',
+      5: 'wreck_me'
+    };
+    if (profile && typeof profile === 'object') {
+      profile.spice_profile = level;
+      profile.spice_dial = values[level] || profile.spice_dial || 'balanced';
+      window.localStorage.setItem(accountScopedKey('sssMadeForYouProfile', accountKey), JSON.stringify(profile));
+      cleanupLegacyKey('sssMadeForYouProfile', accountKey);
+    }
+    if (tasteProfile && typeof tasteProfile === 'object') {
+      tasteProfile.spice_profile = level;
+      tasteProfile.spice_dial = values[level] || tasteProfile.spice_dial || 'balanced';
+      window.localStorage.setItem(accountScopedKey('bbbReaderTasteProfile', accountKey), JSON.stringify(tasteProfile));
+      window.localStorage.setItem('bbbReaderTasteProfile', JSON.stringify(tasteProfile));
+      cleanupLegacyKey('bbbReaderTasteProfile', accountKey);
+    }
+  }
+
+  function initSpiceProfile(root) {
+    var choices = Array.prototype.slice.call(root.querySelectorAll('[data-spice-choice]'));
+    if (!choices.length) return;
+
+    var title = root.querySelector('[data-spice-profile-title]');
+    var copy = root.querySelector('[data-spice-profile-copy]');
+    var peppers = root.querySelector('[data-spice-profile-peppers]');
+    var status = root.querySelector('[data-spice-profile-status]');
+    var api = getAccountApi();
+    var siteData = typeof BBBSiteData !== 'undefined' ? BBBSiteData : window.BBBSiteData;
+    var accountState = (siteData && siteData.BBBReaderAccount) || {};
+    var accountRoot = root.closest('[data-account-shelf]');
+    var accountKey = String(root.dataset.accountKey || (accountRoot && accountRoot.dataset.accountKey) || (api && api.accountKey) || '').trim();
+    var hasReaderAccess = document.body.classList.contains('logged-in') || accountState.hasEmailAccess || (accountRoot && accountRoot.dataset.loggedIn === 'true');
+    var initialLevel = parseInt(root.dataset.initialLevel || '', 10) || getStoredSpiceProfile(accountKey);
+
+    function setStatus(message, tone) {
+      if (!status) return;
+      status.textContent = message || '';
+      status.dataset.tone = tone || '';
+    }
+
+    function applyChoice(choice, shouldSave) {
+      if (!choice) return;
+      var level = parseInt(choice.dataset.spiceChoice || '', 10);
+      if (!(level >= 1 && level <= 5)) return;
+
+      choices.forEach(function (item) {
+        var active = item === choice;
+        item.classList.toggle('is-active', active);
+        item.setAttribute('aria-checked', active ? 'true' : 'false');
+      });
+
+      if (title) title.textContent = choice.dataset.spiceLabel || 'spice profile';
+      if (copy) copy.textContent = choice.dataset.spiceDescription || '';
+      if (peppers) peppers.textContent = choice.dataset.spicePeppers || (level + '/5');
+      setStoredSpiceProfile(level, accountKey);
+      root.dataset.initialLevel = String(level);
+
+      if (!shouldSave) return;
+      window.dispatchEvent(new CustomEvent('bbb:spice-profile-changed', {
+        detail: { level: level, source: 'spice-profile-control' }
+      }));
+      if (!hasReaderAccess || !api || !api.spiceEndpoint) {
+        setStatus('saved on this device.', 'local');
+        return;
+      }
+
+      setStatus('saving...', 'saving');
+      accountApiRequest(api.spiceEndpoint, 'POST', { level: level }).then(function () {
+        setStatus('saved to your account.', 'success');
+      }).catch(function (error) {
+        setStatus('saved on this device. account sync will retry when available.', 'local');
+        console.log('Reader spice profile sync failed', error);
+      });
+    }
+
+    if (initialLevel) {
+      var initialChoice = root.querySelector('[data-spice-choice="' + initialLevel + '"]');
+      if (initialChoice) applyChoice(initialChoice, false);
+    }
+
+    window.addEventListener('bbb:spice-profile-changed', function (event) {
+      var level = parseInt(event.detail && event.detail.level || 0, 10);
+      if (!(level >= 1 && level <= 5)) return;
+      var choice = root.querySelector('[data-spice-choice="' + level + '"]');
+      if (choice) applyChoice(choice, false);
+      var stat = document.querySelector('[data-account-spice-stat]');
+      if (stat) stat.textContent = level + '/5';
+    });
+
+    choices.forEach(function (choice) {
+      choice.addEventListener('click', function () {
+        applyChoice(choice, true);
+      });
+    });
   }
 
   function init(root) {
@@ -286,15 +592,39 @@
     var quoteCard = root.querySelector('[data-account-quote-card]');
     var quoteText = root.querySelector('[data-account-quote-text]');
     var quoteSource = root.querySelector('[data-account-quote-source]');
+    var ratingsSection = root.querySelector('[data-account-ratings]');
+    var ratingsGrid = root.querySelector('[data-account-ratings-grid]');
+    var ratingsCount = root.querySelector('[data-account-ratings-count]');
+    var ratingsEmpty = root.querySelector('[data-account-ratings-empty]');
+    var currentReading = root.querySelector('[data-account-current-reading]');
+    var currentReadingBody = root.querySelector('[data-account-current-reading-body]');
+    var shelfTabs = root.querySelector('[data-account-shelf-tabs]');
+    var shelfSearch = root.querySelector('[data-shelf-search]');
+    var shelfSort = root.querySelector('[data-shelf-sort]');
+    var snapshotReaderType = root.querySelector('[data-snapshot-reader-type]');
+    var snapshotReaderEmoji = root.querySelector('[data-snapshot-reader-emoji]');
+    var snapshotSpice = root.querySelector('[data-snapshot-spice]');
+    var snapshotSpicePeppers = root.querySelector('[data-snapshot-spice-peppers]');
+    var snapshotSaved = root.querySelector('[data-snapshot-saved]');
+    var snapshotReading = root.querySelector('[data-snapshot-reading]');
+    var snapshotFinished = root.querySelector('[data-snapshot-finished]');
     var memberBadge = root.querySelector('[data-account-shelf-badge]');
     var memberBadgeLabel = root.querySelector('[data-account-shelf-badge-label]');
+    var readerProfileCard = root.querySelector('[data-bookshelf-reader-profile]');
+    var readerProfileTitle = root.querySelector('[data-bookshelf-reader-type-title]');
+    var readerProfileEmoji = root.querySelector('[data-bookshelf-reader-type-emoji]');
     var isLoggedIn = root.dataset.loggedIn === 'true';
     var customerId = root.dataset.customerId || '';
     var email = normalizeKey(root.dataset.customerEmail);
+    var accountKey = String(root.dataset.accountKey || '').trim();
     var libraryBooks = parseBookData();
     var lookup = buildLookup(libraryBooks);
     var quotes = parseQuoteData();
+    var readerTypes = parseEmbeddedJSON('[data-account-reader-types]', []);
+    var accountMadeForYouProfile = parseEmbeddedJSON('[data-account-made-for-you-profile]', {});
+    var madeForYouProfileVersion = root.dataset.mfyProfileVersion || '';
     var current = [];
+    var activeShelfTab = 'all';
 
     function setStatus(title, copy) {
       if (!status) return;
@@ -307,6 +637,84 @@
       var isSociety = accessTier === 'society' || root.dataset.isSociety === 'true';
       if (memberBadge) memberBadge.classList.toggle('bbb-account-shelf__memberBadge--secret', isSociety);
       if (memberBadgeLabel) memberBadgeLabel.textContent = isSociety ? 'secret society member' : 'free reader';
+    }
+
+    function readerTypeByKey(key) {
+      key = String(key || '').trim();
+      return readerTypes.find(function (type) {
+        return String(type && type.key || '') === key;
+      }) || null;
+    }
+
+    function madeForYouProfileForDisplay() {
+      if (isCompleteMadeForYouProfile(accountMadeForYouProfile, madeForYouProfileVersion)) return accountMadeForYouProfile;
+      var stored = getStoredMadeForYouProfile(accountKey);
+      if (isCompleteMadeForYouProfile(stored, madeForYouProfileVersion)) return stored;
+      return {};
+    }
+
+    function applyReaderTypePreview(readerType) {
+      if (!readerProfileCard || !readerType) return;
+
+      var theme = readerType.theme || {};
+      var accent = theme.accent || '#D4C2CE';
+      var border = theme.border || accent;
+
+      readerProfileCard.setAttribute('data-reader-profile-theme', String(readerType.key || 'romance_reader'));
+      readerProfileCard.style.setProperty('--reader-profile-accent', accent);
+      readerProfileCard.style.setProperty('--reader-profile-accent-soft', 'color-mix(in srgb, ' + accent + ' 16%, transparent)');
+      readerProfileCard.style.setProperty('--reader-profile-accent-border', 'color-mix(in srgb, ' + border + ' 42%, transparent)');
+      readerProfileCard.style.setProperty('--reader-profile-panel', 'linear-gradient(135deg, color-mix(in srgb, ' + accent + ' 12%, transparent), rgba(255, 255, 255, 0.025))');
+
+      if (readerType.emoji && readerProfileEmoji) {
+        var emojiUrl = '/wp-content/themes/wordpress-theme/assets/images/custom-emojis/' + readerType.emoji + '.png';
+        if (readerProfileEmoji.tagName && readerProfileEmoji.tagName.toLowerCase() === 'img') {
+          readerProfileEmoji.src = emojiUrl;
+          readerProfileEmoji.alt = '';
+        } else {
+          var img = document.createElement('img');
+          img.src = emojiUrl;
+          img.alt = '';
+          img.loading = 'lazy';
+          img.decoding = 'async';
+          img.setAttribute('data-bookshelf-reader-type-emoji', '');
+          readerProfileEmoji.replaceWith(img);
+          readerProfileEmoji = img;
+        }
+      }
+
+      if (readerType.emoji && snapshotReaderEmoji) {
+        var snapshotEmojiUrl = '/wp-content/themes/wordpress-theme/assets/images/custom-emojis/' + readerType.emoji + '.png';
+        if (snapshotReaderEmoji.tagName && snapshotReaderEmoji.tagName.toLowerCase() === 'img') {
+          snapshotReaderEmoji.src = snapshotEmojiUrl;
+          snapshotReaderEmoji.alt = '';
+        } else {
+          var snapshotImg = document.createElement('img');
+          snapshotImg.src = snapshotEmojiUrl;
+          snapshotImg.alt = '';
+          snapshotImg.loading = 'lazy';
+          snapshotImg.decoding = 'async';
+          snapshotImg.setAttribute('data-snapshot-reader-emoji', '');
+          snapshotReaderEmoji.replaceWith(snapshotImg);
+          snapshotReaderEmoji = snapshotImg;
+        }
+      }
+    }
+
+    function renderMadeForYouReaderType() {
+      if (!readerProfileCard || !readerProfileTitle) return;
+
+      var profile = madeForYouProfileForDisplay();
+      if (!profile || !Object.keys(profile).length) return;
+
+      var readerType = readerTypeByKey(madeForYouReaderTypeKey(profile));
+      if (!readerType) return;
+
+      var label = readerType.label || '';
+
+      if (label) readerProfileTitle.textContent = label;
+      if (label && snapshotReaderType) snapshotReaderType.textContent = label;
+      applyReaderTypePreview(readerType);
     }
 
     function relatedQuote(readBooks) {
@@ -326,12 +734,16 @@
     function booksFromStatus(books, wantedStatus, limit) {
       var statuses = getBookStatuses();
       var keyedBooks = {};
+      var seen = {};
 
       libraryBooks.concat(books).map(function (book) {
         return normalizeBook(book, lookup);
       }).filter(Boolean).forEach(function (book) {
         var key = getBookStatusKey(book);
         if (key && !keyedBooks[key]) keyedBooks[key] = book;
+        bookIdentityAliases(book, lookup).forEach(function (alias) {
+          if (!keyedBooks[alias]) keyedBooks[alias] = book;
+        });
       });
 
       return Object.keys(statuses).filter(function (key) {
@@ -340,11 +752,78 @@
         return keyedBooks[key] || lookup[key] || null;
       }).filter(function (book) {
         return book && book.title;
+      }).filter(function (book) {
+        var aliases = bookIdentityAliases(book, lookup);
+        var duplicate = aliases.some(function (alias) { return seen[alias]; });
+        if (duplicate) return false;
+        aliases.forEach(function (alias) { seen[alias] = true; });
+        return true;
       }).slice(0, limit || 7);
     }
 
     function readBooksFromStatuses(books) {
       return booksFromStatus(books, 'read', 7);
+    }
+
+    function statusBooks(books, statusName, limit) {
+      return booksFromStatus(books, statusName, limit || 80);
+    }
+
+    function filteredBooksForTab(books) {
+      var displayBooks = activeShelfTab === 'all' ? books.slice() : statusBooks(books, activeShelfTab, 120);
+      var query = normalizeKey(shelfSearch && shelfSearch.value);
+      var sortMode = String(shelfSort && shelfSort.value || 'recent');
+
+      if (query) {
+        displayBooks = displayBooks.filter(function (book) {
+          return [
+            book.title,
+            book.author,
+            book.tropes,
+            book.tropesDisplay
+          ].join(' ').toLowerCase().indexOf(query) > -1;
+        });
+      }
+
+      if (sortMode === 'title') {
+        displayBooks.sort(function (a, b) {
+          return String(a.title || '').localeCompare(String(b.title || ''));
+        });
+      } else if (sortMode === 'rating') {
+        displayBooks.sort(function (a, b) {
+          return bookRating(b) - bookRating(a) || String(a.title || '').localeCompare(String(b.title || ''));
+        });
+      } else if (sortMode === 'spice') {
+        displayBooks.sort(function (a, b) {
+          return (parseInt(b.spice, 10) || 0) - (parseInt(a.spice, 10) || 0) || String(a.title || '').localeCompare(String(b.title || ''));
+        });
+      }
+
+      return displayBooks;
+    }
+
+    function renderSnapshot(books) {
+      var readingBooks = statusBooks(books, 'reading', 80);
+      var finishedBooks = statusBooks(books, 'read', 80);
+      if (snapshotSaved) snapshotSaved.textContent = String(books.length);
+      if (snapshotReading) snapshotReading.textContent = String(readingBooks.length);
+      if (snapshotFinished) snapshotFinished.textContent = String(finishedBooks.length);
+
+      if (snapshotSpice) {
+        var activeSpice = root.querySelector('[data-spice-choice].is-active');
+        if (snapshotSpicePeppers && activeSpice) snapshotSpicePeppers.textContent = activeSpice.dataset.spicePeppers || '🌶';
+        snapshotSpice.textContent = activeSpice
+          ? (activeSpice.dataset.spiceLabel || 'spice reader')
+          : (snapshotSpice.textContent || 'spice profile not set');
+      }
+    }
+
+    function renderCurrentReading(books) {
+      if (!currentReading || !currentReadingBody) return;
+      var readingBooks = statusBooks(books, 'reading', 1);
+      currentReading.hidden = false;
+      currentReading.classList.toggle('is-empty', !readingBooks.length);
+      currentReadingBody.innerHTML = renderCurrentBook(readingBooks[0] || null);
     }
 
     function renderStatusLanes(books) {
@@ -364,6 +843,38 @@
           countEl.textContent = laneBooks.length + (laneBooks.length === 1 ? ' book' : ' books');
         }
       });
+    }
+
+    function ratedBooks(books) {
+      return books.map(function (book) {
+        var normalized = normalizeBook(book, lookup);
+        if (!normalized || !normalized.title) return null;
+        normalized.rating = bookRating(normalized);
+        return normalized.rating ? normalized : null;
+      }).filter(Boolean).sort(function (a, b) {
+        return bookRating(b) - bookRating(a);
+      });
+    }
+
+    function renderRatings(books) {
+      if (!ratingsSection || !ratingsGrid) return;
+
+      var rated = ratedBooks(books);
+      ratingsSection.hidden = false;
+
+      if (ratingsCount) {
+        ratingsCount.textContent = rated.length + (rated.length === 1 ? ' rated' : ' rated');
+      }
+
+      if (!rated.length) {
+        ratingsGrid.innerHTML = '';
+        if (ratingsEmpty) ratingsEmpty.hidden = false;
+        ratingsSection.hidden = !books.length;
+        return;
+      }
+
+      if (ratingsEmpty) ratingsEmpty.hidden = true;
+      ratingsGrid.innerHTML = rated.map(renderRatedBook).join('');
     }
 
     function renderReadFeature(books) {
@@ -386,20 +897,23 @@
       }
 
       if (quoteText && quote) {
-        quoteText.innerHTML = '<span>' + esc('"' + String(quote.text || '').replace(/^"+|"+$/g, '') + '"') + '</span>';
+        quoteText.innerHTML = '<span>' + esc('"' + decodeHtml(quote.text || '').replace(/^"+|"+$/g, '') + '"') + '</span>';
       }
 
       if (quoteSource) {
         quoteSource.textContent = quote && (quote.book_title || quote.book_handle)
-          ? 'from ' + (quote.book_title || quote.book_handle) + ' → quote wall'
+          ? 'from ' + decodeHtml(quote.book_title || quote.book_handle) + ' → quote wall'
           : 'visit the quote wall →';
       }
     }
 
     function render(books) {
       current = books;
+      renderCurrentReading(books);
+      renderSnapshot(books);
       renderReadFeature(books);
       renderStatusLanes(books);
+      renderRatings(books);
       if (!grid || !empty) return;
       if (!books.length) {
         grid.innerHTML = '';
@@ -411,9 +925,13 @@
       empty.hidden = true;
       if (toolbar) toolbar.hidden = false;
       if (tools) tools.hidden = false;
-      if (count) count.textContent = books.length + (books.length === 1 ? ' book saved' : ' books saved');
-      grid.innerHTML = books.map(renderBook).join('');
+      var displayBooks = filteredBooksForTab(books);
+      if (count) count.textContent = displayBooks.length + (displayBooks.length === 1 ? ' book' : ' books');
+      grid.innerHTML = displayBooks.length
+        ? displayBooks.map(renderBook).join('')
+        : '<div class="bbb-account-shelf__tabEmpty">nothing in this shelf yet.</div>';
       if (window.sssSyncBookStatusUI) window.sssSyncBookStatusUI();
+      if (window.bbbReaderNotesRefresh) window.bbbReaderNotesRefresh();
     }
 
     function renderLocal() {
@@ -458,6 +976,26 @@
       window.location.href = 'mailto:?subject=' + encodeURIComponent('My Society Reading List') + '&body=' + encodeURIComponent(output);
     });
 
+    shelfTabs && shelfTabs.addEventListener('click', function (event) {
+      var tab = event.target.closest('[data-shelf-tab]');
+      if (!tab || !shelfTabs.contains(tab)) return;
+      activeShelfTab = tab.dataset.shelfTab || 'all';
+      shelfTabs.querySelectorAll('[data-shelf-tab]').forEach(function (button) {
+        var active = button === tab;
+        button.classList.toggle('is-active', active);
+        button.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+      render(current);
+    });
+
+    shelfSearch && shelfSearch.addEventListener('input', function () {
+      render(current);
+    });
+
+    shelfSort && shelfSort.addEventListener('change', function () {
+      render(current);
+    });
+
     document.addEventListener('bbb:book-status-changed', function () {
       render(current);
     });
@@ -466,6 +1004,15 @@
       render(current);
     });
 
+    document.addEventListener('bbb:book-rating-changed', function () {
+      render(current);
+    });
+
+    document.addEventListener('bbb:book-ratings-updated', function () {
+      render(current);
+    });
+
+    renderMadeForYouReaderType();
     renderLocal();
 
     if (!isLoggedIn) return;
@@ -473,7 +1020,11 @@
     var api = getAccountApi();
     var localShelf = mergeBooks(getShelf(), [], lookup);
     if (api) {
-      accountApiRequest(api.shelfEndpoint, 'POST', { items: localShelf }).then(function (payload) {
+      accountApiRequest(api.shelfEndpoint, 'POST', {
+        items: localShelf,
+        statuses: getBookStatuses(),
+        ratings: getBookRatings()
+      }).then(function (payload) {
         renderTier(payload.accessTier || 'free');
         var remote = (payload.books || []).map(remoteBook);
         var merged = mergeBooks(localShelf, remote, lookup);
@@ -526,7 +1077,7 @@
       if (response.error) throw response.error;
       var query = client
         .from('bookshelf_saved_books')
-        .select('book_handle,book_title,author,cover,amazon,bookshop,spice_level,darkness_level,tropes,saved_at')
+        .select('book_key,book_handle,book_title,author,cover,amazon,bookshop,spice_level,darkness_level,tropes,saved_at')
         .eq('is_active', true)
         .order('saved_at', { ascending: false })
         .limit(80);
@@ -549,6 +1100,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-spice-profile]').forEach(initSpiceProfile);
     document.querySelectorAll('[data-account-shelf]').forEach(init);
   });
 })();

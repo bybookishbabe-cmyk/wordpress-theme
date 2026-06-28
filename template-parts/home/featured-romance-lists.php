@@ -42,7 +42,7 @@ if (!$posts) {
 		</div>
 
 		<div class="bbb-romance-lists__cta">
-			<a href="<?php echo esc_url(home_url('/blog/curated-romance-guides/')); ?>">
+			<a href="<?php echo esc_url(home_url('/curated-romance-guides/')); ?>">
 				explore all romance lists →
 			</a>
 		</div>

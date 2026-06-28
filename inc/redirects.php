@@ -18,23 +18,32 @@ function bbb_redirect_with_query_string(string $target, int $status = 301): void
 }
 
 function bbb_shopify_post_permalink(string $slug): string {
-	$post = get_posts(
-		array(
-			'name'           => sanitize_title($slug),
-			'post_type'      => 'post',
-			'post_status'    => 'publish',
-			'posts_per_page' => 1,
-		)
-	);
+	$slug = sanitize_title($slug);
+	$candidates = array($slug);
 
-	if ($post) {
-		$permalink = get_permalink($post[0]);
-		if ($permalink) {
-			return $permalink;
+	if (preg_match('/^(.+?-review)(?:-.+)?$/', $slug, $matches)) {
+		$candidates[] = sanitize_title($matches[1]);
+	}
+
+	foreach (array_unique($candidates) as $candidate) {
+		$post = get_posts(
+			array(
+				'name'           => $candidate,
+				'post_type'      => 'post',
+				'post_status'    => 'publish',
+				'posts_per_page' => 1,
+			)
+		);
+
+		if ($post) {
+			$permalink = get_permalink($post[0]);
+			if ($permalink) {
+				return $permalink;
+			}
 		}
 	}
 
-	return home_url('/' . sanitize_title($slug) . '/');
+	return home_url('/' . $slug . '/');
 }
 
 function bbb_shopify_product_permalink(string $handle): string {
@@ -59,6 +68,64 @@ function bbb_shopify_product_permalink(string $handle): string {
 
 	return home_url('/product/' . $handle . '/');
 }
+
+function bbb_restored_download_redirect_handles(): array {
+	return array(
+		'vintage-writer-book-review-editable-canva-template',
+		'cute-book-birthday-invitation-editable-canva-template',
+		'dark-bookshelf-review-editable-canva-template',
+		'smutty-november-printable-kindle-insert',
+		'black-marlboro-printable-kindle-insert',
+		'blue-marlboro-printable-kindle-insert',
+		'green-marlboro-printable-kindle-insert',
+		'pink-marlboro-printable-kindle-insert',
+		'red-marlboro-printable-kindle-insert-copy',
+		'red-marlboro-printable-kindle-insert',
+		'lace-fog-printable-kindle-insert',
+		'once-upon-a-happily-ever-after-printable-kindle-insert',
+		'once-upon-a-fairy-tale-printable-kindle-insert',
+		'once-upon-a-villain-printable-kindle-insert',
+		'book-cover-smutty-printable-kindle-insert',
+	);
+}
+
+function bbb_restored_download_permalink(string $handle): string {
+	$handle = sanitize_title($handle);
+	if (!in_array($handle, bbb_restored_download_redirect_handles(), true)) {
+		return '';
+	}
+
+	if (post_type_exists('download')) {
+		$download = get_page_by_path($handle, OBJECT, 'download');
+		if ($download instanceof WP_Post && 'publish' === $download->post_status) {
+			$permalink = get_permalink($download);
+			if ($permalink) {
+				return $permalink;
+			}
+		}
+	}
+
+	return home_url('/downloads/' . $handle . '/');
+}
+
+add_action(
+	'template_redirect',
+	static function (): void {
+		$path = trim((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
+
+		if (in_array($path, array('downloads/printable-kindle-insert-vault', 'products/printable-kindle-insert-vault', 'product/printable-kindle-insert-vault'), true)) {
+			bbb_redirect_with_query_string(home_url('/downloads/bybookishbabe-vault/'), 301);
+		}
+
+		if (preg_match('#^products?/([^/]+)/?$#', $path, $matches)) {
+			$target = bbb_restored_download_permalink($matches[1]);
+			if ('' !== $target) {
+				bbb_redirect_with_query_string($target, 301);
+			}
+		}
+	},
+	0
+);
 
 function bbb_shopify_collection_permalink(string $handle): string {
 	$handle = sanitize_title($handle);
@@ -167,6 +234,10 @@ add_action(
 		);
 		if (isset($direct_page_redirects[$path])) {
 			bbb_redirect_with_query_string(home_url($direct_page_redirects[$path]), 301);
+		}
+
+		if ('blog/curated-romance-guides' === $path) {
+			bbb_redirect_with_query_string(home_url('/curated-romance-guides/'), 301);
 		}
 
 		if (preg_match('#^if-you-liked-pages/(books-like-[^/]+)/?$#', $path, $matches)) {

@@ -250,6 +250,10 @@ function bbb_normalize_internal_url( string $url ): string {
 		return bbb_page_url( 'reader-quizzes' );
 	}
 
+	if ( 'reader-quizzes/fictional-boyfriend' === $path_only || 'reader-quizzes-fictional-boyfriend' === $path_only ) {
+		return bbb_page_url( 'fictional-boyfriend-quiz' );
+	}
+
 	if ( ( 'series' === $path_only || 'pages/series' === $path_only ) && isset( $query['series'] ) ) {
 		$series = sanitize_title( (string) $query['series'] );
 		if ( '' !== $series ) {

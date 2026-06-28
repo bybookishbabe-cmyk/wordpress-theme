@@ -34,7 +34,7 @@ function sss_library_shortcode($atts): string {
       <?php $book = sss_article_book_data($book_post->ID); ?>
       <button class="sss-blog-library__card" type="button" data-book-preview <?php echo sss_article_data_attrs($book); ?>>
         <?php if ($book['cover']) : ?>
-        <img src="<?php echo esc_url($book['cover']); ?>" alt="<?php echo esc_attr($book['title']); ?>" loading="lazy">
+        <img src="<?php echo esc_url($book['cover']); ?>" alt="<?php echo esc_attr(function_exists('bbb_book_cover_alt') ? bbb_book_cover_alt((string) $book['title'], (string) $book['author'], (string) ($book['shelf']['name'] ?? '')) : (string) $book['title'] . ' book cover'); ?>" loading="lazy">
         <?php endif; ?>
         <div class="sss-blog-library__title"><?php echo esc_html($book['title']); ?></div>
         <div class="sss-blog-library__author"><?php echo esc_html($book['author']); ?></div>
@@ -46,3 +46,4 @@ function sss_library_shortcode($atts): string {
 	return ob_get_clean();
 }
 add_shortcode('sss_library', 'sss_library_shortcode');
+add_shortcode('library', 'sss_library_shortcode');

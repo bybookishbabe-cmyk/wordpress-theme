@@ -230,15 +230,18 @@ function sss_specific_links_shortcode($atts): string {
 	?>
 <nav class="blog-specific-links" aria-label="specific guide links">
   <div class="blog-specific-links__head">
-    <span class="blog-specific-links__kicker">keep browsing</span>
     <span class="blog-specific-links__prompt"><?php echo esc_html($prompt); ?></span>
   </div>
   <div class="blog-specific-links__grid">
   <?php foreach ($links as $i => $link) : ?>
+    <?php
+    $link_title = strtolower((string) $link['title']);
+    $link_emoji = function_exists('bbb_custom_emoji_html') ? bbb_custom_emoji_html($link_title, '', 'blog-specific-links__emoji') : '';
+    ?>
     <a class="blog-specific-links__card" href="<?php echo esc_url($link['url']); ?>">
       <span class="blog-specific-links__number"><?php echo esc_html(str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT)); ?></span>
-      <span class="blog-specific-links__title"><?php echo esc_html(strtolower((string) $link['title'])); ?></span>
-      <span class="blog-specific-links__cta">open guide →</span>
+      <span class="blog-specific-links__title"><?php echo $link_emoji; ?><?php echo esc_html($link_title); ?></span>
+      <span class="blog-specific-links__arrow" aria-hidden="true">→</span>
     </a>
   <?php endforeach; ?>
   </div>
@@ -284,6 +287,8 @@ function sss_what_to_read_next_shortcode($atts): string {
 	}
 	$label = $label ?: 'romance';
 	$first_title = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title((string) $first_data['title']) : (string) $first_data['title'];
+	$first_cover_alt = function_exists('bbb_book_cover_alt') ? bbb_book_cover_alt((string) $first_data['title'], (string) $first_data['author'], (string) ($first_data['shelf']['name'] ?? '')) : (string) $first_data['title'] . ' book cover';
+	$second_cover_alt = $second_data && function_exists('bbb_book_cover_alt') ? bbb_book_cover_alt((string) $second_data['title'], (string) $second_data['author'], (string) ($second_data['shelf']['name'] ?? '')) : ($second_data ? (string) $second_data['title'] . ' book cover' : '');
 	$copy = 'find your next read after ' . $first_title . ' →';
 	if ($label && 'romance' !== $label) {
 		$copy = 'find your next ' . $label . ' read after ' . $first_title . ' →';
@@ -296,7 +301,7 @@ function sss_what_to_read_next_shortcode($atts): string {
     <?php if (!empty($first_data['cover'])) : ?>
       <span class="blog-next-read__book">
         <span class="blog-next-read__bookCover">
-          <img src="<?php echo esc_url($first_data['cover']); ?>" alt="<?php echo esc_attr($first_data['title']); ?>" loading="lazy">
+          <img src="<?php echo esc_url($first_data['cover']); ?>" alt="<?php echo esc_attr($first_cover_alt); ?>" loading="lazy">
         </span>
         <span class="blog-next-read__bookLabel">start here</span>
       </span>
@@ -305,7 +310,7 @@ function sss_what_to_read_next_shortcode($atts): string {
       <span class="blog-next-read__arrow">→</span>
       <span class="blog-next-read__book">
         <span class="blog-next-read__bookCover">
-          <img src="<?php echo esc_url($second_data['cover']); ?>" alt="<?php echo esc_attr($second_data['title']); ?>" loading="lazy">
+          <img src="<?php echo esc_url($second_data['cover']); ?>" alt="<?php echo esc_attr($second_cover_alt); ?>" loading="lazy">
         </span>
         <span class="blog-next-read__bookLabel">try next</span>
       </span>
@@ -319,22 +324,68 @@ function sss_what_to_read_next_shortcode($atts): string {
 add_shortcode('sss_what_to_read_next', 'sss_what_to_read_next_shortcode');
 
 function sss_faq_book_title_patterns(): array {
-	static $patterns = null;
-	if (null !== $patterns) {
-		return $patterns;
+	return array_map(
+		static fn(array $match): string => $match['pattern'],
+		sss_faq_book_title_matches()
+	);
+}
+
+function sss_faq_book_title_linkable(WP_Post $book): bool {
+	if ('publish' !== get_post_status($book)) {
+		return false;
 	}
 
-	$books = function_exists('sss_article_all_visible_books')
-		? sss_article_all_visible_books()
-		: get_posts(
-			array(
-				'post_type'      => array('bbb_book', 'sss_book'),
-				'post_status'    => 'publish',
-				'posts_per_page' => -1,
-				'orderby'        => 'title',
-				'order'          => 'ASC',
-			)
-		);
+	if (function_exists('bbb_content_reveal_date_is_unlocked') && !bbb_content_reveal_date_is_unlocked($book->ID)) {
+		return false;
+	}
+
+	if (function_exists('bbb_book_newsletter_is_unlocked') && !bbb_book_newsletter_is_unlocked($book->ID)) {
+		return false;
+	}
+
+	if (function_exists('bbb_truthy')) {
+		if (bbb_truthy(get_post_meta($book->ID, '_bbb_hidden_from_public_browsing', true))) {
+			return false;
+		}
+		if (bbb_truthy(get_post_meta($book->ID, '_bbb_private_shelf', true))) {
+			return false;
+		}
+	}
+
+	$is_private = function_exists('bbb_get_field') ? bbb_get_field('is_private', $book->ID, false) : get_post_meta($book->ID, 'is_private', true);
+	if (function_exists('bbb_truthy') ? bbb_truthy($is_private) : sss_article_bool($is_private)) {
+		return false;
+	}
+
+	return true;
+}
+
+function sss_faq_book_title_source_books(): array {
+	$books = get_posts(
+		array(
+			'post_type'      => array('bbb_book', 'sss_book'),
+			'post_status'    => 'publish',
+			'posts_per_page' => -1,
+			'orderby'        => 'title',
+			'order'          => 'ASC',
+		)
+	);
+
+	return array_values(
+		array_filter(
+			$books,
+			static fn(WP_Post $book): bool => sss_faq_book_title_linkable($book)
+		)
+	);
+}
+
+function sss_faq_book_title_matches(): array {
+	static $matches = null;
+	if (null !== $matches) {
+		return $matches;
+	}
+
+	$books = sss_faq_book_title_source_books();
 
 	$titles = array();
 	foreach ($books as $book) {
@@ -349,32 +400,111 @@ function sss_faq_book_title_patterns(): array {
 
 		$normalized = function_exists('sss_article_match_text') ? sss_article_match_text($title) : strtolower($title);
 		$word_count = count(preg_split('/\s+/', $normalized) ?: array());
-		if ($word_count < 2 && strlen($normalized) < 10) {
+		if ($word_count < 2 && strlen($normalized) < 5) {
 			continue;
 		}
 
-		$titles[$title] = $title;
+		$titles[$title] = array(
+			'title' => $title,
+			'url'   => get_permalink($book),
+		);
 	}
 
 	$titles = array_values($titles);
 	usort(
 		$titles,
-		static function (string $first, string $second): int {
-			return strlen($second) <=> strlen($first);
+		static function (array $first, array $second): int {
+			return strlen((string) $second['title']) <=> strlen((string) $first['title']);
 		}
 	);
 
-	$patterns = array_map(
-		static function (string $title): string {
-			$pattern = preg_quote($title, '/');
-			$pattern = str_replace(array("'", '’'), "[’']", $pattern);
+	$matches = array_map(
+		static function (array $book): array {
+			$pattern = preg_quote((string) $book['title'], '/');
+			$apostrophe_pattern = '(?:\x{2019}|\x27|&#0*8217;|&#x0*2019;|&rsquo;)';
+			$pattern = str_replace(array("'", '’'), $apostrophe_pattern, $pattern);
 
-			return '/(?<![\p{L}\p{N}])(' . $pattern . ')(?![\p{L}\p{N}])/iu';
+			return array(
+				'title'   => (string) $book['title'],
+				'url'     => (string) $book['url'],
+				'pattern' => '/(?<![\p{L}\p{N}])(' . $pattern . ')(?![\p{L}\p{N}])/iu',
+			);
 		},
 		$titles
 	);
 
-	return $patterns;
+	return $matches;
+}
+
+function sss_faq_series_title_matches(): array {
+	static $matches = null;
+	if (null !== $matches) {
+		return $matches;
+	}
+
+	if (!post_type_exists('sss_series')) {
+		$matches = array();
+		return $matches;
+	}
+
+	$series_posts = get_posts(
+		array(
+			'post_type'      => 'sss_series',
+			'post_status'    => 'publish',
+			'posts_per_page' => -1,
+			'orderby'        => 'title',
+			'order'          => 'ASC',
+		)
+	);
+
+	$titles = array();
+	foreach ($series_posts as $series) {
+		if (!$series instanceof WP_Post) {
+			continue;
+		}
+
+		$title = trim(wp_strip_all_tags(get_the_title($series)));
+		if ('' === $title) {
+			continue;
+		}
+
+		$normalized = function_exists('sss_article_match_text') ? sss_article_match_text($title) : strtolower($title);
+		$word_count = count(preg_split('/\s+/', $normalized) ?: array());
+		if ($word_count < 2 && strlen($normalized) < 5) {
+			continue;
+		}
+
+		$titles[$title] = array(
+			'title' => $title,
+			'url'   => get_permalink($series),
+		);
+	}
+
+	$titles = array_values($titles);
+	usort(
+		$titles,
+		static function (array $first, array $second): int {
+			return strlen((string) $second['title']) <=> strlen((string) $first['title']);
+		}
+	);
+
+	$matches = array_map(
+		static function (array $series): array {
+			$pattern = preg_quote((string) $series['title'], '/');
+			$apostrophe_pattern = '(?:\x{2019}|\x27|&#0*8217;|&#x0*2019;|&rsquo;)';
+			$pattern = str_replace(array("'", '’'), $apostrophe_pattern, $pattern);
+			$series_suffix = preg_match('/\bseries$/i', (string) $series['title']) ? '' : '(?:\s+series)?';
+
+			return array(
+				'title'   => (string) $series['title'],
+				'url'     => (string) $series['url'],
+				'pattern' => '/(?<![\p{L}\p{N}])(' . $pattern . $series_suffix . ')(?![\p{L}\p{N}])/iu',
+			);
+		},
+		$titles
+	);
+
+	return $matches;
 }
 
 function sss_faq_italicize_book_titles(string $html): string {
@@ -412,6 +542,79 @@ function sss_faq_italicize_book_titles(string $html): string {
 	return implode('', $chunks);
 }
 
+function sss_faq_link_known_titles(string $html): string {
+	$matches = array_merge(
+		array_map(
+			static fn(array $match): array => array_merge($match, array('class' => 'blog-faq__bookLink')),
+			sss_faq_book_title_matches()
+		),
+		array_map(
+			static fn(array $match): array => array_merge($match, array('class' => 'blog-faq__seriesLink')),
+			sss_faq_series_title_matches()
+		)
+	);
+	if (!$matches || '' === trim($html)) {
+		return $html;
+	}
+
+	usort(
+		$matches,
+		static function (array $first, array $second): int {
+			return strlen((string) $second['title']) <=> strlen((string) $first['title']);
+		}
+	);
+
+	$chunks = function_exists('wp_html_split') ? wp_html_split($html) : preg_split('/(<[^>]+>)/', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
+	if (!is_array($chunks)) {
+		return $html;
+	}
+
+	$in_link = false;
+	foreach ($chunks as $index => $chunk) {
+		if (str_starts_with($chunk, '<')) {
+			if (preg_match('/^<\s*a\b/i', $chunk)) {
+				$in_link = true;
+			} elseif (preg_match('/^<\s*\/\s*a\s*>/i', $chunk)) {
+				$in_link = false;
+			}
+			continue;
+		}
+
+		if ($in_link || '' === trim($chunk)) {
+			continue;
+		}
+
+		$replacements = array();
+		foreach ($matches as $known_match) {
+			$chunk = (string) preg_replace_callback(
+				$known_match['pattern'],
+				static function (array $title_match) use ($known_match, &$replacements): string {
+					$key = '%%BBB_FAQ_KNOWN_LINK_' . count($replacements) . '%%';
+					$replacements[$key] = sprintf(
+						'<a class="%s" href="%s">%s</a>',
+						esc_attr((string) $known_match['class']),
+						esc_url((string) $known_match['url']),
+						esc_html((string) $title_match[1])
+					);
+
+					return $key;
+				},
+				$chunk
+			);
+		}
+		if ($replacements) {
+			$chunk = str_replace(array_keys($replacements), array_values($replacements), $chunk);
+		}
+		$chunks[$index] = $chunk;
+	}
+
+	return implode('', $chunks);
+}
+
+function sss_faq_link_book_titles(string $html): string {
+	return sss_faq_link_known_titles($html);
+}
+
 function sss_faq_shortcode($atts, ?string $content = null): string {
 	if (null === $content || trim($content) === '') {
 		return '';
@@ -433,7 +636,7 @@ function sss_faq_shortcode($atts, ?string $content = null): string {
 			if ('a' !== $type || '' === $question || '' === $body) {
 				continue;
 			}
-			$answer = sss_faq_italicize_book_titles(wp_kses_post(do_shortcode($body)));
+			$answer = sss_faq_link_book_titles(wp_kses_post(do_shortcode($body)));
 			$items .= '<details class="blog-faq__item"><summary class="blog-faq__question"><span>' . wp_kses_post(sss_faq_italicize_book_titles(esc_html($question))) . '</span><span class="blog-faq__arrow" aria-hidden="true">⌄</span></summary><div class="blog-faq__answer">' . wp_kses_post($answer) . '</div></details>';
 			$question = '';
 		}
@@ -448,7 +651,7 @@ function sss_faq_shortcode($atts, ?string $content = null): string {
 				if (!$question || !$answer) {
 					continue;
 				}
-				$answer = sss_faq_italicize_book_titles(wp_kses_post($answer));
+				$answer = sss_faq_link_book_titles(wp_kses_post($answer));
 				$items .= '<details class="blog-faq__item"><summary class="blog-faq__question"><span>' . wp_kses_post(sss_faq_italicize_book_titles(esc_html($question))) . '</span><span class="blog-faq__arrow" aria-hidden="true">⌄</span></summary><div class="blog-faq__answer">' . wp_kses_post($answer) . '</div></details>';
 			}
 		}
@@ -627,10 +830,11 @@ function sss_readnext_shortcode($atts): string {
 
     <?php if ($rec_book && $rec_article) : ?>
       <?php $rec_data = sss_article_book_data($rec_book->ID); ?>
+      <?php $rec_cover_alt = function_exists('bbb_book_cover_alt') ? bbb_book_cover_alt((string) $rec_data['title'], (string) $rec_data['author'], (string) ($rec_data['shelf']['name'] ?? '')) : (string) $rec_data['title'] . ' book cover'; ?>
     <a class="blog-readnext__item blog-readnext__item--story" href="<?php echo esc_url(get_permalink($rec_article)); ?>">
       <span class="blog-readnext__arrow" aria-hidden="true">→</span>
       <span class="blog-readnext__media blog-readnext__media--book">
-        <img src="<?php echo esc_url($rec_data['cover']); ?>" alt="<?php echo esc_attr($rec_data['title']); ?>" loading="lazy">
+        <img src="<?php echo esc_url($rec_data['cover']); ?>" alt="<?php echo esc_attr($rec_cover_alt); ?>" loading="lazy">
       </span>
       <span class="blog-readnext__body">
         <span class="blog-readnext__label"><?php echo esc_html(function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title((string) $rec_data['title']) : (string) $rec_data['title']); ?></span>

@@ -40,6 +40,86 @@
 		});
 	});
 
+	function filenameFromDownloadLink(link) {
+		var downloadName = link.getAttribute('download');
+		if (downloadName && downloadName !== 'true') {
+			return downloadName;
+		}
+
+		try {
+			var url = new URL(link.href, window.location.href);
+			var queryName = url.searchParams.get('name');
+			if (queryName) {
+				return queryName;
+			}
+			var pathName = url.pathname.split('/').filter(Boolean).pop();
+			if (pathName) {
+				return decodeURIComponent(pathName);
+			}
+		} catch (error) {}
+
+		return 'burn-bright-download';
+	}
+
+	function setDownloadBusy(link, isBusy) {
+		link.classList.toggle('is-downloading', isBusy);
+		link.setAttribute('aria-busy', isBusy ? 'true' : 'false');
+	}
+
+	function flashDownloadLabel(link, label) {
+		var oldLabel = link.getAttribute('data-burn-download-label') || link.textContent;
+		link.setAttribute('data-burn-download-label', oldLabel);
+		link.textContent = label;
+		window.setTimeout(function () {
+			link.textContent = oldLabel;
+		}, 1600);
+	}
+
+	function triggerBlobDownload(blob, filename) {
+		var objectUrl = URL.createObjectURL(blob);
+		var anchor = document.createElement('a');
+		anchor.href = objectUrl;
+		anchor.download = filename;
+		anchor.style.display = 'none';
+		document.body.appendChild(anchor);
+		anchor.click();
+		window.setTimeout(function () {
+			URL.revokeObjectURL(objectUrl);
+			anchor.remove();
+		}, 1000);
+	}
+
+	document.addEventListener('click', function (event) {
+		var link = event.target.closest('[data-burn-force-download]');
+		if (!link || !link.href || link.__burnDownloading) {
+			return;
+		}
+
+		event.preventDefault();
+		event.stopPropagation();
+
+		link.__burnDownloading = true;
+		setDownloadBusy(link, true);
+
+		fetch(link.href, {
+			credentials: 'same-origin',
+			cache: 'no-store'
+		}).then(function (response) {
+			if (!response.ok) {
+				throw new Error('download failed');
+			}
+			return response.blob();
+		}).then(function (blob) {
+			triggerBlobDownload(blob, filenameFromDownloadLink(link));
+			flashDownloadLabel(link, 'download started');
+		}).catch(function () {
+			flashDownloadLabel(link, 'try again');
+		}).finally(function () {
+			link.__burnDownloading = false;
+			setDownloadBusy(link, false);
+		});
+	}, true);
+
 	function readShelf() {
 		try {
 			return JSON.parse(window.localStorage.getItem('sssMyShelf')) || [];
@@ -209,7 +289,7 @@
 		});
 	});
 
-	function bindMobileAutoSwipe() {
+	function bindMobileSwipeHint() {
 		var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 		var mobile = window.matchMedia && window.matchMedia('(max-width: 760px)').matches;
 
@@ -233,18 +313,11 @@
 		}
 
 		lanes.forEach(function (lane, index) {
-			var pausedUntil = 0;
-			var timer = null;
 			var nudged = false;
-			var step = Math.max(140, Math.round(lane.clientWidth * 0.58));
-			var intervalDelay = 1900 + (index * 170);
+			var step = Math.min(44, Math.max(28, Math.round(lane.clientWidth * 0.12)));
 
-			function pauseBriefly() {
-				pausedUntil = Date.now() + 1800;
-			}
-
-			function advance() {
-				if (Date.now() < pausedUntil || document.hidden) {
+			function nudge() {
+				if (nudged || document.hidden) {
 					return;
 				}
 
@@ -253,36 +326,31 @@
 					return;
 				}
 
-				if (lane.scrollLeft >= maxScroll - 8) {
+				nudged = true;
+				lane.scrollBy({
+					left: Math.min(step, maxScroll),
+					behavior: 'smooth'
+				});
+				window.setTimeout(function () {
 					lane.scrollTo({
 						left: 0,
 						behavior: 'smooth'
 					});
-					return;
-				}
-
-				lane.scrollBy({
-					left: step,
-					behavior: 'smooth'
-				});
+				}, 520);
 			}
 
 			['touchstart', 'pointerdown', 'wheel', 'keydown'].forEach(function (eventName) {
-				lane.addEventListener(eventName, pauseBriefly, { passive: true });
+				lane.addEventListener(eventName, function () {
+					nudged = true;
+				}, { passive: true });
 			});
 
 			if ('IntersectionObserver' in window) {
 				var laneObserver = new IntersectionObserver(function (entries) {
 					entries.forEach(function (entry) {
-						if (entry.isIntersecting && !timer) {
-							if (!nudged) {
-								nudged = true;
-								window.setTimeout(advance, 450 + (index * 80));
-							}
-							timer = window.setInterval(advance, intervalDelay);
-						} else if (!entry.isIntersecting && timer) {
-							window.clearInterval(timer);
-							timer = null;
+						if (entry.isIntersecting) {
+							window.setTimeout(nudge, 450 + (index * 80));
+							laneObserver.unobserve(lane);
 						}
 					});
 				}, {
@@ -293,12 +361,11 @@
 				return;
 			}
 
-			window.setTimeout(advance, 450 + (index * 80));
-			timer = window.setInterval(advance, intervalDelay);
+			window.setTimeout(nudge, 450 + (index * 80));
 		});
 	}
 
-	bindMobileAutoSwipe();
+	bindMobileSwipeHint();
 
 	var animatedSections = document.querySelectorAll('.bbb-burn-bright > section');
 	if (!animatedSections.length) {
