@@ -8,10 +8,6 @@
 declare(strict_types=1);
 
 function bbb_page_route_registry(): array {
-	$monthly_theme_template = current_time('Y-m-d H:i:s') >= '2026-06-01 00:00:00'
-		? 'page-june-2026-monthly-theme.php'
-		: 'page-societylibrary.php';
-
 	return array(
 		'artprints'                      => '',
 		'about'                          => 'page-about.php',
@@ -40,12 +36,13 @@ function bbb_page_route_registry(): array {
 		'if-you-liked-pages'             => 'page-if-you-liked-pages.php',
 		'june-2026-monthly-theme'        => 'page-june-2026-monthly-theme.php',
 		'burn-bright'                    => 'page-june-2026-monthly-theme.php',
+		'monthly-bybookishbabe-romance-theme' => 'page-monthly-bybookishbabe-romance-theme.php',
 		'kindle-insert-vault'            => '',
 		'kindle-inserts'                 => 'page-kindle-inserts.php',
 		'library'                        => 'page-library.php',
 		'work-with-me'                   => 'page-media-kit.php',
 		'monthly-freebie'                => 'page-monthly-freebie.php',
-		'monthly-theme'                  => $monthly_theme_template,
+		'monthly-theme'                  => 'page-monthly-bybookishbabe-romance-theme.php',
 		'my-bookshelf'                   => 'page-my-bookshelf.php',
 		'my-notes'                       => 'page-my-notes.php',
 		'my-vault'                       => 'page-my-vault.php',
@@ -53,6 +50,7 @@ function bbb_page_route_registry(): array {
 		'popular-pages'                  => 'page-popular-pages.php',
 		'paranormal-romance-books'       => 'page-shelf.php',
 		'reader-mood-quiz'               => 'page-reader-mood-quiz.php',
+		'reader-type-quiz'               => 'page-reader-type-quiz.php',
 		'reader-types'                   => 'page-reader-types.php',
 		'reader-quizzes'                 => 'page-reader-quizes.php',
 		'romance-trope-quiz'             => 'page-romance-trope-quiz.php',
@@ -269,8 +267,39 @@ function bbb_virtual_book_taxonomy_meta_description(WP_Term $term): string {
 		: 'browse ' . $name . ' romance books in the bybookishbabe library.';
 }
 
+function bbb_monthly_theme_current_path(): string {
+	return 'monthly-theme/july-2026-midnight-summer';
+}
+
+function bbb_monthly_theme_archive_templates(): array {
+	return array(
+		'monthly-theme/june-2026-burn-bright'    => 'page-june-2026-monthly-theme.php',
+		'monthly-theme/july-2026-midnight-summer' => 'page-monthly-bybookishbabe-romance-theme.php',
+	);
+}
+
+function bbb_monthly_theme_template_for_path(string $request_path): string {
+	$archives = bbb_monthly_theme_archive_templates();
+	$template = (string) ($archives[trim($request_path, '/')] ?? '');
+	if ('' === $template) {
+		return '';
+	}
+
+	$path = get_theme_file_path($template);
+	return file_exists($path) ? $path : '';
+}
+
+function bbb_is_monthly_theme_archive_route(?string $request_path = null): bool {
+	if (null === $request_path) {
+		$request_path = trim((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
+	}
+
+	return '' !== bbb_monthly_theme_template_for_path($request_path);
+}
+
 function bbb_is_burn_bright_route(): bool {
-	return 'burn-bright' === bbb_current_route_slug();
+	$request_path = trim((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
+	return in_array($request_path, array('burn-bright', 'june-2026-monthly-theme', 'monthly-theme/june-2026-burn-bright'), true);
 }
 
 function bbb_burn_bright_seo_data(): array {
@@ -279,16 +308,37 @@ function bbb_burn_bright_seo_data(): array {
 		'social_title' => 'Burn Bright — June 2026 Monthly Drop · bybookishbabe',
 		'description'  => 'The June 2026 Smut & Sentiment Society monthly drop — 4 printable Kindle inserts, phone wallpapers, a reading calendar, and book recs for the Burn Bright theme.',
 		'social_description' => '4 printable Kindle inserts, phone wallpapers, a reading calendar, and book recs — the June 2026 Smut & Sentiment Society drop is here.',
-		'canonical'    => home_url('/burn-bright/'),
+		'canonical'    => home_url('/monthly-theme/june-2026-burn-bright/'),
 		'image'        => get_theme_file_uri('assets/monthly-themes/june-2026/previews/burn-bright-og.png'),
 		'image_alt'    => 'Burn Bright June 2026 monthly drop with four printable Kindle insert mockups',
+	);
+}
+
+function bbb_monthly_theme_archive_seo_data(?string $request_path = null): array {
+	if (null === $request_path) {
+		$request_path = trim((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
+	}
+
+	$request_path = trim($request_path, '/');
+	if ('monthly-theme/july-2026-midnight-summer' !== $request_path) {
+		return array();
+	}
+
+	return array(
+		'title'              => 'Midnight Summer July 2026 Romance Theme — kindle inserts, wallpapers & bookmarks',
+		'social_title'       => 'Midnight Summer — July 2026 Monthly Romance Theme · bybookishbabe',
+		'description'        => 'The July 2026 bybookishbabe monthly romance theme: Midnight Summer printable kindle inserts, iPhone wallpapers, printable bookmarks, a reading calendar, playlist vibes, dark romance book recs, and a Canva review template.',
+		'social_description' => 'Open the Midnight Summer July monthly drop: kindle inserts, wallpapers, bookmarks, calendar, review template, playlists, and dark romance recs.',
+		'canonical'          => home_url('/monthly-theme/july-2026-midnight-summer/'),
+		'image'              => get_theme_file_uri('assets/monthly-themes/july-2026/display/midnight-summer-bookmark-mockup.jpg'),
+		'image_alt'          => 'Midnight Summer July 2026 printable bookmarks and monthly romance theme preview',
 	);
 }
 
 add_filter(
 	'pre_handle_404',
 	static function ($preempt, WP_Query $query) {
-		if (!bbb_is_burn_bright_route()) {
+		if (!bbb_is_burn_bright_route() && !bbb_is_monthly_theme_archive_route()) {
 			return $preempt;
 		}
 
@@ -329,8 +379,22 @@ add_action(
 add_filter(
 	'redirect_canonical',
 	static function ($redirect_url) {
+		if (bbb_is_monthly_theme_archive_route()) {
+			return false;
+		}
+
 		return $redirect_url;
 	}
+);
+
+add_filter(
+	'rank_math/redirection/fallback_exclude_locations',
+	static function (array $locations): array {
+		$locations[] = 'monthly-theme/july-2026-midnight-summer';
+		$locations[] = 'monthly-theme/june-2026-burn-bright';
+		return array_values(array_unique($locations));
+	},
+	20
 );
 
 add_action(
@@ -363,6 +427,11 @@ add_filter(
 add_filter(
 	'pre_get_document_title',
 	static function (string $title): string {
+		$monthly_theme_seo = bbb_monthly_theme_archive_seo_data();
+		if ($monthly_theme_seo) {
+			return $monthly_theme_seo['title'] . ' - ' . get_bloginfo('name');
+		}
+
 		if (bbb_is_burn_bright_route()) {
 			return bbb_burn_bright_seo_data()['title'] . ' - ' . get_bloginfo('name');
 		}
@@ -380,6 +449,11 @@ add_filter(
 add_filter(
 	'rank_math/frontend/title',
 	static function (string $title): string {
+		$monthly_theme_seo = bbb_monthly_theme_archive_seo_data();
+		if ($monthly_theme_seo) {
+			return $monthly_theme_seo['title'];
+		}
+
 		if (bbb_is_burn_bright_route()) {
 			return bbb_burn_bright_seo_data()['title'];
 		}
@@ -397,6 +471,11 @@ add_filter(
 add_filter(
 	'rank_math/opengraph/facebook/title',
 	static function (string $title): string {
+		$monthly_theme_seo = bbb_monthly_theme_archive_seo_data();
+		if ($monthly_theme_seo) {
+			return $monthly_theme_seo['social_title'];
+		}
+
 		if (bbb_is_burn_bright_route()) {
 			return bbb_burn_bright_seo_data()['social_title'];
 		}
@@ -414,6 +493,11 @@ add_filter(
 add_filter(
 	'rank_math/opengraph/twitter/title',
 	static function (string $title): string {
+		$monthly_theme_seo = bbb_monthly_theme_archive_seo_data();
+		if ($monthly_theme_seo) {
+			return $monthly_theme_seo['social_title'];
+		}
+
 		if (bbb_is_burn_bright_route()) {
 			return bbb_burn_bright_seo_data()['social_title'];
 		}
@@ -431,6 +515,11 @@ add_filter(
 add_filter(
 	'rank_math/frontend/description',
 	static function (string $description): string {
+		$monthly_theme_seo = bbb_monthly_theme_archive_seo_data();
+		if ($monthly_theme_seo) {
+			return $monthly_theme_seo['description'];
+		}
+
 		if (bbb_is_burn_bright_route()) {
 			return bbb_burn_bright_seo_data()['description'];
 		}
@@ -444,6 +533,11 @@ add_filter(
 add_filter(
 	'rank_math/opengraph/facebook/description',
 	static function (string $description): string {
+		$monthly_theme_seo = bbb_monthly_theme_archive_seo_data();
+		if ($monthly_theme_seo) {
+			return $monthly_theme_seo['social_description'];
+		}
+
 		if (bbb_is_burn_bright_route()) {
 			return bbb_burn_bright_seo_data()['social_description'];
 		}
@@ -457,6 +551,11 @@ add_filter(
 add_filter(
 	'rank_math/opengraph/twitter/description',
 	static function (string $description): string {
+		$monthly_theme_seo = bbb_monthly_theme_archive_seo_data();
+		if ($monthly_theme_seo) {
+			return $monthly_theme_seo['social_description'];
+		}
+
 		if (bbb_is_burn_bright_route()) {
 			return bbb_burn_bright_seo_data()['social_description'];
 		}
@@ -470,6 +569,11 @@ add_filter(
 add_filter(
 	'rank_math/frontend/canonical',
 	static function (string $canonical): string {
+		$monthly_theme_seo = bbb_monthly_theme_archive_seo_data();
+		if ($monthly_theme_seo) {
+			return $monthly_theme_seo['canonical'];
+		}
+
 		if (bbb_is_burn_bright_route()) {
 			return bbb_burn_bright_seo_data()['canonical'];
 		}
@@ -487,6 +591,13 @@ add_filter(
 add_filter(
 	'rank_math/frontend/robots',
 	static function (array $robots): array {
+		if (bbb_monthly_theme_archive_seo_data()) {
+			unset($robots['noindex'], $robots['nofollow']);
+			$robots['index']  = 'index';
+			$robots['follow'] = 'follow';
+			return $robots;
+		}
+
 		if (bbb_is_burn_bright_route()) {
 			unset($robots['noindex'], $robots['nofollow']);
 			$robots['index']  = 'index';
@@ -510,6 +621,13 @@ add_filter(
 add_filter(
 	'wp_robots',
 	static function (array $robots): array {
+		if (bbb_monthly_theme_archive_seo_data()) {
+			unset($robots['noindex'], $robots['nofollow']);
+			$robots['index']  = true;
+			$robots['follow'] = true;
+			return $robots;
+		}
+
 		if (bbb_is_burn_bright_route()) {
 			unset($robots['noindex'], $robots['nofollow']);
 			$robots['index']  = true;
@@ -535,6 +653,59 @@ add_filter('rank_math/opengraph/facebook/url', static fn(string $url): string =>
 add_filter('rank_math/opengraph/twitter/url', static fn(string $url): string => bbb_is_burn_bright_route() ? bbb_burn_bright_seo_data()['canonical'] : $url, 99);
 add_filter('rank_math/opengraph/facebook/image', static fn(string $image): string => bbb_is_burn_bright_route() ? bbb_burn_bright_seo_data()['image'] : $image, 99);
 add_filter('rank_math/opengraph/twitter/image', static fn(string $image): string => bbb_is_burn_bright_route() ? bbb_burn_bright_seo_data()['image'] : $image, 99);
+add_filter('rank_math/opengraph/type', static fn(string $type): string => bbb_monthly_theme_archive_seo_data() ? 'website' : $type, 100);
+add_filter('rank_math/opengraph/facebook/url', static fn(string $url): string => bbb_monthly_theme_archive_seo_data()['canonical'] ?? $url, 100);
+add_filter('rank_math/opengraph/twitter/url', static fn(string $url): string => bbb_monthly_theme_archive_seo_data()['canonical'] ?? $url, 100);
+add_filter('rank_math/opengraph/facebook/image', static fn(string $image): string => bbb_monthly_theme_archive_seo_data()['image'] ?? $image, 100);
+add_filter('rank_math/opengraph/twitter/image', static fn(string $image): string => bbb_monthly_theme_archive_seo_data()['image'] ?? $image, 100);
+
+function bbb_monthly_theme_remove_rank_math_social_defaults(): void {
+	if (!bbb_monthly_theme_archive_seo_data()) {
+		return;
+	}
+
+	remove_all_actions('rank_math/opengraph/facebook', 10);
+	remove_all_actions('rank_math/opengraph/facebook', 11);
+	remove_all_actions('rank_math/opengraph/facebook', 12);
+	remove_all_actions('rank_math/opengraph/twitter', 10);
+	remove_all_actions('rank_math/opengraph/twitter', 11);
+}
+add_action('rank_math/opengraph/facebook', 'bbb_monthly_theme_remove_rank_math_social_defaults', 0);
+add_action('rank_math/opengraph/twitter', 'bbb_monthly_theme_remove_rank_math_social_defaults', 0);
+
+function bbb_monthly_theme_print_facebook_social_meta(): void {
+	$seo = bbb_monthly_theme_archive_seo_data();
+	if (!$seo) {
+		return;
+	}
+
+	printf('<meta property="og:title" content="%s">%s', esc_attr($seo['social_title']), "\n");
+	printf('<meta property="og:description" content="%s">%s', esc_attr($seo['social_description']), "\n");
+	printf('<meta property="og:url" content="%s">%s', esc_url($seo['canonical']), "\n");
+}
+add_action('rank_math/opengraph/facebook', 'bbb_monthly_theme_print_facebook_social_meta', 9);
+
+function bbb_monthly_theme_print_twitter_social_meta(): void {
+	$seo = bbb_monthly_theme_archive_seo_data();
+	if (!$seo) {
+		return;
+	}
+
+	printf('<meta name="twitter:title" content="%s">%s', esc_attr($seo['social_title']), "\n");
+	printf('<meta name="twitter:description" content="%s">%s', esc_attr($seo['social_description']), "\n");
+}
+add_action('rank_math/opengraph/twitter', 'bbb_monthly_theme_print_twitter_social_meta', 9);
+
+function bbb_monthly_theme_add_rank_math_image($opengraph_image): void {
+	$seo = bbb_monthly_theme_archive_seo_data();
+	if (!$seo || !is_object($opengraph_image) || !method_exists($opengraph_image, 'add_image')) {
+		return;
+	}
+
+	$opengraph_image->add_image($seo['image']);
+}
+add_action('rank_math/opengraph/facebook/add_additional_images', 'bbb_monthly_theme_add_rank_math_image', 5);
+add_action('rank_math/opengraph/twitter/add_additional_images', 'bbb_monthly_theme_add_rank_math_image', 5);
 
 function bbb_burn_bright_remove_rank_math_social_defaults(): void {
 	if (!bbb_is_burn_bright_route()) {
@@ -586,6 +757,13 @@ add_action('rank_math/opengraph/twitter/add_additional_images', 'bbb_burn_bright
 add_action(
 	'wp_head',
 	static function (): void {
+		$monthly_theme_seo = bbb_monthly_theme_archive_seo_data();
+		if ($monthly_theme_seo) {
+			printf('<meta property="og:image:alt" content="%s">%s', esc_attr($monthly_theme_seo['image_alt']), "\n");
+			printf('<meta name="twitter:image:alt" content="%s">%s', esc_attr($monthly_theme_seo['image_alt']), "\n");
+			return;
+		}
+
 		if (!bbb_is_burn_bright_route()) {
 			return;
 		}
@@ -600,6 +778,40 @@ add_action(
 add_filter(
 	'rank_math/json_ld',
 	static function (array $data): array {
+		$monthly_theme_seo = bbb_monthly_theme_archive_seo_data();
+		if ($monthly_theme_seo) {
+			$graph = isset($data['@graph']) && is_array($data['@graph']) ? $data['@graph'] : $data;
+			foreach ($graph as &$item) {
+				if (!is_array($item)) {
+					continue;
+				}
+
+				if (isset($item['@type']) && 'ImageObject' === $item['@type']) {
+					$item['@id']    = $monthly_theme_seo['image'];
+					$item['url']    = $monthly_theme_seo['image'];
+					$item['width']  = 1200;
+					$item['height'] = 1200;
+				}
+
+				if (isset($item['@type']) && in_array($item['@type'], array('WebPage', 'Article'), true)) {
+					$item['name']               = $monthly_theme_seo['title'];
+					$item['description']        = $monthly_theme_seo['description'];
+					$item['url']                = $monthly_theme_seo['canonical'];
+					$item['image']              = $monthly_theme_seo['image'];
+					$item['primaryImageOfPage'] = array('@id' => $monthly_theme_seo['image']);
+				}
+			}
+			unset($item);
+
+			if (isset($data['@graph']) && is_array($data['@graph'])) {
+				$data['@graph'] = $graph;
+			} else {
+				$data = $graph;
+			}
+
+			return $data;
+		}
+
 		if (!bbb_is_burn_bright_route()) {
 			return $data;
 		}
@@ -830,6 +1042,14 @@ add_action(
 			exit;
 		}
 
+		$monthly_theme_template = bbb_monthly_theme_template_for_path($request_path);
+		if ('' !== $monthly_theme_template) {
+			set_query_var('bbb_monthly_theme_archive_path', $request_path);
+			bbb_mark_virtual_route_found(false);
+			require $monthly_theme_template;
+			exit;
+		}
+
 		$empty_post_redirects = array(
 			'media-kit'                    => 'work-with-me',
 			'enemies-to-lovers'            => 'enemies-to-lovers-books',
@@ -1027,7 +1247,14 @@ add_action(
 		}
 
 		if ($template !== '') {
-			bbb_mark_virtual_route_found('series-reading-orders' !== $slug);
+			$send_nocache_headers = !in_array($slug, array('series-reading-orders', 'bybookishbabe-app'), true);
+			bbb_mark_virtual_route_found($send_nocache_headers);
+			if ('bybookishbabe-app' === $slug) {
+				header_remove('Pragma');
+				header_remove('Expires');
+				header_remove('Surrogate-Control');
+				header('Cache-Control: public, max-age=600, must-revalidate', true);
+			}
 			require $template;
 			exit;
 		}

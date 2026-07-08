@@ -259,6 +259,8 @@ function bbb_fictional_boyfriend_render_meta_box(WP_Post $post): void {
 	$love_language = (string) get_post_meta($post->ID, '_bbb_fb_love_language', true);
 	$would_text_back = (string) get_post_meta($post->ID, '_bbb_fb_would_text_back', true);
 	$read_next_note = (string) get_post_meta($post->ID, '_bbb_fb_read_next_note', true);
+	$dropbox_aesthetic_folder = 'Apps/bybookishbabe-edd-products/images/fictional-boyfriends/' . $post->post_name . '/';
+	$dropbox_aesthetic_url = 'https://www.dropbox.com/home/' . str_replace('%2F', '/', rawurlencode($dropbox_aesthetic_folder));
 	$aesthetic_images = array();
 	foreach (bbb_fictional_boyfriend_lines_meta($post->ID, '_bbb_fb_pinterest_urls') as $line) {
 		$parts = array_map('trim', explode('|', $line, 2));
@@ -290,6 +292,8 @@ function bbb_fictional_boyfriend_render_meta_box(WP_Post $post): void {
 		.bbb-fb-admin-linked select { min-height: 180px; }
 		.bbb-fb-admin-linked__current { margin: 8px 0 0; }
 		.bbb-fb-admin-aesthetic { display: grid; gap: 12px; max-width: 760px; }
+		.bbb-fb-admin-aesthetic__dropbox { padding: 12px; border: 1px solid #dcdcde; border-radius: 6px; background: #fff; }
+		.bbb-fb-admin-aesthetic__dropbox code { display: block; margin: 8px 0; white-space: normal; word-break: break-word; }
 		.bbb-fb-admin-aesthetic__slot { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 12px; align-items: start; padding: 12px; border: 1px solid #dcdcde; border-radius: 6px; background: #fff; }
 		.bbb-fb-admin-aesthetic__preview { display: block; width: 100px; aspect-ratio: 2 / 3; object-fit: cover; border: 1px solid #dcdcde; border-radius: 4px; background: #f6f7f7; }
 		.bbb-fb-admin-aesthetic__controls { display: grid; gap: 8px; }
@@ -421,8 +425,13 @@ function bbb_fictional_boyfriend_render_meta_box(WP_Post $post): void {
 		<div class="bbb-fb-admin-aesthetic" data-bbb-fb-aesthetic-field>
 			<p>
 				<strong><?php esc_html_e('Aesthetic images', 'bybookishbabe-shopify-port'); ?></strong><br>
-				<span class="description"><?php esc_html_e('Add up to three 1000 x 1500 images. Uploaded/site images get the Pinterest save badge; Pinterest-sourced images can use the optional click/source URL to open the board.', 'bybookishbabe-shopify-port'); ?></span>
+				<span class="description"><?php esc_html_e('Use the Dropbox folder for moodboard/collage images. The page reads the first three image files by filename order.', 'bybookishbabe-shopify-port'); ?></span>
 			</p>
+			<div class="bbb-fb-admin-aesthetic__dropbox">
+				<strong><?php esc_html_e('Dropbox folder', 'bybookishbabe-shopify-port'); ?></strong>
+				<code><?php echo esc_html($dropbox_aesthetic_folder); ?></code>
+				<a class="button" href="<?php echo esc_url($dropbox_aesthetic_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Open Dropbox folder', 'bybookishbabe-shopify-port'); ?></a>
+			</div>
 			<?php foreach ($aesthetic_images as $slot => $image) : ?>
 				<?php
 				$image_url = (string) ($image['image'] ?? '');
@@ -440,8 +449,7 @@ function bbb_fictional_boyfriend_render_meta_box(WP_Post $post): void {
 							<input name="bbb_fictional_boyfriend_aesthetic_images[<?php echo esc_attr((string) $slot); ?>][link]" type="text" value="<?php echo esc_attr($link_url); ?>" placeholder="https://www.pinterest.com/.../aaron-warner/" data-bbb-fb-aesthetic-link>
 						</label>
 						<div class="bbb-fb-admin-aesthetic__buttons">
-							<button type="button" class="button" data-bbb-fb-aesthetic-pick><?php esc_html_e('Choose/upload image', 'bybookishbabe-shopify-port'); ?></button>
-							<button type="button" class="button" data-bbb-fb-aesthetic-clear><?php esc_html_e('Clear image', 'bybookishbabe-shopify-port'); ?></button>
+							<button type="button" class="button" data-bbb-fb-aesthetic-clear><?php esc_html_e('Clear legacy URL', 'bybookishbabe-shopify-port'); ?></button>
 						</div>
 					</div>
 				</div>
@@ -1043,6 +1051,80 @@ function bbb_fictional_boyfriend_series_post(int $post_id): ?WP_Post {
 	return $series instanceof WP_Post ? $series : null;
 }
 
+function bbb_fictional_boyfriend_series_siblings(int $post_id, int $limit = 3): array {
+	$book_id = bbb_fictional_boyfriend_primary_book_id($post_id);
+	$book = $book_id > 0 ? get_post($book_id) : null;
+	if (!$book instanceof WP_Post || !post_type_exists('bbb_boyfriend')) {
+		return array();
+	}
+
+	$series_handle = sanitize_title((string) get_post_meta($book_id, '_bbb_series_handle', true));
+	if ('' === $series_handle) {
+		return array();
+	}
+
+	$post_types = array_values(array_filter(array('bbb_book', 'sss_book'), 'post_type_exists'));
+	if (!$post_types) {
+		return array();
+	}
+
+	$series_books = get_posts(
+		array(
+			'post_type'              => $post_types,
+			'post_status'            => 'publish',
+			'posts_per_page'         => -1,
+			'orderby'                => 'meta_value_num title',
+			'order'                  => 'ASC',
+			'meta_key'               => '_bbb_series_number',
+			'no_found_rows'          => true,
+			'update_post_meta_cache' => true,
+			'update_post_term_cache' => false,
+			'meta_query'             => array(
+				array(
+					'key'   => '_bbb_series_handle',
+					'value' => $series_handle,
+				),
+			),
+		)
+	);
+
+	$siblings = array();
+	$seen_ids = array($post_id);
+	foreach ($series_books as $series_book) {
+		if (!$series_book instanceof WP_Post || (int) $series_book->ID === $book_id) {
+			continue;
+		}
+
+		$boyfriend_name = trim((string) get_post_meta($series_book->ID, '_bbb_boyfriend_name', true));
+		$boyfriend = bbb_fictional_boyfriend_for_book((int) $series_book->ID, $boyfriend_name);
+		if (!$boyfriend instanceof WP_Post || in_array((int) $boyfriend->ID, $seen_ids, true)) {
+			continue;
+		}
+		if (function_exists('bbb_content_is_publicly_discoverable') && !bbb_content_is_publicly_discoverable((int) $boyfriend->ID)) {
+			continue;
+		}
+
+		$seen_ids[] = (int) $boyfriend->ID;
+		$siblings[] = array(
+			'post'          => $boyfriend,
+			'book'          => $series_book,
+			'name'          => get_the_title($boyfriend),
+			'url'           => get_permalink($boyfriend),
+			'image'         => (string) get_the_post_thumbnail_url($boyfriend, 'medium'),
+			'book_title'    => get_the_title($series_book),
+			'book_url'      => get_permalink($series_book),
+			'series_number' => trim((string) get_post_meta($series_book->ID, '_bbb_series_number', true)),
+			'type'          => trim((string) get_post_meta($series_book->ID, '_bbb_boyfriend_type', true)),
+		);
+
+		if ($limit > 0 && count($siblings) >= $limit) {
+			break;
+		}
+	}
+
+	return $siblings;
+}
+
 function bbb_fictional_boyfriend_series_books(int $post_id): array {
 	$primary_book_id = bbb_fictional_boyfriend_primary_book_id($post_id);
 	$series = bbb_fictional_boyfriend_series_post($post_id);
@@ -1333,6 +1415,20 @@ function bbb_fictional_boyfriend_pinterest_description(int $post_id): string {
 	}
 
 	return wp_html_excerpt($fallback, 260, '');
+}
+
+function bbb_fictional_boyfriend_main_image_pinterest_description(int $post_id): string {
+	$name = bbb_fictional_boyfriend_seo_clean((string) get_post_field('post_title', $post_id));
+	if ('' === $name) {
+		$name = 'this fictional boyfriend';
+	}
+
+	$source = bbb_fictional_boyfriend_seo_source($post_id);
+	if ('' !== $source) {
+		return wp_html_excerpt($name . ' is from ' . $source . ' - check out his full profile at bybookishbabe.com', 260, '');
+	}
+
+	return wp_html_excerpt($name . ' fictional boyfriend profile - check out his full profile at bybookishbabe.com', 260, '');
 }
 
 function bbb_fictional_boyfriend_seo_focus_keyword(int $post_id): string {

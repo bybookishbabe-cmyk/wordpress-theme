@@ -757,31 +757,34 @@ $mfy_access = $bbb_mfy_is_paid ? 'paid' : 'free';
 $mfy_join_url = (string) get_option('bbb_society_gate_member_url', 'https://thesmutandsentimentsociety.substack.com/subscribe');
 $mfy_notes_url = function_exists('bbb_page_url') ? bbb_page_url('my-notes') : home_url('/my-notes/');
 $mfy_library_url = function_exists('bbb_page_url') ? bbb_page_url('library') : home_url('/library/');
-$mfy_monthly_theme_url = function_exists('bbb_page_url') ? bbb_page_url('june-2026-monthly-theme') : home_url('/june-2026-monthly-theme/');
+$mfy_monthly_owner_preview = current_user_can('manage_options');
+$mfy_monthly_theme_url = function_exists('bbb_page_url')
+	? bbb_page_url($mfy_monthly_owner_preview ? 'monthly-bybookishbabe-romance-theme' : 'monthly-theme')
+	: home_url($mfy_monthly_owner_preview ? '/monthly-bybookishbabe-romance-theme/' : '/monthly-theme/');
 $mfy_monthly_parts = array(
 	array(
 		'emoji' => '🖼️',
 		'title' => 'kindle inserts',
 		'copy'  => '4 printable designs by size',
-		'url'   => $mfy_monthly_theme_url . '#burn-downloads',
+		'url'   => $mfy_monthly_theme_url . '#kindle-downloads',
 	),
 	array(
 		'emoji' => '📱',
 		'title' => 'phone wallpapers',
 		'copy'  => 'lockscreen versions of each design',
-		'url'   => $mfy_monthly_theme_url . '#bbb-burn-wallpapers-title',
+		'url'   => $mfy_monthly_theme_url . '#wallpapers',
 	),
 	array(
 		'emoji' => '📅',
-		'title' => 'june calendar',
+		'title' => 'july calendar',
 		'copy'  => 'monthly tracker preview + download',
-		'url'   => $mfy_monthly_theme_url . '#bbb-burn-calendar-title',
+		'url'   => $mfy_monthly_theme_url . '#calendar',
 	),
 	array(
 		'emoji' => '🎧',
 		'title' => 'playlist vibes',
 		'copy'  => 'songs matched to the mood',
-		'url'   => $mfy_monthly_theme_url . '#bbb-burn-playlist-title',
+		'url'   => $mfy_monthly_theme_url . '#playlists',
 	),
 );
 $mfy_css_path = get_theme_file_path('assets/css/sss-library.css');
@@ -937,7 +940,7 @@ get_header();
 										<span data-society-tier-label><?php echo esc_html($bbb_mfy_is_paid ? 'paid member · the society' : 'free member · the society'); ?></span>
 										<strong data-society-dashboard-title>your reader type is loading</strong>
 									</div>
-									<button type="button" class="sss-mfy__societyThemeBtn" data-society-theme-button><?php echo esc_html($bbb_mfy_is_paid ? 'reader theme' : 'burn bright'); ?></button>
+									<button type="button" class="sss-mfy__societyThemeBtn" data-society-theme-button><?php echo esc_html($bbb_mfy_is_paid ? 'reader theme' : 'july theme'); ?></button>
 								</div>
 
 								<div class="sss-mfy__societyGrid">
@@ -1000,14 +1003,14 @@ get_header();
 								</div>
 								<div class="sss-mfy__monthCard sss-mfy__monthCard--burn-bright<?php echo $bbb_mfy_is_free ? ' is-locked-for-free' : ''; ?>">
 									<div class="sss-mfy__monthIntro">
-										<span><?php echo esc_html($bbb_mfy_is_free ? 'upgrade to get' : 'full access'); ?></span>
-										<strong>burn bright</strong>
-										<small>June theme: printable inserts, wallpapers, calendar, and playlist.</small>
+										<span><?php echo esc_html($bbb_mfy_is_free ? 'upgrade to get' : ($mfy_monthly_owner_preview ? 'staging now' : 'full access')); ?></span>
+										<strong>midnight summer</strong>
+										<small>July theme: printable inserts, wallpapers, calendar, and playlist.</small>
 									</div>
-										<a class="sss-mfy__monthHero" href="<?php echo esc_url($mfy_monthly_theme_url); ?>" aria-label="Open the Burn Bright monthly theme">
-											<img src="<?php echo esc_url(get_theme_file_uri('assets/monthly-themes/june-2026/previews/burn-bright-og.png')); ?>" alt="Burn Bright June 2026 monthly theme preview" loading="lazy" decoding="async">
+										<a class="sss-mfy__monthHero" href="<?php echo esc_url($mfy_monthly_theme_url); ?>" aria-label="<?php echo esc_attr($mfy_monthly_owner_preview ? 'Open the July monthly theme staging page' : 'Open the current monthly theme'); ?>">
+											<img src="<?php echo esc_url(get_theme_file_uri('assets/monthly-themes/july-2026/previews/midnight-drive-mockup.png')); ?>" alt="Midnight Summer July 2026 monthly theme preview" loading="lazy" decoding="async">
 										</a>
-										<div class="sss-mfy__monthPartGrid" aria-label="Burn Bright access links">
+										<div class="sss-mfy__monthPartGrid" aria-label="July monthly theme links">
 											<?php foreach ($mfy_monthly_parts as $part) : ?>
 												<a href="<?php echo esc_url($part['url']); ?>">
 													<b aria-hidden="true"><?php echo esc_html($part['emoji']); ?></b>

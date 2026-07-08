@@ -13,7 +13,10 @@ function bbb_get_book_data_attrs(int $post_id): string {
 	$author     = function_exists('bbb_get_book_author') ? bbb_get_book_author($post_id) : get_post_meta($post_id, '_bbb_author', true);
 	$cover      = function_exists('bbb_get_book_cover_url') ? bbb_get_book_cover_url($post_id) : get_post_meta($post_id, '_bbb_cover_url', true);
 	$amazon     = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($post_id, '_bbb_amazon_url', true)) : get_post_meta($post_id, '_bbb_amazon_url', true);
+	$ku_url     = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($post_id, '_bbb_ku_url', true)) : get_post_meta($post_id, '_bbb_ku_url', true);
+	$audible    = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($post_id, '_bbb_audible_url', true)) : get_post_meta($post_id, '_bbb_audible_url', true);
 	$bookshop   = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($post_id, '_bbb_bookshop_url', true)) : get_post_meta($post_id, '_bbb_bookshop_url', true);
+	$libby      = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($post_id, '_bbb_libby_url', true)) : get_post_meta($post_id, '_bbb_libby_url', true);
 	$mini       = get_post_meta($post_id, '_bbb_mini_note', true);
 	$why        = get_post_meta($post_id, '_bbb_why', true);
 	$newsletter = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($post_id, '_bbb_newsletter_url', true)) : get_post_meta($post_id, '_bbb_newsletter_url', true);
@@ -67,7 +70,10 @@ function bbb_get_book_data_attrs(int $post_id): string {
 		'data-author'         => $author,
 		'data-cover'          => $cover,
 		'data-amazon'         => $amazon,
+		'data-ku-url'         => $ku_url,
+		'data-audible'        => $audible,
 		'data-bookshop'       => $bookshop,
+		'data-libby'          => $libby,
 		'data-shelf'          => $shelf_name,
 		'data-private-shelf'  => $private,
 		'data-spice'          => $spice,
@@ -185,8 +191,11 @@ function bbb_render_article_book_card(int $post_id, bool $show_why = false): str
 	$mini          = get_post_meta($post_id, '_bbb_mini_note', true);
 	$why           = get_post_meta($post_id, '_bbb_why', true);
 	$ku_raw        = get_post_meta($post_id, '_bbb_ku', true);
+	$ku_url        = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($post_id, '_bbb_ku_url', true)) : get_post_meta($post_id, '_bbb_ku_url', true);
 	$amazon        = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($post_id, '_bbb_amazon_url', true)) : get_post_meta($post_id, '_bbb_amazon_url', true);
+	$audible       = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($post_id, '_bbb_audible_url', true)) : get_post_meta($post_id, '_bbb_audible_url', true);
 	$bookshop      = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($post_id, '_bbb_bookshop_url', true)) : get_post_meta($post_id, '_bbb_bookshop_url', true);
+	$libby         = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($post_id, '_bbb_libby_url', true)) : get_post_meta($post_id, '_bbb_libby_url', true);
 	$book_url      = get_permalink($post_id) ?: home_url('/books/' . get_post_field('post_name', $post_id) . '/');
 	$series_handle = get_post_meta($post_id, '_bbb_series_handle', true);
 	$series_number = get_post_meta($post_id, '_bbb_series_number', true);
@@ -275,14 +284,20 @@ function bbb_render_article_book_card(int $post_id, bool $show_why = false): str
     </p>
     <?php endif; ?>
     <div class="article-book-card__buttons">
-      <?php if ($amazon && $ku_raw === '1') : ?>
-      <a class="article-book-card__button article-book-card__button--ku" href="<?php echo esc_url((string) $amazon); ?>" target="_blank" rel="noopener">read free on kindle unlimited</a>
+      <?php if ($ku_raw === '1' && ($ku_url || $amazon)) : ?>
+      <a class="article-book-card__button article-book-card__button--ku" href="<?php echo esc_url((string) ($ku_url ?: $amazon)); ?>" target="_blank" rel="noopener">read free on kindle unlimited</a>
       <?php endif; ?>
       <?php if ($amazon) : ?>
       <a class="article-book-card__button article-book-card__button--amazon" href="<?php echo esc_url((string) $amazon); ?>" target="_blank" rel="noopener">buy on amazon <span>· own it forever</span></a>
       <?php endif; ?>
+      <?php if ($audible) : ?>
+      <a class="article-book-card__button article-book-card__button--audible" href="<?php echo esc_url((string) $audible); ?>" target="_blank" rel="noopener"><span aria-hidden="true">🎧</span> audible <span>· listen to it</span></a>
+      <?php endif; ?>
       <?php if ($bookshop) : ?>
       <a class="article-book-card__button article-book-card__button--bookshop" href="<?php echo esc_url((string) $bookshop); ?>" target="_blank" rel="noopener">prefer indie? bookshop.org →</a>
+      <?php endif; ?>
+      <?php if ($libby) : ?>
+      <a class="article-book-card__button article-book-card__button--libby" href="<?php echo esc_url((string) $libby); ?>" target="_blank" rel="noopener"><span aria-hidden="true">📚</span> libby <span>· borrow it</span></a>
       <?php endif; ?>
     </div>
     <div class="article-book-card__secondaryLinks" aria-label="more book links">

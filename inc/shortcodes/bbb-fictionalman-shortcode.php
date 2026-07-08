@@ -35,13 +35,21 @@ function bbb_fictionalman_shortcode_profile_from_name(string $name): ?WP_Post {
 	);
 
 	$needle = function_exists('sss_article_match_text') ? sss_article_match_text($name) : strtolower($name);
+	$needle_compact = preg_replace('/[^a-z0-9]+/', '', $needle) ?? $needle;
 	foreach ($profiles as $profile) {
 		if (!$profile instanceof WP_Post) {
 			continue;
 		}
 
 		$title = function_exists('sss_article_match_text') ? sss_article_match_text(get_the_title($profile)) : strtolower(get_the_title($profile));
-		if ($needle === $title) {
+		$title_compact = preg_replace('/[^a-z0-9]+/', '', $title) ?? $title;
+		$slug_compact = str_replace('-', '', $profile->post_name);
+		if (
+			$needle === $title ||
+			$needle_compact === $title_compact ||
+			$needle_compact === $slug_compact ||
+			('' !== $needle_compact && (str_starts_with($title_compact, $needle_compact) || str_starts_with($slug_compact, $needle_compact)))
+		) {
 			return $profile;
 		}
 	}
@@ -90,3 +98,48 @@ function bbb_fictionalman_shortcode($atts): string {
 	return (string) ob_get_clean();
 }
 add_shortcode('bbb_fictionalman', 'bbb_fictionalman_shortcode');
+
+function bbb_fictionalman_swipe_names_from_content(string $content): array {
+	$names = array();
+
+	if (preg_match_all('/\[fictionalman:([^\]\r\n]+)\]/i', $content, $matches)) {
+		foreach ($matches[1] as $match) {
+			$names[] = trim(wp_strip_all_tags((string) $match), " \t\n\r\0\x0B\"'");
+		}
+	}
+
+	if (preg_match_all('/\[bbb_fictionalman\s+name=(["\'])([^"\']+)\1[^\]]*\]/i', $content, $matches)) {
+		foreach ($matches[2] as $match) {
+			$names[] = trim(wp_strip_all_tags((string) $match), " \t\n\r\0\x0B\"'");
+		}
+	}
+
+	if (!$names) {
+		$names = preg_split('/\s*(?:,|\||;|\R)\s*/', trim(wp_strip_all_tags($content))) ?: array();
+	}
+
+	return array_values(array_filter(array_map('trim', $names)));
+}
+
+function bbb_fictionalman_swipe_shortcode($atts, ?string $content = null): string {
+	$names = bbb_fictionalman_swipe_names_from_content((string) $content);
+	if (!$names) {
+		return '';
+	}
+
+	ob_start();
+	?>
+	<section class="bbb-fictionalman-swipe" aria-label="swipe through fictional men">
+		<div class="bbb-fictionalman-swipe__rail" tabindex="0">
+			<?php foreach ($names as $name) : ?>
+				<div class="bbb-fictionalman-swipe__item">
+					<?php echo bbb_fictionalman_shortcode(array('name' => $name)); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				</div>
+			<?php endforeach; ?>
+		</div>
+	</section>
+	<?php
+	return (string) ob_get_clean();
+}
+add_shortcode('bbb_fictionalman_swipe', 'bbb_fictionalman_swipe_shortcode');
+add_shortcode('fictionalmanswipe', 'bbb_fictionalman_swipe_shortcode');

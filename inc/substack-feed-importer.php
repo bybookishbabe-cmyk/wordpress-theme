@@ -198,8 +198,57 @@ function bbb_substack_find_book_for_issue_url(string $url): ?WP_Post {
 	return !empty($books[0]) && $books[0] instanceof WP_Post ? $books[0] : null;
 }
 
+function bbb_substack_retry_timezone(): DateTimeZone {
+	return new DateTimeZone('America/Los_Angeles');
+}
+
+function bbb_substack_retry_local_now(?int $timestamp = null): DateTimeImmutable {
+	try {
+		$now = new DateTimeImmutable('@' . ($timestamp ?? time()));
+	} catch (Exception $e) {
+		$now = new DateTimeImmutable('@' . time());
+	}
+
+	return $now->setTimezone(bbb_substack_retry_timezone());
+}
+
+function bbb_substack_sunday_retry_is_active(?int $timestamp = null): bool {
+	$now = bbb_substack_retry_local_now($timestamp);
+
+	return 7 === (int) $now->format('N') && $now->format('H:i') >= '10:00';
+}
+
+function bbb_substack_sunday_retry_date(?int $timestamp = null): string {
+	return bbb_substack_retry_local_now($timestamp)->format('Y-m-d');
+}
+
+function bbb_substack_issue_is_retry_sunday(WP_Post $issue, ?int $timestamp = null): bool {
+	$date = function_exists('sss_get_issue_publish_date')
+		? sss_get_issue_publish_date($issue)
+		: (string) get_post_meta($issue->ID, '_issue_publish_date', true);
+	$weekday = function_exists('sss_get_issue_publish_weekday')
+		? sss_get_issue_publish_weekday($issue)
+		: (int) get_post_meta($issue->ID, '_issue_publish_weekday', true);
+
+	return bbb_substack_sunday_retry_date($timestamp) === $date && 7 === (int) $weekday;
+}
+
+function bbb_substack_homepage_has_current_sunday_issue(?int $timestamp = null): bool {
+	if (!function_exists('sss_get_current_obsession_context')) {
+		return false;
+	}
+
+	$context = sss_get_current_obsession_context();
+	$issue   = $context['issue'] ?? null;
+	if (!$issue instanceof WP_Post || (string) ($context['date'] ?? '') !== bbb_substack_sunday_retry_date($timestamp)) {
+		return false;
+	}
+
+	return bbb_substack_issue_is_retry_sunday($issue, $timestamp);
+}
+
 function bbb_substack_feed_cache_lifetime(int $seconds): int {
-	return 15 * MINUTE_IN_SECONDS;
+	return bbb_substack_sunday_retry_is_active() ? MINUTE_IN_SECONDS : 15 * MINUTE_IN_SECONDS;
 }
 
 function bbb_substack_item_local_date_parts(int $timestamp): array {
@@ -303,7 +352,8 @@ function bbb_substack_import_latest_issue(bool $force = false) {
 	if (!$force && get_transient('bbb_substack_latest_import_lock')) {
 		return null;
 	}
-	set_transient('bbb_substack_latest_import_lock', '1', 5 * MINUTE_IN_SECONDS);
+	$lock_ttl = bbb_substack_sunday_retry_is_active() ? 45 : 5 * MINUTE_IN_SECONDS;
+	set_transient('bbb_substack_latest_import_lock', '1', $lock_ttl);
 
 	require_once ABSPATH . WPINC . '/feed.php';
 
@@ -338,19 +388,83 @@ function bbb_substack_import_latest_issue(bool $force = false) {
 	delete_option('bbb_substack_last_import_error');
 	if ($latest instanceof WP_Post) {
 		update_option('bbb_substack_last_imported_issue_id', $latest->ID, false);
+		bbb_substack_note_latest_import($latest);
 	}
 	delete_transient('bbb_substack_latest_import_lock');
 
 	return $latest;
 }
 
+function bbb_substack_note_latest_import(WP_Post $issue): void {
+	clean_post_cache($issue);
+	update_option('bbb_substack_last_successful_import_at', current_time('mysql'), false);
+
+	if (function_exists('sss_library_flush_cache')) {
+		sss_library_flush_cache();
+	}
+
+	if (bbb_substack_sunday_retry_is_active() && bbb_substack_issue_is_retry_sunday($issue)) {
+		wp_cache_flush();
+		do_action('wpe_purge_varnish_cache');
+		do_action('bbb_substack_homepage_cache_purge', $issue);
+	}
+}
+
+function bbb_substack_cron_schedules(array $schedules): array {
+	if (!isset($schedules['bbb_every_minute'])) {
+		$schedules['bbb_every_minute'] = array(
+			'interval' => MINUTE_IN_SECONDS,
+			'display'  => __('Every minute', 'bybookishbabe-shopify-port'),
+		);
+	}
+
+	return $schedules;
+}
+add_filter('cron_schedules', 'bbb_substack_cron_schedules');
+
+function bbb_substack_clear_sunday_retry_schedule(): void {
+	while ($timestamp = wp_next_scheduled('bbb_substack_sunday_retry_import')) {
+		if (false === wp_unschedule_event($timestamp, 'bbb_substack_sunday_retry_import')) {
+			break;
+		}
+	}
+}
+
 function bbb_substack_schedule_import(): void {
 	if (!wp_next_scheduled('bbb_substack_import_latest_issue')) {
 		wp_schedule_event(time() + 15 * MINUTE_IN_SECONDS, 'hourly', 'bbb_substack_import_latest_issue');
 	}
+
+	if (!bbb_substack_sunday_retry_is_active() || bbb_substack_homepage_has_current_sunday_issue()) {
+		bbb_substack_clear_sunday_retry_schedule();
+		return;
+	}
+
+	if (!wp_next_scheduled('bbb_substack_sunday_retry_import')) {
+		wp_schedule_event(time() + MINUTE_IN_SECONDS, 'bbb_every_minute', 'bbb_substack_sunday_retry_import');
+	}
 }
 add_action('init', 'bbb_substack_schedule_import');
 add_action('bbb_substack_import_latest_issue', 'bbb_substack_import_latest_issue');
+
+function bbb_substack_sunday_retry_import(): void {
+	if (!bbb_substack_sunday_retry_is_active()) {
+		bbb_substack_clear_sunday_retry_schedule();
+		return;
+	}
+
+	if (bbb_substack_homepage_has_current_sunday_issue()) {
+		bbb_substack_clear_sunday_retry_schedule();
+		return;
+	}
+
+	$result = bbb_substack_import_latest_issue(true);
+	if ($result instanceof WP_Post && bbb_substack_homepage_has_current_sunday_issue()) {
+		update_option('bbb_substack_sunday_retry_completed_at', current_time('mysql'), false);
+		bbb_substack_clear_sunday_retry_schedule();
+	}
+}
+add_action('bbb_substack_sunday_retry_import', 'bbb_substack_sunday_retry_import');
 
 function bbb_substack_import_on_admin_request(): void {
 	if (!current_user_can('manage_options')) {

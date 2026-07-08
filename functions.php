@@ -51,6 +51,7 @@ require_once get_theme_file_path('inc/taxonomies-extra.php');
 require_once get_theme_file_path('inc/redirects.php');
 require_once get_theme_file_path('inc/reader-account.php');
 require_once get_theme_file_path('inc/vault.php');
+require_once get_theme_file_path('inc/staged-products.php');
 require_once get_theme_file_path('inc/media-kit.php');
 require_once get_theme_file_path('inc/api/analytics-sync-endpoint.php');
 require_once get_theme_file_path('inc/api/books-endpoint.php');
@@ -59,6 +60,7 @@ require_once get_theme_file_path('inc/enqueue-weekly-obsession.php');
 require_once get_theme_file_path('inc/token-engine.php');
 require_once get_theme_file_path('inc/social-posting-calendar.php');
 require_once get_theme_file_path('inc/shortcodes/sss-book-shortcode.php');
+require_once get_theme_file_path('inc/shortcodes/bbb-book-swipe-shortcode.php');
 require_once get_theme_file_path('inc/shortcodes/sss-quickstats-shortcode.php');
 require_once get_theme_file_path('inc/shortcodes/sss-library-shortcode.php');
 require_once get_theme_file_path('inc/shortcodes/sss-signoff-shortcode.php');
@@ -91,6 +93,15 @@ require_once get_theme_file_path('inc/homepage-seo.php');
 require_once get_theme_file_path('inc/social-share-images.php');
 require_once get_theme_file_path('inc/seo-lowercase.php');
 require_once get_theme_file_path('inc/yearly-romance-census.php');
+
+add_filter(
+	'auth_cookie_expiration',
+	static function (int $expiration, int $user_id, bool $remember): int {
+		return user_can($user_id, 'manage_options') ? 30 * DAY_IN_SECONDS : $expiration;
+	},
+	10,
+	3
+);
 
 function bbb_reader_is_society(): bool {
 	if (is_user_logged_in() && current_user_can('manage_options')) {
@@ -203,15 +214,23 @@ function bbb_asset_exists(string $relative_path): bool {
 	return file_exists(get_theme_file_path($relative_path));
 }
 
+function bbb_asset_version(string $relative_path): string {
+	$asset_path = get_theme_file_path($relative_path);
+	$version    = file_exists($asset_path) ? (string) filemtime($asset_path) : wp_get_theme()->get('Version');
+
+	if (is_user_logged_in() && current_user_can('manage_options')) {
+		$version .= '-' . time();
+	}
+
+	return $version;
+}
+
 function bbb_enqueue_css(string $handle, string $relative_path, array $deps = array(), ?string $media = null): void {
 	if (!bbb_asset_exists($relative_path)) {
 		return;
 	}
 
-	$asset_path = get_theme_file_path($relative_path);
-	$version    = file_exists($asset_path) ? (string) filemtime($asset_path) : wp_get_theme()->get('Version');
-
-	wp_enqueue_style($handle, get_theme_file_uri($relative_path), $deps, $version, $media ?: 'all');
+	wp_enqueue_style($handle, get_theme_file_uri($relative_path), $deps, bbb_asset_version($relative_path), $media ?: 'all');
 }
 
 function bbb_enqueue_js(string $handle, string $relative_path, array $deps = array(), bool $in_footer = true): void {
@@ -219,31 +238,37 @@ function bbb_enqueue_js(string $handle, string $relative_path, array $deps = arr
 		return;
 	}
 
-	$asset_path = get_theme_file_path($relative_path);
-	$version    = file_exists($asset_path) ? (string) filemtime($asset_path) : wp_get_theme()->get('Version');
+	wp_enqueue_script($handle, get_theme_file_uri($relative_path), $deps, bbb_asset_version($relative_path), $in_footer);
+}
 
-	wp_enqueue_script($handle, get_theme_file_uri($relative_path), $deps, $version, $in_footer);
+function bbb_is_home_surface_request(): bool {
+	$request_path = isset($_SERVER['REQUEST_URI'])
+		? trailingslashit((string) parse_url((string) wp_unslash($_SERVER['REQUEST_URI']), PHP_URL_PATH))
+		: '';
+	$route_slug = function_exists('bbb_current_route_slug') ? bbb_current_route_slug() : trim($request_path, '/');
+
+	return is_front_page()
+		|| 'bybookishbabe-app' === $route_slug
+		|| (function_exists('bbb_pwa_request_path_is') && bbb_pwa_request_path_is('bybookishbabe-app'));
+}
+
+function bbb_home_hero_image_url(): string {
+	return 'https://cdn.shopify.com/s/files/1/0633/4968/6353/files/MainLogo_2cf8c37f-58ee-482e-af99-2e916ea1f3dd.png?v=1764968954';
 }
 
 add_action(
 	'wp_enqueue_scripts',
 	static function (): void {
-		wp_enqueue_style('bbb-font-kaushan', 'https://fonts.googleapis.com/css2?family=Kaushan+Script&display=swap', array(), null);
-		wp_enqueue_style('bbb-fonts', 'https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,600;0,700;1,400;1,600&family=Kaushan+Script&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap', array(), null);
-		wp_enqueue_style('bbb-font-cormorant-allura', 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Allura&display=swap', array(), null);
-		wp_enqueue_style('bbb-font-dancing', 'https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600&display=swap', array(), null);
-		wp_enqueue_style('bbb-font-playfair', 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap', array(), null);
-		wp_enqueue_style('bbb-font-system', 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=DM+Serif+Display:ital@0;1&family=Lato:wght@400;700;900&family=Source+Sans+3:wght@400;600;700;800;900&display=swap', array('bbb-font-playfair', 'bbb-font-cormorant-allura'), null);
+		wp_enqueue_style('bbb-fonts', 'https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@400;500;600;700;800;900&family=DM+Serif+Display:ital@0;1&family=Dancing+Script:wght@400;600&family=Kaushan+Script&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Source+Sans+3:wght@400;600;700;800;900&display=swap', array(), null);
 		$bbb_request_path    = isset($_SERVER['REQUEST_URI']) ? trailingslashit((string) parse_url((string) wp_unslash($_SERVER['REQUEST_URI']), PHP_URL_PATH)) : '';
 		$bbb_route_slug      = function_exists('bbb_current_route_slug') ? bbb_current_route_slug() : trim($bbb_request_path, '/');
+		$bbb_trimmed_request_path = trim($bbb_request_path, '/');
+		$bbb_is_monthly_theme_route = in_array($bbb_route_slug, array('burn-bright', 'june-2026-monthly-theme', 'monthly-bybookishbabe-romance-theme', 'monthly-theme'), true)
+			|| (function_exists('bbb_is_monthly_theme_archive_route') && bbb_is_monthly_theme_archive_route($bbb_trimmed_request_path));
 		$bbb_is_app_home     = 'bybookishbabe-app' === $bbb_route_slug || (function_exists('bbb_pwa_request_path_is') && bbb_pwa_request_path_is('bybookishbabe-app'));
 		$bbb_is_home_surface = is_front_page() || $bbb_is_app_home;
 
-		if ($bbb_is_home_surface) {
-			wp_enqueue_style('bbb-font-connect-cards', 'https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant:wght@500;600&display=swap', array(), null);
-		}
-
-		bbb_enqueue_css('bbb-base', 'assets/base.css', array('bbb-font-kaushan', 'bbb-font-cormorant-allura', 'bbb-font-dancing', 'bbb-font-system'));
+		bbb_enqueue_css('bbb-base', 'assets/base.css', array('bbb-fonts'));
 		if (bbb_asset_exists('assets/bbb-design-tokens.css')) {
 			wp_add_inline_style('bbb-base', (string) file_get_contents(get_theme_file_path('assets/bbb-design-tokens.css')));
 		}
@@ -270,6 +295,7 @@ add_action(
 			'what-to-read-next',
 			'find-your-read',
 			'reader-mood-quiz',
+			'reader-type-quiz',
 			'fictional-boyfriend-quiz',
 			'romance-trope-quiz',
 			'romance-book-moodboards',
@@ -290,6 +316,8 @@ add_action(
 			'weekly-obsession',
 			'june-2026-monthly-theme',
 			'burn-bright',
+			'monthly-bybookishbabe-romance-theme',
+			'monthly-theme',
 			'books',
 		);
 		$bbb_book_taxonomy_term = function_exists('bbb_find_book_taxonomy_term') && $bbb_route_slug
@@ -306,13 +334,16 @@ add_action(
 			|| $bbb_is_books_like_route
 			|| 'page-shelf.php' === (string) (bbb_page_route_registry()[$bbb_route_slug] ?? '')
 			|| 'page-trope.php' === (string) (bbb_page_route_registry()[$bbb_route_slug] ?? '');
-		$bbb_needs_library_scripts = is_singular('bbb_book')
-			|| in_array($bbb_route_slug, $bbb_library_routes, true)
-			|| $bbb_book_taxonomy_term instanceof WP_Term
-			|| $bbb_is_books_like_route
-			|| 'page-shelf.php' === (string) (bbb_page_route_registry()[$bbb_route_slug] ?? '')
-			|| 'page-trope.php' === (string) (bbb_page_route_registry()[$bbb_route_slug] ?? '');
-		$bbb_needs_library_core_scripts = $bbb_is_home_surface || $bbb_needs_library_scripts;
+		$bbb_needs_library_scripts = !$bbb_is_monthly_theme_route
+			&& (
+				is_singular('bbb_book')
+				|| in_array($bbb_route_slug, $bbb_library_routes, true)
+				|| $bbb_book_taxonomy_term instanceof WP_Term
+				|| $bbb_is_books_like_route
+				|| 'page-shelf.php' === (string) (bbb_page_route_registry()[$bbb_route_slug] ?? '')
+				|| 'page-trope.php' === (string) (bbb_page_route_registry()[$bbb_route_slug] ?? '')
+			);
+		$bbb_needs_library_core_scripts = $bbb_needs_library_scripts;
 		$bbb_is_spice_route = 'romance-books-by-spice-level' === $bbb_route_slug || str_starts_with($bbb_request_path, '/romance-books-by-spice-level/');
 		if (is_singular('post')) {
 			bbb_enqueue_css('section-blog-post', 'assets/css/section-blog-post.css', array('bbb-bookshelf-signup'));
@@ -324,7 +355,12 @@ add_action(
 			bbb_enqueue_css('component-card', 'assets/css/component-card.css', array('bbb-bookshelf-signup'));
 			bbb_enqueue_css('component-article-card', 'assets/css/component-article-card.css', array('component-card'));
 			bbb_enqueue_css('section-main-blog', 'assets/css/section-main-blog.css', array('component-article-card'));
-			bbb_enqueue_css('bbb-home-static', 'assets/home-static.css', array('section-main-blog'));
+			$bbb_blog_style_dependency = 'section-main-blog';
+			if (is_search()) {
+				bbb_enqueue_css('bbb-search-results', 'assets/css/search-results.css', array('section-main-blog'));
+				$bbb_blog_style_dependency = 'bbb-search-results';
+			}
+			bbb_enqueue_css('bbb-home-static', 'assets/home-static.css', array($bbb_blog_style_dependency));
 			bbb_enqueue_js('blog-trope-rotator', 'assets/js/blog-trope-rotator.js', array(), true);
 		}
 		if (is_post_type_archive('bbb_book')) {
@@ -386,7 +422,7 @@ add_action(
 			bbb_enqueue_css('bbb-component-discounts', 'assets/component-discounts.css', array('bbb-component-price'));
 		}
 
-		wp_enqueue_script('bbb-supabase', 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2', array(), null, true);
+		wp_register_script('bbb-supabase', 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2', array(), null, true);
 		bbb_enqueue_js('bbb-globals', 'assets/bbb-globals.js', array(), false);
 		bbb_enqueue_js('bbb-reader-email-access', 'assets/js/reader-email-access.js', array('bbb-globals'), false);
 		bbb_enqueue_js('bbb-post-login-redirect', 'assets/bbb-post-login-redirect.js', array('bbb-globals'), false);
@@ -404,7 +440,7 @@ add_action(
 		bbb_enqueue_js('bbb-animations', 'assets/animations.js', array('bbb-global'));
 		bbb_enqueue_js('bbb-sticky-header', 'assets/sticky-header.js', array('bbb-global'));
 		bbb_enqueue_js('bbb-cart-notification', 'assets/cart-notification.js', array('bbb-pubsub'));
-		bbb_enqueue_js('bbb-bookshelf-signup', 'assets/bookshelf-signup.js', array('bbb-supabase'));
+		bbb_enqueue_js('bbb-bookshelf-signup', 'assets/bookshelf-signup.js', array());
 		if ($bbb_needs_library_core_scripts) {
 			bbb_enqueue_js('bbb-sss-library', 'assets/js/sss-library.js', array('bbb-supabase'), true);
 		}
@@ -429,7 +465,7 @@ add_action(
 		if ($bbb_is_home_surface) {
 			bbb_enqueue_js('bbb-browse-by-trope', 'assets/js/browse-by-trope.js', array('bbb-global'));
 			bbb_enqueue_js('bbb-sponsorship-zones', 'assets/js/sponsorship-zones.js', array('bbb-global'));
-			bbb_enqueue_js('bbb-homepage-library-preview', 'assets/js/homepage-library-preview.js', array('bbb-supabase', 'bbb-sss-library'));
+			bbb_enqueue_js('bbb-homepage-library-preview', 'assets/js/homepage-library-preview.js', array());
 			bbb_enqueue_js('bbb-home-static', 'assets/home-static.js', array('bbb-global'));
 			bbb_enqueue_js('bbb-section-society-hero', 'assets/js/section-society-hero.js', array('bbb-global'));
 		}
@@ -524,7 +560,8 @@ add_action(
 				'bbb-sss-library',
 				'BBBLibraryData',
 				array(
-						'books'       => bbb_get_all_books_json(),
+						'books'       => array(),
+						'archiveEndpoint' => esc_url_raw(rest_url('bbb/v1/library/archive')),
 						'supabaseUrl' => defined('SUPABASE_URL') ? SUPABASE_URL : 'https://efmrfxsmgbeikfgtrxjv.supabase.co',
 						'supabaseKey' => defined('SUPABASE_ANON_KEY') ? SUPABASE_ANON_KEY : 'sb_publishable_iwjASe3QwixdDvHovaXZBQ_gbXU0Utk',
 						'currentUser' => $reader_email ?: null,
@@ -537,6 +574,114 @@ add_action(
 			);
 		}
 	}
+);
+
+add_action(
+	'wp_enqueue_scripts',
+	static function (): void {
+		$request_path = trim((string) parse_url((string) wp_unslash($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH), '/');
+		$route_slug   = function_exists('bbb_current_route_slug') ? bbb_current_route_slug() : $request_path;
+		$is_monthly_theme_route = in_array($route_slug, array('burn-bright', 'june-2026-monthly-theme', 'monthly-bybookishbabe-romance-theme', 'monthly-theme'), true)
+			|| (function_exists('bbb_is_monthly_theme_archive_route') && bbb_is_monthly_theme_archive_route($request_path));
+
+		if (!$is_monthly_theme_route) {
+			return;
+		}
+
+		wp_dequeue_style('convertkit-admin-quicktags');
+		wp_dequeue_script('quicktags');
+		wp_dequeue_script('convertkit-admin-quicktags');
+	},
+	100
+);
+
+add_filter(
+	'wp_resource_hints',
+	static function (array $urls, string $relation_type): array {
+		if ('preconnect' !== $relation_type) {
+			return $urls;
+		}
+
+		$urls[] = array(
+			'href'        => 'https://fonts.googleapis.com',
+			'crossorigin' => '',
+		);
+		$urls[] = array(
+			'href'        => 'https://fonts.gstatic.com',
+			'crossorigin' => '',
+		);
+		$urls[] = array('href' => 'https://cdn.shopify.com');
+		$urls[] = array('href' => 'https://cdn.jsdelivr.net');
+
+		return $urls;
+	},
+	10,
+	2
+);
+
+add_action(
+	'wp_head',
+	static function (): void {
+		if (!bbb_is_home_surface_request()) {
+			return;
+		}
+
+		printf(
+			'<link rel="preload" as="image" href="%s" fetchpriority="high">' . "\n",
+			esc_url(bbb_home_hero_image_url())
+		);
+	},
+	1
+);
+
+add_filter(
+	'script_loader_tag',
+	static function (string $tag, string $handle, string $src): string {
+		$deferred_handles = array(
+			'bbb-supabase',
+			'bbb-reader-email-access',
+			'bbb-post-login-redirect',
+			'bbb-constants',
+			'bbb-pubsub',
+			'bbb-global',
+			'bbb-details-disclosure',
+			'bbb-details-modal',
+			'bbb-search-form',
+			'bbb-predictive-search',
+			'bbb-animations',
+			'bbb-sticky-header',
+			'bbb-cart-notification',
+			'bbb-bookshelf-signup',
+			'bbb-sss-library',
+			'bbb-series-library',
+			'bbb-sss-series',
+			'bbb-sss-memberdash',
+			'bbb-sss-library-member',
+			'bbb-page-spice',
+			'blog-system',
+			'bbb-favorite-card-atc',
+			'bbb-thread-carousel',
+			'bbb-rose-petals',
+			'bbb-holiday-overlay',
+			'bbb-browse-by-trope',
+			'bbb-sponsorship-zones',
+			'bbb-homepage-library-preview',
+			'bbb-home-static',
+			'bbb-section-society-hero',
+			'bbb-localization-form',
+			'bbb-shop-edd-cart',
+			'bbb-shop-filters',
+			'bbb-shop-drop-popup',
+		);
+
+		if (!in_array($handle, $deferred_handles, true) || false !== strpos($tag, ' defer')) {
+			return $tag;
+		}
+
+		return str_replace(' src=', ' defer src=', $tag);
+	},
+	10,
+	3
 );
 
 add_filter(

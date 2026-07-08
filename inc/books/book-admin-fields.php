@@ -17,6 +17,9 @@ function bbb_book_admin_fields(): array {
 			'description' => 'Upload or choose a 2:3 cover image from the media library. 1200 x 1800px WebP/JPG is ideal.',
 		),
 		array('label' => 'Amazon Link', 'key' => '_bbb_amazon_url', 'type' => 'url'),
+		array('label' => 'Kindle Unlimited Link', 'key' => '_bbb_ku_url', 'type' => 'url'),
+		array('label' => 'Audible Link', 'key' => '_bbb_audible_url', 'type' => 'url'),
+		array('label' => 'Libby Link', 'key' => '_bbb_libby_url', 'type' => 'url'),
 		array('label' => 'Bookshop Link', 'key' => '_bbb_bookshop_url', 'type' => 'url'),
 		array('label' => 'Newsletter URL', 'key' => '_bbb_newsletter_url', 'type' => 'url'),
 		array(
@@ -501,8 +504,15 @@ function bbb_render_book_admin_fields_meta_box(WP_Post $post): void {
 		<div class="bbb-book-aesthetic" data-bbb-book-aesthetic-field>
 			<p>
 				<strong><?php esc_html_e('Book aesthetic images', 'bybookishbabe-shopify-port'); ?></strong><br>
-				<span class="bbb-book-fields__help"><?php esc_html_e('Add up to three 1000 x 1500 images. Uploaded/site images stay first; Pinterest-sourced images can link to the chosen board or section.', 'bybookishbabe-shopify-port'); ?></span>
+				<span class="bbb-book-fields__help"><?php esc_html_e('Add book moodboard images in Dropbox first. Use book-slug_bookstagramaesthetic.png for the main bookstagram pin, then optional 02-mood.webp and 03-detail.webp in images/books/this-book-slug/. These fields stay as a fallback for Pinterest or emergency manual images.', 'bybookishbabe-shopify-port'); ?></span>
 			</p>
+			<?php if ($post instanceof WP_Post) : ?>
+				<p>
+					<a class="button" href="<?php echo esc_url('https://www.dropbox.com/home/Apps/bybookishbabe-edd-products/images/books/' . $post->post_name); ?>" target="_blank" rel="noopener noreferrer">
+						<?php esc_html_e('Open Dropbox folder', 'bybookishbabe-shopify-port'); ?>
+					</a>
+				</p>
+			<?php endif; ?>
 			<?php foreach ($aesthetic_images as $slot => $image) : ?>
 				<?php
 				$image_url = (string) ($image['image'] ?? '');
@@ -1175,6 +1185,9 @@ function bbb_save_book_quotes(int $post_id): void {
 
 	if (function_exists('sss_library_flush_cache')) {
 		sss_library_flush_cache();
+	}
+	if (function_exists('bbb_book_quotes_flush_cache')) {
+		bbb_book_quotes_flush_cache();
 	}
 }
 add_action('save_post_bbb_book', 'bbb_save_book_quotes', 20);

@@ -268,11 +268,6 @@ nocache_headers();
 </head>
 <body>
 	<button class="bbb-app-back" type="button" aria-label="go back" data-app-back hidden>←</button>
-	<button class="bbb-app-share" type="button" aria-label="share bybookishbabe app" data-app-share data-share-url="<?php echo esc_url($app_share_url); ?>" data-share-title="bybookishbabe app" data-share-text="save this bookish shortcut">
-		<span class="bbb-app-shareIcon" aria-hidden="true">📲</span>
-		<span class="bbb-app-share__text" data-app-share-label>share app link</span>
-	</button>
-	<span class="bbb-app-share__toast" data-app-share-toast role="status" aria-live="polite">link copied</span>
 	<main id="MainContent" role="main" tabindex="-1">
 		<?php if (!$show_app_hub && ($is_app_home || $is_app_preview)) : ?>
 			<section class="bbb-app-visitor" aria-label="locked reader dashboard preview">

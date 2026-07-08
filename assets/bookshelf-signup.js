@@ -14,9 +14,48 @@
   var form = document.getElementById("BBBBookshelfSignupForm");
   var emailInput = document.getElementById("bbbShelfSignupEmail");
   var closeButtons = root.querySelectorAll("[data-bbb-shelf-close]");
-  var supabaseClient = window.supabase && window.supabase.createClient
-    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
-    : null;
+  var supabaseClient = null;
+  var supabaseLoadPromise = null;
+
+  function loadSupabase(){
+    if (window.supabase && window.supabase.createClient) {
+      return Promise.resolve(window.supabase);
+    }
+
+    if (supabaseLoadPromise) {
+      return supabaseLoadPromise;
+    }
+
+    supabaseLoadPromise = new Promise(function(resolve, reject){
+      var script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+      script.async = true;
+      script.onload = function(){
+        resolve(window.supabase);
+      };
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+
+    return supabaseLoadPromise;
+  }
+
+  async function getSupabaseClient(){
+    if (supabaseClient) {
+      return supabaseClient;
+    }
+
+    try {
+      var supabaseApi = await loadSupabase();
+      if (supabaseApi && supabaseApi.createClient) {
+        supabaseClient = supabaseApi.createClient(SUPABASE_URL, SUPABASE_KEY);
+      }
+    } catch (err) {
+      console.log("Supabase client failed to load", err);
+    }
+
+    return supabaseClient;
+  }
 
   function inDesignMode(){
     return !!(window.Shopify && window.Shopify.designMode);
@@ -98,13 +137,14 @@
   }
 
   async function ensureSubscriberRecord(emailNormalized){
-    if (!supabaseClient || !emailNormalized) return;
+    var client = await getSupabaseClient();
+    if (!client || !emailNormalized) return;
 
     var state = getState();
     var account = getReaderAccount();
     var accountEmail = getReaderEmail();
     try {
-      await supabaseClient.from(SUBSCRIBERS_TABLE).upsert([
+      await client.from(SUBSCRIBERS_TABLE).upsert([
         {
           email: state.email || accountEmail || emailNormalized,
           email_normalized: emailNormalized,
@@ -171,14 +211,15 @@
   }
 
   async function syncSavedBookRecord(emailNormalized, book, isActive){
-    if (!supabaseClient || !emailNormalized || !book) return;
+    var client = await getSupabaseClient();
+    if (!client || !emailNormalized || !book) return;
 
     var key = getBookKey(book);
     if (!key) return;
 
     try {
       if (isActive){
-        await supabaseClient.from(SAVED_BOOKS_TABLE).upsert([
+        await client.from(SAVED_BOOKS_TABLE).upsert([
           {
           email_normalized: emailNormalized,
           wordpress_user_id: getReaderCustomerId() || null,
@@ -202,7 +243,7 @@
           onConflict: "email_normalized,book_key"
         });
       } else {
-        await supabaseClient
+        await client
           .from(SAVED_BOOKS_TABLE)
           .update({
             is_active: false,
@@ -217,14 +258,15 @@
   }
 
   async function syncAllStatuses(emailNormalized){
-    if (!supabaseClient || !emailNormalized) return;
+    var client = await getSupabaseClient();
+    if (!client || !emailNormalized) return;
 
     var statuses = getStoredStatuses();
     var ratings = getStoredRatings();
     var keys = Object.keys(statuses || {});
 
     try {
-      await supabaseClient
+      await client
         .from(STATUSES_TABLE)
         .delete()
         .eq("email_normalized", emailNormalized);
@@ -238,7 +280,7 @@
         if (key) shelfMap[key] = item;
       });
 
-      await supabaseClient.from(STATUSES_TABLE).insert(
+      await client.from(STATUSES_TABLE).insert(
         keys.map(function(key){
           var book = shelfMap[key] || {};
           return {
@@ -293,10 +335,12 @@
   }
 
   async function trackPopupEvent(eventType, metadata){
-    if (!supabaseClient || !eventType || inDesignMode()) return;
+    if (!eventType || inDesignMode()) return;
+    var client = await getSupabaseClient();
+    if (!client) return;
 
     try {
-      await supabaseClient.from("site_events").insert([
+      await client.from("site_events").insert([
         {
           session_id: getSessionId(),
           event_type: eventType,
@@ -319,9 +363,10 @@
       var pending = JSON.parse(raw);
       if (!pending || !pending.email_normalized) return;
 
-      if (supabaseClient){
+      var client = await getSupabaseClient();
+      if (client){
         var account = getReaderAccount();
-        await supabaseClient.from(SUBSCRIBERS_TABLE).upsert([
+        await client.from(SUBSCRIBERS_TABLE).upsert([
           {
             email: pending.email,
             email_normalized: pending.email_normalized,
@@ -344,7 +389,7 @@
         });
 
         if (Array.isArray(pending.shelf) && pending.shelf.length){
-          await supabaseClient.from(SAVED_BOOKS_TABLE).upsert(
+          await client.from(SAVED_BOOKS_TABLE).upsert(
             pending.shelf.map(function(book){
               return {
                 email_normalized: pending.email_normalized,

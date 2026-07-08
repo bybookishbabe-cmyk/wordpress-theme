@@ -53,7 +53,7 @@ add_action(
 			);
 		}
 
-		foreach (array('author', 'amazon_link', 'bookshop_link', 'boyfriend_name', 'boyfriend_type', 'mini_note', 'newsletter_url', 'sss_author', 'sss_cover_url', 'sss_amazon', 'sss_bookshop', 'sss_newsletter', 'sss_series_handle', 'sss_yearning', 'sss_boyfriend_type', 'sss_boyfriend_name', 'sss_shelf', 'sss_featured_month') as $meta_key) {
+		foreach (array('author', 'amazon_link', 'kindle_unlimited_link', 'ku_link', 'bookshop_link', 'boyfriend_name', 'boyfriend_type', 'mini_note', 'newsletter_url', 'sss_author', 'sss_cover_url', 'sss_amazon', 'sss_ku_url', 'sss_bookshop', 'sss_newsletter', 'sss_series_handle', 'sss_yearning', 'sss_boyfriend_type', 'sss_boyfriend_name', 'sss_shelf', 'sss_featured_month') as $meta_key) {
 			register_post_meta(
 				'sss_book',
 				$meta_key,

@@ -275,8 +275,8 @@ function bbb_books_like_trope_filter_value(array $trope): string {
 									$series_name   = trim((string) ($book['series_name'] ?? ''));
 									?>
 									<div class="bbb-like__matchActions">
-										<?php if (!empty($book['ku'])) : ?>
-											<a class="bbb-like__cta bbb-like__cta--ku" href="<?php echo esc_url((string) ($book['amazon'] ?: $book['bookshop'] ?: '#')); ?>" target="_blank" rel="noopener">read free on kindle unlimited</a>
+										<?php if (!empty($book['ku']) && (!empty($book['ku_url']) || !empty($book['amazon']) || !empty($book['bookshop']))) : ?>
+											<a class="bbb-like__cta bbb-like__cta--ku" href="<?php echo esc_url((string) (!empty($book['ku_url']) ? $book['ku_url'] : ($book['amazon'] ?: $book['bookshop'] ?: '#'))); ?>" target="_blank" rel="noopener">read free on kindle unlimited</a>
 										<?php endif; ?>
 										<?php if (!empty($book['amazon'])) : ?>
 											<a class="bbb-like__cta bbb-like__cta--amazon" href="<?php echo esc_url((string) $book['amazon']); ?>" target="_blank" rel="noopener">buy on amazon <span>&middot; own it forever</span></a>

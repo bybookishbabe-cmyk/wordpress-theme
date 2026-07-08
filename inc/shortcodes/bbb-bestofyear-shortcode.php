@@ -132,6 +132,24 @@ function bbb_bestofyear_fictionalman_for_book(WP_Post $book, array $map): string
 		}
 	}
 
+	if (function_exists('bbb_fictional_boyfriend_for_book')) {
+		$boyfriend_names = function_exists('bbb_fictional_boyfriend_book_boyfriend_names')
+			? bbb_fictional_boyfriend_book_boyfriend_names($book)
+			: array((string) get_post_meta($book->ID, '_bbb_boyfriend_name', true));
+
+		foreach (array_merge($boyfriend_names, array('')) as $boyfriend_name) {
+			$profile = bbb_fictional_boyfriend_for_book($book->ID, (string) $boyfriend_name);
+			if ($profile instanceof WP_Post) {
+				return get_the_title($profile);
+			}
+		}
+	}
+
+	$fallback_name = trim((string) get_post_meta($book->ID, '_bbb_boyfriend_name', true));
+	if ('' !== $fallback_name) {
+		return $fallback_name;
+	}
+
 	return '';
 }
 

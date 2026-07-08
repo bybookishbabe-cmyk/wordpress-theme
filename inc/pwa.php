@@ -27,16 +27,345 @@ function bbb_pwa_asset_uri(string $relative_path): string {
 	return add_query_arg('v', bbb_pwa_version(), get_theme_file_uri($relative_path));
 }
 
+function bbb_pwa_base64url_encode(string $value): string {
+	return rtrim(strtr(base64_encode($value), '+/', '-_'), '=');
+}
+
+function bbb_pwa_base64url_decode(string $value): string {
+	$padded = strtr($value, '-_', '+/');
+	$padded .= str_repeat('=', (4 - strlen($padded) % 4) % 4);
+
+	return (string) base64_decode($padded, true);
+}
+
 function bbb_pwa_install_url(): string {
 	return home_url('/bybookishbabe-app/?install=1');
+}
+
+function bbb_pwa_generate_vapid_keypair(): array {
+	$key = openssl_pkey_new(
+		array(
+			'private_key_type' => OPENSSL_KEYTYPE_EC,
+			'curve_name'       => 'prime256v1',
+		)
+	);
+
+	if (false === $key || !openssl_pkey_export($key, $private_pem)) {
+		return array();
+	}
+
+	$details = openssl_pkey_get_details($key);
+	$x       = isset($details['ec']['x']) ? (string) $details['ec']['x'] : '';
+	$y       = isset($details['ec']['y']) ? (string) $details['ec']['y'] : '';
+
+	if ('' === $x || '' === $y) {
+		return array();
+	}
+
+	return array(
+		'public_key'  => bbb_pwa_base64url_encode("\x04" . $x . $y),
+		'public_x'    => bbb_pwa_base64url_encode($x),
+		'public_y'    => bbb_pwa_base64url_encode($y),
+		'private_pem' => (string) $private_pem,
+		'created_at'  => current_time('mysql', true),
+	);
+}
+
+function bbb_pwa_vapid_keypair(): array {
+	$keys = get_option('bbb_pwa_vapid_keypair', array());
+
+	if (is_array($keys) && !empty($keys['public_key']) && !empty($keys['private_pem'])) {
+		return $keys;
+	}
+
+	$keys = bbb_pwa_generate_vapid_keypair();
+	if (!empty($keys['public_key']) && !empty($keys['private_pem'])) {
+		update_option('bbb_pwa_vapid_keypair', $keys, false);
+		return $keys;
+	}
+
+	return array();
 }
 
 function bbb_pwa_vapid_public_key(): string {
 	$key = defined('BBB_PWA_VAPID_PUBLIC_KEY')
 		? (string) BBB_PWA_VAPID_PUBLIC_KEY
-		: 'BPQhYTst7vQE468FOTU4Q2hVDTR5g3QJs-1EG13Z4RjVmXWvZA-wZe650NeqD8xuFR8_ikDnApZ7AaMBWo4PTLs';
+		: (string) (bbb_pwa_vapid_keypair()['public_key'] ?? '');
 
 	return trim((string) apply_filters('bbb_pwa_vapid_public_key', $key));
+}
+
+function bbb_pwa_vapid_private_pem(): string {
+	$key = defined('BBB_PWA_VAPID_PRIVATE_PEM')
+		? (string) BBB_PWA_VAPID_PRIVATE_PEM
+		: (string) (bbb_pwa_vapid_keypair()['private_pem'] ?? '');
+
+	return trim((string) apply_filters('bbb_pwa_vapid_private_pem', $key));
+}
+
+function bbb_pwa_monthly_theme_notification_payload(): array {
+	$url = add_query_arg(
+		array(
+			'source'       => 'pwa-monthly-theme-july-2026',
+			'utm_source'   => 'pwa',
+			'utm_medium'   => 'push',
+			'utm_campaign' => 'july-2026-monthly-theme',
+		),
+		home_url('/monthly-theme/')
+	);
+
+	return array(
+		'title' => 'you voted for it. we built it.',
+		'body'  => 'midnight summer, after hours is officially here.',
+		'url'   => $url,
+		'tag'   => 'bbb-monthly-theme-july-2026',
+	);
+}
+
+function bbb_pwa_monthly_theme_notification_send_at(): int {
+	$timezone = new DateTimeZone('America/Los_Angeles');
+	$send_at  = new DateTimeImmutable('2026-07-01 15:00:00', $timezone);
+
+	return $send_at->getTimestamp();
+}
+
+function bbb_pwa_schedule_monthly_theme_notification(): void {
+	$hook      = 'bbb_pwa_send_monthly_theme_notification';
+	$timestamp = bbb_pwa_monthly_theme_notification_send_at();
+
+	if (wp_next_scheduled($hook)) {
+		return;
+	}
+
+	if (time() >= $timestamp) {
+		update_option(
+			'bbb_pwa_monthly_theme_notification_schedule',
+			array(
+				'status'       => 'missed',
+				'scheduled_at' => gmdate('c', $timestamp),
+				'checked_at'   => current_time('mysql', true),
+			),
+			false
+		);
+		return;
+	}
+
+	if (wp_schedule_single_event($timestamp, $hook)) {
+		update_option(
+			'bbb_pwa_monthly_theme_notification_schedule',
+			array(
+				'status'       => 'scheduled',
+				'scheduled_at' => gmdate('c', $timestamp),
+				'checked_at'   => current_time('mysql', true),
+			),
+			false
+		);
+	}
+}
+
+function bbb_pwa_der_signature_to_raw(string $signature): string {
+	$offset = 0;
+	if (ord($signature[$offset] ?? "\0") !== 0x30) {
+		return '';
+	}
+	$offset += 2;
+	if (ord($signature[$offset] ?? "\0") !== 0x02) {
+		return '';
+	}
+	$r_length = ord($signature[$offset + 1] ?? "\0");
+	$offset  += 2;
+	$r        = substr($signature, $offset, $r_length);
+	$offset  += $r_length;
+	if (ord($signature[$offset] ?? "\0") !== 0x02) {
+		return '';
+	}
+	$s_length = ord($signature[$offset + 1] ?? "\0");
+	$offset  += 2;
+	$s        = substr($signature, $offset, $s_length);
+
+	$r = substr(str_pad(ltrim($r, "\0"), 32, "\0", STR_PAD_LEFT), -32);
+	$s = substr(str_pad(ltrim($s, "\0"), 32, "\0", STR_PAD_LEFT), -32);
+
+	return $r . $s;
+}
+
+function bbb_pwa_vapid_jwt(string $endpoint): string {
+	$private_pem = bbb_pwa_vapid_private_pem();
+	$public_key  = bbb_pwa_vapid_public_key();
+	$parts       = wp_parse_url($endpoint);
+
+	if ('' === $private_pem || '' === $public_key || empty($parts['scheme']) || empty($parts['host'])) {
+		return '';
+	}
+
+	$audience = $parts['scheme'] . '://' . $parts['host'];
+	$header   = bbb_pwa_base64url_encode((string) wp_json_encode(array('typ' => 'JWT', 'alg' => 'ES256')));
+	$claims   = bbb_pwa_base64url_encode(
+		(string) wp_json_encode(
+			array(
+				'aud' => $audience,
+				'exp' => time() + 12 * HOUR_IN_SECONDS,
+				'sub' => 'mailto:bybookishbabe@gmail.com',
+			)
+		)
+	);
+	$input    = $header . '.' . $claims;
+	$signed   = openssl_sign($input, $signature, $private_pem, OPENSSL_ALGO_SHA256);
+	$raw_sig  = $signed ? bbb_pwa_der_signature_to_raw((string) $signature) : '';
+
+	return '' !== $raw_sig ? $input . '.' . bbb_pwa_base64url_encode($raw_sig) : '';
+}
+
+function bbb_pwa_raw_public_key_to_pem(string $raw_key): string {
+	$der = hex2bin('3059301306072a8648ce3d020106082a8648ce3d030107034200') . $raw_key;
+
+	return "-----BEGIN PUBLIC KEY-----\n" . chunk_split(base64_encode((string) $der), 64, "\n") . "-----END PUBLIC KEY-----\n";
+}
+
+function bbb_pwa_hkdf_extract(string $salt, string $ikm): string {
+	return hash_hmac('sha256', $ikm, $salt, true);
+}
+
+function bbb_pwa_hkdf_expand(string $prk, string $info, int $length): string {
+	$output = '';
+	$block  = '';
+	$index  = 1;
+
+	while (strlen($output) < $length) {
+		$block   = hash_hmac('sha256', $block . $info . chr($index), $prk, true);
+		$output .= $block;
+		$index  += 1;
+	}
+
+	return substr($output, 0, $length);
+}
+
+function bbb_pwa_encrypt_push_payload(array $subscription, array $payload): string {
+	$user_public = bbb_pwa_base64url_decode((string) ($subscription['keys']['p256dh'] ?? ''));
+	$auth_secret = bbb_pwa_base64url_decode((string) ($subscription['keys']['auth'] ?? ''));
+
+	if (65 !== strlen($user_public) || '' === $auth_secret) {
+		return '';
+	}
+
+	$local_key = openssl_pkey_new(
+		array(
+			'private_key_type' => OPENSSL_KEYTYPE_EC,
+			'curve_name'       => 'prime256v1',
+		)
+	);
+	if (false === $local_key || !openssl_pkey_export($local_key, $local_private_pem)) {
+		return '';
+	}
+
+	$details       = openssl_pkey_get_details($local_key);
+	$server_public = isset($details['ec']['x'], $details['ec']['y']) ? "\x04" . (string) $details['ec']['x'] . (string) $details['ec']['y'] : '';
+	$peer_public   = openssl_pkey_get_public(bbb_pwa_raw_public_key_to_pem($user_public));
+	$shared_secret = $peer_public ? openssl_pkey_derive($peer_public, $local_private_pem, 32) : false;
+
+	if (65 !== strlen($server_public) || false === $shared_secret) {
+		return '';
+	}
+
+	$salt      = random_bytes(16);
+	$key_info  = 'WebPush: info' . "\0" . $user_public . $server_public;
+	$prk_key   = bbb_pwa_hkdf_extract($auth_secret, (string) $shared_secret);
+	$ikm       = bbb_pwa_hkdf_expand($prk_key, $key_info, 32);
+	$prk       = bbb_pwa_hkdf_extract($salt, $ikm);
+	$cek       = bbb_pwa_hkdf_expand($prk, 'Content-Encoding: aes128gcm' . "\0", 16);
+	$nonce     = bbb_pwa_hkdf_expand($prk, 'Content-Encoding: nonce' . "\0", 12);
+	$plaintext = (string) wp_json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\x02";
+	$tag       = '';
+	$encrypted = openssl_encrypt($plaintext, 'aes-128-gcm', $cek, OPENSSL_RAW_DATA, $nonce, $tag);
+
+	if (false === $encrypted) {
+		return '';
+	}
+
+	return $salt . pack('N', 4096) . chr(strlen($server_public)) . $server_public . $encrypted . $tag;
+}
+
+function bbb_pwa_send_push_to_subscription(array $subscription, array $payload): array {
+	$endpoint = esc_url_raw((string) ($subscription['endpoint'] ?? ''));
+	$jwt      = '' !== $endpoint ? bbb_pwa_vapid_jwt($endpoint) : '';
+	$body     = '' !== $jwt ? bbb_pwa_encrypt_push_payload($subscription, $payload) : '';
+
+	if ('' === $endpoint || '' === $jwt || '' === $body) {
+		return array('ok' => false, 'status' => 0, 'message' => 'push-payload-build-failed');
+	}
+
+	$response = wp_remote_post(
+		$endpoint,
+		array(
+			'timeout' => 20,
+			'headers' => array(
+				'Authorization'    => 'vapid t=' . $jwt . ', k=' . bbb_pwa_vapid_public_key(),
+				'TTL'              => '86400',
+				'Urgency'          => 'normal',
+				'Content-Encoding' => 'aes128gcm',
+				'Content-Type'     => 'application/octet-stream',
+			),
+			'body'    => $body,
+		)
+	);
+
+	if (is_wp_error($response)) {
+		return array('ok' => false, 'status' => 0, 'message' => $response->get_error_message());
+	}
+
+	$status = (int) wp_remote_retrieve_response_code($response);
+
+	return array(
+		'ok'      => $status >= 200 && $status < 300,
+		'status'  => $status,
+		'message' => wp_remote_retrieve_response_message($response),
+	);
+}
+
+function bbb_pwa_send_monthly_theme_notification(): void {
+	$payload = bbb_pwa_monthly_theme_notification_payload();
+	$records = get_option('bbb_pwa_push_subscriptions', array());
+	$records = is_array($records) ? $records : array();
+	$current_public_key = bbb_pwa_vapid_public_key();
+	$sent = 0;
+	$failed = 0;
+	$stale = 0;
+	$results = array();
+
+	foreach ($records as $key => $subscription) {
+		if (!is_array($subscription)) {
+			continue;
+		}
+
+		if (($subscription['vapid_public_key'] ?? '') !== $current_public_key) {
+			$stale += 1;
+			continue;
+		}
+
+		$result = bbb_pwa_send_push_to_subscription($subscription, $payload);
+		if (!empty($result['ok'])) {
+			$sent += 1;
+		} else {
+			$failed += 1;
+		}
+
+		$results[(string) $key] = $result;
+	}
+
+	update_option(
+		'bbb_pwa_monthly_theme_notification_last_run',
+		array(
+			'status'  => $sent > 0 && 0 === $failed ? 'sent' : 'completed-with-errors',
+			'sent'    => $sent,
+			'failed'  => $failed,
+			'stale'   => $stale,
+			'total'   => count($records),
+			'payload' => $payload,
+			'results' => $results,
+			'ran_at'  => current_time('mysql', true),
+		),
+		false
+	);
 }
 
 function bbb_pwa_manifest(): array {
@@ -181,6 +510,9 @@ add_action(
 		add_rewrite_rule('^sw-[A-Za-z0-9_-]+\.js$', 'index.php?bbb_pwa_sw=1', 'top');
 	}
 );
+
+add_action('init', 'bbb_pwa_schedule_monthly_theme_notification');
+add_action('bbb_pwa_send_monthly_theme_notification', 'bbb_pwa_send_monthly_theme_notification');
 
 add_action('after_switch_theme', 'flush_rewrite_rules');
 
@@ -340,7 +672,8 @@ add_action(
 		status_header(200);
 		header_remove('Pragma');
 		header_remove('Expires');
-		header('Cache-Control: public, max-age=0, must-revalidate');
+		header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+		header('Surrogate-Control: no-store');
 		header('Content-Type: application/javascript; charset=' . get_option('blog_charset'));
 		header('Service-Worker-Allowed: /');
 		$theme_version = wp_get_theme()->get('Version') ?: '1.0.0';
@@ -354,7 +687,6 @@ add_action(
 					home_url('/?source=pwa-bybookishbabe-offline'),
 					home_url('/shop/'),
 					home_url('/books/'),
-					home_url('/library/'),
 					home_url('/reader-quizzes/'),
 					bbb_pwa_asset_uri('assets/pwa/bybookishbabe-icon-192.png'),
 					bbb_pwa_asset_uri('assets/pwa/bybookishbabe-apple-touch-icon.png'),
@@ -402,7 +734,22 @@ function bbbPwaIsSensitiveRoute(url) {
 	return url.pathname.startsWith('/wp-admin')
 		|| url.pathname.startsWith('/wp-login')
 		|| url.pathname.startsWith('/wp-json')
+		|| url.pathname.startsWith('/monthly-theme')
+		|| url.pathname.startsWith('/monthly-bybookishbabe-romance-theme')
+		|| url.pathname.startsWith('/social-planner')
 		|| /^\/(account|cart|checkout|my-bookshelf|my-notes|my-vault)(\/|$)/.test(url.pathname);
+}
+
+function bbbPwaIsShellDocument(url) {
+	const offlinePath = new URL(BBB_PWA.offlineUrl).pathname;
+
+	return url.pathname === BBB_PWA.homePath || url.pathname === offlinePath;
+}
+
+function bbbPwaIsNetworkOnlyAsset(url) {
+	return url.pathname.indexOf('/assets/js/social-posting-calendar.js') !== -1
+		|| url.pathname.indexOf('/assets/css/social-posting-calendar.css') !== -1
+		|| url.pathname.indexOf('/assets/pwa/social-planner.webmanifest') !== -1;
 }
 
 function bbbPwaCacheKey(request) {
@@ -464,6 +811,14 @@ function bbbPwaDocumentStaleWhileRevalidate(request, preloadResponse) {
 		});
 }
 
+function bbbPwaDocumentNetworkFirst(request, preloadResponse) {
+	const cacheKey = bbbPwaCacheKey(request);
+	const offlineKey = bbbPwaCacheKey(new Request(BBB_PWA.offlineUrl, { credentials: 'same-origin' }));
+
+	return bbbPwaNetworkThenCache(request, preloadResponse, cacheKey, true)
+		.catch(() => caches.match(cacheKey).then((cached) => cached || caches.match(offlineKey)));
+}
+
 function bbbPwaNetworkOnly(request, preloadResponse) {
 	const network = preloadResponse ? preloadResponse.then((response) => response || fetch(request)) : fetch(request);
 
@@ -482,7 +837,11 @@ function bbbPwaNotifyClientsOfUpdate() {
 }
 
 self.addEventListener('install', (event) => {
-	const precacheUrls = BBB_PWA.precacheUrls || [BBB_PWA.offlineUrl];
+	const precacheUrls = [
+		BBB_PWA.homeUrl,
+		BBB_PWA.offlineUrl,
+		BBB_PWA.defaultIcon,
+	].filter(Boolean);
 
 	event.waitUntil(
 		caches.open(BBB_PWA.cacheName)
@@ -523,13 +882,18 @@ self.addEventListener('fetch', (event) => {
 		return;
 	}
 
+	if (bbbPwaIsSensitiveRoute(url) || bbbPwaIsNetworkOnlyAsset(url)) {
+		event.respondWith(bbbPwaNetworkOnly(request, event.preloadResponse));
+		return;
+	}
+
 	if (bbbPwaIsDocumentRequest(request)) {
 		if (!bbbPwaShouldCachePage(request)) {
 			event.respondWith(bbbPwaNetworkOnly(request, event.preloadResponse));
 			return;
 		}
 
-		event.respondWith(bbbPwaDocumentStaleWhileRevalidate(request, event.preloadResponse));
+		event.respondWith(bbbPwaIsShellDocument(url) ? bbbPwaDocumentNetworkFirst(request, event.preloadResponse) : bbbPwaNetworkOnly(request, event.preloadResponse));
 		return;
 	}
 
@@ -610,19 +974,6 @@ add_action(
 );
 
 add_action(
-	'wp_head',
-	static function (): void {
-		if (!is_front_page()) {
-			return;
-		}
-		?>
-<link rel="prefetch" href="<?php echo esc_url(home_url('/library/')); ?>" as="document">
-		<?php
-	},
-	8
-);
-
-add_action(
 	'wp_enqueue_scripts',
 	static function (): void {
 		bbb_enqueue_css('bbb-pwa-promos', 'assets/css/pwa-promos.css', array('bbb-base'));
@@ -634,8 +985,10 @@ add_action(
 				'serviceWorkerUrl' => add_query_arg('v', bbb_pwa_version(), home_url('/sw.js')),
 				'version'          => bbb_pwa_version(),
 				'appHomePath'      => wp_parse_url(home_url('/bybookishbabe-app/'), PHP_URL_PATH) ?: '/bybookishbabe-app/',
+				'defaultIcon'      => bbb_pwa_asset_uri('assets/pwa/bybookishbabe-icon-192.png'),
 				'vapidPublicKey'   => bbb_pwa_vapid_public_key(),
 				'subscribeUrl'     => esc_url_raw(rest_url('bbb/v1/push-subscriptions')),
+				'monthlyThemeNotificationPreview' => current_user_can('manage_options') ? bbb_pwa_monthly_theme_notification_payload() : null,
 				'nonce'            => wp_create_nonce('wp_rest'),
 				'supabaseUrl'      => defined('SUPABASE_URL') ? SUPABASE_URL : 'https://efmrfxsmgbeikfgtrxjv.supabase.co',
 				'supabaseKey'      => defined('SUPABASE_ANON_KEY') ? SUPABASE_ANON_KEY : 'sb_publishable_iwjASe3QwixdDvHovaXZBQ_gbXU0Utk',
@@ -751,11 +1104,12 @@ function bbb_pwa_save_push_subscription(WP_REST_Request $request): WP_REST_Respo
 	$key      = hash('sha256', $endpoint);
 
 	$records[$key] = array(
-		'endpoint'   => $endpoint,
-		'keys'       => isset($subscription['keys']) && is_array($subscription['keys']) ? array_map('sanitize_text_field', $subscription['keys']) : array(),
-		'user_id'    => get_current_user_id(),
-		'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field((string) wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '',
-		'updated_at' => current_time('mysql', true),
+		'endpoint'         => $endpoint,
+		'keys'             => isset($subscription['keys']) && is_array($subscription['keys']) ? array_map('sanitize_text_field', $subscription['keys']) : array(),
+		'vapid_public_key' => bbb_pwa_vapid_public_key(),
+		'user_id'          => get_current_user_id(),
+		'user_agent'       => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field((string) wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '',
+		'updated_at'       => current_time('mysql', true),
 	);
 
 	update_option('bbb_pwa_push_subscriptions', $records, false);

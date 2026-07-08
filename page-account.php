@@ -57,6 +57,46 @@ if (!function_exists('bbb_account_drop_file_items')) {
 	}
 }
 
+if (!function_exists('bbb_account_current_monthly_era_fallback')) {
+	function bbb_account_current_monthly_era_fallback(): array {
+		$current_path = function_exists('bbb_monthly_theme_current_path') ? bbb_monthly_theme_current_path() : '';
+		$timestamp    = (int) current_time('timestamp');
+		$is_july_2026 = str_contains($current_path, 'july-2026-midnight-summer')
+			|| $timestamp >= (int) strtotime('2026-07-01 00:00:00 America/Los_Angeles');
+
+		if ($is_july_2026) {
+			return array(
+				'title'   => 'midnight summer',
+				'copy'    => 'after-hours romance energy: printable kindle inserts, wallpapers, bookmarks, a review template, and dark summer mood.',
+				'accent'  => '#f2a7cc',
+				'cream'   => '#151326',
+				'paper'   => '#070812',
+				'texture' => get_theme_file_uri('assets/monthly-themes/july-2026/display/midnight-summer-bookmark-mockup.jpg'),
+				'designs' => array(
+					array('name' => 'midnight swim', 'image' => get_theme_file_uri('assets/monthly-themes/july-2026/display/midnight-swim-insert-preview.jpg')),
+					array('name' => 'midnight movie', 'image' => get_theme_file_uri('assets/monthly-themes/july-2026/display/midnight-movie-insert-preview.jpg')),
+					array('name' => 'midnight drive', 'image' => get_theme_file_uri('assets/monthly-themes/july-2026/display/midnight-drive-insert-preview.jpg')),
+					array('name' => 'midnight makeout', 'image' => get_theme_file_uri('assets/monthly-themes/july-2026/display/midnight-makeout-insert-preview.jpg')),
+				),
+			);
+		}
+
+		return array(
+			'title'   => 'burn bright',
+			'copy'    => 'printable kindle inserts, wallpapers, calendar prompts, and the whole monthly mood.',
+			'accent'  => '#ff6b1a',
+			'cream'   => '#ffd0a8',
+			'paper'   => '#fff8f0',
+			'texture' => get_theme_file_uri('assets/monthly-themes/june-2026/textures/burn-bright-botanical-texture.png'),
+			'designs' => array(
+				array('name' => 'alive in the night', 'image' => get_theme_file_uri('assets/monthly-themes/june-2026/previews/alive-in-the-night-mockup.png')),
+				array('name' => 'golden and unbothered', 'image' => get_theme_file_uri('assets/monthly-themes/june-2026/previews/golden-and-unbothered-mockup.png')),
+				array('name' => 'you glow different', 'image' => get_theme_file_uri('assets/monthly-themes/june-2026/previews/you-glow-different-mockup.png')),
+			),
+		);
+	}
+}
+
 if (!function_exists('bbb_account_book_url')) {
 	function bbb_account_book_url(array $book): string {
 		$handle = sanitize_title((string) ($book['book_handle'] ?? $book['handle'] ?? $book['slug'] ?? ''));
@@ -236,7 +276,10 @@ $bookshelf_url = function_exists('bbb_page_url') ? bbb_page_url('my-bookshelf') 
 $vault_url = function_exists('bbb_page_url') ? bbb_page_url('my-vault') : home_url('/my-vault/');
 $notes_url = function_exists('bbb_page_url') ? bbb_page_url('my-notes') : home_url('/my-notes/');
 $made_for_you_url = function_exists('bbb_page_url') ? bbb_page_url('made-for-you') : home_url('/made-for-you/');
-$monthly_drop_url = function_exists('bbb_page_url') ? bbb_page_url('monthly-theme') : home_url('/monthly-theme/');
+$account_monthly_owner_preview = current_user_can('manage_options');
+$monthly_drop_url = function_exists('bbb_page_url')
+	? bbb_page_url($account_monthly_owner_preview ? 'monthly-bybookishbabe-romance-theme' : 'monthly-theme')
+	: home_url($account_monthly_owner_preview ? '/monthly-bybookishbabe-romance-theme/' : '/monthly-theme/');
 $society_url = function_exists('bbb_page_url') ? bbb_page_url('smut-sentiment-society') : home_url('/smut-sentiment-society/');
 $society_join_url = get_option('bbb_society_gate_member_url', 'https://thesmutandsentimentsociety.substack.com/subscribe');
 $society_join_url = '' !== trim((string) $society_join_url) ? (string) $society_join_url : 'https://thesmutandsentimentsociety.substack.com/subscribe';
@@ -342,7 +385,10 @@ $reader_profile_trope_fallback = implode('|', array_map('strval', $reader_profil
 $monthly_theme_fields = is_array($active_monthly_drop['fields'] ?? null) && function_exists('bbb_reader_drop_field_map')
 	? bbb_reader_drop_field_map((array) $active_monthly_drop['fields'])
 	: array();
-$monthly_era_title = function_exists('bbb_reader_drop_field_value') ? bbb_reader_drop_field_value($monthly_theme_fields, 'name', 'burn bright') : 'burn bright';
+$monthly_era_fallback = bbb_account_current_monthly_era_fallback();
+$monthly_era_imported_title = function_exists('bbb_reader_drop_field_value') ? bbb_reader_drop_field_value($monthly_theme_fields, 'name') : '';
+$monthly_era_is_stale = 'midnight summer' === $monthly_era_fallback['title'] && in_array(sanitize_title($monthly_era_imported_title), array('', 'burn-bright'), true);
+$monthly_era_title = $monthly_era_is_stale ? $monthly_era_fallback['title'] : $monthly_era_imported_title;
 $monthly_era_copy = function_exists('bbb_reader_drop_field_value') ? bbb_reader_drop_field_value($monthly_theme_fields, 'gram_sub') : '';
 if ('' === $monthly_era_copy && function_exists('bbb_reader_drop_field_value')) {
 	$monthly_era_copy = bbb_reader_drop_field_value($monthly_theme_fields, 'quote_text');
@@ -350,29 +396,28 @@ if ('' === $monthly_era_copy && function_exists('bbb_reader_drop_field_value')) 
 if ('' === $monthly_era_copy && function_exists('bbb_reader_drop_field_value')) {
 	$monthly_era_copy = bbb_reader_drop_field_value($monthly_theme_fields, 'moodboard_title');
 }
-$fallback_monthly_era_designs = array(
-	array('name' => 'alive in the night', 'image' => get_theme_file_uri('assets/monthly-themes/june-2026/previews/alive-in-the-night-mockup.png')),
-	array('name' => 'golden and unbothered', 'image' => get_theme_file_uri('assets/monthly-themes/june-2026/previews/golden-and-unbothered-mockup.png')),
-	array('name' => 'you glow different', 'image' => get_theme_file_uri('assets/monthly-themes/june-2026/previews/you-glow-different-mockup.png')),
-);
+if ($monthly_era_is_stale) {
+	$monthly_era_copy = $monthly_era_fallback['copy'];
+}
 $monthly_era_designs = bbb_account_drop_file_items(
 	$monthly_theme_fields,
 	array('wallpaper_images', 'mood_images', 'era_images', 'gram_image', 'calendar_image')
 );
-if (!$monthly_era_designs) {
-	$monthly_era_designs = $fallback_monthly_era_designs;
+if (!$monthly_era_designs || $monthly_era_is_stale) {
+	$monthly_era_designs = $monthly_era_fallback['designs'];
 }
 $monthly_era = array(
 	'title'   => '' !== trim($monthly_era_title) ? $monthly_era_title : 'monthly theme',
 	'kicker'  => 'monthly era',
-	'copy'    => '' !== trim($monthly_era_copy) ? $monthly_era_copy : 'printable kindle inserts, wallpapers, calendar prompts, and the whole monthly mood.',
-	'accent'  => function_exists('bbb_reader_drop_field_value') ? bbb_reader_drop_field_value($monthly_theme_fields, 'mood_accent', '#ff6b1a') : '#ff6b1a',
-	'cream'   => function_exists('bbb_reader_drop_field_value') ? bbb_reader_drop_field_value($monthly_theme_fields, 'mood_pill_bg', '#ffd0a8') : '#ffd0a8',
-	'paper'   => '#fff8f0',
+	'copy'    => '' !== trim($monthly_era_copy) ? $monthly_era_copy : $monthly_era_fallback['copy'],
+	'accent'  => $monthly_era_is_stale ? $monthly_era_fallback['accent'] : (function_exists('bbb_reader_drop_field_value') ? bbb_reader_drop_field_value($monthly_theme_fields, 'mood_accent', $monthly_era_fallback['accent']) : $monthly_era_fallback['accent']),
+	'cream'   => $monthly_era_is_stale ? $monthly_era_fallback['cream'] : (function_exists('bbb_reader_drop_field_value') ? bbb_reader_drop_field_value($monthly_theme_fields, 'mood_pill_bg', $monthly_era_fallback['cream']) : $monthly_era_fallback['cream']),
+	'paper'   => $monthly_era_fallback['paper'],
 	'url'     => $monthly_drop_url,
-	'texture' => get_theme_file_uri('assets/monthly-themes/june-2026/textures/burn-bright-botanical-texture.png'),
-	'designs' => array_slice($monthly_era_designs, 0, 3),
+	'texture' => $monthly_era_fallback['texture'],
+	'designs' => array_slice($monthly_era_designs, 0, 4),
 );
+$monthly_era_has_daily_prompt = $show_daily_prompt && 'midnight-summer' !== sanitize_title((string) $monthly_era['title']);
 $account_vintage_images = array(
 	get_theme_file_uri('assets/freebies/may-2026-bookend-8x10-art-print-preview.jpg'),
 	get_theme_file_uri('assets/monthly-themes/june-2026/previews/golden-and-unbothered.png'),
@@ -567,16 +612,20 @@ get_header();
 					</section>
 
 					<a
-						class="bbb-account-profile__section bbb-account-profile__monthlyEra"
+						class="bbb-account-profile__section bbb-account-profile__monthlyEra<?php echo $monthly_era_has_daily_prompt ? '' : ' bbb-account-profile__monthlyEra--noPrompt'; ?>"
 						href="<?php echo esc_url($monthly_era['url']); ?>"
 						aria-label="<?php echo esc_attr('open ' . $monthly_era['title'] . ' monthly era'); ?>"
 						data-account-reveal
 						style="--era-accent: <?php echo esc_attr($monthly_era['accent']); ?>; --era-cream: <?php echo esc_attr($monthly_era['cream']); ?>; --era-paper: <?php echo esc_attr($monthly_era['paper']); ?>; --era-texture: url('<?php echo esc_url($monthly_era['texture']); ?>');"
 					>
 					<div class="bbb-account-profile__monthlyEraCopy">
-						<p class="bbb-account-profile__cardLabel"><?php echo esc_html($monthly_era['kicker']); ?></p>
+						<?php if ($monthly_era_has_daily_prompt) : ?>
+							<p class="bbb-account-profile__cardLabel"><?php echo esc_html($monthly_era['kicker']); ?></p>
+						<?php endif; ?>
 						<h2><?php echo esc_html($monthly_era['title']); ?></h2>
-						<p><?php echo esc_html($monthly_era['copy']); ?></p>
+						<?php if ($monthly_era_has_daily_prompt) : ?>
+							<p><?php echo esc_html($monthly_era['copy']); ?></p>
+						<?php endif; ?>
 						<span class="bbb-account-profile__monthlyEraCta">open monthly era</span>
 					</div>
 					<div class="bbb-account-profile__monthlyEraDesigns" aria-label="monthly theme designs">
@@ -586,16 +635,13 @@ get_header();
 							</span>
 						<?php endforeach; ?>
 					</div>
-					<article class="bbb-account-profile__monthlyEraPrompt" aria-label="daily journal prompt">
-						<span>daily journal prompt</span>
-						<?php if ($show_daily_prompt) : ?>
+					<?php if ($monthly_era_has_daily_prompt) : ?>
+						<article class="bbb-account-profile__monthlyEraPrompt" aria-label="daily journal prompt">
+							<span>daily journal prompt</span>
 							<strong><?php echo esc_html($daily_prompt_meta); ?></strong>
 							<p><?php echo esc_html($daily_prompt_text); ?></p>
-						<?php else : ?>
-							<strong>prompt coming soon</strong>
-							<p>journal prompts are added from your active monthly drop.</p>
-						<?php endif; ?>
-					</article>
+						</article>
+					<?php endif; ?>
 				</a>
 
 					<section class="bbb-account-profile__section bbb-account-profile__section--quickLinks" aria-label="quick links" data-account-reveal>

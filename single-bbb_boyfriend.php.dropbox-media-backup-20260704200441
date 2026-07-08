@@ -1,0 +1,700 @@
+<?php
+/**
+ * Single fictional boyfriend profile.
+ *
+ * @package ByBookishBabeShopifyPort
+ */
+
+declare(strict_types=1);
+
+bbb_enqueue_css('bbb-book-breakdown-page', 'assets/css/book-breakdown-page.css', array('bbb-base'));
+bbb_enqueue_css('bbb-fictional-boyfriends', 'assets/css/fictional-boyfriends.css', array('bbb-book-breakdown-page'));
+bbb_enqueue_css('bbb-society-content-cta', 'assets/css/society-content-cta.css', array('bbb-fictional-boyfriends'));
+bbb_enqueue_js('bbb-fictional-boyfriends', 'assets/js/fictional-boyfriends.js', array(), true);
+wp_enqueue_script('bbb-pinterest-pinit', 'https://assets.pinterest.com/js/pinit.js', array(), null, true);
+
+get_header();
+
+if (!have_posts()) {
+	get_footer();
+	return;
+}
+
+the_post();
+
+$post_id = get_the_ID();
+$profile_url = get_permalink($post_id);
+$profile_image_url = (string) get_the_post_thumbnail_url($post_id, 'full');
+$book_id = bbb_fictional_boyfriend_primary_book_id($post_id);
+$source  = (string) get_post_meta($post_id, '_bbb_fb_source', true);
+$author  = (string) get_post_meta($post_id, '_bbb_fb_author', true);
+$series  = (string) get_post_meta($post_id, '_bbb_fb_series', true);
+$shelf   = (string) get_post_meta($post_id, '_bbb_fb_shelf', true);
+$tropes  = bbb_fictional_boyfriend_tropes($post_id);
+$traits  = bbb_fictional_boyfriend_traits($post_id);
+$spice   = bbb_fictional_boyfriend_spice($post_id);
+$series_post = bbb_fictional_boyfriend_series_post($post_id);
+$series_name = $series_post instanceof WP_Post ? get_the_title($series_post) : $series;
+$series_url = $series_post instanceof WP_Post ? get_permalink($series_post) : '';
+$verdict = trim((string) get_post_meta($post_id, '_bbb_fb_one_line_profile', true));
+if ('' === $verdict) {
+	$verdict = trim((string) get_the_excerpt());
+}
+$pinterest_title = function_exists('bbb_fictional_boyfriend_pinterest_title')
+	? bbb_fictional_boyfriend_pinterest_title($post_id)
+	: trim(wp_strip_all_tags(get_the_title($post_id) . ' fictional boyfriend profile'));
+$pinterest_description = function_exists('bbb_fictional_boyfriend_pinterest_description')
+	? bbb_fictional_boyfriend_pinterest_description($post_id)
+	: trim(wp_strip_all_tags($verdict ?: get_the_title($post_id)));
+$pinterest_save_url = $profile_image_url
+	? add_query_arg(
+		array(
+			'url'         => $profile_url,
+			'media'       => $profile_image_url,
+			'title'       => $pinterest_title,
+			'description' => $pinterest_description,
+		),
+		'https://www.pinterest.com/pin/create/button/'
+	)
+	: '';
+$book_url = $book_id ? get_permalink($book_id) : '';
+$book_title = $book_id ? get_the_title($book_id) : $source;
+$society_subscribe_url = function_exists('bbb_substack_subscribe_url') ? bbb_substack_subscribe_url() : 'https://thesmutandsentimentsociety.substack.com/subscribe';
+$book_cover = '';
+if ($book_id) {
+	$book_cover = (string) get_the_post_thumbnail_url($book_id, 'full');
+	if ('' === $book_cover && function_exists('bbb_get_book_cover_url')) {
+		$book_cover = (string) bbb_get_book_cover_url($book_id);
+	}
+}
+$book_review_post = null;
+if ($book_id) {
+	$book_review_post = function_exists('bbb_article_book_connections_review_post_for_book')
+		? bbb_article_book_connections_review_post_for_book($book_id)
+		: null;
+}
+$love_language = trim((string) get_post_meta($post_id, '_bbb_fb_love_language', true));
+$would_text_back = trim((string) get_post_meta($post_id, '_bbb_fb_would_text_back', true));
+$read_next_note = trim((string) get_post_meta($post_id, '_bbb_fb_read_next_note', true));
+$trait_scores = bbb_fictional_boyfriend_trait_scores($post_id);
+$raw_content = (string) get_post_field('post_content', $post_id);
+$content_faq_shortcode = '';
+$main_content = preg_replace_callback(
+	'/<!--\s+wp:shortcode\s+-->\s*(\[faq\b[^\]]*\].*?\[\/faq\])\s*<!--\s+\/wp:shortcode\s+-->/is',
+	static function (array $matches) use (&$content_faq_shortcode): string {
+		if ('' === $content_faq_shortcode) {
+			$content_faq_shortcode = $matches[1];
+		}
+		return '';
+	},
+	$raw_content
+);
+if (null === $main_content) {
+	$main_content = $raw_content;
+}
+$main_content = preg_replace_callback(
+	'/\[faq\b[^\]]*\].*?\[\/faq\]/is',
+	static function (array $matches) use (&$content_faq_shortcode): string {
+		if ('' === $content_faq_shortcode) {
+			$content_faq_shortcode = $matches[0];
+		}
+		return '';
+	},
+	$main_content
+);
+if (null === $main_content) {
+	$main_content = $raw_content;
+}
+$related_books = array();
+if ($book_id && function_exists('bbb_books_like_recommendations')) {
+	foreach (bbb_books_like_recommendations($book_id) as $book) {
+		if (count($related_books) >= 3 || empty($book['id'])) {
+			continue;
+		}
+		$related_post = get_post((int) $book['id']);
+		if ($related_post instanceof WP_Post) {
+			$related_data = function_exists('sss_book_data') ? sss_book_data($related_post) : array();
+			$related_cover = (string) ($related_data['cover'] ?? '');
+			if ('' !== $related_cover && function_exists('bbb_normalize_url_value')) {
+				$related_cover = bbb_normalize_url_value($related_cover);
+			}
+			$related_tropes = (array) ($related_data['tropes'] ?? array());
+			$first_trope = $related_tropes[0] ?? array();
+			$first_trope_name = (string) ($first_trope['name'] ?? '');
+			$first_trope_html = '' !== $first_trope_name && function_exists('bbb_trope_label_html')
+				? bbb_trope_label_html($first_trope_name, $first_trope['emoji'] ?? '', (string) ($first_trope['handle'] ?? $first_trope_name))
+				: esc_html($first_trope_name);
+			$related_books[] = array(
+				'post' => $related_post,
+				'handle' => (string) ($related_data['handle'] ?? $related_post->post_name),
+				'title' => (string) ($related_data['title'] ?? get_the_title($related_post)),
+				'author' => (string) ($related_data['author'] ?? ''),
+				'cover' => $related_cover,
+				'amazon' => (string) ($related_data['amazon'] ?? ''),
+				'bookshop' => (string) ($related_data['bookshop'] ?? ''),
+				'spice' => (int) ($related_data['spice'] ?? get_post_meta($related_post->ID, '_bbb_spice', true)),
+				'shelf' => (string) ($related_data['shelf'] ?? ''),
+				'trope' => $first_trope_name,
+				'trope_html' => $first_trope_html,
+				'tropes' => implode(', ', array_filter(array_map(static fn(array $trope): string => (string) ($trope['name'] ?? ''), $related_tropes))),
+				'mini' => (string) ($related_data['mini'] ?? ''),
+				'ku' => !empty($related_data['ku']),
+				'url' => get_permalink($related_post),
+			);
+		}
+	}
+}
+$related_boyfriends = bbb_fictional_boyfriend_related($post_id, 3);
+$series_boyfriends = function_exists('bbb_fictional_boyfriend_series_siblings') ? bbb_fictional_boyfriend_series_siblings($post_id, 3) : array();
+$quote_posts = bbb_fictional_boyfriend_quotes($post_id, 6);
+$quote_teasers = array_slice($quote_posts, 0, 3);
+$quote_wall_book_id = $book_id;
+if (!$quote_wall_book_id && $quote_teasers && function_exists('bbb_quote_wall_book')) {
+	$quote_wall_book = bbb_quote_wall_book($quote_teasers[0]);
+	$quote_wall_book_id = $quote_wall_book instanceof WP_Post ? (int) $quote_wall_book->ID : 0;
+}
+if (!$quote_wall_book_id && '' !== trim($source)) {
+	$quote_source_slug = sanitize_title($source);
+	$quote_book_types = function_exists('bbb_quote_book_post_types') ? bbb_quote_book_post_types() : array('bbb_book');
+	foreach ($quote_book_types as $quote_book_type) {
+		$quote_wall_book = get_page_by_path($quote_source_slug, OBJECT, $quote_book_type);
+		if ($quote_wall_book instanceof WP_Post) {
+			$quote_wall_book_id = (int) $quote_wall_book->ID;
+			break;
+		}
+	}
+}
+$quote_wall_url = $quote_wall_book_id && function_exists('bbb_book_quotes_url') ? bbb_book_quotes_url($quote_wall_book_id) : home_url('/sss-quote-wall/');
+if ('' === $book_cover && $quote_wall_book_id) {
+	$quote_wall_cover = (string) get_the_post_thumbnail_url($quote_wall_book_id, 'full');
+	if ('' === $quote_wall_cover && function_exists('bbb_get_book_cover_url')) {
+		$quote_wall_cover = (string) bbb_get_book_cover_url($quote_wall_book_id);
+	}
+	if ('' !== $quote_wall_cover) {
+		$book_cover = $quote_wall_cover;
+		$book_url = $book_url ?: (string) get_permalink($quote_wall_book_id);
+		$book_title = get_the_title($quote_wall_book_id) ?: $book_title;
+	}
+}
+$pinterest_links = function_exists('bbb_fictional_boyfriend_pinterest_links') ? bbb_fictional_boyfriend_pinterest_links($post_id) : array();
+$character_name = trim(wp_strip_all_tags(get_the_title($post_id)));
+$aesthetic_book_title = trim(wp_strip_all_tags((string) ($book_title ?: $source)));
+$aesthetic_trope = $tropes[0] ?? 'dark romance';
+$aesthetic_alt = trim(
+	sprintf(
+		'%1$s dark romance moodboard - morally gray book boyfriend%2$s',
+		$character_name,
+		$aesthetic_book_title ? ' from ' . $aesthetic_book_title : ''
+	)
+);
+$aesthetic_pin_description = trim(
+	sprintf(
+		'%1$s aesthetic | dark romance | morally gray book boyfriend | enemies to lovers%2$s%3$s',
+		$character_name,
+		$aesthetic_book_title ? ' | ' . $aesthetic_book_title : '',
+		$aesthetic_trope ? ' | ' . $aesthetic_trope : ''
+	)
+);
+$aesthetic_tiles = array();
+$aesthetic_uploaded_tiles = array();
+$aesthetic_external_tiles = array();
+foreach ($pinterest_links as $index => $pin_url) {
+	$pin_parts = array_map('trim', explode('|', $pin_url, 2));
+	$pin_media_url = (string) ($pin_parts[0] ?? '');
+	$pin_source_url = (string) ($pin_parts[1] ?? $pin_media_url);
+	$is_image_url = (bool) preg_match('/\.(?:avif|gif|jpe?g|png|webp)(?:\?.*)?$/i', $pin_media_url);
+	if (!$is_image_url) {
+		continue;
+	}
+	$tile = array(
+		'media' => $pin_media_url,
+		'source' => $pin_source_url,
+	);
+	if (0 === strpos($pin_media_url, home_url('/'))) {
+		$aesthetic_uploaded_tiles[] = $tile;
+	} else {
+		$aesthetic_external_tiles[] = $tile;
+	}
+}
+$aesthetic_tiles = array_merge($aesthetic_uploaded_tiles, $aesthetic_external_tiles);
+$aesthetic_tiles = array_slice($aesthetic_tiles, 0, 3);
+$aesthetic_has_media = static function (array $tiles, string $media_url): bool {
+	$media_url = trim($media_url);
+	if ('' === $media_url) {
+		return true;
+	}
+
+	foreach ($tiles as $tile) {
+		if ($media_url === trim((string) ($tile['media'] ?? ''))) {
+			return true;
+		}
+	}
+
+	return false;
+};
+if (count($aesthetic_tiles) < 3 && '' !== $book_cover && !$aesthetic_has_media($aesthetic_tiles, $book_cover)) {
+	$aesthetic_tiles[] = array(
+		'media'           => $book_cover,
+		'source'          => $book_url ?: $profile_url,
+		'alt'             => trim(($book_title ?: $source ?: $character_name) . ' book cover'),
+		'pin_title'       => trim(($book_title ?: $source ?: $character_name) . ' book cover'),
+		'pin_description' => trim(
+			sprintf(
+				'Save the %1$s book cover from %2$s%3$s.',
+				$book_title ?: $source ?: $character_name,
+				$character_name,
+				$aesthetic_trope ? ' | ' . $aesthetic_trope : ''
+			)
+		),
+	);
+}
+$aesthetic_quote_tile = null;
+if (function_exists('bbb_quote_pin_card_url') && $quote_posts) {
+	$aesthetic_quote_rotations = array();
+	foreach ($quote_posts as $quote) {
+		if (!$quote instanceof WP_Post) {
+			continue;
+		}
+
+		$quote_text = bbb_quote_pin_quote_text($quote);
+		if ('' === $quote_text) {
+			continue;
+		}
+
+		$quote_pin_args = array(
+			'context'   => 'boyfriend',
+			'source_id' => $post_id,
+		);
+		$aesthetic_quote_rotations[] = array(
+			'media' => bbb_quote_pin_card_url($quote, $quote_pin_args),
+			'alt'   => bbb_quote_pin_title($quote, $quote_pin_args),
+			'title' => bbb_quote_pin_title($quote, $quote_pin_args),
+			'description' => bbb_quote_pin_description($quote, $quote_pin_args),
+		);
+	}
+
+	if ($aesthetic_quote_rotations) {
+		$first_quote_tile = $aesthetic_quote_rotations[0];
+		$aesthetic_quote_tile = array(
+			'media'           => (string) $first_quote_tile['media'],
+			'source'          => $profile_url,
+			'alt'             => (string) $first_quote_tile['alt'],
+			'pin_title'       => (string) $first_quote_tile['title'],
+			'pin_description' => (string) $first_quote_tile['description'],
+			'rotations'       => $aesthetic_quote_rotations,
+		);
+	}
+}
+if ($aesthetic_quote_tile && count($aesthetic_tiles) < 3) {
+	$aesthetic_side_tiles = array_slice($aesthetic_tiles, 0, 2);
+	$aesthetic_tiles = array();
+	if (!empty($aesthetic_side_tiles[0])) {
+		$aesthetic_tiles[0] = $aesthetic_side_tiles[0];
+	}
+	$aesthetic_tiles[1] = $aesthetic_quote_tile;
+	if (!empty($aesthetic_side_tiles[1])) {
+		$aesthetic_tiles[2] = $aesthetic_side_tiles[1];
+	}
+}
+
+$needs_note = static function (string $label): void {
+	?>
+	<div class="bbb-fb-note-needed">
+		<p><?php echo esc_html($label); ?> needs your note before this section goes final.</p>
+	</div>
+	<?php
+};
+
+$bar = static function (string $label, int $value): void {
+	$value = max(0, min(10, $value));
+	?>
+	<div class="bbb-fb-bar">
+		<span><?php echo esc_html($label); ?></span>
+		<i><b style="width: <?php echo esc_attr((string) ($value * 10)); ?>%"></b></i>
+		<em><?php echo esc_html((string) $value); ?>/10</em>
+	</div>
+	<?php
+};
+
+$fallback_faq_shortcode = sprintf(
+	'[faq][q]what book is %1$s from?[/q][a]%1$s is from %2$s%3$s.[/a][q]what are %1$s\'s tropes?[/q][a]%4$s[/a][q]how spicy is %1$s\'s book?[/q][a]%5$s is currently rated %6$s in the library.[/a][q]is %1$s in the fictional boyfriend quiz?[/q][a]he belongs in the fictional boyfriend universe here. take the quiz at <a href="%7$s">/fictional-boyfriend-quiz/</a>.[/a][/faq]',
+	esc_html(get_the_title()),
+	esc_html($source ?: 'a book that still needs to be linked'),
+	$author ? esc_html(' by ' . $author) : '',
+	esc_html($tropes ? implode(', ', $tropes) : 'his tropes still need to be linked from the book record.'),
+	esc_html($source ?: 'the linked book'),
+	esc_html(bbb_fictional_boyfriend_peppers($spice)),
+	esc_url(function_exists('bbb_page_url') ? bbb_page_url('fictional-boyfriend-quiz') : home_url('/fictional-boyfriend-quiz/'))
+);
+$faq_shortcode = '' !== trim($content_faq_shortcode) ? $content_faq_shortcode : $fallback_faq_shortcode;
+?>
+
+<main id="MainContent" class="content-for-layout focus-none bbb-fb bbb-fb-single" role="main" tabindex="-1">
+	<nav class="bbb-fb-breadcrumb" aria-label="breadcrumb" data-fb-reveal="breadcrumb">
+		<a href="<?php echo esc_url(home_url('/')); ?>">home</a>
+		<span aria-hidden="true">→</span>
+		<a href="<?php echo esc_url(home_url('/fictional-boyfriends/')); ?>">fictional boyfriends</a>
+		<span aria-hidden="true">→</span>
+		<span><?php the_title(); ?></span>
+	</nav>
+
+	<section class="bbb-fb-profile-hero" data-fb-reveal="hero">
+		<div class="bbb-fb-profile-hero__image">
+			<?php the_post_thumbnail('large'); ?>
+			<?php if ($pinterest_save_url && $profile_image_url) : ?>
+				<a
+					class="bbb-fb-profile-hero__pin"
+					href="<?php echo esc_url($pinterest_save_url); ?>"
+					data-pin-do="buttonPin"
+					data-pin-custom="true"
+					data-pin-media="<?php echo esc_url($profile_image_url); ?>"
+					data-pin-url="<?php echo esc_url($profile_url); ?>"
+					data-pin-title="<?php echo esc_attr($pinterest_title); ?>"
+					data-pin-description="<?php echo esc_attr($pinterest_description); ?>"
+					target="_blank"
+					rel="noopener noreferrer"
+					aria-label="<?php echo esc_attr('save ' . get_the_title($post_id) . ' to Pinterest'); ?>"
+				>
+					<svg aria-hidden="true" viewBox="0 0 20 20" focusable="false">
+						<path d="M10 2.01a8.1 8.1 0 0 1 5.666 2.353 8.09 8.09 0 0 1 1.277 9.68A7.95 7.95 0 0 1 10 18.04a8.2 8.2 0 0 1-2.276-.307c.403-.653.672-1.24.816-1.729l.567-2.2c.134.27.393.5.768.702.384.192.768.297 1.19.297q1.254 0 2.248-.72a4.7 4.7 0 0 0 1.537-1.969c.37-.89.554-1.848.537-2.813 0-1.249-.48-2.315-1.43-3.227a5.06 5.06 0 0 0-3.65-1.374c-.893 0-1.729.154-2.478.461a5.02 5.02 0 0 0-3.236 4.552c0 .72.134 1.355.413 1.902.269.538.672.922 1.22 1.152.096.039.182.039.25 0 .066-.028.114-.096.143-.192l.173-.653c.048-.144.02-.288-.105-.432a2.26 2.26 0 0 1-.548-1.565 3.803 3.803 0 0 1 3.976-3.861c1.047 0 1.863.288 2.44.855.585.576.883 1.315.883 2.228a6.8 6.8 0 0 1-.317 2.122 3.8 3.8 0 0 1-.893 1.556c-.384.384-.836.576-1.345.576-.413 0-.749-.144-1.018-.451-.259-.307-.345-.672-.25-1.085q.22-.77.452-1.537l.173-.701c.057-.25.086-.451.086-.624 0-.346-.096-.634-.269-.855-.192-.22-.451-.336-.797-.336-.432 0-.797.192-1.085.595-.288.394-.442.893-.442 1.499.005.374.063.746.173 1.104l.058.144c-.576 2.478-.913 3.938-1.037 4.36-.116.528-.154 1.153-.125 1.863A8.07 8.07 0 0 1 2 10.03c0-2.208.778-4.11 2.343-5.666A7.72 7.72 0 0 1 10 2.001z" />
+					</svg>
+				</a>
+			<?php endif; ?>
+		</div>
+		<div class="bbb-fb-profile-hero__copy">
+			<?php if (function_exists('bbb_fictional_boyfriend_is_popular_now') && bbb_fictional_boyfriend_is_popular_now($post_id)) : ?>
+				<?php echo wp_kses_post(bbb_fictional_boyfriend_popular_badge('bbb-fb-popular-badge--hero')); ?>
+			<?php endif; ?>
+			<p class="bbb-fb-kicker"><?php echo esc_html($shelf ?: 'fictional boyfriend'); ?></p>
+			<h1><?php the_title(); ?></h1>
+			<?php if ($source || $author) : ?>
+				<p class="bbb-fb-profile-hero__book">
+					<?php if ($book_url) : ?>
+						<a href="<?php echo esc_url($book_url); ?>"><?php echo esc_html($source); ?></a>
+					<?php else : ?>
+						<?php echo esc_html($source); ?>
+					<?php endif; ?>
+					<?php echo $author ? esc_html(' by ' . $author) : ''; ?>
+				</p>
+			<?php endif; ?>
+			<?php if ($series_name) : ?>
+				<p class="bbb-fb-profile-hero__series">
+					<?php if ($series_url) : ?>
+						<a href="<?php echo esc_url($series_url); ?>"><?php echo esc_html($series_name); ?> series</a>
+					<?php else : ?>
+						<?php echo esc_html($series_name); ?>
+					<?php endif; ?>
+				</p>
+			<?php endif; ?>
+			<?php if ($verdict) : ?>
+				<p class="bbb-fb-profile-hero__verdict"><em><?php echo esc_html($verdict); ?></em></p>
+			<?php else : ?>
+				<?php $needs_note('One-line verdict'); ?>
+			<?php endif; ?>
+			<?php if ($book_review_post instanceof WP_Post && $book_title) : ?>
+				<p class="bbb-fb-review-link">
+					<a href="<?php echo esc_url(get_permalink($book_review_post)); ?>">
+						read full review on <?php echo esc_html(function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title($book_title) : $book_title); ?> <span aria-hidden="true">→</span>
+					</a>
+				</p>
+			<?php endif; ?>
+		</div>
+	</section>
+
+	<section class="bbb-fb-stats" aria-label="quick stats" data-fb-reveal="stats">
+		<div><span>Trope</span><strong><?php echo esc_html(implode(' / ', array_slice($tropes, 0, 2)) ?: 'needs linked trope'); ?></strong></div>
+		<?php if ($book_title && $book_url) : ?>
+			<div class="bbb-fb-stats__book">
+				<a href="<?php echo esc_url($book_url); ?>" aria-label="<?php echo esc_attr('open ' . $book_title); ?>">
+					<?php if ($book_cover) : ?>
+						<img src="<?php echo esc_url($book_cover); ?>" alt="<?php echo esc_attr($book_title . ' book cover'); ?>" loading="lazy">
+					<?php endif; ?>
+					<span>Book</span>
+					<strong><?php echo esc_html(function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title($book_title) : $book_title); ?></strong>
+				</a>
+			</div>
+		<?php endif; ?>
+		<div><span>Spice level</span><strong><?php echo esc_html(bbb_fictional_boyfriend_peppers($spice)); ?></strong></div>
+		<div><span>Love language</span><strong><?php echo esc_html($love_language ?: 'being decoded'); ?></strong></div>
+		<div><span>Would he text back</span><strong><?php echo esc_html($would_text_back ?: 'pending evidence'); ?></strong></div>
+	</section>
+
+	<section class="bbb-fb-content" data-fb-reveal="split">
+		<article class="bbb-fb-main-copy">
+			<?php if (trim(wp_strip_all_tags(strip_shortcodes($main_content)))) : ?>
+				<?php echo apply_filters('the_content', $main_content); ?>
+			<?php else : ?>
+				<h2>who he is</h2>
+				<?php $needs_note('Character page template'); ?>
+			<?php endif; ?>
+		</article>
+
+		<aside class="bbb-fb-personality">
+			<h2>personality breakdown</h2>
+			<?php foreach ($trait_scores as $label => $score) : ?>
+				<?php $bar(ucwords(str_replace('-', ' ', $label)), $score); ?>
+			<?php endforeach; ?>
+			<?php if ($traits) : ?>
+				<div class="bbb-fb-tags bbb-fb-tags--wide">
+					<?php foreach ($traits as $trait) : ?>
+						<span><?php echo esc_html(bbb_fictional_boyfriend_trait_label($trait)); ?></span>
+					<?php endforeach; ?>
+				</div>
+			<?php endif; ?>
+		</aside>
+	</section>
+
+	<?php if ($series_boyfriends) : ?>
+		<section class="bbb-fb-series-boyfriends" data-fb-reveal="cards" aria-label="other boyfriends in the series">
+			<div class="bbb-fb-wrap">
+				<div class="bbb-fb-series-boyfriends__header">
+					<div>
+						<p class="bbb-fb-kicker">same series</p>
+						<h2>other boyfriends in <?php echo esc_html($series_name ? $series_name . ' series' : 'this series'); ?></h2>
+					</div>
+					<?php if ($series_url) : ?>
+						<a class="bbb-fb-text-link bbb-fb-series-boyfriends__series-link" href="<?php echo esc_url($series_url); ?>">see full series <span aria-hidden="true">→</span></a>
+					<?php endif; ?>
+				</div>
+				<div class="bbb-fb-series-boyfriends__grid">
+					<?php foreach ($series_boyfriends as $series_boyfriend) : ?>
+						<a class="bbb-fb-series-boyfriends__card" href="<?php echo esc_url($series_boyfriend['url']); ?>">
+							<span class="bbb-fb-series-boyfriends__image">
+								<?php if (!empty($series_boyfriend['image'])) : ?>
+									<img src="<?php echo esc_url($series_boyfriend['image']); ?>" alt="<?php echo esc_attr($series_boyfriend['name']); ?>" loading="lazy">
+								<?php else : ?>
+									<span><?php echo esc_html(mb_substr((string) $series_boyfriend['name'], 0, 1)); ?></span>
+								<?php endif; ?>
+							</span>
+							<span class="bbb-fb-series-boyfriends__copy">
+								<span class="bbb-fb-series-boyfriends__name"><?php echo esc_html($series_boyfriend['name']); ?></span>
+								<span class="bbb-fb-series-boyfriends__book">
+									<?php if ('' !== $series_boyfriend['series_number']) : ?>
+										book <?php echo esc_html($series_boyfriend['series_number']); ?> ·
+									<?php endif; ?>
+									<?php echo esc_html(function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title($series_boyfriend['book_title']) : $series_boyfriend['book_title']); ?>
+								</span>
+								<?php if ('' !== $series_boyfriend['type']) : ?>
+									<span class="bbb-fb-series-boyfriends__type"><?php echo esc_html($series_boyfriend['type']); ?></span>
+								<?php endif; ?>
+							</span>
+						</a>
+					<?php endforeach; ?>
+				</div>
+			</div>
+		</section>
+	<?php endif; ?>
+
+	<?php
+	if (function_exists('bbb_render_society_content_cta')) {
+		bbb_render_society_content_cta(
+			array(
+				'variant'    => 'boyfriend',
+				'title'      => 'the fun keeps going...',
+				'copy'       => 'Save the books that introduced him, save the quotes that made you pause, and keep building your personal archive of fictional men with excellent emotional damage.',
+				'play_label' => 'more fictional men',
+				'play_url'   => home_url('/fictional-boyfriends/'),
+				'features'   => array(
+					array('title' => 'join the society', 'text' => 'start here so your fictional man archive has a home.'),
+					array('title' => 'log into account', 'text' => 'come back to your saves, notes, quotes, and shelf.'),
+					array('title' => 'have fun', 'text' => 'meet more fictional men and save the evidence.', 'url' => home_url('/fictional-boyfriends/')),
+				),
+			)
+		);
+	}
+	?>
+
+	<section class="bbb-fb-aesthetic" data-fb-reveal="aesthetic">
+		<div class="bbb-fb-wrap">
+			<p class="bbb-fb-kicker">pinterest moodboard</p>
+			<h2><?php the_title(); ?> aesthetic</h2>
+			<div class="bbb-fb-moodboard<?php echo $aesthetic_tiles ? '' : ' bbb-fb-moodboard--empty'; ?>" data-fb-carousel aria-label="<?php echo esc_attr($character_name . ' aesthetic moodboard'); ?>">
+				<?php for ($slot = 0; $slot < 3; $slot++) : ?>
+					<?php $tile = $aesthetic_tiles[$slot] ?? null; ?>
+					<?php if ($tile) : ?>
+					<?php
+					$tile_media = (string) ($tile['media'] ?? '');
+					$tile_source = (string) ($tile['source'] ?? $profile_url);
+					$tile_alt = (string) ($tile['alt'] ?? $aesthetic_alt);
+					$tile_pin_title = (string) ($tile['pin_title'] ?? $pinterest_title);
+					$tile_pin_description = (string) ($tile['pin_description'] ?? $aesthetic_pin_description);
+					$tile_rotations = !empty($tile['rotations']) && is_array($tile['rotations']) ? wp_json_encode($tile['rotations']) : '';
+					$tile_is_site_media = 0 === strpos($tile_media, home_url('/'));
+					$tile_click_url = $tile_is_site_media ? '' : ($tile_source ?: $tile_media);
+					$tile_pin_url = add_query_arg(
+						array(
+							'url' => $profile_url,
+							'media' => $tile_media,
+							'title' => $tile_pin_title,
+							'description' => $tile_pin_description,
+						),
+						'https://www.pinterest.com/pin/create/button/'
+					);
+					?>
+					<figure class="bbb-fb-moodboard__tile"<?php echo $tile_rotations ? ' data-bbb-quote-rotator="' . esc_attr($tile_rotations) . '"' : ''; ?>>
+						<?php if ($tile_is_site_media) : ?>
+						<div class="bbb-fb-moodboard__imageLink">
+							<img src="<?php echo esc_url($tile_media); ?>" alt="<?php echo esc_attr($tile_alt); ?>" loading="lazy" decoding="async">
+						</div>
+						<a class="bbb-fb-moodboard__pin" href="<?php echo esc_url($tile_pin_url); ?>" data-pin-do="buttonPin" data-pin-custom="true" data-pin-media="<?php echo esc_url($tile_media); ?>" data-pin-url="<?php echo esc_url($profile_url); ?>" data-pin-title="<?php echo esc_attr($tile_pin_title); ?>" data-pin-description="<?php echo esc_attr($tile_pin_description); ?>" target="_blank" rel="noopener noreferrer" aria-label="<?php echo esc_attr('save ' . $tile_pin_title . ' to Pinterest'); ?>">
+							<svg aria-hidden="true" viewBox="0 0 20 20" focusable="false">
+								<path d="M10 2.01a8.1 8.1 0 0 1 5.666 2.353 8.09 8.09 0 0 1 1.277 9.68A7.95 7.95 0 0 1 10 18.04a8.2 8.2 0 0 1-2.276-.307c.403-.653.672-1.24.816-1.729l.567-2.2c.134.27.393.5.768.702.384.192.768.297 1.19.297q1.254 0 2.248-.72a4.7 4.7 0 0 0 1.537-1.969c.37-.89.554-1.848.537-2.813 0-1.249-.48-2.315-1.43-3.227a5.06 5.06 0 0 0-3.65-1.374c-.893 0-1.729.154-2.478.461a5.02 5.02 0 0 0-3.236 4.552c0 .72.134 1.355.413 1.902.269.538.672.922 1.22 1.152.096.039.182.039.25 0 .066-.028.114-.096.143-.192l.173-.653c.048-.144.02-.288-.105-.432a2.26 2.26 0 0 1-.548-1.565 3.803 3.803 0 0 1 3.976-3.861c1.047 0 1.863.288 2.44.855.585.576.883 1.315.883 2.228a6.8 6.8 0 0 1-.317 2.122 3.8 3.8 0 0 1-.893 1.556c-.384.384-.836.576-1.345.576-.413 0-.749-.144-1.018-.451-.259-.307-.345-.672-.25-1.085q.22-.77.452-1.537l.173-.701c.057-.25.086-.451.086-.624 0-.346-.096-.634-.269-.855-.192-.22-.451-.336-.797-.336-.432 0-.797.192-1.085.595-.288.394-.442.893-.442 1.499.005.374.063.746.173 1.104l.058.144c-.576 2.478-.913 3.938-1.037 4.36-.116.528-.154 1.153-.125 1.863A8.07 8.07 0 0 1 2 10.03c0-2.208.778-4.11 2.343-5.666A7.72 7.72 0 0 1 10 2.001z" />
+							</svg>
+						</a>
+						<?php else : ?>
+						<a class="bbb-fb-moodboard__imageLink" href="<?php echo esc_url($tile_click_url); ?>" target="_blank" rel="noopener noreferrer nofollow" aria-label="<?php echo esc_attr('open ' . $character_name . ' aesthetic source on Pinterest'); ?>">
+							<img src="<?php echo esc_url($tile_media); ?>" alt="<?php echo esc_attr($tile_alt); ?>" loading="lazy" decoding="async">
+						</a>
+						<?php endif; ?>
+					</figure>
+					<?php else : ?>
+						<span class="bbb-fb-moodboard__blank"></span>
+					<?php endif; ?>
+				<?php endfor; ?>
+			</div>
+		</div>
+	</section>
+
+	<section class="bbb-fb-quotes" data-fb-reveal="quotes">
+		<div class="bbb-fb-wrap">
+			<h2><?php the_title(); ?> quotes</h2>
+			<?php if ($quote_teasers) : ?>
+				<div class="sss-book-page__quoteList">
+					<?php foreach ($quote_teasers as $quote) : ?>
+						<?php $quote_text = function_exists('bbb_bookquote_quote_text') ? bbb_bookquote_quote_text($quote) : trim(wp_strip_all_tags((string) $quote->post_content)); ?>
+						<?php if ('' === $quote_text) continue; ?>
+						<?php
+						$quote_book = function_exists('bbb_quote_wall_book') ? bbb_quote_wall_book($quote) : null;
+						$quote_book_title = $quote_book instanceof WP_Post ? get_the_title($quote_book) : '';
+						if ('' === trim($quote_book_title)) {
+							$quote_book_title = trim((string) get_post_meta($quote->ID, '_quote_book_title', true));
+						}
+						if ('' === trim($quote_book_title)) {
+							$quote_book_title = trim((string) get_post_meta($quote->ID, 'book_title', true));
+						}
+						if ('' !== trim($quote_book_title) && function_exists('bbb_bookish_book_title')) {
+							$quote_book_title = bbb_bookish_book_title($quote_book_title);
+						}
+						?>
+							<blockquote class="sss-book-page__bookQuote">
+								<a class="sss-book-page__quoteWallLink" href="<?php echo esc_url($quote_wall_url); ?>">‹ all quotes</a>
+							<p>&ldquo;<?php echo esc_html($quote_text); ?>&rdquo;</p>
+							<?php if ('' !== trim($quote_book_title)) : ?>
+								<cite class="bbb-fb-quote-source">— <?php echo esc_html($quote_book_title); ?></cite>
+								<?php endif; ?>
+								<div class="sss-book-page__quoteActions">
+									<button class="sss-book-page__quoteCopy" type="button" data-bbb-copy-quote="<?php echo esc_attr($quote_text); ?>" aria-label="copy quote">copy</button>
+								</div>
+							</blockquote>
+					<?php endforeach; ?>
+				</div>
+				<a class="sss-book-page__quoteMore" href="<?php echo esc_url($quote_wall_url); ?>">see all book quotes <span aria-hidden="true">→</span></a>
+				<script>
+					document.addEventListener('click', function(event) {
+						var button = event.target.closest('[data-bbb-copy-quote]');
+						if (!button || !navigator.clipboard) {
+							return;
+						}
+						navigator.clipboard.writeText(button.getAttribute('data-bbb-copy-quote') || '').then(function() {
+							button.textContent = 'copied';
+							window.setTimeout(function() {
+								button.textContent = 'copy';
+							}, 1400);
+						});
+					});
+				</script>
+			<?php else : ?>
+				<?php $needs_note('Quote library entries linked to ' . ($source ?: get_the_title())); ?>
+			<?php endif; ?>
+		</div>
+	</section>
+
+	<section class="bbb-fb-read-next" data-fb-reveal="cards">
+		<div class="bbb-fb-wrap">
+			<p class="sss-book-page__relatedLabel">if you liked <?php echo esc_html($source ?: get_the_title()); ?>, try these →</p>
+			<?php if (!$related_books) : ?>
+				<?php $needs_note('Read-next cards'); ?>
+			<?php else : ?>
+				<div class="sss-book-page__relatedGrid">
+					<?php foreach ($related_books as $related_book) : ?>
+						<article
+							class="sss-book-page__relatedCard sss-lib__book"
+							data-handle="<?php echo esc_attr($related_book['handle']); ?>"
+							data-title="<?php echo esc_attr($related_book['title']); ?>"
+							data-author="<?php echo esc_attr($related_book['author']); ?>"
+							data-cover="<?php echo esc_url($related_book['cover']); ?>"
+							data-amazon="<?php echo esc_url($related_book['amazon']); ?>"
+							data-bookshop="<?php echo esc_url($related_book['bookshop']); ?>"
+							data-spice="<?php echo esc_attr((string) $related_book['spice']); ?>"
+							data-shelf="<?php echo esc_attr($related_book['shelf']); ?>"
+							data-tropes="<?php echo esc_attr($related_book['tropes']); ?>"
+							data-mini="<?php echo esc_attr($related_book['mini']); ?>"
+							data-ku="<?php echo $related_book['ku'] ? 'true' : 'false'; ?>"
+						>
+							<?php if (!empty($related_book['cover'])) : ?>
+								<span class="sss-book-page__relatedCoverWrap">
+									<span class="sss-lib__heart" data-heart role="button" aria-label="save to your bookshelf">
+										<span class="sss-lib__heartIcon" data-heart-icon aria-hidden="true">♡</span>
+										<span class="sss-lib__heartLabel" data-heart-label>save</span>
+									</span>
+									<?php if ($related_book['spice'] > 0) : ?>
+										<span class="sss-lib__floatSpice"><?php echo esc_html(str_repeat('🌶', $related_book['spice'])); ?></span>
+									<?php endif; ?>
+									<a class="sss-book-page__relatedCoverLink" href="<?php echo esc_url($related_book['url']); ?>" data-book-page-link aria-label="<?php echo esc_attr('open ' . $related_book['title']); ?>">
+										<img class="sss-book-page__relatedCover" src="<?php echo esc_url($related_book['cover']); ?>" alt="<?php echo esc_attr($related_book['title'] . ($related_book['author'] ? ' by ' . $related_book['author'] : '') . ' book cover'); ?>" loading="lazy">
+									</a>
+								</span>
+							<?php endif; ?>
+							<a class="sss-book-page__relatedTitle" href="<?php echo esc_url($related_book['url']); ?>" data-book-page-link><?php echo esc_html($related_book['title']); ?></a>
+							<?php if ($related_book['author']) : ?>
+								<span class="sss-book-page__relatedAuthor"><?php echo esc_html($related_book['author']); ?></span>
+							<?php endif; ?>
+							<?php if ($related_book['trope']) : ?>
+								<span class="sss-book-page__relatedTrope"><?php echo wp_kses_post($related_book['trope_html']); ?></span>
+							<?php endif; ?>
+						</article>
+					<?php endforeach; ?>
+				</div>
+			<?php endif; ?>
+			<a class="bbb-fb-text-link" href="<?php echo esc_url(home_url('/library/')); ?>">explore the full library <span aria-hidden="true">→</span></a>
+		</div>
+	</section>
+
+	<section class="bbb-fb-quiz-cta" data-fb-reveal="cta">
+		<div class="bbb-fb-wrap">
+			<h2>think he might be yours?</h2>
+			<p>take the 2-minute quiz to meet your fictional boyfriend.</p>
+			<a class="bbb-fb-cta bbb-fb-cta--light" href="<?php echo esc_url(function_exists('bbb_page_url') ? bbb_page_url('fictional-boyfriend-quiz') : home_url('/fictional-boyfriend-quiz/')); ?>">take the quiz <span aria-hidden="true">→</span></a>
+		</div>
+	</section>
+
+	<?php if ($related_boyfriends) : ?>
+		<section class="bbb-fb-related" data-fb-reveal="cards-alt">
+			<div class="bbb-fb-wrap">
+				<h2>same energy as <?php the_title(); ?>?</h2>
+					<div class="bbb-fb-related-row">
+						<?php foreach ($related_boyfriends as $related) : ?>
+							<a class="bbb-fb-related-card" href="<?php echo esc_url(get_permalink($related)); ?>">
+								<?php echo get_the_post_thumbnail($related, 'medium'); ?>
+								<span><?php echo esc_html(get_the_title($related)); ?></span>
+							</a>
+						<?php endforeach; ?>
+					</div>
+					<a class="bbb-fb-text-link bbb-fb-related__all-link" href="<?php echo esc_url(home_url('/fictional-boyfriends/')); ?>">all book boyfriends <span aria-hidden="true">→</span></a>
+				</div>
+			</section>
+		<?php endif; ?>
+
+	<section class="bbb-fb-faq" data-fb-reveal="faq">
+		<div class="bbb-fb-wrap">
+			<div class="bbb-fb-faq__panel" aria-label="frequently asked questions">
+				<p class="bbb-fb-faq__label">frequently asked questions</p>
+				<?php echo do_shortcode($faq_shortcode); ?>
+			</div>
+		</div>
+	</section>
+
+</main>
+
+<?php
+get_footer();

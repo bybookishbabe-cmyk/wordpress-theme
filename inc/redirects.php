@@ -108,6 +108,53 @@ function bbb_restored_download_permalink(string $handle): string {
 	return home_url('/downloads/' . $handle . '/');
 }
 
+function bbb_legacy_trope_redirect_map(): array {
+	$map = array();
+
+	if (function_exists('bbb_trope_page_seo_rows')) {
+		foreach (bbb_trope_page_seo_rows() as $row) {
+			$tag  = sanitize_title((string) ($row['tag'] ?? ''));
+			$page = (string) ($row['page'] ?? '');
+			if ('' === $tag || '' === $page) {
+				continue;
+			}
+
+			$map[$tag] = $page;
+		}
+	}
+
+	return $map;
+}
+
+function bbb_legacy_trope_redirect_target(string $slug): string {
+	$slug = sanitize_title($slug);
+	if ('' === $slug) {
+		return '';
+	}
+
+	$map        = bbb_legacy_trope_redirect_map();
+	$candidates = array_values(
+		array_unique(
+			array_filter(
+				array(
+					$slug,
+					preg_replace('/-romance$/', '', $slug),
+					preg_replace('/-books$/', '', $slug),
+					preg_replace('/-romance-books$/', '', $slug),
+				)
+			)
+		)
+	);
+
+	foreach ($candidates as $candidate) {
+		if (isset($map[$candidate])) {
+			return home_url($map[$candidate]);
+		}
+	}
+
+	return '';
+}
+
 add_action(
 	'template_redirect',
 	static function (): void {
@@ -216,6 +263,19 @@ add_action(
 	'template_redirect',
 	static function (): void {
 		$path = trim((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
+		$current_monthly_path = function_exists('bbb_monthly_theme_current_path')
+			? bbb_monthly_theme_current_path()
+			: 'monthly-theme/july-2026-midnight-summer';
+
+		if ('monthly-theme' === $path) {
+			bbb_redirect_with_query_string(home_url('/' . trim($current_monthly_path, '/') . '/'), 302);
+		}
+
+		if (in_array($path, array('burn-bright', 'june-2026-monthly-theme'), true)) {
+			bbb_redirect_with_query_string(home_url('/monthly-theme/june-2026-burn-bright/'), 301);
+		}
+
+		$monthly_theme_redirect = '/monthly-theme/';
 
 		$direct_page_redirects = array(
 			'canva-templates'              => '/smut-sentiment-society/',
@@ -226,14 +286,21 @@ add_action(
 			'series'                       => '/series-reading-orders/',
 			'society-library'              => '/smut-sentiment-society/',
 			'sss-library-page'             => '/library/',
-			'sss-printable-kindle'         => '/monthly-theme/',
-			'sss-printable-kindle-inserts' => '/monthly-theme/',
+			'sss-printable-kindle'         => $monthly_theme_redirect,
+			'sss-printable-kindle-inserts' => $monthly_theme_redirect,
 			'sss-canva-templates'          => '/smut-sentiment-society/',
 			'sss-freebies'                 => '/smut-sentiment-society/',
 			'sss-private-shelf'            => '/library/',
 		);
 		if (isset($direct_page_redirects[$path])) {
 			bbb_redirect_with_query_string(home_url($direct_page_redirects[$path]), 301);
+		}
+
+		if (preg_match('#^tropes?/([^/]+)/?$#', $path, $matches)) {
+			$trope_target = bbb_legacy_trope_redirect_target($matches[1]);
+			if ('' !== $trope_target) {
+				bbb_redirect_with_query_string($trope_target, 301);
+			}
 		}
 
 		if ('blog/curated-romance-guides' === $path) {

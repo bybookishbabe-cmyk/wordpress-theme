@@ -542,17 +542,36 @@ function sss_faq_italicize_book_titles(string $html): string {
 	return implode('', $chunks);
 }
 
-function sss_faq_link_known_titles(string $html): string {
-	$matches = array_merge(
-		array_map(
-			static fn(array $match): array => array_merge($match, array('class' => 'blog-faq__bookLink')),
-			sss_faq_book_title_matches()
-		),
-		array_map(
-			static fn(array $match): array => array_merge($match, array('class' => 'blog-faq__seriesLink')),
-			sss_faq_series_title_matches()
-		)
-	);
+function sss_faq_link_known_titles(string $html, int $post_id = 0): string {
+	$post_id = $post_id ?: (int) get_the_ID();
+	$link_books = !function_exists('bbb_article_auto_link_setting') || !$post_id || bbb_article_auto_link_setting($post_id, 'faq_books');
+	$link_series = function_exists('bbb_article_auto_link_series_match_allowed') && $post_id;
+
+	$matches = array();
+	if ($link_books) {
+		$matches = array_merge(
+			$matches,
+			array_map(
+				static fn(array $match): array => array_merge($match, array('class' => 'blog-faq__bookLink')),
+				sss_faq_book_title_matches()
+			)
+		);
+	}
+	if ($link_series) {
+		$series_matches = array_values(
+			array_filter(
+				sss_faq_series_title_matches(),
+				static fn(array $match): bool => bbb_article_auto_link_series_match_allowed($post_id, $match)
+			)
+		);
+		$matches = array_merge(
+			$matches,
+			array_map(
+				static fn(array $match): array => array_merge($match, array('class' => 'blog-faq__seriesLink')),
+				$series_matches
+			)
+		);
+	}
 	if (!$matches || '' === trim($html)) {
 		return $html;
 	}
@@ -636,7 +655,7 @@ function sss_faq_shortcode($atts, ?string $content = null): string {
 			if ('a' !== $type || '' === $question || '' === $body) {
 				continue;
 			}
-			$answer = sss_faq_link_book_titles(wp_kses_post(do_shortcode($body)));
+			$answer = sss_faq_link_known_titles(wp_kses_post(do_shortcode($body)), (int) get_the_ID());
 			$items .= '<details class="blog-faq__item"><summary class="blog-faq__question"><span>' . wp_kses_post(sss_faq_italicize_book_titles(esc_html($question))) . '</span><span class="blog-faq__arrow" aria-hidden="true">⌄</span></summary><div class="blog-faq__answer">' . wp_kses_post($answer) . '</div></details>';
 			$question = '';
 		}
@@ -651,7 +670,7 @@ function sss_faq_shortcode($atts, ?string $content = null): string {
 				if (!$question || !$answer) {
 					continue;
 				}
-				$answer = sss_faq_link_book_titles(wp_kses_post($answer));
+				$answer = sss_faq_link_known_titles(wp_kses_post($answer), (int) get_the_ID());
 				$items .= '<details class="blog-faq__item"><summary class="blog-faq__question"><span>' . wp_kses_post(sss_faq_italicize_book_titles(esc_html($question))) . '</span><span class="blog-faq__arrow" aria-hidden="true">⌄</span></summary><div class="blog-faq__answer">' . wp_kses_post($answer) . '</div></details>';
 			}
 		}

@@ -130,16 +130,96 @@
 		return outputArray;
 	}
 
+	function uint8ArrayToUrlBase64(value) {
+		var bytes = value instanceof ArrayBuffer ? new Uint8Array(value) : new Uint8Array(value || []);
+		var binary = '';
+
+		for (var i = 0; i < bytes.byteLength; i += 1) {
+			binary += String.fromCharCode(bytes[i]);
+		}
+
+		return window.btoa(binary).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+	}
+
+	function subscriptionUsesCurrentKey(subscription) {
+		if (!subscription || !subscription.options || !subscription.options.applicationServerKey || !settings.vapidPublicKey) {
+			return true;
+		}
+
+		return uint8ArrayToUrlBase64(subscription.options.applicationServerKey) === settings.vapidPublicKey;
+	}
+
 	function registerServiceWorker() {
 		if (!('serviceWorker' in navigator) || !settings.serviceWorkerUrl) {
 			return Promise.resolve(null);
 		}
 
 		if (!registrationPromise) {
-			registrationPromise = navigator.serviceWorker.register(settings.serviceWorkerUrl, { scope: '/' });
+			registrationPromise = navigator.serviceWorker.getRegistration('/')
+				.then(function (registration) {
+					if (registration) {
+						registration.update().catch(function () {});
+						return registration;
+					}
+
+					return navigator.serviceWorker.register(settings.serviceWorkerUrl, {
+						scope: '/',
+						updateViaCache: 'none',
+					});
+				});
 		}
 
 		return registrationPromise;
+	}
+
+	function requestNotificationPermission() {
+		if (!('Notification' in window)) {
+			return Promise.resolve('unsupported');
+		}
+
+		if (window.Notification.permission === 'granted' || window.Notification.permission === 'denied') {
+			return Promise.resolve(window.Notification.permission);
+		}
+
+		return new Promise(function (resolve) {
+			var settled = false;
+
+			function finish(permission) {
+				if (settled) {
+					return;
+				}
+
+				settled = true;
+				resolve(permission || window.Notification.permission || 'default');
+			}
+
+			try {
+				var request = window.Notification.requestPermission(finish);
+				if (request && typeof request.then === 'function') {
+					request.then(finish).catch(function () {
+						finish(window.Notification.permission || 'default');
+					});
+				}
+			} catch (error) {
+				finish(window.Notification.permission || 'default');
+			}
+		});
+	}
+
+	function withTimeout(promise, timeoutMs, reason) {
+		var timeoutId = null;
+		var timeout = new Promise(function (resolve) {
+			timeoutId = window.setTimeout(function () {
+				resolve({ ok: false, reason: reason || 'timed out' });
+			}, timeoutMs);
+		});
+
+		return Promise.race([promise, timeout]).then(function (result) {
+			if (timeoutId) {
+				window.clearTimeout(timeoutId);
+			}
+			return result;
+		});
 	}
 
 	function saveSubscription(subscription) {
@@ -155,7 +235,10 @@
 				'X-WP-Nonce': settings.nonce || '',
 			},
 			body: JSON.stringify(subscription),
-		}).then(function () {
+		}).then(function (response) {
+			if (!response.ok) {
+				throw new Error('subscription-save-failed-' + response.status);
+			}
 			return subscription;
 		});
 	}
@@ -165,13 +248,22 @@
 			return Promise.resolve({ ok: false, reason: 'unsupported' });
 		}
 
-		return registerServiceWorker()
+		return withTimeout(registerServiceWorker(), 30000, 'service worker timed out')
 			.then(function (registration) {
+				if (registration && registration.ok === false) {
+					return registration;
+				}
+
 				if (!registration) {
 					return { ok: false, reason: 'no-service-worker' };
 				}
 
-				return window.Notification.requestPermission().then(function (permission) {
+				return withTimeout(requestNotificationPermission(), 12000, 'permission timed out').then(function (permissionResult) {
+					if (permissionResult && permissionResult.ok === false) {
+						return permissionResult;
+					}
+
+					var permission = permissionResult;
 					if (permission !== 'granted') {
 						return { ok: false, reason: permission };
 					}
@@ -184,14 +276,96 @@
 						return { ok: true, reason: 'permission-granted-no-vapid-key' };
 					}
 
-					return registration.pushManager.subscribe({
-						userVisibleOnly: true,
-						applicationServerKey: urlBase64ToUint8Array(settings.vapidPublicKey),
-					}).then(saveSubscription).then(function () {
+					return withTimeout(registration.pushManager.getSubscription(), 8000, 'subscription check timed out').then(function (existingSubscription) {
+						if (existingSubscription && existingSubscription.ok === false) {
+							return existingSubscription;
+						}
+
+						if (existingSubscription && !subscriptionUsesCurrentKey(existingSubscription)) {
+							return existingSubscription.unsubscribe().then(function () {
+								return null;
+							});
+						}
+
+						return existingSubscription;
+					}).then(function (subscription) {
+						if (subscription && subscription.ok === false) {
+							return subscription;
+						}
+
+						return subscription || withTimeout(registration.pushManager.subscribe({
+							userVisibleOnly: true,
+							applicationServerKey: urlBase64ToUint8Array(settings.vapidPublicKey),
+						}), 12000, 'subscribe timed out');
+					}).then(function (subscription) {
+						if (subscription && subscription.ok === false) {
+							return subscription;
+						}
+
+						return withTimeout(saveSubscription(subscription), 8000, 'save timed out');
+					}).then(function (result) {
+						if (result && result.ok === false) {
+							return result;
+						}
+
 						return { ok: true, reason: 'subscribed' };
 					});
 				});
 			});
+	}
+
+	function previewMonthlyThemeNotification(trigger) {
+		var payload = settings.monthlyThemeNotificationPreview;
+
+		if (!payload || !payload.title) {
+			return Promise.resolve({ ok: false, reason: 'missing-payload' });
+		}
+
+		function showPreviewNotification() {
+			return registerServiceWorker().then(function (registration) {
+				if (!registration || !registration.showNotification) {
+					return { ok: false, reason: 'no-service-worker' };
+				}
+
+				return registration.showNotification(payload.title, {
+					body: payload.body || '',
+					icon: payload.icon || settings.defaultIcon || '/wp-content/themes/wordpress-theme/assets/pwa/bybookishbabe-icon-192.png',
+					badge: payload.badge || payload.icon || '/wp-content/themes/wordpress-theme/assets/pwa/bybookishbabe-icon-192.png',
+					tag: payload.tag || 'bbb-monthly-theme-preview',
+					data: { url: payload.url || '/monthly-theme/' },
+				}).then(function () {
+					return { ok: true, reason: 'preview-shown' };
+				});
+			});
+		}
+
+		if (!('Notification' in window)) {
+			return Promise.resolve({ ok: false, reason: 'unsupported' });
+		}
+
+		if (window.Notification.permission === 'granted') {
+			return showPreviewNotification();
+		}
+
+		if (window.Notification.permission === 'denied') {
+			return Promise.resolve({ ok: false, reason: 'denied' });
+		}
+
+		if (trigger) {
+			trigger.setAttribute('aria-busy', 'true');
+		}
+
+		return window.Notification.requestPermission().then(function (permission) {
+			if (trigger) {
+				trigger.removeAttribute('aria-busy');
+			}
+
+			if (permission !== 'granted') {
+				return { ok: false, reason: permission };
+			}
+
+			return showPreviewNotification();
+		});
 	}
 
 	function createNotificationPrompt() {
@@ -205,23 +379,39 @@
 		panel.innerHTML = [
 			'<div class="bbb-pwa-notification-panel__inner">',
 			'<p class="bbb-pwa-notification-panel__eyebrow">bybookishbabe app</p>',
-			'<h2>Want bookish alerts?</h2>',
-			'<p>Get a little nudge when new recs, freebies, or Society updates drop.</p>',
+			'<h2>want bookish alerts?</h2>',
+			'<p>get a little nudge when new recs, freebies, or society updates drop.</p>',
+			'<p class="bbb-pwa-notification-panel__diagnostics" data-bbb-pwa-notification-diagnostics></p>',
 			'<div class="bbb-pwa-notification-panel__actions">',
-			'<button type="button" class="bbb-pwa-notification-panel__primary" data-bbb-pwa-notifications>Turn on notifications</button>',
-			'<button type="button" class="bbb-pwa-notification-panel__secondary" data-bbb-pwa-dismiss-notifications>Not now</button>',
+			'<button type="button" class="bbb-pwa-notification-panel__primary" data-bbb-pwa-notifications>turn on notifications</button>',
+			'<button type="button" class="bbb-pwa-notification-panel__secondary" data-bbb-pwa-dismiss-notifications>not now</button>',
 			'</div>',
 			'</div>',
 		].join('');
 		document.body.appendChild(panel);
+		updateNotificationDiagnostics();
 	}
 
 	function maybeShowInstalledNotificationPrompt() {
-		if (!looksLikePwaLaunch() || !('Notification' in window) || window.Notification.permission !== 'default') {
+		var forcePrompt = shouldForceNotificationPrompt();
+
+		if (isSocialPlannerRoute()) {
 			return;
 		}
 
-		if (!shouldForceNotificationPrompt()) {
+		if (!('Notification' in window)) {
+			return;
+		}
+
+		if (!forcePrompt && !looksLikePwaLaunch()) {
+			return;
+		}
+
+		if (!forcePrompt && window.Notification.permission !== 'default') {
+			return;
+		}
+
+		if (!forcePrompt) {
 			try {
 				if (window.localStorage.getItem(promptStorageKey)) {
 					return;
@@ -232,6 +422,99 @@
 		}
 
 		window.setTimeout(createNotificationPrompt, 1200);
+	}
+
+	function notificationDiagnosticsText() {
+		var parts = [];
+
+		parts.push('permission: ' + (('Notification' in window) ? window.Notification.permission : 'missing'));
+		parts.push('service worker: ' + (('serviceWorker' in navigator) ? 'yes' : 'no'));
+		parts.push('push: ' + (('PushManager' in window) ? 'yes' : 'no'));
+		parts.push('mode: ' + (looksLikePwaLaunch() ? 'app' : 'browser'));
+
+		return parts.join(' | ');
+	}
+
+	function updateNotificationDiagnostics() {
+		Array.prototype.slice.call(document.querySelectorAll('[data-bbb-pwa-notification-diagnostics]')).forEach(function (element) {
+			element.textContent = notificationDiagnosticsText();
+		});
+	}
+
+	function updateNotificationButtons(result) {
+		var label = 'try again';
+
+		if (result && result.ok) {
+			label = 'connected';
+		} else if (result && result.reason === 'denied') {
+			label = 'blocked';
+		} else if (result && result.reason === 'unsupported') {
+			label = 'unsupported';
+		} else if (result && result.reason) {
+			label = result.reason;
+		}
+
+		Array.prototype.slice.call(document.querySelectorAll('[data-bbb-pwa-notifications]')).forEach(function (button) {
+			button.textContent = label;
+			button.removeAttribute('aria-busy');
+		});
+
+		updateNotificationDiagnostics();
+	}
+
+	function repairGrantedNotificationSubscription() {
+		if (!('Notification' in window) || !('PushManager' in window) || window.Notification.permission !== 'granted' || !settings.vapidPublicKey) {
+			return;
+		}
+
+		withTimeout(registerServiceWorker(), 30000, 'service worker timed out')
+			.then(function (registration) {
+				if (!registration || registration.ok === false) {
+					return registration;
+				}
+
+				return withTimeout(registration.pushManager.getSubscription(), 8000, 'subscription check timed out').then(function (existingSubscription) {
+					if (existingSubscription && existingSubscription.ok === false) {
+						return existingSubscription;
+					}
+
+					if (existingSubscription && !subscriptionUsesCurrentKey(existingSubscription)) {
+						return existingSubscription.unsubscribe().then(function () {
+							return null;
+						});
+					}
+
+					return existingSubscription;
+				}).then(function (subscription) {
+					if (subscription && subscription.ok === false) {
+						return subscription;
+					}
+
+					return subscription || withTimeout(registration.pushManager.subscribe({
+						userVisibleOnly: true,
+						applicationServerKey: urlBase64ToUint8Array(settings.vapidPublicKey),
+					}), 12000, 'subscribe timed out');
+				}).then(function (subscription) {
+					if (subscription && subscription.ok === false) {
+						return subscription;
+					}
+
+					return withTimeout(saveSubscription(subscription), 8000, 'save timed out');
+				}).then(function (result) {
+					if (result && result.ok === false) {
+						return result;
+					}
+
+					document.dispatchEvent(new CustomEvent('bbb:pwa-notification-result', {
+						detail: { ok: true, reason: 'subscribed' },
+					}));
+					return { ok: true, reason: 'subscribed' };
+				});
+			}).catch(function (error) {
+				if (window.console && window.console.log) {
+					window.console.log('PWA notification repair failed', error);
+				}
+			});
 	}
 
 	function trackFirstStandaloneOpen() {
@@ -379,6 +662,10 @@
 		return new URLSearchParams(window.location.search).get('show-pwa-notifications') === '1';
 	}
 
+	function isSocialPlannerRoute() {
+		return window.location.pathname.indexOf('/social-planner') === 0;
+	}
+
 	function looksLikePwaLaunch() {
 		var source = new URLSearchParams(window.location.search).get('source') || '';
 
@@ -489,6 +776,8 @@
 		if (!isStandalone()) {
 			return;
 		}
+
+		window.setTimeout(warmVisibleAppLinks, 250);
 
 		if ('requestIdleCallback' in window) {
 			window.requestIdleCallback(warmVisibleAppLinks, { timeout: 1600 });
@@ -660,6 +949,7 @@
 			restoreDismissedPromo();
 			scheduleAppPrefetch();
 			setupVisibleLinkWarmObserver();
+			repairGrantedNotificationSubscription();
 			maybeShowInstalledNotificationPrompt();
 		});
 	} else {
@@ -671,6 +961,7 @@
 		restoreDismissedPromo();
 		scheduleAppPrefetch();
 		setupVisibleLinkWarmObserver();
+		repairGrantedNotificationSubscription();
 		maybeShowInstalledNotificationPrompt();
 	}
 
@@ -800,12 +1091,42 @@
 		}
 
 		event.preventDefault();
-		requestNotifications().then(function (result) {
+		trigger.setAttribute('aria-busy', 'true');
+		trigger.textContent = 'connecting...';
+		withTimeout(requestNotifications(), 12000, 'timed out').then(function (result) {
 			var panel = document.querySelector('[data-bbb-pwa-notification-panel]');
 			if (panel && result && result.ok) {
 				panel.remove();
 			}
 			document.dispatchEvent(new CustomEvent('bbb:pwa-notification-result', { detail: result }));
+		}).catch(function (error) {
+			document.dispatchEvent(new CustomEvent('bbb:pwa-notification-result', {
+				detail: { ok: false, reason: error && error.message ? error.message : 'subscription-failed' },
+			}));
+		});
+	});
+
+	document.addEventListener('click', function (event) {
+		var trigger = closestFromTarget(event.target, '[data-bbb-pwa-monthly-preview]');
+		var panel = trigger ? trigger.closest('[data-bbb-pwa-monthly-preview-panel]') : null;
+
+		if (!trigger) {
+			return;
+		}
+
+		event.preventDefault();
+		previewMonthlyThemeNotification(trigger).then(function (result) {
+			if (!panel) {
+				return;
+			}
+
+			panel.setAttribute('data-preview-result', result && result.ok ? 'ok' : 'error');
+			if (result && result.ok) {
+				trigger.textContent = 'sent preview';
+				return;
+			}
+
+			trigger.textContent = result && result.reason === 'denied' ? 'blocked' : 'try again';
 		});
 	});
 
@@ -840,9 +1161,17 @@
 	});
 
 	document.addEventListener('bbb:pwa-request-notifications', function () {
-		requestNotifications().then(function (result) {
+		withTimeout(requestNotifications(), 12000, 'timed out').then(function (result) {
 			document.dispatchEvent(new CustomEvent('bbb:pwa-notification-result', { detail: result }));
+		}).catch(function (error) {
+			document.dispatchEvent(new CustomEvent('bbb:pwa-notification-result', {
+				detail: { ok: false, reason: error && error.message ? error.message : 'subscription-failed' },
+			}));
 		});
+	});
+
+	document.addEventListener('bbb:pwa-notification-result', function (event) {
+		updateNotificationButtons(event.detail || {});
 	});
 
 	document.addEventListener('click', function (event) {

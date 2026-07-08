@@ -109,13 +109,13 @@ function bbb_society_discount_is_applied_to_session(): bool {
 }
 
 function bbb_society_discount_clear_cart_fee(): void {
-	if (function_exists('EDD') && EDD()->fees) {
+	if (function_exists('EDD') && EDD()->fees && EDD()->session && method_exists(EDD()->fees, 'remove_fee')) {
 		EDD()->fees->remove_fee(BBB_SOCIETY_DISCOUNT_FEE_ID);
 	}
 }
 
 function bbb_society_discount_refresh_cart_fee(): void {
-	if (!function_exists('EDD') || !EDD()->fees) {
+	if (!function_exists('EDD') || !EDD()->fees || !EDD()->session) {
 		return;
 	}
 
@@ -175,7 +175,10 @@ function bbb_society_discount_redirect_with_status(string $status): void {
 }
 
 function bbb_society_discount_handle_apply(): void {
-	check_admin_referer('bbb_apply_society_discount');
+	$nonce = isset($_POST['_wpnonce']) ? sanitize_text_field((string) wp_unslash($_POST['_wpnonce'])) : '';
+	if (!wp_verify_nonce($nonce, 'bbb_apply_society_discount')) {
+		bbb_society_discount_redirect_with_status('expired');
+	}
 
 	if (!bbb_society_discount_member_has_access()) {
 		bbb_society_discount_redirect_with_status('member-required');

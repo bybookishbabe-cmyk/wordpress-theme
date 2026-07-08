@@ -86,9 +86,9 @@ if (function_exists('bbb_bookish_proper_name')) {
 	$author = bbb_bookish_proper_name($author);
 }
 
-$quote_scope_books = function_exists('bbb_book_quote_scope_books') ? bbb_book_quote_scope_books($book) : array($book);
-$is_series_quotes  = count($quote_scope_books) > 1;
-$quote_scope_label = $is_series_quotes && function_exists('bbb_book_quote_scope_label') ? bbb_book_quote_scope_label($book) : $title;
+$quote_scope_books = array($book);
+$is_series_quotes  = false;
+$quote_scope_label = $title;
 $quotes            = function_exists('bbb_book_quote_posts') ? bbb_book_quote_posts($book) : array();
 $book_url         = get_permalink($book);
 $all_quotes_url   = home_url('/sss-quote-wall/');

@@ -66,6 +66,135 @@
   }
 
   function profileFor(type, scores) {
+    if (type === 'reader-type') {
+      var readerType = topKey(scores, ['chaos', 'dark', 'fantasy', 'sports', 'slow', 'tension', 'fake', 'sweet', 'comfort']);
+      var readerTypes = {
+        chaos: {
+          title: 'you are the chaos reader',
+          kicker: 'reader type unlocked',
+          copy: 'you want intensity, momentum, and romance that makes one tiny normal choice then immediately swerves off-road.',
+          tags: ['dark romance', 'high stakes', 'touch her and die'],
+          slug: 'chaos-reader',
+          match: {
+            boost: ['dark romance', 'mafia', 'stalker', 'touch her', 'villain', 'morally gray', 'high stakes'],
+            minDarknessBoost: 3
+          }
+        },
+        dark: {
+          title: 'you are the dark romance girlie',
+          kicker: 'reader type unlocked',
+          copy: 'morally gray devotion, dangerous promises, and a plot with consequences. you are here for obsession with a paper trail.',
+          tags: ['dark romance', 'morally gray', 'possessive'],
+          slug: 'dark-romance-girlie',
+          match: {
+            boost: ['dark romance', 'mafia', 'stalker', 'touch her', 'villain', 'morally gray', 'possessive'],
+            minDarknessBoost: 3
+          }
+        },
+        fantasy: {
+          title: 'you are the fantasy girlie',
+          kicker: 'reader type unlocked',
+          copy: 'you prefer your romance with magic, curses, creatures, impossible stakes, and a man who may or may not be ancient.',
+          tags: ['romantasy', 'paranormal romance', 'fated mates'],
+          slug: 'fantasy-girlie',
+          match: {
+            boost: ['romantasy', 'fantasy', 'paranormal', 'fated mates', 'dragon', 'fae']
+          }
+        },
+        sports: {
+          title: 'you are the jersey chaser',
+          kicker: 'reader type unlocked',
+          copy: 'you like competition, locker-room confidence, public wins, private softness, and men who have absolutely practiced the apology.',
+          tags: ['sports romance', 'he falls first', 'protective'],
+          slug: 'jersey-chaser',
+          match: {
+            boost: ['sports romance', 'hockey', 'football', 'baseball romance', 'athlete', 'he falls first'],
+            avoid: ['stalker', 'mafia', 'captor', 'captive'],
+            maxDarkness: 3
+          }
+        },
+        slow: {
+          title: 'you are the slow burn girlie',
+          kicker: 'reader type unlocked',
+          copy: 'you want restraint, yearning, almost-moments, and the kind of payoff that requires patience and a dramatic little stare.',
+          tags: ['slow burn', 'second chance', 'yearning'],
+          slug: 'slow-burn-girlie',
+          match: {
+            boost: ['slow burn', 'yearning', 'second chance', 'friends to lovers'],
+            avoid: ['bully romance', 'stalker', 'mafia'],
+            maxSpice: 4,
+            maxDarkness: 3,
+            spiceMin: 2,
+            spiceMax: 3
+          }
+        },
+        tension: {
+          title: 'you are the tension addict',
+          kicker: 'reader type unlocked',
+          copy: 'you read for charged silence, sharp banter, inconvenient proximity, and the exact second the denial stops working.',
+          tags: ['enemies to lovers', 'forced proximity', 'banter'],
+          slug: 'tension-addict',
+          match: {
+            boost: ['enemies to lovers', 'forced proximity', 'banter', 'rivals'],
+            minTensionBoost: 3
+          }
+        },
+        fake: {
+          title: 'you are the fake dating fanatic',
+          kicker: 'reader type unlocked',
+          copy: 'you believe rules are foreplay, pretend affection is evidence, and the fake kiss should absolutely ruin everyone.',
+          tags: ['fake dating', 'jealousy', 'forced proximity'],
+          slug: 'fake-dating-fanatic',
+          match: {
+            boost: ['fake dating', 'marriage of convenience', 'forced proximity', 'jealousy'],
+            avoid: ['stalker', 'captor', 'captive'],
+            maxDarkness: 3
+          }
+        },
+        sweet: {
+          title: 'you are the sweet romance devotee',
+          kicker: 'reader type unlocked',
+          copy: 'you want tenderness, safety, mutual care, and proof that soft romance can still hit hard.',
+          tags: ['friends to lovers', 'comfort read', 'he falls first'],
+          slug: 'sweet-romance-devotee',
+          match: {
+            boost: ['friends to lovers', 'he falls first', 'comfort', 'contemporary', 'small town', 'single dad', 'grumpy sunshine'],
+            avoid: ['bully', 'dark romance', 'mafia', 'stalker', 'touch her', 'villain', 'captor', 'captive', 'morally gray', 'obsession', 'possessive', 'forbidden love'],
+            penalty: ['enemies to lovers', 'rivals'],
+            maxSpice: 3,
+            maxDarkness: 1,
+            maxDamage: 3,
+            spiceMin: 1,
+            spiceMax: 2,
+            preferLowDarkness: true,
+            preferLowDamage: true,
+            maxTensionPenalty: 4
+          }
+        },
+        comfort: {
+          title: 'you are the sweet romance devotee',
+          kicker: 'reader type unlocked',
+          copy: 'you want tenderness, safety, mutual care, and proof that soft romance can still hit hard.',
+          tags: ['friends to lovers', 'comfort read', 'he falls first'],
+          slug: 'sweet-romance-devotee',
+          match: {
+            boost: ['friends to lovers', 'he falls first', 'comfort', 'contemporary', 'small town', 'single dad', 'grumpy sunshine'],
+            avoid: ['bully', 'dark romance', 'mafia', 'stalker', 'touch her', 'villain', 'captor', 'captive', 'morally gray', 'obsession', 'possessive', 'forbidden love'],
+            penalty: ['enemies to lovers', 'rivals'],
+            maxSpice: 3,
+            maxDarkness: 1,
+            maxDamage: 3,
+            spiceMin: 1,
+            spiceMax: 2,
+            preferLowDarkness: true,
+            preferLowDamage: true,
+            maxTensionPenalty: 4
+          }
+        }
+      };
+      return readerTypes[readerType] || readerTypes.tension;
+    }
+
     if (type === 'trope') {
       var trope = topKey(scores, ['enemies', 'friends', 'proximity', 'fake', 'second']);
       var tropeMap = {
@@ -235,6 +364,22 @@
   }
 
   function readerTypeFromQuiz(type, scores, profile, boyfriendMatch) {
+    if (type === 'reader-type') {
+      var readerType = topScoreKey(scores, ['chaos', 'dark', 'fantasy', 'sports', 'slow', 'tension', 'fake', 'sweet', 'comfort']);
+      var readerTypeMap = {
+        chaos: 'chaos_reader',
+        dark: 'dark_romance_girlie',
+        fantasy: 'fantasy_girlie',
+        sports: 'jersey_chaser',
+        slow: 'slow_burn_girlie',
+        tension: 'tension_addict',
+        fake: 'fake_dating_fanatic',
+        sweet: 'sweet_romance_devotee',
+        comfort: 'sweet_romance_devotee'
+      };
+      return readerTypeMap[readerType] || 'romance_reader';
+    }
+
     if (type === 'boyfriend') {
       var dark = Number(scores.dark || 0) + Number(scores.gray || 0) + Number(scores.stalker || 0) + Number(scores.mafia || 0) + Number(scores.possessive || 0);
       var chaos = dark + Number(scores.spicy || 0);
@@ -344,6 +489,7 @@
     var now = new Date().toISOString();
     var profile = existing && typeof existing === 'object' ? Object.assign({}, existing) : {};
     var version = mfyProfileVersion();
+    var seed = evidence && evidence.dashboard_seed && typeof evidence.dashboard_seed === 'object' ? evidence.dashboard_seed : null;
     profile.mfy_profile_version = version;
     profile.profile_version = version;
     profile.updatedAt = now;
@@ -352,6 +498,15 @@
       profile.favorite_trope = evidence.favorite_trope || profile.favorite_trope || '';
       profile.spice_profile = evidence.spice_profile || profile.spice_profile || 0;
       profile.spice_dial = evidence.spice_dial || profile.spice_dial || '';
+      if (seed) {
+        profile.name = profile.name || seed.name || 'reader';
+        profile.heat_lane = seed.heat_lane || profile.heat_lane || '';
+        profile.group_chat_text = seed.group_chat_text || profile.group_chat_text || '';
+        profile.love_interest = seed.love_interest || profile.love_interest || '';
+        profile.wall_line = seed.wall_line || profile.wall_line || '';
+        profile.dashboard_built = true;
+        profile.profile_source = 'reader_type_quiz';
+      }
     } else {
       profile.reader_type_prior = profile.reader_type_prior || profile.theme || '';
       profile.favorite_trope = profile.favorite_trope || '';
@@ -374,6 +529,67 @@
     return profile;
   }
 
+  function dashboardSeedForReaderType(readerType) {
+    var seeds = {
+      chaos_reader: {
+        heat_lane: 'unhinged',
+        group_chat_text: 'tension_addict',
+        love_interest: 'dark_romance_girlie',
+        wall_line: 'chaos_reader'
+      },
+      dark_romance_girlie: {
+        heat_lane: 'open',
+        group_chat_text: 'dark_romance_girlie',
+        love_interest: 'dark_romance_girlie',
+        wall_line: 'fake_dating_fanatic'
+      },
+      fantasy_girlie: {
+        heat_lane: 'cracked',
+        group_chat_text: 'fake_dating_fanatic',
+        love_interest: 'fantasy_girlie',
+        wall_line: 'chaos_reader'
+      },
+      jersey_chaser: {
+        heat_lane: 'cracked',
+        group_chat_text: 'tension_addict',
+        love_interest: 'jersey_chaser',
+        wall_line: 'fake_dating_fanatic'
+      },
+      slow_burn_girlie: {
+        heat_lane: 'cracked',
+        group_chat_text: 'slow_burn_girlie',
+        love_interest: 'sweet_romance_devotee',
+        wall_line: 'slow_burn_girlie'
+      },
+      tension_addict: {
+        heat_lane: 'open',
+        group_chat_text: 'tension_addict',
+        love_interest: 'jersey_chaser',
+        wall_line: 'fake_dating_fanatic'
+      },
+      fake_dating_fanatic: {
+        heat_lane: 'cracked',
+        group_chat_text: 'fake_dating_fanatic',
+        love_interest: 'jersey_chaser',
+        wall_line: 'fake_dating_fanatic'
+      },
+      sweet_romance_devotee: {
+        heat_lane: 'closed',
+        group_chat_text: 'slow_burn_girlie',
+        love_interest: 'sweet_romance_devotee',
+        wall_line: 'fake_dating_fanatic'
+      },
+      romance_reader: {
+        heat_lane: 'cracked',
+        group_chat_text: 'slow_burn_girlie',
+        love_interest: 'sweet_romance_devotee',
+        wall_line: 'fake_dating_fanatic'
+      }
+    };
+
+    return Object.assign({ name: 'reader' }, seeds[readerType] || seeds.romance_reader);
+  }
+
   function syncQuizEvidence(root, type, scores, answers, profile, boyfriendMatch, picks) {
     var readerType = readerTypeFromQuiz(type, scores, profile, boyfriendMatch);
     var fictionalBoyfriend = type === 'boyfriend' ? canonicalFictionalBoyfriend(boyfriendMatch, scores, profile) : null;
@@ -391,6 +607,7 @@
       scores: Object.assign({}, scores),
       answers: answers.slice(),
       recommendations: (picks || []).slice(0, 5).map(compactBook),
+      dashboard_seed: type === 'reader-type' ? dashboardSeedForReaderType(readerType) : null,
       fictional_boyfriend: fictionalBoyfriend,
       boyfriend_match: boyfriendMatch ? {
         id: boyfriendMatch.id || '',
@@ -678,6 +895,44 @@
     if ((scores.medium || scores.slow || 0) > 0 && spice >= 2 && spice <= 3) value += 10;
 
     return value + Math.max(0, 8 - index * 0.02);
+  }
+
+  function readerTypeBookBlocked(book, profile) {
+    if (!book || !profile || !profile.match) return false;
+
+    var rules = profile.match || {};
+    var content = bookText(book);
+    var spice = Number(book.spice || 0);
+    var darkness = Number(book.darkness || 0);
+    var damage = Number(book.damage || 0);
+
+    return (typeof rules.maxSpice === 'number' && spice > rules.maxSpice)
+      || (typeof rules.maxDarkness === 'number' && darkness > rules.maxDarkness)
+      || (typeof rules.maxDamage === 'number' && damage > rules.maxDamage)
+      || (Array.isArray(rules.avoid) && includesAny(content, rules.avoid));
+  }
+
+  function scoreReaderTypeBook(book, profile, scores, index) {
+    if (readerTypeBookBlocked(book, profile)) return -100000;
+
+    var value = scoreBook(book, profile, scores, index);
+    var rules = (profile && profile.match) || {};
+    var content = bookText(book);
+    var spice = Number(book.spice || 0);
+    var darkness = Number(book.darkness || 0);
+    var damage = Number(book.damage || 0);
+    var tension = Number(book.tension || 0);
+
+    if (Array.isArray(rules.boost) && includesAny(content, rules.boost)) value += 40;
+    if (Array.isArray(rules.penalty) && includesAny(content, rules.penalty)) value -= 24;
+    if (typeof rules.spiceMin === 'number' && typeof rules.spiceMax === 'number' && spice >= rules.spiceMin && spice <= rules.spiceMax) value += 16;
+    if (rules.preferLowDarkness && darkness === 0) value += 18;
+    if (rules.preferLowDamage && damage <= 2) value += 10;
+    if (typeof rules.maxTensionPenalty === 'number' && tension >= rules.maxTensionPenalty) value -= 10;
+    if (typeof rules.minTensionBoost === 'number' && tension >= rules.minTensionBoost) value += 28;
+    if (typeof rules.minDarknessBoost === 'number' && darkness >= rules.minDarknessBoost) value += 34;
+
+    return value;
   }
 
   function cleanText(value) {
@@ -1433,7 +1688,7 @@
   }
 
   function shareUrl(profile) {
-    var path = profile && profile.slug ? '/romance-trope-quiz/#' + profile.slug : window.location.pathname;
+    var path = profile && profile.slug ? window.location.pathname + '#' + profile.slug : window.location.pathname;
     return window.location.origin + path;
   }
 
@@ -1447,6 +1702,10 @@
 
   function nextQuiz(type) {
     var quizzes = {
+      'reader-type': {
+        href: '/fictional-boyfriend-quiz/',
+        label: 'find your fictional boyfriend'
+      },
       boyfriend: {
         href: '/romance-trope-quiz/',
         label: 'take the trope quiz'
@@ -1572,6 +1831,38 @@
     '</article>';
   }
 
+  function resultAccountCta(root) {
+    if (!root || !root.dataset.quizResultCta) return '';
+
+    var subscribeUrl = root.dataset.quizSubscribeUrl || '/smut-sentiment-society/';
+    var accountUrl = root.dataset.quizAccountUrl || '/account/';
+    var recsUrl = root.dataset.quizRecsUrl || '/made-for-you/';
+
+    return '<aside class="bbb-livequiz__conversion" aria-label="save your reader type">' +
+      '<div class="bbb-livequiz__conversionCopy">' +
+        '<p class="bbb-livequiz__resultKicker">keep the result</p>' +
+        '<h3>turn this into your personal rec engine.</h3>' +
+      '</div>' +
+      '<div class="bbb-livequiz__conversionActions">' +
+        '<a class="bbb-livequiz__conversionStep" href="' + esc(subscribeUrl) + '">' +
+          '<span class="bbb-livequiz__conversionStepTop" aria-hidden="true"><span>1</span></span>' +
+          '<strong>subscribe free</strong>' +
+          '<p>get the weekly reader dispatch and keep the quiz world close.</p>' +
+        '</a>' +
+        '<a class="bbb-livequiz__conversionStep" href="' + esc(accountUrl) + '">' +
+          '<span class="bbb-livequiz__conversionStepTop" aria-hidden="true"><span>2</span></span>' +
+          '<strong>create account</strong>' +
+          '<p>save your reader type so it can follow your shelf and quiz history.</p>' +
+        '</a>' +
+        '<a class="bbb-livequiz__conversionStep" href="' + esc(recsUrl) + '">' +
+          '<span class="bbb-livequiz__conversionStepTop" aria-hidden="true"><span>3</span></span>' +
+          '<strong>get recs</strong>' +
+          '<p>open Made For You for smarter picks based on this result.</p>' +
+        '</a>' +
+      '</div>' +
+    '</aside>';
+  }
+
   function renderResult(root, scores, answers) {
     var type = root.dataset.quizType || 'mood';
     var standard = root.hasAttribute('data-quiz-standard');
@@ -1582,9 +1873,9 @@
     var relatedBoyfriends = boyfriendMatch ? rankedBoyfriendProfiles(root, scores, profile, boyfriendMatch.id, 3) : [];
     var suggestedQuiz = nextQuiz(type);
     var picks = books.map(function (book, index) {
-      return { book: book, score: scoreBook(book, profile, scores, index) };
+      return { book: book, score: type === 'reader-type' ? scoreReaderTypeBook(book, profile, scores, index) : scoreBook(book, profile, scores, index) };
     }).filter(function (item) {
-      return item.book && item.book.title && item.book.cover;
+      return item.score > -100000 && item.book && item.book.title && item.book.cover;
     }).sort(function (a, b) {
       return b.score - a.score;
     }).slice(0, 3).map(function (item) {
@@ -1609,6 +1900,7 @@
           '<div class="bbb-livequiz__books">' + picks.map(function (book, index) {
             return card(book, index === 0 ? 'best match' : (index === 1 ? 'same energy' : 'wildcard'));
           }).join('') + '</div>' +
+          resultAccountCta(root) +
           '<div class="bbb-livequiz__resultActions">' +
             '<a class="bbb-livequiz__link bbb-livequiz__link--library" href="/library/">browse the library</a>' +
             shareButton('share your result') +

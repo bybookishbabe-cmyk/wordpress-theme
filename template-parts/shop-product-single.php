@@ -241,6 +241,31 @@ if (!function_exists('bbb_single_product_purchase_form')) {
 	}
 }
 
+if (!function_exists('bbb_single_product_july_2026_staged_handles')) {
+	function bbb_single_product_july_2026_staged_handles(): array {
+		return array(
+			'midnight-drive-printable-kindle-insert',
+			'midnight-makeout-printable-kindle-insert',
+			'midnight-movie-printable-kindle-insert',
+			'midnight-swim-printable-kindle-insert',
+		);
+	}
+}
+
+if (!function_exists('bbb_single_product_is_july_2026_staged')) {
+	function bbb_single_product_is_july_2026_staged(int $post_id): bool {
+		if (function_exists('bbb_staged_product_is_locked')) {
+			return bbb_staged_product_is_locked($post_id);
+		}
+
+		$release_at = new DateTimeImmutable('2026-07-01 00:00:00', new DateTimeZone('America/Los_Angeles'));
+		$now        = new DateTimeImmutable('now', new DateTimeZone('America/Los_Angeles'));
+
+		return $now < $release_at
+			&& in_array(sanitize_title((string) get_post_field('post_name', $post_id)), bbb_single_product_july_2026_staged_handles(), true);
+	}
+}
+
 if (!function_exists('bbb_single_product_is_kindle_insert')) {
 	function bbb_single_product_is_kindle_insert(int $post_id): bool {
 		$term_names = '';
@@ -259,6 +284,47 @@ if (!function_exists('bbb_single_product_is_kindle_insert')) {
 			&& !str_contains($haystack, 'vault')
 			&& !str_contains($haystack, 'canva')
 			&& !str_contains($haystack, 'template');
+	}
+}
+
+if (!function_exists('bbb_single_product_is_canva_template')) {
+	function bbb_single_product_is_canva_template(int $post_id): bool {
+		$term_text = '';
+		foreach (array('download_category', 'download_tag', 'product_cat', 'product_tag') as $taxonomy) {
+			if (!taxonomy_exists($taxonomy)) {
+				continue;
+			}
+
+			$terms = get_the_terms($post_id, $taxonomy);
+			if (is_array($terms)) {
+				$term_text .= ' ' . implode(' ', array_merge(wp_list_pluck($terms, 'name'), wp_list_pluck($terms, 'slug')));
+			}
+		}
+
+		$haystack = strtolower(
+			get_the_title($post_id) . ' ' .
+			(string) get_post_field('post_name', $post_id) . ' ' .
+			(string) get_post_meta($post_id, '_bbb_shopify_product_type', true) . ' ' .
+			$term_text
+		);
+
+		return (str_contains($haystack, 'canva') || str_contains($haystack, 'template'))
+			&& !str_contains($haystack, 'kindle insert');
+	}
+}
+
+if (!function_exists('bbb_single_product_kind_label')) {
+	function bbb_single_product_kind_label(int $post_id): string {
+		if (bbb_single_product_is_canva_template($post_id)) {
+			return 'canva template';
+		}
+
+		if (bbb_single_product_is_kindle_insert($post_id)) {
+			return 'printable';
+		}
+
+		$kind = strtolower((string) get_post_meta($post_id, '_bbb_shopify_product_type', true));
+		return '' !== $kind ? $kind : ('download' === get_post_type($post_id) ? 'digital download' : 'product');
 	}
 }
 
@@ -353,8 +419,16 @@ if (!function_exists('bbb_single_product_related_products')) {
 
 		$term_ids  = bbb_single_product_related_terms($post_id);
 		$keywords  = bbb_single_product_related_keywords($post_id);
+		$is_template_product = bbb_single_product_is_canva_template($post_id);
 		$tax_query = array();
-		if ($term_ids) {
+		if ($is_template_product) {
+			$tax_query[] = array(
+				'taxonomy' => 'download_category',
+				'field'    => 'slug',
+				'terms'    => array('bookish-templates', 'canva-templates'),
+				'operator' => 'IN',
+			);
+		} elseif ($term_ids) {
 			$tax_query[] = array(
 				'taxonomy' => 'download_category',
 				'field'    => 'term_id',
@@ -394,11 +468,16 @@ if (!function_exists('bbb_single_product_related_products')) {
 				continue;
 			}
 
+			if ($is_template_product && !bbb_single_product_is_canva_template($candidate_id)) {
+				continue;
+			}
+
 			$candidate_terms    = bbb_single_product_related_terms($candidate_id);
 			$candidate_keywords = bbb_single_product_related_keywords($candidate_id);
 			$score              = count(array_intersect($term_ids, $candidate_terms)) * 10;
 			$score             += count(array_intersect($keywords, $candidate_keywords)) * 7;
 			$score             += bbb_single_product_is_kindle_insert($post_id) && bbb_single_product_is_kindle_insert($candidate_id) ? 12 : 0;
+			$score             += $is_template_product && bbb_single_product_is_canva_template($candidate_id) ? 20 : 0;
 
 			if ($score <= 0) {
 				$score = 1;
@@ -682,6 +761,14 @@ if (!function_exists('bbb_single_product_image_color_buckets')) {
 	}
 }
 
+if (!function_exists('bbb_single_product_can_compute_visual_matches')) {
+	function bbb_single_product_can_compute_visual_matches(): bool {
+		return (defined('WP_CLI') && WP_CLI)
+			|| wp_doing_cron()
+			|| (is_admin() && current_user_can('edit_posts'));
+	}
+}
+
 if (!function_exists('bbb_single_product_color_tokens')) {
 	function bbb_single_product_color_tokens(int $post_id, string $image_url): array {
 		$handle = bbb_single_product_handle($post_id);
@@ -690,6 +777,18 @@ if (!function_exists('bbb_single_product_color_tokens')) {
 			if (!empty($map[$handle]) && is_array($map[$handle])) {
 				return array_values(array_filter(array_map('bbb_single_product_filter_slug', $map[$handle])));
 			}
+		}
+
+		$cached = (string) get_post_meta($post_id, '_bbb_shop_visual_color_cache', true);
+		if (str_contains($cached, '|')) {
+			list(, $cached_colors) = explode('|', $cached, 2);
+			if ('' !== trim($cached_colors)) {
+				return array_values(array_filter(array_map('bbb_single_product_filter_slug', preg_split('/\s+/', $cached_colors) ?: array())));
+			}
+		}
+
+		if (!bbb_single_product_can_compute_visual_matches()) {
+			return bbb_single_product_keyword_colors(get_the_title($post_id));
 		}
 
 		$image_source = bbb_single_product_image_source($image_url);
@@ -738,6 +837,10 @@ if (!function_exists('bbb_single_product_book_color_tokens')) {
 			}
 		}
 
+		if (!bbb_single_product_can_compute_visual_matches()) {
+			return array();
+		}
+
 		$colors = '' !== $image_source ? bbb_single_product_image_color_buckets($image_source) : array();
 		$colors = array_values(array_filter(array_map('bbb_single_product_filter_slug', $colors)));
 		if ($colors) {
@@ -779,6 +882,10 @@ if (!function_exists('bbb_single_product_book_matches')) {
 			}
 
 			return array('colors' => $match_colors, 'books' => $books);
+		}
+
+		if (!bbb_single_product_can_compute_visual_matches()) {
+			return array('colors' => $match_colors, 'books' => array());
 		}
 
 		$book_posts = function_exists('sss_get_all_books') ? sss_get_all_books() : get_posts(
@@ -845,12 +952,14 @@ $compare_price = bbb_single_product_compare_price($post_id);
 $file_count    = bbb_single_product_file_count($post_id);
 $is_full_vault_product = function_exists('bbb_vault_full_access_product_ids') && in_array($post_id, bbb_vault_full_access_product_ids(), true);
 $missing_files = !$is_full_vault_product && 'yes' === get_post_meta($post_id, '_bbb_missing_download_url', true) && 0 === $file_count;
-$can_purchase  = ($is_full_vault_product || 0 < $file_count) && !$missing_files;
-$is_free       = 'yes' === get_post_meta($post_id, '_bbb_society_free_download', true);
-$kind          = strtolower((string) get_post_meta($post_id, '_bbb_shopify_product_type', true));
-$kind          = '' !== $kind ? $kind : ('download' === get_post_type($post_id) ? 'digital download' : 'product');
+$is_july_staged = bbb_single_product_is_july_2026_staged($post_id);
+$can_purchase  = ($is_full_vault_product || 0 < $file_count) && !$missing_files && !$is_july_staged;
+$is_free       = function_exists('bbb_society_product_has_member_access') && bbb_society_product_has_member_access($post_id);
+$kind          = bbb_single_product_kind_label($post_id);
 $edit_url      = get_edit_post_link($post_id);
 $is_kindle_insert = bbb_single_product_is_kindle_insert($post_id);
+$is_canva_template = bbb_single_product_is_canva_template($post_id);
+$related_title = $is_canva_template ? 'other canva templates' : 'more like this';
 $related_products = bbb_single_product_related_products($post_id, 3);
 $book_matches = $is_kindle_insert ? bbb_single_product_book_matches($post_id, $image_url, 3) : array('colors' => array(), 'books' => array());
 ?>
@@ -894,6 +1003,8 @@ $book_matches = $is_kindle_insert ? bbb_single_product_book_matches($post_id, $i
 					<a class="bbb-shop-card__button bbb-shop-card__button--ghost" href="<?php echo esc_url($edit_url); ?>">finish setup</a>
 				<?php elseif ($can_purchase) : ?>
 					<?php bbb_single_product_purchase_form($post_id); ?>
+				<?php elseif ($is_july_staged) : ?>
+					<span class="bbb-shop-card__button bbb-shop-card__button--disabled bbb-shop-card__button--locked" aria-disabled="true">coming july 1</span>
 				<?php else : ?>
 					<span class="bbb-shop-card__button bbb-shop-card__button--disabled" aria-disabled="true">coming soon</span>
 				<?php endif; ?>
@@ -923,15 +1034,14 @@ $book_matches = $is_kindle_insert ? bbb_single_product_book_matches($post_id, $i
 	<?php if ($related_products) : ?>
 		<section class="bbb-product__related" aria-labelledby="bbb-product-related-title">
 			<p class="bbb-shop__kicker">you may also like</p>
-			<h2 id="bbb-product-related-title">more like this</h2>
+			<h2 id="bbb-product-related-title"><?php echo esc_html($related_title); ?></h2>
 			<div class="bbb-product__relatedGrid">
 				<?php foreach ($related_products as $related_product) : ?>
 					<?php
 					$related_id    = (int) $related_product->ID;
 					$related_image = bbb_single_product_image($related_id);
 					$related_price = bbb_single_product_price($related_id);
-					$related_kind  = strtolower((string) get_post_meta($related_id, '_bbb_shopify_product_type', true));
-					$related_kind  = '' !== $related_kind ? $related_kind : 'digital download';
+					$related_kind  = bbb_single_product_kind_label($related_id);
 					?>
 					<article class="bbb-product-related-card">
 						<a class="bbb-product-related-card__media" href="<?php echo esc_url(get_permalink($related_id)); ?>">

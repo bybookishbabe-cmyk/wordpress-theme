@@ -827,6 +827,37 @@ function bbb_society_product_importer_rows_from_csv(string $csv) {
 	return $rows;
 }
 
+function bbb_society_product_importer_monthly_theme_haystack(array $row): string {
+	$parts = array(
+		$row['handle'] ?? '',
+		$row['slug'] ?? '',
+		$row['title'] ?? '',
+		$row['name'] ?? '',
+		$row['product_type'] ?? '',
+		$row['productType'] ?? '',
+		$row['categories'] ?? '',
+		$row['collections'] ?? '',
+		$row['tags'] ?? '',
+	);
+
+	return strtolower(implode(' ', array_map(static fn($part): string => is_scalar($part) ? (string) $part : wp_json_encode($part), $parts)));
+}
+
+function bbb_society_product_importer_is_monthly_theme_row(array $row): bool {
+	$haystack = bbb_society_product_importer_monthly_theme_haystack($row);
+
+	return str_contains($haystack, 'monthly theme')
+		|| str_contains($haystack, 'monthly-theme')
+		|| str_contains($haystack, 'monthly_collection')
+		|| str_contains($haystack, 'monthly collection')
+		|| str_contains($haystack, 'burn bright')
+		|| str_contains($haystack, 'midnight summer');
+}
+
+function bbb_society_product_importer_should_include_with_membership(array $row, bool $requested_free): bool {
+	return $requested_free && bbb_society_product_importer_is_monthly_theme_row($row);
+}
+
 function bbb_society_product_importer_normalize_row(array $row, bool $default_free): array {
 	$handle = sanitize_title((string) ($row['handle'] ?? $row['slug'] ?? ''));
 	$title  = trim((string) ($row['title'] ?? $row['name'] ?? $handle));
@@ -843,7 +874,7 @@ function bbb_society_product_importer_normalize_row(array $row, bool $default_fr
 		'media_urls'   => bbb_society_product_importer_media_urls($row),
 		'download_url' => bbb_society_product_importer_download_url($row),
 		'download_files' => $download_files,
-		'society_free' => $is_digital && (isset($row['society_free']) ? bbb_society_product_importer_truthy($row['society_free']) : $default_free),
+		'society_free' => $is_digital && bbb_society_product_importer_should_include_with_membership($row, isset($row['society_free']) ? bbb_society_product_importer_truthy($row['society_free']) : $default_free),
 		'status'       => in_array((string) ($row['status'] ?? ''), array('publish', 'draft', 'private'), true) ? (string) $row['status'] : 'draft',
 		'is_digital'   => $is_digital,
 		'product_type' => (string) ($row['product_type'] ?? $row['productType'] ?? ''),
@@ -1286,7 +1317,7 @@ function bbb_society_product_importer_admin_page(): void {
 			<p><label for="bbb_society_products_text">Or paste JSON/CSV</label></p>
 			<textarea id="bbb_society_products_text" name="bbb_society_products_text" rows="10" class="large-text code" placeholder="handle,title,price,download_url,image_url,society_free,status,id,product_type,categories,tags,vendor,shopify_url"></textarea>
 			<p>
-				<label><input type="checkbox" name="bbb_society_products_default_free" value="1" checked> default imported products to free for paid Society members</label>
+				<label><input type="checkbox" name="bbb_society_products_default_free" value="1"> default imported products to free for paid Society members</label>
 			</p>
 			<?php submit_button('Import society products'); ?>
 		</form>
@@ -1344,8 +1375,42 @@ function bbb_society_product_importer_admin_menu(): void {
 }
 add_action('admin_menu', 'bbb_society_product_importer_admin_menu');
 
-function bbb_society_product_is_member_free(int $product_id): bool {
+function bbb_society_product_is_monthly_theme(int $product_id): bool {
+	$terms = array();
+	foreach (array('download_category', 'download_tag', 'product_cat', 'product_tag') as $taxonomy) {
+		if (!taxonomy_exists($taxonomy)) {
+			continue;
+		}
+
+		$product_terms = get_the_terms($product_id, $taxonomy);
+		if (is_array($product_terms)) {
+			$terms = array_merge($terms, wp_list_pluck($product_terms, 'name'), wp_list_pluck($product_terms, 'slug'));
+		}
+	}
+
+	$haystack = strtolower(
+		get_the_title($product_id) . ' ' .
+		(string) get_post_field('post_name', $product_id) . ' ' .
+		(string) get_post_meta($product_id, '_bbb_shopify_product_handle', true) . ' ' .
+		(string) get_post_meta($product_id, '_bbb_shopify_product_type', true) . ' ' .
+		implode(' ', array_map('strval', $terms))
+	);
+
+	return str_contains($haystack, 'monthly theme')
+		|| str_contains($haystack, 'monthly-theme')
+		|| str_contains($haystack, 'monthly_collection')
+		|| str_contains($haystack, 'monthly collection')
+		|| str_contains($haystack, 'burn bright')
+		|| str_contains($haystack, 'midnight summer');
+}
+
+function bbb_society_product_has_member_access(int $product_id): bool {
 	return 'yes' === get_post_meta($product_id, '_bbb_society_free_download', true)
+		&& bbb_society_product_is_monthly_theme($product_id);
+}
+
+function bbb_society_product_is_member_free(int $product_id): bool {
+	return bbb_society_product_has_member_access($product_id)
 		&& function_exists('bbb_reader_is_society')
 		&& bbb_reader_is_society();
 }
@@ -1401,7 +1466,7 @@ function bbb_society_product_member_note(): void {
 		return;
 	}
 
-	if ('yes' !== get_post_meta((int) $product->get_id(), '_bbb_society_free_download', true)) {
+	if (!bbb_society_product_has_member_access((int) $product->get_id())) {
 		return;
 	}
 

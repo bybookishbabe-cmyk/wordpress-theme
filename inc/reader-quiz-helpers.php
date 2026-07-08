@@ -200,6 +200,19 @@ function bbb_reader_quiz_enqueue_assets(): void {
 	);
 }
 
+add_action(
+	'wp_enqueue_scripts',
+	static function (): void {
+		$slug = function_exists('bbb_current_route_slug') ? bbb_current_route_slug() : '';
+		if (!in_array($slug, array('fictional-boyfriend-quiz', 'reader-mood-quiz', 'reader-type-quiz', 'romance-trope-quiz'), true)) {
+			return;
+		}
+
+		bbb_reader_quiz_enqueue_assets();
+	},
+	20
+);
+
 function bbb_reader_quiz_save_pin_card_file(array $file) {
 	$size = isset($file['size']) ? (int) $file['size'] : 0;
 	$tmp  = isset($file['tmp_name']) ? (string) $file['tmp_name'] : '';

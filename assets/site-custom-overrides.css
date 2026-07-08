@@ -1261,6 +1261,27 @@ body {
   border-bottom: 1px solid #eee;
   padding-bottom: 8px;
 }
+
+.article-template__content > h3,
+.article-template__content .rte > h3{
+  position:relative;
+  margin-top:38px;
+  margin-bottom:14px;
+  padding-left:1.05em;
+  font-size:clamp(19px, 2vw, 21px);
+  font-weight:600;
+  line-height:1.24;
+  letter-spacing:0;
+}
+
+.article-template__content > h3::before,
+.article-template__content .rte > h3::before{
+  content:"-";
+  position:absolute;
+  left:0;
+  color:#ff8ac7;
+  font-weight:700;
+}
 .article-template__content ol{
   list-style: decimal;
   padding-left: 2.4rem;
@@ -1306,6 +1327,37 @@ body {
   display:block;
   flex:1 1 auto;
   min-width:0;
+}
+
+.predictive-search__search-for-button.button,
+.predictive-search__search-for-button.button--primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  background-color: #e45f9c;
+  border-color: #e45f9c;
+  color: #fff;
+  opacity: 1;
+}
+
+predictive-search[loading] .predictive-search__results-groups-wrapper ~ .predictive-search__search-for-button.button {
+  display: flex;
+}
+
+.predictive-search__search-for-button.button:hover,
+.predictive-search__search-for-button.button:focus-visible,
+.predictive-search__search-for-button.button--primary:hover,
+.predictive-search__search-for-button.button--primary:focus-visible {
+  background-color: #cf4f8b;
+  border-color: #cf4f8b;
+  color: #fff;
+}
+
+.predictive-search__search-for-button.button::before,
+.predictive-search__search-for-button.button::after {
+  box-shadow: none;
 }
 
 /* =========================

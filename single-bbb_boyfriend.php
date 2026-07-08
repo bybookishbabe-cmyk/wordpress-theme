@@ -69,28 +69,9 @@ if ($book_id) {
 }
 $book_review_post = null;
 if ($book_id) {
-	$review_candidates = function_exists('bbb_article_book_connections_posts_for_book')
-		? bbb_article_book_connections_posts_for_book($book_id)
-		: array();
-
-	foreach ($review_candidates as $review_candidate) {
-		if (!$review_candidate instanceof WP_Post || 'publish' !== $review_candidate->post_status) {
-			continue;
-		}
-
-		$review_handle = strtolower(trim((string) get_post_meta($review_candidate->ID, '_shopify_blog_handle', true)));
-		$review_terms = taxonomy_exists('book_review_category') ? get_the_terms($review_candidate, 'book_review_category') : false;
-		$review_title_slug = strtolower((string) $review_candidate->post_name . ' ' . get_the_title($review_candidate));
-		$is_review = has_category('book-reviews', $review_candidate)
-			|| 'book-reviews' === $review_handle
-			|| ($review_terms && !is_wp_error($review_terms))
-			|| str_contains($review_title_slug, 'review');
-
-		if ($is_review) {
-			$book_review_post = $review_candidate;
-			break;
-		}
-	}
+	$book_review_post = function_exists('bbb_article_book_connections_review_post_for_book')
+		? bbb_article_book_connections_review_post_for_book($book_id)
+		: null;
 }
 $love_language = trim((string) get_post_meta($post_id, '_bbb_fb_love_language', true));
 $would_text_back = trim((string) get_post_meta($post_id, '_bbb_fb_would_text_back', true));
@@ -164,6 +145,7 @@ if ($book_id && function_exists('bbb_books_like_recommendations')) {
 	}
 }
 $related_boyfriends = bbb_fictional_boyfriend_related($post_id, 3);
+$series_boyfriends = function_exists('bbb_fictional_boyfriend_series_siblings') ? bbb_fictional_boyfriend_series_siblings($post_id, 3) : array();
 $quote_posts = bbb_fictional_boyfriend_quotes($post_id, 6);
 $quote_teasers = array_slice($quote_posts, 0, 3);
 $quote_wall_book_id = $book_id;
@@ -214,8 +196,23 @@ $aesthetic_pin_description = trim(
 	)
 );
 $aesthetic_tiles = array();
+$aesthetic_dropbox_tiles = array();
 $aesthetic_uploaded_tiles = array();
 $aesthetic_external_tiles = array();
+$dropbox_tiles = function_exists('bbb_dropbox_fictional_boyfriend_images') ? bbb_dropbox_fictional_boyfriend_images((int) $post_id, 3) : array();
+foreach ($dropbox_tiles as $dropbox_tile) {
+	$dropbox_media_url = (string) ($dropbox_tile['media'] ?? '');
+	if ('' === $dropbox_media_url) {
+		continue;
+	}
+
+	$aesthetic_dropbox_tiles[] = array(
+		'media' => $dropbox_media_url,
+		'source' => (string) ($dropbox_tile['source'] ?? $profile_url),
+		'alt' => (string) ($dropbox_tile['alt'] ?? $aesthetic_alt),
+		'pinnable' => true,
+	);
+}
 foreach ($pinterest_links as $index => $pin_url) {
 	$pin_parts = array_map('trim', explode('|', $pin_url, 2));
 	$pin_media_url = (string) ($pin_parts[0] ?? '');
@@ -234,7 +231,7 @@ foreach ($pinterest_links as $index => $pin_url) {
 		$aesthetic_external_tiles[] = $tile;
 	}
 }
-$aesthetic_tiles = array_merge($aesthetic_uploaded_tiles, $aesthetic_external_tiles);
+$aesthetic_tiles = array_merge($aesthetic_dropbox_tiles, $aesthetic_uploaded_tiles, $aesthetic_external_tiles);
 $aesthetic_tiles = array_slice($aesthetic_tiles, 0, 3);
 $aesthetic_has_media = static function (array $tiles, string $media_url): bool {
 	$media_url = trim($media_url);
@@ -462,6 +459,47 @@ $faq_shortcode = '' !== trim($content_faq_shortcode) ? $content_faq_shortcode : 
 		</aside>
 	</section>
 
+	<?php if ($series_boyfriends) : ?>
+		<section class="bbb-fb-series-boyfriends" data-fb-reveal="cards" aria-label="other boyfriends in the series">
+			<div class="bbb-fb-wrap">
+				<div class="bbb-fb-series-boyfriends__header">
+					<div>
+						<p class="bbb-fb-kicker">same series</p>
+						<h2>other boyfriends in <?php echo esc_html($series_name ? $series_name . ' series' : 'this series'); ?></h2>
+					</div>
+					<?php if ($series_url) : ?>
+						<a class="bbb-fb-text-link bbb-fb-series-boyfriends__series-link" href="<?php echo esc_url($series_url); ?>">see full series <span aria-hidden="true">→</span></a>
+					<?php endif; ?>
+				</div>
+				<div class="bbb-fb-series-boyfriends__grid">
+					<?php foreach ($series_boyfriends as $series_boyfriend) : ?>
+						<a class="bbb-fb-series-boyfriends__card" href="<?php echo esc_url($series_boyfriend['url']); ?>">
+							<span class="bbb-fb-series-boyfriends__image">
+								<?php if (!empty($series_boyfriend['image'])) : ?>
+									<img src="<?php echo esc_url($series_boyfriend['image']); ?>" alt="<?php echo esc_attr($series_boyfriend['name']); ?>" loading="lazy">
+								<?php else : ?>
+									<span><?php echo esc_html(mb_substr((string) $series_boyfriend['name'], 0, 1)); ?></span>
+								<?php endif; ?>
+							</span>
+							<span class="bbb-fb-series-boyfriends__copy">
+								<span class="bbb-fb-series-boyfriends__name"><?php echo esc_html($series_boyfriend['name']); ?></span>
+								<span class="bbb-fb-series-boyfriends__book">
+									<?php if ('' !== $series_boyfriend['series_number']) : ?>
+										book <?php echo esc_html($series_boyfriend['series_number']); ?> ·
+									<?php endif; ?>
+									<?php echo esc_html(function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title($series_boyfriend['book_title']) : $series_boyfriend['book_title']); ?>
+								</span>
+								<?php if ('' !== $series_boyfriend['type']) : ?>
+									<span class="bbb-fb-series-boyfriends__type"><?php echo esc_html($series_boyfriend['type']); ?></span>
+								<?php endif; ?>
+							</span>
+						</a>
+					<?php endforeach; ?>
+				</div>
+			</div>
+		</section>
+	<?php endif; ?>
+
 	<?php
 	if (function_exists('bbb_render_society_content_cta')) {
 		bbb_render_society_content_cta(
@@ -497,6 +535,7 @@ $faq_shortcode = '' !== trim($content_faq_shortcode) ? $content_faq_shortcode : 
 					$tile_pin_description = (string) ($tile['pin_description'] ?? $aesthetic_pin_description);
 					$tile_rotations = !empty($tile['rotations']) && is_array($tile['rotations']) ? wp_json_encode($tile['rotations']) : '';
 					$tile_is_site_media = 0 === strpos($tile_media, home_url('/'));
+					$tile_is_pinnable = $tile_is_site_media || !empty($tile['pinnable']);
 					$tile_click_url = $tile_is_site_media ? '' : ($tile_source ?: $tile_media);
 					$tile_pin_url = add_query_arg(
 						array(
@@ -509,7 +548,7 @@ $faq_shortcode = '' !== trim($content_faq_shortcode) ? $content_faq_shortcode : 
 					);
 					?>
 					<figure class="bbb-fb-moodboard__tile"<?php echo $tile_rotations ? ' data-bbb-quote-rotator="' . esc_attr($tile_rotations) . '"' : ''; ?>>
-						<?php if ($tile_is_site_media) : ?>
+						<?php if ($tile_is_pinnable) : ?>
 						<div class="bbb-fb-moodboard__imageLink">
 							<img src="<?php echo esc_url($tile_media); ?>" alt="<?php echo esc_attr($tile_alt); ?>" loading="lazy" decoding="async">
 						</div>

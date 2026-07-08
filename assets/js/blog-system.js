@@ -549,6 +549,7 @@ const title = card.dataset.title;
 const author = card.dataset.author;
 const cover = card.dataset.cover;
 const amazon = card.dataset.amazon;
+const kuUrl = card.dataset.kuUrl;
 const bookshop = card.dataset.bookshop;
 const spice = card.dataset.spice;
 const shelf = card.dataset.shelf;
@@ -568,6 +569,7 @@ currentPreviewBook = {
   author: author || "",
   cover: cover || "",
   amazon: amazon || "",
+  kuUrl: kuUrl || "",
   bookshop: bookshop || "",
   spice: spice || "",
   shelf: shelf || "",
@@ -913,8 +915,9 @@ if (amazonEl) {
 }
 
 if (kuButtonEl) {
-  kuButtonEl.href = amazon || "#";
-  kuButtonEl.hidden = !amazon || !kuState;
+  const kuHref = kuUrl || amazon || "";
+  kuButtonEl.href = kuHref || "#";
+  kuButtonEl.hidden = !kuHref || !kuState;
 }
 
 if (shopEl) {

@@ -31,7 +31,7 @@ $book      = get_post();
 $data      = $book instanceof WP_Post && function_exists('sss_book_data') ? sss_book_data($book) : array();
 $is_locked = function_exists('sss_book_is_private') && sss_book_is_private($book_id) && !(function_exists('bbb_reader_is_society') && bbb_reader_is_society());
 
-foreach (array('cover', 'amazon', 'bookshop', 'newsletter') as $url_key) {
+foreach (array('cover', 'amazon', 'ku_url', 'audible', 'bookshop', 'libby', 'newsletter') as $url_key) {
 	if (isset($data[$url_key]) && function_exists('bbb_normalize_url_value')) {
 		$data[$url_key] = bbb_normalize_url_value($data[$url_key]);
 	}
@@ -49,6 +49,14 @@ $mini          = (string) ($data['mini'] ?? '');
 $why           = (string) ($data['why'] ?? '');
 $spice_count   = max(0, (int) ($data['spice'] ?? 0));
 $ku            = !empty($data['ku']);
+$ku_url        = (string) ($data['ku_url'] ?? '');
+$audible_url   = (string) ($data['audible'] ?? '');
+$libby_url     = (string) ($data['libby'] ?? '');
+$show_listen_borrow_mock = isset($_GET['listen_borrow_mock']) && is_user_logged_in() && current_user_can('manage_options');
+if ($show_listen_borrow_mock) {
+	$audible_url = '' !== $audible_url ? $audible_url : 'https://www.audible.com/';
+	$libby_url   = '' !== $libby_url ? $libby_url : 'https://www.overdrive.com/apps/libby';
+}
 $reread        = !empty($data['reread']) && 'false' !== (string) $data['reread'];
 $boyfriend_label = trim((string) (!empty($data['boyfriend_name']) ? $data['boyfriend_name'] : ($data['boyfriend'] ?? '')));
 $boyfriend_profile = function_exists('bbb_fictional_boyfriend_for_book') && '' !== $boyfriend_label
@@ -80,27 +88,8 @@ $book_pin_save_url = $book_cover_url
 	)
 	: '';
 $book_review_post = null;
-if (function_exists('bbb_article_book_connections_posts_for_book')) {
-	$review_candidates = bbb_article_book_connections_posts_for_book($book_id);
-
-	foreach ($review_candidates as $review_candidate) {
-		if (!$review_candidate instanceof WP_Post || 'publish' !== $review_candidate->post_status) {
-			continue;
-		}
-
-		$review_handle = strtolower(trim((string) get_post_meta($review_candidate->ID, '_shopify_blog_handle', true)));
-		$review_terms = taxonomy_exists('book_review_category') ? get_the_terms($review_candidate, 'book_review_category') : false;
-		$review_title_slug = strtolower((string) $review_candidate->post_name . ' ' . get_the_title($review_candidate));
-		$is_review = has_category('book-reviews', $review_candidate)
-			|| 'book-reviews' === $review_handle
-			|| ($review_terms && !is_wp_error($review_terms))
-			|| str_contains($review_title_slug, 'review');
-
-		if ($is_review) {
-			$book_review_post = $review_candidate;
-			break;
-		}
-	}
+if (function_exists('bbb_article_book_connections_review_post_for_book')) {
+	$book_review_post = bbb_article_book_connections_review_post_for_book($book_id);
 }
 
 $book_page_meta = static function (string $key) use ($book_id): string {
@@ -327,6 +316,30 @@ $book_aesthetic_pin_description = trim(
 );
 $book_aesthetic_uploaded_tiles = array();
 $book_aesthetic_external_tiles = array();
+$book_aesthetic_dropbox_tiles = function_exists('bbb_dropbox_book_images') ? bbb_dropbox_book_images((int) $book_id, 3) : array();
+$bookstagram_pin_title = strtolower(trim($title . ' book aesthetic'));
+$bookstagram_pin_description = strtolower(
+	trim(
+		sprintf(
+			'%1$s%2$s quotes, vibes, and the details.',
+			$title,
+			$author ? ' by ' . $author : ''
+		)
+	)
+);
+foreach ($book_aesthetic_dropbox_tiles as &$book_aesthetic_dropbox_tile) {
+	$book_aesthetic_dropbox_name = strtolower((string) ($book_aesthetic_dropbox_tile['name'] ?? ''));
+	if (false === strpos($book_aesthetic_dropbox_name, '_bookstagramaesthetic')) {
+		continue;
+	}
+
+	$book_aesthetic_dropbox_tile['source'] = $book_permalink;
+	$book_aesthetic_dropbox_tile['alt'] = $bookstagram_pin_title;
+	$book_aesthetic_dropbox_tile['pin_title'] = $bookstagram_pin_title;
+	$book_aesthetic_dropbox_tile['pin_description'] = $bookstagram_pin_description;
+	$book_aesthetic_dropbox_tile['layout'] = 'bookstagram';
+}
+unset($book_aesthetic_dropbox_tile);
 foreach (preg_split('/\r\n|\r|\n/', (string) get_post_meta($book_id, '_bbb_book_aesthetic_urls', true)) ?: array() as $book_aesthetic_line) {
 	$book_aesthetic_line = trim((string) $book_aesthetic_line);
 	if ('' === $book_aesthetic_line) {
@@ -345,13 +358,19 @@ foreach (preg_split('/\r\n|\r|\n/', (string) get_post_meta($book_id, '_bbb_book_
 		'media'  => $book_aesthetic_media,
 		'source' => $book_aesthetic_source,
 	);
+	if (false !== strpos(strtolower($book_aesthetic_media), '_bookstagramaesthetic')) {
+		$book_aesthetic_tile['layout'] = 'bookstagram';
+		$book_aesthetic_tile['alt'] = $bookstagram_pin_title;
+		$book_aesthetic_tile['pin_title'] = $bookstagram_pin_title;
+		$book_aesthetic_tile['pin_description'] = $bookstagram_pin_description;
+	}
 	if (0 === strpos($book_aesthetic_media, home_url('/'))) {
 		$book_aesthetic_uploaded_tiles[] = $book_aesthetic_tile;
 	} else {
 		$book_aesthetic_external_tiles[] = $book_aesthetic_tile;
 	}
 }
-$book_aesthetic_tiles = array_slice(array_merge($book_aesthetic_uploaded_tiles, $book_aesthetic_external_tiles), 0, 3);
+$book_aesthetic_tiles = array_slice(array_merge($book_aesthetic_dropbox_tiles, $book_aesthetic_uploaded_tiles, $book_aesthetic_external_tiles), 0, 3);
 $book_aesthetic_has_media = static function (array $tiles, string $media_url): bool {
 	$media_url = trim($media_url);
 	if ('' === $media_url) {
@@ -471,7 +490,10 @@ if ($book_aesthetic_quote_tile && count($book_aesthetic_tiles) < 3) {
 					data-author="<?php echo esc_attr($author); ?>"
 					data-cover="<?php echo esc_url((string) ($data['cover'] ?? '')); ?>"
 					data-amazon="<?php echo esc_url((string) ($data['amazon'] ?? '')); ?>"
+					data-ku-url="<?php echo esc_url($ku_url); ?>"
+					data-audible="<?php echo esc_url($audible_url); ?>"
 					data-bookshop="<?php echo esc_url((string) ($data['bookshop'] ?? '')); ?>"
+					data-libby="<?php echo esc_url($libby_url); ?>"
 					data-spice="<?php echo esc_attr((string) $spice_count); ?>"
 					data-shelf="<?php echo esc_attr((string) ($data['shelf'] ?? '')); ?>"
 					data-tropes="<?php echo esc_attr(implode(', ', array_map(static fn(array $trope): string => (string) ($trope['name'] ?? ''), (array) ($data['tropes'] ?? array())))); ?>"
@@ -521,7 +543,10 @@ if ($book_aesthetic_quote_tile && count($book_aesthetic_tiles) < 3) {
 							data-author="<?php echo esc_attr($author); ?>"
 							data-cover="<?php echo esc_url((string) ($data['cover'] ?? '')); ?>"
 							data-amazon="<?php echo esc_url((string) ($data['amazon'] ?? '')); ?>"
+							data-ku-url="<?php echo esc_url($ku_url); ?>"
+							data-audible="<?php echo esc_url($audible_url); ?>"
 							data-bookshop="<?php echo esc_url((string) ($data['bookshop'] ?? '')); ?>"
+							data-libby="<?php echo esc_url($libby_url); ?>"
 							data-spice="<?php echo esc_attr((string) $spice_count); ?>"
 							data-shelf="<?php echo esc_attr((string) ($data['shelf'] ?? '')); ?>"
 							data-tropes="<?php echo esc_attr(implode(', ', array_map(static fn(array $trope): string => (string) ($trope['name'] ?? ''), (array) ($data['tropes'] ?? array())))); ?>"
@@ -558,7 +583,10 @@ if ($book_aesthetic_quote_tile && count($book_aesthetic_tiles) < 3) {
 								data-author="<?php echo esc_attr($author); ?>"
 								data-cover="<?php echo esc_url((string) ($data['cover'] ?? '')); ?>"
 								data-amazon="<?php echo esc_url((string) ($data['amazon'] ?? '')); ?>"
+								data-ku-url="<?php echo esc_url($ku_url); ?>"
+								data-audible="<?php echo esc_url($audible_url); ?>"
 								data-bookshop="<?php echo esc_url((string) ($data['bookshop'] ?? '')); ?>"
+								data-libby="<?php echo esc_url($libby_url); ?>"
 								data-spice="<?php echo esc_attr((string) $spice_count); ?>"
 								data-shelf="<?php echo esc_attr((string) ($data['shelf'] ?? '')); ?>"
 								data-tropes="<?php echo esc_attr(implode(', ', array_map(static fn(array $trope): string => (string) ($trope['name'] ?? ''), (array) ($data['tropes'] ?? array())))); ?>"
@@ -675,18 +703,44 @@ if ($book_aesthetic_quote_tile && count($book_aesthetic_tiles) < 3) {
 				<?php endif; ?>
 
 				<div class="sss-book-page__ctaRow">
+					<?php if ($ku && ($ku_url || !empty($data['amazon']))) : ?>
+						<a class="sss-book-page__cta sss-book-page__cta--ku" href="<?php echo esc_url((string) ($ku_url ?: $data['amazon'])); ?>" target="_blank" rel="noopener">read free on kindle unlimited</a>
+					<?php endif; ?>
 					<?php if (!empty($data['amazon'])) : ?>
-						<?php if ($ku) : ?>
-							<a class="sss-book-page__cta sss-book-page__cta--ku" href="<?php echo esc_url((string) $data['amazon']); ?>" target="_blank" rel="noopener">read free on kindle unlimited</a>
-						<?php endif; ?>
 						<a class="sss-book-page__cta sss-book-page__cta--amazon" href="<?php echo esc_url((string) $data['amazon']); ?>" target="_blank" rel="noopener">
 							buy on amazon<?php if ($ku) : ?> <span>· own it forever</span><?php endif; ?>
 						</a>
 					<?php endif; ?>
 					<?php if (!empty($data['bookshop'])) : ?>
 						<a class="sss-book-page__cta sss-book-page__cta--bookshop" href="<?php echo esc_url((string) $data['bookshop']); ?>" target="_blank" rel="noopener">prefer indie? bookshop.org →</a>
-							<?php endif; ?>
-						</div>
+					<?php endif; ?>
+				</div>
+				<?php if ($audible_url || $libby_url) : ?>
+					<section class="sss-book-page__listenBorrow" aria-label="audiobook and library options">
+						<?php if ($audible_url) : ?>
+							<div class="sss-book-page__listenBorrowGroup sss-book-page__listenBorrowGroup--audible">
+								<div class="sss-book-page__listenBorrowLabel">
+									<span>listen to it</span>
+								</div>
+								<a class="sss-book-page__listenBorrowButton" href="<?php echo esc_url($audible_url); ?>" target="_blank" rel="noopener">
+									<span class="sss-book-page__listenBorrowEmoji" aria-hidden="true">🎧</span>
+									try it on audible
+								</a>
+							</div>
+						<?php endif; ?>
+						<?php if ($libby_url) : ?>
+							<div class="sss-book-page__listenBorrowGroup sss-book-page__listenBorrowGroup--libby">
+								<div class="sss-book-page__listenBorrowLabel">
+									<span>borrow it</span>
+								</div>
+								<a class="sss-book-page__listenBorrowButton" href="<?php echo esc_url($libby_url); ?>" target="_blank" rel="noopener">
+									<span class="sss-book-page__listenBorrowEmoji" aria-hidden="true">&#x1F4DA;</span>
+									check libby
+								</a>
+							</div>
+						<?php endif; ?>
+					</section>
+				<?php endif; ?>
 
 						<?php if ($series_books) : ?>
 							<section class="sss-book-page__related sss-book-page__seriesBooks" aria-label="other books in the series">
@@ -705,6 +759,7 @@ if ($book_aesthetic_quote_tile && count($book_aesthetic_tiles) < 3) {
 											data-author="<?php echo esc_attr($series_book['author']); ?>"
 											data-cover="<?php echo esc_url($series_book['cover']); ?>"
 											data-amazon="<?php echo esc_url($series_book['amazon']); ?>"
+											data-ku-url="<?php echo esc_url((string) ($series_book['ku_url'] ?? '')); ?>"
 											data-bookshop="<?php echo esc_url($series_book['bookshop']); ?>"
 											data-spice="<?php echo esc_attr((string) $series_book['spice']); ?>"
 											data-shelf="<?php echo esc_attr($series_book['shelf']); ?>"
@@ -848,6 +903,7 @@ if ($book_aesthetic_quote_tile && count($book_aesthetic_tiles) < 3) {
 									$tile_pin_title = (string) ($tile['pin_title'] ?? $title . ' aesthetic');
 									$tile_pin_description = (string) ($tile['pin_description'] ?? $book_aesthetic_pin_description);
 									$tile_rotations = !empty($tile['rotations']) && is_array($tile['rotations']) ? wp_json_encode($tile['rotations']) : '';
+									$tile_classes = 'bbb-fb-moodboard__tile' . ('bookstagram' === (string) ($tile['layout'] ?? '') ? ' bbb-fb-moodboard__tile--bookstagram' : '');
 									$tile_is_site_media = 0 === strpos($tile_media, home_url('/'));
 									$tile_click_url = $tile_is_site_media ? '' : ($tile_source ?: $tile_media);
 									$tile_pin_url = add_query_arg(
@@ -860,7 +916,7 @@ if ($book_aesthetic_quote_tile && count($book_aesthetic_tiles) < 3) {
 										'https://www.pinterest.com/pin/create/button/'
 									);
 									?>
-									<figure class="bbb-fb-moodboard__tile"<?php echo $tile_rotations ? ' data-bbb-quote-rotator="' . esc_attr($tile_rotations) . '"' : ''; ?>>
+									<figure class="<?php echo esc_attr($tile_classes); ?>"<?php echo $tile_rotations ? ' data-bbb-quote-rotator="' . esc_attr($tile_rotations) . '"' : ''; ?>>
 										<?php if ($tile_is_site_media) : ?>
 											<div class="bbb-fb-moodboard__imageLink">
 												<img src="<?php echo esc_url($tile_media); ?>" alt="<?php echo esc_attr($tile_alt); ?>" loading="lazy" decoding="async">
@@ -937,6 +993,7 @@ if ($book_aesthetic_quote_tile && count($book_aesthetic_tiles) < 3) {
 									data-author="<?php echo esc_attr($related_book['author']); ?>"
 									data-cover="<?php echo esc_url($related_book['cover']); ?>"
 									data-amazon="<?php echo esc_url($related_book['amazon']); ?>"
+									data-ku-url="<?php echo esc_url((string) ($related_book['ku_url'] ?? '')); ?>"
 									data-bookshop="<?php echo esc_url($related_book['bookshop']); ?>"
 									data-spice="<?php echo esc_attr((string) $related_book['spice']); ?>"
 									data-shelf="<?php echo esc_attr($related_book['shelf']); ?>"

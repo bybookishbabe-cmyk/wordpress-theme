@@ -991,6 +991,110 @@ a.bbb-specific-quote__link:focus-visible{
   transform: translateY(-1px) !important;
 }
 
+.article-template__content .bbb-fictionalman-swipe,
+.bbb-fictionalman-swipe{
+  margin: 30px 0;
+}
+
+.article-template__content .bbb-fictionalman-swipe__rail,
+.bbb-fictionalman-swipe__rail{
+  display: flex;
+  gap: 12px;
+  padding: 2px 2px 14px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 2px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.article-template__content .bbb-fictionalman-swipe__rail:focus-visible,
+.bbb-fictionalman-swipe__rail:focus-visible{
+  outline: 2px solid rgba(255, 255, 255, .58);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.article-template__content .bbb-fictionalman-swipe__rail::-webkit-scrollbar,
+.bbb-fictionalman-swipe__rail::-webkit-scrollbar{
+  height: 8px;
+}
+
+.article-template__content .bbb-fictionalman-swipe__rail::-webkit-scrollbar-track,
+.bbb-fictionalman-swipe__rail::-webkit-scrollbar-track{
+  background: rgba(255, 255, 255, .06);
+  border-radius: 999px;
+}
+
+.article-template__content .bbb-fictionalman-swipe__rail::-webkit-scrollbar-thumb,
+.bbb-fictionalman-swipe__rail::-webkit-scrollbar-thumb{
+  background: rgba(255, 255, 255, .32);
+  border-radius: 999px;
+}
+
+.article-template__content .bbb-fictionalman-swipe__item,
+.bbb-fictionalman-swipe__item{
+  flex: 0 0 220px;
+  scroll-snap-align: start;
+}
+
+.article-template__content .bbb-fictionalman-swipe .bbb-fictionalman-callout,
+.bbb-fictionalman-swipe .bbb-fictionalman-callout{
+  display: grid !important;
+  grid-template-rows: auto 1fr;
+  gap: 0;
+  height: 100%;
+  min-height: 296px;
+  margin: 0;
+  padding: 0;
+  border-color: rgba(255, 255, 255, .1);
+  background: rgba(18, 16, 18, .58);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, .14);
+}
+
+.article-template__content .bbb-fictionalman-swipe .bbb-fictionalman-callout__portrait,
+.bbb-fictionalman-swipe .bbb-fictionalman-callout__portrait{
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  border-width: 0 0 1px;
+  border-color: rgba(255, 255, 255, .1);
+  border-radius: 0;
+}
+
+.article-template__content .bbb-fictionalman-swipe .bbb-fictionalman-callout__body,
+.bbb-fictionalman-swipe .bbb-fictionalman-callout__body{
+  justify-content: flex-start;
+  gap: 7px;
+  padding: 12px;
+}
+
+.article-template__content .bbb-fictionalman-swipe .bbb-fictionalman-callout__kicker,
+.bbb-fictionalman-swipe .bbb-fictionalman-callout__kicker{
+  margin: 0;
+  color: rgba(255, 255, 255, .62);
+  font-size: 10px;
+}
+
+.article-template__content .bbb-fictionalman-swipe .bbb-fictionalman-callout__name,
+.bbb-fictionalman-swipe .bbb-fictionalman-callout__name{
+  margin: 0;
+  font-size: 24px;
+}
+
+.article-template__content .bbb-fictionalman-swipe .bbb-fictionalman-callout__link,
+.bbb-fictionalman-swipe .bbb-fictionalman-callout__link{
+  min-height: 0;
+  margin-top: auto;
+  padding: 0;
+  border: 0 !important;
+  background: transparent;
+  color: rgba(255, 255, 255, .76) !important;
+  font-size: 10px;
+}
+
 @media screen and (max-width: 640px){
   .article-template__content .bbb-fictionalman-callout,
   .bbb-fictionalman-callout{
@@ -1020,6 +1124,36 @@ a.bbb-specific-quote__link:focus-visible{
     min-height: 36px;
     padding: 9px 12px;
     font-size: 10px;
+  }
+
+  .article-template__content .bbb-fictionalman-swipe,
+  .bbb-fictionalman-swipe{
+    margin: 24px 0;
+  }
+
+  .article-template__content .bbb-fictionalman-swipe__item,
+  .bbb-fictionalman-swipe__item{
+    flex-basis: 176px;
+  }
+
+  .article-template__content .bbb-fictionalman-swipe .bbb-fictionalman-callout,
+  .bbb-fictionalman-swipe .bbb-fictionalman-callout{
+    min-height: 252px;
+  }
+
+  .article-template__content .bbb-fictionalman-swipe .bbb-fictionalman-callout__body{
+    padding: 10px;
+  }
+
+  .article-template__content .bbb-fictionalman-swipe .bbb-fictionalman-callout__name{
+    margin-bottom: 0;
+    font-size: 21px;
+  }
+
+  .article-template__content .bbb-fictionalman-swipe .bbb-fictionalman-callout__link{
+    min-height: 0;
+    padding: 0;
+    font-size: 9px;
   }
 }
 

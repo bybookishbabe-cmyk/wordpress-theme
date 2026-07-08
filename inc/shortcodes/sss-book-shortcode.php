@@ -25,6 +25,8 @@ function sss_article_field(string $key, int $post_id, $default = '') {
 			'author'                  => '_bbb_author',
 			'cover'                   => '_bbb_cover_url',
 			'amazon_link'             => '_bbb_amazon_url',
+			'kindle_unlimited_link'   => '_bbb_ku_url',
+			'ku_link'                 => '_bbb_ku_url',
 			'bookshop_link'           => '_bbb_bookshop_url',
 			'newsletter_url'          => '_bbb_newsletter_url',
 			'spice_level'             => '_bbb_spice',
@@ -384,6 +386,7 @@ function sss_article_book_data(int $book_id): array {
 		'author'        => function_exists('bbb_get_book_author') ? bbb_get_book_author($book_id) : (function_exists('bbb_bookish_proper_name') ? bbb_bookish_proper_name((string) sss_article_field('author', $book_id, '')) : (string) sss_article_field('author', $book_id, '')),
 		'cover'         => sss_article_cover_url($book_id),
 		'amazon'        => function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(sss_article_field('amazon_link', $book_id, '')) : (string) sss_article_field('amazon_link', $book_id, ''),
+		'ku_url'        => function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(sss_article_field('kindle_unlimited_link', $book_id, sss_article_field('ku_link', $book_id, ''))) : (string) sss_article_field('kindle_unlimited_link', $book_id, sss_article_field('ku_link', $book_id, '')),
 		'bookshop'      => function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(sss_article_field('bookshop_link', $book_id, '')) : (string) sss_article_field('bookshop_link', $book_id, ''),
 		'newsletter'    => function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(sss_article_field('newsletter_url', $book_id, '')) : (string) sss_article_field('newsletter_url', $book_id, ''),
 		'spice'         => (int) sss_article_field('spice_level', $book_id, 0),
@@ -414,6 +417,7 @@ function sss_article_data_attrs(array $book): string {
 		'data-author'         => $book['author'],
 		'data-cover'          => $book['cover'],
 		'data-amazon'         => $book['amazon'],
+		'data-ku-url'         => $book['ku_url'],
 		'data-bookshop'       => $book['bookshop'],
 		'data-newsletter'     => $book['newsletter'],
 		'data-spice'          => (string) $book['spice'],
@@ -478,7 +482,7 @@ function sss_render_article_book_card(int $book_id, bool $show_why = false): str
   <div class="article-book-card__image">
     <button type="button" class="article-book-card__heart" data-blog-heart
       data-title="<?php echo esc_attr($book['title']); ?>" data-author="<?php echo esc_attr($book['author']); ?>" data-cover="<?php echo esc_attr($book['cover']); ?>"
-      data-amazon="<?php echo esc_attr($book['amazon']); ?>" data-bookshop="<?php echo esc_attr($book['bookshop']); ?>"
+      data-amazon="<?php echo esc_attr($book['amazon']); ?>" data-ku-url="<?php echo esc_attr($book['ku_url']); ?>" data-bookshop="<?php echo esc_attr($book['bookshop']); ?>"
       aria-label="save to your bookshelf">
       <span class="article-book-card__heartIcon" aria-hidden="true">♡</span>
       <span class="article-book-card__heartLabel">save</span>
@@ -517,8 +521,8 @@ function sss_render_article_book_card(int $book_id, bool $show_why = false): str
     <?php endif; ?>
 
 	    <div class="article-book-card__buttons">
-	      <?php if ($book['amazon'] && $book['ku']) : ?>
-	      <a class="article-book-card__button article-book-card__button--ku" href="<?php echo esc_url($book['amazon']); ?>" target="_blank" rel="noopener">read free on kindle unlimited</a>
+	      <?php if ($book['ku'] && ($book['ku_url'] || $book['amazon'])) : ?>
+	      <a class="article-book-card__button article-book-card__button--ku" href="<?php echo esc_url((string) ($book['ku_url'] ?: $book['amazon'])); ?>" target="_blank" rel="noopener">read free on kindle unlimited</a>
 	      <?php endif; ?>
 	      <?php if ($book['amazon']) : ?>
 	      <a class="article-book-card__button article-book-card__button--amazon" href="<?php echo esc_url($book['amazon']); ?>" target="_blank" rel="noopener">buy on amazon <span>· own it forever</span></a>

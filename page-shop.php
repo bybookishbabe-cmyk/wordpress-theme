@@ -53,8 +53,14 @@ if (!bbb_shop_has_private_cache_context()) {
 
 $shop_css_path = get_theme_file_path('assets/css/shop-page.css');
 wp_enqueue_style('bbb-shop-page', get_template_directory_uri() . '/assets/css/shop-page.css', array('bbb-base'), file_exists($shop_css_path) ? (string) filemtime($shop_css_path) : wp_get_theme()->get('Version'));
+wp_add_inline_style(
+	'bbb-shop-page',
+	'.bbb-shop__loadMore{display:flex;justify-content:center;padding:clamp(1.5rem,4vw,3rem) 1rem clamp(3rem,7vw,5rem)}.bbb-shop__loadMoreButton{display:inline-flex;align-items:center;justify-content:center;gap:.55rem;min-height:48px;padding:.9rem 1.25rem;border:1px solid currentColor;border-radius:6px;background:#111;color:#fff;text-decoration:none;text-transform:lowercase;font-weight:700;line-height:1}.bbb-shop__loadMoreButton span{font-size:.82em;font-weight:600;opacity:.74}.bbb-shop__loadMoreButton:hover,.bbb-shop__loadMoreButton:focus-visible{background:#fff;color:#111}'
+);
 $shop_filters_js_path = get_theme_file_path('assets/js/shop-filters.js');
 wp_enqueue_script('bbb-shop-filters', get_template_directory_uri() . '/assets/js/shop-filters.js', array(), file_exists($shop_filters_js_path) ? (string) filemtime($shop_filters_js_path) : wp_get_theme()->get('Version'), true);
+$shop_edd_cart_js_path = get_theme_file_path('assets/js/shop-edd-cart.js');
+wp_enqueue_script('bbb-shop-edd-cart', get_template_directory_uri() . '/assets/js/shop-edd-cart.js', array(), file_exists($shop_edd_cart_js_path) ? (string) filemtime($shop_edd_cart_js_path) : wp_get_theme()->get('Version'), true);
 $shop_popup_css_path = get_theme_file_path('assets/css/shop-drop-popup.css');
 wp_enqueue_style('bbb-shop-drop-popup', get_template_directory_uri() . '/assets/css/shop-drop-popup.css', array('bbb-shop-page'), file_exists($shop_popup_css_path) ? (string) filemtime($shop_popup_css_path) : wp_get_theme()->get('Version'));
 $shop_popup_js_path = get_theme_file_path('assets/js/shop-drop-popup.js');
@@ -65,11 +71,14 @@ get_header();
 $is_admin_preview = current_user_can('edit_posts');
 $post_status      = array('publish');
 $removed_product_handles = function_exists('bbb_society_product_importer_removed_handles') ? bbb_society_product_importer_removed_handles() : array();
+$shop_page_size = 30;
+$requested_shop_items = isset($_GET['shop_items']) ? absint(wp_unslash($_GET['shop_items'])) : $shop_page_size;
+$visible_shop_items = max($shop_page_size, min(120, (int) (ceil($requested_shop_items / $shop_page_size) * $shop_page_size)));
 $downloads_query  = new WP_Query(
 	array(
 		'post_type'      => post_type_exists('download') ? 'download' : 'product',
 		'post_status'    => $post_status,
-		'posts_per_page' => 96,
+		'posts_per_page' => 120,
 		'no_found_rows'  => true,
 		'update_post_term_cache' => true,
 		'orderby'        => 'title',
@@ -105,6 +114,66 @@ if (!function_exists('bbb_shop_download_image')) {
 		}
 
 		return esc_url_raw($image_url);
+	}
+}
+
+if (!function_exists('bbb_shop_july_2026_staged_handles')) {
+	function bbb_shop_july_2026_staged_handles(): array {
+		return array(
+			'midnight-summer-book-review-editable-canva-template',
+			'midnight-drive-printable-kindle-insert',
+			'midnight-makeout-printable-kindle-insert',
+			'midnight-movie-printable-kindle-insert',
+			'midnight-swim-printable-kindle-insert',
+		);
+	}
+}
+
+if (!function_exists('bbb_shop_is_july_2026_staged_download')) {
+	function bbb_shop_is_july_2026_staged_download(WP_Post $download): bool {
+		if (function_exists('bbb_staged_product_is_locked')) {
+			return bbb_staged_product_is_locked((int) $download->ID);
+		}
+
+		$release_at = new DateTimeImmutable('2026-07-01 00:00:00', new DateTimeZone('America/Los_Angeles'));
+		$now        = new DateTimeImmutable('now', new DateTimeZone('America/Los_Angeles'));
+
+		return $now < $release_at
+			&& in_array(sanitize_title((string) $download->post_name), bbb_shop_july_2026_staged_handles(), true);
+	}
+}
+
+if (!function_exists('bbb_shop_july_2026_staged_url')) {
+	function bbb_shop_july_2026_staged_url(): string {
+		return home_url('/monthly-theme/#kindle-downloads');
+	}
+}
+
+if (!function_exists('bbb_shop_july_2026_staged_downloads')) {
+	function bbb_shop_july_2026_staged_downloads(): array {
+		$post_type = post_type_exists('download') ? 'download' : 'product';
+		$downloads = array();
+		foreach (bbb_shop_july_2026_staged_handles() as $handle) {
+			$query = new WP_Query(
+				array(
+					'post_type'      => $post_type,
+					'name'           => $handle,
+					'post_status'    => 'future',
+					'posts_per_page' => 1,
+					'no_found_rows'  => true,
+				)
+			);
+			$download = $query->posts[0] ?? null;
+			if (
+				$download instanceof WP_Post &&
+				'future' === get_post_status($download) &&
+				'society_product_importer' === get_post_meta((int) $download->ID, '_bbb_import_source', true)
+			) {
+				$downloads[] = $download;
+			}
+		}
+
+		return $downloads;
 	}
 }
 
@@ -692,6 +761,14 @@ if (!function_exists('bbb_shop_image_color_buckets')) {
 	}
 }
 
+if (!function_exists('bbb_shop_can_compute_visual_filters')) {
+	function bbb_shop_can_compute_visual_filters(): bool {
+		return (defined('WP_CLI') && WP_CLI)
+			|| wp_doing_cron()
+			|| (is_admin() && current_user_can('edit_posts'));
+	}
+}
+
 if (!function_exists('bbb_shop_visual_color_filters')) {
 	function bbb_shop_visual_color_map(): array {
 		static $map = null;
@@ -725,6 +802,18 @@ if (!function_exists('bbb_shop_visual_color_filters')) {
 			return $fallback;
 		}
 
+		$cached = (string) get_post_meta($post_id, '_bbb_shop_visual_color_cache', true);
+		if (str_contains($cached, '|')) {
+			list(, $cached_color) = explode('|', $cached, 2);
+			if ('' !== trim($cached_color)) {
+				return array_values(array_filter(array_map('bbb_shop_filter_slug', preg_split('/\s+/', $cached_color) ?: array())));
+			}
+		}
+
+		if (!bbb_shop_can_compute_visual_filters()) {
+			return $fallback;
+		}
+
 		$image_source = bbb_shop_image_file_path($post_id, $image_url);
 		if ('' === $image_source) {
 			return $fallback;
@@ -732,7 +821,6 @@ if (!function_exists('bbb_shop_visual_color_filters')) {
 
 		$source_version = is_readable($image_source) ? (string) @filemtime($image_source) : md5($image_source);
 		$cache_key = md5('visual-color-v4|' . $image_source . '|' . $source_version);
-		$cached    = (string) get_post_meta($post_id, '_bbb_shop_visual_color_cache', true);
 		if (str_contains($cached, '|')) {
 			list($cached_key, $cached_color) = explode('|', $cached, 2);
 			if ($cached_key === $cache_key && '' !== $cached_color) {
@@ -918,7 +1006,7 @@ if (!function_exists('bbb_shop_new_drop_product')) {
 				'url'         => get_permalink($product),
 				'image'       => bbb_shop_download_image($product_id),
 				'price'       => bbb_shop_download_price($product_id),
-				'member_free' => 'yes' === get_post_meta($product_id, '_bbb_society_free_download', true),
+				'member_free' => function_exists('bbb_society_product_has_member_access') && bbb_society_product_has_member_access($product_id),
 				'added_at'    => $added_at,
 			);
 		}
@@ -927,9 +1015,11 @@ if (!function_exists('bbb_shop_new_drop_product')) {
 	}
 }
 
+$download_posts = array_merge($downloads_query->posts, bbb_shop_july_2026_staged_downloads());
+
 $downloads = array_values(
 	array_filter(
-		$downloads_query->posts,
+		$download_posts,
 		static function ($download) use ($is_admin_preview, $removed_product_handles): bool {
 			if (!$download instanceof WP_Post) {
 				return false;
@@ -937,6 +1027,10 @@ $downloads = array_values(
 
 			if (in_array(sanitize_title((string) $download->post_name), $removed_product_handles, true)) {
 				return false;
+			}
+
+			if ('future' === get_post_status($download)) {
+				return bbb_shop_is_july_2026_staged_download($download);
 			}
 
 			if ($is_admin_preview) {
@@ -985,6 +1079,11 @@ foreach ($seed_products as $product) {
 	$counts[$kind]++;
 	$groups[$kind][] = $product;
 }
+
+$total_shop_items = count($groups['inserts']);
+$next_shop_items = min(120, $visible_shop_items + $shop_page_size);
+$render_groups = $groups;
+$render_groups['inserts'] = array_slice($groups['inserts'], 0, $visible_shop_items);
 
 $sections = array(
 	'inserts'   => array(
@@ -1125,7 +1224,7 @@ $vault_file_count = array_reduce(
 		<p class="bbb-shop__noResults" data-bbb-shop-no-results hidden>no designs match those filters yet.</p>
 		<div id="shop-all"></div>
 		<?php foreach ($sections as $kind => $section) : ?>
-			<?php if (empty($groups[$kind])) : ?>
+			<?php if (empty($render_groups[$kind])) : ?>
 				<?php continue; ?>
 			<?php endif; ?>
 			<section class="bbb-shop__section" id="<?php echo esc_attr($section['id']); ?>">
@@ -1134,7 +1233,7 @@ $vault_file_count = array_reduce(
 					<h2><?php echo esc_html($section['title']); ?></h2>
 				</div>
 				<div class="bbb-shop__grid">
-					<?php foreach ($groups[$kind] as $download) : ?>
+					<?php foreach ($render_groups[$kind] as $download) : ?>
 						<?php
 						$is_seed_product = is_array($download);
 						$compare_price = '';
@@ -1149,7 +1248,9 @@ $vault_file_count = array_reduce(
 							$file_count    = bbb_shop_seed_file_count($download);
 							$missing_files = (bool) ($download['download_missing'] ?? false) && 0 === $file_count;
 							$can_purchase  = false;
-							$is_free       = bbb_society_product_importer_truthy($download['society_free'] ?? false);
+							$is_free       = function_exists('bbb_society_product_importer_should_include_with_membership')
+								? bbb_society_product_importer_should_include_with_membership($download, bbb_society_product_importer_truthy($download['society_free'] ?? false))
+								: false;
 						} else {
 							$post_id       = (int) $download->ID;
 							$title         = get_the_title($download);
@@ -1160,8 +1261,9 @@ $vault_file_count = array_reduce(
 							$file_count    = bbb_shop_download_file_count($post_id);
 							$is_full_vault_product = function_exists('bbb_vault_full_access_product_ids') && in_array($post_id, bbb_vault_full_access_product_ids(), true);
 							$missing_files = !$is_full_vault_product && 'yes' === get_post_meta($post_id, '_bbb_missing_download_url', true) && 0 === $file_count;
-							$can_purchase  = ($is_full_vault_product || 0 < $file_count) && !$missing_files;
-							$is_free       = 'yes' === get_post_meta($post_id, '_bbb_society_free_download', true);
+							$is_july_staged = bbb_shop_is_july_2026_staged_download($download);
+							$can_purchase  = ($is_full_vault_product || 0 < $file_count) && !$missing_files && !$is_july_staged;
+							$is_free       = function_exists('bbb_society_product_has_member_access') && bbb_society_product_has_member_access($post_id);
 						}
 						$filter_values = bbb_shop_filter_values($download, $is_seed_product, $kind, $image_url);
 						?>
@@ -1186,7 +1288,7 @@ $vault_file_count = array_reduce(
 									<?php if ($is_free) : ?>
 										<span>member access</span>
 									<?php endif; ?>
-									<?php if (!$is_seed_product && 'publish' !== get_post_status($download)) : ?>
+									<?php if (!$is_seed_product && empty($is_july_staged) && 'publish' !== get_post_status($download)) : ?>
 										<span><?php echo esc_html(get_post_status($download)); ?></span>
 									<?php endif; ?>
 									<?php if ($missing_files) : ?>
@@ -1211,6 +1313,8 @@ $vault_file_count = array_reduce(
 										<a class="bbb-shop-card__button bbb-shop-card__button--ghost" href="<?php echo esc_url(get_edit_post_link($post_id)); ?>">finish setup</a>
 									<?php elseif ($can_purchase) : ?>
 										<a class="bbb-shop-card__button" href="<?php echo esc_url($permalink); ?>">view details</a>
+									<?php elseif (!empty($is_july_staged)) : ?>
+										<span class="bbb-shop-card__button bbb-shop-card__button--disabled bbb-shop-card__button--locked" aria-disabled="true">coming july 1</span>
 									<?php elseif (!$can_purchase) : ?>
 										<span class="bbb-shop-card__button bbb-shop-card__button--disabled" aria-disabled="true">coming soon</span>
 										<a class="bbb-shop-card__details" href="<?php echo esc_url($permalink); ?>">view details</a>
@@ -1222,6 +1326,14 @@ $vault_file_count = array_reduce(
 						</article>
 					<?php endforeach; ?>
 				</div>
+				<?php if ('inserts' === $kind && $visible_shop_items < $total_shop_items) : ?>
+					<div class="bbb-shop__loadMore">
+						<a class="bbb-shop__loadMoreButton" href="<?php echo esc_url(add_query_arg('shop_items', (string) $next_shop_items, get_permalink()) . '#kindle-inserts'); ?>">
+							show more kindle inserts
+							<span><?php echo esc_html((string) min($shop_page_size, $total_shop_items - $visible_shop_items)); ?> more</span>
+						</a>
+					</div>
+				<?php endif; ?>
 			</section>
 		<?php endforeach; ?>
 	<?php endif; ?>

@@ -58,6 +58,21 @@ function bbb_book_quotes_is_context(): bool {
 	return bbb_book_quotes_current_book_id() > 0;
 }
 
+function bbb_book_quotes_cache_version(): string {
+	$version = get_option('bbb_book_quotes_cache_version', '');
+
+	if (!is_string($version) || '' === $version) {
+		$version = sprintf('%.6F', microtime(true));
+		update_option('bbb_book_quotes_cache_version', $version, false);
+	}
+
+	return $version;
+}
+
+function bbb_book_quotes_flush_cache(): void {
+	update_option('bbb_book_quotes_cache_version', sprintf('%.6F', microtime(true)), false);
+}
+
 function bbb_book_quote_series_handle(WP_Post $book): string {
 	$handle = '';
 	if (function_exists('sss_book_data')) {
@@ -537,7 +552,7 @@ function bbb_book_quote_posts(WP_Post $book, int $limit = 0): array {
 		return array();
 	}
 
-	$scope_books      = bbb_book_quote_scope_books($book);
+	$scope_books      = array($book);
 	$scope_book_ids   = array_values(array_unique(array_map(static fn(WP_Post $scope_book): int => (int) $scope_book->ID, $scope_books)));
 	$scope_handles    = array_values(
 		array_unique(
@@ -550,7 +565,7 @@ function bbb_book_quote_posts(WP_Post $book, int $limit = 0): array {
 		)
 	);
 	$posts_per_page   = $limit > 0 ? $limit : -1;
-	$quote_cache_seed = (function_exists('sss_library_cache_version') ? sss_library_cache_version() : wp_get_theme()->get('Version')) . '|series-scope-v1|' . implode(',', $quote_types) . '|' . implode(',', $scope_book_ids) . '|' . $limit;
+	$quote_cache_seed = (function_exists('sss_library_cache_version') ? sss_library_cache_version() : wp_get_theme()->get('Version')) . '|' . bbb_book_quotes_cache_version() . '|book-scope-v1|' . implode(',', $quote_types) . '|' . implode(',', $scope_book_ids) . '|' . $limit;
 	$quote_cache_key  = 'bbb_book_quotes_' . (int) $book->ID . '_' . md5($quote_cache_seed);
 	$quote_ids        = get_transient($quote_cache_key);
 

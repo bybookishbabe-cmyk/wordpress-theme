@@ -357,7 +357,7 @@ if (!function_exists('bbb_series_find_entity_by_slug')) {
 if (!function_exists('bbb_series_normalized_book_data')) {
 	function bbb_series_normalized_book_data(WP_Post $book): array {
 		$data = bbb_series_book_data($book);
-		foreach (array('cover', 'amazon', 'bookshop', 'newsletter') as $url_key) {
+		foreach (array('cover', 'amazon', 'ku_url', 'bookshop', 'newsletter') as $url_key) {
 			if (isset($data[$url_key]) && function_exists('bbb_normalize_url_value')) {
 				$data[$url_key] = bbb_normalize_url_value($data[$url_key]);
 			}
@@ -659,6 +659,7 @@ if (!function_exists('bbb_render_series_order_detail_page')) {
 				'book'     => (string) ($related_data['title'] ?? get_the_title($related_book)),
 				'author'   => (string) ($related_data['author'] ?? ''),
 				'amazon'   => (string) ($related_data['amazon'] ?? ''),
+				'ku_url'   => (string) ($related_data['ku_url'] ?? ''),
 				'bookshop' => (string) ($related_data['bookshop'] ?? ''),
 				'spice'    => (int) ($related_data['spice'] ?? 0),
 				'shelf'    => (string) ($related_data['shelf'] ?? ''),
@@ -770,6 +771,7 @@ if (!function_exists('bbb_render_series_order_detail_page')) {
 							data-author="<?php echo esc_attr($book_author); ?>"
 							data-cover="<?php echo esc_url((string) ($data['cover'] ?? '')); ?>"
 							data-amazon="<?php echo esc_url((string) ($data['amazon'] ?? '')); ?>"
+							data-ku-url="<?php echo esc_url((string) ($data['ku_url'] ?? '')); ?>"
 							data-bookshop="<?php echo esc_url((string) ($data['bookshop'] ?? '')); ?>"
 							data-shelf="<?php echo esc_attr((string) ($data['shelf'] ?? '')); ?>"
 							data-spice="<?php echo esc_attr((string) ($data['spice'] ?? '')); ?>"
@@ -821,10 +823,10 @@ if (!function_exists('bbb_render_series_order_detail_page')) {
 								<?php endif; ?>
 							</div>
 							<div class="bbb-seriesOrderPage__bookCta">
+								<?php if (!empty($data['ku']) && (!empty($data['ku_url']) || !empty($data['amazon']))) : ?>
+									<a class="is-ku" href="<?php echo esc_url((string) (!empty($data['ku_url']) ? $data['ku_url'] : $data['amazon'])); ?>" target="_blank" rel="noopener">read free on kindle unlimited</a>
+								<?php endif; ?>
 								<?php if (!empty($data['amazon'])) : ?>
-									<?php if (!empty($data['ku'])) : ?>
-										<a class="is-ku" href="<?php echo esc_url((string) $data['amazon']); ?>" target="_blank" rel="noopener">read free on kindle unlimited</a>
-									<?php endif; ?>
 									<a class="is-amazon" href="<?php echo esc_url((string) $data['amazon']); ?>" target="_blank" rel="noopener">buy on amazon<?php echo !empty($data['ku']) ? ' · own it forever' : ''; ?></a>
 								<?php endif; ?>
 								<?php if (!empty($data['bookshop'])) : ?>
@@ -852,6 +854,7 @@ if (!function_exists('bbb_render_series_order_detail_page')) {
 									data-author="<?php echo esc_attr($related_card['author']); ?>"
 									data-cover="<?php echo esc_url($related_card['cover']); ?>"
 									data-amazon="<?php echo esc_url($related_card['amazon']); ?>"
+									data-ku-url="<?php echo esc_url($related_card['ku_url']); ?>"
 									data-bookshop="<?php echo esc_url($related_card['bookshop']); ?>"
 									data-spice="<?php echo esc_attr((string) $related_card['spice']); ?>"
 									data-shelf="<?php echo esc_attr($related_card['shelf']); ?>"

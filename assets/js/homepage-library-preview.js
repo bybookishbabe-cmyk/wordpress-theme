@@ -1,6 +1,33 @@
+var bbbHomepageSupabasePromise = null;
+
+function bbbLoadHomepageSupabase(){
+  if (window.supabase && window.supabase.createClient) {
+    return Promise.resolve(window.supabase);
+  }
+
+  if (bbbHomepageSupabasePromise) {
+    return bbbHomepageSupabasePromise;
+  }
+
+  bbbHomepageSupabasePromise = new Promise(function(resolve, reject){
+    var script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+    script.async = true;
+    script.onload = function(){
+      resolve(window.supabase);
+    };
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+
+  return bbbHomepageSupabasePromise;
+}
+
 async function loadPreviewTrending(){
 
   try {
+
+    await bbbLoadHomepageSupabase();
 
     const { createClient } = supabase;
 
@@ -39,6 +66,26 @@ async function loadPreviewTrending(){
 
 }
 
+function queuePreviewTrendingLoad(){
+  const row = document.getElementById("sssPreviewTrending");
+  if(!row) return;
+
+  if(!("IntersectionObserver" in window)){
+    loadPreviewTrending();
+    return;
+  }
+
+  const observer = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(!entry.isIntersecting) return;
+      observer.disconnect();
+      loadPreviewTrending();
+    });
+  }, { rootMargin: "450px 0px", threshold: 0.01 });
+
+  observer.observe(row);
+}
+
 document.addEventListener("sssPreviewReady", function(){
 
   const titles = window.sssPreviewTrending || [];
@@ -74,7 +121,7 @@ document.addEventListener("sssPreviewReady", function(){
 
 });
 
-loadPreviewTrending();
+queuePreviewTrendingLoad();
 
 function revealHomepageTrendingBooks(){
   const books = Array.from(document.querySelectorAll(".bbb-trending__book"));

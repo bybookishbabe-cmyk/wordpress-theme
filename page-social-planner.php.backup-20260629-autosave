@@ -1,0 +1,171 @@
+<?php
+/**
+ * Private creator social planner app shell.
+ *
+ * @package ByBookishBabeShopifyPort
+ */
+
+declare(strict_types=1);
+
+if (!current_user_can('manage_options')) {
+	nocache_headers();
+	if (!headers_sent()) {
+		header('X-Robots-Tag: noindex, nofollow', true);
+	}
+	if (!is_user_logged_in()) {
+		wp_safe_redirect(wp_login_url(home_url('/social-planner/')));
+		exit;
+	}
+	status_header(404);
+	echo '<!doctype html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><title>Not found</title></head><body>Not found.</body></html>';
+	exit;
+}
+
+nocache_headers();
+
+if (!headers_sent()) {
+	header('X-Robots-Tag: noindex, nofollow', true);
+}
+
+$bbb_social_settings            = bbb_social_calendar_settings();
+$bbb_social_planner_manifest_path = get_theme_file_path('assets/pwa/social-planner.webmanifest');
+$bbb_social_planner_icon_path   = get_theme_file_path('assets/pwa/social-planner-icon-180.png');
+$bbb_social_planner_version     = 'social-planner-' . (file_exists($bbb_social_planner_manifest_path) ? (string) filemtime($bbb_social_planner_manifest_path) : (string) wp_get_theme()->get('Version'));
+$bbb_social_planner_icon_version = 'social-planner-icon-' . (file_exists($bbb_social_planner_icon_path) ? (string) filemtime($bbb_social_planner_icon_path) : $bbb_social_planner_version);
+$bbb_social_planner_icon        = add_query_arg('v', $bbb_social_planner_icon_version, get_theme_file_uri('assets/pwa/social-planner-icon-180.png'));
+$bbb_social_planner_manifest    = add_query_arg('v', $bbb_social_planner_version, get_theme_file_uri('assets/pwa/social-planner.webmanifest'));
+$bbb_newsletter_types           = function_exists('bbb_urgency_banner_newsletter_types') ? bbb_urgency_banner_newsletter_types() : array();
+$bbb_newsletter_schedule        = function_exists('bbb_social_calendar_newsletter_schedule') ? bbb_social_calendar_newsletter_schedule() : array();
+
+wp_enqueue_style('bbb-social-posting-calendar-fonts', 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@700&display=swap', array(), null);
+bbb_enqueue_css('bbb-social-posting-calendar', 'assets/css/social-posting-calendar.css', array('bbb-social-posting-calendar-fonts'));
+wp_enqueue_script('bbb-fullcalendar', 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js', array(), '6.1.17', true);
+wp_enqueue_script('bbb-ical-js', 'https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js', array(), '1.5.0', true);
+wp_enqueue_script('bbb-fullcalendar-ical', 'https://cdn.jsdelivr.net/npm/@fullcalendar/icalendar@6.1.17/index.global.min.js', array('bbb-fullcalendar', 'bbb-ical-js'), '6.1.17', true);
+bbb_enqueue_js('bbb-social-posting-calendar', 'assets/js/social-posting-calendar.js', array('bbb-fullcalendar', 'bbb-fullcalendar-ical'), true);
+wp_localize_script(
+	'bbb-social-posting-calendar',
+	'bbbSocialCalendar',
+	array(
+		'icsProxyUrl'         => '',
+		'ajaxUrl'             => wp_make_link_relative(admin_url('admin-ajax.php')),
+		'stateNonce'          => wp_create_nonce('bbb_social_calendar_state'),
+		'plannerToken'        => function_exists('bbb_social_calendar_planner_token') ? bbb_social_calendar_planner_token() : '',
+		'state'               => function_exists('bbb_social_calendar_post_state') ? bbb_social_calendar_post_state() : array(),
+		'boyfriendPinResults' => function_exists('bbb_social_calendar_boyfriend_pin_results') ? bbb_social_calendar_boyfriend_pin_results('') : array(),
+		'visualPlatformOptions' => array('pinterest', 'instagram', 'threads'),
+		'pinterestBoards'     => function_exists('bbb_social_calendar_pinterest_boards') ? bbb_social_calendar_pinterest_boards() : array(),
+		'timeZone'            => wp_timezone_string(),
+		'threadsUrl'          => (string) ($bbb_social_settings['threads_url'] ?? 'https://www.threads.net/'),
+		'instagramUrl'        => (string) ($bbb_social_settings['instagram_url'] ?? 'https://www.instagram.com/'),
+		'tiktokUrl'           => (string) ($bbb_social_settings['tiktok_url'] ?? 'https://www.tiktok.com/'),
+				'pinterestUrl'        => (string) ($bbb_social_settings['pinterest_url'] ?? ''),
+				'pinterestApp'        => (string) ($bbb_social_settings['pinterest_app'] ?? 'https://www.pinterest.com/'),
+				'pinterestSchedulerUrl' => 'http://localhost:8787/admin/social-planner-queue',
+				'pinterestSchedulerStatusUrl' => 'http://localhost:8787/admin/social-planner-status',
+				'pinterestSchedulerSecret' => function_exists('bbb_social_calendar_scheduler_secret') ? bbb_social_calendar_scheduler_secret() : '',
+			'instagramSchedulerUrl' => 'http://localhost:8787/admin/social-planner-instagram-queue',
+			'instagramSchedulerSecret' => function_exists('bbb_social_calendar_scheduler_secret') ? bbb_social_calendar_scheduler_secret() : '',
+		'dashboardUrl'        => (string) ($bbb_social_settings['dashboard_url'] ?? ''),
+		'newsletterTypes'     => array_map(
+			static fn(array $type): string => (string) ($type['label'] ?? ''),
+			$bbb_newsletter_types
+		),
+		'newsletterSchedule'  => $bbb_newsletter_schedule,
+	)
+);
+
+	wp_add_inline_script(
+		'bbb-social-posting-calendar',
+		"(function(){if(!('serviceWorker' in navigator))return;var workerUrl='" . esc_js(home_url('/sw-' . bbb_pwa_version() . '.js')) . "';var cacheName='bbb-pwa-" . esc_js(sanitize_key((string) (wp_get_theme()->get('Version') ?: '1.0.0'))) . "-" . esc_js(bbb_pwa_version()) . "';navigator.serviceWorker.register(workerUrl,{scope:'/'}).then(function(registration){if(registration){registration.update().catch(function(){});if(registration.waiting){registration.waiting.postMessage({type:'SKIP_WAITING'});}}}).catch(function(){});if(window.caches&&caches.keys){caches.keys().then(function(keys){keys.forEach(function(key){if(key.indexOf('bbb-pwa-')===0&&key!==cacheName){caches.delete(key);}});}).catch(function(){});}})();",
+		'before'
+	);
+?><!doctype html>
+<html <?php language_attributes(); ?>>
+<head>
+	<meta charset="<?php bloginfo('charset'); ?>">
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+	<meta name="robots" content="noindex,nofollow">
+	<meta name="theme-color" content="#080808">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-title" content="Social Planner">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+	<link rel="manifest" href="<?php echo esc_url($bbb_social_planner_manifest); ?>">
+	<link rel="apple-touch-icon" sizes="180x180" href="<?php echo esc_url($bbb_social_planner_icon); ?>">
+	<link rel="apple-touch-icon-precomposed" sizes="180x180" href="<?php echo esc_url($bbb_social_planner_icon); ?>">
+	<title>Social Planner</title>
+	<?php wp_head(); ?>
+</head>
+<body <?php body_class('bbb-social-planner-app-shell'); ?>>
+<?php wp_body_open(); ?>
+<main class="bbb-social-calendar bbb-social-calendar--app is-visual-mode" data-social-calendar-page data-current-mode="visual">
+	<section class="bbb-social-calendar__hero">
+		<div>
+			<p class="bbb-social-calendar__eyebrow">private app</p>
+			<h1>Social Planner</h1>
+			<p>Plan the week, drop in images, and keep posting days protected.</p>
+		</div>
+	</section>
+
+	<section class="bbb-social-calendar__layout">
+		<div class="bbb-social-calendar__main">
+			<div class="bbb-social-calendar__toolbar" aria-label="planner controls">
+				<span>Sunday through Saturday</span>
+				<div class="bbb-social-calendar__toolbarActions">
+					<button type="button" data-calendar-mode="calendar" aria-pressed="false">calendar</button>
+					<button type="button" class="is-active" data-calendar-mode="visual" aria-pressed="true">visual week</button>
+				</div>
+			</div>
+			<div id="bbbSocialFullCalendar" class="bbb-social-calendar__calendar" hidden></div>
+			<section class="bbb-social-calendar__visual" data-visual-planner>
+				<div class="bbb-social-calendar__visualHead">
+					<div>
+						<p class="bbb-social-calendar__eyebrow">posting board</p>
+						<h2 data-visual-week-label>This week</h2>
+					</div>
+					<div class="bbb-social-calendar__weekNav" aria-label="visual week controls">
+							<button type="button" class="bbb-social-calendar__saveNow" data-save-planner>save/sync now</button>
+							<span class="bbb-social-calendar__saveStatus" data-save-planner-status aria-live="polite"></span>
+							<button type="button" data-review-pinterest>review/edit</button>
+							<button type="button" data-contact-sheet-pinterest>contact sheet</button>
+							<button type="button" data-scheduler-pinterest>send to scheduler</button>
+					</div>
+				</div>
+				<div class="bbb-social-calendar__platformTabs" data-visual-platforms aria-label="visual platform"></div>
+				<div class="bbb-social-calendar__visualGrid" data-visual-week></div>
+				<div class="bbb-social-calendar__pinReview" data-pinterest-review hidden></div>
+			</section>
+		</div>
+	</section>
+
+	<div class="bbb-social-calendar__modal" data-social-modal aria-hidden="true">
+		<div class="bbb-social-calendar__modalBackdrop" data-social-modal-close></div>
+		<section class="bbb-social-calendar__modalCard" role="dialog" aria-modal="true" aria-labelledby="bbbSocialModalTitle">
+			<button class="bbb-social-calendar__modalClose" type="button" data-social-modal-close aria-label="Close">x</button>
+			<div class="bbb-social-calendar__modalHead">
+				<p data-social-modal-date>select a day</p>
+				<h2 id="bbbSocialModalTitle" data-social-modal-title>choose platform</h2>
+				<span data-social-modal-status>not scheduled</span>
+			</div>
+			<div class="bbb-social-calendar__platformGrid" data-platform-picker></div>
+			<form class="bbb-social-calendar__postForm" data-post-form hidden>
+				<div class="bbb-social-calendar__postMeta">
+					<strong data-post-platform>Threads</strong>
+					<span data-post-time>time loading</span>
+				</div>
+				<label>
+					<span>post draft</span>
+					<textarea data-post-draft rows="8" placeholder="Paste or write the post here."></textarea>
+				</label>
+				<div class="bbb-social-calendar__postActions">
+					<a href="https://www.threads.net/" target="_blank" rel="noopener" data-post-open>open platform</a>
+					<button type="button" data-post-copy>copy post</button>
+					<button type="button" data-post-scheduled>mark scheduled</button>
+				</div>
+			</form>
+		</section>
+	</div>
+</main>
+<?php wp_footer(); ?>
+</body>
+</html>

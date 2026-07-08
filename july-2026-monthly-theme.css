@@ -1,0 +1,2217 @@
+.bbb-midnight-kit,
+.bbb-midnight-kit * {
+	box-sizing: border-box;
+}
+
+.bbb-midnight-kit {
+	--midnight: #070e1c;
+	--navy: #0d1e38;
+	--storm: #1a3554;
+	--slate: #2a4a6b;
+	--fog: #456580;
+	--moonstone: #aec8d8;
+	--silver: #ccdde8;
+	--pale: #eaf2f7;
+	--mauve: #6e5280;
+	--dusk: #9a78ac;
+	--blush: #c0a0cc;
+	--gold: #c8aa84;
+	position: relative;
+	z-index: 1;
+	min-height: 100vh;
+	margin: 0;
+	background:
+		radial-gradient(ellipse 60% 40% at 50% 12%, rgba(26, 53, 84, 0.45), transparent 70%),
+		linear-gradient(180deg, #070e1c 0%, #050a14 100%);
+	color: var(--silver);
+	font-family: "DM Sans", sans-serif;
+	font-weight: 300;
+	overflow: clip;
+}
+
+.bbb-midnight-kit a {
+	color: inherit;
+}
+
+.bbb-midnight-kit__stars {
+	position: fixed;
+	inset: 0;
+	z-index: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+
+.bbb-midnight-kit__nav {
+	position: sticky;
+	top: 0;
+	z-index: 5;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.45rem;
+	padding: 0.95rem max(1rem, calc((100vw - 1120px) / 2));
+	overflow-x: auto;
+	scrollbar-width: none;
+	background: rgba(7, 14, 28, 0.88);
+	border-top: 1px solid rgba(174, 200, 216, 0.08);
+	border-bottom: 1px solid rgba(174, 200, 216, 0.08);
+	backdrop-filter: blur(16px);
+}
+
+.admin-bar .bbb-midnight-kit__nav {
+	top: 32px;
+}
+
+.bbb-midnight-kit__nav::-webkit-scrollbar {
+	display: none;
+}
+
+.bbb-midnight-kit__nav span {
+	flex: 0 0 auto;
+	margin-right: 1.25rem;
+	color: var(--moonstone);
+	font-family: "Cormorant Garamond", serif;
+	font-size: 1rem;
+	font-style: italic;
+	white-space: nowrap;
+}
+
+.bbb-midnight-kit__nav a {
+	flex: 0 0 auto;
+	padding: 0.55rem 1rem;
+	border-radius: 999px;
+	color: var(--fog);
+	font-size: 0.9rem;
+	letter-spacing: 0.06em;
+	text-decoration: none;
+	text-transform: uppercase;
+	transition: background 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.bbb-midnight-kit__nav a:hover,
+.bbb-midnight-kit__nav a:focus-visible {
+	color: var(--moonstone);
+	background: rgba(174, 200, 216, 0.07);
+	transform: translateY(-1px);
+}
+
+.bbb-midnight-kit__hero {
+	position: relative;
+	z-index: 1;
+	display: grid;
+	place-items: center;
+	min-height: min(92vh, 820px);
+	padding: clamp(5.5rem, 9vw, 8rem) 1.25rem clamp(5rem, 8vw, 7rem);
+	overflow: hidden;
+	text-align: center;
+}
+
+.bbb-midnight-kit__glow {
+	position: absolute;
+	inset: 0;
+	background:
+		radial-gradient(ellipse 60% 45% at 50% 55%, rgba(26, 53, 84, 0.72), transparent 70%),
+		radial-gradient(ellipse 35% 25% at 25% 75%, rgba(110, 82, 128, 0.22), transparent 60%),
+		radial-gradient(ellipse 30% 20% at 75% 20%, rgba(174, 200, 216, 0.08), transparent 60%);
+	pointer-events: none;
+}
+
+.bbb-midnight-kit__waves {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 280px;
+	pointer-events: none;
+}
+
+.bbb-midnight-kit__heroInner {
+	position: relative;
+	z-index: 2;
+	max-width: 980px;
+}
+
+.bbb-midnight-kit__eyebrow,
+.bbb-midnight-kit__sub,
+.bbb-midnight-kit__badge,
+.bbb-midnight-section__head h2,
+.bbb-midnight-calendar header span,
+.bbb-midnight-phone span,
+.bbb-midnight-phone small,
+.bbb-midnight-wallpapers footer,
+.bbb-midnight-books li,
+.bbb-midnight-quotes figcaption,
+.bbb-midnight-mood small,
+.bbb-midnight-mood header span,
+.bbb-midnight-kit__footer span {
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+}
+
+.bbb-midnight-kit__eyebrow {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: min(100%, 760px);
+	margin: 0 0 clamp(1.8rem, 3vw, 2.6rem);
+	padding: 0.48rem 1rem;
+	border: 1px solid rgba(174, 200, 216, 0.14);
+	border-radius: 999px;
+	background: rgba(7, 14, 28, 0.32);
+	color: var(--silver);
+	font-family: "Cormorant Garamond", serif;
+	font-size: clamp(1.05rem, 1.8vw, 1.42rem);
+	font-style: italic;
+	font-weight: 400;
+	letter-spacing: 0.06em;
+	text-transform: lowercase;
+	box-shadow: 0 0 42px rgba(154, 120, 172, 0.08);
+}
+
+.bbb-midnight-kit h1 {
+	margin: 0;
+	color: var(--pale);
+	font-family: "Cormorant Garamond", serif;
+	font-size: clamp(3.6rem, 10vw, 9rem);
+	font-weight: 300;
+	letter-spacing: 0;
+	line-height: 0.98;
+}
+
+.bbb-midnight-kit h1 em {
+	display: block;
+	color: var(--moonstone);
+	font-style: italic;
+}
+
+.bbb-midnight-kit__rule {
+	width: 60px;
+	height: 1px;
+	margin: clamp(3.4rem, 5vw, 4.8rem) auto 2.1rem;
+	background: linear-gradient(90deg, transparent, var(--dusk), transparent);
+}
+
+.bbb-midnight-kit__sub {
+	margin: 0 0 2.6rem;
+	color: var(--moonstone);
+	font-size: clamp(0.72rem, 1.3vw, 0.88rem);
+	letter-spacing: 0.16em;
+	line-height: 1.7;
+}
+
+.bbb-midnight-kit__badge {
+	display: inline-flex;
+	max-width: 100%;
+	padding: 0.5rem 1.6rem;
+	border: 1px solid rgba(154, 120, 172, 0.35);
+	border-radius: 999px;
+	background: rgba(110, 82, 128, 0.1);
+	color: var(--blush);
+	font-family: "Cormorant Garamond", serif;
+	font-size: 1rem;
+	font-style: italic;
+	letter-spacing: 0.02em;
+	text-transform: none;
+}
+
+.bbb-midnight-section {
+	position: relative;
+	z-index: 1;
+	max-width: 980px;
+	margin: 0 auto;
+	padding: 5rem 1.25rem;
+	border-top: 1px solid rgba(174, 200, 216, 0.05);
+}
+
+.bbb-midnight-section__head {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	margin-bottom: 0.6rem;
+}
+
+.bbb-midnight-section__head h2 {
+	margin: 0;
+	color: var(--mauve);
+	font-family: "DM Sans", sans-serif;
+	font-size: 0.56rem;
+	font-weight: 500;
+	letter-spacing: 0.48em;
+	white-space: nowrap;
+}
+
+.bbb-midnight-section__head::after {
+	content: "";
+	flex: 1;
+	height: 1px;
+	background: linear-gradient(90deg, rgba(110, 82, 128, 0.4), transparent);
+}
+
+.bbb-midnight-section__kicker {
+	margin: 0 0 3rem;
+	color: rgba(192, 160, 204, 0.8);
+	font-family: "Cormorant Garamond", serif;
+	font-size: 1rem;
+	font-style: italic;
+}
+
+.bbb-midnight-inserts,
+.bbb-midnight-wallpapers,
+.bbb-midnight-quotes {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+	gap: 1.5rem;
+}
+
+.bbb-midnight-insert {
+	position: relative;
+	display: grid;
+	grid-template-rows: 1fr auto;
+	min-height: 0;
+	overflow: hidden;
+	border: 1px solid rgba(174, 200, 216, 0.1);
+	border-radius: 8px;
+	background: rgba(7, 14, 28, 0.72);
+	box-shadow: 0 20px 56px rgba(0, 0, 0, 0.2);
+	transition: border-color 240ms ease, transform 240ms ease, box-shadow 240ms ease;
+}
+
+.bbb-midnight-insert:hover {
+	border-color: rgba(174, 200, 216, 0.25);
+	box-shadow: 0 24px 68px rgba(0, 0, 0, 0.28);
+	transform: translateY(-4px);
+}
+
+.bbb-midnight-insert__preview {
+	display: block;
+	width: 100%;
+	height: 100%;
+	aspect-ratio: 3 / 4;
+	object-fit: cover;
+	transition: transform 260ms ease, filter 260ms ease;
+}
+
+.bbb-midnight-insert:hover .bbb-midnight-insert__preview {
+	filter: saturate(1.08) contrast(1.04);
+	transform: scale(1.025);
+}
+
+.bbb-midnight-insert footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.8rem;
+	padding: 0.9rem 1rem;
+	border-top: 1px solid rgba(174, 200, 216, 0.08);
+	background: rgba(7, 14, 28, 0.9);
+}
+
+.bbb-midnight-insert footer span,
+.bbb-midnight-insert footer small {
+	position: static;
+	color: var(--fog);
+	font-size: 0.72rem;
+	letter-spacing: 0.06em;
+	line-height: 1.25;
+	text-transform: uppercase;
+}
+
+.bbb-midnight-insert footer small {
+	color: rgba(192, 160, 204, 0.78);
+	text-align: right;
+}
+
+.bbb-midnight-downloads {
+	background: rgba(7, 14, 28, 0.66);
+}
+
+.bbb-midnight-downloads__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 360px));
+	justify-content: center;
+	gap: 1.35rem;
+}
+
+.bbb-midnight-download {
+	overflow: hidden;
+	border: 1px solid rgba(174, 200, 216, 0.12);
+	border-radius: 8px;
+	background: rgba(7, 14, 28, 0.82);
+	box-shadow: 0 20px 56px rgba(0, 0, 0, 0.22);
+}
+
+.bbb-midnight-download__mockup {
+	margin: 0;
+	background: linear-gradient(160deg, #070e1c, #1a3554);
+}
+
+.bbb-midnight-download__mockup img {
+	display: block;
+	width: 100%;
+	aspect-ratio: 1 / 1;
+	object-fit: cover;
+}
+
+.bbb-midnight-download__body {
+	padding: 1.1rem;
+}
+
+.bbb-midnight-download h3 {
+	margin: 0 0 1rem;
+	color: var(--pale);
+	font-family: "Cormorant Garamond", serif;
+	font-size: clamp(1.7rem, 2.4vw, 2.25rem);
+	font-weight: 300;
+	line-height: 1.05;
+}
+
+.bbb-midnight-download__links {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.65rem;
+}
+
+.bbb-midnight-download__links a {
+	display: inline-flex;
+	min-height: 2.55rem;
+	align-items: center;
+	justify-content: center;
+	padding: 0.6rem 0.75rem;
+	border: 1px solid rgba(174, 200, 216, 0.18);
+	border-radius: 999px;
+	background: rgba(174, 200, 216, 0.06);
+	color: var(--pale);
+	font-size: 0.78rem;
+	letter-spacing: 0.04em;
+	line-height: 1.2;
+	text-align: center;
+	text-decoration: none;
+	text-transform: uppercase;
+	transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+
+.bbb-midnight-download__links a:hover {
+	border-color: rgba(174, 200, 216, 0.32);
+	background: rgba(174, 200, 216, 0.12);
+	color: #fff;
+}
+
+.bbb-midnight-download__links a.is-locked {
+	border-color: rgba(192, 160, 204, 0.18);
+	background: rgba(192, 160, 204, 0.08);
+	color: var(--blush);
+}
+
+.bbb-midnight-calendar {
+	position: relative;
+	overflow: hidden;
+	border: 1px solid rgba(174, 200, 216, 0.09);
+	border-radius: 6px;
+	background: linear-gradient(140deg, rgba(13, 30, 56, 0.85), rgba(7, 14, 28, 0.95));
+}
+
+.bbb-midnight-calendar::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	right: 0;
+	left: 0;
+	height: 2px;
+	background: linear-gradient(90deg, transparent, var(--moonstone), var(--dusk), transparent);
+}
+
+.bbb-midnight-calendar > img {
+	display: block;
+	width: 100%;
+	height: auto;
+	background: #0d0c0d;
+}
+
+.bbb-midnight-calendar header {
+	padding: 2.5rem 1.5rem 1.5rem;
+	border-bottom: 1px solid rgba(174, 200, 216, 0.06);
+	text-align: center;
+}
+
+.bbb-midnight-calendar header strong {
+	display: block;
+	color: var(--pale);
+	font-family: "Cormorant Garamond", serif;
+	font-size: clamp(2.2rem, 6vw, 4.5rem);
+	font-weight: 300;
+	letter-spacing: 0.05em;
+	line-height: 1;
+}
+
+.bbb-midnight-calendar header em {
+	color: var(--moonstone);
+	font-style: italic;
+}
+
+.bbb-midnight-calendar header span {
+	display: block;
+	margin-top: 0.5rem;
+	color: var(--dusk);
+	font-size: 0.6rem;
+	letter-spacing: 0.32em;
+}
+
+.bbb-midnight-calendar__body {
+	padding: 1.5rem;
+}
+
+.bbb-midnight-calendar__dow,
+.bbb-midnight-calendar__grid {
+	display: grid;
+	grid-template-columns: repeat(7, minmax(0, 1fr));
+	gap: 3px;
+}
+
+.bbb-midnight-calendar__dow {
+	margin-bottom: 0.4rem;
+}
+
+.bbb-midnight-calendar__dow span {
+	padding: 0.35rem 0;
+	color: var(--fog);
+	font-size: 0.52rem;
+	letter-spacing: 0.18em;
+	text-align: center;
+	text-transform: uppercase;
+}
+
+.bbb-midnight-calendar__grid > span {
+	display: flex;
+	min-height: 54px;
+	flex-direction: column;
+	gap: 2px;
+	padding: 0.3rem 0.38rem;
+	border: 1px solid rgba(174, 200, 216, 0.06);
+	border-radius: 2px;
+	background: rgba(255, 255, 255, 0.015);
+	transition: background 180ms ease;
+}
+
+.bbb-midnight-calendar__grid > span:hover {
+	background: rgba(26, 53, 84, 0.35);
+}
+
+.bbb-midnight-calendar__grid .is-empty {
+	border-color: transparent;
+	background: transparent;
+}
+
+.bbb-midnight-calendar__grid b {
+	color: var(--silver);
+	font-size: 0.68rem;
+	font-weight: 400;
+}
+
+.bbb-midnight-calendar__grid .is-weekend b {
+	color: var(--dusk);
+}
+
+.bbb-midnight-calendar__grid i,
+.bbb-midnight-calendar footer i {
+	width: 6px;
+	height: 6px;
+	border-radius: 999px;
+}
+
+.bbb-midnight-calendar__grid em {
+	color: var(--fog);
+	font-size: 0.42rem;
+	font-style: normal;
+	letter-spacing: 0.04em;
+	line-height: 1.35;
+}
+
+.bbb-midnight-calendar .is-blue {
+	background: var(--moonstone);
+}
+
+.bbb-midnight-calendar .is-mauve {
+	background: var(--dusk);
+}
+
+.bbb-midnight-calendar footer {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	gap: 0.8rem;
+	padding: 1rem 1.25rem 1.2rem;
+	border-top: 1px solid rgba(174, 200, 216, 0.05);
+}
+
+.bbb-midnight-calendar footer span {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+	color: var(--fog);
+	font-size: 0.58rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+}
+
+.bbb-midnight-calendar footer a {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.5rem 0.85rem;
+	border: 1px solid rgba(174, 200, 216, 0.18);
+	border-radius: 999px;
+	color: var(--moonstone);
+	font-size: 0.58rem;
+	letter-spacing: 0.08em;
+	text-decoration: none;
+	text-transform: uppercase;
+	transition: border-color 180ms ease, color 180ms ease, background 180ms ease;
+}
+
+.bbb-midnight-calendar footer a:hover,
+.bbb-midnight-calendar footer a:focus-visible {
+	border-color: rgba(174, 200, 216, 0.35);
+	background: rgba(174, 200, 216, 0.08);
+	color: var(--pale);
+}
+
+.bbb-midnight-calendar footer a.is-locked {
+	border-color: rgba(192, 160, 204, 0.18);
+	background: rgba(192, 160, 204, 0.08);
+	color: var(--blush);
+}
+
+.bbb-midnight-wallpapers {
+	grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.bbb-midnight-wallpapers article {
+	overflow: hidden;
+	border: 1px solid rgba(174, 200, 216, 0.09);
+	border-radius: 28px;
+	transition: transform 240ms ease;
+}
+
+.bbb-midnight-wallpapers article:hover {
+	transform: scale(1.02);
+}
+
+.bbb-midnight-wallpapers img {
+	display: block;
+	width: 100%;
+	aspect-ratio: 9 / 16;
+	object-fit: cover;
+}
+
+.bbb-midnight-phone {
+	position: relative;
+	display: grid;
+	aspect-ratio: 9 / 19.5;
+	place-items: center;
+	overflow: hidden;
+	padding: 1.5rem 1rem;
+	text-align: center;
+}
+
+.bbb-midnight-phone canvas {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+
+.bbb-midnight-phone > div {
+	position: relative;
+	z-index: 1;
+}
+
+.bbb-midnight-phone strong {
+	display: block;
+	margin-bottom: 0.2rem;
+	font-size: 2.2rem;
+	font-weight: 300;
+	letter-spacing: 0.04em;
+	line-height: 1;
+}
+
+.bbb-midnight-phone span {
+	display: block;
+	margin-bottom: 2.5rem;
+	color: var(--fog);
+	font-size: 0.48rem;
+	letter-spacing: 0.25em;
+}
+
+.bbb-midnight-phone p {
+	margin: 0 0 0.4rem;
+	font-family: "Cormorant Garamond", serif;
+	font-size: 1.15rem;
+	font-weight: 300;
+	line-height: 1.15;
+}
+
+.bbb-midnight-phone em {
+	font-style: italic;
+}
+
+.bbb-midnight-phone small {
+	display: block;
+	font-size: 0.48rem;
+	letter-spacing: 0.16em;
+}
+
+.bbb-midnight-phone--navy {
+	background: linear-gradient(178deg, #040a14 0%, #0d1e38 55%, #1a3554 100%);
+	color: var(--pale);
+}
+
+.bbb-midnight-phone--mauve {
+	background: radial-gradient(ellipse at 50% 30%, #1e0d38 0%, #070e1c 70%);
+	color: var(--blush);
+}
+
+.bbb-midnight-phone--minimal {
+	background: linear-gradient(178deg, #050b15 0%, #0d1e38 60%, #0f1a30 100%);
+	color: var(--moonstone);
+}
+
+.bbb-midnight-phone--gold {
+	background: linear-gradient(175deg, #0a0818 0%, #070e1c 60%, #0d1622 100%);
+	color: var(--gold);
+}
+
+.bbb-midnight-phone--gold strong {
+	font-family: "Cormorant Garamond", serif;
+	font-size: 1.6rem;
+	font-style: italic;
+}
+
+.bbb-midnight-wallpapers footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.6rem;
+	padding: 0.65rem;
+	background: rgba(7, 14, 28, 0.7);
+	color: var(--fog);
+	font-size: 0.58rem;
+	letter-spacing: 0.15em;
+	text-align: left;
+}
+
+.bbb-midnight-wallpapers footer span {
+	min-width: 0;
+}
+
+.bbb-midnight-wallpapers footer a {
+	flex: 0 0 auto;
+	padding: 0.34rem 0.54rem;
+	border: 1px solid rgba(174, 200, 216, 0.16);
+	border-radius: 999px;
+	color: var(--moonstone);
+	font-size: 0.52rem;
+	letter-spacing: 0.08em;
+	text-decoration: none;
+	text-transform: uppercase;
+	transition: border-color 180ms ease, color 180ms ease, background 180ms ease;
+}
+
+.bbb-midnight-wallpapers footer a:hover,
+.bbb-midnight-wallpapers footer a:focus-visible {
+	border-color: rgba(174, 200, 216, 0.34);
+	background: rgba(174, 200, 216, 0.08);
+	color: var(--pale);
+}
+
+.bbb-midnight-wallpapers footer a.is-locked {
+	color: var(--dusk);
+}
+
+.bbb-midnight-books {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(210px, 280px));
+	gap: 1.2rem;
+	justify-content: center;
+}
+
+.bbb-midnight-books article {
+	position: relative;
+	display: grid;
+	grid-template-rows: auto 1fr;
+	overflow: hidden;
+	border: 1px solid rgba(174, 200, 216, 0.12);
+	border-radius: 8px;
+	background: rgba(7, 14, 28, 0.72);
+	box-shadow: 0 20px 56px rgba(0, 0, 0, 0.2);
+	cursor: pointer;
+	transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.bbb-midnight-books article:hover {
+	border-color: rgba(174, 200, 216, 0.25);
+	background: rgba(13, 30, 56, 0.82);
+	transform: translateY(-4px);
+}
+
+.bbb-midnight-book__coverWrap {
+	position: relative;
+	display: block;
+	aspect-ratio: 2 / 3;
+	overflow: hidden;
+	background: linear-gradient(160deg, #070e1c, #1a3554);
+}
+
+.bbb-midnight-book__cover {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	transform: scale(1.01);
+	transition: transform 240ms ease, filter 240ms ease;
+}
+
+.bbb-midnight-books article:hover .bbb-midnight-book__cover {
+	filter: saturate(1.08) contrast(1.04);
+	transform: scale(1.045);
+}
+
+.bbb-midnight-book__coverWrap::after {
+	position: absolute;
+	inset: auto 0 0;
+	height: 42%;
+	background: linear-gradient(180deg, rgba(7, 14, 28, 0), rgba(7, 14, 28, 0.72));
+	content: "";
+	pointer-events: none;
+}
+
+.bbb-midnight-book__heart {
+	position: absolute;
+	z-index: 2;
+	top: 0.75rem;
+	left: 0.75rem;
+	display: inline-grid;
+	width: 2.45rem;
+	height: 2.45rem;
+	place-items: center;
+	border: 1px solid rgba(232, 239, 246, 0.38);
+	border-radius: 999px;
+	background: rgba(7, 14, 28, 0.72);
+	color: var(--pale);
+	font: inherit;
+	font-size: 1.3rem;
+	line-height: 1;
+	backdrop-filter: blur(14px);
+	cursor: pointer;
+	transition: transform 180ms ease, background 180ms ease, color 180ms ease;
+}
+
+.bbb-midnight-book__heart:hover,
+.bbb-midnight-book__heart.is-saved {
+	background: rgba(192, 160, 204, 0.88);
+	color: #070e1c;
+	transform: scale(1.04);
+}
+
+.bbb-midnight-book__spice {
+	position: absolute;
+	z-index: 2;
+	right: 0.7rem;
+	bottom: 0.7rem;
+	padding: 0.34rem 0.52rem;
+	border: 1px solid rgba(200, 170, 132, 0.34);
+	border-radius: 999px;
+	background: rgba(7, 14, 28, 0.78);
+	color: var(--gold);
+	font-size: 0.82rem;
+	letter-spacing: 0.08em;
+	line-height: 1;
+	backdrop-filter: blur(14px);
+}
+
+.bbb-midnight-book__body {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: 0.55rem;
+	padding: 1rem;
+}
+
+.bbb-midnight-book__shelf {
+	align-self: flex-start;
+	padding: 0.2rem 0.58rem;
+	border: 1px solid rgba(174, 200, 216, 0.16);
+	border-radius: 999px;
+	background: rgba(174, 200, 216, 0.05);
+	color: var(--moonstone);
+	font-size: 0.68rem;
+	letter-spacing: 0.06em;
+	line-height: 1.25;
+	text-transform: lowercase;
+}
+
+.bbb-midnight-books h3 {
+	margin: 0;
+	color: var(--pale);
+	font-family: "Cormorant Garamond", serif;
+	font-size: clamp(1.5rem, 2.6vw, 2.05rem);
+	font-weight: 300;
+	line-height: 1.08;
+}
+
+.bbb-midnight-books p {
+	margin: -0.2rem 0 0.1rem;
+	color: var(--fog);
+	font-size: 0.9rem;
+	letter-spacing: 0.03em;
+	line-height: 1.35;
+}
+
+.bbb-midnight-books ul {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.38rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.bbb-midnight-books li {
+	padding: 0.25rem 0.62rem;
+	border: 1px solid;
+	border-radius: 999px;
+	font-size: 0.7rem;
+	letter-spacing: 0.04em;
+	line-height: 1.25;
+}
+
+.bbb-midnight-books .tone-0 {
+	border-color: rgba(174, 200, 216, 0.22);
+	background: rgba(174, 200, 216, 0.05);
+	color: var(--moonstone);
+}
+
+.bbb-midnight-books .tone-1 {
+	border-color: rgba(192, 160, 204, 0.22);
+	background: rgba(154, 120, 172, 0.05);
+	color: var(--blush);
+}
+
+.bbb-midnight-books .tone-2 {
+	border-color: rgba(200, 170, 132, 0.22);
+	background: rgba(200, 170, 132, 0.05);
+	color: var(--gold);
+}
+
+.bbb-midnight-quotes {
+	grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+	gap: 1.2rem;
+}
+
+.bbb-midnight-quotes figure {
+	position: relative;
+	overflow: hidden;
+	margin: 0;
+	padding: 2.2rem 2rem;
+	border: 1px solid rgba(174, 200, 216, 0.08);
+	border-radius: 4px;
+}
+
+.bbb-midnight-quotes figure::before {
+	content: "\"";
+	position: absolute;
+	top: -1rem;
+	left: 1rem;
+	color: var(--moonstone);
+	font-family: "Cormorant Garamond", serif;
+	font-size: 7rem;
+	line-height: 1;
+	opacity: 0.07;
+}
+
+.bbb-midnight-quotes figure::after {
+	content: "";
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	height: 1px;
+	background: linear-gradient(90deg, transparent, var(--moonstone), transparent);
+}
+
+.bbb-midnight-quotes blockquote {
+	position: relative;
+	z-index: 1;
+	margin: 0 0 1.2rem;
+	font-family: "Cormorant Garamond", serif;
+	font-size: 1.05rem;
+	font-style: italic;
+	line-height: 1.7;
+}
+
+.bbb-midnight-quotes figcaption {
+	position: relative;
+	z-index: 1;
+	color: var(--fog);
+	font-size: 0.58rem;
+}
+
+.bbb-midnight-quotes .tone-0 {
+	background: linear-gradient(140deg, rgba(26, 53, 84, 0.5), rgba(7, 14, 28, 0.8));
+	color: var(--pale);
+}
+
+.bbb-midnight-quotes .tone-1 {
+	background: linear-gradient(140deg, rgba(110, 82, 128, 0.2), rgba(7, 14, 28, 0.8));
+	color: var(--blush);
+}
+
+.bbb-midnight-quotes .tone-2 {
+	background: linear-gradient(140deg, rgba(13, 30, 48, 0.6), rgba(22, 14, 40, 0.6));
+	color: var(--moonstone);
+}
+
+.bbb-midnight-quotes .tone-3 {
+	background: linear-gradient(140deg, rgba(20, 14, 36, 0.55), rgba(7, 14, 28, 0.9));
+	color: var(--gold);
+}
+
+.bbb-midnight-moodIntro {
+	max-width: 540px;
+	margin: 0 0 2.5rem;
+	color: var(--fog);
+	font-size: 0.8rem;
+	line-height: 1.85;
+}
+
+.bbb-midnight-mood {
+	overflow: hidden;
+	border: 1px solid rgba(174, 200, 216, 0.07);
+	border-radius: 4px;
+}
+
+.bbb-midnight-mood header,
+.bbb-midnight-mood article {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.bbb-midnight-mood header {
+	background: rgba(26, 53, 84, 0.35);
+}
+
+.bbb-midnight-mood header span {
+	padding: 0.65rem 1.2rem;
+	border-right: 1px solid rgba(174, 200, 216, 0.06);
+	color: var(--dusk);
+	font-size: 0.52rem;
+	letter-spacing: 0.24em;
+}
+
+.bbb-midnight-mood article {
+	border-top: 1px solid rgba(174, 200, 216, 0.05);
+	background: rgba(7, 14, 28, 0.8);
+	transition: background 180ms ease;
+}
+
+.bbb-midnight-mood article:hover {
+	background: rgba(13, 30, 56, 0.9);
+}
+
+.bbb-midnight-mood article div {
+	padding: 1.3rem 1.2rem;
+	border-right: 1px solid rgba(174, 200, 216, 0.05);
+}
+
+.bbb-midnight-mood header span:last-child,
+.bbb-midnight-mood article div:last-child {
+	border-right: 0;
+}
+
+.bbb-midnight-mood small {
+	display: block;
+	margin-bottom: 0.4rem;
+	color: var(--fog);
+	font-size: 0.5rem;
+	letter-spacing: 0.22em;
+}
+
+.bbb-midnight-mood strong {
+	display: block;
+	color: var(--moonstone);
+	font-family: "Cormorant Garamond", serif;
+	font-size: 1rem;
+	font-weight: 300;
+	line-height: 1.25;
+}
+
+.bbb-midnight-mood article:nth-child(3n) strong {
+	color: var(--blush);
+	font-style: italic;
+}
+
+.bbb-midnight-mood article:nth-child(4n) strong {
+	color: var(--gold);
+}
+
+.bbb-midnight-kit__footer {
+	position: relative;
+	z-index: 1;
+	padding: 5rem 1.25rem 6rem;
+	border-top: 1px solid rgba(174, 200, 216, 0.05);
+	text-align: center;
+}
+
+.bbb-midnight-kit__footer strong {
+	display: block;
+	margin-bottom: 0.5rem;
+	color: var(--moonstone);
+	font-family: "Cormorant Garamond", serif;
+	font-size: 2rem;
+	font-style: italic;
+	font-weight: 300;
+	letter-spacing: 0.08em;
+}
+
+.bbb-midnight-kit__footer span,
+.bbb-midnight-kit__footer a {
+	display: block;
+	color: var(--mauve);
+	font-size: 0.6rem;
+	letter-spacing: 0.32em;
+	text-decoration: none;
+	text-transform: uppercase;
+}
+
+.bbb-midnight-kit__footer a {
+	margin-top: 1.5rem;
+	color: var(--dusk);
+	letter-spacing: 0.08em;
+	text-transform: none;
+}
+
+/* Production readability pass: the mockup used micro-labels that collapse inside the WP shell. */
+.bbb-midnight-kit {
+	font-size: 18px;
+	line-height: 1.55;
+}
+
+.bbb-midnight-kit__nav {
+	padding-block: 1rem;
+}
+
+.bbb-midnight-kit__nav span {
+	font-size: 1.35rem;
+}
+
+.bbb-midnight-kit__nav a {
+	padding: 0.6rem 1.05rem;
+	font-size: 0.95rem;
+	letter-spacing: 0.06em;
+}
+
+.bbb-midnight-kit__heroInner {
+	max-width: 1080px;
+}
+
+.bbb-midnight-kit__eyebrow {
+	font-size: clamp(1.18rem, 2vw, 1.65rem);
+}
+
+.bbb-midnight-kit h1 {
+	font-size: clamp(4.4rem, 10vw, 9.8rem);
+	line-height: 0.98;
+}
+
+.bbb-midnight-kit__sub {
+	max-width: 780px;
+	margin-inline: auto;
+	margin-top: 0.35rem;
+	font-size: clamp(0.95rem, 1.25vw, 1.15rem);
+	letter-spacing: 0.06em;
+	text-transform: none;
+}
+
+.bbb-midnight-kit__badge {
+	padding: 0.68rem 1.8rem;
+	font-size: 1.2rem;
+}
+
+.bbb-midnight-section {
+	max-width: 1120px;
+	padding-block: 5.8rem;
+}
+
+.bbb-midnight-section__head {
+	align-items: baseline;
+	margin-bottom: 0.8rem;
+}
+
+.bbb-midnight-section__head h2 {
+	color: var(--blush);
+	font-family: "Cormorant Garamond", serif;
+	font-size: clamp(1.45rem, 2vw, 2rem);
+	font-style: italic;
+	font-weight: 400;
+	letter-spacing: 0.04em;
+	text-transform: lowercase;
+	white-space: normal;
+}
+
+.bbb-midnight-section__kicker,
+.bbb-midnight-moodIntro {
+	max-width: 760px;
+	font-size: clamp(1.12rem, 1.45vw, 1.35rem);
+	line-height: 1.55;
+}
+
+.bbb-midnight-inserts {
+	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+	gap: 1.75rem;
+}
+
+.bbb-midnight-wallpapers {
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 1.75rem;
+}
+
+.bbb-midnight-quotes {
+	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+	gap: 1.5rem;
+}
+
+.bbb-midnight-calendar header span {
+	font-size: 0.9rem;
+	letter-spacing: 0.08em;
+	line-height: 1.45;
+}
+
+.bbb-midnight-calendar__body {
+	padding: 1.75rem;
+}
+
+.bbb-midnight-calendar__dow span {
+	font-size: 0.76rem;
+	letter-spacing: 0.08em;
+}
+
+.bbb-midnight-calendar__grid > span {
+	min-height: 78px;
+	padding: 0.55rem;
+}
+
+.bbb-midnight-calendar__grid b {
+	font-size: 1.02rem;
+}
+
+.bbb-midnight-calendar__grid em {
+	font-size: 0.68rem;
+	line-height: 1.25;
+}
+
+.bbb-midnight-calendar footer span {
+	font-size: 0.82rem;
+	letter-spacing: 0.04em;
+}
+
+.bbb-midnight-phone {
+	padding: 2rem 1.25rem;
+}
+
+.bbb-midnight-phone strong {
+	font-size: 2.6rem;
+}
+
+.bbb-midnight-phone span {
+	margin-bottom: 2rem;
+	font-size: 0.72rem;
+	letter-spacing: 0.08em;
+	line-height: 1.35;
+}
+
+.bbb-midnight-phone p {
+	font-size: clamp(1.55rem, 2.4vw, 2rem);
+}
+
+.bbb-midnight-phone small,
+.bbb-midnight-wallpapers footer {
+	font-size: 0.72rem;
+	letter-spacing: 0.06em;
+	line-height: 1.35;
+}
+
+.bbb-midnight-books article {
+	min-height: 100%;
+}
+
+.bbb-midnight-book__body {
+	padding: 1.15rem;
+}
+
+.bbb-midnight-books h3 {
+	font-size: clamp(1.65rem, 2.4vw, 2.15rem);
+}
+
+.bbb-midnight-books p {
+	font-size: 0.94rem;
+}
+
+.bbb-midnight-books li {
+	padding: 0.28rem 0.7rem;
+	font-size: 0.74rem;
+	letter-spacing: 0.04em;
+}
+
+.bbb-midnight-quotes figure {
+	padding: 2.4rem 2.1rem;
+}
+
+.bbb-midnight-quotes blockquote {
+	font-size: clamp(1.35rem, 1.8vw, 1.7rem);
+	line-height: 1.45;
+}
+
+.bbb-midnight-quotes figcaption {
+	font-size: 0.76rem;
+	letter-spacing: 0.06em;
+	line-height: 1.35;
+}
+
+.bbb-midnight-mood header span {
+	font-size: 0.78rem;
+	letter-spacing: 0.06em;
+	line-height: 1.35;
+}
+
+.bbb-midnight-mood article div {
+	padding: 1.45rem 1.25rem;
+}
+
+.bbb-midnight-mood small {
+	font-size: 0.78rem;
+	letter-spacing: 0.05em;
+	line-height: 1.35;
+}
+
+.bbb-midnight-mood strong {
+	font-size: 1.28rem;
+	line-height: 1.25;
+}
+
+.bbb-midnight-kit__footer strong {
+	font-size: 2.6rem;
+}
+
+.bbb-midnight-kit__footer span,
+.bbb-midnight-kit__footer a {
+	font-size: 0.86rem;
+	letter-spacing: 0.08em;
+	line-height: 1.5;
+}
+
+@media (max-width: 720px) {
+	.bbb-midnight-kit__nav {
+		justify-content: flex-start;
+		padding-inline: 1rem;
+	}
+
+	.admin-bar .bbb-midnight-kit__nav {
+		top: 46px;
+	}
+
+	.bbb-midnight-kit__eyebrow {
+		width: min(100%, 24rem);
+		padding-inline: 0.85rem;
+		font-size: 1.08rem;
+		letter-spacing: 0.04em;
+		line-height: 1.25;
+	}
+
+	.bbb-midnight-kit h1 {
+		font-size: clamp(3.4rem, 17vw, 5.5rem);
+	}
+
+	.bbb-midnight-kit__sub {
+		font-size: 0.98rem;
+	}
+
+	.bbb-midnight-kit__badge {
+		font-size: 1.08rem;
+		line-height: 1.25;
+	}
+
+	.bbb-midnight-section {
+		padding-block: 4rem;
+	}
+
+	.bbb-midnight-insert {
+		min-height: 420px;
+	}
+
+	.bbb-midnight-calendar__body {
+		padding: 0.8rem;
+	}
+
+	.bbb-midnight-calendar__grid > span {
+		min-height: 52px;
+		padding: 0.25rem;
+	}
+
+	.bbb-midnight-calendar__grid em {
+		display: none;
+	}
+
+	.bbb-midnight-calendar__dow span {
+		font-size: 0.68rem;
+		letter-spacing: 0.02em;
+	}
+
+	.bbb-midnight-books {
+		grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	}
+
+	.bbb-midnight-book__body {
+		padding: 0.95rem;
+	}
+
+	.bbb-midnight-books h3 {
+		font-size: 1.45rem;
+	}
+
+	.bbb-midnight-book__spice {
+		font-size: 0.72rem;
+	}
+
+	.bbb-midnight-mood header {
+		display: none;
+	}
+
+	.bbb-midnight-mood article {
+		grid-template-columns: 1fr;
+	}
+
+	.bbb-midnight-mood article div {
+		border-right: 0;
+		border-bottom: 1px solid rgba(174, 200, 216, 0.05);
+	}
+
+	.bbb-midnight-mood article div:last-child {
+		border-bottom: 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.bbb-midnight-kit *,
+	.bbb-midnight-kit *::before,
+	.bbb-midnight-kit *::after {
+		scroll-behavior: auto !important;
+		transition-duration: 0.001ms !important;
+	}
+
+	.bbb-midnight-kit canvas {
+		display: none;
+	}
+}
+
+/* Editorial pass: bring July closer to the big-image Burn Bright flow. */
+.bbb-midnight-kit {
+	--paper: #c8beb2;
+	--ink: #f1ece5;
+	--rose: #d9a7bd;
+	--violet: #8d6cff;
+	--fire: #e06b34;
+	background:
+		radial-gradient(ellipse 58% 30% at 74% 5%, rgba(141, 108, 255, 0.22), transparent 68%),
+		radial-gradient(ellipse 42% 28% at 18% 20%, rgba(217, 167, 189, 0.12), transparent 72%),
+		linear-gradient(180deg, #050407 0%, #0b0d10 38%, #07070a 100%);
+}
+
+.bbb-midnight-kit__hero {
+	display: grid;
+	grid-template-columns: minmax(0, 0.82fr) minmax(420px, 1fr);
+	gap: clamp(2rem, 5vw, 5.5rem);
+	place-items: center;
+	min-height: min(94vh, 900px);
+	padding-inline: max(1.25rem, calc((100vw - 1180px) / 2));
+	text-align: left;
+}
+
+.bbb-midnight-kit__heroInner {
+	max-width: 620px;
+}
+
+.bbb-midnight-kit__heroInner .bbb-midnight-kit__rule {
+	margin-inline: 0;
+}
+
+.bbb-midnight-kit__heroWall {
+	position: relative;
+	z-index: 2;
+	display: grid;
+	width: min(100%, 640px);
+	min-height: clamp(520px, 70vw, 760px);
+	grid-template-columns: repeat(8, 1fr);
+	grid-template-rows: repeat(8, 1fr);
+}
+
+.bbb-midnight-kit__heroTile {
+	position: relative;
+	overflow: hidden;
+	margin: 0;
+	border: 1px solid rgba(241, 236, 229, 0.16);
+	border-radius: 4px;
+	background: #050407;
+	box-shadow: 0 26px 80px rgba(0, 0, 0, 0.4);
+	transform: rotate(var(--tilt, 0deg));
+}
+
+.bbb-midnight-kit__heroTile::after {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 40%, rgba(0, 0, 0, 0.2));
+	content: "";
+	pointer-events: none;
+}
+
+.bbb-midnight-kit__heroTile img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.bbb-midnight-kit__heroTile--swim {
+	z-index: 3;
+	grid-area: 1 / 1 / 6 / 5;
+	--tilt: -4deg;
+}
+
+.bbb-midnight-kit__heroTile--movie {
+	z-index: 4;
+	grid-area: 2 / 4 / 7 / 9;
+	--tilt: 3deg;
+}
+
+.bbb-midnight-kit__heroTile--drive {
+	z-index: 2;
+	grid-area: 5 / 1 / 9 / 6;
+	--tilt: 2deg;
+}
+
+.bbb-midnight-kit__heroTile--makeout {
+	z-index: 5;
+	grid-area: 4 / 5 / 9 / 9;
+	--tilt: -2deg;
+}
+
+.bbb-midnight-section {
+	max-width: 1180px;
+	padding-block: clamp(5rem, 9vw, 8rem);
+}
+
+.bbb-midnight-section__head h2 {
+	color: var(--paper);
+	font-size: 0.72rem;
+	letter-spacing: 0.34em;
+}
+
+.bbb-midnight-section__kicker {
+	max-width: 760px;
+	color: rgba(217, 167, 189, 0.88);
+	font-size: clamp(1.15rem, 2vw, 1.55rem);
+}
+
+.bbb-midnight-inserts {
+	grid-template-columns: repeat(4, minmax(240px, 1fr));
+	gap: clamp(1rem, 2vw, 1.5rem);
+	align-items: stretch;
+}
+
+.bbb-midnight-insert {
+	min-height: auto;
+	border-color: rgba(241, 236, 229, 0.12);
+	background: rgba(255, 255, 255, 0.025);
+	box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
+}
+
+.bbb-midnight-insert:nth-child(even) {
+	margin-top: clamp(2rem, 4vw, 4.5rem);
+}
+
+.bbb-midnight-insert__preview {
+	height: min(58vw, 560px);
+	object-position: center;
+}
+
+.bbb-midnight-insert footer {
+	background: rgba(5, 4, 7, 0.88);
+}
+
+.bbb-midnight-calendar {
+	display: grid;
+	grid-template-columns: minmax(0, 1.45fr) minmax(250px, 0.55fr);
+	align-items: stretch;
+	overflow: hidden;
+	border-color: rgba(241, 236, 229, 0.16);
+	background:
+		linear-gradient(145deg, rgba(200, 190, 178, 0.09), rgba(5, 4, 7, 0.96)),
+		#07070a;
+	box-shadow: 0 30px 90px rgba(0, 0, 0, 0.32);
+}
+
+.bbb-midnight-calendar > img {
+	height: 100%;
+	min-height: 520px;
+	object-fit: cover;
+	object-position: center;
+}
+
+.bbb-midnight-calendar footer {
+	align-content: center;
+	flex-direction: column;
+	align-items: flex-start;
+	justify-content: center;
+	padding: clamp(1.5rem, 4vw, 3rem);
+	border-top: 0;
+	border-left: 1px solid rgba(241, 236, 229, 0.1);
+	background:
+		radial-gradient(circle at 100% 0%, rgba(141, 108, 255, 0.16), transparent 45%),
+		rgba(5, 4, 7, 0.76);
+}
+
+.bbb-midnight-calendar footer span {
+	color: var(--ink);
+	font-family: "Cormorant Garamond", serif;
+	font-size: clamp(2.1rem, 4vw, 3.8rem);
+	font-style: italic;
+	font-weight: 300;
+	letter-spacing: 0;
+	line-height: 0.95;
+	text-transform: lowercase;
+}
+
+.bbb-midnight-calendar footer span::after {
+	display: block;
+	width: 54px;
+	height: 1px;
+	margin: 1.3rem 0 0.3rem;
+	background: linear-gradient(90deg, var(--rose), transparent);
+	content: "";
+}
+
+.bbb-midnight-calendar footer a {
+	margin-top: 0.8rem;
+	padding: 0.72rem 1rem;
+	border-color: rgba(241, 236, 229, 0.22);
+	color: var(--paper);
+}
+
+.bbb-midnight-wallpapers {
+	grid-template-columns: repeat(4, minmax(210px, 1fr));
+	gap: clamp(1rem, 2vw, 1.6rem);
+	align-items: start;
+}
+
+.bbb-midnight-wallpapers article {
+	border-color: rgba(241, 236, 229, 0.14);
+	border-radius: 4px;
+	background: rgba(255, 255, 255, 0.025);
+	box-shadow: 0 24px 70px rgba(0, 0, 0, 0.25);
+}
+
+.bbb-midnight-wallpapers article:nth-child(even) {
+	margin-top: clamp(2rem, 4vw, 5rem);
+}
+
+.bbb-midnight-wallpapers img {
+	aspect-ratio: 9 / 16;
+	object-position: center;
+}
+
+.bbb-midnight-wallpapers footer {
+	background: rgba(5, 4, 7, 0.9);
+}
+
+.bbb-midnight-downloads {
+	max-width: 1180px;
+}
+
+.bbb-midnight-downloads__grid {
+	grid-template-columns: repeat(4, minmax(220px, 1fr));
+	gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+.bbb-midnight-download {
+	border-radius: 4px;
+	background: rgba(255, 255, 255, 0.028);
+}
+
+.bbb-midnight-download__mockup {
+	aspect-ratio: 4 / 5;
+}
+
+.bbb-midnight-books {
+	grid-template-columns: repeat(4, minmax(190px, 1fr));
+	gap: clamp(1rem, 2vw, 1.5rem);
+	max-width: 1180px;
+	margin-inline: auto;
+}
+
+.bbb-midnight-books .bbb-midnight-book.sss-lib__book {
+	display: grid;
+	grid-template-rows: auto 1fr;
+	min-width: 0;
+	overflow: hidden;
+	border-radius: 4px;
+	background:
+		linear-gradient(145deg, rgba(141, 108, 255, 0.12), rgba(5, 4, 7, 0.86)),
+		rgba(255, 255, 255, 0.028);
+}
+
+.bbb-midnight-books .bbb-midnight-book__coverWrap {
+	position: relative;
+	display: block;
+	width: 100%;
+	aspect-ratio: 2 / 3;
+	overflow: hidden;
+}
+
+.bbb-midnight-books .bbb-midnight-book__cover {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.bbb-midnight-books .bbb-midnight-book .sss-lib__heart {
+	top: 0.7rem;
+	right: auto;
+	bottom: auto;
+	left: 0.7rem;
+	z-index: 4;
+	width: 2.35rem;
+	min-width: 0;
+	height: 2.35rem;
+	min-height: 0;
+	padding: 0;
+}
+
+.bbb-midnight-books .bbb-midnight-book .bbb-midnight-book__spice.sss-lib__floatSpice {
+	position: absolute;
+	top: 0.7rem;
+	right: 0.7rem;
+	bottom: auto;
+	left: auto;
+	z-index: 4;
+	display: inline-flex;
+	width: auto;
+	min-width: 0;
+	max-width: calc(100% - 1.4rem);
+	height: auto;
+	min-height: 0;
+	align-items: center;
+	justify-content: center;
+	padding: 0.38rem 0.52rem;
+	border: 0;
+	border-radius: 999px;
+	background: rgba(5, 4, 7, 0.78);
+	color: var(--gold);
+	font-size: 0.9rem;
+	letter-spacing: 0.03em;
+	line-height: 1;
+	writing-mode: horizontal-tb;
+	backdrop-filter: blur(14px);
+}
+
+.bbb-midnight-books .bbb-midnight-book .bbb-midnight-book__spice img.emoji {
+	display: inline-block;
+	width: 1em;
+	height: 1em;
+	margin: 0;
+}
+
+.bbb-midnight-books .bbb-midnight-book__body {
+	padding: 1.1rem;
+}
+
+.bbb-midnight-books .bbb-midnight-book__shelf {
+	border-color: rgba(217, 167, 189, 0.25);
+	color: var(--rose);
+}
+
+.bbb-midnight-playlists {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+.bbb-midnight-playlist {
+	position: relative;
+	overflow: hidden;
+	border: 1px solid rgba(241, 236, 229, 0.12);
+	border-radius: 4px;
+	background:
+		radial-gradient(circle at 100% 0%, rgba(217, 167, 189, 0.12), transparent 38%),
+		linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(5, 4, 7, 0.82));
+	box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
+}
+
+.bbb-midnight-playlist::before {
+	position: absolute;
+	inset: 0;
+	background-image:
+		linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+	background-size: 28px 28px;
+	content: "";
+	opacity: 0.18;
+	pointer-events: none;
+}
+
+.bbb-midnight-playlist header {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	align-items: flex-start;
+	gap: 1rem;
+	padding: clamp(1.15rem, 2vw, 1.5rem);
+	border-bottom: 1px solid rgba(241, 236, 229, 0.08);
+}
+
+.bbb-midnight-playlist header > span {
+	display: grid;
+	flex: 0 0 auto;
+	width: 3rem;
+	height: 3rem;
+	place-items: center;
+	border: 1px solid rgba(241, 236, 229, 0.14);
+	border-radius: 999px;
+	background: rgba(5, 4, 7, 0.55);
+	font-size: 1.45rem;
+	line-height: 1;
+}
+
+.bbb-midnight-playlist h3 {
+	margin: 0;
+	color: var(--ink);
+	font-family: "Cormorant Garamond", serif;
+	font-size: clamp(2rem, 4vw, 3.2rem);
+	font-weight: 300;
+	line-height: 0.95;
+	text-transform: lowercase;
+}
+
+.bbb-midnight-playlist p {
+	margin: 0.55rem 0 0;
+	color: rgba(217, 167, 189, 0.86);
+	font-size: 0.86rem;
+	line-height: 1.45;
+}
+
+.bbb-midnight-playlist ol {
+	position: relative;
+	z-index: 1;
+	display: grid;
+	gap: 0;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	counter-reset: midnight-track;
+}
+
+.bbb-midnight-playlist li {
+	counter-increment: midnight-track;
+}
+
+.bbb-midnight-playlist li + li {
+	border-top: 1px solid rgba(241, 236, 229, 0.06);
+}
+
+.bbb-midnight-playlist a {
+	display: grid;
+	grid-template-columns: 2.4rem minmax(0, 1fr);
+	gap: 0.8rem;
+	align-items: center;
+	padding: 0.78rem clamp(1.15rem, 2vw, 1.5rem);
+	color: inherit;
+	text-decoration: none;
+	transition: background 180ms ease, color 180ms ease;
+}
+
+.bbb-midnight-playlist a::before {
+	color: rgba(241, 236, 229, 0.34);
+	content: counter(midnight-track, decimal-leading-zero);
+	font-family: "DM Sans", sans-serif;
+	font-size: 0.68rem;
+	letter-spacing: 0.14em;
+}
+
+.bbb-midnight-playlist a:hover,
+.bbb-midnight-playlist a:focus-visible {
+	background: rgba(241, 236, 229, 0.055);
+	outline: 0;
+}
+
+.bbb-midnight-playlist strong,
+.bbb-midnight-playlist a span {
+	grid-column: 2;
+}
+
+.bbb-midnight-playlist strong {
+	color: var(--ink);
+	font-family: "Cormorant Garamond", serif;
+	font-size: 1.25rem;
+	font-weight: 400;
+	line-height: 1.08;
+}
+
+.bbb-midnight-playlist a span {
+	margin-top: -0.15rem;
+	color: rgba(174, 200, 216, 0.7);
+	font-size: 0.78rem;
+	letter-spacing: 0.04em;
+	line-height: 1.25;
+}
+
+.bbb-midnight-playlist--makeout {
+	background:
+		radial-gradient(circle at 100% 0%, rgba(217, 167, 189, 0.16), transparent 42%),
+		linear-gradient(145deg, rgba(50, 36, 50, 0.72), rgba(5, 4, 7, 0.9));
+}
+
+.bbb-midnight-playlist--drive {
+	background:
+		radial-gradient(circle at 8% 0%, rgba(174, 200, 216, 0.14), transparent 42%),
+		linear-gradient(145deg, rgba(16, 32, 50, 0.8), rgba(5, 4, 7, 0.9));
+}
+
+.bbb-midnight-playlist--movie {
+	background:
+		radial-gradient(circle at 100% 0%, rgba(224, 107, 52, 0.13), transparent 40%),
+		linear-gradient(145deg, rgba(38, 22, 18, 0.74), rgba(5, 4, 7, 0.92));
+}
+
+.bbb-midnight-playlist--swim {
+	background:
+		radial-gradient(circle at 10% 0%, rgba(141, 108, 255, 0.16), transparent 42%),
+		linear-gradient(145deg, rgba(14, 36, 38, 0.76), rgba(5, 4, 7, 0.9));
+}
+
+@media (max-width: 980px) {
+	.bbb-midnight-kit__hero {
+		grid-template-columns: 1fr;
+		text-align: center;
+	}
+
+	.bbb-midnight-kit__heroInner .bbb-midnight-kit__rule {
+		margin-inline: auto;
+	}
+
+	.bbb-midnight-kit__heroWall {
+		width: min(100%, 720px);
+		min-height: 560px;
+	}
+
+	.bbb-midnight-inserts,
+	.bbb-midnight-wallpapers,
+	.bbb-midnight-downloads__grid {
+		display: flex;
+		overflow-x: auto;
+		padding-bottom: 1rem;
+		scroll-snap-type: x proximity;
+	}
+
+	.bbb-midnight-insert,
+	.bbb-midnight-wallpapers article,
+	.bbb-midnight-download {
+		flex: 0 0 min(78vw, 360px);
+		scroll-snap-align: start;
+	}
+
+	.bbb-midnight-books {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.bbb-midnight-playlists {
+		grid-template-columns: 1fr;
+	}
+
+	.bbb-midnight-insert:nth-child(even),
+	.bbb-midnight-wallpapers article:nth-child(even) {
+		margin-top: 0;
+	}
+
+	.bbb-midnight-calendar {
+		grid-template-columns: 1fr;
+	}
+
+	.bbb-midnight-calendar > img {
+		min-height: 0;
+	}
+
+	.bbb-midnight-calendar footer {
+		border-left: 0;
+		border-top: 1px solid rgba(241, 236, 229, 0.1);
+	}
+}
+
+@media (max-width: 640px) {
+	.bbb-midnight-kit__heroWall {
+		min-height: 430px;
+	}
+
+	.bbb-midnight-kit__heroTile--swim {
+		grid-area: 1 / 1 / 5 / 5;
+	}
+
+	.bbb-midnight-kit__heroTile--movie {
+		grid-area: 1 / 4 / 6 / 9;
+	}
+
+	.bbb-midnight-kit__heroTile--drive {
+		grid-area: 5 / 1 / 9 / 6;
+	}
+
+	.bbb-midnight-kit__heroTile--makeout {
+		grid-area: 4 / 5 / 9 / 9;
+	}
+
+	.bbb-midnight-books {
+		grid-template-columns: 1fr;
+	}
+
+	.bbb-midnight-playlist h3 {
+		font-size: 2rem;
+	}
+
+	.bbb-midnight-playlist a {
+		grid-template-columns: 2rem minmax(0, 1fr);
+	}
+}
+
+/* Global readability pass: keep the moody editorial styling, but make the whole page readable in the WP shell. */
+.bbb-midnight-kit {
+	font-size: 20px;
+}
+
+.bbb-midnight-kit__nav a {
+	font-size: 1rem;
+}
+
+.bbb-midnight-kit__sub {
+	font-size: clamp(1.08rem, 1.35vw, 1.28rem);
+	line-height: 1.55;
+}
+
+.bbb-midnight-kit__badge {
+	font-size: clamp(1.1rem, 1.35vw, 1.3rem);
+}
+
+.bbb-midnight-section__head {
+	gap: 1rem;
+	margin-bottom: 1.15rem;
+}
+
+.bbb-midnight-section__head h2 {
+	color: var(--paper);
+	font-size: clamp(1.45rem, 2.2vw, 2.2rem);
+	letter-spacing: 0.16em;
+	line-height: 1.05;
+}
+
+.bbb-midnight-section__kicker,
+.bbb-midnight-moodIntro {
+	max-width: 900px;
+	font-size: clamp(1.35rem, 2vw, 1.75rem);
+	line-height: 1.55;
+}
+
+.bbb-midnight-insert footer span,
+.bbb-midnight-wallpapers footer span {
+	font-size: 1.08rem;
+	line-height: 1.25;
+}
+
+.bbb-midnight-insert footer small {
+	font-size: 0.92rem;
+	line-height: 1.35;
+}
+
+.bbb-midnight-wallpapers footer a,
+.bbb-midnight-calendar footer a,
+.bbb-midnight-download__links a {
+	font-size: 0.95rem;
+	letter-spacing: 0.08em;
+}
+
+.bbb-midnight-calendar footer span {
+	font-size: clamp(2.4rem, 4.4vw, 4.25rem);
+	line-height: 0.98;
+}
+
+.bbb-midnight-download h3 {
+	font-size: clamp(1.55rem, 2vw, 2rem);
+	line-height: 1.12;
+}
+
+.bbb-midnight-download__body p,
+.bbb-midnight-download__body span {
+	font-size: 1rem;
+	line-height: 1.45;
+}
+
+.bbb-midnight-books h3 {
+	font-size: clamp(1.85rem, 2.2vw, 2.35rem);
+	line-height: 1.08;
+}
+
+.bbb-midnight-books p {
+	font-size: 1rem;
+	line-height: 1.35;
+}
+
+.bbb-midnight-books li,
+.bbb-midnight-book__shelf {
+	font-size: 0.82rem;
+	line-height: 1.2;
+}
+
+.bbb-midnight-books .bbb-midnight-book .bbb-midnight-book__spice.sss-lib__floatSpice {
+	font-size: 1rem;
+}
+
+.bbb-midnight-playlist header {
+	gap: 1.15rem;
+	padding: clamp(1.35rem, 2.2vw, 1.85rem);
+}
+
+.bbb-midnight-playlist header > span {
+	width: 3.4rem;
+	height: 3.4rem;
+	font-size: 1.65rem;
+}
+
+.bbb-midnight-playlist h3 {
+	font-size: clamp(2.8rem, 4.6vw, 4.5rem);
+	line-height: 0.95;
+}
+
+.bbb-midnight-playlist p {
+	margin-top: 0.65rem;
+	font-size: 1.08rem;
+	line-height: 1.45;
+}
+
+.bbb-midnight-playlist a {
+	grid-template-columns: 2.8rem minmax(0, 1fr);
+	gap: 0.95rem;
+	padding: 1rem clamp(1.35rem, 2.2vw, 1.85rem);
+}
+
+.bbb-midnight-playlist a::before {
+	font-size: 0.82rem;
+}
+
+.bbb-midnight-playlist strong {
+	font-size: clamp(1.45rem, 1.8vw, 1.85rem);
+	line-height: 1.08;
+}
+
+.bbb-midnight-playlist a span {
+	font-size: 0.96rem;
+	line-height: 1.35;
+}
+
+.bbb-midnight-quotes blockquote {
+	font-size: clamp(1.65rem, 2.8vw, 2.45rem);
+	line-height: 1.1;
+}
+
+.bbb-midnight-quotes figcaption {
+	font-size: 1rem;
+	line-height: 1.4;
+}
+
+.bbb-midnight-quotes figcaption strong,
+.bbb-midnight-quotes figcaption span,
+.bbb-midnight-quotes figcaption a {
+	display: block;
+}
+
+.bbb-midnight-quotes figcaption strong {
+	color: var(--paper);
+	font-family: "Cormorant Garamond", serif;
+	font-size: 1.35rem;
+	font-weight: 400;
+	letter-spacing: 0;
+	line-height: 1.1;
+	text-transform: none;
+}
+
+.bbb-midnight-quotes figcaption span {
+	margin-top: 0.2rem;
+	color: rgba(174, 200, 216, 0.78);
+	font-size: 0.95rem;
+	letter-spacing: 0.04em;
+	text-transform: none;
+}
+
+.bbb-midnight-quotes figcaption a {
+	width: max-content;
+	margin-top: 0.9rem;
+	color: var(--blush);
+	font-size: 0.78rem;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	text-decoration: none;
+}
+
+.bbb-midnight-quotes figcaption a:hover,
+.bbb-midnight-quotes figcaption a:focus-visible {
+	color: var(--paper);
+	outline: 0;
+}
+
+.bbb-midnight-footer {
+	font-size: 1.05rem;
+	line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+	.bbb-midnight-kit {
+		font-size: 18px;
+	}
+
+	.bbb-midnight-section__head h2 {
+		font-size: 1.55rem;
+		letter-spacing: 0.1em;
+	}
+
+	.bbb-midnight-section__kicker,
+	.bbb-midnight-moodIntro {
+		font-size: 1.12rem;
+	}
+
+	.bbb-midnight-calendar footer span {
+		font-size: 2.35rem;
+	}
+
+	.bbb-midnight-books h3 {
+		font-size: 1.65rem;
+	}
+
+	.bbb-midnight-playlist h3 {
+		font-size: 2.35rem;
+	}
+
+	.bbb-midnight-playlist strong {
+		font-size: 1.28rem;
+	}
+
+	.bbb-midnight-playlist a span {
+		font-size: 0.88rem;
+	}
+}

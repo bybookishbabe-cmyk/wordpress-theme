@@ -88,6 +88,7 @@ $post_types        = array_values(
 	)
 );
 $top_shelf_books   = array();
+$top_shelf_limit   = 6;
 $top_shelf_query   = new WP_Query(
 	array(
 		'post_type'      => $post_types ?: 'sss_book',
@@ -164,7 +165,7 @@ if ($top_shelf_query->have_posts()) {
 		}
 
 		$top_shelf_books[] = get_post($book_id);
-		if (count($top_shelf_books) >= 5) {
+		if (count($top_shelf_books) >= $top_shelf_limit) {
 			break;
 		}
 	}
@@ -172,7 +173,7 @@ if ($top_shelf_query->have_posts()) {
 	wp_reset_postdata();
 }
 
-if (count($top_shelf_books) < 5 && function_exists('sss_get_all_books')) {
+if (count($top_shelf_books) < $top_shelf_limit && function_exists('sss_get_all_books')) {
 	foreach (sss_get_all_books() as $book) {
 		if (!$book instanceof WP_Post) {
 			continue;
@@ -185,7 +186,7 @@ if (count($top_shelf_books) < 5 && function_exists('sss_get_all_books')) {
 		}
 
 		$top_shelf_books[] = $book;
-		if (count($top_shelf_books) >= 5) {
+		if (count($top_shelf_books) >= $top_shelf_limit) {
 			break;
 		}
 	}

@@ -292,6 +292,9 @@ function sss_book_data(WP_Post $post): array {
 		}
 
 		$ku_raw = get_post_meta($post->ID, '_bbb_ku', true);
+		$ku_url = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($post->ID, '_bbb_ku_url', true)) : (string) get_post_meta($post->ID, '_bbb_ku_url', true);
+		$audible_url = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($post->ID, '_bbb_audible_url', true)) : (string) get_post_meta($post->ID, '_bbb_audible_url', true);
+		$libby_url = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($post->ID, '_bbb_libby_url', true)) : (string) get_post_meta($post->ID, '_bbb_libby_url', true);
 
 		$data = array(
 			'handle'         => $post->post_name,
@@ -300,7 +303,10 @@ function sss_book_data(WP_Post $post): array {
 			'author'         => function_exists('bbb_get_book_author') ? bbb_get_book_author($post->ID) : (string) get_post_meta($post->ID, '_bbb_author', true),
 			'cover'          => function_exists('bbb_get_book_cover_url') ? bbb_get_book_cover_url($post->ID) : (string) get_post_meta($post->ID, '_bbb_cover_url', true),
 			'amazon'         => (string) get_post_meta($post->ID, '_bbb_amazon_url', true),
+			'ku_url'         => $ku_url,
+			'audible'        => $audible_url,
 			'bookshop'       => (string) get_post_meta($post->ID, '_bbb_bookshop_url', true),
+			'libby'          => $libby_url,
 			'shelf'          => $shelf,
 			'spice'          => (int) get_post_meta($post->ID, '_bbb_spice', true),
 			'darkness'       => get_post_meta($post->ID, '_bbb_darkness', true),
@@ -339,7 +345,10 @@ function sss_book_data(WP_Post $post): array {
 		'author'         => function_exists('bbb_bookish_proper_name') ? bbb_bookish_proper_name((string) sss_meta($post->ID, 'sss_author', '')) : (string) sss_meta($post->ID, 'sss_author', ''),
 		'cover'          => sss_get_book_cover_url($post->ID),
 		'amazon'         => (string) sss_meta($post->ID, 'sss_amazon', ''),
+		'ku_url'         => function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(sss_meta($post->ID, 'sss_ku_url', '')) : (string) sss_meta($post->ID, 'sss_ku_url', ''),
+		'audible'        => function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(sss_meta($post->ID, 'audible_link', '')) : (string) sss_meta($post->ID, 'audible_link', ''),
 		'bookshop'       => (string) sss_meta($post->ID, 'sss_bookshop', ''),
+		'libby'          => function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(sss_meta($post->ID, 'libby_link', '')) : (string) sss_meta($post->ID, 'libby_link', ''),
 		'shelf'          => (string) sss_meta($post->ID, 'sss_shelf', ''),
 		'spice'          => (int) sss_meta($post->ID, 'sss_spice', 0),
 		'darkness'       => sss_meta($post->ID, 'sss_darkness', ''),

@@ -36,6 +36,7 @@ function bbb_books_like_book_data(int $book_id): array {
 			'author'        => function_exists('bbb_get_book_author') ? bbb_get_book_author($book_id) : '',
 			'cover'         => function_exists('bbb_get_book_cover_url') ? bbb_get_book_cover_url($book_id) : '',
 			'amazon'        => function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($book_id, '_bbb_amazon_url', true)) : (string) get_post_meta($book_id, '_bbb_amazon_url', true),
+			'ku_url'        => function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($book_id, '_bbb_ku_url', true)) : (string) get_post_meta($book_id, '_bbb_ku_url', true),
 			'bookshop'      => function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($book_id, '_bbb_bookshop_url', true)) : (string) get_post_meta($book_id, '_bbb_bookshop_url', true),
 			'newsletter'    => function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value(get_post_meta($book_id, '_bbb_newsletter_url', true)) : (string) get_post_meta($book_id, '_bbb_newsletter_url', true),
 			'spice'         => (int) get_post_meta($book_id, '_bbb_spice', true),
@@ -58,6 +59,7 @@ function bbb_books_like_book_data(int $book_id): array {
 	$data['boyfriend'] = (string) (function_exists('sss_article_field') ? sss_article_field('boyfriend_type', $book_id, get_post_meta($book_id, '_bbb_boyfriend_type', true)) : get_post_meta($book_id, '_bbb_boyfriend_type', true));
 	$data['boyfriend_name'] = (string) (function_exists('sss_article_field') ? sss_article_field('boyfriend_name', $book_id, get_post_meta($book_id, '_bbb_boyfriend_name', true)) : get_post_meta($book_id, '_bbb_boyfriend_name', true));
 	$data['reread'] = (string) (function_exists('sss_article_field') ? sss_article_field('reread_badge', $book_id, get_post_meta($book_id, '_bbb_reread', true)) : get_post_meta($book_id, '_bbb_reread', true));
+	$data['ku_url'] = function_exists('bbb_normalize_url_value') ? bbb_normalize_url_value((string) ($data['ku_url'] ?? get_post_meta($book_id, '_bbb_ku_url', true))) : (string) ($data['ku_url'] ?? get_post_meta($book_id, '_bbb_ku_url', true));
 	$data['private'] = function_exists('bbb_book_is_private') ? bbb_book_is_private($book_id) : false;
 	$data['title'] = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title((string) ($data['title'] ?? '')) : (string) ($data['title'] ?? '');
 	$data['author'] = function_exists('bbb_bookish_proper_name') ? bbb_bookish_proper_name((string) ($data['author'] ?? '')) : (string) ($data['author'] ?? '');
@@ -153,6 +155,7 @@ function bbb_books_like_data_attrs(array $book): string {
 		'data-author'         => $book['author'] ?? '',
 		'data-cover'          => $book['cover'] ?? '',
 		'data-amazon'         => $book['amazon'] ?? '',
+		'data-ku-url'         => $book['ku_url'] ?? '',
 		'data-bookshop'       => $book['bookshop'] ?? '',
 		'data-shelf'          => $book['shelf']['name'] ?? '',
 		'data-private-shelf'  => !empty($book['private']) ? 'true' : 'false',

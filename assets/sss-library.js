@@ -1034,6 +1034,7 @@ var bookData = {
   author: bookBtn.dataset.author || '',
   cover: bookBtn.dataset.cover || '',
   amazon: bookBtn.dataset.amazon || '',
+  kuUrl: bookBtn.dataset.kuUrl || '',
   bookshop: bookBtn.dataset.bookshop || '',
   spice: bookBtn.dataset.spice || '',
   darkness: bookBtn.dataset.darkness || '',
@@ -1180,6 +1181,7 @@ function hydrateShelfBook(book){
       author: sourceCard.dataset.author || book.author || '',
       cover: sourceCard.dataset.cover || book.cover || '',
       amazon: sourceCard.dataset.amazon || book.amazon || '',
+      kuUrl: sourceCard.dataset.kuUrl || book.kuUrl || book.ku_url || '',
       bookshop: sourceCard.dataset.bookshop || book.bookshop || '',
       spice: sourceCard.dataset.spice || '',
       tropes: sourceCard.dataset.tropes || '',
@@ -1290,6 +1292,7 @@ function renderMyShelf(){
         data-boyfriend="${stringifyBookDatasetValue(hydratedBook.boyfriend)}"
         data-reread="${stringifyBookDatasetValue(hydratedBook.reread)}"
         data-ku="${stringifyBookDatasetValue(hydratedBook.ku)}"
+        data-ku-url="${stringifyBookDatasetValue(hydratedBook.kuUrl || hydratedBook.ku_url)}"
         data-mini="${stringifyBookDatasetValue(hydratedBook.mini)}"
         data-series="${stringifyBookDatasetValue(hydratedBook.series)}"
         data-series-name="${stringifyBookDatasetValue(hydratedBook.seriesName)}"
@@ -1652,6 +1655,7 @@ function init(){
         author: btn.dataset.author || '',
         cover: btn.dataset.cover || '',
         amazon: btn.dataset.amazon || '',
+        kuUrl: btn.dataset.kuUrl || '',
         bookshop: btn.dataset.bookshop || '',
         spice: btn.dataset.spice || '',
         tropes: btn.dataset.tropes || '',
@@ -1952,6 +1956,7 @@ if(modalHeart){
             author:data.author,
             cover:data.cover,
             amazon:data.amazon,
+            kuUrl:data.kuUrl,
             bookshop:data.bookshop,
             series:data.series
           }
@@ -2127,9 +2132,10 @@ if (seriesOrderEl){
 
       var modalKuState = String(data.ku || '').toLowerCase().trim() === 'true';
       if (kuBtn){
-        kuBtn.style.display = data.amazon && modalKuState ? '' : 'none';
-        if (data.amazon) kuBtn.href = data.amazon;
-        kuBtn.onclick = data.amazon && modalKuState ? function(){
+        var modalKuUrl = data.kuUrl || data.amazon || '';
+        kuBtn.style.display = modalKuUrl && modalKuState ? '' : 'none';
+        if (modalKuUrl) kuBtn.href = modalKuUrl;
+        kuBtn.onclick = modalKuUrl && modalKuState ? function(){
           trackSiteEvent("book_link_clicked", {
             bookHandle: data.handle || '',
             bookTitle: data.title || '',

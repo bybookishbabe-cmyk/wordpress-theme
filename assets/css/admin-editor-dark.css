@@ -1,0 +1,293 @@
+:root {
+  --bbb-admin-bg: #0b070a;
+  --bbb-admin-panel: #130d12;
+  --bbb-admin-panel-2: #1b1118;
+  --bbb-admin-panel-3: #241722;
+  --bbb-admin-border: #5a2b45;
+  --bbb-admin-border-soft: rgba(255, 154, 210, 0.22);
+  --bbb-admin-text: #f7eaf2;
+  --bbb-admin-muted: #b9a6b2;
+  --bbb-admin-faint: #8f7d88;
+  --bbb-admin-accent: #d95d96;
+  --bbb-admin-accent-2: #f08ab8;
+  --bbb-admin-blue: #2ab7ef;
+}
+
+body.block-editor-page,
+body.post-php,
+body.post-new-php {
+  background: var(--bbb-admin-bg);
+}
+
+body.block-editor-page .interface-interface-skeleton,
+body.block-editor-page .interface-interface-skeleton__body,
+body.block-editor-page .interface-interface-skeleton__content,
+body.block-editor-page .edit-post-layout,
+body.block-editor-page .edit-post-visual-editor,
+body.block-editor-page .editor-styles-wrapper {
+  background: var(--bbb-admin-bg);
+  color: var(--bbb-admin-text);
+}
+
+body.block-editor-page .edit-post-header,
+body.block-editor-page .interface-interface-skeleton__sidebar,
+body.block-editor-page .edit-post-sidebar,
+body.block-editor-page .components-panel,
+body.block-editor-page .components-panel__body,
+body.block-editor-page .postbox,
+body.post-php .postbox,
+body.post-new-php .postbox {
+  background: var(--bbb-admin-panel);
+  border-color: var(--bbb-admin-border-soft);
+  color: var(--bbb-admin-text);
+}
+
+body.block-editor-page .components-panel__body-title,
+body.block-editor-page .components-panel__body-toggle,
+body.block-editor-page .postbox-header,
+body.post-php .postbox-header,
+body.post-new-php .postbox-header {
+  background: var(--bbb-admin-panel-2);
+  border-color: var(--bbb-admin-border-soft);
+  color: var(--bbb-admin-text);
+}
+
+body.block-editor-page .components-button,
+body.block-editor-page .components-base-control__label,
+body.block-editor-page .components-panel__body-title,
+body.block-editor-page .editor-post-title__input,
+body.block-editor-page .editor-styles-wrapper,
+body.block-editor-page .postbox .hndle,
+body.post-php .postbox .hndle,
+body.post-new-php .postbox .hndle {
+  color: var(--bbb-admin-text);
+}
+
+body.block-editor-page input[type="text"],
+body.block-editor-page input[type="number"],
+body.block-editor-page input[type="search"],
+body.block-editor-page input[type="url"],
+body.block-editor-page textarea,
+body.block-editor-page select,
+body.post-php input[type="text"],
+body.post-php input[type="number"],
+body.post-php input[type="search"],
+body.post-php input[type="url"],
+body.post-php textarea,
+body.post-php select,
+body.post-new-php input[type="text"],
+body.post-new-php input[type="number"],
+body.post-new-php input[type="search"],
+body.post-new-php input[type="url"],
+body.post-new-php textarea,
+body.post-new-php select {
+  background: var(--bbb-admin-panel-2);
+  border-color: var(--bbb-admin-border);
+  color: var(--bbb-admin-text);
+}
+
+body.block-editor-page input::placeholder,
+body.block-editor-page textarea::placeholder,
+body.post-php input::placeholder,
+body.post-php textarea::placeholder,
+body.post-new-php input::placeholder,
+body.post-new-php textarea::placeholder {
+  color: var(--bbb-admin-faint);
+}
+
+.rank-math-sidebar-panel,
+.rank-math-modal,
+.rank-math-modal-overlay,
+.rank-math-modal .components-modal__content,
+.rank-math-modal .components-modal__frame,
+.rank-math-modal-overlay .components-modal__content {
+  background: var(--bbb-admin-panel) !important;
+  color: var(--bbb-admin-text) !important;
+}
+
+.rank-math-modal .components-modal__header,
+.rank-math-modal-overlay .components-modal__header,
+.rank-math-editor > .components-tab-panel__tabs,
+.rank-math-tabs > .components-tab-panel__tabs,
+#rank-math-metabox-wrapper,
+#rank_math_metabox .inside {
+  background: var(--bbb-admin-panel-2) !important;
+  border-color: var(--bbb-admin-border-soft) !important;
+  color: var(--bbb-admin-text) !important;
+}
+
+.rank-math-editor > .components-tab-panel__tab-content,
+.rank-math-tabs .components-panel__body,
+.rank-math-sidebar-panel .components-panel__body,
+.rank-math-modal .components-panel__body,
+.rank-math-editor .field-group,
+.rank-math-serp-checklist,
+.rank-math-focus-keyword,
+.rank-math-tab-content-general,
+.rank-math-tab-content-social,
+.rank-math-tab-content-schema,
+.rank-math-tab-content-advanced {
+  background: var(--bbb-admin-panel) !important;
+  border-color: var(--bbb-admin-border-soft) !important;
+  color: var(--bbb-admin-text) !important;
+}
+
+.rank-math-editor .field-group {
+  background: var(--bbb-admin-panel-2) !important;
+}
+
+.rank-math-editor .field-group input[type="text"],
+.rank-math-editor .field-group input[type="url"],
+.rank-math-editor .field-group textarea,
+.rank-math-editor .field-group select,
+.rank-math-tabs input[type="text"],
+.rank-math-tabs input[type="number"],
+.rank-math-tabs input[type="url"],
+.rank-math-tabs textarea,
+.rank-math-tabs select,
+.rank-math-sidebar-panel input[type="text"],
+.rank-math-sidebar-panel input[type="number"],
+.rank-math-sidebar-panel input[type="url"],
+.rank-math-sidebar-panel textarea,
+.rank-math-sidebar-panel select,
+.rank-math-modal input[type="text"],
+.rank-math-modal input[type="number"],
+.rank-math-modal input[type="url"],
+.rank-math-modal textarea,
+.rank-math-modal select,
+.rank-math-modal .components-text-control__input,
+.rank-math-modal .components-textarea-control__input,
+.rank-math-modal .components-input-control__container,
+.rank-math-sidebar-panel .components-input-control__container {
+  background: var(--bbb-admin-panel-3) !important;
+  border-color: var(--bbb-admin-border) !important;
+  color: var(--bbb-admin-text) !important;
+}
+
+.rank-math-editor .field-group input:focus,
+.rank-math-editor .field-group textarea:focus,
+.rank-math-tabs input:focus,
+.rank-math-tabs textarea:focus,
+.rank-math-modal input:focus,
+.rank-math-modal textarea:focus,
+.rank-math-sidebar-panel input:focus,
+.rank-math-sidebar-panel textarea:focus {
+  border-color: var(--bbb-admin-accent-2) !important;
+  box-shadow: 0 0 0 1px var(--bbb-admin-accent-2) !important;
+}
+
+.rank-math-modal label,
+.rank-math-modal .components-base-control__label,
+.rank-math-modal .components-toggle-control__label,
+.rank-math-sidebar-panel label,
+.rank-math-sidebar-panel .components-base-control__label,
+#rank-math-metabox-wrapper label,
+#rank-math-metabox-wrapper .components-base-control__label,
+#rank-math-metabox-wrapper .components-panel__body h2,
+#rank-math-metabox-wrapper .rank-math-tabs .components-panel__body > .components-base-control > .components-base-control__field > .components-base-control__label,
+#rank-math-metabox-wrapper .rank-math-tabs .components-panel__body.rank-math-redirect label {
+  color: var(--bbb-admin-text) !important;
+}
+
+.rank-math-modal .components-base-control__help,
+.rank-math-sidebar-panel .components-base-control__help,
+.rank-math-editor .field-group .components-base-control__help,
+.rank-math-serp-checklist li,
+.rank-math-tab-content-general p,
+.rank-math-tab-content-social p,
+.rank-math-tab-content-schema p,
+.rank-math-tab-content-advanced p {
+  color: var(--bbb-admin-muted) !important;
+}
+
+.rank-math-editor > .components-tab-panel__tabs button,
+.rank-math-tabs > .components-tab-panel__tabs button {
+  color: var(--bbb-admin-muted) !important;
+}
+
+.rank-math-editor > .components-tab-panel__tabs button.is-active,
+.rank-math-tabs > .components-tab-panel__tabs button.is-active {
+  color: var(--bbb-admin-text) !important;
+}
+
+.rank-math-editor > .components-tab-panel__tabs button.is-active::after,
+.rank-math-tabs > .components-tab-panel__tabs button.is-active::after {
+  background: var(--bbb-admin-blue) !important;
+}
+
+.rank-math-modal .serp-preview-wrapper,
+.rank-math-sidebar-panel .serp-preview-wrapper,
+#rank-math-metabox-wrapper .serp-preview-wrapper {
+  background: #151b22 !important;
+  border: 1px solid rgba(42, 183, 239, 0.18);
+  border-radius: 4px;
+  padding: 15px !important;
+}
+
+.rank-math-modal .serp-title,
+.rank-math-sidebar-panel .serp-title,
+#rank-math-metabox-wrapper .serp-title {
+  color: #f4f7fb !important;
+}
+
+.rank-math-modal .serp-url,
+.rank-math-sidebar-panel .serp-url,
+#rank-math-metabox-wrapper .serp-url {
+  color: #d7e9ff !important;
+}
+
+.rank-math-modal .serp-description,
+.rank-math-sidebar-panel .serp-description,
+#rank-math-metabox-wrapper .serp-description {
+  color: #d6cbd4 !important;
+}
+
+.rank-math-sidebar-panel .components-panel__body .button,
+.rank-math-sidebar-panel .components-panel__body .button-secondary,
+.rank-math-sidebar-panel .components-panel__body .is-secondary,
+.rank-math-modal .components-panel__body .button,
+.rank-math-modal .components-panel__body .button-secondary,
+.rank-math-modal .components-panel__body .is-secondary,
+.rank-math-modal .components-modal__content .button,
+.rank-math-modal .components-modal__content .button-secondary,
+.rank-math-modal .components-modal__content .is-secondary {
+  background: var(--bbb-admin-panel-3) !important;
+  border-color: var(--bbb-admin-border) !important;
+  color: var(--bbb-admin-text) !important;
+}
+
+.rank-math-sidebar-panel .components-panel__body .button-primary,
+.rank-math-sidebar-panel .components-panel__body .is-primary,
+.rank-math-modal .components-panel__body .button-primary,
+.rank-math-modal .components-panel__body .is-primary,
+.rank-math-modal .components-modal__content .button-primary,
+.rank-math-modal .components-modal__content .is-primary {
+  background: var(--bbb-admin-accent) !important;
+  border-color: var(--bbb-admin-accent) !important;
+  color: #fff !important;
+}
+
+.rank-math-modal .notice,
+.rank-math-sidebar-panel .notice,
+#rank-math-pro-cta .rank-math-cta-box,
+#rank-math-pro-cta .rank-math-cta-table {
+  background: var(--bbb-admin-panel-2) !important;
+  border-color: var(--bbb-admin-border) !important;
+  color: var(--bbb-admin-text) !important;
+}
+
+.rank-math-seo-score {
+  background: var(--bbb-admin-panel-3) !important;
+}
+
+.rank-math-seo-score.good-fk {
+  color: #7dde87 !important;
+}
+
+.rank-math-seo-score.ok-fk {
+  color: #f2c65d !important;
+}
+
+.rank-math-seo-score.bad-fk {
+  color: #ff857b !important;
+}

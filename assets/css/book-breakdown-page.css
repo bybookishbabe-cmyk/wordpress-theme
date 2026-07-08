@@ -857,6 +857,89 @@ body.single-bbb_book .sss-book-page::after{
   box-shadow:0 14px 28px rgba(217,93,150,.14);
 }
 
+.sss-book-page__listenBorrow{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:10px;
+  margin:18px 0 32px;
+  animation:bbbBookFadeUp .95s cubic-bezier(.2,.78,.22,1) both;
+  animation-delay:1.18s;
+}
+
+.sss-book-page__listenBorrowGroup{
+  display:grid;
+  align-content:start;
+  gap:10px;
+  min-width:0;
+  padding:14px;
+  border:1px solid rgba(217,93,150,.18);
+  border-radius:8px;
+  background:rgba(255,255,255,.025);
+  box-shadow:0 14px 28px rgba(0,0,0,.14);
+}
+
+.sss-book-page__listenBorrowLabel{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:#d6bdc9;
+  font-family:var(--font-body-family, inherit);
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.12em;
+  text-transform:lowercase;
+}
+
+.sss-book-page__listenBorrowLabel::after{
+  content:"";
+  flex:1 1 auto;
+  height:1px;
+  background:linear-gradient(90deg, rgba(217,93,150,.5), rgba(217,93,150,.04));
+}
+
+.sss-book-page__listenBorrowButton{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  width:100%;
+  max-width:100%;
+  min-height:54px;
+  padding:13px 16px;
+  border:1px solid rgba(217,93,150,.48);
+  border-radius:999px;
+  background:rgba(217,93,150,.08);
+  color:#ff8ac7;
+  font-size:14px;
+  font-weight:900;
+  line-height:1.15;
+  text-align:center;
+  text-decoration:none;
+  text-transform:lowercase;
+  box-shadow:0 12px 30px rgba(0,0,0,.16);
+  transition:transform .2s ease, border-color .2s ease, background .2s ease, color .2s ease, box-shadow .2s ease;
+}
+
+.sss-book-page__listenBorrowButton:hover,
+.sss-book-page__listenBorrowButton:focus-visible{
+  transform:translateY(-2px);
+  border-color:rgba(217,93,150,.78);
+  background:rgba(217,93,150,.14);
+  color:#ffd3e6;
+  box-shadow:0 16px 34px rgba(217,93,150,.14);
+}
+
+.sss-book-page__listenBorrowEmoji{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  width:20px;
+  font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
+  font-size:18px;
+  line-height:1;
+}
+
 .sss-book-page__quote{
   margin:26px 0;
   padding:0 0 0 18px;
@@ -1701,6 +1784,32 @@ body.single-bbb_book .sss-book-page::after{
 
   .sss-book-page__ctaRow{
     grid-template-columns:1fr;
+  }
+
+  .sss-book-page__listenBorrow{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:8px;
+  }
+
+  .sss-book-page__listenBorrowGroup{
+    padding:10px;
+  }
+
+  .sss-book-page__listenBorrowLabel{
+    font-size:10px;
+    letter-spacing:.08em;
+  }
+
+  .sss-book-page__listenBorrowButton{
+    min-height:48px;
+    padding:10px 8px;
+    gap:5px;
+    font-size:12px;
+  }
+
+  .sss-book-page__listenBorrowEmoji{
+    width:18px;
+    font-size:17px;
   }
 
   .sss-book-page__fitGrid{

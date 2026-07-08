@@ -193,9 +193,17 @@ function bbb_blog_post_seo_autofill_review(int $post_id, WP_Post $post, bool $up
 		add_action('save_post_post', 'bbb_blog_post_seo_autofill_review', 80, 3);
 	}
 
-	update_post_meta($post_id, 'rank_math_title', wp_slash($seo_title));
-	update_post_meta($post_id, 'rank_math_description', wp_slash($desc));
-	update_post_meta($post_id, 'rank_math_focus_keyword', wp_slash($focus));
+	if ('' === bbb_blog_post_seo_clean((string) get_post_meta($post_id, 'rank_math_title', true))) {
+		update_post_meta($post_id, 'rank_math_title', wp_slash($seo_title));
+	}
+
+	if ('' === bbb_blog_post_seo_clean((string) get_post_meta($post_id, 'rank_math_description', true))) {
+		update_post_meta($post_id, 'rank_math_description', wp_slash($desc));
+	}
+
+	if ('' === bbb_blog_post_seo_clean((string) get_post_meta($post_id, 'rank_math_focus_keyword', true))) {
+		update_post_meta($post_id, 'rank_math_focus_keyword', wp_slash($focus));
+	}
 }
 add_action('save_post_post', 'bbb_blog_post_seo_autofill_review', 80, 3);
 

@@ -99,6 +99,14 @@ function bbb_brand_base_proper_phrases(array &$phrases, bool $include_ambiguous_
 			continue;
 		}
 
+		if ($include_ambiguous_books && 'book' === $type) {
+			$proper = function_exists('bbb_bookish_book_title') ? bbb_bookish_book_title($phrase) : $phrase;
+			if (bbb_brand_is_single_word_phrase($proper)) {
+				$phrases[bbb_brand_proper_phrase_key($proper)] = $proper;
+			}
+			continue;
+		}
+
 		bbb_brand_add_proper_phrase($phrases, $phrase, $type);
 	}
 }
@@ -186,6 +194,7 @@ function bbb_brand_ambiguous_book_phrases(): array {
 	}
 
 	$phrases = array();
+	bbb_brand_base_proper_phrases($phrases, true);
 	bbb_brand_dynamic_proper_phrases($phrases, true);
 
 	ksort($phrases);
@@ -206,6 +215,10 @@ function bbb_brand_restore_ambiguous_book_phrases(string $text): string {
 
 				if (preg_match('/(?:\b(?:the|a|an|these|those|this|that|my|your|her|his|their|our)\s+)$/u', $before)) {
 					return $word;
+				}
+
+				if (0 === $offset && preg_match('/^\s*(?:[:|]|[—–-])/u', $after)) {
+					return $proper;
 				}
 
 				if (
@@ -247,12 +260,24 @@ function bbb_brand_restore_proper_phrases(string $text): string {
 	return $text;
 }
 
+function bbb_brand_current_request_prefers_lowercase_kindle(): bool {
+	$request_path = trim((string) parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH), '/');
+
+	return 'monthly-theme/july-2026-midnight-summer' === $request_path;
+}
+
 function bbb_brand_standard_text($text) {
 	if (!is_scalar($text)) {
 		return $text;
 	}
 
-	return bbb_brand_restore_proper_phrases(bbb_brand_lowercase((string) $text));
+	$standard = bbb_brand_restore_proper_phrases(bbb_brand_lowercase((string) $text));
+
+	if (bbb_brand_current_request_prefers_lowercase_kindle()) {
+		$standard = (string) preg_replace('/\bKindle\b/', 'kindle', $standard);
+	}
+
+	return $standard;
 }
 
 function bbb_brand_standard_title($title, $post_id = 0) {

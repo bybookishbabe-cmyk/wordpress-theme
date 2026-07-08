@@ -30,7 +30,14 @@ function bbb_blog_poll_label_from_key(string $value): string {
 
 function bbb_blog_poll_parse_options(string $raw_options): array {
 	$options = array();
-	$separator = str_contains($raw_options, ';') ? '/\s*;\s*/' : '/\s*,\s*|\R+/';
+	if (str_contains($raw_options, ';')) {
+		$separator = '/\s*;\s*/';
+	} elseif (str_contains($raw_options, ',') || preg_match('/\R/', $raw_options)) {
+		$separator = '/\s*,\s*|\R+/';
+	} else {
+		$separator = '/\s*\|\s*/';
+	}
+
 	foreach (preg_split($separator, trim($raw_options)) ?: array() as $raw_option) {
 		$raw_option = bbb_blog_poll_clean_option_text($raw_option);
 		if ('' === $raw_option) {

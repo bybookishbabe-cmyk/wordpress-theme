@@ -36,6 +36,7 @@ $bbb_social_planner_icon        = add_query_arg('v', $bbb_social_planner_icon_ve
 $bbb_social_planner_manifest    = add_query_arg('v', $bbb_social_planner_version, get_theme_file_uri('assets/pwa/social-planner.webmanifest'));
 $bbb_newsletter_types           = function_exists('bbb_urgency_banner_newsletter_types') ? bbb_urgency_banner_newsletter_types() : array();
 $bbb_newsletter_schedule        = function_exists('bbb_social_calendar_newsletter_schedule') ? bbb_social_calendar_newsletter_schedule() : array();
+$bbb_insert_spotlight           = function_exists('bbb_social_calendar_insert_spotlight') ? bbb_social_calendar_insert_spotlight() : array();
 
 wp_enqueue_style('bbb-social-posting-calendar-fonts', 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@700&display=swap', array(), null);
 bbb_enqueue_css('bbb-social-posting-calendar', 'assets/css/social-posting-calendar.css', array('bbb-social-posting-calendar-fonts'));
@@ -48,10 +49,12 @@ wp_localize_script(
 	'bbbSocialCalendar',
 	array(
 		'icsProxyUrl'         => '',
-		'ajaxUrl'             => admin_url('admin-ajax.php'),
+		'ajaxUrl'             => wp_make_link_relative(admin_url('admin-ajax.php')),
 		'stateNonce'          => wp_create_nonce('bbb_social_calendar_state'),
+		'plannerToken'        => function_exists('bbb_social_calendar_planner_token') ? bbb_social_calendar_planner_token() : '',
 		'state'               => function_exists('bbb_social_calendar_post_state') ? bbb_social_calendar_post_state() : array(),
-		'visualPlatformOptions' => array('pinterest', 'instagram', 'threads'),
+		'boyfriendPinResults' => function_exists('bbb_social_calendar_boyfriend_pin_results') ? bbb_social_calendar_boyfriend_pin_results('') : array(),
+		'visualPlatformOptions' => array('pinterest', 'instagram', 'threads', 'substack'),
 		'pinterestBoards'     => function_exists('bbb_social_calendar_pinterest_boards') ? bbb_social_calendar_pinterest_boards() : array(),
 		'timeZone'            => wp_timezone_string(),
 		'threadsUrl'          => (string) ($bbb_social_settings['threads_url'] ?? 'https://www.threads.net/'),
@@ -72,6 +75,12 @@ wp_localize_script(
 		'newsletterSchedule'  => $bbb_newsletter_schedule,
 	)
 );
+
+	wp_add_inline_script(
+		'bbb-social-posting-calendar',
+		"(function(){var cachePromise=window.caches&&caches.keys?caches.keys().then(function(keys){return Promise.all(keys.filter(function(key){return key.indexOf('bbb-pwa-')===0;}).map(function(key){return caches.delete(key);}));}):Promise.resolve();var workerPromise='serviceWorker'in navigator?navigator.serviceWorker.getRegistrations().then(function(registrations){return Promise.all(registrations.map(function(registration){return registration.unregister();}));}):Promise.resolve();Promise.all([cachePromise.catch(function(){}),workerPromise.catch(function(){})]).catch(function(){});})();",
+		'before'
+	);
 ?><!doctype html>
 <html <?php language_attributes(); ?>>
 <head>
@@ -90,7 +99,7 @@ wp_localize_script(
 </head>
 <body <?php body_class('bbb-social-planner-app-shell'); ?>>
 <?php wp_body_open(); ?>
-<main class="bbb-social-calendar bbb-social-calendar--app is-visual-mode" data-social-calendar-page data-current-mode="visual">
+	<main class="bbb-social-calendar bbb-social-calendar--app is-calendar-mode" data-social-calendar-page data-current-mode="calendar" data-current-step="week">
 	<section class="bbb-social-calendar__hero">
 		<div>
 			<p class="bbb-social-calendar__eyebrow">private app</p>
@@ -99,38 +108,91 @@ wp_localize_script(
 		</div>
 	</section>
 
+	<?php if (!empty($bbb_insert_spotlight['items']) && is_array($bbb_insert_spotlight['items'])) : ?>
+		<section class="bbb-social-calendar__insertSpotlight" aria-labelledby="bbbInsertSpotlightTitle">
+			<div class="bbb-social-calendar__insertSpotlightHead">
+				<div>
+					<p class="bbb-social-calendar__eyebrow">sunday spotlight</p>
+					<h2 id="bbbInsertSpotlightTitle">Inserts of the Week</h2>
+				</div>
+				<span><?php echo esc_html((string) ($bbb_insert_spotlight['weekLabel'] ?? 'this week')); ?></span>
+			</div>
+			<div class="bbb-social-calendar__insertSpotlightGrid">
+				<?php foreach ($bbb_insert_spotlight['items'] as $bbb_spotlight_insert) : ?>
+					<?php
+					if (!is_array($bbb_spotlight_insert)) {
+						continue;
+						}
+						$bbb_spotlight_title = isset($bbb_spotlight_insert['title']) && is_scalar($bbb_spotlight_insert['title']) ? (string) $bbb_spotlight_insert['title'] : '';
+						$bbb_spotlight_url   = isset($bbb_spotlight_insert['url']) && is_scalar($bbb_spotlight_insert['url']) ? (string) $bbb_spotlight_insert['url'] : '';
+						$bbb_spotlight_image = isset($bbb_spotlight_insert['image']) && is_scalar($bbb_spotlight_insert['image']) ? (string) $bbb_spotlight_insert['image'] : '';
+						if ('' === trim($bbb_spotlight_title)) {
+							continue;
+						}
+						?>
+						<?php if ('' !== $bbb_spotlight_url) : ?>
+							<a class="bbb-social-calendar__insertSpotlightItem" href="<?php echo esc_url($bbb_spotlight_url); ?>" target="_blank" rel="noopener">
+								<?php if ('' !== $bbb_spotlight_image) : ?>
+									<img src="<?php echo esc_url($bbb_spotlight_image); ?>" alt="" loading="lazy">
+								<?php endif; ?>
+								<strong><?php echo esc_html($bbb_spotlight_title); ?></strong>
+							</a>
+						<?php else : ?>
+							<article class="bbb-social-calendar__insertSpotlightItem">
+								<?php if ('' !== $bbb_spotlight_image) : ?>
+									<img src="<?php echo esc_url($bbb_spotlight_image); ?>" alt="" loading="lazy">
+								<?php endif; ?>
+								<strong><?php echo esc_html($bbb_spotlight_title); ?></strong>
+							</article>
+					<?php endif; ?>
+				<?php endforeach; ?>
+			</div>
+		</section>
+	<?php endif; ?>
+
 	<section class="bbb-social-calendar__layout">
 		<div class="bbb-social-calendar__main">
 			<div class="bbb-social-calendar__toolbar" aria-label="planner controls">
-				<span>Today plus the next 7 days</span>
+				<span>Week Flow</span>
 				<div class="bbb-social-calendar__toolbarActions">
-					<button type="button" data-calendar-mode="calendar" aria-pressed="false">calendar</button>
-					<button type="button" class="is-active" data-calendar-mode="visual" aria-pressed="true">visual week</button>
-					<button type="button" data-calendar-today>jump to today</button>
+					<button type="button" class="is-active" data-planner-tab="month" aria-controls="bbbSocialMediaMonth" aria-pressed="true">1. month</button>
+					<button type="button" data-planner-tab="week" aria-controls="bbbSocialFullCalendar" aria-pressed="false">2. week</button>
+					<button type="button" data-planner-tab="visual" aria-controls="bbbSocialVisualBoard" aria-pressed="false">3. visuals</button>
+					<button type="button" data-planner-tab="review" data-review-pinterest aria-controls="bbbSocialVisualBoard" aria-pressed="false">4. review</button>
+					<button type="button" data-hard-refresh-planner>refresh</button>
 				</div>
 			</div>
-			<div id="bbbSocialFullCalendar" class="bbb-social-calendar__calendar" hidden></div>
-			<section class="bbb-social-calendar__visual" data-visual-planner>
+			<div id="bbbSocialFullCalendar" class="bbb-social-calendar__calendar" data-planner-panel="week" hidden></div>
+			<section id="bbbSocialWeekSummary" class="bbb-social-calendar__weekSummary" data-week-summary data-planner-panel="missing" aria-live="polite" hidden></section>
+			<section id="bbbSocialVisualBoard" class="bbb-social-calendar__visual" data-visual-planner data-planner-panel="visual review" hidden>
 				<div class="bbb-social-calendar__visualHead">
 					<div>
 						<p class="bbb-social-calendar__eyebrow">posting board</p>
-						<h2 data-visual-week-label>Today + next 7 days</h2>
+						<h2 data-visual-week-label>This week</h2>
 					</div>
 					<div class="bbb-social-calendar__weekNav" aria-label="visual week controls">
-						<button type="button" data-review-pinterest>review/edit</button>
-						<button type="button" data-share-pinterest>share link</button>
-						<button type="button" data-contact-sheet-pinterest>contact sheet</button>
-						<button type="button" data-export-pinterest>export pins</button>
-						<button type="button" data-scheduler-pinterest>send scheduler</button>
-						<button type="button" data-scheduler-instagram>send Instagram</button>
-						<button type="button" data-visual-prev>prev week</button>
-						<button type="button" data-visual-today>this week</button>
-						<button type="button" data-visual-next>next week</button>
+							<button type="button" class="bbb-social-calendar__saveNow" data-save-planner>autosave on</button>
+							<span class="bbb-social-calendar__saveStatus" data-save-planner-status aria-live="polite"></span>
+							<button type="button" data-contact-sheet-pinterest>contact sheet</button>
+							<button type="button" data-scheduler-pinterest>send ready pins</button>
+							<button type="button" data-open-pinterest-scheduler>scheduler</button>
+							<button type="button" data-toggle-pinterest-queue>queue</button>
 					</div>
 				</div>
 				<div class="bbb-social-calendar__platformTabs" data-visual-platforms aria-label="visual platform"></div>
+				<section class="bbb-social-calendar__queuePanel" data-pinterest-queue-panel hidden></section>
 				<div class="bbb-social-calendar__visualGrid" data-visual-week></div>
 				<div class="bbb-social-calendar__pinReview" data-pinterest-review hidden></div>
+			</section>
+			<section id="bbbSocialMediaMonth" class="bbb-social-calendar__mediaMonth" data-media-month data-planner-panel="month">
+				<div class="bbb-social-calendar__visualHead">
+					<div>
+						<p class="bbb-social-calendar__eyebrow">media month</p>
+						<h2 data-media-month-label>Next 28 days</h2>
+					</div>
+				</div>
+				<div class="bbb-social-calendar__platformTabs" data-media-month-platforms aria-label="media month platform"></div>
+				<div class="bbb-social-calendar__mediaMonthGrid" data-media-month-grid></div>
 			</section>
 		</div>
 	</section>

@@ -29,6 +29,8 @@ if (!function_exists('bbb_series_field')) {
 		$sss_map    = array(
 			'amazon_link'              => 'sss_amazon',
 			'bookshop_link'            => 'sss_bookshop',
+			'kindle_unlimited_link'    => 'sss_ku_url',
+			'ku_link'                  => 'sss_ku_url',
 			'cover'                    => 'sss_cover_url',
 			'darkness_level'           => 'sss_darkness',
 			'emotional_damage_score'   => 'sss_damage',
@@ -46,6 +48,8 @@ if (!function_exists('bbb_series_field')) {
 			'amazon_link'              => '_bbb_amazon_url',
 			'author'                   => '_bbb_author',
 			'bookshop_link'            => '_bbb_bookshop_url',
+			'kindle_unlimited_link'    => '_bbb_ku_url',
+			'ku_link'                  => '_bbb_ku_url',
 			'boyfriend_name'           => '_bbb_boyfriend_name',
 			'boyfriend_type'           => '_bbb_boyfriend_type',
 			'cover'                    => '_bbb_cover_url',
@@ -228,6 +232,7 @@ if (!function_exists('bbb_series_book_data')) {
 			'author'         => (string) bbb_series_field($post_id, 'author', ''),
 			'cover'          => $cover,
 			'amazon'         => bbb_series_url_value(bbb_series_field($post_id, 'amazon_link', '')),
+			'ku_url'         => bbb_series_url_value(bbb_series_field($post_id, 'kindle_unlimited_link', '')),
 			'bookshop'       => bbb_series_url_value(bbb_series_field($post_id, 'bookshop_link', '')),
 			'shelf'          => $shelf_terms ? $shelf_terms[0]->name : (string) bbb_series_field($post_id, 'shelf', ''),
 			'is_private'     => $is_bbb && function_exists('bbb_is_book_private') ? bbb_is_book_private($post_id) : (function_exists('sss_book_is_private') ? sss_book_is_private($post_id) : bbb_series_bool(bbb_series_field($post_id, 'is_private', false))),
@@ -284,6 +289,7 @@ $trope_urls    = array_map(
 	data-author="<?php echo esc_attr($data['author']); ?>"
 	data-cover="<?php echo esc_attr($data['cover']); ?>"
 	data-amazon="<?php echo esc_attr($data['amazon']); ?>"
+	data-ku-url="<?php echo esc_attr($data['ku_url']); ?>"
 	data-bookshop="<?php echo esc_attr($data['bookshop']); ?>"
 	data-shelf="<?php echo esc_attr($data['shelf']); ?>"
 	data-private-shelf="<?php echo esc_attr($data['is_private'] ? 'true' : 'false'); ?>"

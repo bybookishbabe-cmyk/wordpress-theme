@@ -261,6 +261,10 @@ function initMobileGridPagination(){
 
   grids.forEach(function(grid){
 
+    if (grid.getAttribute('data-lazy-archive') === 'true'){
+      return;
+    }
+
     if (grid.classList.contains('sss-lib__grid--swipeable')){
       return;
     }
@@ -364,6 +368,149 @@ function refreshPaginatedGridVisibility(){
       grid.__sssPagination.updateVisibleBooks();
     }
   });
+}
+
+function bindLibraryCardEnhancements(scope){
+  var root = scope || document;
+  var cards = [];
+
+  if (root.matches && root.matches('.sss-lib__book')) {
+    cards.push(root);
+  }
+
+  root.querySelectorAll('.sss-lib__book').forEach(function(card){
+    cards.push(card);
+  });
+
+  cards.forEach(applyBookStatusToCard);
+
+  root.querySelectorAll('[data-heart]').forEach(function(heart){
+    if (heart.__sssLazyHeartBound) return;
+    var bookBtn = heart.closest('.sss-lib__book');
+    if (!bookBtn) return;
+
+    heart.__sssLazyHeartBound = true;
+    applyHeartSavedState(heart, !!getShelf().find(function(book){
+      return book.title === bookBtn.dataset.title;
+    }));
+
+    heart.addEventListener('click', function(event){
+      event.stopPropagation();
+      toggleSave(heart, bookBtn);
+    });
+  });
+
+  root.querySelectorAll('.sss-lib__seriesBadge[data-series-url]').forEach(function(badge){
+    if (badge.__sssSeriesBound) return;
+    badge.__sssSeriesBound = true;
+    badge.addEventListener('click', function(event){
+      event.preventDefault();
+      event.stopPropagation();
+      var url = badge.getAttribute('data-series-url');
+      if (url) window.location.href = url;
+    });
+  });
+}
+
+function appendArchiveHtml(grid, html){
+  var template = document.createElement('template');
+  template.innerHTML = String(html || '').trim();
+  var fragment = template.content;
+  var appended = Array.from(fragment.querySelectorAll('.sss-lib__book'));
+
+  grid.appendChild(fragment);
+  appended.forEach(bindLibraryCardEnhancements);
+
+  return appended.length;
+}
+
+function loadArchiveBatch(grid, loadAll){
+  if (!grid || grid.__sssArchiveLoading || grid.__sssArchiveComplete) {
+    return Promise.resolve();
+  }
+
+  var endpoint = grid.getAttribute('data-archive-endpoint');
+  if (!endpoint) return Promise.resolve();
+
+  var offset = parseInt(grid.getAttribute('data-archive-offset') || '0', 10) || 0;
+  var total = parseInt(grid.getAttribute('data-archive-total') || '0', 10) || 0;
+  var limit = loadAll ? 48 : (parseInt(grid.getAttribute('data-archive-limit') || '24', 10) || 24);
+  var url = new URL(endpoint, window.location.origin);
+  url.searchParams.set('offset', String(offset));
+  url.searchParams.set('limit', String(limit));
+
+  grid.__sssArchiveLoading = true;
+  grid.classList.add('is-loading-more');
+
+  return fetch(url.toString(), { credentials: 'same-origin' })
+    .then(function(response){
+      if (!response.ok) throw new Error('archive batch failed');
+      return response.json();
+    })
+    .then(function(payload){
+      appendArchiveHtml(grid, payload.html || '');
+      grid.setAttribute('data-archive-offset', String(payload.nextOffset || offset));
+      grid.setAttribute('data-archive-total', String(payload.total || total));
+      grid.__sssArchiveComplete = !payload.hasMore;
+
+      if (grid.__sssArchiveButtonWrap) {
+        grid.__sssArchiveButtonWrap.style.display = grid.__sssArchiveComplete ? 'none' : '';
+      }
+
+      if (loadAll && !grid.__sssArchiveComplete) {
+        return loadArchiveBatch(grid, true);
+      }
+
+      return undefined;
+    })
+    .catch(function(error){
+      console.log('Library archive lazy load failed', error);
+    })
+    .finally(function(){
+      grid.__sssArchiveLoading = false;
+      grid.classList.remove('is-loading-more');
+    });
+}
+
+function initLazyArchive(){
+  document.querySelectorAll('.sss-lib__grid[data-lazy-archive="true"]').forEach(function(grid){
+    if (grid.__sssLazyArchiveBound) return;
+    grid.__sssLazyArchiveBound = true;
+
+    var offset = parseInt(grid.getAttribute('data-archive-offset') || '0', 10) || 0;
+    var total = parseInt(grid.getAttribute('data-archive-total') || '0', 10) || 0;
+    if (!total || offset >= total) {
+      grid.__sssArchiveComplete = true;
+      return;
+    }
+
+    var wrap = document.createElement('div');
+    wrap.className = 'sss-lib__showMoreWrap sss-lib__showMoreWrap--lazy';
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'sss-lib__showMoreBtn';
+    button.textContent = 'show more';
+
+    button.addEventListener('click', function(){
+      button.disabled = true;
+      button.textContent = 'loading...';
+      loadArchiveBatch(grid, false).finally(function(){
+        button.disabled = false;
+        button.textContent = 'show more';
+      });
+    });
+
+    wrap.appendChild(button);
+    grid.insertAdjacentElement('afterend', wrap);
+    grid.__sssArchiveButtonWrap = wrap;
+  });
+}
+
+function ensureArchiveLoadedForFilters(){
+  var grid = document.querySelector('.sss-lib__grid[data-lazy-archive="true"]');
+  if (!grid || grid.__sssArchiveComplete) return Promise.resolve();
+
+  return loadArchiveBatch(grid, true);
 }
 /* ======================
    PERSONAL SHELF STORAGE
@@ -999,6 +1146,7 @@ function bookDataFromElement(bookBtn){
     author: bookBtn.dataset.author || '',
     cover: bookBtn.dataset.cover || '',
     amazon: bookBtn.dataset.amazon || '',
+    kuUrl: bookBtn.dataset.kuUrl || '',
     bookshop: bookBtn.dataset.bookshop || '',
     spice: bookBtn.dataset.spice || '',
     darkness: bookBtn.dataset.darkness || '',
@@ -1509,6 +1657,7 @@ function hydrateShelfBook(book){
       author: sourceCard.dataset.author || book.author || '',
       cover: sourceCard.dataset.cover || book.cover || '',
       amazon: sourceCard.dataset.amazon || book.amazon || '',
+      kuUrl: sourceCard.dataset.kuUrl || book.kuUrl || book.ku_url || '',
       bookshop: sourceCard.dataset.bookshop || book.bookshop || '',
       spice: sourceCard.dataset.spice || '',
       tropes: sourceCard.dataset.tropes || '',
@@ -1609,6 +1758,7 @@ function renderMyShelf(){
         data-author="${stringifyBookDatasetValue(hydratedBook.author || book.author)}"
         data-cover="${stringifyBookDatasetValue(hydratedBook.cover || book.cover)}"
         data-amazon="${stringifyBookDatasetValue(hydratedBook.amazon || book.amazon)}"
+        data-ku-url="${stringifyBookDatasetValue(hydratedBook.kuUrl || hydratedBook.ku_url || book.kuUrl || book.ku_url)}"
         data-bookshop="${stringifyBookDatasetValue(hydratedBook.bookshop || book.bookshop)}"
         data-spice="${stringifyBookDatasetValue(hydratedBook.spice)}"
         data-tropes="${stringifyBookDatasetValue(hydratedBook.tropes)}"
@@ -1688,6 +1838,7 @@ function renderMyShelf(){
         author: bookBtn.dataset.author || '',
         cover: bookBtn.dataset.cover || '',
         amazon: bookBtn.dataset.amazon || '',
+        kuUrl: bookBtn.dataset.kuUrl || '',
         bookshop: bookBtn.dataset.bookshop || '',
         spice: bookBtn.dataset.spice || '',
         darkness: bookBtn.dataset.darkness || '',
@@ -2035,6 +2186,7 @@ function init(){
         author: modalDatasetValue(btn, sourceCard, 'author'),
         cover: modalDatasetValue(btn, sourceCard, 'cover'),
         amazon: modalDatasetValue(btn, sourceCard, 'amazon'),
+        kuUrl: modalDatasetValue(btn, sourceCard, 'kuUrl'),
         bookshop: modalDatasetValue(btn, sourceCard, 'bookshop'),
         spice: modalDatasetValue(btn, sourceCard, 'spice'),
         tropes: modalDatasetValue(btn, sourceCard, 'tropes'),
@@ -2394,6 +2546,7 @@ if(modalHeart){
             author:data.author,
             cover:data.cover,
             amazon:data.amazon,
+            kuUrl:data.kuUrl,
             bookshop:data.bookshop,
             spice:data.spice,
             darkness:data.darkness,
@@ -2583,9 +2736,10 @@ if (seriesOrderEl){
 
       var modalKuState = String(data.ku || '').toLowerCase().trim() === 'true';
       if (kuBtn){
-        kuBtn.style.display = data.amazon && modalKuState ? '' : 'none';
-        if (data.amazon) kuBtn.href = data.amazon;
-        kuBtn.onclick = data.amazon && modalKuState ? function(){
+        var modalKuUrl = data.kuUrl || data.amazon || '';
+        kuBtn.style.display = modalKuUrl && modalKuState ? '' : 'none';
+        if (modalKuUrl) kuBtn.href = modalKuUrl;
+        kuBtn.onclick = modalKuUrl && modalKuState ? function(){
           trackSiteEvent("book_link_clicked", {
             bookHandle: data.handle || '',
             bookTitle: data.title || '',
@@ -3284,6 +3438,7 @@ syncBookStatusUI();
 document.addEventListener("DOMContentLoaded", function(){
 
 	  init();
+	  initLazyArchive();
 	  bindStandaloneBookPageSaveControls();
 	  bindBookPageRatingControls();
 	  initMadeForYou();
@@ -3310,6 +3465,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
 document.addEventListener('shopify:section:load', function(){
   init();
+  initLazyArchive();
   initMadeForYou();
   initArchiveFilters();
   syncBookStatusUI();
@@ -3541,7 +3697,7 @@ function bindArchiveRankInputs(){
     input.__sssRankBound = true;
     input.addEventListener('input', function(){
       hasInteracted = true;
-      updateRanking();
+      ensureArchiveLoadedForFilters().then(updateRanking);
     });
   });
 }
@@ -3569,7 +3725,7 @@ function bindArchiveYearningButtons(){
 
     hasInteracted = true;
 
-    updateRanking(); // trigger filter
+    ensureArchiveLoadedForFilters().then(updateRanking); // trigger filter
   });
 
   });
@@ -3592,7 +3748,7 @@ function bindArchiveKuButtons(){
     btn.classList.add('active');
 
     hasInteracted = true;
-    updateRanking();
+    ensureArchiveLoadedForFilters().then(updateRanking);
   });
 
   });
@@ -3914,7 +4070,7 @@ function bindArchiveSearchFilters(){
     searchInput.__sssArchiveSearchBound = true;
     searchInput.addEventListener('input', function(){
       hasInteracted = true;
-      updateRanking();
+      ensureArchiveLoadedForFilters().then(updateRanking);
     });
   }
 
@@ -3922,7 +4078,7 @@ function bindArchiveSearchFilters(){
     archiveTropeSelect.__sssArchiveTropeBound = true;
     archiveTropeSelect.addEventListener('change', function(){
       hasInteracted = true;
-      updateRanking();
+      ensureArchiveLoadedForFilters().then(updateRanking);
     });
   }
 }

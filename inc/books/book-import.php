@@ -674,7 +674,9 @@ function bbb_import_books_from_data(array $data, ?callable $logger = null): arra
 		foreach (
 			array(
 				'amazon_link'                 => '_bbb_amazon_url',
+				'audible_link'                => '_bbb_audible_url',
 				'bookshop_link'               => '_bbb_bookshop_url',
+				'libby_link'                  => '_bbb_libby_url',
 				'newsletter_url'              => '_bbb_newsletter_url',
 				'featured_in_newsletter_date' => '_bbb_newsletter_date',
 			) as $shopify_key => $wp_meta

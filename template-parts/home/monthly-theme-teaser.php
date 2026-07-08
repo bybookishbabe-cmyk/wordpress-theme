@@ -7,35 +7,35 @@
 
 declare(strict_types=1);
 
-$theme_url     = function_exists('bbb_page_url') ? bbb_page_url('burn-bright') : home_url('/burn-bright/');
+$theme_url     = function_exists('bbb_page_url') ? bbb_page_url('monthly-theme') : home_url('/monthly-theme/');
 $subscribe_url = function_exists('bbb_substack_subscribe_url') ? bbb_substack_subscribe_url() : 'https://thesmutandsentimentsociety.substack.com/subscribe';
-$release_at    = '2026-06-01T00:00:00-07:00';
+$release_at    = '2026-07-01T00:00:00-07:00';
 $release_time  = strtotime($release_at);
 $current_time  = current_time('timestamp');
 $promo_ends_at = $release_time ? strtotime('+10 days', $release_time) : 0;
 $is_current    = $release_time && $current_time >= $release_time;
 $show_teaser   = !$is_current || !$promo_ends_at || $current_time < $promo_ends_at;
 $theme_label   = $is_current ? 'current monthly theme' : 'theme coming next';
-$asset_base    = 'assets/monthly-themes/june-2026';
+$asset_base    = 'assets/monthly-themes/july-2026';
 $previews      = array(
 	array(
-		'src' => 'previews/alive-in-the-night.png',
-		'alt' => 'Alive in the Night kindle insert artwork preview',
+		'src' => 'display/midnight-swim-insert-preview.jpg',
+		'alt' => 'Midnight Swim kindle insert artwork preview',
 	),
 	array(
-		'src' => 'previews/golden-and-unbothered.png',
-		'alt' => 'Golden and Unbothered kindle insert artwork preview',
+		'src' => 'display/midnight-movie-insert-preview.jpg',
+		'alt' => 'Midnight Movie kindle insert artwork preview',
 	),
 	array(
-		'src' => 'previews/you-glow-different.png',
-		'alt' => 'You Glow Different kindle insert artwork preview',
+		'src' => 'display/midnight-drive-insert-preview.jpg',
+		'alt' => 'Midnight Drive kindle insert artwork preview',
 	),
 );
 ?>
 <?php if ($show_teaser) : ?>
 <section class="bbb-monthly-teaser" aria-labelledby="bbb-monthly-teaser-title">
 	<div class="bbb-monthly-teaser__inner">
-		<a class="bbb-monthly-teaser__art" href="<?php echo esc_url($theme_url); ?>" aria-label="Preview the June 2026 Burn Bright monthly theme">
+		<a class="bbb-monthly-teaser__art" href="<?php echo esc_url($theme_url); ?>" aria-label="Preview the July 2026 Midnight Summer monthly theme">
 			<?php foreach ($previews as $index => $preview) : ?>
 				<figure class="bbb-monthly-teaser__print bbb-monthly-teaser__print--<?php echo esc_attr((string) ($index + 1)); ?>">
 					<img src="<?php echo esc_url(get_theme_file_uri($asset_base . '/' . $preview['src'])); ?>" alt="<?php echo esc_attr($preview['alt']); ?>" loading="lazy">
@@ -62,12 +62,12 @@ $previews      = array(
 					</div>
 				</div>
 			<?php endif; ?>
-			<p class="bbb-monthly-teaser__eyebrow">included in paid society membership</p>
-			<h2 id="bbb-monthly-teaser-title"><?php echo esc_html($theme_label); ?>: burn bright</h2>
-			<p>peek at the <?php echo esc_html($is_current ? 'current' : 'next'); ?> monthly theme page: printable kindle inserts, wallpapers, a calendar, playlist vibes, and the whole orange-lit mood.</p>
+			<p class="bbb-monthly-teaser__eyebrow">partial for free, FULL for paid</p>
+			<h2 id="bbb-monthly-teaser-title"><?php echo esc_html($theme_label); ?>: midnight summer</h2>
+			<p>peek at the <?php echo esc_html($is_current ? 'current' : 'next'); ?> monthly theme page: printable kindle inserts, wallpapers, a calendar, review template, and the whole after-dark summer mood.</p>
 			<div class="bbb-monthly-teaser__actions" aria-label="Monthly theme actions">
 				<a class="bbb-monthly-teaser__button bbb-monthly-teaser__button--secondary" href="<?php echo esc_url($theme_url); ?>"><?php echo esc_html($is_current ? 'open the theme' : 'preview the theme'); ?></a>
-				<a class="bbb-monthly-teaser__button bbb-monthly-teaser__button--primary" href="<?php echo esc_url($subscribe_url); ?>" target="_blank" rel="noopener">subscribe on substack</a>
+				<a class="bbb-monthly-teaser__button bbb-monthly-teaser__button--primary" href="<?php echo esc_url($subscribe_url); ?>" target="_blank" rel="noopener">subscribe to get the goods</a>
 			</div>
 		</div>
 	</div>

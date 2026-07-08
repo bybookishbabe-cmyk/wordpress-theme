@@ -351,6 +351,58 @@
   text-decoration: none !important;
 }
 
+.article-book-card__buttons .article-book-card__button--audible,
+.article-book-card__buttons .article-book-card__button--libby {
+  min-height: 42px;
+  padding: 11px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.78) !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  color: #ffffff !important;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.1;
+  text-decoration: none !important;
+  text-transform: lowercase !important;
+}
+
+.article-book-card__buttons .article-book-card__button--audible span,
+.article-book-card__buttons .article-book-card__button--libby span {
+  color: inherit !important;
+}
+
+.article-book-card__buttons .article-book-card__button--audible:hover,
+.article-book-card__buttons .article-book-card__button--audible:focus-visible,
+.article-book-card__buttons .article-book-card__button--libby:hover,
+.article-book-card__buttons .article-book-card__button--libby:focus-visible {
+  border-color: #ffffff !important;
+  background: #ffffff !important;
+  color: var(--cta-ink) !important;
+  text-decoration: none !important;
+  transform: translateY(-1px);
+}
+
+.article-template__content .article-book-card__buttons .article-book-card__button.article-book-card__button--audible,
+.article-template__content .article-book-card__buttons .article-book-card__button.article-book-card__button--libby {
+  min-height: 42px !important;
+  padding: 11px 18px !important;
+  border: 1px solid rgba(255, 255, 255, 0.78) !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  color: #ffffff !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+}
+
+.article-template__content .article-book-card__buttons .article-book-card__button.article-book-card__button--audible:hover,
+.article-template__content .article-book-card__buttons .article-book-card__button.article-book-card__button--audible:focus-visible,
+.article-template__content .article-book-card__buttons .article-book-card__button.article-book-card__button--libby:hover,
+.article-template__content .article-book-card__buttons .article-book-card__button.article-book-card__button--libby:focus-visible {
+  border-color: #ffffff !important;
+  background: #ffffff !important;
+  color: var(--cta-ink) !important;
+}
+
 .article-book-card__newsletter,
 .sss-lib__mbtn--newsletter,
 #bbbBookPreview .sss-lib__mbtn--newsletter,

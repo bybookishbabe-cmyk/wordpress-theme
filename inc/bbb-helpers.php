@@ -23,7 +23,11 @@ function bbb_get_field(string $key, $post_id = null, $default = null) {
 			'author'                      => '_bbb_author',
 			'cover'                       => '_bbb_cover_url',
 			'amazon_link'                 => '_bbb_amazon_url',
+			'audible_link'                => '_bbb_audible_url',
 			'bookshop_link'               => '_bbb_bookshop_url',
+			'libby_link'                  => '_bbb_libby_url',
+			'kindle_unlimited_link'       => '_bbb_ku_url',
+			'ku_link'                     => '_bbb_ku_url',
 			'spice_level'                 => '_bbb_spice',
 			'book_spice_level'            => '_bbb_spice',
 			'starter_pack'                => '_bbb_starter_pack',
@@ -96,6 +100,10 @@ function bbb_normalize_url_value($value): string {
 		&& (('"' === $url[0] && '"' === substr($url, -1)) || ("'" === $url[0] && "'" === substr($url, -1)))
 	) {
 		$url = substr($url, 1, -1);
+	}
+
+	if (preg_match('/url:\s*(https?:\/\/.+)$/i', $url, $matches)) {
+		return trim((string) $matches[1]);
 	}
 
 	return trim($url);

@@ -12,6 +12,14 @@ bbb_enqueue_css('bbb-edd-checkout', 'assets/css/edd-checkout.css', array('bbb-ba
 $vault_upgrade_url = function_exists('bbb_vault_upgrade_checkout_url') ? bbb_vault_upgrade_checkout_url() : (function_exists('bbb_vault_buy_url') ? bbb_vault_buy_url() : home_url('/downloads/bybookishbabe-vault/'));
 $vault_upgrade_price = function_exists('bbb_vault_price_label') ? bbb_vault_price_label() : '';
 $vault_upgrade_button = 'upgrade to vault' . ('' !== $vault_upgrade_price ? ' - ' . $vault_upgrade_price : '');
+$society_discount_enabled = function_exists('bbb_society_discount_percent');
+$society_discount_percent = $society_discount_enabled ? bbb_society_discount_percent() : 0;
+$society_discount_access = function_exists('bbb_society_discount_member_has_access') && bbb_society_discount_member_has_access();
+$society_discount_used = function_exists('bbb_society_discount_has_used_this_month') && bbb_society_discount_has_used_this_month();
+$society_discount_applied = function_exists('bbb_society_discount_is_applied_to_session') && bbb_society_discount_is_applied_to_session();
+$society_discount_status = isset($_GET['society_discount']) ? sanitize_key((string) wp_unslash($_GET['society_discount'])) : '';
+$society_discount_label = $society_discount_percent > 0 ? (string) $society_discount_percent . '% off' : 'monthly discount';
+$society_page_url = function_exists('bbb_page_url') ? bbb_page_url('smut-sentiment-society') : home_url('/smut-sentiment-society/');
 
 get_header();
 ?>
@@ -19,7 +27,7 @@ get_header();
 <main class="bbb-checkout" id="main">
 	<section class="bbb-checkout__hero">
 		<div class="bbb-checkout__inner">
-			<p class="bbb-checkout__kicker">checkout</p>
+			<p class="bbb-checkout__kicker">instant downloads</p>
 			<h1><?php echo esc_html(strtolower(get_the_title() ?: 'checkout')); ?></h1>
 			<p>secure your downloads, then your files will be waiting in your receipt and account area.</p>
 			<ol class="bbb-checkout__steps" aria-label="checkout steps">
@@ -38,6 +46,36 @@ get_header();
 				the_content();
 			endwhile;
 			?>
+			<?php if ($society_discount_enabled) : ?>
+				<aside id="society-shop-discount" class="bbb-checkout__societyDiscount <?php echo esc_attr($society_discount_applied || 'applied' === $society_discount_status ? 'is-applied' : ($society_discount_used || 'used' === $society_discount_status ? 'is-used' : 'is-ready')); ?>" aria-label="society discount">
+					<div>
+						<span>society member?</span>
+						<strong><?php echo esc_html($society_discount_label); ?> one order this month</strong>
+							<?php if (!$society_discount_access) : ?>
+								<p>join free or paid society to unlock the monthly shop perk.</p>
+							<?php elseif ($society_discount_used || 'used' === $society_discount_status) : ?>
+								<p>you already used this month&apos;s society discount. a new one opens next month.</p>
+							<?php elseif ($society_discount_applied || 'applied' === $society_discount_status) : ?>
+								<p>applied. the discount will show in your order summary.</p>
+							<?php elseif ('expired' === $society_discount_status) : ?>
+								<p>that discount session refreshed. tap apply again to use this month&apos;s perk.</p>
+							<?php else : ?>
+								<p>apply it here, then finish checkout with your member discount.</p>
+							<?php endif; ?>
+					</div>
+					<?php if (!$society_discount_access) : ?>
+						<a class="bbb-checkout__societyDiscountAction" href="<?php echo esc_url($society_page_url . '#society-shop-discount'); ?>">unlock discount</a>
+					<?php else : ?>
+						<form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+							<input type="hidden" name="action" value="bbb_apply_society_discount">
+							<?php wp_nonce_field('bbb_apply_society_discount'); ?>
+							<button class="bbb-checkout__societyDiscountAction" type="submit" <?php disabled($society_discount_used || $society_discount_applied || 'used' === $society_discount_status || 'applied' === $society_discount_status); ?>>
+								<?php echo esc_html($society_discount_used || 'used' === $society_discount_status ? 'used this month' : ($society_discount_applied || 'applied' === $society_discount_status ? 'applied' : 'apply discount')); ?>
+							</button>
+						</form>
+					<?php endif; ?>
+				</aside>
+			<?php endif; ?>
 			<aside class="bbb-checkout__extras" aria-label="download notes">
 				<a
 					class="bbb-checkout__sample"
@@ -86,9 +124,10 @@ get_header();
 	document.addEventListener('DOMContentLoaded', function () {
 		var panel = document.querySelector('.bbb-checkout__panel');
 		var extras = document.querySelector('.bbb-checkout__extras');
+		var discount = document.querySelector('.bbb-checkout__societyDiscount');
 		var cart = document.querySelector('#edd_checkout_cart_form, .edd-blocks__cart');
 
-		if (!panel || !extras || !cart || cart.closest('.bbb-checkout__sideRail')) {
+		if (!panel || !extras || panel.querySelector('.bbb-checkout__sideRail')) {
 			return;
 		}
 
@@ -96,8 +135,48 @@ get_header();
 		sideRail.className = 'bbb-checkout__sideRail';
 		sideRail.setAttribute('aria-label', 'checkout summary');
 		panel.appendChild(sideRail);
-		sideRail.appendChild(cart);
+		if (cart) {
+			sideRail.appendChild(cart);
+		}
+		if (discount) {
+			sideRail.appendChild(discount);
+		}
 		sideRail.appendChild(extras);
+	});
+
+	document.addEventListener('click', function (event) {
+		var applyButton = event.target.closest('.bbb-checkout__sideRail .edd-apply-discount');
+		var formWrap = document.querySelector('#edd_checkout_form_wrap');
+		var sideRail = document.querySelector('.bbb-checkout__sideRail');
+		var cart = applyButton ? applyButton.closest('.edd-blocks__cart, #edd_checkout_cart_form') : null;
+
+		if (!applyButton || !formWrap || !sideRail || !cart || !window.jQuery) {
+			return;
+		}
+
+		event.preventDefault();
+		formWrap.insertBefore(cart, formWrap.firstChild);
+		window.jQuery(document.body).one('edd_discount_applied edd_discount_invalid edd_discount_failed', function () {
+			sideRail.insertBefore(cart, sideRail.firstChild);
+		});
+		window.jQuery(applyButton).trigger('click');
+		window.setTimeout(function () {
+			if (!sideRail.contains(cart)) {
+				sideRail.insertBefore(cart, sideRail.firstChild);
+			}
+		}, 2500);
+	});
+
+	document.addEventListener('keyup', function (event) {
+		var discountInput = event.target.closest('.bbb-checkout__sideRail #edd-discount');
+		var applyButton = discountInput ? document.querySelector('.bbb-checkout__sideRail .edd-apply-discount') : null;
+
+		if ('Enter' !== event.key || !discountInput || !applyButton) {
+			return;
+		}
+
+		event.preventDefault();
+		applyButton.click();
 	});
 
 	document.addEventListener('DOMContentLoaded', function () {

@@ -1,5 +1,5 @@
 (function () {
-  var targets = document.querySelectorAll('.bbb-romance-lists, .sss-lib--preview, #bbb-newsletter-cta-society-hero');
+  var targets = document.querySelectorAll('.bbb-romance-lists, .sss-lib--preview, #bbb-newsletter-cta-society-hero, .bbb-release-radar-cta');
   var dashboardScroller = document.querySelector('.bbb-home-shelf-week--dashboard .bbb-home-shelf-week__inner');
   var madeForYouDashboard = document.querySelector('[data-home-mfy-dashboard]');
   var monthlyCountdowns = document.querySelectorAll('[data-monthly-release]');

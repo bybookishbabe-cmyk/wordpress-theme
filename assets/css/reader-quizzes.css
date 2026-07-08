@@ -474,6 +474,7 @@
     padding: 0 14px;
     font-size: 11px;
   }
+
 }
 
 @media (max-width: 420px) {
@@ -564,6 +565,7 @@
     min-height: 40px;
     margin-top: 2px;
   }
+
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1643,6 +1645,95 @@
   transform: translateY(-1px);
 }
 
+.bbb-livequiz__conversion {
+  display: grid;
+  gap: 18px;
+  margin-top: 30px;
+  padding: 22px;
+  border: 1px solid rgba(255,138,199,.2);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(255,138,199,.12), rgba(255,255,255,.045)),
+    rgba(255,255,255,.035);
+  text-align: center;
+}
+
+.bbb-livequiz__conversionCopy h3 {
+  margin: 6px 0 0;
+  color: #f6f6f6;
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 400;
+  line-height: 1;
+  text-transform: lowercase;
+}
+
+.bbb-livequiz__conversionActions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  text-align: left;
+}
+
+.bbb-livequiz__conversionStep {
+  position: relative;
+  display: grid;
+  min-height: 148px;
+  grid-template-rows: auto auto 1fr;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 8px;
+  background: rgba(10,10,10,.36);
+  color: #f6f6f6;
+  text-decoration: none;
+  text-transform: lowercase;
+  box-shadow: 0 14px 30px rgba(0,0,0,.18);
+  transition: transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+
+.bbb-livequiz__conversionStep:hover,
+.bbb-livequiz__conversionStep:focus-visible {
+  border-color: #ff8ac7;
+  background: rgba(255,138,199,.12);
+  box-shadow: 0 18px 34px rgba(0,0,0,.24);
+  outline: none;
+  transform: translateY(-2px);
+}
+
+.bbb-livequiz__conversionStepTop {
+  display: flex;
+  align-items: center;
+  min-height: 34px;
+}
+
+.bbb-livequiz__conversionStepTop span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: Assistant, var(--font-body-family, sans-serif);
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 0 18px rgba(255,255,255,.28);
+}
+
+.bbb-livequiz__conversionStep strong {
+  display: block;
+  color: #fff;
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.bbb-livequiz__conversionStep p {
+  margin: 0;
+  color: rgba(246,246,246,.68);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.38;
+}
+
 .bbb-livequiz__tags,
 .bbb-livequiz__bookTropes,
 .bbb-livequiz__links {
@@ -2072,6 +2163,20 @@
   .bbb-livequiz__resultActions .bbb-livequiz__shareBtn,
   .bbb-livequiz__resultActions .bbb-livequiz__link {
     width: 100%;
+  }
+
+  .bbb-livequiz__conversion {
+    padding: 18px;
+    text-align: center;
+  }
+
+  .bbb-livequiz__conversionActions {
+    grid-template-columns: 1fr;
+  }
+
+  .bbb-livequiz__conversionStep {
+    min-height: 0;
+    text-align: left;
   }
 
   .bbb-livequiz__book .sss-lib__coverWrap {

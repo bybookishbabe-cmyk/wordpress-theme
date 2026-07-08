@@ -274,6 +274,13 @@ function bbb_save_quote_details(int $post_id): void {
 			delete_post_meta($post_id, $key);
 		}
 	}
+
+	if (function_exists('sss_library_flush_cache')) {
+		sss_library_flush_cache();
+	}
+	if (function_exists('bbb_book_quotes_flush_cache')) {
+		bbb_book_quotes_flush_cache();
+	}
 }
 add_action('save_post', 'bbb_save_quote_details');
 

@@ -31,6 +31,16 @@ function sss_token_engine(string $content, int $post_id): string {
 		'<div$1>[sss_bookpage_suggestions post_id="' . $post_id . '"]</div>',
 		$content
 	) ?? $content;
+	$content = preg_replace(
+		'/\[bookswipestart\](.*?)\[bookswipeend\]/is',
+		'[bookswipe]$1[/bookswipe]',
+		$content
+	) ?? $content;
+	$content = preg_replace(
+		'/\[fictionalmanswipestart\](.*?)\[fictionalmanswipeend\]/is',
+		'[fictionalmanswipe]$1[/fictionalmanswipe]',
+		$content
+	) ?? $content;
 
 	$content = preg_replace_callback(
 		'/\[book:(\d+)\]/i',

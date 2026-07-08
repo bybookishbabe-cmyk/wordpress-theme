@@ -316,9 +316,43 @@ if ($active_fields) {
 	}
 }
 
+$july_2026_release_time = strtotime('2026-07-01T00:00:00-07:00');
 $burn_bright_release_time = strtotime('2026-06-01T00:00:00-07:00');
-if ($burn_bright_release_time && current_time('timestamp') >= $burn_bright_release_time) {
-	$monthly_theme_url = bbb_page_url('burn-bright');
+if ($july_2026_release_time && current_time('timestamp') >= $july_2026_release_time) {
+	$monthly_theme_url = bbb_page_url('monthly-theme');
+	$monthly_hub['kicker'] = 'monthly theme';
+	$monthly_hub['title'] = 'midnight summer';
+	$monthly_hub['text'] = 'dark nights, morally gray reads, kindle inserts, wallpapers, bookmarks, and the whole after-hours summer mood.';
+	$monthly_hub['image'] = get_theme_file_uri('assets/monthly-themes/july-2026/display/midnight-summer-book-review-mockup.jpg');
+	$monthly_countdown = array();
+	$drop_products = array(
+		array(
+			'title' => 'midnight drive',
+			'handle' => 'midnight-drive',
+			'image' => get_theme_file_uri('assets/monthly-themes/july-2026/display/midnight-drive-mockup.jpg'),
+			'url' => $monthly_theme_url,
+		),
+		array(
+			'title' => 'midnight makeout',
+			'handle' => 'midnight-makeout',
+			'image' => get_theme_file_uri('assets/monthly-themes/july-2026/display/midnight-makeout-mockup.jpg'),
+			'url' => $monthly_theme_url,
+		),
+		array(
+			'title' => 'midnight movie',
+			'handle' => 'midnight-movie',
+			'image' => get_theme_file_uri('assets/monthly-themes/july-2026/display/midnight-movie-mockup.jpg'),
+			'url' => $monthly_theme_url,
+		),
+		array(
+			'title' => 'midnight swim',
+			'handle' => 'midnight-swim',
+			'image' => get_theme_file_uri('assets/monthly-themes/july-2026/display/midnight-swim-mockup.jpg'),
+			'url' => $monthly_theme_url,
+		),
+	);
+} elseif ($burn_bright_release_time && current_time('timestamp') >= $burn_bright_release_time) {
+	$monthly_theme_url = bbb_page_url('monthly-theme');
 	$monthly_hub['kicker'] = 'monthly theme';
 	$monthly_hub['title'] = 'burn bright';
 	$monthly_hub['text'] = 'printable kindle inserts, wallpapers, a calendar, playlist vibes, and the whole orange-lit mood.';
@@ -384,7 +418,7 @@ $sections = array(
 	array(
 		'label' => 'shop perks',
 		'items' => array(
-			array('title' => 'monthly freebie', 'copy' => 'this month: an 8x10 printable art piece for free and paid society members.', 'url' => bbb_page_url('monthly-freebie'), 'badge' => 'member', 'emoji' => '🎁'),
+			array('title' => 'monthly freebie', 'copy' => 'this month: printable midnight summer bookmarks for free and paid society members.', 'url' => bbb_page_url('monthly-freebie'), 'badge' => 'member', 'emoji' => '🎁'),
 			array('title' => 'shop discount', 'copy' => 'this month: ' . (string) $society_discount_percent . '% off one order for free and paid society members.', 'url' => bbb_page_url('society-shop-discount'), 'badge' => 'member', 'emoji' => '🏷️', 'type' => 'society_discount'),
 		),
 	),

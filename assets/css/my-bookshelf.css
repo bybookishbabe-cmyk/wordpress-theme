@@ -8408,6 +8408,196 @@ a.bbb-account-welcome__readerTypeBadge:focus-visible {
   font-weight: 500;
 }
 
+.bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEra {
+  grid-template-columns: minmax(0, .9fr) minmax(300px, .7fr) minmax(280px, .8fr);
+  align-items: stretch;
+  max-width: 1060px;
+  min-height: 350px;
+  margin-top: 34px;
+  padding: clamp(24px, 4vw, 42px);
+  border-radius: 180px 28px 28px 28px;
+}
+
+.bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEra::before {
+  background:
+    linear-gradient(180deg, rgba(5, 1, 0, .48), rgba(5, 1, 0, .72)),
+    var(--era-texture) top center / min(1180px, 132vw) auto repeat-y;
+  opacity: .34;
+}
+
+.bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEra::after {
+  background:
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--era-accent) 8%, transparent) 0 1px, transparent 1px 28px),
+    radial-gradient(circle at 18% 20%, color-mix(in srgb, var(--era-accent) 16%, transparent), transparent 18rem);
+  mix-blend-mode: screen;
+  opacity: .54;
+}
+
+.bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEraCopy {
+  min-width: 0;
+  max-width: none;
+  justify-content: center;
+}
+
+.bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEraCopy h2 {
+  max-width: none;
+  margin-top: 8px;
+  font-size: clamp(58px, 5.8vw, 92px);
+  line-height: .88;
+  overflow-wrap: normal;
+  word-break: normal;
+  text-wrap: balance;
+}
+
+.bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEraCopy p {
+  max-width: 410px;
+  color: color-mix(in srgb, var(--era-paper) 78%, transparent);
+}
+
+.bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEraDesigns {
+  min-height: 260px;
+  align-self: stretch;
+}
+
+.bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEraDesign {
+  width: clamp(112px, 12vw, 150px);
+  aspect-ratio: 3 / 4;
+  border-radius: 10px;
+}
+
+.bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEraDesign--1 {
+  top: 24px;
+  left: 0;
+}
+
+.bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEraDesign--2 {
+  top: 0;
+  left: 31%;
+}
+
+.bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEraDesign--3 {
+  right: 0;
+  bottom: 18px;
+}
+
+.bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEraPrompt {
+  width: auto;
+  min-height: 260px;
+  justify-self: stretch;
+  align-self: stretch;
+  padding: 22px;
+  border-radius: 120px 120px 18px 18px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--era-cream) 10%, transparent), rgba(20,6,0,.32)),
+    color-mix(in srgb, var(--era-cream) 4%, transparent);
+  backdrop-filter: none;
+}
+
+.bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEraPrompt strong {
+  font-size: 2.1rem;
+  line-height: 1;
+}
+
+.bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEra--noPrompt {
+  grid-template-columns: minmax(260px, .58fr) minmax(420px, 1.42fr);
+  align-items: center;
+  min-height: clamp(360px, 30vw, 430px);
+  padding: clamp(30px, 5vw, 58px);
+  border-radius: 42px;
+}
+
+.bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEra--noPrompt .bbb-account-profile__monthlyEraDesigns {
+  min-height: clamp(300px, 26vw, 380px);
+  width: min(100%, 650px);
+  justify-self: end;
+}
+
+.bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEra--noPrompt .bbb-account-profile__monthlyEraDesign {
+  width: clamp(132px, 12.5vw, 190px);
+  border-radius: 14px;
+  box-shadow: 0 26px 60px rgba(0,0,0,.46);
+}
+
+.bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEra--noPrompt .bbb-account-profile__monthlyEraCopy {
+  justify-content: center;
+  max-width: 360px;
+}
+
+.bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEra--noPrompt .bbb-account-profile__monthlyEraCopy h2 {
+  max-width: 7.6ch;
+  margin: 0;
+  font-size: clamp(68px, 6.4vw, 112px);
+  line-height: .84;
+}
+
+.bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEra--noPrompt .bbb-account-profile__monthlyEraCta {
+  margin-top: 30px;
+}
+
+.bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEra--noPrompt .bbb-account-profile__monthlyEraDesign--1 {
+  top: 12%;
+  left: 2%;
+  z-index: 2;
+  transform: rotate(-8deg);
+}
+
+.bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEra--noPrompt .bbb-account-profile__monthlyEraDesign--2 {
+  top: 0;
+  left: 28%;
+  z-index: 4;
+  transform: rotate(4deg);
+}
+
+.bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEra--noPrompt .bbb-account-profile__monthlyEraDesign--3 {
+  right: 18%;
+  bottom: 0;
+  z-index: 3;
+  transform: rotate(-4deg);
+}
+
+.bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEra--noPrompt .bbb-account-profile__monthlyEraDesign--4 {
+  right: 1%;
+  top: 18%;
+  z-index: 1;
+  transform: rotate(8deg);
+}
+
+@media (max-width: 980px) {
+  .bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEra {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+  }
+
+  .bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEraCopy h2 {
+    max-width: 10ch;
+    font-size: clamp(48px, 13vw, 76px);
+  }
+
+  .bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEraDesigns {
+    min-height: 270px;
+  }
+
+  .bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEraPrompt {
+    justify-self: stretch;
+    width: 100%;
+  }
+
+  .bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEra--noPrompt {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 28px;
+  }
+
+  .bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEra--noPrompt .bbb-account-profile__monthlyEraCopy h2 {
+    max-width: 8ch;
+    font-size: clamp(54px, 14vw, 82px);
+  }
+
+  .bbb-account-shelf.bbb-account-home[data-account-shelf] .bbb-account-profile__monthlyEra--noPrompt .bbb-account-profile__monthlyEraDesigns {
+    min-height: 330px;
+    width: 100%;
+  }
+}
+
 /* Mobile account reset: softer, less blocky, easier to scan. */
 @media (max-width: 640px) {
   .bbb-account-home {

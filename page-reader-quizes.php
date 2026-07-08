@@ -125,15 +125,16 @@ get_header();
 					<span class="bbb-quizdash__cta">find your trope →</span>
 				</a>
 
-				<article class="bbb-quizdash__card bbb-quizdash__card--locked">
+				<a class="bbb-quizdash__card" href="<?php echo esc_url(home_url('/reader-type-quiz/')); ?>">
 					<span class="bbb-quizdash__emojiRain" aria-hidden="true">
-						<span>🌶</span><span>🔥</span><span>💋</span><span>🌶</span><span>🔥</span>
+						<span>💌</span><span>📚</span><span>✨</span><span>🖤</span><span>💘</span>
 					</span>
-					<span class="bbb-quizdash__issue">coming next</span>
-					<h2>what spice level is your current era?</h2>
-					<p>a deeply unserious diagnosis for the state of your kindle, your standards, and your sleep schedule.</p>
-					<span class="bbb-quizdash__cta">coming soon</span>
-				</article>
+					<span class="bbb-quizdash__badge">new</span>
+					<span class="bbb-quizdash__issue">quiz 04</span>
+					<h2>what romance reader type are you?</h2>
+					<p>find the reader badge behind your tropes, heat level, book boyfriends, and repeat chaos.</p>
+					<span class="bbb-quizdash__cta">find your type →</span>
+				</a>
 			</div>
 
 			<a class="bbb-quizdash__bingoCta" href="<?php echo esc_url(home_url('/romance-reading-bingo/')); ?>">
@@ -154,6 +155,7 @@ get_header();
 				</span>
 				<span class="bbb-quizdash__bingoCtaAction">play the board →</span>
 			</a>
+
 		</div>
 	</section>
 </main>

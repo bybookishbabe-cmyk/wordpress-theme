@@ -10,29 +10,56 @@ declare(strict_types=1);
 $reader_identity = function_exists('bbb_reader_current_identity') ? bbb_reader_current_identity() : null;
 $is_society_member = is_array($reader_identity) && '' !== trim((string) ($reader_identity['email'] ?? ''));
 $join_url = get_option('bbb_society_gate_member_url', 'https://thesmutandsentimentsociety.substack.com/subscribe');
-$print_path = get_theme_file_path('assets/freebies/may-2026-bookend-8x10-art-print.php');
-$download_url = add_query_arg('download', 'print', bbb_page_url('monthly-freebie'));
-$preview_url = get_theme_file_uri('assets/freebies/may-2026-bookend-8x10-art-print-mockup.jpg');
+$asset_base = 'assets/monthly-themes/july-2026';
+$bookmarks_pdf_path = $asset_base . '/freebies/midnight-summer-bookmarks.pdf';
+$download_url = function_exists('bbb_forced_theme_asset_download_url')
+	? bbb_forced_theme_asset_download_url($bookmarks_pdf_path, 'MidnightSummer_Bookmarks.pdf')
+	: get_theme_file_uri($bookmarks_pdf_path);
+$preview_url = get_theme_file_uri($asset_base . '/display/midnight-summer-bookmark-mockup.jpg');
 
-if (isset($_GET['download']) && 'print' === sanitize_key((string) wp_unslash($_GET['download']))) {
-	$print_contents = file_exists($print_path) ? file_get_contents($print_path) : false;
-	$halt_marker = '__halt_compiler(); ?>';
-	$halt_position = is_string($print_contents) ? strpos($print_contents, $halt_marker) : false;
-	$print_binary = false !== $halt_position && is_string($print_contents)
-		? substr($print_contents, $halt_position + strlen($halt_marker))
-		: '';
+if (!function_exists('bbb_monthly_freebie_has_private_cache_context')) {
+	function bbb_monthly_freebie_has_private_cache_context(): bool {
+		if (is_user_logged_in()) {
+			return true;
+		}
 
-	if (!$is_society_member || '' === $print_binary) {
-		wp_redirect($join_url);
-		exit;
+		foreach (array_keys($_COOKIE) as $cookie_name) {
+			$cookie_name = strtolower((string) $cookie_name);
+			if (
+				str_contains($cookie_name, 'wordpress_logged_in') ||
+				str_contains($cookie_name, 'bbb_reader') ||
+				str_contains($cookie_name, 'substack') ||
+				str_starts_with($cookie_name, 'edd_') ||
+				str_contains($cookie_name, 'cart') ||
+				str_contains($cookie_name, 'checkout')
+			) {
+				return true;
+			}
+		}
+
+		return false;
 	}
+}
 
-	nocache_headers();
-	header('Content-Type: image/png');
-	header('Content-Disposition: attachment; filename="may-2026-bookend-8x10-art-print.png"');
-	header('Content-Length: ' . (string) strlen($print_binary));
-	echo $print_binary;
-	exit;
+if (!$is_society_member && !bbb_monthly_freebie_has_private_cache_context()) {
+	$bbb_freebie_public_cache = 'public, max-age=300, s-maxage=900, stale-while-revalidate=86400';
+	add_filter(
+		'nocache_headers',
+		static function (array $headers) use ($bbb_freebie_public_cache): array {
+			return array(
+				'Cache-Control' => $bbb_freebie_public_cache,
+				'Expires'       => gmdate('D, d M Y H:i:s', time() + 300) . ' GMT',
+			);
+		},
+		100
+	);
+
+	if (!headers_sent()) {
+		header_remove('Pragma');
+		header_remove('Expires');
+		header('Cache-Control: ' . $bbb_freebie_public_cache, true);
+		header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 300) . ' GMT', true);
+	}
 }
 
 get_header();
@@ -42,35 +69,34 @@ get_header();
 	<div class="bbb-society-page__inner bbb-monthly-freebie__inner">
 		<header class="bbb-society-page__header bbb-monthly-freebie__header">
 			<p class="bbb-society-landing__eyebrow">monthly freebie</p>
-			<h1 id="bbb-monthly-freebie-title">8x10 art print</h1>
+			<h1 id="bbb-monthly-freebie-title">printable bookmarks</h1>
 			<p>
-				this month's society freebie is a printable bookish art piece made for frames, reading corners,
-				and the little wall spaces that deserve a softer love story.
+				this month's society freebie is a set of midnight summer bookmarks made for the books
+				that keep you reading past reasonable hours.
 			</p>
 		</header>
 
 		<div class="bbb-monthly-freebie__layout">
 			<figure class="bbb-monthly-freebie__art">
-				<img src="<?php echo esc_url($preview_url); ?>" alt="framed mockup preview of the may society 8 by 10 art print" loading="eager">
+				<img src="<?php echo esc_url($preview_url); ?>" alt="Midnight Summer printable bookmark mockup" loading="eager">
 			</figure>
 
 			<aside class="bbb-monthly-freebie__panel" aria-label="monthly freebie details">
-				<p class="bbb-society-landing__eyebrow">may society file</p>
-				<h2>in every book</h2>
+				<p class="bbb-society-landing__eyebrow">july society file</p>
+				<h2>midnight summer bookmarks</h2>
 				<p>
-					a 2400 by 3000 pixel png designed at 8x10 inches. download it, print it, and let it look
-					like it was always meant to live beside your shelf.
+					download the PDF, print it, trim it, and keep the after-hours mood tucked inside your current read.
 				</p>
 
 				<ul class="bbb-monthly-freebie__facts" aria-label="print details">
-					<li><span>size</span><strong>8x10 inches</strong></li>
-					<li><span>file</span><strong>png</strong></li>
-					<li><span>resolution</span><strong>2400x3000</strong></li>
+					<li><span>type</span><strong>printable bookmarks</strong></li>
+					<li><span>file</span><strong>pdf</strong></li>
+					<li><span>access</span><strong>free + paid members</strong></li>
 				</ul>
 
 				<?php if ($is_society_member) : ?>
-					<a class="bbb-monthly-freebie__button" href="<?php echo esc_url($download_url); ?>" download>download the print</a>
-					<p class="bbb-monthly-freebie__note">included with your society membership.</p>
+					<a class="bbb-monthly-freebie__button" href="<?php echo esc_url($download_url); ?>" download>download bookmarks</a>
+					<p class="bbb-monthly-freebie__note">included for free and paid society members.</p>
 				<?php else : ?>
 					<a class="bbb-monthly-freebie__button" href="<?php echo esc_url($join_url); ?>" target="_blank" rel="noopener">join to download</a>
 					<p class="bbb-monthly-freebie__note">free and paid society members can download the monthly freebie here.</p>

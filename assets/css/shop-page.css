@@ -804,6 +804,12 @@
   cursor: not-allowed;
 }
 
+.bbb-shop-card__button--locked {
+  border-color: rgba(255, 214, 102, 0.42) !important;
+  background: rgba(255, 214, 102, 0.12) !important;
+  color: #ffe6a3 !important;
+}
+
 .bbb-shop-card__details {
   display: inline-flex;
   justify-content: center;

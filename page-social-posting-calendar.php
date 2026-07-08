@@ -102,7 +102,6 @@ get_header();
 				<div class="bbb-social-calendar__toolbarActions">
 					<button type="button" class="is-active" data-calendar-mode="calendar" aria-pressed="true">calendar</button>
 					<button type="button" data-calendar-mode="visual" aria-pressed="false">visual week</button>
-					<button type="button" data-calendar-today>jump to today</button>
 				</div>
 			</div>
 			<div id="bbbSocialFullCalendar" class="bbb-social-calendar__calendar" data-has-feed="<?php echo $bbb_has_ics ? 'true' : 'false'; ?>"></div>
@@ -111,11 +110,6 @@ get_header();
 					<div>
 						<p class="bbb-social-calendar__eyebrow">visual planner</p>
 						<h2 data-visual-week-label>Today + next 7 days</h2>
-					</div>
-					<div class="bbb-social-calendar__weekNav" aria-label="visual week controls">
-						<button type="button" data-visual-prev>prev week</button>
-						<button type="button" data-visual-today>this week</button>
-						<button type="button" data-visual-next>next week</button>
 					</div>
 				</div>
 				<div class="bbb-social-calendar__platformTabs" data-visual-platforms aria-label="visual platform"></div>

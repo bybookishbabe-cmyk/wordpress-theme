@@ -13,6 +13,8 @@
 		var pin = tile.querySelector('[data-pin-media]');
 		var rotateQuote = null;
 		var startRotator = null;
+		var isAnimating = false;
+		var updateQuote = null;
 
 		if (tile.dataset.bbbQuoteRotatorReady === 'true') {
 			return;
@@ -29,13 +31,7 @@
 		}
 
 		tile.dataset.bbbQuoteRotatorReady = 'true';
-		rotateQuote = function () {
-			index = (index + 1) % quotes.length;
-			var quote = quotes[index] || {};
-			if (!quote.media) {
-				return;
-			}
-
+		updateQuote = function (quote) {
 			image.src = quote.media;
 			image.alt = quote.alt || quote.title || image.alt;
 			pin.setAttribute('data-pin-media', quote.media);
@@ -49,12 +45,48 @@
 			}).toString();
 			pin.setAttribute('aria-label', 'save ' + (quote.title || 'quote') + ' to Pinterest');
 		};
+		rotateQuote = function () {
+			var nextIndex = (index + 1) % quotes.length;
+			var quote = quotes[nextIndex] || {};
+			if (!quote.media) {
+				return;
+			}
+
+			if (isAnimating || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+				index = nextIndex;
+				updateQuote(quote);
+				return;
+			}
+
+			isAnimating = true;
+			tile.classList.remove('is-quote-swiping-in');
+			tile.classList.add('is-quote-swiping-out');
+
+			window.setTimeout(function () {
+				var nextImage = new Image();
+				var finish = function () {
+					index = nextIndex;
+					updateQuote(quote);
+					tile.classList.remove('is-quote-swiping-out');
+					tile.classList.add('is-quote-swiping-in');
+
+					window.setTimeout(function () {
+						tile.classList.remove('is-quote-swiping-in');
+						isAnimating = false;
+					}, 360);
+				};
+
+				nextImage.onload = finish;
+				nextImage.onerror = finish;
+				nextImage.src = quote.media;
+			}, 220);
+		};
 		startRotator = function () {
 			if (tile.dataset.bbbQuoteRotatorInterval) {
 				return;
 			}
 
-			tile.dataset.bbbQuoteRotatorInterval = String(window.setInterval(rotateQuote, 3000));
+			tile.dataset.bbbQuoteRotatorInterval = String(window.setInterval(rotateQuote, 4500));
 		};
 
 		if ('IntersectionObserver' in window) {

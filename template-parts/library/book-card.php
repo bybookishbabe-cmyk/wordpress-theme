@@ -46,6 +46,7 @@ $trope_urls    = array_map(
 	data-author="<?php echo esc_attr($data['author']); ?>"
 	data-cover="<?php echo esc_url($data['cover']); ?>"
 	data-amazon="<?php echo esc_url($data['amazon']); ?>"
+	data-ku-url="<?php echo esc_url((string) ($data['ku_url'] ?? '')); ?>"
 	data-bookshop="<?php echo esc_url($data['bookshop']); ?>"
 	data-shelf="<?php echo esc_attr($data['shelf']); ?>"
 	data-private-shelf="<?php echo $data['is_private'] ? 'true' : 'false'; ?>"

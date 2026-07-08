@@ -48,7 +48,7 @@ function bbb_reader_request_is_pwa_home(): bool {
 add_action(
 	'init',
 	static function (): void {
-		if (!bbb_reader_request_has_email_session() && !bbb_reader_request_is_pwa_home()) {
+		if (!bbb_reader_request_has_email_session()) {
 			return;
 		}
 
@@ -68,7 +68,7 @@ add_action(
 add_action(
 	'send_headers',
 	static function (): void {
-		if (!bbb_reader_request_has_email_session() && !bbb_reader_request_is_pwa_home()) {
+		if (!bbb_reader_request_has_email_session()) {
 			return;
 		}
 
@@ -76,6 +76,38 @@ add_action(
 		header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0, private');
 	},
 	0
+);
+
+add_action(
+	'wp_enqueue_scripts',
+	static function (): void {
+		if (is_admin()) {
+			return;
+		}
+
+		$request_path = isset($_SERVER['REQUEST_URI'])
+			? trailingslashit((string) parse_url((string) wp_unslash($_SERVER['REQUEST_URI']), PHP_URL_PATH))
+			: '';
+		$route_slug = function_exists('bbb_current_route_slug') ? bbb_current_route_slug() : trim($request_path, '/');
+		$is_home_surface = is_front_page()
+			|| 'bybookishbabe-app' === $route_slug
+			|| (function_exists('bbb_pwa_request_path_is') && bbb_pwa_request_path_is('bybookishbabe-app'));
+
+		wp_dequeue_style('convertkit-admin-quicktags');
+		wp_deregister_style('convertkit-admin-quicktags');
+		wp_dequeue_script('quicktags');
+		wp_deregister_script('quicktags');
+		wp_dequeue_script('convertkit-admin-quicktags');
+		wp_deregister_script('convertkit-admin-quicktags');
+
+		if ($is_home_surface) {
+			wp_dequeue_script('edd-ajax');
+			wp_deregister_script('edd-ajax');
+			wp_dequeue_script('genesis-blocks-dismiss-js');
+			wp_deregister_script('genesis-blocks-dismiss-js');
+		}
+	},
+	999
 );
 
 function bbb_reader_is_local_request(): bool {
@@ -1516,12 +1548,18 @@ if (!function_exists('bbb_reader_active_society_daily_prompt')) {
 		$journal_start = bbb_reader_drop_field_value($fields, 'journal_start_date');
 		$prompts_raw   = bbb_reader_drop_field_value($fields, 'prompts');
 		$prompts       = array_values(array_filter(array_map('trim', preg_split('/\s*\|\|\s*/', $prompts_raw) ?: array())));
+		$timestamp     = (int) current_time('timestamp');
+		$year          = (int) date_i18n('Y', $timestamp);
+		$month         = (int) date_i18n('n', $timestamp);
+		$drop_name     = sanitize_title((string) bbb_reader_drop_field_value($fields, 'name'));
 
-		if (!$prompts && function_exists('bbb_reader_june_2026_daily_prompts')) {
-			$timestamp = (int) current_time('timestamp');
-			$year      = (int) date_i18n('Y', $timestamp);
-			$month     = (int) date_i18n('n', $timestamp);
-			if (2026 === $year && 6 === $month) {
+		if (2026 === $year && 7 === $month && in_array($drop_name, array('', 'burn-bright'), true)) {
+			$prompts       = array();
+			$journal_start = '';
+		}
+
+		if (!$prompts) {
+			if (2026 === $year && 6 === $month && function_exists('bbb_reader_june_2026_daily_prompts')) {
 				$prompts = bbb_reader_june_2026_daily_prompts();
 				$journal_start = '2026-06-01';
 			}

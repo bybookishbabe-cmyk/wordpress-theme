@@ -20,17 +20,17 @@ function bbb_urgency_banner_next_target(): DateTimeImmutable {
 }
 
 function bbb_urgency_banner_live_read_url(DateTimeImmutable $now): string {
-	if (function_exists('bbb_sunday_drop_latest_substack_post')) {
-		$substack = bbb_sunday_drop_latest_substack_post();
-		if (!empty($substack['url'])) {
-			return (string) $substack['url'];
-		}
-	}
-
 	if (function_exists('bbb_sunday_drop_latest_issue')) {
 		$issue = bbb_sunday_drop_latest_issue();
 		if ($issue instanceof WP_Post && function_exists('bbb_sunday_drop_issue_url')) {
 			return bbb_sunday_drop_issue_url($issue);
+		}
+	}
+
+	if (function_exists('bbb_sunday_drop_latest_substack_post')) {
+		$substack = bbb_sunday_drop_latest_substack_post();
+		if (!empty($substack['url'])) {
+			return (string) $substack['url'];
 		}
 	}
 

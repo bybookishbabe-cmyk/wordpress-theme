@@ -182,9 +182,79 @@
   min-width: 0;
 }
 
-.bbb-checkout__extras {
+.bbb-checkout__societyDiscount {
   display: grid;
   order: 2;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid rgba(245, 154, 200, 0.42);
+  border-radius: 8px;
+  background: linear-gradient(145deg, rgba(245, 154, 200, 0.16), rgba(205, 238, 227, 0.08));
+}
+
+.bbb-checkout__societyDiscount div {
+  display: grid;
+  gap: 6px;
+}
+
+.bbb-checkout__societyDiscount span {
+  color: var(--checkout-pink);
+  font: 750 12px/1.2 var(--checkout-body-font);
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+}
+
+.bbb-checkout__societyDiscount strong {
+  color: #ffffff;
+  font: 750 17px/1.25 var(--checkout-body-font);
+  letter-spacing: 0;
+  text-transform: lowercase;
+}
+
+.bbb-checkout__societyDiscount p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font: 500 13px/1.45 var(--checkout-body-font);
+  text-transform: none;
+}
+
+.bbb-checkout__societyDiscount form {
+  margin: 0;
+}
+
+.bbb-checkout__societyDiscountAction {
+  display: inline-flex;
+  width: 100%;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.86) !important;
+  border-radius: 6px;
+  background: #ffffff !important;
+  color: #080808 !important;
+  font: 800 13px/1 var(--checkout-body-font);
+  text-decoration: none;
+  text-transform: lowercase;
+  box-shadow: none !important;
+}
+
+.bbb-checkout__societyDiscountAction:hover,
+.bbb-checkout__societyDiscountAction:focus-visible {
+  border-color: var(--checkout-pink) !important;
+  background: var(--checkout-pink) !important;
+  color: #080808 !important;
+  outline: none;
+}
+
+.bbb-checkout__societyDiscountAction:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.bbb-checkout__extras {
+  display: grid;
+  order: 3;
   gap: 18px;
 }
 
@@ -1122,10 +1192,12 @@
   .bbb-checkout__steps li:nth-child(2),
   .bbb-checkout__steps li:nth-child(3) {
     grid-column: 1;
+    grid-row: auto;
   }
 
 .bbb-checkout #edd_checkout_cart_form:not(.edd-blocks-form__cart),
 .bbb-checkout .edd-blocks__cart,
+  .bbb-checkout__societyDiscount,
   .bbb-checkout #edd_checkout_user_info,
   .bbb-checkout #edd_cc_fields,
   .bbb-checkout #edd_register_account_fields,
